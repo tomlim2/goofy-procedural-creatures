@@ -1,0 +1,94 @@
+:root {
+  --paper: #efe9dd;
+  --ink: #2b2724;
+  --line: rgba(43, 39, 36, 0.22);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  padding: 14px 18px;
+  pointer-events: none;
+}
+
+.mark { font-weight: 700; letter-spacing: 0.18em; }
+.sub { opacity: 0.5; }
+.status { margin-left: auto; opacity: 0.6; }
+
+.deck {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  width: 208px;
+  display: grid;
+  gap: 10px;
+}
+
+.card {
+  border: 1px solid var(--line);
+  background: rgba(239, 233, 221, 0.82);
+  padding: 10px 12px;
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  opacity: 0.55;
+  font-weight: 600;
+}
+
+.seed {
+  margin: 0 0 10px;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+button:hover { background: rgba(43, 39, 36, 0.06); }
+button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+button.wide { width: 100%; }
+
+.seg { display: flex; gap: 6px; }
+.seg button { flex: 1; }
+
+.hint { margin: 0; opacity: 0.45; }
+
+.noscript {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+}
