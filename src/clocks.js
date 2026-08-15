@@ -33,6 +33,30 @@ export function makeClock(seed, birth = 0) {
   // 재생성 — 슬롯의 개체가 교체된다 (레퍼런스 실측 5~13초)
   let regenAt = rng.float(6, 14);
 
+  // ── 몸통 idle ──
+  // 체중 이동. 발을 축으로 아주 천천히 좌우로 기운다. 개체마다 폭이 다르다.
+  const swayAmp = rng.float(0.006, 0.03);
+  const swayPeriod = rng.float(3.2, 7.5);
+  const swayPhase = rng.float(0, Math.PI * 2);
+
+  // 머리 갸웃 — 한쪽으로 기울여 몇 초 유지
+  let nextTilt = rng.float(4, 12);
+  let tiltUntil = -1;
+  let tiltTarget = 0;
+  let headAngle = 0;
+
+  // 끄덕임 — 짧게 두 번
+  let nextNod = rng.float(6, 18);
+  let nodStart = -1;
+
+  // 폴짝 — 드물게 제자리 점프. 앉았다 늘어났다 착지까지.
+  let nextHop = rng.float(10, 30);
+  let hopStart = -1;
+
+  // 부르르 — 아주 드물게 몸을 턴다
+  let nextShiver = rng.float(18, 45);
+  let shiverStart = -1;
+
   // 눈썹·입 상태 — 이따금 대체 상태로 넘어갔다 돌아온다
   let nextMood = rng.float(3, 10);
   let moodUntil = -1;
@@ -98,6 +122,66 @@ export function makeClock(seed, birth = 0) {
       }
       if (mouthUntil >= 0 && t >= mouthUntil) mouthUntil = -1;
 
+      // ── 몸통 idle 계산 ──
+      const sway = Math.sin((t / swayPeriod) * Math.PI * 2 + swayPhase) * swayAmp;
+
+      if (t >= nextTilt && tiltUntil < 0) {
+        tiltTarget = rng.around(0, 0.11);
+        tiltUntil = t + rng.float(1.2, 3.2);
+        nextTilt = t + rng.float(7, 18);
+      }
+      if (tiltUntil >= 0 && t >= tiltUntil) tiltUntil = -1;
+      headAngle += ((tiltUntil >= 0 ? tiltTarget : 0) - headAngle) * 0.07;
+
+      let headBob = 0;
+      if (t >= nextNod && nodStart < 0) {
+        nodStart = t;
+        nextNod = t + rng.float(9, 24);
+      }
+      if (nodStart >= 0) {
+        const k = (t - nodStart) / 0.7;
+        if (k >= 1) nodStart = -1;
+        else headBob = -Math.abs(Math.sin(k * Math.PI * 2)) * 0.014;
+      }
+
+      let hopY = 0;
+      let squashX = 0;
+      let squashY = 0;
+      if (t >= nextHop && hopStart < 0) {
+        hopStart = t;
+        nextHop = t + rng.float(16, 40);
+      }
+      if (hopStart >= 0) {
+        const k = (t - hopStart) / 0.55;
+        if (k >= 1) hopStart = -1;
+        else if (k < 0.2) {
+          // 준비 — 웅크린다
+          squashY = -0.07 * Math.sin((k / 0.2) * Math.PI);
+          squashX = -squashY * 0.8;
+        } else if (k < 0.8) {
+          // 공중 — 늘어난다
+          const j = (k - 0.2) / 0.6;
+          hopY = Math.sin(j * Math.PI) * 0.05;
+          squashY = 0.05 * Math.sin(j * Math.PI);
+          squashX = -squashY * 0.7;
+        } else {
+          // 착지 — 다시 눌린다
+          squashY = -0.05 * Math.sin(((k - 0.8) / 0.2) * Math.PI);
+          squashX = -squashY * 0.8;
+        }
+      }
+
+      let shiverX = 0;
+      if (t >= nextShiver && shiverStart < 0) {
+        shiverStart = t;
+        nextShiver = t + rng.float(26, 60);
+      }
+      if (shiverStart >= 0) {
+        const k = (t - shiverStart) / 0.35;
+        if (k >= 1) shiverStart = -1;
+        else shiverX = Math.sin(k * Math.PI * 9) * 0.008 * (1 - k);
+      }
+
       let regen = false;
       if (t >= regenAt) {
         regen = true;
@@ -118,7 +202,11 @@ export function makeClock(seed, birth = 0) {
 
       const breathe = Math.sin((t / breathePeriod) * Math.PI * 2 + breathePhase);
 
-      return { breathe, lid, gaze, aperture, regen, emote, browAlt: moodUntil >= 0, mouthAlt: mouthUntil >= 0 };
+      return {
+        breathe, lid, gaze, aperture, regen, emote,
+        browAlt: moodUntil >= 0, mouthAlt: mouthUntil >= 0,
+        sway, headAngle, headBob, hopY, squashX, squashY, shiverX
+      };
     }
   };
 }
