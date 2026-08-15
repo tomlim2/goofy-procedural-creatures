@@ -23,11 +23,13 @@ function readSeedFromHash() {
 }
 
 function render() {
+  // 라벨부터 갱신한다. 빌드가 어떤 이유로든 실패해도 클릭이 접수됐다는
+  // 사실은 화면에 보여야 한다.
+  seedLabel.textContent = formatSeed(seed);
+  window.history.replaceState(null, "", `#${seed.toString(36)}`);
   const specs = makeGrid(seed, columns * rows, columns);
   scene.build(specs, columns);
-  seedLabel.textContent = formatSeed(seed);
   statusLabel.textContent = `${specs.length} ALIVE`;
-  window.history.replaceState(null, "", `#${seed.toString(36)}`);
 }
 
 function reseed() {
@@ -74,8 +76,15 @@ scene.resize();
 
 const start = performance.now();
 function frame() {
-  scene.resize();
-  scene.update((performance.now() - start) / 1000);
+  // 예외가 나도 루프는 살린다. rAF 루프가 죽으면 라벨만 바뀌고 캔버스가
+  // 멈춰서 "버튼이 안 눌린다"로 보인다.
+  try {
+    scene.resize();
+    scene.update((performance.now() - start) / 1000);
+  } catch (error) {
+    statusLabel.textContent = "ERROR";
+    console.error(error);
+  }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
