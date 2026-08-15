@@ -21,10 +21,13 @@ html, body {
   width: 100%;
   height: 100%;
   display: block;
+  /* 위계를 명시한다. DOM 순서에만 기대면 안 된다. */
+  z-index: 0;
 }
 
 .bar {
   position: fixed;
+  z-index: 2;
   top: 0;
   left: 0;
   right: 0;
@@ -41,6 +44,7 @@ html, body {
 
 .deck {
   position: fixed;
+  z-index: 10;
   left: 18px;
   bottom: 18px;
   width: 208px;
@@ -50,7 +54,9 @@ html, body {
 
 .card {
   border: 1px solid var(--line);
-  background: rgba(239, 233, 221, 0.82);
+  /* 반투명이면 뒤의 크리처가 비쳐서 버튼이 그림 밑에 깔린 것처럼 보인다 */
+  background: #f2ecdf;
+  box-shadow: 0 2px 12px rgba(43, 39, 36, 0.12);
   padding: 10px 12px;
 }
 
