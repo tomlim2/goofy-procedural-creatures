@@ -1,6 +1,6 @@
 # guidelines — menagerie 작업 규칙
 
-이 랩을 고칠 때 지키는 규칙. 레포 전체 규칙은 [`../../../guideline/`](../../../guideline/index.md)에 있고,
+이 랩을 고칠 때 지키는 규칙. 레포 전체 규칙은 [`../../../guidelines/`](../../../guidelines/index.md)에 있고,
 여기는 menagerie에만 해당하는 것만 둔다.
 
 | 문서 | 언제 읽나 |
