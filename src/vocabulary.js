@@ -134,3 +134,56 @@ export const ACCENTS = [
   "#8d7168",
   "#7a7686"
 ];
+
+// 종족. 아키타입이 "성향"이라면 종족은 "골격"이다. 줄 단위로 정해져서
+// 한 판에 사람 줄, 개 줄, 고양이 줄, 도깨비 줄이 섞인다.
+// bias는 아키타입보다 우선한다. 골격이 성향보다 먼저다.
+export const SPECIES = [
+  { name: "kid", weight: 5, bias: {} },
+  {
+    name: "pup",
+    weight: 2,
+    bias: {
+      ears: [["flap", 5], ["round", 2], ["pointy", 1]],
+      horns: [["none", 8], ["nub", 1]],
+      hair: [["none", 5], ["tuft", 2], ["wisp", 1]],
+      headgear: [["none", 8], ["cap", 1]],
+      eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
+      nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
+      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1]],
+      marks: [["none", 3], ["stripes", 2], ["patch", 2], ["dots", 1]]
+    }
+  },
+  {
+    name: "cat",
+    weight: 2,
+    bias: {
+      ears: [["pointy", 6], ["round", 1]],
+      horns: [["none", 1]],
+      hair: [["none", 6], ["tuft", 1]],
+      headgear: [["none", 1]],
+      eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
+      nose: [["dot", 5], ["none", 2]],
+      eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["wide", 2], ["dot", 2]],
+      mouth: [["line", 3], ["dot", 2], ["wave", 2], ["smile", 2]],
+      marks: [["none", 3], ["patch", 3], ["stripes", 2]]
+    }
+  },
+  {
+    name: "imp",
+    weight: 2,
+    bias: {
+      horns: [["curved", 3], ["straight", 3], ["antenna", 3], ["nub", 1]],
+      ears: [["none", 5], ["pointy", 2]],
+      hair: [["none", 6], ["spikes", 2]],
+      headgear: [["none", 1]],
+      eyewear: [["none", 6], ["patch", 2], ["goggles", 1]],
+      eyes: [["ring", 3], ["wide", 3], ["spiral", 2], ["cross", 2]],
+      nose: [["none", 4], ["dot", 2]],
+      mouth: [["teeth", 3], ["wave", 2], ["open", 2], ["line", 1]],
+      marks: [["none", 1]],
+      body: [["bean", 3], ["box", 1]],
+      brow: [["none", 3], ["flat", 2], ["angry", 2]]
+    }
+  }
+];

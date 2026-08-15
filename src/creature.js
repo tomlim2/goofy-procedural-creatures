@@ -7,15 +7,15 @@
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
 import { makeRng } from "./rng.js";
-import { SLOTS, ARCHETYPES, DEFAULT_BIAS, FILLS, INKS, ACCENTS } from "./vocabulary.js";
+import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS } from "./vocabulary.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
 }
 
-// 아키타입 성향 > 기본 가중치 > 균등. 세 단계로 내려간다.
-function pickSlot(rng, archetype, slot) {
-  const bias = archetype.bias[slot] || DEFAULT_BIAS[slot];
+// 종족 골격 > 아키타입 성향 > 기본 가중치 > 균등. 네 단계로 내려간다.
+function pickSlot(rng, species, archetype, slot) {
+  const bias = species.bias[slot] || archetype.bias[slot] || DEFAULT_BIAS[slot];
   if (bias) return rng.weighted(bias);
   return rng.pick(SLOTS[slot]);
 }
@@ -82,19 +82,25 @@ function makeProportions(rng, archetype) {
     legLength: rng.around(0.3, 0.12),
     armSpread: rng.around(1, 0.25),
 
+    // 네발 종족용. 두발 종족도 값은 뽑아 둔다. 종족에 따라 rng 호출 수가
+    // 달라지면 시드 재현이 꼬인다.
+    bodyLen: rng.around(1, 0.2),
+    tailLift: rng.around(0, 1),
+
     // 개체마다 손떨림 정도가 다르다. 어떤 놈은 반듯하고 어떤 놈은 엉망이다.
     wobble: rng.around(1, 0.55),
     wobbleSeed: rng.int(0, 100000)
   };
 }
 
-export function makeCreature(seed) {
+export function makeCreature(seed, speciesName = "kid") {
   const rng = makeRng(seed);
+  const species = SPECIES.find((s) => s.name === speciesName) || SPECIES[0];
   const archetype = pickArchetype(rng);
 
   const parts = {};
   for (const slot of Object.keys(SLOTS)) {
-    parts[slot] = pickSlot(rng, archetype, slot);
+    parts[slot] = pickSlot(rng, species, archetype, slot);
   }
   applyConstraints(parts, rng);
 
@@ -109,12 +115,20 @@ export function makeCreature(seed) {
     fillOffset: [rng.around(0, 0.035), rng.around(0, 0.035)]
   };
 
+  if (species.name === "imp") {
+    // 도깨비는 머리와 몸이 통째로 먹빛이다. 얼굴은 종이색으로 그린다.
+    palette.skin = palette.ink;
+    palette.cloth = palette.ink;
+  }
+
   return {
     seed,
+    species: species.name,
     archetype: archetype.name,
     parts,
     proportions: makeProportions(rng, archetype),
-    palette
+    palette,
+    faceInk: species.name === "imp" ? "#e9e3d5" : null
   };
 }
 
@@ -124,13 +138,27 @@ export function makeCreature(seed) {
 // 비슷해 보이는 일이 생긴다. 미리 만들어 보고 이웃과 겹치면 다시 뽑는다.
 export function makeGrid(baseSeed, count, columns) {
   const creatures = [];
+  const rows = Math.ceil(count / columns);
+
+  // 줄마다 종족을 정한다. 바로 윗줄과 같으면 한 번만 다시 뽑는다.
+  // 사람(kid)은 흔해서 연속 두 줄이 나와도 자연스럽다.
+  const rowRng = makeRng((baseSeed ^ 0x51ed270b) >>> 0);
+  const rowSpecies = [];
+  for (let r = 0; r < rows; r += 1) {
+    let pick = rowRng.weighted(SPECIES.map((s) => [s, s.weight]));
+    if (r > 0 && pick.name === rowSpecies[r - 1]) {
+      pick = rowRng.weighted(SPECIES.map((s) => [s, s.weight]));
+    }
+    rowSpecies.push(pick.name);
+  }
 
   for (let i = 0; i < count; i += 1) {
+    const species = rowSpecies[Math.floor(i / columns)];
     let candidate = null;
 
     // 최대 8번까지만 다시 뽑는다. 무한정 고르면 오히려 분포가 치우친다.
     for (let attempt = 0; attempt < 8; attempt += 1) {
-      candidate = makeCreature((baseSeed + i * 2654435761 + attempt * 40503) >>> 0);
+      candidate = makeCreature((baseSeed + i * 2654435761 + attempt * 40503) >>> 0, species);
       const left = i % columns === 0 ? null : creatures[i - 1];
       const up = i >= columns ? creatures[i - columns] : null;
       const clash =

@@ -57,7 +57,10 @@ function inkMaterial(opacity) {
     transparent: true,
     opacity,
     depthTest: false,
-    depthWrite: false
+    depthWrite: false,
+    // 2D 그림이라 뒷면 컬링이 필요 없다. 켜두면 시계방향으로 감긴
+    // 경로(box 몸통 등)의 fan 삼각형이 백페이스로 잘려 채색이 사라진다.
+    side: THREE.DoubleSide
   });
 }
 

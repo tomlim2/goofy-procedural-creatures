@@ -10,6 +10,24 @@ const TAU = Math.PI * 2;
 // 스펙에서 실제 치수를 뽑는다. 그리기 함수들이 전부 이 값을 공유한다.
 function layout(spec) {
   const p = spec.proportions;
+  const quad = spec.species === "pup" || spec.species === "cat";
+
+  if (quad) {
+    // 네발 골격. 몸이 가로로 눕고 머리가 몸 앞(왼쪽)에 얹힌다.
+    // 키가 작아서 사람 줄과 나란히 서면 레퍼런스처럼 층이 낮아진다.
+    const legTop = p.legLength * 0.4;
+    const bodyH = 0.15 * (p.bodyScale / 0.52);
+    const bodyW = 0.18 * p.bodyLen;
+    const bodyCx = 0.08;
+    const bodyTop = legTop + bodyH;
+    const headRy = 0.23 * p.headScale;
+    const headRx = headRy * p.headWide;
+    // 머리는 몸 위에 얹는다. 겹치면 몸의 잉크가 얼굴 위로 비친다
+    // (잉크 메시는 채색 메시보다 항상 위에 있다).
+    const headCy = bodyTop + headRy * 0.82;
+    return { quad, legTop, bodyH, bodyW, bodyCx, bodyTop, headRx, headRy, headCy };
+  }
+
   const legTop = p.legLength * 0.55;
   const bodyH = 0.28 * (p.bodyScale / 0.52);
   const bodyW = 0.23 * p.bodyWide;
@@ -18,7 +36,7 @@ function layout(spec) {
   const headRx = headRy * p.headWide;
   const headCy = bodyTop + headRy * 0.72;
 
-  return { legTop, bodyH, bodyW, bodyTop, headRx, headRy, headCy };
+  return { quad: false, legTop, bodyH, bodyW, bodyCx: 0, bodyTop, headRx, headRy, headCy };
 }
 
 function eyeGeometry(spec, box) {
@@ -51,6 +69,21 @@ function drawHead(ink, fills, spec, box, noise) {
 function drawEars(ink, spec, box) {
   const kind = spec.parts.ears;
   if (kind === "none") return;
+
+  if (spec.species === "cat" && kind === "pointy") {
+    // 고양이 귀는 옆이 아니라 정수리에 선다
+    for (const side of [-1, 1]) {
+      const bx = side * box.headRx * 0.55;
+      const by = box.headCy + box.headRy * 0.78;
+      ink.stroke([
+        [bx - side * 0.04, by],
+        [bx + side * 0.015, by + 0.085],
+        [bx + side * 0.055, by - 0.01]
+      ], { color: spec.palette.ink, width: 0.011 });
+    }
+    return;
+  }
+
   const y = box.headCy - box.headRy * 0.05;
 
   for (const side of [-1, 1]) {
@@ -74,7 +107,7 @@ function drawEars(ink, spec, box) {
 
 function drawEyes(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyes;
-  const ink0 = spec.palette.ink;
+  const ink0 = spec.faceInk || spec.palette.ink;
 
   for (const eye of eyes) {
     if (spec.parts.patchSide === eye.side) continue;
@@ -115,6 +148,7 @@ function drawEyes(ink, fills, spec, box, eyes) {
 function drawBrow(ink, spec, box, eyes) {
   const kind = spec.parts.brow;
   if (kind === "none") return;
+  const ink0 = spec.faceInk || spec.palette.ink;
 
   for (const eye of eyes) {
     if (spec.parts.patchSide === eye.side) continue;
@@ -130,7 +164,7 @@ function drawBrow(ink, spec, box, eyes) {
       right = y + eye.r * 0.3 * (eye.side > 0 ? 0 : 1);
     }
     ink.stroke([[eye.x - half, left], [eye.x + half, right]], {
-      color: spec.palette.ink, width: 0.012, jitter: 0.008
+      color: ink0, width: 0.012, jitter: 0.008
     });
   }
 }
@@ -138,7 +172,7 @@ function drawBrow(ink, spec, box, eyes) {
 function drawEyewear(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyewear;
   if (kind === "none") return;
-  const ink0 = spec.palette.ink;
+  const ink0 = spec.faceInk || spec.palette.ink;
 
   if (kind === "patch") {
     const eye = eyes.find((e) => e.side === spec.parts.patchSide) || eyes[0];
@@ -184,7 +218,7 @@ function drawNose(ink, spec, box, eyes) {
   const kind = spec.parts.nose;
   if (kind === "none") return;
   const y = box.headCy - box.headRy * spec.proportions.noseDrop;
-  const ink0 = spec.palette.ink;
+  const ink0 = spec.faceInk || spec.palette.ink;
 
   if (kind === "dot") {
     ink.stroke([[-0.012, y], [0.012, y]], { color: ink0, width: 0.013 });
@@ -201,7 +235,7 @@ function drawNose(ink, spec, box, eyes) {
 function drawMouth(ink, fills, spec, box) {
   const kind = spec.parts.mouth;
   const y = box.headCy - box.headRy * spec.proportions.mouthDrop;
-  const ink0 = spec.palette.ink;
+  const ink0 = spec.faceInk || spec.palette.ink;
   const w = box.headRx * 0.38;
 
   if (kind === "dot") {
@@ -358,6 +392,18 @@ function drawHorns(ink, fills, spec, box, noise) {
 }
 
 function drawBody(ink, fills, spec, box, noise) {
+  if (box.quad) {
+    // 가로로 누운 몸. 머리가 앞쪽을 덮으므로 몸은 뒤로 뻗는다.
+    const cx = box.bodyCx + box.bodyW * 0.35;
+    const cy = (box.legTop + box.bodyTop) / 2;
+    const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
+      lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
+    });
+    fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
+    ink.outline(path, { color: spec.palette.ink, width: 0.012, passes: 2 });
+    return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
+  }
+
   const kind = spec.parts.body;
   const w = box.bodyW;
   const bottom = box.legTop;
@@ -379,32 +425,32 @@ function drawBody(ink, fills, spec, box, noise) {
 
   fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
   ink.outline(path, { color: ink0, width: 0.012, passes: 2 });
-  return { path, top, bottom, w };
+  return { path, top, bottom, w, cx: 0 };
 }
 
 function drawMarks(ink, spec, body) {
   const kind = spec.parts.marks;
   if (kind === "none") return;
   const ink0 = spec.palette.ink;
-  const { top, bottom, w } = body;
+  const { top, bottom, w, cx = 0 } = body;
 
   if (kind === "stripes") {
     for (let i = 1; i <= 3; i += 1) {
       const y = bottom + ((top - bottom) * i) / 4;
-      ink.stroke([[-w * 0.85, y], [w * 0.85, y + 0.004]], { color: ink0, width: 0.011 });
+      ink.stroke([[cx - w * 0.85, y], [cx + w * 0.85, y + 0.004]], { color: ink0, width: 0.011 });
     }
   } else if (kind === "dots") {
     for (let i = 0; i < 4; i += 1) {
-      const x = -w * 0.5 + (i % 2) * w;
+      const x = cx - w * 0.5 + (i % 2) * w;
       const y = bottom + (top - bottom) * (0.3 + Math.floor(i / 2) * 0.35);
       ink.stroke([[x - 0.008, y], [x + 0.008, y]], { color: ink0, width: 0.012 });
     }
   } else if (kind === "hatch") {
-    ink.hatch(0, (top + bottom) / 2, w * 0.8, (top - bottom) * 0.35, Math.PI * 0.25, {
+    ink.hatch(cx, (top + bottom) / 2, w * 0.8, (top - bottom) * 0.35, Math.PI * 0.25, {
       color: ink0, lines: 5, width: 0.007
     });
   } else {
-    ink.hatch(-w * 0.35, (top + bottom) / 2, w * 0.4, (top - bottom) * 0.25, 0, {
+    ink.hatch(cx - w * 0.35, (top + bottom) / 2, w * 0.4, (top - bottom) * 0.25, 0, {
       color: ink0, lines: 4, width: 0.008
     });
   }
@@ -413,6 +459,30 @@ function drawMarks(ink, spec, body) {
 function drawLimbs(ink, spec, box, body, noise) {
   const ink0 = spec.palette.ink;
   const p = spec.proportions;
+
+  if (box.quad) {
+    // 네 다리와 꼬리. 팔은 없다.
+    for (const t of [-0.62, -0.22, 0.28, 0.66]) {
+      const x = body.cx + body.w * t;
+      ink.stroke([[x, box.legTop], [x + noise(t * 7.1) * 0.015, 0]], { color: ink0, width: 0.011 });
+      ink.stroke([[x - 0.02, 0], [x + 0.025, 0.003]], { color: ink0, width: 0.01 });
+    }
+    const backX = body.cx + body.w * 0.98;
+    const backY = (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1;
+    if (spec.species === "cat") {
+      // 고양이 꼬리는 위로 선다
+      ink.stroke([
+        [backX, backY],
+        [backX + 0.045, backY + 0.09],
+        [backX + 0.02 + p.tailLift * 0.03, backY + 0.17]
+      ], { color: ink0, width: 0.011 });
+    } else {
+      ink.stroke([[backX, backY], [backX + 0.08, backY + 0.03 + p.tailLift * 0.05]], {
+        color: ink0, width: 0.012
+      });
+    }
+    return;
+  }
 
   // 다리
   for (const side of [-1, 1]) {
@@ -468,6 +538,18 @@ export function drawCreature(spec) {
   drawBrow(ink, spec, box, eyes);
   drawNose(ink, spec, box, eyes);
   drawMouth(ink, fills, spec, box);
+  if (spec.species === "cat") {
+    const wy = box.headCy - box.headRy * 0.3;
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 3; i += 1) {
+        const y0 = wy + (i - 1) * 0.028;
+        ink.stroke([
+          [side * box.headRx * 0.3, y0],
+          [side * (box.headRx * 0.3 + 0.09), y0 + (i - 1) * 0.012]
+        ], { color: spec.palette.ink, width: 0.006, jitter: 0.004 });
+      }
+    }
+  }
   drawEyewear(ink, fills, spec, box, eyes);
   drawHair(ink, spec, box, noise);
   drawHeadgear(ink, fills, spec, box);
