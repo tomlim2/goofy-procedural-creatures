@@ -39,10 +39,6 @@ function reseed() {
 
 document.getElementById("reseed").addEventListener("click", reseed);
 
-// 그림 아무 데나 클릭해도 새 시드. 버튼 레이어에 무슨 일이 생겨도
-// 이 경로는 살아 있다.
-canvas.addEventListener("click", reseed);
-
 // 재생성 토글. 기본은 STILL — 형태는 NEW SEED를 눌러야만 바뀐다.
 // LIVE를 켜면 레퍼런스 영상처럼 슬롯이 각자의 시계로 교체된다.
 let live = false;
