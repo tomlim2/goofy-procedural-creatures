@@ -199,9 +199,10 @@ export function createScene(canvas) {
   let noise = null;
   // 마지막 update의 전역 시각. 재생성·재빌드로 태어나는 시계의 출생 시각이 된다.
   let clockNow = 0;
-  // 재생성 스위치. 끄면 개체 교체만 멈추고 호흡·깜빡임·보일은 계속 돈다.
-  // 꺼진 동안에는 화면이 시드와 정확히 일치한다.
-  let regenEnabled = true;
+  // 재생성 스위치. 기본 꺼짐 — 형태는 NEW SEED로만 바뀐다.
+  // 켜면 개체가 각자의 시계로 교체된다(레퍼런스 동작). 꺼진 동안에는
+  // 호흡·깜빡임·보일·표정만 돌고 화면이 시드와 정확히 일치한다.
+  let regenEnabled = false;
   let columns = 7;
   let rows = 5;
 

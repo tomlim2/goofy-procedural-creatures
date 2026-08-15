@@ -37,9 +37,9 @@ function reseed() {
 
 document.getElementById("reseed").addEventListener("click", reseed);
 
-// 재생성 토글. LIVE면 슬롯이 각자의 시계로 교체되고(레퍼런스 동작),
-// STILL이면 판이 고정돼 시드가 곧 화면이다.
-let live = true;
+// 재생성 토글. 기본은 STILL — 형태는 NEW SEED를 눌러야만 바뀐다.
+// LIVE를 켜면 레퍼런스 영상처럼 슬롯이 각자의 시계로 교체된다.
+let live = false;
 const liveButtons = document.getElementById("liveSeg");
 liveButtons.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-live]");
