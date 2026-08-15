@@ -48,9 +48,5 @@ menagerie를 만들 때 본 것들. 무엇을 가져왔고 무엇을 일부러 �
 형태가 되므로, 필요하면 로컬에서만 두고 `.gitignore`에 넣는 편이 낫다.
 
 로컬 참고용으로 두려면 이 폴더에 `weird-faces.png`, `creature-grid.png` 같은 이름으로
-넣고 아래 항목을 레포 루트 `.gitignore`에 추가한다.
-
-```
-web/menagerie/reference/*.png
-web/menagerie/reference/*.jpg
-```
+그냥 넣으면 된다. 레포 루트 `.gitignore`가 이 폴더의 이미지를 이미 제외하고 있으므로
+커밋되지 않는다.

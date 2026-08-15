@@ -36,6 +36,12 @@ three.js는 importmap으로 unpkg에서 받는다.
 | `src/clocks.js` | 개체별 호흡·깜빡임·시선 타이밍 |
 | `src/scene.js` | three.js 씬, 그리드 배치, 종이 텍스처 |
 | `reference/` | 참고 자료 출처와 차용 범위 |
+| `guidelines/` | 이 랩을 고칠 때 지키는 규칙 |
+
+## 고치기 전에
+
+[`guidelines/`](guidelines/README.md)를 먼저 읽는다. 시드 계약, 파츠 추가 절차,
+선·색·레이어 규칙이 있다.
 
 ## 다양성을 만드는 세 층
 
