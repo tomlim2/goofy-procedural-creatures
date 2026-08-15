@@ -4,7 +4,7 @@
 // 보일은 지터 위상이 다른 잉크·채색 3벌을 미리 굽고 낮은 주기로 순환한다.
 
 import * as THREE from "three";
-import { drawCreature } from "./draw.js";
+import { drawCreature, facePartKinds, facePartSketch } from "./draw.js";
 import { blobPath, arcPath, Sketch } from "./stroke.js";
 import { makeClock } from "./clocks.js";
 import { makeCreature } from "./creature.js";
@@ -149,10 +149,23 @@ function buildCreature(spec, noise, birth = 0) {
     eyeRigs.push({ rig, pupil, lid, eye });
   }
 
+  // 눈썹·입 상태 메시. [쉼, 대체] 두 벌을 굽고 clock이 토글한다.
+  const kinds = facePartKinds(spec);
+  const faceStates = {};
+  for (const part of ["brow", "mouth"]) {
+    faceStates[part] = kinds[part].map((kind, index) => {
+      const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 2);
+      mesh.visible = index === 0;
+      group.add(mesh);
+      return mesh;
+    });
+  }
+
   return {
     group,
     frames,
     eyeRigs,
+    faceStates,
     clock: makeClock(spec.seed, birth),
     spec,
     headTop: firstDrawn.headTop,
@@ -317,6 +330,11 @@ export function createScene(canvas) {
       for (let k = 0; k < item.frames.length; k += 1) item.frames[k].visible = k === frame;
 
       item.group.scale.set(1 + state.breathe * 0.006, 1 + state.breathe * 0.011, 1);
+
+      item.faceStates.brow[0].visible = !state.browAlt;
+      item.faceStates.brow[1].visible = state.browAlt;
+      item.faceStates.mouth[0].visible = !state.mouthAlt;
+      item.faceStates.mouth[1].visible = state.mouthAlt;
 
       for (const rig of item.eyeRigs) {
         rig.rig.scale.setScalar(state.aperture);

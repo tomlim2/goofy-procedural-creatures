@@ -173,6 +173,24 @@ export class Sketch {
     }
   }
 
+  // 스크리블 채움. 타원 내부를 지그재그 한 획으로 왕복해 덮는다.
+  // 플랫 채색과 달리 획 방향이 보인다. 연필로 칠한 면의 정체가 이거다.
+  scribbleFill(cx, cy, rx, ry, { color, angle = 0, gap = 0.03, width = 0.007 } = {}) {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const local = [];
+    let dir = 1;
+    for (let v = -ry + gap * 0.6; v < ry; v += gap) {
+      const half = rx * Math.sqrt(Math.max(0, 1 - (v * v) / (ry * ry)));
+      local.push([-half * dir, v], [half * dir, v]);
+      dir = -dir;
+    }
+    if (local.length < 4) return;
+    const world = local.map(([x, y]) => [cx + x * cos - y * sin, cy + x * sin + y * cos]);
+    this.phase += 3.3;
+    this.stroke(world, { color, width, jitter: 0.01, step: 0.05 });
+  }
+
   // 빗금 음영. 볼이나 이마의 그늘에 쓴다.
   hatch(cx, cy, rx, ry, angle, { color = "#3a3430", lines = 6, width = 0.006 } = {}) {
     const cos = Math.cos(angle);

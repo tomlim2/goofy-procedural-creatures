@@ -32,7 +32,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 |
 | `src/vocabulary.js` | 파츠 어휘, 아키타입 성향, 기본 가중치, 팔레트 |
 | `src/creature.js` | 시드 → 스펙. 조합 규칙과 제약, 비율 지터 |
-| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 해칭 |
+| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 |
 | `src/draw.js` | 스펙 → 획. 파츠별 그리기 |
 | `src/clocks.js` | 개체별 호흡·깜빡임·시선·놀람·재생성·이모트 타이밍 |
 | `src/scene.js` | three.js 씬, 그리드 배치, 종이 텍스처 |

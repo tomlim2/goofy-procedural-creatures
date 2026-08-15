@@ -9,10 +9,12 @@ export const SLOTS = {
   eyewear: ["none", "glasses", "goggles", "patch", "monocle"],
   // 헤어는 면을 칠하지 않고 펜으로 왕복해 긋는 스크리블로 그린다.
   hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep"],
-  headgear: ["none", "helmet", "cap", "band", "pot"],
+  headgear: ["none", "helmet", "cap", "band", "pot", "beret"],
   horns: ["none", "curved", "straight", "antenna", "nub"],
   ears: ["none", "round", "pointy", "flap"],
   nose: ["hook", "dot", "wedge", "long", "none"],
+  // 볼·눈가 디테일. 레퍼런스의 눈물 자국과 볼터치.
+  face2: ["none", "tears", "blush", "freckles"],
   mouth: ["dot", "line", "teeth", "open", "wave", "smile"],
   body: ["bean", "box", "dress", "tube"],
   marks: ["none", "stripes", "dots", "patch", "hatch"],
@@ -27,12 +29,13 @@ export const SLOTS = {
 // "없음"이 흔해야 하는 슬롯과 흔하면 안 되는 슬롯을 여기서 가른다.
 export const DEFAULT_BIAS = {
   hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["mohawk", 1]],
-  headgear: [["none", 6], ["cap", 2], ["band", 2], ["helmet", 1], ["pot", 1]],
+  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1]],
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 2], ["pointy", 2], ["flap", 1]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1]],
   marks: [["none", 4], ["stripes", 2], ["hatch", 2], ["dots", 2], ["patch", 1]],
   nose: [["hook", 3], ["dot", 2], ["wedge", 2], ["none", 2], ["long", 1]],
+  face2: [["none", 5], ["blush", 2], ["freckles", 2], ["tears", 1.5]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]]
 };
 
@@ -58,6 +61,7 @@ export const ARCHETYPES = [
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
       eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1]],
       hair: [["bob", 3], ["wisp", 3], ["sweep", 2], ["none", 2]],
+      headgear: [["none", 4], ["beret", 3], ["cap", 1]],
       mouth: [["line", 3], ["dot", 2], ["smile", 2]],
       nose: [["long", 3], ["hook", 3], ["dot", 1]],
       horns: [["none", 6], ["nub", 1]]
@@ -155,7 +159,8 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1]],
-      marks: [["none", 3], ["stripes", 2], ["patch", 2], ["dots", 1]]
+      marks: [["none", 3], ["stripes", 2], ["patch", 2], ["dots", 1]],
+      face2: [["none", 5], ["blush", 1]]
     }
   },
   {
@@ -170,7 +175,8 @@ export const SPECIES = [
       nose: [["dot", 5], ["none", 2]],
       eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["wide", 2], ["dot", 2]],
       mouth: [["line", 3], ["dot", 2], ["wave", 2], ["smile", 2]],
-      marks: [["none", 3], ["patch", 3], ["stripes", 2]]
+      marks: [["none", 3], ["patch", 3], ["stripes", 2]],
+      face2: [["none", 5], ["blush", 1], ["freckles", 1]]
     }
   },
   {
@@ -186,6 +192,7 @@ export const SPECIES = [
       nose: [["none", 4], ["dot", 2]],
       mouth: [["teeth", 3], ["wave", 2], ["open", 2], ["line", 1]],
       marks: [["stripes", 3], ["none", 2], ["hatch", 1]],
+      face2: [["none", 6], ["tears", 1]],
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]]
     }

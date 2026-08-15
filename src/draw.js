@@ -89,13 +89,17 @@ function drawHead(ink, fills, spec, box, noise) {
 
   fills.fill(path, spec.palette.skin, spec.palette.fillOffset);
 
-  // 연필 음영. 플랫 채색 위에 같은 계열의 어두운 톤으로 성기게 긋는다.
-  // 도깨비 머리는 이미 먹빛이라 건너뛴다.
-  if (spec.species !== "imp") {
-    fills.hatch(0.02, box.headCy + box.headRy * 0.1, box.headRx * 0.72, box.headRy * 0.6,
-      Math.PI * (0.2 + noise(p.wobbleSeed * 0.03) * 0.2), {
-        color: darken(spec.palette.skin, 0.88), lines: 7, width: 0.008
-      });
+  // 연필 스크리블. 플랫 채색 위를 같은 계열 어두운 톤의 지그재그 한 획으로
+  // 덮어 획 방향을 남긴다. 도깨비는 먹빛 위에 살짝 밝은 톤으로 긁는다.
+  const scribbleAngle = Math.PI * (0.14 + noise(p.wobbleSeed * 0.03) * 0.22);
+  if (spec.species === "imp") {
+    fills.scribbleFill(0.01, box.headCy, box.headRx * 0.82, box.headRy * 0.8, {
+      color: darken(spec.palette.ink, 1.6), angle: scribbleAngle, gap: 0.03, width: 0.006
+    });
+  } else {
+    fills.scribbleFill(0.01, box.headCy, box.headRx * 0.8, box.headRy * 0.76, {
+      color: darken(spec.palette.skin, 0.9), angle: scribbleAngle, gap: 0.034, width: 0.007
+    });
   }
 
   ink.outline(path, { color: spec.palette.ink, width: 0.014, jitter: 0.008, passes: 2 });
@@ -191,8 +195,45 @@ function drawEyes(ink, fills, spec, box, eyes) {
   }
 }
 
-function drawBrow(ink, spec, box, eyes) {
-  const kind = spec.parts.brow;
+function drawFace2(ink, fills, spec, box, eyes) {
+  const kind = spec.parts.face2;
+  if (kind === "none") return;
+  const ink0 = spec.faceInk || spec.palette.ink;
+
+  if (kind === "tears") {
+    // 눈 아래로 흘러내리는 두 줄. 레퍼런스에서 자주 보이는 디테일.
+    for (const eye of eyes) {
+      if (spec.parts.patchSide === eye.side) continue;
+      for (const off of [-0.35, 0.35]) {
+        const x = eye.x + eye.r * off;
+        ink.stroke([
+          [x, eye.y - eye.r * 0.9],
+          [x + 0.008, eye.y - eye.r * 0.9 - box.headRy * 0.3],
+          [x - 0.004, eye.y - eye.r * 0.9 - box.headRy * 0.52]
+        ], { color: ink0, width: 0.007, jitter: 0.006 });
+      }
+    }
+    return;
+  }
+
+  const cheekY = box.headCy - box.headRy * 0.28;
+  for (const side of [-1, 1]) {
+    const cx = side * box.headRx * 0.58;
+    if (kind === "blush") {
+      fills.fill(blobPath(cx, cheekY, 0.042, 0.026, { lumps: 3, amount: 0.15, noise: null }), "#d9968a");
+    } else {
+      // freckles — 볼마다 점 세 개
+      for (let i = 0; i < 3; i += 1) {
+        const fx = cx + (i - 1) * 0.022;
+        const fy = cheekY + (i % 2 ? 0.012 : -0.008);
+        ink.stroke([[fx - 0.005, fy], [fx + 0.005, fy]], { color: ink0, width: 0.008 });
+      }
+    }
+  }
+}
+
+function drawBrow(ink, spec, box, eyes, kindOverride) {
+  const kind = kindOverride || spec.parts.brow;
   if (kind === "none") return;
   const ink0 = spec.faceInk || spec.palette.ink;
 
@@ -289,8 +330,8 @@ function drawNose(ink, fills, spec, box, eyes) {
   }
 }
 
-function drawMouth(ink, fills, spec, box) {
-  const kind = spec.parts.mouth;
+function drawMouth(ink, fills, spec, box, kindOverride) {
+  const kind = kindOverride || spec.parts.mouth;
   const y = box.headCy - box.headRy * spec.proportions.mouthDrop;
   const ink0 = spec.faceInk || spec.palette.ink;
   const w = box.headRx * 0.38;
@@ -404,6 +445,21 @@ function drawHeadgear(ink, fills, spec, box) {
     return;
   }
 
+  if (kind === "beret") {
+    // 베레. 한쪽으로 기운 납작한 원반 + 꼭지.
+    const tilt = (spec.seed % 2 ? 1 : -1) * 0.16;
+    const bx = -tilt * rx * 0.8;
+    const by = cy + ry * 0.82;
+    const cos = Math.cos(tilt);
+    const sin = Math.sin(tilt);
+    const disc = blobPath(0, 0, rx * 0.92, ry * 0.3, { lumps: 4, amount: 0.12, noise: null })
+      .map(([x, y]) => [bx + x * cos - y * sin, by + x * sin + y * cos]);
+    fills.fill(disc, accent);
+    ink.outline(disc, { color: ink0, width: 0.012, passes: 2 });
+    ink.stroke([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0, width: 0.012 });
+    return;
+  }
+
   // pot — 머리에 뒤집어쓴 통
   const top = cy + ry * 1.05;
   const box2 = [
@@ -461,6 +517,10 @@ function drawBody(ink, fills, spec, box, noise) {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
     fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
+    fills.scribbleFill(cx, cy, box.bodyW * 0.8, (box.bodyTop - box.legTop) * 0.4, {
+      color: darken(spec.palette.cloth, spec.palette.cloth === spec.palette.ink ? 1.5 : 0.9),
+      angle: Math.PI * 0.22, gap: 0.026, width: 0.006
+    });
     ink.outline(path, { color: spec.palette.ink, width: 0.012, passes: 2 });
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
   }
@@ -485,11 +545,10 @@ function drawBody(ink, fills, spec, box, noise) {
   }
 
   fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
-  if (spec.species !== "imp") {
-    fills.hatch(0, (top + bottom) / 2, w * 0.6, (top - bottom) * 0.32, Math.PI * 0.3, {
-      color: darken(spec.palette.cloth, 0.88), lines: 4, width: 0.007
-    });
-  }
+  fills.scribbleFill(0, (top + bottom) / 2, w * 0.72, (top - bottom) * 0.4, {
+    color: darken(spec.palette.cloth, spec.palette.cloth === spec.palette.ink ? 1.5 : 0.9),
+    angle: Math.PI * 0.28, gap: 0.03, width: 0.006
+  });
   ink.outline(path, { color: ink0, width: 0.012, passes: 2 });
   return { path, top, bottom, w, cx: 0 };
 }
@@ -581,6 +640,29 @@ function drawLimbs(ink, spec, box, body, noise) {
   }
 }
 
+// 눈썹·입의 대체 상태. 쉬는 상태에서 이따금 이 상태로 넘어갔다 돌아온다.
+const ALT_BROW = { none: "flat", flat: "worry", angry: "flat", worry: "flat" };
+const ALT_MOUTH = { dot: "line", line: "wave", teeth: "open", open: "line", wave: "line", smile: "open" };
+
+export function facePartKinds(spec) {
+  return {
+    brow: [spec.parts.brow, ALT_BROW[spec.parts.brow] || "flat"],
+    mouth: [spec.parts.mouth, ALT_MOUTH[spec.parts.mouth] || "line"]
+  };
+}
+
+// 눈썹 또는 입 한 상태를 독립 Sketch로 굽는다. scene이 상태별 메시로 세운다.
+export function facePartSketch(spec, part, kind) {
+  const rng = makeRng((spec.proportions.wobbleSeed + (part === "brow" ? 101 : 202)) >>> 0);
+  const noise = makeNoise(rng);
+  const sketch = new Sketch(noise, spec.proportions.wobble);
+  const box = layout(spec);
+  const eyes = eyeGeometry(spec, box);
+  if (part === "brow") drawBrow(sketch, spec, box, eyes, kind);
+  else drawMouth(sketch, sketch, spec, box, kind);
+  return sketch;
+}
+
 // 스펙 하나를 그려서 지오메트리 재료를 돌려준다.
 // eyes 정보는 동공·눈꺼풀을 따로 움직이기 위해 scene.js로 넘긴다.
 // variant는 보일 프레임 번호다. 지터 위상만 달라지고 구도는 같다.
@@ -602,9 +684,10 @@ export function drawCreature(spec, variant = 0) {
   drawHead(ink, fills, spec, box, noise);
   drawHorns(ink, fills, spec, box, noise);
   drawEyes(ink, fills, spec, box, eyes);
-  drawBrow(ink, spec, box, eyes);
+  drawFace2(ink, fills, spec, box, eyes);
   drawNose(ink, fills, spec, box, eyes);
-  drawMouth(ink, fills, spec, box);
+  // 눈썹과 입은 여기서 굽지 않는다. 상태 전환을 위해 scene이
+  // facePartSketch로 별도 메시를 세운다.
   if (spec.species === "cat") {
     const wy = box.headCy - box.headRy * 0.3;
     for (const side of [-1, 1]) {

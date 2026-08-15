@@ -33,6 +33,12 @@ export function makeClock(seed, birth = 0) {
   // 재생성 — 슬롯의 개체가 교체된다 (레퍼런스 실측 5~13초)
   let regenAt = rng.float(6, 14);
 
+  // 눈썹·입 상태 — 이따금 대체 상태로 넘어갔다 돌아온다
+  let nextMood = rng.float(3, 10);
+  let moodUntil = -1;
+  let nextMouth = rng.float(2, 8);
+  let mouthUntil = -1;
+
   // 이모트 — 머리 위 ♥ ! ?
   let nextEmote = rng.float(5, 30);
   let emoteStart = -1;
@@ -80,6 +86,18 @@ export function makeClock(seed, birth = 0) {
         else aperture = 1 + 0.65 * Math.pow(Math.sin(Math.PI * k), 0.6);
       }
 
+      if (t >= nextMood && moodUntil < 0) {
+        moodUntil = t + rng.float(1.5, 4);
+        nextMood = t + rng.float(6, 16);
+      }
+      if (moodUntil >= 0 && t >= moodUntil) moodUntil = -1;
+
+      if (t >= nextMouth && mouthUntil < 0) {
+        mouthUntil = t + rng.float(0.8, 2.2);
+        nextMouth = t + rng.float(4, 12);
+      }
+      if (mouthUntil >= 0 && t >= mouthUntil) mouthUntil = -1;
+
       let regen = false;
       if (t >= regenAt) {
         regen = true;
@@ -100,7 +118,7 @@ export function makeClock(seed, birth = 0) {
 
       const breathe = Math.sin((t / breathePeriod) * Math.PI * 2 + breathePhase);
 
-      return { breathe, lid, gaze, aperture, regen, emote };
+      return { breathe, lid, gaze, aperture, regen, emote, browAlt: moodUntil >= 0, mouthAlt: mouthUntil >= 0 };
     }
   };
 }
