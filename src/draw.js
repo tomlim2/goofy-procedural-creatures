@@ -14,7 +14,9 @@ const HEAD_SHAPES = {
   square: { square: 1.5, taper: 0, rx: 1, ry: 0.96 },
   tall: { square: 0.9, taper: -0.05, rx: 0.86, ry: 1.22 },
   pear: { square: 0.25, taper: 0.3, rx: 1, ry: 1.06 },
-  wide: { square: 0.7, taper: 0.1, rx: 1.28, ry: 0.9 }
+  wide: { square: 0.7, taper: 0.1, rx: 1.28, ry: 0.9 },
+  egg: { square: 0.2, taper: 0.28, rx: 0.94, ry: 1.14 },
+  block: { square: 2.2, taper: 0, rx: 1.06, ry: 0.98 }
 };
 
 function headShape(spec) {
@@ -67,6 +69,11 @@ function eyeGeometry(spec, box) {
   const gap = box.headRx * p.eyeGap;
   const base = box.headRy * p.eyeSize * 1.35;
   const y = box.headCy + box.headRy * p.eyeHeight;
+
+  // 외눈은 중앙에 하나만
+  if (spec.parts.eyes === "cyclops") {
+    return [{ side: 0, x: 0, y, r: base * 1.75 }];
+  }
 
   // 좌우를 일부러 어긋나게 둔다. 대칭이면 즉시 도형처럼 보인다.
   return [
@@ -150,6 +157,20 @@ function drawEars(ink, fills, spec, box) {
       ink.stroke([[x - 0.01, y + 0.05], [x + side * 0.075, y + 0.02], [x - 0.01, y - 0.05]], {
         color: spec.palette.ink, width: 0.011
       });
+    } else if (kind === "long") {
+      // 늘어진 긴 귀 — 개가 아니어도 달 수 있다
+      const lobe = blobPath(x + side * 0.012, y - box.headRy * 0.32, 0.035, box.headRy * 0.45, {
+        lumps: 3, amount: 0.12, noise: null
+      });
+      ink.outline(lobe, { color: spec.palette.ink, width: 0.01, passes: 2 });
+    } else if (kind === "fold") {
+      // 접힌 귀 — 끝이 꺾인다
+      ink.stroke([
+        [x - side * 0.01, y + 0.04],
+        [x + side * 0.055, y + 0.055],
+        [x + side * 0.05, y - 0.01],
+        [x + side * 0.015, y - 0.03]
+      ], { color: spec.palette.ink, width: 0.011 });
     } else {
       // flap — 아래로 늘어진 귀
       ink.stroke(arcPath(x, y, 0.05, 0.09, -Math.PI * 0.6, Math.PI * 0.6), {
@@ -182,6 +203,14 @@ function drawEyes(ink, fills, spec, box, eyes) {
         spiral.push([eye.x + Math.cos(angle) * r, eye.y + Math.sin(angle) * r]);
       }
       ink.stroke(spiral, { color: ink0, width: 0.009, jitter: 0.004 });
+    } else if (kind === "slit") {
+      // 아몬드 윤곽 + 세로 동공
+      ink.outline(blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.62, { lumps: 3, amount: 0.1, noise: null }), {
+        color: ink0, width: 0.01
+      });
+      ink.stroke([[eye.x, eye.y - eye.r * 0.5], [eye.x + 0.004, eye.y + eye.r * 0.5]], {
+        color: ink0, width: 0.013
+      });
     } else if (kind === "half") {
       ink.outline(blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.1, noise: null }), {
         color: ink0, width: 0.011
@@ -303,12 +332,16 @@ function drawEyewear(ink, fills, spec, box, eyes) {
 
 function drawNose(ink, fills, spec, box, eyes) {
   if (spec.species === "pup") {
-    // 주둥이. 밝은 타원 blob 위에 큼직한 검은 코.
-    const my = box.headCy - box.headRy * 0.42;
-    const muzzle = blobPath(0, my, box.headRx * 0.5, box.headRy * 0.36, { lumps: 3, amount: 0.1, noise: null });
+    // 주둥이. 코 슬롯이 주둥이의 형태를 정한다 — 같은 슬롯으로 종족별 변형을 얻는다.
+    const kind = spec.parts.nose;
+    const mw = kind === "hook" ? 0.62 : kind === "long" ? 0.68 : kind === "wedge" ? 0.4 : 0.5;
+    const mh = kind === "long" ? 0.28 : kind === "wedge" ? 0.3 : 0.36;
+    const my = box.headCy - box.headRy * (kind === "long" ? 0.48 : 0.42);
+    const muzzle = blobPath(0, my, box.headRx * mw, box.headRy * mh, { lumps: 3, amount: 0.1, noise: null });
     fills.fill(muzzle, "#f0ebdf");
     ink.outline(muzzle, { color: spec.palette.ink, width: 0.01 });
-    const nose = blobPath(0, my + box.headRy * 0.16, 0.038, 0.028, { lumps: 3, amount: 0.15, noise: null });
+    const nr = kind === "hook" ? 0.05 : kind === "dot" ? 0.032 : 0.04;
+    const nose = blobPath(0, my + box.headRy * 0.16, nr, nr * 0.75, { lumps: 3, amount: 0.15, noise: null });
     fills.fill(nose, spec.palette.ink);
     return;
   }
@@ -349,6 +382,19 @@ function drawMouth(ink, fills, spec, box, kindOverride) {
   } else if (kind === "open") {
     const hole = blobPath(0, y, w * 0.8, 0.05, { lumps: 3, amount: 0.15, noise: null });
     fills.fill(hole, ink0);
+  } else if (kind === "pout") {
+    // 오리입 — 작은 동그라미
+    ink.outline(blobPath(0, y, 0.022, 0.017, { lumps: 3, amount: 0.15, noise: null }), {
+      color: ink0, width: 0.011
+    });
+  } else if (kind === "omega") {
+    // ω — 고양이 입
+    ink.stroke(arcPath(-w * 0.35, y + 0.012, w * 0.38, 0.028, Math.PI, TAU), { color: ink0, width: 0.01 });
+    ink.stroke(arcPath(w * 0.35, y + 0.012, w * 0.38, 0.028, Math.PI, TAU), { color: ink0, width: 0.01 });
+  } else if (kind === "zigzag") {
+    const zig = [];
+    for (let i = 0; i <= 6; i += 1) zig.push([-w + (2 * w * i) / 6, y + (i % 2 ? -0.016 : 0.012)]);
+    ink.stroke(zig, { color: ink0, width: 0.011 });
   } else {
     // teeth — 입선 위아래로 이가 삐져나온다
     ink.stroke([[-w, y], [w, y]], { color: ink0, width: 0.012 });
@@ -379,6 +425,38 @@ function drawHair(ink, spec, box, noise) {
       const len = 0.06 + Math.abs(noise(i * 3.1 + spec.seed * 0.001)) * 0.09;
       ink.stroke([[bx, by], [bx + Math.cos(angle) * len, by + Math.sin(angle) * len]], {
         color: ink0, width: 0.012
+      });
+    }
+    return;
+  }
+
+  if (kind === "pigtails") {
+    // 양갈래 — 머리 옆에 묶인 뭉치 두 개
+    for (const side of [-1, 1]) {
+      const bx = side * rx * 1.02;
+      const by = cy + ry * 0.3;
+      ink.scribble(arcPath(bx, by, 0.045, 0.06, Math.PI * 0.5, Math.PI * 2.5, 12), {
+        color: ink0, passes: 7, width: 0.008, spread: 0.03
+      });
+      ink.stroke([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: ink0, width: 0.012 });
+    }
+    // 정수리 살짝
+    ink.scribble(arcPath(0, cy, rx * 0.9, ry * 0.9, Math.PI * 0.72, Math.PI * 0.28, 10), {
+      color: ink0, passes: 5, width: 0.008, spread: ry * 0.12
+    });
+    return;
+  }
+
+  if (kind === "curly") {
+    // 곱슬 — 정수리를 따라 작은 원 뭉치
+    for (let i = 0; i < 7; i += 1) {
+      const k = i / 6;
+      const angle = Math.PI * (0.8 - 0.6 * k);
+      const bx = Math.cos(angle) * rx * 0.88;
+      const by = cy + Math.sin(angle) * ry * 0.92;
+      const r = 0.03 + noise(i * 4.4) * 0.012;
+      ink.outline(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), {
+        color: ink0, width: 0.009, jitter: 0.008
       });
     }
     return;
@@ -460,6 +538,14 @@ function drawHeadgear(ink, fills, spec, box) {
     return;
   }
 
+  if (kind === "bonnet") {
+    // 보닛 — 머리를 감싸는 두툼한 구름 테
+    const rim = arcPath(0, cy, rx * 1.18, ry * 1.16, Math.PI * 1.15, -Math.PI * 0.15, 26);
+    ink.stroke(rim, { color: accent, width: 0.05, jitter: 0.012 });
+    ink.stroke(rim, { color: ink0, width: 0.01, jitter: 0.01, passes: 2 });
+    return;
+  }
+
   // pot — 머리에 뒤집어쓴 통
   const top = cy + ry * 1.05;
   const box2 = [
@@ -500,6 +586,30 @@ function drawHorns(ink, fills, spec, box, noise) {
       const tipY = by + 0.24 * scale;
       ink.stroke([[bx, by], [tipX, tipY]], { color: ink0, width: 0.008 });
       fills.fill(blobPath(tipX, tipY, 0.022 * scale, 0.022 * scale, { lumps: 3, amount: 0.2, noise: null }), ink0);
+    } else if (kind === "ram") {
+      // 나선으로 말린 숫양 뿔
+      const spiral = [];
+      for (let i = 0; i <= 26; i += 1) {
+        const k = i / 26;
+        const angle = Math.PI * 0.5 + side * k * Math.PI * 1.7;
+        const r = (0.055 + 0.02 * scale) * (1 - k * 0.72);
+        spiral.push([bx + side * 0.02 + Math.cos(angle) * r * side, by + 0.02 + Math.sin(angle) * r]);
+      }
+      ink.stroke(spiral, { color: ink0, width: 0.014, jitter: 0.004 });
+    } else if (kind === "crown") {
+      // 정수리를 가로지르는 스파이크 열 — 좌우 한 번씩만 돌면 중복이므로 side<0에서만
+      if (side < 0) {
+        for (let i = 0; i < 5; i += 1) {
+          const k = i / 4;
+          const angle = Math.PI * (0.72 - 0.44 * k);
+          const sx = Math.cos(angle) * rx * 0.9;
+          const sy = cy + Math.sin(angle) * ry * 0.92;
+          const len = 0.05 + 0.03 * Math.sin(k * Math.PI);
+          ink.stroke([[sx, sy], [sx + Math.cos(angle) * len * 1.6, sy + Math.sin(angle) * len * 1.6]], {
+            color: ink0, width: 0.016
+          });
+        }
+      }
     } else {
       ink.outline(blobPath(bx, by + 0.035, 0.033 * scale, 0.045 * scale, { lumps: 3, amount: 0.15, noise: null }), {
         color: ink0, width: 0.011
@@ -574,6 +684,15 @@ function drawMarks(ink, spec, body) {
     ink.hatch(cx, (top + bottom) / 2, w * 0.8, (top - bottom) * 0.35, Math.PI * 0.25, {
       color: ink0, lines: 5, width: 0.007
     });
+  } else if (kind === "spots") {
+    // 달마시안 얼룩
+    for (let i = 0; i < 3; i += 1) {
+      const sx = cx + (i - 1) * w * 0.5;
+      const sy = bottom + (top - bottom) * (0.35 + (i % 2) * 0.3);
+      ink.outline(blobPath(sx, sy, 0.025 + (i % 2) * 0.01, 0.02, { lumps: 4, amount: 0.25, noise: null }), {
+        color: ink0, width: 0.008
+      });
+    }
   } else {
     ink.hatch(cx - w * 0.35, (top + bottom) / 2, w * 0.4, (top - bottom) * 0.25, 0, {
       color: ink0, lines: 4, width: 0.008
@@ -592,20 +711,8 @@ function drawLimbs(ink, spec, box, body, noise) {
       ink.stroke([[x, box.legTop], [x + noise(t * 7.1) * 0.015, 0]], { color: ink0, width: 0.011 });
       ink.stroke([[x - 0.02, 0], [x + 0.025, 0.003]], { color: ink0, width: 0.01 });
     }
-    const backX = body.cx + body.w * 0.98;
-    const backY = (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1;
-    if (spec.species === "cat") {
-      // 고양이 꼬리는 위로 선다
-      ink.stroke([
-        [backX, backY],
-        [backX + 0.045, backY + 0.09],
-        [backX + 0.02 + p.tailLift * 0.03, backY + 0.17]
-      ], { color: ink0, width: 0.011 });
-    } else {
-      ink.stroke([[backX, backY], [backX + 0.08, backY + 0.03 + p.tailLift * 0.05]], {
-        color: ink0, width: 0.012
-      });
-    }
+    // 꼬리는 본체에 굽지 않는다. scene이 tailSketch로 별도 메시를 세워
+    // 살랑거림을 움직인다.
     return;
   }
 
@@ -626,18 +733,7 @@ function drawLimbs(ink, spec, box, body, noise) {
     ink.stroke([[x - 0.025, 0], [x + 0.03, 0.004]], { color: ink0, width: 0.011 });
   }
 
-  // 팔
-  const shoulder = box.bodyTop - (box.bodyTop - box.legTop) * 0.25;
-  for (const side of [-1, 1]) {
-    const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.9 : 0.95);
-    const reach = 0.11 * p.armSpread;
-    let end;
-    if (spec.parts.arms === "up") end = [x + side * reach, shoulder + 0.09];
-    else if (spec.parts.arms === "out") end = [x + side * reach * 1.5, shoulder + 0.01];
-    else end = [x + side * reach * 0.6, shoulder - 0.1];
-    ink.stroke([[x, shoulder], end], { color: ink0, width: 0.01 });
-    ink.stroke([[end[0] - 0.016, end[1]], [end[0] + 0.016, end[1] + 0.004]], { color: ink0, width: 0.01 });
-  }
+  // 팔은 본체에 굽지 않는다. scene이 armSketch로 포즈 상태 메시를 세운다.
 }
 
 // 눈썹·입의 대체 상태. 쉬는 상태에서 이따금 이 상태로 넘어갔다 돌아온다.
@@ -664,28 +760,30 @@ export function facePartSketch(spec, part, kind) {
 }
 
 // 스펙 하나를 그려서 지오메트리 재료를 돌려준다.
-// eyes 정보는 동공·눈꺼풀을 따로 움직이기 위해 scene.js로 넘긴다.
+// 머리와 몸을 분리해 굽는다 — scene이 머리만 굴리고 끄덕일 수 있게.
 // variant는 보일 프레임 번호다. 지터 위상만 달라지고 구도는 같다.
 export function drawCreature(spec, variant = 0) {
   const rng = makeRng((spec.proportions.wobbleSeed ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
   const wobble = spec.proportions.wobble;
 
-  const ink = new Sketch(noise, wobble);
-  const fills = new Sketch(noise, wobble);
+  const bodyInk = new Sketch(noise, wobble);
+  const bodyFills = new Sketch(noise, wobble);
+  const headInk = new Sketch(noise, wobble);
+  const headFills = new Sketch(noise, wobble);
   const box = layout(spec);
   const eyes = eyeGeometry(spec, box);
 
-  const body = drawBody(ink, fills, spec, box, noise);
-  drawMarks(ink, spec, body);
-  drawLimbs(ink, spec, box, body, noise);
+  const body = drawBody(bodyInk, bodyFills, spec, box, noise);
+  drawMarks(bodyInk, spec, body);
+  drawLimbs(bodyInk, spec, box, body, noise);
 
-  drawEars(ink, fills, spec, box);
-  drawHead(ink, fills, spec, box, noise);
-  drawHorns(ink, fills, spec, box, noise);
-  drawEyes(ink, fills, spec, box, eyes);
-  drawFace2(ink, fills, spec, box, eyes);
-  drawNose(ink, fills, spec, box, eyes);
+  drawEars(headInk, headFills, spec, box);
+  drawHead(headInk, headFills, spec, box, noise);
+  drawHorns(headInk, headFills, spec, box, noise);
+  drawEyes(headInk, headFills, spec, box, eyes);
+  drawFace2(headInk, headFills, spec, box, eyes);
+  drawNose(headInk, headFills, spec, box, eyes);
   // 눈썹과 입은 여기서 굽지 않는다. 상태 전환을 위해 scene이
   // facePartSketch로 별도 메시를 세운다.
   if (spec.species === "cat") {
@@ -693,21 +791,91 @@ export function drawCreature(spec, variant = 0) {
     for (const side of [-1, 1]) {
       for (let i = 0; i < 3; i += 1) {
         const y0 = wy + (i - 1) * 0.028;
-        ink.stroke([
+        headInk.stroke([
           [side * box.headRx * 0.3, y0],
           [side * (box.headRx * 0.3 + 0.09), y0 + (i - 1) * 0.012]
         ], { color: spec.palette.ink, width: 0.006, jitter: 0.004 });
       }
     }
   }
-  drawEyewear(ink, fills, spec, box, eyes);
-  drawHair(ink, spec, box, noise);
-  drawHeadgear(ink, fills, spec, box);
+  drawEyewear(headInk, headFills, spec, box, eyes);
+  drawHair(headInk, spec, box, noise);
+  drawHeadgear(headInk, headFills, spec, box);
 
-  // 동공이 움직이는 눈만 골라 넘긴다. 감은 눈은 깜빡일 것도 없다.
-  const live = ["ring", "wide"].includes(spec.parts.eyes)
+  // 동공이 움직이는 눈만 골라 넘긴다. 외눈도 살아 있다.
+  const live = ["ring", "wide", "cyclops"].includes(spec.parts.eyes)
     ? eyes.filter((e) => e.side !== spec.parts.patchSide)
     : [];
 
-  return { ink, fills, eyes: live, box, headTop: box.headCy + box.headRy };
+  return {
+    body: { ink: bodyInk, fills: bodyFills },
+    head: { ink: headInk, fills: headFills },
+    eyes: live,
+    box,
+    // 머리 회전 축. 몸 꼭대기(턱 언저리)다.
+    neckY: box.bodyTop,
+    headTop: box.headCy + box.headRy,
+    quad: box.quad
+  };
+}
+
+// 팔 포즈. 쉬는 포즈에서 이따금 다른 포즈로 넘어갔다 돌아온다.
+const ALT_ARMS = { down: "out", out: "up", up: "out" };
+
+export function armPoseKinds(spec) {
+  return [spec.parts.arms, ALT_ARMS[spec.parts.arms] || "down"];
+}
+
+export function armSketch(spec, pose) {
+  const rng = makeRng((spec.proportions.wobbleSeed + 303) >>> 0);
+  const noise = makeNoise(rng);
+  const sketch = new Sketch(noise, spec.proportions.wobble);
+  const box = layout(spec);
+  if (box.quad) return sketch;
+
+  const p = spec.proportions;
+  const ink0 = spec.palette.ink;
+  const shoulder = box.bodyTop - (box.bodyTop - box.legTop) * 0.25;
+  for (const side of [-1, 1]) {
+    const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.9 : 0.95);
+    const reach = 0.11 * p.armSpread;
+    let end;
+    if (pose === "up") end = [x + side * reach, shoulder + 0.09];
+    else if (pose === "out") end = [x + side * reach * 1.5, shoulder + 0.01];
+    else end = [x + side * reach * 0.6, shoulder - 0.1];
+    sketch.stroke([[x, shoulder], end], { color: ink0, width: 0.01 });
+    sketch.stroke([[end[0] - 0.016, end[1]], [end[0] + 0.016, end[1] + 0.004]], { color: ink0, width: 0.01 });
+  }
+  return sketch;
+}
+
+// 꼬리. 피벗(꼬리 뿌리) 원점 기준으로 그린다. scene이 회전시켜 살랑거린다.
+export function tailSketch(spec) {
+  const rng = makeRng((spec.proportions.wobbleSeed + 404) >>> 0);
+  const noise = makeNoise(rng);
+  const sketch = new Sketch(noise, spec.proportions.wobble);
+  const box = layout(spec);
+  if (!box.quad) return { sketch, pivot: [0, 0] };
+
+  const p = spec.proportions;
+  const ink0 = spec.palette.ink;
+  const cx = box.bodyCx + box.bodyW * 0.35;
+  const pivot = [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1];
+  const kind = spec.parts.tail;
+
+  if (kind === "curl") {
+    sketch.stroke([
+      [0, 0], [0.05, 0.08], [0.03 + p.tailLift * 0.02, 0.16], [-0.015, 0.2]
+    ], { color: ink0, width: 0.011 });
+  } else if (kind === "flag") {
+    sketch.stroke([[0, 0], [0.025, 0.1], [0.01 + p.tailLift * 0.02, 0.2]], { color: ink0, width: 0.012 });
+  } else if (kind === "longtail") {
+    sketch.stroke([
+      [0, 0], [0.07, 0.015], [0.14, 0.05], [0.18, 0.12 + p.tailLift * 0.02]
+    ], { color: ink0, width: 0.011 });
+  } else {
+    // stubtail — 뭉툭한 꼬리
+    sketch.stroke([[0, 0], [0.035, 0.05]], { color: ink0, width: 0.02 });
+  }
+  return { sketch, pivot };
 }

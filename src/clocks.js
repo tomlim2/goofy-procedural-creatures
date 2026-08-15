@@ -1,78 +1,164 @@
 // 개체별 시계. 35마리가 같은 박자로 움직이면 기계처럼 보인다.
-// 호흡, 깜빡임, 시선, 눈 개방도(놀람), 반감김, 재생성, 이모트가
-// 전부 개체마다 다른 주기·위상으로 돈다.
+//
+// 종족마다 지배 모션이 다르다 (레퍼런스 2차 관찰, video-notes 26~32):
+//   kid — 좌우·앞뒤 락킹, 폴짝, 팔 포즈
+//   pup — 머리 롤·딥, 행복 눈 유지, 꼬리 플릭
+//   cat — 꼬리 스위시 상시, 갸웃, 윙크, 기지개
+//   imp — 젤리 워블, 부르르, 눈 사이클, "..." 중얼
+// 움직임은 이징으로 매끄럽게, 선(보일)만 끓는다.
 
 import { makeRng } from "./rng.js";
 
 const BLINK_TIME = 0.13;
 
-// birth는 이 시계가 태어난 전역 시각이다. 모든 예약은 출생 기준 상대
-// 시간으로 잡는다. 절대 시간으로 잡으면 재생성으로 태어난 개체의 예약이
-// 전부 과거가 되어, 태어나자마자 매 프레임 다시 재생성되는 폭주가 생긴다.
-export function makeClock(seed, birth = 0) {
+// 종족별 모션 성격. [min, max]는 이벤트 간격(초), null은 그 모션 없음.
+const MOTION = {
+  kid: {
+    sway: [0.012, 0.032], swayPeriod: [2.6, 4.6],
+    rock: 0.006,
+    roll: null, dip: null,
+    hop: [14, 34], stretch: null,
+    tilt: [7, 18], tiltAmp: 0.1,
+    jelly: null, shiver: [26, 60],
+    arm: [5, 14], wink: null, happyHold: null,
+    tailSwish: null, tailFlick: null,
+    surprise: [8, 22], yaw: 0.5,
+    emotes: ["heart", "bang", "quest"]
+  },
+  pup: {
+    sway: [0.004, 0.01], swayPeriod: [3, 6],
+    rock: 0.003,
+    roll: { amp: [0.07, 0.14], period: [2.4, 4.8] },
+    dip: [4, 10],
+    hop: [30, 70], stretch: null,
+    tilt: [9, 20], tiltAmp: 0.08,
+    jelly: null, shiver: [40, 80],
+    arm: null, wink: null, happyHold: [6, 16],
+    tailSwish: null, tailFlick: [3, 9],
+    surprise: [10, 26], yaw: 0.7,
+    emotes: ["heart", "bang", "quest"]
+  },
+  cat: {
+    sway: [0.002, 0.007], swayPeriod: [3.5, 7],
+    rock: 0.004,
+    roll: null, dip: null,
+    hop: null, stretch: [10, 26],
+    tilt: [5, 12], tiltAmp: 0.14,
+    jelly: null, shiver: [40, 90],
+    arm: null, wink: [8, 20], happyHold: null,
+    tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [4, 11],
+    surprise: [9, 24], yaw: 0.8,
+    emotes: ["heart", "quest", "bang"]
+  },
+  imp: {
+    sway: [0.015, 0.04], swayPeriod: [2, 3.8],
+    rock: 0.004,
+    roll: null, dip: null,
+    hop: [20, 50], stretch: null,
+    tilt: [8, 18], tiltAmp: 0.09,
+    jelly: { amp: [0.008, 0.018], freq: [1.1, 1.9] }, shiver: [12, 30],
+    arm: [8, 20], wink: null, happyHold: null,
+    tailSwish: null, tailFlick: null,
+    surprise: [4, 12], yaw: 0.6,
+    emotes: ["dots", "dots", "bang", "quest", "heart"]
+  }
+};
+
+export function makeClock(seed, birth = 0, species = "kid") {
   const rng = makeRng(seed ^ 0x5bf03635);
+  const M = MOTION[species] || MOTION.kid;
 
   const breathePeriod = rng.float(2.6, 5.4);
   const breathePhase = rng.float(0, Math.PI * 2);
 
   let nextBlink = rng.float(0, 4);
   let blinkStart = -1;
+  let blinkHappy = false;
 
   let nextGlance = rng.float(0, 3);
   let gaze = [0, 0];
   let gazeTarget = [0, 0];
 
-  // 놀람 — 눈 흰자가 커졌다 돌아온다
-  let nextSurprise = rng.float(4, 16);
+  let nextSurprise = rng.float(M.surprise[0], M.surprise[1]);
   let surpriseStart = -1;
 
-  // 반감김 — 몇 초씩 유지되는 졸린 눈
   let nextSquint = rng.float(6, 18);
   let squintUntil = -1;
 
-  // 재생성 — 슬롯의 개체가 교체된다 (레퍼런스 실측 5~13초)
   let regenAt = rng.float(6, 14);
 
-  // ── 몸통 idle ──
-  // 체중 이동. 발을 축으로 아주 천천히 좌우로 기운다. 개체마다 폭이 다르다.
-  const swayAmp = rng.float(0.006, 0.03);
-  const swayPeriod = rng.float(3.2, 7.5);
-  const swayPhase = rng.float(0, Math.PI * 2);
-
-  // 머리 갸웃 — 한쪽으로 기울여 몇 초 유지
-  let nextTilt = rng.float(4, 12);
-  let tiltUntil = -1;
-  let tiltTarget = 0;
-  let headAngle = 0;
-
-  // 끄덕임 — 짧게 두 번
-  let nextNod = rng.float(6, 18);
-  let nodStart = -1;
-
-  // 폴짝 — 드물게 제자리 점프. 앉았다 늘어났다 착지까지.
-  let nextHop = rng.float(10, 30);
-  let hopStart = -1;
-
-  // 부르르 — 아주 드물게 몸을 턴다
-  let nextShiver = rng.float(18, 45);
-  let shiverStart = -1;
-
-  // 눈썹·입 상태 — 이따금 대체 상태로 넘어갔다 돌아온다
   let nextMood = rng.float(3, 10);
   let moodUntil = -1;
   let nextMouth = rng.float(2, 8);
   let mouthUntil = -1;
 
-  // 이모트 — 머리 위 ♥ ! ?
   let nextEmote = rng.float(5, 30);
   let emoteStart = -1;
   let emoteKind = "heart";
 
+  // ── 몸통 idle ──
+  const swayAmp = rng.float(M.sway[0], M.sway[1]);
+  const swayPeriod = rng.float(M.swayPeriod[0], M.swayPeriod[1]);
+  const swayPhase = rng.float(0, Math.PI * 2);
+
+  // 앞뒤 락킹 — y스케일 미세 진동. 좌우 스웨이와 다른 주기라 어긋난다.
+  const rockPeriod = rng.float(2.1, 3.9);
+  const rockPhase = rng.float(0, Math.PI * 2);
+
+  const roll = M.roll
+    ? { amp: rng.float(M.roll.amp[0], M.roll.amp[1]), period: rng.float(M.roll.period[0], M.roll.period[1]), phase: rng.float(0, Math.PI * 2) }
+    : null;
+
+  let nextDip = M.dip ? rng.float(M.dip[0], M.dip[1]) : Infinity;
+  let dipStart = -1;
+
+  let nextTilt = rng.float(M.tilt[0], M.tilt[1]);
+  let tiltUntil = -1;
+  let tiltTarget = 0;
+  let headAngle = 0;
+
+  let nextNod = rng.float(9, 24);
+  let nodStart = -1;
+
+  let nextHop = M.hop ? rng.float(M.hop[0], M.hop[1]) : Infinity;
+  let hopStart = -1;
+
+  let nextStretch = M.stretch ? rng.float(M.stretch[0], M.stretch[1]) : Infinity;
+  let stretchStart = -1;
+
+  let nextShiver = rng.float(M.shiver[0], M.shiver[1]);
+  let shiverStart = -1;
+
+  let nextArm = M.arm ? rng.float(M.arm[0], M.arm[1]) : Infinity;
+  let armUntil = -1;
+
+  let nextWink = M.wink ? rng.float(M.wink[0], M.wink[1]) : Infinity;
+  let winkUntil = -1;
+  let winkSide = 0;
+
+  let nextHappy = M.happyHold ? rng.float(M.happyHold[0], M.happyHold[1]) : Infinity;
+  let happyUntil = -1;
+
+  const tailSwish = M.tailSwish
+    ? { amp: rng.float(M.tailSwish.amp[0], M.tailSwish.amp[1]), period: rng.float(M.tailSwish.period[0], M.tailSwish.period[1]), phase: rng.float(0, Math.PI * 2) }
+    : null;
+  let nextFlick = M.tailFlick ? rng.float(M.tailFlick[0], M.tailFlick[1]) : Infinity;
+  let flickStart = -1;
+
+  const jelly = M.jelly
+    ? { amp: rng.float(M.jelly.amp[0], M.jelly.amp[1]), freq: rng.float(M.jelly.freq[0], M.jelly.freq[1]), phase: rng.float(0, Math.PI * 2) }
+    : null;
+
+  let faceYaw = 0;
+
   return {
     update(globalT) {
       const t = globalT - birth;
+
       if (t >= nextBlink) {
         blinkStart = t;
+        // 깜빡임의 일부는 ^^ 로 닫힌다
+        blinkHappy = rng.chance(0.22);
         nextBlink = t + rng.float(1.8, 6.5);
         if (rng.chance(0.22)) nextBlink = t + BLINK_TIME * 2.4;
       }
@@ -83,11 +169,18 @@ export function makeClock(seed, birth = 0) {
       }
       gaze = [gaze[0] + (gazeTarget[0] - gaze[0]) * 0.12, gaze[1] + (gazeTarget[1] - gaze[1]) * 0.12];
 
+      // 얼굴 요 — 이목구비가 시선을 천천히 따라간다. 머리를 돌린 착시.
+      faceYaw += (gaze[0] * M.yaw - faceYaw) * 0.06;
+
       let lid = 0;
+      let happy = false;
       if (blinkStart >= 0) {
         const k = (t - blinkStart) / BLINK_TIME;
         if (k >= 1) blinkStart = -1;
-        else lid = Math.sin(Math.min(1, k) * Math.PI);
+        else {
+          lid = Math.sin(Math.min(1, k) * Math.PI);
+          if (blinkHappy && lid > 0.7) happy = true;
+        }
       }
 
       if (t >= nextSquint && squintUntil < 0) {
@@ -99,15 +192,145 @@ export function makeClock(seed, birth = 0) {
         else lid = Math.max(lid, 0.5);
       }
 
+      // 행복 눈 유지 — 눈을 ^^ 로 닫고 몇 초 버틴다 (개)
+      if (t >= nextHappy && happyUntil < 0) {
+        happyUntil = t + rng.float(2, 5);
+        nextHappy = t + rng.float(M.happyHold[0], M.happyHold[1]);
+      }
+      if (happyUntil >= 0) {
+        if (t >= happyUntil) happyUntil = -1;
+        else { lid = 1; happy = true; }
+      }
+
+      // 윙크 — 한쪽만 감는다 (고양이)
+      if (t >= nextWink && winkUntil < 0) {
+        winkSide = rng.chance(0.5) ? -1 : 1;
+        winkUntil = t + rng.float(0.5, 1.3);
+        nextWink = t + rng.float(M.wink[0], M.wink[1]);
+      }
+      if (winkUntil >= 0 && t >= winkUntil) { winkUntil = -1; winkSide = 0; }
+
       let aperture = 1;
       if (t >= nextSurprise && surpriseStart < 0) {
         surpriseStart = t;
-        nextSurprise = t + rng.float(8, 22);
+        nextSurprise = t + rng.float(M.surprise[0], M.surprise[1]);
       }
       if (surpriseStart >= 0) {
         const k = (t - surpriseStart) / 1.1;
         if (k >= 1) surpriseStart = -1;
         else aperture = 1 + 0.65 * Math.pow(Math.sin(Math.PI * k), 0.6);
+      }
+
+      // ── 몸통 ──
+      const sway = Math.sin((t / swayPeriod) * Math.PI * 2 + swayPhase) * swayAmp;
+      const rock = Math.sin((t / rockPeriod) * Math.PI * 2 + rockPhase) * (M.rock || 0);
+
+      if (t >= nextTilt && tiltUntil < 0) {
+        tiltTarget = rng.around(0, M.tiltAmp);
+        tiltUntil = t + rng.float(1.2, 3.2);
+        nextTilt = t + rng.float(M.tilt[0], M.tilt[1]);
+      }
+      if (tiltUntil >= 0 && t >= tiltUntil) tiltUntil = -1;
+      const rollAngle = roll ? Math.sin((t / roll.period) * Math.PI * 2 + roll.phase) * roll.amp : 0;
+      headAngle += ((tiltUntil >= 0 ? tiltTarget : 0) - headAngle) * 0.07;
+
+      let headBob = 0;
+      if (t >= nextNod && nodStart < 0) {
+        nodStart = t;
+        nextNod = t + rng.float(9, 24);
+      }
+      if (nodStart >= 0) {
+        const k = (t - nodStart) / 0.7;
+        if (k >= 1) nodStart = -1;
+        else headBob = -Math.abs(Math.sin(k * Math.PI * 2)) * 0.014;
+      }
+
+      // 킁킁 딥 — 머리가 깊게 내려갔다 온다 (개)
+      if (t >= nextDip && dipStart < 0) {
+        dipStart = t;
+        nextDip = t + rng.float(M.dip[0], M.dip[1]);
+      }
+      if (dipStart >= 0) {
+        const k = (t - dipStart) / 1.2;
+        if (k >= 1) dipStart = -1;
+        else headBob -= Math.sin(Math.min(1, k) * Math.PI) * 0.035;
+      }
+
+      let hopY = 0;
+      let squashX = 0;
+      let squashY = 0;
+      if (t >= nextHop && hopStart < 0) {
+        hopStart = t;
+        nextHop = t + rng.float(M.hop[0], M.hop[1]);
+      }
+      if (hopStart >= 0) {
+        const k = (t - hopStart) / 0.55;
+        if (k >= 1) hopStart = -1;
+        else if (k < 0.2) {
+          squashY = -0.07 * Math.sin((k / 0.2) * Math.PI);
+          squashX = -squashY * 0.8;
+        } else if (k < 0.8) {
+          const j = (k - 0.2) / 0.6;
+          hopY = Math.sin(j * Math.PI) * 0.05;
+          squashY = 0.05 * Math.sin(j * Math.PI);
+          squashX = -squashY * 0.7;
+        } else {
+          squashY = -0.05 * Math.sin(((k - 0.8) / 0.2) * Math.PI);
+          squashX = -squashY * 0.8;
+        }
+      }
+
+      // 기지개 — 가로로 쭉 (고양이)
+      let stretchX = 0;
+      if (t >= nextStretch && stretchStart < 0) {
+        stretchStart = t;
+        nextStretch = t + rng.float(M.stretch[0], M.stretch[1]);
+      }
+      if (stretchStart >= 0) {
+        const k = (t - stretchStart) / 1.6;
+        if (k >= 1) stretchStart = -1;
+        else stretchX = Math.sin(Math.min(1, k) * Math.PI) * 0.06;
+      }
+
+      let shiverX = 0;
+      if (t >= nextShiver && shiverStart < 0) {
+        shiverStart = t;
+        nextShiver = t + rng.float(M.shiver[0], M.shiver[1]);
+      }
+      if (shiverStart >= 0) {
+        const k = (t - shiverStart) / 0.35;
+        if (k >= 1) shiverStart = -1;
+        else shiverX = Math.sin(k * Math.PI * 9) * 0.008 * (1 - k);
+      }
+
+      // 팔 포즈 전환
+      if (t >= nextArm && armUntil < 0) {
+        armUntil = t + rng.float(1, 3);
+        nextArm = t + rng.float(M.arm[0], M.arm[1]);
+      }
+      if (armUntil >= 0 && t >= armUntil) armUntil = -1;
+
+      // 꼬리 — 상시 스위시(고양이) + 간헐 플릭
+      let tailAngle = tailSwish
+        ? Math.sin((t / tailSwish.period) * Math.PI * 2 + tailSwish.phase) * tailSwish.amp
+        : 0;
+      if (t >= nextFlick && flickStart < 0) {
+        flickStart = t;
+        nextFlick = t + rng.float(M.tailFlick[0], M.tailFlick[1]);
+      }
+      if (flickStart >= 0) {
+        const k = (t - flickStart) / 0.5;
+        if (k >= 1) flickStart = -1;
+        else tailAngle += Math.sin(k * Math.PI * 3) * 0.35 * (1 - k);
+      }
+
+      // 젤리 워블 — 덩어리가 출렁인다 (도깨비)
+      let jellyX = 0;
+      let jellyY = 0;
+      if (jelly) {
+        const w = Math.sin(t * jelly.freq * Math.PI * 2 + jelly.phase);
+        jellyX = w * jelly.amp;
+        jellyY = -w * jelly.amp * 0.9;
       }
 
       if (t >= nextMood && moodUntil < 0) {
@@ -122,66 +345,6 @@ export function makeClock(seed, birth = 0) {
       }
       if (mouthUntil >= 0 && t >= mouthUntil) mouthUntil = -1;
 
-      // ── 몸통 idle 계산 ──
-      const sway = Math.sin((t / swayPeriod) * Math.PI * 2 + swayPhase) * swayAmp;
-
-      if (t >= nextTilt && tiltUntil < 0) {
-        tiltTarget = rng.around(0, 0.11);
-        tiltUntil = t + rng.float(1.2, 3.2);
-        nextTilt = t + rng.float(7, 18);
-      }
-      if (tiltUntil >= 0 && t >= tiltUntil) tiltUntil = -1;
-      headAngle += ((tiltUntil >= 0 ? tiltTarget : 0) - headAngle) * 0.07;
-
-      let headBob = 0;
-      if (t >= nextNod && nodStart < 0) {
-        nodStart = t;
-        nextNod = t + rng.float(9, 24);
-      }
-      if (nodStart >= 0) {
-        const k = (t - nodStart) / 0.7;
-        if (k >= 1) nodStart = -1;
-        else headBob = -Math.abs(Math.sin(k * Math.PI * 2)) * 0.014;
-      }
-
-      let hopY = 0;
-      let squashX = 0;
-      let squashY = 0;
-      if (t >= nextHop && hopStart < 0) {
-        hopStart = t;
-        nextHop = t + rng.float(16, 40);
-      }
-      if (hopStart >= 0) {
-        const k = (t - hopStart) / 0.55;
-        if (k >= 1) hopStart = -1;
-        else if (k < 0.2) {
-          // 준비 — 웅크린다
-          squashY = -0.07 * Math.sin((k / 0.2) * Math.PI);
-          squashX = -squashY * 0.8;
-        } else if (k < 0.8) {
-          // 공중 — 늘어난다
-          const j = (k - 0.2) / 0.6;
-          hopY = Math.sin(j * Math.PI) * 0.05;
-          squashY = 0.05 * Math.sin(j * Math.PI);
-          squashX = -squashY * 0.7;
-        } else {
-          // 착지 — 다시 눌린다
-          squashY = -0.05 * Math.sin(((k - 0.8) / 0.2) * Math.PI);
-          squashX = -squashY * 0.8;
-        }
-      }
-
-      let shiverX = 0;
-      if (t >= nextShiver && shiverStart < 0) {
-        shiverStart = t;
-        nextShiver = t + rng.float(26, 60);
-      }
-      if (shiverStart >= 0) {
-        const k = (t - shiverStart) / 0.35;
-        if (k >= 1) shiverStart = -1;
-        else shiverX = Math.sin(k * Math.PI * 9) * 0.008 * (1 - k);
-      }
-
       let regen = false;
       if (t >= regenAt) {
         regen = true;
@@ -191,7 +354,7 @@ export function makeClock(seed, birth = 0) {
       let emote = null;
       if (t >= nextEmote && emoteStart < 0) {
         emoteStart = t;
-        emoteKind = rng.pick(["heart", "bang", "quest"]);
+        emoteKind = rng.pick(M.emotes);
         nextEmote = t + rng.float(14, 40);
       }
       if (emoteStart >= 0) {
@@ -205,7 +368,10 @@ export function makeClock(seed, birth = 0) {
       return {
         breathe, lid, gaze, aperture, regen, emote,
         browAlt: moodUntil >= 0, mouthAlt: mouthUntil >= 0,
-        sway, headAngle, headBob, hopY, squashX, squashY, shiverX
+        sway, rock, headAngle: headAngle + rollAngle, headBob,
+        hopY, squashX, squashY, stretchX, shiverX,
+        jellyX, jellyY, faceYaw,
+        armAlt: armUntil >= 0, happy, winkSide, tailAngle
       };
     }
   };

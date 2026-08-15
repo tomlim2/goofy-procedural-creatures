@@ -1,10 +1,12 @@
-// three.js 씬. 그리드 배치, 종이 배경, 개체 구성.
+// three.js 씬. 그리드 배치, 종이 배경, 개체 리그 조립.
 //
-// 애니메이션 원칙: 생성은 개체당 한 번(보일 변형 포함), 매 프레임은 변형만.
-// 보일은 지터 위상이 다른 잉크·채색 3벌을 미리 굽고 낮은 주기로 순환한다.
+// 개체 하나의 계층:
+//   group(발 원점) ── bodyGroup ── 보일 몸 3벌 · tailGroup(꼬리) · 팔 상태 2벌
+//                └── headGroup(목 축) ── 보일 머리 3벌 · faceGroup(요) ── 눈 리그 · 눈썹 · 입
+// 애니메이션 원칙: 생성은 개체당 한 번, 매 프레임은 변형만.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch } from "./draw.js";
+import { drawCreature, facePartKinds, facePartSketch, armPoseKinds, armSketch, tailSketch } from "./draw.js";
 import { blobPath, arcPath, Sketch } from "./stroke.js";
 import { makeClock } from "./clocks.js";
 import { makeCreature } from "./creature.js";
@@ -68,8 +70,11 @@ function inkMaterial(opacity) {
   });
 }
 
-function sketchMesh(sketch, opacity, renderOrder) {
-  const mesh = new THREE.Mesh(sketch.build(), inkMaterial(opacity));
+// dy만큼 지오메트리를 미리 내린다. 회전 축(그룹 원점)을 맞추는 데 쓴다.
+function sketchMesh(sketch, opacity, renderOrder, dy = 0) {
+  const geometry = sketch.build();
+  if (dy) geometry.translate(0, dy, 0);
+  const mesh = new THREE.Mesh(geometry, inkMaterial(opacity));
   mesh.renderOrder = renderOrder;
   return mesh;
 }
@@ -81,7 +86,6 @@ function buildEmote(kind, noise) {
     const pts = [];
     for (let i = 0; i <= 28; i += 1) {
       const a = (i / 28) * Math.PI * 2;
-      // 파라메트릭 하트
       const x = 0.045 * Math.pow(Math.sin(a), 3);
       const y = 0.038 * (Math.cos(a) - 0.35 * Math.cos(2 * a) - 0.18 * Math.cos(3 * a) - 0.06 * Math.cos(4 * a)) + 0.01;
       pts.push([x, y]);
@@ -91,37 +95,95 @@ function buildEmote(kind, noise) {
   } else if (kind === "bang") {
     sketch.stroke([[0, 0.075], [0.004, 0.02]], { color: "#2b2724", width: 0.018 });
     sketch.stroke([[-0.002, -0.012], [0.006, -0.014]], { color: "#2b2724", width: 0.018 });
+  } else if (kind === "dots") {
+    // "..." — 중얼거림
+    for (let i = 0; i < 3; i += 1) {
+      const x = -0.03 + i * 0.03;
+      sketch.stroke([[x - 0.006, 0.01 + (i % 2) * 0.008], [x + 0.006, 0.01 + (i % 2) * 0.008]], {
+        color: "#2b2724", width: 0.014
+      });
+    }
   } else {
     sketch.stroke(arcPath(0, 0.045, 0.03, 0.03, Math.PI, -Math.PI * 0.35, 12), { color: "#2b2724", width: 0.012 });
     sketch.stroke([[0.012, 0.012], [0.008, -0.004]], { color: "#2b2724", width: 0.012 });
     sketch.stroke([[0.004, -0.026], [0.012, -0.028]], { color: "#2b2724", width: 0.015 });
   }
-  return sketchMesh(sketch, 0.95, 6);
+  return sketchMesh(sketch, 0.95, 7);
 }
 
 function buildCreature(spec, noise, birth = 0) {
   const group = new THREE.Group();
+  const bodyGroup = new THREE.Group();
+  const headGroup = new THREE.Group();
+  const faceGroup = new THREE.Group();
+  group.add(bodyGroup);
+  group.add(headGroup);
+  headGroup.add(faceGroup);
 
-  // 보일 — 지터 위상만 다른 3벌. visible 토글로 순환한다.
-  const frames = [];
+  // 보일 — 지터 위상만 다른 3벌. 몸·머리를 같은 인덱스로 토글한다.
+  const bodyFrames = [];
+  const headFrames = [];
   let firstDrawn = null;
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const drawn = drawCreature(spec, k);
     if (!firstDrawn) firstDrawn = drawn;
-    const frame = new THREE.Group();
-    if (!drawn.fills.empty) frame.add(sketchMesh(drawn.fills, 0.92, 1));
-    frame.add(sketchMesh(drawn.ink, 1, 2));
-    frame.visible = k === 0;
-    group.add(frame);
-    frames.push(frame);
+
+    const bodyFrame = new THREE.Group();
+    if (!drawn.body.fills.empty) bodyFrame.add(sketchMesh(drawn.body.fills, 0.92, 1));
+    bodyFrame.add(sketchMesh(drawn.body.ink, 1, 2));
+    bodyFrame.visible = k === 0;
+    bodyGroup.add(bodyFrame);
+    bodyFrames.push(bodyFrame);
+
+    const headFrame = new THREE.Group();
+    if (!drawn.head.fills.empty) headFrame.add(sketchMesh(drawn.head.fills, 0.92, 1, -drawn.neckY));
+    headFrame.add(sketchMesh(drawn.head.ink, 1, 2, -drawn.neckY));
+    headFrame.visible = k === 0;
+    headGroup.add(headFrame);
+    headFrames.push(headFrame);
+  }
+  const neckY = firstDrawn.neckY;
+  headGroup.position.y = neckY;
+
+  // 꼬리 — 피벗에 걸어 살랑거린다 (네발)
+  let tailGroup = null;
+  const tail = tailSketch(spec);
+  if (!tail.sketch.empty) {
+    tailGroup = new THREE.Group();
+    tailGroup.position.set(tail.pivot[0], tail.pivot[1], 0);
+    tailGroup.add(sketchMesh(tail.sketch, 1, 2));
+    bodyGroup.add(tailGroup);
   }
 
-  // 살아 있는 눈. 흰자·윤곽·동공·눈꺼풀을 한 그룹으로 묶고
-  // 그룹 scale로 개방도(놀람)를 움직인다.
+  // 팔 — 포즈 2벌 토글 (두발)
+  const armKinds = armPoseKinds(spec);
+  const armMeshes = [];
+  if (!firstDrawn.quad) {
+    armKinds.forEach((pose, index) => {
+      const mesh = sketchMesh(armSketch(spec, pose), 1, 2);
+      mesh.visible = index === 0;
+      bodyGroup.add(mesh);
+      armMeshes.push(mesh);
+    });
+  }
+
+  // 눈썹·입 상태 — faceGroup 안에서 요(yaw)를 따라간다
+  const kinds = facePartKinds(spec);
+  const faceStates = {};
+  for (const part of ["brow", "mouth"]) {
+    faceStates[part] = kinds[part].map((kind, index) => {
+      const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 3, -neckY);
+      mesh.visible = index === 0;
+      faceGroup.add(mesh);
+      return mesh;
+    });
+  }
+
+  // 눈 리그 — 흰자·윤곽·동공·눈꺼풀·스마일을 그룹으로 묶는다
   const eyeRigs = [];
   for (const eye of firstDrawn.eyes) {
     const rig = new THREE.Group();
-    rig.position.set(eye.x, eye.y, 0);
+    rig.position.set(eye.x, eye.y - neckY, 0);
 
     const white = new Sketch(noise, 0.4);
     white.fill(blobPath(0, 0, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null }), "#f6f2e9");
@@ -145,32 +207,40 @@ function buildCreature(spec, noise, birth = 0) {
     lid.scale.y = 0;
     rig.add(lid);
 
-    group.add(rig);
-    eyeRigs.push({ rig, pupil, lid, eye });
-  }
-
-  // 눈썹·입 상태 메시. [쉼, 대체] 두 벌을 굽고 clock이 토글한다.
-  const kinds = facePartKinds(spec);
-  const faceStates = {};
-  for (const part of ["brow", "mouth"]) {
-    faceStates[part] = kinds[part].map((kind, index) => {
-      const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 2);
-      mesh.visible = index === 0;
-      group.add(mesh);
-      return mesh;
+    // ^^ — 행복하게 감은 눈. 눈꺼풀을 다 닫고 이 아치를 위에 얹는다.
+    const smileSketch = new Sketch(noise, 0.5);
+    smileSketch.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), {
+      color: spec.palette.ink, width: 0.013
     });
+    const smile = sketchMesh(smileSketch, 1, 6);
+    smile.visible = false;
+    rig.add(smile);
+
+    faceGroup.add(rig);
+    eyeRigs.push({ rig, pupil, lid, smile, eye });
   }
 
   return {
     group,
-    frames,
+    bodyGroup,
+    headGroup,
+    faceGroup,
+    tailGroup,
+    armMeshes,
+    bodyFrames,
+    headFrames,
     eyeRigs,
     faceStates,
-    clock: makeClock(spec.seed, birth),
+    clock: makeClock(spec.seed, birth, spec.species),
     spec,
+    neckY,
+    headRx: firstDrawn.box.headRx,
     headTop: firstDrawn.headTop,
-    boilFps: 6 + (spec.seed % 5) * 0.5,
+    boilFps: 8 + (spec.seed % 5) * 0.5,
     boilOffset: spec.seed % BOIL_FRAMES,
+    baseX: 0,
+    baseY: 0,
+    generation: 0,
     emoteMesh: null,
     emoteKind: null
   };
@@ -197,14 +267,12 @@ export function createScene(canvas) {
   let ground = null;
   let creatures = [];
   let noise = null;
+  let columns = 7;
+  let rows = 5;
   // 마지막 update의 전역 시각. 재생성·재빌드로 태어나는 시계의 출생 시각이 된다.
   let clockNow = 0;
   // 재생성 스위치. 기본 꺼짐 — 형태는 NEW SEED로만 바뀐다.
-  // 켜면 개체가 각자의 시계로 교체된다(레퍼런스 동작). 꺼진 동안에는
-  // 호흡·깜빡임·보일·표정만 돌고 화면이 시드와 정확히 일치한다.
   let regenEnabled = false;
-  let columns = 7;
-  let rows = 5;
 
   function clear() {
     for (const item of creatures) {
@@ -271,7 +339,8 @@ export function createScene(canvas) {
     specs.forEach((spec, index) => {
       const item = buildCreature(spec, noise, clockNow);
       const [x, y] = slotPosition(index);
-      item.generation = 0;
+      item.baseX = x;
+      item.baseY = y;
       item.group.position.set(x, y, 0);
       scene.add(item.group);
       creatures.push(item);
@@ -286,7 +355,8 @@ export function createScene(canvas) {
         color: "#4a423a", width: 0.012, jitter: 0.02, step: 0.08
       });
     }
-    ground = sketchMesh(groundSketch, 0.72, 1);
+    ground = new THREE.Mesh(groundSketch.build(), inkMaterial(0.72));
+    ground.renderOrder = 1;
     scene.add(ground);
 
     layout();
@@ -304,6 +374,8 @@ export function createScene(canvas) {
     const item = buildCreature(spec, noise, clockNow);
     item.generation = old.generation + 1;
     const [x, y] = slotPosition(index);
+    item.baseX = x;
+    item.baseY = y;
     item.group.position.set(x, y, 0);
     scene.add(item.group);
     creatures[index] = item;
@@ -330,42 +402,74 @@ export function createScene(canvas) {
       }
 
       // 보일 — 낮은 주기로 잉크 변형을 순환
-      const frame = Math.floor(t * item.boilFps + item.boilOffset) % item.frames.length;
-      for (let k = 0; k < item.frames.length; k += 1) item.frames[k].visible = k === frame;
+      const frame = Math.floor(t * item.boilFps + item.boilOffset) % BOIL_FRAMES;
+      for (let k = 0; k < BOIL_FRAMES; k += 1) {
+        item.bodyFrames[k].visible = k === frame;
+        item.headFrames[k].visible = k === frame;
+      }
 
-      item.group.scale.set(1 + state.breathe * 0.006, 1 + state.breathe * 0.011, 1);
+      // 몸 전체 — 스웨이(발 축 회전), 부르르, 폴짝, 호흡+락킹+젤리+기지개
+      item.group.rotation.z = state.sway;
+      item.group.position.x = item.baseX + state.shiverX;
+      item.group.position.y = item.baseY + state.hopY;
+      item.group.scale.set(
+        1 + state.breathe * 0.006 + state.squashX + state.stretchX + state.jellyX,
+        1 + state.breathe * 0.011 + state.rock + state.squashY + state.jellyY,
+        1
+      );
 
+      // 머리 — 갸웃·롤·딥·끄덕
+      item.headGroup.rotation.z = state.headAngle;
+      item.headGroup.position.y = item.neckY + state.headBob;
+
+      // 얼굴 요 — 이목구비가 통째로 밀려 머리를 돌린 착시
+      item.faceGroup.position.x = state.faceYaw * item.headRx * 0.22;
+
+      // 꼬리
+      if (item.tailGroup) item.tailGroup.rotation.z = state.tailAngle;
+
+      // 팔 포즈
+      if (item.armMeshes.length) {
+        item.armMeshes[0].visible = !state.armAlt;
+        item.armMeshes[1].visible = state.armAlt;
+      }
+
+      // 눈썹·입 상태
       item.faceStates.brow[0].visible = !state.browAlt;
       item.faceStates.brow[1].visible = state.browAlt;
       item.faceStates.mouth[0].visible = !state.mouthAlt;
       item.faceStates.mouth[1].visible = state.mouthAlt;
 
+      // 눈 — 개방도·시선·깜빡임·^^·윙크
       for (const rig of item.eyeRigs) {
         rig.rig.scale.setScalar(state.aperture);
         rig.pupil.position.x = state.gaze[0] * rig.eye.r * 0.34;
         rig.pupil.position.y = state.gaze[1] * rig.eye.r * 0.28;
-        rig.lid.scale.y = state.lid;
+        const winked = state.winkSide !== 0 && rig.eye.side === state.winkSide;
+        const closed = winked || state.happy;
+        rig.lid.scale.y = closed ? 1 : state.lid;
+        rig.smile.visible = closed;
       }
 
-      // 이모트 — 머리 위에 떠서 까딱거리다 사라진다
+      // 이모트
       if (state.emote) {
         if (!item.emoteMesh || item.emoteKind !== state.emote.kind) {
           if (item.emoteMesh) {
             disposeGroup(item.emoteMesh);
-            item.group.remove(item.emoteMesh);
+            item.headGroup.remove(item.emoteMesh);
           }
           item.emoteMesh = buildEmote(state.emote.kind, noise);
           item.emoteKind = state.emote.kind;
-          item.group.add(item.emoteMesh);
+          item.headGroup.add(item.emoteMesh);
         }
         const k = state.emote.k;
         const fade = Math.min(1, Math.min(k / 0.15, (1 - k) / 0.2));
-        item.emoteMesh.position.set(0.02, item.headTop + 0.15 + Math.sin(k * Math.PI * 3) * 0.015, 0);
+        item.emoteMesh.position.set(0.02, item.headTop - item.neckY + 0.15 + Math.sin(k * Math.PI * 3) * 0.015, 0);
         item.emoteMesh.scale.setScalar(0.8 + 0.2 * fade);
         item.emoteMesh.material.opacity = fade * 0.95;
       } else if (item.emoteMesh) {
         disposeGroup(item.emoteMesh);
-        item.group.remove(item.emoteMesh);
+        item.headGroup.remove(item.emoteMesh);
         item.emoteMesh = null;
         item.emoteKind = null;
       }

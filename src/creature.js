@@ -39,10 +39,20 @@ function applyConstraints(parts, rng) {
   if (parts.horns === "antenna" && rng.chance(0.75)) parts.ears = "none";
 
   // 안대는 한쪽 눈을 가린다. 어느 쪽인지 여기서 정해 둔다.
-  parts.patchSide = parts.eyewear === "patch" ? (rng.chance(0.5) ? -1 : 1) : 0;
+  // 외눈의 side가 0이라, 안대 없음의 센티널은 0이면 안 된다.
+  parts.patchSide = parts.eyewear === "patch" ? (rng.chance(0.5) ? -1 : 1) : 99;
 
   // 감은 눈에 화난 눈썹을 붙이면 표정이 읽히지 않는다.
   if (parts.eyes === "sleepy" && parts.brow === "angry") parts.brow = "flat";
+
+  // 외눈에는 안경류가 성립하지 않는다.
+  if (parts.eyes === "cyclops") parts.eyewear = "none";
+
+  // 왕관 뿔은 정수리를 차지한다.
+  if (parts.horns === "crown") {
+    parts.headgear = "none";
+    if (!["none", "tuft"].includes(parts.hair)) parts.hair = "none";
+  }
 
   // 안경류는 눈 위에 겹치므로 눈썹을 자주 가린다.
   if ((parts.eyewear === "glasses" || parts.eyewear === "goggles") && rng.chance(0.6)) {
