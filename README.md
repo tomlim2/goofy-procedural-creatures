@@ -35,6 +35,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | `src/draw.js` | 스펙 → 획. 파츠별 그리기 |
 | `src/clocks.js` | 개체별 호흡·깜빡임·시선 타이밍 |
 | `src/scene.js` | three.js 씬, 그리드 배치, 종이 텍스처 |
+| `reference/` | 참고 자료 출처와 차용 범위 |
 
 ## 다양성을 만드는 세 층
 
@@ -69,6 +70,5 @@ WebGL의 `linewidth`는 대부분 1로 고정되므로 `Line`으로는 굵기를
 
 ## 참고
 
-절차적으로 그린 손그림 캐릭터라는 발상은 Matthias Dörfelt의 *Weird Faces*(2012–2013,
-Paper.js)와 같은 계열이다. 부위별 프리셋을 섞고 각 프리셋을 알고리즘으로 표현한다는 구조를
-참고했고, 파츠 어휘와 아키타입은 이 랩에서 따로 구성했다.
+무엇을 보고 만들었는지, 무엇을 가져오고 무엇을 안 가져왔는지는
+[`reference/`](reference/README.md)에 적어 뒀다.
