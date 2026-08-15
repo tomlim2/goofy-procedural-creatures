@@ -37,6 +37,19 @@ function reseed() {
 
 document.getElementById("reseed").addEventListener("click", reseed);
 
+// 재생성 토글. LIVE면 슬롯이 각자의 시계로 교체되고(레퍼런스 동작),
+// STILL이면 판이 고정돼 시드가 곧 화면이다.
+let live = true;
+const liveButtons = document.getElementById("liveSeg");
+liveButtons.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-live]");
+  if (!button) return;
+  for (const node of liveButtons.querySelectorAll("button")) node.classList.remove("on");
+  button.classList.add("on");
+  live = button.dataset.live === "on";
+  scene.setRegen(live);
+});
+
 countSeg.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-grid]");
   if (!button) return;
@@ -48,6 +61,10 @@ countSeg.addEventListener("click", (event) => {
 
 window.addEventListener("keydown", (event) => {
   if (event.key === "r" || event.key === "R") reseed();
+  if (event.key === "s" || event.key === "S") {
+    const target = liveButtons.querySelector(live ? '[data-live="off"]' : '[data-live="on"]');
+    target.click();
+  }
 });
 
 window.addEventListener("resize", () => scene.resize());

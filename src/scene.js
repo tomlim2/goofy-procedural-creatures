@@ -199,6 +199,9 @@ export function createScene(canvas) {
   let noise = null;
   // 마지막 update의 전역 시각. 재생성·재빌드로 태어나는 시계의 출생 시각이 된다.
   let clockNow = 0;
+  // 재생성 스위치. 끄면 개체 교체만 멈추고 호흡·깜빡임·보일은 계속 돈다.
+  // 꺼진 동안에는 화면이 시드와 정확히 일치한다.
+  let regenEnabled = true;
   let columns = 7;
   let rows = 5;
 
@@ -320,7 +323,7 @@ export function createScene(canvas) {
       const item = creatures[index];
       const state = item.clock.update(t);
 
-      if (state.regen) {
+      if (state.regen && regenEnabled) {
         regenerate(index);
         continue;
       }
@@ -369,5 +372,9 @@ export function createScene(canvas) {
     renderer.render(scene, camera);
   }
 
-  return { build, update, resize, renderer, scene, camera };
+  function setRegen(value) {
+    regenEnabled = value;
+  }
+
+  return { build, update, resize, setRegen, renderer, scene, camera };
 }
