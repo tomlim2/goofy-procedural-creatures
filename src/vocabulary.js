@@ -128,6 +128,10 @@ export const FILLS = [
   "#c9b8a8"  // 갈회
 ];
 
+// 색 포인트. 거의 모노톤인 판에 한두 개만 섞이는 채도 있는 색.
+// 한 판에 몇 개까지 허용할지는 creature.js의 makeGrid가 통제한다.
+export const POPS = ["#4a6fa5", "#5c7a3f", "#b0432e", "#c8871e", "#8a4b2a"];
+
 export const ACCENTS = [
   "#8a7f72",
   "#6f7a72",
@@ -181,7 +185,7 @@ export const SPECIES = [
       eyes: [["ring", 3], ["wide", 3], ["spiral", 2], ["cross", 2]],
       nose: [["none", 4], ["dot", 2]],
       mouth: [["teeth", 3], ["wave", 2], ["open", 2], ["line", 1]],
-      marks: [["none", 1]],
+      marks: [["stripes", 3], ["none", 2], ["hatch", 1]],
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]]
     }

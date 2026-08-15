@@ -7,7 +7,7 @@
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
 import { makeRng } from "./rng.js";
-import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS } from "./vocabulary.js";
+import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS } from "./vocabulary.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -58,7 +58,7 @@ function makeProportions(rng, archetype) {
   const blob = archetype.name === "blob";
 
   return {
-    headScale: rng.around(blob ? 1.14 : sprite ? 0.96 : 1.04, 0.2),
+    headScale: rng.around(blob ? 1.14 : sprite ? 0.96 : 1.04, 0.34),
     headWide: rng.around(blob ? 1.16 : 1, 0.18),
     headTilt: rng.around(0, 0.09),
 
@@ -116,9 +116,23 @@ export function makeCreature(seed, speciesName = "kid") {
   };
 
   if (species.name === "imp") {
-    // 도깨비는 머리와 몸이 통째로 먹빛이다. 얼굴은 종이색으로 그린다.
+    // 도깨비 머리는 먹빛, 얼굴은 종이색. 몸은 레퍼런스처럼 밝은 줄무늬도 나오도록
+    // 절반만 먹빛으로 둔다. rng 호출 수는 조건과 무관하게 고정한다.
+    const darkBody = rng.next() < 0.5;
     palette.skin = palette.ink;
-    palette.cloth = palette.ink;
+    if (darkBody) palette.cloth = palette.ink;
+  } else {
+    rng.next();
+  }
+
+  // 색 포인트. 호출 수를 고정하기 위해 무조건 두 번 뽑고 나서 판정한다.
+  const popRoll = rng.next();
+  const popTarget = rng.pick(["hair", "headgear", "skin"]);
+  palette.pop = popRoll < 0.14 ? { color: POPS[Math.floor(popRoll / 0.14 * POPS.length) % POPS.length], target: popTarget } : null;
+  if (palette.pop && palette.pop.target === "skin") {
+    // 도깨비 머리는 먹빛이라 피부 포인트가 무의미하다.
+    if (species.name === "imp") palette.pop = null;
+    else palette.skin = palette.pop.color;
   }
 
   return {
@@ -168,6 +182,14 @@ export function makeGrid(baseSeed, count, columns) {
     }
 
     creatures.push(candidate);
+  }
+
+  // 색 포인트는 한 판에 3개까지. 넘치면 앞에서부터 유지하고 나머지는 끈다.
+  let pops = 0;
+  for (const creature of creatures) {
+    if (!creature.palette.pop) continue;
+    pops += 1;
+    if (pops > 3) creature.palette.pop = null;
   }
 
   return creatures;

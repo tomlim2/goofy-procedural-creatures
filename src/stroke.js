@@ -202,13 +202,22 @@ export class Sketch {
 }
 
 // 불규칙한 폐곡선. 레퍼런스의 머리는 원이 아니라 울퉁불퉁한 덩어리다.
-export function blobPath(cx, cy, rx, ry, { lumps = 5, amount = 0.08, noise, phase = 0, steps = 48 } = {}) {
+//
+// square: superellipse 지수 증가분. 0이면 타원, 1.5쯤이면 모서리 둥근 사각.
+// taper: 위아래 폭 비율. +면 아래가 넓고(서양배), -면 위가 넓다.
+export function blobPath(cx, cy, rx, ry, { lumps = 5, amount = 0.08, noise, phase = 0, steps = 48, square = 0, taper = 0 } = {}) {
+  const n = 2 + square;
   const points = [];
   for (let i = 0; i < steps; i += 1) {
     const angle = (i / steps) * Math.PI * 2;
-    const lumpiness = noise ? noise(phase + Math.cos(angle) * lumps + Math.sin(angle) * lumps) : 0;
+    const c = Math.cos(angle);
+    const sSin = Math.sin(angle);
+    const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
+    const uy = Math.sign(sSin) * Math.pow(Math.abs(sSin), 2 / n);
+    const widen = 1 - taper * uy;
+    const lumpiness = noise ? noise(phase + c * lumps + sSin * lumps) : 0;
     const r = 1 + lumpiness * amount;
-    points.push([cx + Math.cos(angle) * rx * r, cy + Math.sin(angle) * ry * r]);
+    points.push([cx + ux * rx * widen * r, cy + uy * ry * r]);
   }
   return points;
 }

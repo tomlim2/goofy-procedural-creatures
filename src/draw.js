@@ -7,6 +7,27 @@ import { makeNoise, makeRng } from "./rng.js";
 
 const TAU = Math.PI * 2;
 
+// 머리 윤곽 사전. 뽑히기만 하고 안 쓰이던 head 슬롯을 여기서 소비한다.
+// square는 각짐, taper는 위아래 폭 비(+면 아래가 넓다), rx/ry는 크기 배율.
+const HEAD_SHAPES = {
+  round: { square: 0, taper: 0, rx: 1, ry: 1 },
+  square: { square: 1.5, taper: 0, rx: 1, ry: 0.96 },
+  tall: { square: 0.9, taper: -0.05, rx: 0.86, ry: 1.22 },
+  pear: { square: 0.25, taper: 0.3, rx: 1, ry: 1.06 },
+  wide: { square: 0.7, taper: 0.1, rx: 1.28, ry: 0.9 }
+};
+
+function headShape(spec) {
+  return HEAD_SHAPES[spec.parts.head] || HEAD_SHAPES.round;
+}
+
+// 채색보다 살짝 어두운 톤. 연필 음영에 쓴다.
+function darken(hex, factor) {
+  const v = parseInt(hex.slice(1), 16);
+  const ch = (x) => Math.round(Math.max(0, Math.min(255, x * factor))).toString(16).padStart(2, "0");
+  return "#" + ch((v >> 16) & 255) + ch((v >> 8) & 255) + ch(v & 255);
+}
+
 // 스펙에서 실제 치수를 뽑는다. 그리기 함수들이 전부 이 값을 공유한다.
 function layout(spec) {
   const p = spec.proportions;
@@ -20,8 +41,9 @@ function layout(spec) {
     const bodyW = 0.18 * p.bodyLen;
     const bodyCx = 0.08;
     const bodyTop = legTop + bodyH;
-    const headRy = 0.23 * p.headScale;
-    const headRx = headRy * p.headWide;
+    const shape = headShape(spec);
+    const headRy = 0.23 * p.headScale * shape.ry;
+    const headRx = 0.23 * p.headScale * p.headWide * shape.rx;
     // 머리는 몸 위에 얹는다. 겹치면 몸의 잉크가 얼굴 위로 비친다
     // (잉크 메시는 채색 메시보다 항상 위에 있다).
     const headCy = bodyTop + headRy * 0.82;
@@ -32,8 +54,9 @@ function layout(spec) {
   const bodyH = 0.28 * (p.bodyScale / 0.52);
   const bodyW = 0.23 * p.bodyWide;
   const bodyTop = legTop + bodyH;
-  const headRy = 0.3 * p.headScale;
-  const headRx = headRy * p.headWide;
+  const shape = headShape(spec);
+  const headRy = 0.3 * p.headScale * shape.ry;
+  const headRx = 0.3 * p.headScale * p.headWide * shape.rx;
   const headCy = bodyTop + headRy * 0.72;
 
   return { quad: false, legTop, bodyH, bodyW, bodyCx: 0, bodyTop, headRx, headRy, headCy };
@@ -54,21 +77,48 @@ function eyeGeometry(spec, box) {
 
 function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
+  const shape = headShape(spec);
   const path = blobPath(0, box.headCy, box.headRx, box.headRy, {
     lumps: p.headLumps,
     amount: p.headLump,
     noise,
-    phase: p.wobbleSeed * 0.01
+    phase: p.wobbleSeed * 0.01,
+    square: shape.square,
+    taper: shape.taper
   });
 
   fills.fill(path, spec.palette.skin, spec.palette.fillOffset);
+
+  // 연필 음영. 플랫 채색 위에 같은 계열의 어두운 톤으로 성기게 긋는다.
+  // 도깨비 머리는 이미 먹빛이라 건너뛴다.
+  if (spec.species !== "imp") {
+    fills.hatch(0.02, box.headCy + box.headRy * 0.1, box.headRx * 0.72, box.headRy * 0.6,
+      Math.PI * (0.2 + noise(p.wobbleSeed * 0.03) * 0.2), {
+        color: darken(spec.palette.skin, 0.88), lines: 7, width: 0.008
+      });
+  }
+
   ink.outline(path, { color: spec.palette.ink, width: 0.014, jitter: 0.008, passes: 2 });
   return path;
 }
 
-function drawEars(ink, spec, box) {
+function drawEars(ink, fills, spec, box) {
   const kind = spec.parts.ears;
   if (kind === "none") return;
+
+  if (spec.species === "pup") {
+    // 개 귀는 머리 위옆에서 길게 늘어진다. 레퍼런스의 비글 귀.
+    for (const side of [-1, 1]) {
+      const bx = side * box.headRx * 0.72;
+      const by = box.headCy + box.headRy * 0.55;
+      const lobe = blobPath(bx + side * 0.02, by - box.headRy * 0.55, 0.045, box.headRy * 0.62, {
+        lumps: 3, amount: 0.12, noise: null
+      });
+      fills.fill(lobe, darken(spec.palette.skin, 0.8));
+      ink.outline(lobe, { color: spec.palette.ink, width: 0.011, passes: 2 });
+    }
+    return;
+  }
 
   if (spec.species === "cat" && kind === "pointy") {
     // 고양이 귀는 옆이 아니라 정수리에 선다
@@ -135,13 +185,9 @@ function drawEyes(ink, fills, spec, box, eyes) {
       ink.stroke([[eye.x - eye.r * 1.1, eye.y + eye.r * 0.25], [eye.x + eye.r * 1.1, eye.y + eye.r * 0.35]], {
         color: ink0, width: 0.013
       });
-    } else {
-      // ring / wide — 흰자를 남기고 동공은 따로 움직인다
-      fills.fill(blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null }), "#f6f2e9");
-      ink.outline(blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 4, amount: 0.1, noise: null }), {
-        color: ink0, width: 0.011, passes: 2
-      });
     }
+    // ring / wide는 여기서 그리지 않는다. scene이 흰자·동공·눈꺼풀을
+    // 별도 메시로 세워 개방도(놀람)를 움직인다.
   }
 }
 
@@ -214,7 +260,18 @@ function drawEyewear(ink, fills, spec, box, eyes) {
   }
 }
 
-function drawNose(ink, spec, box, eyes) {
+function drawNose(ink, fills, spec, box, eyes) {
+  if (spec.species === "pup") {
+    // 주둥이. 밝은 타원 blob 위에 큼직한 검은 코.
+    const my = box.headCy - box.headRy * 0.42;
+    const muzzle = blobPath(0, my, box.headRx * 0.5, box.headRy * 0.36, { lumps: 3, amount: 0.1, noise: null });
+    fills.fill(muzzle, "#f0ebdf");
+    ink.outline(muzzle, { color: spec.palette.ink, width: 0.01 });
+    const nose = blobPath(0, my + box.headRy * 0.16, 0.038, 0.028, { lumps: 3, amount: 0.15, noise: null });
+    fills.fill(nose, spec.palette.ink);
+    return;
+  }
+
   const kind = spec.parts.nose;
   if (kind === "none") return;
   const y = box.headCy - box.headRy * spec.proportions.noseDrop;
@@ -264,7 +321,8 @@ function drawMouth(ink, fills, spec, box) {
 function drawHair(ink, spec, box, noise) {
   const kind = spec.parts.hair;
   if (kind === "none") return;
-  const ink0 = spec.palette.ink;
+  const pop = spec.palette.pop;
+  const ink0 = pop && pop.target === "hair" ? pop.color : spec.palette.ink;
   const rx = box.headRx;
   const ry = box.headRy;
   const cy = box.headCy;
@@ -318,7 +376,8 @@ function drawHeadgear(ink, fills, spec, box) {
   const kind = spec.parts.headgear;
   if (kind === "none") return;
   const ink0 = spec.palette.ink;
-  const accent = spec.palette.accent;
+  const pop = spec.palette.pop;
+  const accent = pop && pop.target === "headgear" ? pop.color : spec.palette.accent;
   const rx = box.headRx;
   const ry = box.headRy;
   const cy = box.headCy;
@@ -364,6 +423,8 @@ function drawHorns(ink, fills, spec, box, noise) {
   const rx = box.headRx;
   const ry = box.headRy;
   const cy = box.headCy;
+  // 도깨비 뿔은 레퍼런스처럼 길다. 실루엣을 위로 크게 확장한다.
+  const scale = spec.species === "imp" ? 1.8 : 1;
 
   for (const side of [-1, 1]) {
     const bx = side * rx * 0.6;
@@ -373,18 +434,18 @@ function drawHorns(ink, fills, spec, box, noise) {
     if (kind === "curved") {
       ink.stroke([
         [bx, by],
-        [bx + side * 0.06, by + 0.09],
-        [bx + side * 0.02 + lean, by + 0.17]
-      ], { color: ink0, width: 0.015 });
+        [bx + side * 0.07 * scale, by + 0.09 * scale],
+        [bx + side * 0.01 + lean, by + 0.17 * scale]
+      ], { color: ink0, width: 0.015 * scale });
     } else if (kind === "straight") {
-      ink.stroke([[bx, by], [bx + side * 0.05 + lean, by + 0.2]], { color: ink0, width: 0.014 });
+      ink.stroke([[bx, by], [bx + side * 0.05 + lean, by + 0.2 * scale]], { color: ink0, width: 0.014 * scale });
     } else if (kind === "antenna") {
       const tipX = bx + side * 0.05 + lean;
-      const tipY = by + 0.24;
+      const tipY = by + 0.24 * scale;
       ink.stroke([[bx, by], [tipX, tipY]], { color: ink0, width: 0.008 });
-      fills.fill(blobPath(tipX, tipY, 0.022, 0.022, { lumps: 3, amount: 0.2, noise: null }), ink0);
+      fills.fill(blobPath(tipX, tipY, 0.022 * scale, 0.022 * scale, { lumps: 3, amount: 0.2, noise: null }), ink0);
     } else {
-      ink.outline(blobPath(bx, by + 0.035, 0.033, 0.045, { lumps: 3, amount: 0.15, noise: null }), {
+      ink.outline(blobPath(bx, by + 0.035, 0.033 * scale, 0.045 * scale, { lumps: 3, amount: 0.15, noise: null }), {
         color: ink0, width: 0.011
       });
     }
@@ -424,6 +485,11 @@ function drawBody(ink, fills, spec, box, noise) {
   }
 
   fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
+  if (spec.species !== "imp") {
+    fills.hatch(0, (top + bottom) / 2, w * 0.6, (top - bottom) * 0.32, Math.PI * 0.3, {
+      color: darken(spec.palette.cloth, 0.88), lines: 4, width: 0.007
+    });
+  }
   ink.outline(path, { color: ink0, width: 0.012, passes: 2 });
   return { path, top, bottom, w, cx: 0 };
 }
@@ -517,8 +583,9 @@ function drawLimbs(ink, spec, box, body, noise) {
 
 // 스펙 하나를 그려서 지오메트리 재료를 돌려준다.
 // eyes 정보는 동공·눈꺼풀을 따로 움직이기 위해 scene.js로 넘긴다.
-export function drawCreature(spec) {
-  const rng = makeRng(spec.proportions.wobbleSeed);
+// variant는 보일 프레임 번호다. 지터 위상만 달라지고 구도는 같다.
+export function drawCreature(spec, variant = 0) {
+  const rng = makeRng((spec.proportions.wobbleSeed ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
   const wobble = spec.proportions.wobble;
 
@@ -531,12 +598,12 @@ export function drawCreature(spec) {
   drawMarks(ink, spec, body);
   drawLimbs(ink, spec, box, body, noise);
 
-  drawEars(ink, spec, box);
+  drawEars(ink, fills, spec, box);
   drawHead(ink, fills, spec, box, noise);
   drawHorns(ink, fills, spec, box, noise);
   drawEyes(ink, fills, spec, box, eyes);
   drawBrow(ink, spec, box, eyes);
-  drawNose(ink, spec, box, eyes);
+  drawNose(ink, fills, spec, box, eyes);
   drawMouth(ink, fills, spec, box);
   if (spec.species === "cat") {
     const wy = box.headCy - box.headRy * 0.3;
@@ -555,7 +622,7 @@ export function drawCreature(spec) {
   drawHeadgear(ink, fills, spec, box);
 
   // 동공이 움직이는 눈만 골라 넘긴다. 감은 눈은 깜빡일 것도 없다.
-  const live = ["ring", "wide", "half"].includes(spec.parts.eyes)
+  const live = ["ring", "wide"].includes(spec.parts.eyes)
     ? eyes.filter((e) => e.side !== spec.parts.patchSide)
     : [];
 

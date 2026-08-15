@@ -1,14 +1,19 @@
-// three.js 씬. 그리드 배치, 종이 배경, 개체별 메시 구성.
+// three.js 씬. 그리드 배치, 종이 배경, 개체 구성.
+//
+// 애니메이션 원칙: 생성은 개체당 한 번(보일 변형 포함), 매 프레임은 변형만.
+// 보일은 지터 위상이 다른 잉크·채색 3벌을 미리 굽고 낮은 주기로 순환한다.
 
 import * as THREE from "three";
 import { drawCreature } from "./draw.js";
-import { blobPath, Sketch } from "./stroke.js";
+import { blobPath, arcPath, Sketch } from "./stroke.js";
 import { makeClock } from "./clocks.js";
+import { makeCreature } from "./creature.js";
 import { makeNoise, makeRng } from "./rng.js";
 import { PAPER } from "./vocabulary.js";
 
 const CELL_W = 1.0;
 const CELL_H = 1.35;
+const BOIL_FRAMES = 3;
 
 // 종이. 균일한 단색이면 선이 떠 보인다. 그레인과 얼룩을 절차적으로 굽는다.
 function makePaperTexture(seed) {
@@ -31,7 +36,6 @@ function makePaperTexture(seed) {
   }
   ctx.putImageData(image, 0, 0);
 
-  // 옅은 얼룩 몇 개. 종이가 균일하지 않다는 신호.
   for (let i = 0; i < 18; i += 1) {
     const x = rng.float(0, size);
     const y = rng.float(0, size);
@@ -64,50 +68,108 @@ function inkMaterial(opacity) {
   });
 }
 
+function sketchMesh(sketch, opacity, renderOrder) {
+  const mesh = new THREE.Mesh(sketch.build(), inkMaterial(opacity));
+  mesh.renderOrder = renderOrder;
+  return mesh;
+}
+
+// 이모트 글리프. 이벤트가 드물어서 그때그때 굽는다.
+function buildEmote(kind, noise) {
+  const sketch = new Sketch(noise, 0.6);
+  if (kind === "heart") {
+    const pts = [];
+    for (let i = 0; i <= 28; i += 1) {
+      const a = (i / 28) * Math.PI * 2;
+      // 파라메트릭 하트
+      const x = 0.045 * Math.pow(Math.sin(a), 3);
+      const y = 0.038 * (Math.cos(a) - 0.35 * Math.cos(2 * a) - 0.18 * Math.cos(3 * a) - 0.06 * Math.cos(4 * a)) + 0.01;
+      pts.push([x, y]);
+    }
+    sketch.fill(pts, "#b0432e");
+    sketch.outline(pts, { color: "#7d2f20", width: 0.007 });
+  } else if (kind === "bang") {
+    sketch.stroke([[0, 0.075], [0.004, 0.02]], { color: "#2b2724", width: 0.018 });
+    sketch.stroke([[-0.002, -0.012], [0.006, -0.014]], { color: "#2b2724", width: 0.018 });
+  } else {
+    sketch.stroke(arcPath(0, 0.045, 0.03, 0.03, Math.PI, -Math.PI * 0.35, 12), { color: "#2b2724", width: 0.012 });
+    sketch.stroke([[0.012, 0.012], [0.008, -0.004]], { color: "#2b2724", width: 0.012 });
+    sketch.stroke([[0.004, -0.026], [0.012, -0.028]], { color: "#2b2724", width: 0.015 });
+  }
+  return sketchMesh(sketch, 0.95, 6);
+}
+
 function buildCreature(spec, noise) {
   const group = new THREE.Group();
-  const drawn = drawCreature(spec);
 
-  // 채색이 먼저, 그 위에 잉크. 순서가 뒤집히면 선이 묻힌다.
-  if (!drawn.fills.empty) {
-    const mesh = new THREE.Mesh(drawn.fills.build(), inkMaterial(0.92));
-    mesh.renderOrder = 1;
-    group.add(mesh);
+  // 보일 — 지터 위상만 다른 3벌. visible 토글로 순환한다.
+  const frames = [];
+  let firstDrawn = null;
+  for (let k = 0; k < BOIL_FRAMES; k += 1) {
+    const drawn = drawCreature(spec, k);
+    if (!firstDrawn) firstDrawn = drawn;
+    const frame = new THREE.Group();
+    if (!drawn.fills.empty) frame.add(sketchMesh(drawn.fills, 0.92, 1));
+    frame.add(sketchMesh(drawn.ink, 1, 2));
+    frame.visible = k === 0;
+    group.add(frame);
+    frames.push(frame);
   }
-  const ink = new THREE.Mesh(drawn.ink.build(), inkMaterial(1));
-  ink.renderOrder = 2;
-  group.add(ink);
 
-  // 동공과 눈꺼풀만 따로 움직인다. 나머지 선은 한 번 굽고 끝이다.
-  const pupils = [];
-  const lids = [];
-  for (const eye of drawn.eyes) {
+  // 살아 있는 눈. 흰자·윤곽·동공·눈꺼풀을 한 그룹으로 묶고
+  // 그룹 scale로 개방도(놀람)를 움직인다.
+  const eyeRigs = [];
+  for (const eye of firstDrawn.eyes) {
+    const rig = new THREE.Group();
+    rig.position.set(eye.x, eye.y, 0);
+
+    const white = new Sketch(noise, 0.4);
+    white.fill(blobPath(0, 0, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null }), "#f6f2e9");
+    rig.add(sketchMesh(white, 1, 3));
+
+    const rim = new Sketch(noise, 0.6);
+    rim.outline(blobPath(0, 0, eye.r, eye.r, { lumps: 4, amount: 0.1, noise: null }), {
+      color: spec.palette.ink, width: 0.011, passes: 2
+    });
+    rig.add(sketchMesh(rim, 1, 4));
+
     const pupilSketch = new Sketch(noise, 0.4);
-    pupilSketch.fill(
-      blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }),
-      spec.palette.ink
-    );
-    const pupil = new THREE.Mesh(pupilSketch.build(), inkMaterial(0.95));
-    pupil.renderOrder = 3;
-    pupil.position.set(eye.x, eye.y, 0);
-    group.add(pupil);
-    pupils.push({ mesh: pupil, eye });
+    pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
+    const pupil = sketchMesh(pupilSketch, 0.95, 5);
+    rig.add(pupil);
 
-    // 눈꺼풀은 위에서 내려온다. 지오메트리를 미리 내려 두고 scale.y로 여닫는다.
     const lidSketch = new Sketch(noise, 0.4);
-    lidSketch.fill(
-      blobPath(0, -eye.r * 1.15, eye.r * 1.2, eye.r * 1.15, { lumps: 3, amount: 0.1, noise: null }),
-      spec.palette.skin
-    );
-    const lid = new THREE.Mesh(lidSketch.build(), inkMaterial(1));
-    lid.renderOrder = 4;
-    lid.position.set(eye.x, eye.y + eye.r * 1.15, 0);
+    lidSketch.fill(blobPath(0, -eye.r * 1.15, eye.r * 1.25, eye.r * 1.15, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
+    const lid = sketchMesh(lidSketch, 1, 5);
+    lid.position.set(0, eye.r * 1.15, 0);
     lid.scale.y = 0;
-    group.add(lid);
-    lids.push(lid);
+    rig.add(lid);
+
+    group.add(rig);
+    eyeRigs.push({ rig, pupil, lid, eye });
   }
 
-  return { group, pupils, lids, clock: makeClock(spec.seed), spec };
+  return {
+    group,
+    frames,
+    eyeRigs,
+    clock: makeClock(spec.seed),
+    spec,
+    headTop: firstDrawn.headTop,
+    boilFps: 6 + (spec.seed % 5) * 0.5,
+    boilOffset: spec.seed % BOIL_FRAMES,
+    emoteMesh: null,
+    emoteKind: null
+  };
+}
+
+function disposeGroup(root) {
+  root.traverse((node) => {
+    if (node.isMesh) {
+      node.geometry.dispose();
+      node.material.dispose();
+    }
+  });
 }
 
 export function createScene(canvas) {
@@ -119,18 +181,23 @@ export function createScene(canvas) {
   camera.position.z = 10;
 
   let paper = null;
+  let ground = null;
   let creatures = [];
+  let noise = null;
   let columns = 7;
   let rows = 5;
 
   function clear() {
     for (const item of creatures) {
-      item.group.traverse((node) => {
-        if (node.isMesh) node.geometry.dispose();
-      });
+      disposeGroup(item.group);
       scene.remove(item.group);
     }
     creatures = [];
+    if (ground) {
+      disposeGroup(ground);
+      scene.remove(ground);
+      ground = null;
+    }
   }
 
   function layout() {
@@ -139,7 +206,6 @@ export function createScene(canvas) {
     const aspect = canvas.clientWidth / canvas.clientHeight;
     const gridAspect = width / height;
 
-    // 그리드 전체가 화면에 들어오도록 맞춘다.
     let viewW = width * 1.08;
     let viewH = height * 1.08;
     if (aspect > gridAspect) viewW = viewH * aspect;
@@ -157,13 +223,21 @@ export function createScene(canvas) {
     }
   }
 
+  function slotPosition(index) {
+    const width = columns * CELL_W;
+    const height = rows * CELL_H;
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    return [-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 1) + 0.16];
+  }
+
   function build(specs, cols) {
     clear();
     columns = cols;
     rows = Math.ceil(specs.length / cols);
 
     const rng = makeRng(specs[0] ? specs[0].seed : 1);
-    const noise = makeNoise(rng);
+    noise = makeNoise(rng);
 
     if (!paper) {
       paper = new THREE.Mesh(
@@ -175,35 +249,45 @@ export function createScene(canvas) {
       scene.add(paper);
     }
 
-    const width = columns * CELL_W;
-    const height = rows * CELL_H;
-
     specs.forEach((spec, index) => {
-      const col = index % columns;
-      const row = Math.floor(index / columns);
-      const x = -width / 2 + CELL_W * (col + 0.5);
-      const y = height / 2 - CELL_H * (row + 1) + 0.16;
-
       const item = buildCreature(spec, noise);
+      const [x, y] = slotPosition(index);
+      item.generation = 0;
       item.group.position.set(x, y, 0);
       scene.add(item.group);
       creatures.push(item);
     });
 
-    // 각 줄의 바닥선. 셀마다 끊지 않고 한 줄을 통으로 긋되 손으로 그은 것처럼 흔든다.
-    const ground = new Sketch(noise, 1.4);
+    const width = columns * CELL_W;
+    const height = rows * CELL_H;
+    const groundSketch = new Sketch(noise, 1.4);
     for (let row = 0; row < rows; row += 1) {
       const y = height / 2 - CELL_H * (row + 1) + 0.16;
-      ground.stroke([[-width / 2 + 0.1, y], [width / 2 - 0.1, y]], {
+      groundSketch.stroke([[-width / 2 + 0.1, y], [width / 2 - 0.1, y]], {
         color: "#4a423a", width: 0.012, jitter: 0.02, step: 0.08
       });
     }
-    const groundMesh = new THREE.Mesh(ground.build(), inkMaterial(0.72));
-    groundMesh.renderOrder = 1;
-    scene.add(groundMesh);
-    creatures.push({ group: groundMesh, pupils: [], lids: [], clock: null, spec: null });
+    ground = sketchMesh(groundSketch, 0.72, 1);
+    scene.add(ground);
 
     layout();
+  }
+
+  // 재생성. 종족은 슬롯에 남고 개체만 바뀐다.
+  function regenerate(index) {
+    const old = creatures[index];
+    const nextSeed = (old.spec.seed + (old.generation + 1) * 48271) >>> 0;
+    const spec = makeCreature(nextSeed, old.spec.species);
+
+    disposeGroup(old.group);
+    scene.remove(old.group);
+
+    const item = buildCreature(spec, noise);
+    item.generation = old.generation + 1;
+    const [x, y] = slotPosition(index);
+    item.group.position.set(x, y, 0);
+    scene.add(item.group);
+    creatures[index] = item;
   }
 
   function resize() {
@@ -216,20 +300,49 @@ export function createScene(canvas) {
   }
 
   function update(t) {
-    for (const item of creatures) {
-      if (!item.clock) continue;
+    for (let index = 0; index < creatures.length; index += 1) {
+      const item = creatures[index];
       const state = item.clock.update(t);
 
-      // 호흡 — 아주 작게. 크게 주면 젤리처럼 보인다.
-      item.group.scale.set(1 + state.breathe * 0.006, 1 + state.breathe * 0.011, 1);
-      item.group.position.y += 0;
-
-      for (const { mesh, eye } of item.pupils) {
-        mesh.position.x = eye.x + state.gaze[0] * eye.r * 0.34;
-        mesh.position.y = eye.y + state.gaze[1] * eye.r * 0.28;
+      if (state.regen) {
+        regenerate(index);
+        continue;
       }
-      for (const lid of item.lids) {
-        lid.scale.y = state.lid;
+
+      // 보일 — 낮은 주기로 잉크 변형을 순환
+      const frame = Math.floor(t * item.boilFps + item.boilOffset) % item.frames.length;
+      for (let k = 0; k < item.frames.length; k += 1) item.frames[k].visible = k === frame;
+
+      item.group.scale.set(1 + state.breathe * 0.006, 1 + state.breathe * 0.011, 1);
+
+      for (const rig of item.eyeRigs) {
+        rig.rig.scale.setScalar(state.aperture);
+        rig.pupil.position.x = state.gaze[0] * rig.eye.r * 0.34;
+        rig.pupil.position.y = state.gaze[1] * rig.eye.r * 0.28;
+        rig.lid.scale.y = state.lid;
+      }
+
+      // 이모트 — 머리 위에 떠서 까딱거리다 사라진다
+      if (state.emote) {
+        if (!item.emoteMesh || item.emoteKind !== state.emote.kind) {
+          if (item.emoteMesh) {
+            disposeGroup(item.emoteMesh);
+            item.group.remove(item.emoteMesh);
+          }
+          item.emoteMesh = buildEmote(state.emote.kind, noise);
+          item.emoteKind = state.emote.kind;
+          item.group.add(item.emoteMesh);
+        }
+        const k = state.emote.k;
+        const fade = Math.min(1, Math.min(k / 0.15, (1 - k) / 0.2));
+        item.emoteMesh.position.set(0.02, item.headTop + 0.15 + Math.sin(k * Math.PI * 3) * 0.015, 0);
+        item.emoteMesh.scale.setScalar(0.8 + 0.2 * fade);
+        item.emoteMesh.material.opacity = fade * 0.95;
+      } else if (item.emoteMesh) {
+        disposeGroup(item.emoteMesh);
+        item.group.remove(item.emoteMesh);
+        item.emoteMesh = null;
+        item.emoteKind = null;
       }
     }
     renderer.render(scene, camera);
