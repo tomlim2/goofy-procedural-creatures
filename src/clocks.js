@@ -6,7 +6,10 @@ import { makeRng } from "./rng.js";
 
 const BLINK_TIME = 0.13;
 
-export function makeClock(seed) {
+// birth는 이 시계가 태어난 전역 시각이다. 모든 예약은 출생 기준 상대
+// 시간으로 잡는다. 절대 시간으로 잡으면 재생성으로 태어난 개체의 예약이
+// 전부 과거가 되어, 태어나자마자 매 프레임 다시 재생성되는 폭주가 생긴다.
+export function makeClock(seed, birth = 0) {
   const rng = makeRng(seed ^ 0x5bf03635);
 
   const breathePeriod = rng.float(2.6, 5.4);
@@ -36,7 +39,8 @@ export function makeClock(seed) {
   let emoteKind = "heart";
 
   return {
-    update(t) {
+    update(globalT) {
+      const t = globalT - birth;
       if (t >= nextBlink) {
         blinkStart = t;
         nextBlink = t + rng.float(1.8, 6.5);

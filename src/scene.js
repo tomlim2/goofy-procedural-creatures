@@ -99,7 +99,7 @@ function buildEmote(kind, noise) {
   return sketchMesh(sketch, 0.95, 6);
 }
 
-function buildCreature(spec, noise) {
+function buildCreature(spec, noise, birth = 0) {
   const group = new THREE.Group();
 
   // 보일 — 지터 위상만 다른 3벌. visible 토글로 순환한다.
@@ -153,7 +153,7 @@ function buildCreature(spec, noise) {
     group,
     frames,
     eyeRigs,
-    clock: makeClock(spec.seed),
+    clock: makeClock(spec.seed, birth),
     spec,
     headTop: firstDrawn.headTop,
     boilFps: 6 + (spec.seed % 5) * 0.5,
@@ -184,6 +184,8 @@ export function createScene(canvas) {
   let ground = null;
   let creatures = [];
   let noise = null;
+  // 마지막 update의 전역 시각. 재생성·재빌드로 태어나는 시계의 출생 시각이 된다.
+  let clockNow = 0;
   let columns = 7;
   let rows = 5;
 
@@ -250,7 +252,7 @@ export function createScene(canvas) {
     }
 
     specs.forEach((spec, index) => {
-      const item = buildCreature(spec, noise);
+      const item = buildCreature(spec, noise, clockNow);
       const [x, y] = slotPosition(index);
       item.generation = 0;
       item.group.position.set(x, y, 0);
@@ -282,7 +284,7 @@ export function createScene(canvas) {
     disposeGroup(old.group);
     scene.remove(old.group);
 
-    const item = buildCreature(spec, noise);
+    const item = buildCreature(spec, noise, clockNow);
     item.generation = old.generation + 1;
     const [x, y] = slotPosition(index);
     item.group.position.set(x, y, 0);
@@ -300,6 +302,7 @@ export function createScene(canvas) {
   }
 
   function update(t) {
+    clockNow = t;
     for (let index = 0; index < creatures.length; index += 1) {
       const item = creatures[index];
       const state = item.clock.update(t);
