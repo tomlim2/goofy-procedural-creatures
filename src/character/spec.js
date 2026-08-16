@@ -7,7 +7,7 @@
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
 import { makeRng } from "../rng.js";
-import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS } from "./vocabulary/index.js";
+import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS } from "./vocabulary/index.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -22,14 +22,19 @@ function pickSlot(rng, species, archetype, slot) {
 
 // 같이 나오면 그림이 깨지는 조합을 정리한다.
 // 랜덤을 다시 굴리지 않고 결정적으로 덮어써야 시드 재현이 유지된다.
-function applyConstraints(parts, rng, speciesName) {
-  // 종족 금지표를 가장 먼저 적용한다. species.js의 forbid를 읽어 결정적으로 덮어쓴다.
-  // "사람에게 뿔 없음", "외눈은 도깨비만" 같은 제한은 전부 거기 있다 — 여기 하드코딩하지 않는다.
-  // 맨 앞이어야 뒤의 제약(더듬이→귀 제거 등)이 금지된 값을 보고 오작동하지 않는다.
+// 종족 금지표. species.js의 forbid를 읽어 결정적으로 덮어쓴다(rng 없음).
+// "사람에게 뿔 없음", "외눈은 도깨비만" 같은 제한은 전부 거기 있다 — 여기 하드코딩하지 않는다.
+function applyForbid(parts, speciesName) {
   const forbid = (SPECIES.find((s) => s.name === speciesName) || {}).forbid || {};
   for (const [slot, table] of Object.entries(forbid)) {
     if (table[parts[slot]] !== undefined) parts[slot] = table[parts[slot]];
   }
+}
+
+function applyConstraints(parts, rng, speciesName) {
+  // 종족 금지표를 가장 먼저 적용한다. 맨 앞이어야 뒤의 제약(더듬이→귀 제거 등)이
+  // 금지된 값을 보고 오작동하지 않는다.
+  applyForbid(parts, speciesName);
 
   // 헬멧과 항아리는 머리를 덮는다. 머리카락이 비집고 나올 자리가 없다.
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
@@ -121,6 +126,7 @@ export function makeCreature(seed, speciesName = "human") {
 
   const parts = {};
   for (const slot of Object.keys(SLOTS)) {
+    if (LATE_SLOTS.includes(slot)) continue;   // 맨 끝에 뽑는다 (아래)
     parts[slot] = pickSlot(rng, species, archetype, slot);
   }
   applyConstraints(parts, rng, species.name);
@@ -161,6 +167,11 @@ export function makeCreature(seed, speciesName = "human") {
   }
 
   const proportions = makeProportions(rng, archetype);
+
+  // 뒤늦게 붙인 슬롯. 여기서 뽑아야 앞선 파츠·색·비율의 시드가 유지된다 (slots.js LATE_SLOTS).
+  // 종족 forbid는 다시 한 번 — 이 슬롯들에도 적용되게.
+  for (const slot of LATE_SLOTS) parts[slot] = pickSlot(rng, species, archetype, slot);
+  applyForbid(parts, species.name);
 
   return {
     seed,

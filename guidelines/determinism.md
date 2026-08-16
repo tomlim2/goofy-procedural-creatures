@@ -21,13 +21,15 @@ for (const slot of Object.keys(SLOTS)) parts[slot] = pickSlot(rng, archetype, sl
 
 그래서 다음은 전부 **기존 시드를 깨는 변경**이다. 해도 되지만 알고 해야 한다.
 
-- `SLOTS`에 슬롯을 추가하거나 순서를 바꾸는 것 (`character/vocabulary/slots.js`)
+- `SLOTS`의 순서를 바꾸거나 슬롯을 **중간에** 끼우는 것 (`character/vocabulary/slots.js`)
 - `makeCreature` 안에서 rng를 부르는 순서를 바꾸는 것
 - `applyConstraints`에서 `rng.chance()` 호출을 추가하거나 제거하는 것
 
 반대로 다음은 **시드를 깨지 않는다.**
 
 - 가중치 숫자만 바꾸는 것 (`DEFAULT_BIAS`의 값 조정) — 결과는 달라지지만 호출 횟수는 같다
+- 새 슬롯을 `LATE_SLOTS` 끝에 붙이는 것 — `makeCreature`가 파츠·제약·색·비율을 다 뽑은 **뒤에** 뽑으므로
+  기존 판은 그대로이고 새 슬롯 값만 더해진다 (`legLength`가 이 자리다). `LATE_SLOTS`의 순서는 추가 순서다
 - `character/draw/`만 고치는 것. 그리기는 스펙을 소비할 뿐 rng를 소비하지 않는다
 - `stroke.js`의 폭·떨림 상수를 바꾸는 것
 

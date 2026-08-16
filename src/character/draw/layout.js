@@ -55,7 +55,8 @@ export function layout(spec) {
     return { quad, legTop, bodyH, bodyW, bodyCx, bodyTop, headRx, headRy, headCy };
   }
 
-  const legTop = p.legLength * 0.55;
+  // 다리 기장. short는 스케일이 아니라 길이만 절반 — 몸이 바닥 가까이 내려앉고 발·굵기는 그대로.
+  const legTop = p.legLength * 0.55 * (spec.parts.legLength === "short" ? 0.5 : 1);
   const bodyH = 0.28 * (p.bodyScale / 0.52);
   const bodyW = 0.23 * p.bodyWide;
   const bodyTop = legTop + bodyH;

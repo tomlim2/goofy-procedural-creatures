@@ -2,10 +2,11 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 17슬롯 100파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 18슬롯 102파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
-슬롯 추가·순서 변경은 rng 호출 수를 바꿔 **기존 시드를 깬다** ([../determinism.md](../determinism.md)).
+슬롯 순서 변경은 rng 호출 순서를 바꿔 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에 붙여 맨 끝에 뽑으면 기존 판이
+유지된다 ([../determinism.md](../determinism.md)).
 
 ## 머리
 
@@ -98,6 +99,15 @@ none / stripes(가로 3줄) / dots(4점) / patch(왼쪽 해칭) / hatch(전체 �
 | tiptoe | 가는 선 + 아래로 뾰족한 발 |
 
 두발은 엉덩이(밑단 위 0.02)에 피벗. **네발**은 슬롯값과 무관하게 굵은 스텁 4개 + 발가락, 뿌리는 bodyH 25% 위.
+
+### legLength (2)
+| 값 | 기장 | |
+| --- | --- | --- |
+| medium | legLength 비율 × 0.55 (≈0.17) | 기준 |
+| short | 그 절반 (≈0.08) | 몸이 바닥 가까이 내려앉는다. **스케일이 아니라 기장만** — 발·굵기·부츠 높이는 그대로 |
+
+형태(legs)와 독립이라 6×2 조합 — 모든 다리 유형에 짧은 판이 있다. `layout()`이 `legTop`에서 곱하므로 몸·머리·어깨가
+같이 내려온다. 네발은 무시. `LATE_SLOTS`라 맨 끝에 뽑는다. 갤러리: `gallery.html?slot=legs&fix=legLength:short`.
 
 ### tail (4) — 네발 전용
 curl(위로 말림) / flag(위로 곧게) / longtail(뒤로 길게) / stubtail(뭉툭). 꼬리 뿌리에 피벗.
