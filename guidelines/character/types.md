@@ -94,18 +94,18 @@
 
 `species.js` `identity`. census가 검사하는 종족 불변식.
 
-| 종족 | skeleton | horns | eyes | arms | tail | 기타 |
-| --- | --- | --- | --- | --- | --- | --- |
-| human | biped | none | not cyclops | ● | ✗ | armLength medium만 |
-| pup | quad | none | not cyclops | ✗ | ● | hair none (털이지 머리카락이 아니다) |
-| cat | quad | none | not cyclops | ✗ | ● | hair none |
-| imp | biped | (자유) | (자유) | ● | ✗ | 머리 어두움(휘도<90) |
+| 종족 | skeleton | horns | eyes | arms | tail | ears | 기타 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| human | biped | none | not cyclops | ● | ✗ | none·round(·Mid)·pointy(·Mid·Big)·flap·fold(·Mid) | armLength medium만 |
+| pup | quad | none | not cyclops | ✗ | ● | flap·long·pointy(·Mid)·round(·Mid)·fold(·Mid) | hair·brow none (털이지 머리카락이 아니다) |
+| cat | quad | none | not cyclops | ✗ | ● | pointy·round·fold 각 크기 셋 (늘어진 귀 없음) | hair·brow none |
+| imp | biped | (자유) | (자유) | ● | ✗ | none·pointy | 머리 어두움(휘도<90) |
 
 ## 제약 (applyConstraints)
 
 같이 나오면 그림이 깨지는 조합. **다시 뽑지 않고 결정적으로 덮어쓴다.** 순서대로:
 
-1. **종족 forbid** (species.js) — 맨 먼저. human 뿔→none·cyclops→wide·long 팔→medium, pup 뿔·머리카락→none·cyclops→dot, cat 뿔·머리카락→none·cyclops→slit
+1. **종족 forbid** (species.js) — 맨 먼저. human 뿔→none·cyclops→wide·long 팔→medium·귀 경계, pup 뿔·머리카락·눈썹→none·cyclops→dot·귀 경계, cat 뿔·머리카락·눈썹→none·cyclops→slit·귀 경계(늘어진 귀→정수리 귀), imp 귀 경계(none·작은 pointy만)
 2. 헬멧·항아리 → 머리카락 없음. 모자·밴드 → 짧은 머리만
 3. 모히칸 → 모자 없음. 왕관 뿔 → 모자 없음, 머리카락 none/tuft만
 4. 더듬이 → 75% 확률로 귀 없음

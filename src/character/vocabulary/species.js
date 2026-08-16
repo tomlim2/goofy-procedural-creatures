@@ -11,12 +11,14 @@ export const SPECIES = [
     // forbid는 "이 슬롯의 이 값이 나오면 이걸로 바꾼다". applyConstraints가 읽어서
     // 결정적으로 덮어쓴다 — 아키타입 성향(scholar의 dot 눈 등)은 살아 있다.
     forbid: {
+      ears: { long: "flap", roundBig: "roundMid", foldBig: "foldMid" },   // 사람 귀 경계
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       eyes: { cyclops: "wide" },
       armLength: { long: "medium" }
     },
     // 정체성 — census가 검사한다. 위반 개체가 나오면 버그다.
     identity: {
+      ears: ["none", "round", "roundMid", "pointy", "pointyMid", "pointyBig", "flap", "fold", "foldMid"],   // 늘어진 긴 귀·왕귀는 사람 것이 아니다
       skeleton: "biped",
       horns: ["none"],
       eyes: { not: ["cyclops"] },
@@ -30,6 +32,8 @@ export const SPECIES = [
     name: "pup",
     weight: 2,
     forbid: {
+      ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid" },
+      // 개 귀 경계 — 없음·왕귀는 개 귀로
       eyes: { cyclops: "dot" },
       // 개에게 뿔·머리카락은 없다 — 전부 none (털이지 머리카락이 아니다)
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
@@ -37,6 +41,7 @@ export const SPECIES = [
       brow: { flat: "none", angry: "none", worry: "none" }   // 동물에게 눈썹은 없다 (상태 전환의 대체 눈썹도 막힌다)
     },
     identity: {
+      ears: ["flap", "long", "pointy", "pointyMid", "round", "roundMid", "fold", "foldMid"],   // 개 귀 — 늘어진 귀가 기본, none·왕귀 없음
       skeleton: "quad",
       horns: ["none"],
       hair: ["none"],
@@ -49,7 +54,7 @@ export const SPECIES = [
       // 다리 — 레퍼런스의 굵은 스텁이 기본. 가는 다리·양말·떠 있는 발(레이맨식)도 섞인다
       legs: [["stub", 4], ["stick", 2], ["float", 1.5], ["boots", 1]],
       // 귀 — 늘어진 로브(flap·long)가 기본, 쫑긋(pointy)·동그란(round)·접힌(fold) 귀도 섞인다
-      ears: [["flap", 4], ["long", 3], ["pointy", 1.2], ["pointyMid", 0.8], ["round", 1.5], ["fold", 1]],
+      ears: [["flap", 4], ["long", 3], ["pointy", 1.2], ["pointyMid", 0.8], ["round", 1], ["roundMid", 0.5], ["fold", 0.7], ["foldMid", 0.3]],
       horns: [["none", 1]],
       hair: [["none", 1]],
       headgear: [["none", 8], ["cap", 1]],
@@ -65,12 +70,15 @@ export const SPECIES = [
     name: "cat",
     weight: 2,
     forbid: {
+      ears: { flap: "pointy", long: "pointyMid", none: "pointy" },
+      // 고양이 귀 경계 — 늘어진 귀·없음은 정수리 귀로
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none" },
       brow: { flat: "none", angry: "none", worry: "none" }
     },
     identity: {
+      ears: ["pointy", "pointyMid", "pointyBig", "round", "roundMid", "roundBig", "fold", "foldMid", "foldBig"],   // 정수리 귀만 — 늘어진 귀(flap·long)·none 없음
       skeleton: "quad",
       horns: ["none"],
       hair: ["none"],
@@ -81,8 +89,12 @@ export const SPECIES = [
     },
     bias: {
       legs: [["stub", 3], ["stick", 3], ["float", 1.5], ["boots", 1]],
-      // 정수리 세모귀 — 작음·중간·큼 섞임. 접힌 귀(스코티시 폴드)·동그란 귀도
-      ears: [["pointy", 3], ["pointyMid", 3], ["pointyBig", 2], ["fold", 2], ["round", 1]],
+      // 정수리 귀 — 세모·동그란·접힌 귀 각각 작음·중간·큼. 늘어진 귀(flap·long)는 고양이에게 없다
+      ears: [
+        ["pointy", 2], ["pointyMid", 2], ["pointyBig", 1.5],
+        ["round", 1], ["roundMid", 1], ["roundBig", 0.5],
+        ["fold", 1], ["foldMid", 1], ["foldBig", 0.5]
+      ],
       horns: [["none", 1]],
       hair: [["none", 1]],
       headgear: [["none", 1]],
@@ -98,8 +110,11 @@ export const SPECIES = [
   {
     name: "imp",
     weight: 2,
-    forbid: {},
+    forbid: {
+      ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none" }   // 도깨비 귀는 없거나 작은 뾰족귀
+    },
     identity: {
+      ears: ["none", "pointy"],   // 도깨비 귀는 없거나 뾰족 작은 것
       skeleton: "biped",
       darkHead: true,
       arms: true,

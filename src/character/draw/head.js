@@ -35,43 +35,24 @@ export function drawHead(ink, fills, spec, box, noise) {
   return path;
 }
 
-// pointy 크기 배율. pointyMid·pointyBig는 모양은 pointy, 길이·폭만 크다
-const POINTY_SCALE = { pointy: 1, pointyMid: 1.4, pointyBig: 1.85 };
-const earKind = (value) => (POINTY_SCALE[value] ? "pointy" : value);
+// 귀 크기 배율. Mid·Big는 모양은 같고 길이·폭만 크다. earKind()가 값을 기본 모양으로 돌린다
+const EAR_SIZE = { round: 1, roundMid: 1.4, roundBig: 1.8, pointy: 1, pointyMid: 1.4, pointyBig: 1.85, fold: 1, foldMid: 1.4, foldBig: 1.8 };
+const earKind = (value) => value.replace(/(Mid|Big)$/, "");
 
 export function drawEars(ink, fills, spec, box) {
   const kind = earKind(spec.parts.ears);
-  const size = POINTY_SCALE[spec.parts.ears] || 1;
+  const size = EAR_SIZE[spec.parts.ears] || 1;
   if (kind === "none") return;
   // 개 귀는 머리 뒤가 아니라 **머리 위에** 그린다 (drawPupEars, 머리 다음) — 안쪽으로 기운 귀가 얼굴에 가려지지 않게
   if (spec.species === "pup") return;
-
-  if (spec.species === "cat" && kind === "pointy") {
-    // 고양이 귀는 옆이 아니라 정수리에 선다. 크기 셋 — 큰 귀는 밑변도 넓고 안쪽 귀 선이 하나 더
-    for (const side of [-1, 1]) {
-      const bx = side * box.headRx * 0.55;
-      const by = box.headCy + box.headRy * 0.78;
-      const w = 0.045 * (0.7 + 0.3 * size);
-      const h = 0.085 * size;
-      ink.stroke([
-        [bx - side * w * 0.9, by],
-        [bx + side * w * 0.3, by + h],
-        [bx + side * w * 1.2, by - 0.01]
-      ], { color: spec.palette.ink, width: 0.011 });
-      if (size > 1.2) {
-        // 안쪽 귀 선
-        ink.stroke([[bx - side * w * 0.35, by + 0.008], [bx + side * w * 0.3, by + h * 0.62]], { color: spec.palette.ink, width: 0.007 });
-      }
-    }
-    return;
-  }
+  if (spec.species === "cat") { drawCatEars(ink, spec, box, kind, size); return; }
 
   const y = box.headCy - box.headRy * 0.05;
 
   for (const side of [-1, 1]) {
     const x = side * box.headRx * 0.98;
     if (kind === "round") {
-      ink.outline(blobPath(x, y, 0.035, 0.045, { lumps: 3, amount: 0.15, noise: null }), {
+      ink.outline(blobPath(x, y, 0.035 * size, 0.045 * size, { lumps: 3, amount: 0.15, noise: null }), {
         color: spec.palette.ink, width: 0.011
       });
     } else if (kind === "pointy") {
@@ -86,12 +67,12 @@ export function drawEars(ink, fills, spec, box) {
       });
       ink.outline(lobe, { color: spec.palette.ink, width: 0.01, passes: 2 });
     } else if (kind === "fold") {
-      // 접힌 귀 — 끝이 꺾인다
+      // 접힌 귀 — 끝이 꺾인다 (크기 배율)
       ink.stroke([
-        [x - side * 0.01, y + 0.04],
-        [x + side * 0.055, y + 0.055],
-        [x + side * 0.05, y - 0.01],
-        [x + side * 0.015, y - 0.03]
+        [x - side * 0.01, y + 0.04 * size],
+        [x + side * 0.055 * size, y + 0.055 * size],
+        [x + side * 0.05 * size, y - 0.01 * size],
+        [x + side * 0.015 * size, y - 0.03 * size]
       ], { color: spec.palette.ink, width: 0.011 });
     } else {
       // flap — 아래로 늘어진 귀
@@ -102,11 +83,47 @@ export function drawEars(ink, fills, spec, box) {
   }
 }
 
+// 고양이 귀 — 정수리 쪽 윤곽 위에 선다: 정수리~눈 사이 위쪽(round 55° · fold 50°) 또는 정수리에 가까이(pointy 38°).
+// 세모·동그란·접힌 귀 각각 크기 셋. 머리 뒤에 그려서 윤곽 안쪽 부분은 머리 채색에 묻힌다(박혀 보임).
+// 늘어진 귀(flap·long)는 고양이에게 없다 — 들어오면 pointy로 그린다.
+function drawCatEars(ink, spec, box, kind, size) {
+  const rx = box.headRx, ry = box.headRy, cy = box.headCy;
+  const shape = kind === "round" || kind === "fold" ? kind : "pointy";
+  const theta = { pointy: 0.66, fold: 0.87, round: 0.96 }[shape];
+  const ink0 = spec.palette.ink;
+  for (const side of [-1, 1]) {
+    // 윤곽 위 뿌리, 바깥 법선 n, 접선 t(정수리 쪽 +)
+    const bx = side * rx * Math.sin(theta);
+    const by = cy + ry * Math.cos(theta);
+    let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
+    const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+    const tx = -ny * side, ty = nx * side;
+    const local = (u, v) => [bx + nx * u + tx * v, by + ny * u + ty * v];
+    if (shape === "pointy") {
+      // 열린 세모 — 밑변은 윤곽 안, 끝은 법선을 따라. 중간 이상은 안쪽 귀 선 하나 더
+      const w = 0.042 * (0.7 + 0.3 * size);
+      const h = 0.085 * size;
+      ink.stroke([local(-0.014, w * 0.95), local(h, -w * 0.1), local(-0.014, -w * 1.05)], { color: ink0, width: 0.011 });
+      if (size > 1.2) ink.stroke([local(0.004, w * 0.35), local(h * 0.6, -w * 0.02)], { color: ink0, width: 0.007 });
+    } else if (shape === "round") {
+      const [cxr, cyr] = local(0.018 * size, 0);
+      ink.outline(blobPath(cxr, cyr, 0.03 * size, 0.032 * size, { lumps: 3, amount: 0.15, noise: null }), { color: ink0, width: 0.011 });
+    } else {
+      // 접힌 귀 — 올라갔다가 끝이 턱 쪽으로 꺾여 처진다 (스코티시 폴드)
+      const w = 0.04 * (0.7 + 0.3 * size);
+      ink.stroke([
+        local(-0.012, w * 0.9), local(0.05 * size, w * 0.5), local(0.06 * size, -w * 0.3),
+        local(0.03 * size, -w * 1.4), local(-0.012, -w * 1.05)
+      ], { color: ink0, width: 0.011 });
+    }
+  }
+}
+
 // 개 귀 — 머리(채색·윤곽) **위에** 그린다. 안쪽으로 기운 귀라 머리 뒤에 그리면 얼굴에 묻힌다.
 export function drawPupEars(ink, fills, spec, box) {
   if (spec.species !== "pup") return;   // 개만. (빠지면 모든 종족 머리에 개 귀가 얹혀 뿔처럼 보인다)
   const kind = earKind(spec.parts.ears);
-  const size = POINTY_SCALE[spec.parts.ears] || 1;
+  const size = EAR_SIZE[spec.parts.ears] || 1;
   if (kind === "none") return;
   // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위** 두 자리 중 하나고, 귀는 그 자리의 법선을 **반대 기울기로** 탄다
   // (법선을 수직에 대해 거울상으로 뒤집은 축 — 바깥으로 벌어지지 않고 안쪽으로 모인다):
@@ -147,16 +164,17 @@ export function drawPupEars(ink, fills, spec, box) {
       const b0 = -OUT - 0.01;
       path = [local(b0, 0.05 * (0.8 + 0.2 * size)), local(len, 0.004), local(b0, -0.04 * (0.8 + 0.2 * size))];
     } else if (kind === "round") {
-      // 귀 축 방향으로 길쭉한 동그란 귀 — 안쪽이 윤곽에 살짝 걸친다
-      const [cx, cy] = local(-OUT + 0.055, 0);
-      path = rotate(blobPath(cx, cy, 0.036, 0.046, { lumps: 3, amount: 0.15, noise: null }), cx, cy, side * lean);
+      // 귀 축 방향으로 길쭉한 동그란 귀 — 안쪽이 윤곽에 살짝 걸친다 (크기 배율)
+      const [cx, cy] = local(-OUT + 0.055 * size, 0);
+      path = rotate(blobPath(cx, cy, 0.036 * size, 0.046 * size, { lumps: 3, amount: 0.15, noise: null }), cx, cy, side * lean);
     } else if (kind === "fold") {
-      // 접힌 귀 — 윤곽에서 귀 축을 따라 올라갔다가 끝이 바깥·아래로 접혀 처진다 (중력 방향)
+      // 접힌 귀 — 윤곽에서 귀 축을 따라 올라갔다가 끝이 바깥·아래로 접혀 처진다 (중력 방향). 크기 배율
       const b0 = -OUT - 0.01;
-      const [ux, uy] = local(0.06, 0.02);           // 접히는 지점
+      const k = size;
+      const [ux, uy] = local(0.06 * k, 0.02);       // 접히는 지점
       path = [
-        local(b0, 0.045), local(0.05, 0.05), [ux + side * 0.02, uy], [ux + side * 0.055, uy - 0.05],
-        [ux + side * 0.02, uy - 0.07], [ux - side * 0.005, uy - 0.03], local(0.02, -0.03), local(b0, -0.03)
+        local(b0, 0.045 * k), local(0.05 * k, 0.05 * k), [ux + side * 0.02 * k, uy], [ux + side * 0.055 * k, uy - 0.05 * k],
+        [ux + side * 0.02 * k, uy - 0.07 * k], [ux - side * 0.005, uy - 0.03 * k], local(0.02, -0.03 * k), local(b0, -0.03 * k)
       ];
     } else {
       // flap / long — 머리 옆에서 늘어지되 반대 기울기(0.25rad 안쪽)로 끝이 얼굴 쪽으로 모이는 로브
