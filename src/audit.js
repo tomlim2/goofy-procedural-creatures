@@ -6,7 +6,8 @@
 // 판단 기준(기대값):
 //   눈썹(none 아님)·입·코(주둥이)·안경·볼·수염(고양이) — 모든 상태에서 보인다
 //   정지 눈(dot·sleepy·cross·spiral·slit·half) — 잠들면 잠 눈꺼풀이 덮으므로 그때만 안 보여도 된다
-//   눈 리그의 동공(ring·wide·cyclops) — 깜빡임·^^·윙크(그쪽)·잠에는 감기니 그때는 빼고 본다
+//   눈 리그의 동공(ring·wide·cyclops) — 깜빡임·^^·윙크(그쪽)·잠에는 감기니 그때는 빼고 본다. 대신 그때는
+//   감은 눈 선(shut)이 보여야 한다 — 눈이 감겼다고 얼굴에서 눈이 사라지면 안 된다
 //   ^^ 아치 — 행복·윙크(그쪽)일 때 보인다 · 잠 눈꺼풀 — 잠들었을 때 보인다
 
 import * as THREE from "three";
@@ -130,6 +131,8 @@ function audit() {
         const closed = winked || closedAll || asleep;
         parts.push([`pupil${i}`, [rig.pupil], !closed]);
         parts.push([`smile${i}`, [rig.smile], !!(winked || ov.happy)]);
+        // 감은 눈(깜빡임·잠)은 감은 눈 선이 있어야 한다 — "동공이 안 보여도 된다"가 "눈이 없어도 된다"는 뜻이 아니다
+        parts.push([`shut${i}`, [rig.shut], !winked && !ov.happy && (asleep || !!ov.lid)]);
       });
       item.sleepLids.forEach((lid, i) => parts.push([`sleepLid${i}`, [lid], asleep]));
 

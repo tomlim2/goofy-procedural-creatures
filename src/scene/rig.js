@@ -152,8 +152,18 @@ export function buildCreature(spec, noise, birth = 0) {
     smile.visible = false;
     rig.add(smile);
 
+    // 감은 눈 선 — 눈꺼풀이 다 내려왔을 때(깜빡임 꼭대기·잠) 살색 덮개 위에 얹는 아치. 이게 없으면 살아 있는 눈(ring·wide·cyclops)은
+    // 감는 순간 얼굴에서 아예 사라진다 — 잠든 개·고양이가 눈 없는 얼굴이 된다 (정지 눈의 잠 눈꺼풀 아치와 같은 역할)
+    const shutSketch = new Sketch(noise, 0.5);
+    shutSketch.stroke(arcPath(0, eye.r * 0.1, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), {
+      color: spec.faceInk || spec.palette.ink, width: 0.012
+    });
+    const shut = sketchMesh(shutSketch, 1, 6);
+    shut.visible = false;
+    rig.add(shut);
+
     faceGroup.add(rig);
-    eyeRigs.push({ rig, pupil, lid, smile, eye });
+    eyeRigs.push({ rig, pupil, lid, smile, shut, eye });
   }
 
   // 잠 눈꺼풀 — 정지 눈(dot·cross·slit…)은 얼굴 잉크에 구워져 있어 감을 수 없다. 잘 때 그 위에 덮는 살색 덮개 + 감은 선.

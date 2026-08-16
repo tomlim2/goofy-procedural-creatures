@@ -107,6 +107,8 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     const closed = winked || state.happy;
     rig.lid.scale.y = closed ? 1 : state.lid;
     rig.smile.visible = closed;
+    // 눈꺼풀이 거의 다 내려오면(깜빡임 꼭대기·잠) 감은 눈 선 — 감은 눈이 빈 얼굴이 되지 않게. ^^·윙크는 미소 아치가 대신한다
+    rig.shut.visible = !closed && state.lid > 0.85;
   }
 
   // 이모지 애니메이션 — 모션과 별개 층. clock의 이모지 채널이 종류·진행·곡선(dy·scale·rot·opacity)을 준다.

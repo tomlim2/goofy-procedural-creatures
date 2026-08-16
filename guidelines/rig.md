@@ -28,7 +28,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·점�
         ├── faceStates.mouth ×2
         ├── sleepLid ×(정지 눈 수) ← 잠 눈꺼풀. 정지 눈(dot·cross·slit…) 위 살색 덮개 + 감은 선 (3.5). sleep > 0.5일 때만
         └── eyeRig ×(0~2)        ← 살아 있는 눈만
-            ├── white(3) · rim(4) · pupil(5) · lid(5) · smile(6)
+            ├── white(3) · rim(4) · pupil(5) · lid(5) · smile(6) · shut(6 — 감은 눈 선, 눈꺼풀 > 0.85일 때: 깜빡임 꼭대기·잠)
 emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머리 위 지점(세계 좌표)을 이징(0.1)으로 따라간다 —
                                   갸웃·점프 때 한 박자 늦게 끌려오고 끌리는 쪽으로 눕는다. 이모지 중에만 메시가 있다
 ```
@@ -79,7 +79,7 @@ emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머
 | 팔다리 지체 (front, back) | pivot.rotation.z, elbow.rotation.z (이징된 목표각 + 이징 없는 진동), front/back visible |
 | 꼬리 | rotation.z |
 | 눈썹·입 쉼/대체 | visible |
-| 눈 리그 5메시 | scale(개방도 × 개체 `eyePop` — 왕눈·외눈은 절반), position, visible |
+| 눈 리그 6메시 | scale(개방도 × 개체 `eyePop` — 왕눈·외눈은 절반), position, visible (smile ^^ / shut 감은 눈 선) |
 | — | group·headGroup·faceGroup의 position/rotation/scale |
 
 **매 프레임 지오메트리를 다시 만들지 않는다.** 예외는 이모지(트리거당 1회)와 재생성(개체 교체)뿐이다.
