@@ -13,7 +13,7 @@ const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infini
 
 // ── init (rng 소비) ──
 export function initBlink(rng) { return { next: rng.float(0, 4), start: -1, happy: false }; }
-export function initGlance(rng) { return { next: rng.float(0, 3), gaze: [0, 0], gazeTarget: [0, 0], faceYaw: 0 }; }
+export function initGlance(rng) { return { next: rng.float(0, 3), gaze: [0, 0], gazeTarget: [0, 0], faceTurn: [0, 0] }; }
 export function initSurprise(rng, M) { return { next: schedule(rng, M.surprise), start: -1 }; }
 export function initRegen(rng) { return { at: rng.float(6, 14) }; }
 export function initEmote(rng) { return { next: rng.float(5, 30), start: -1, kind: "heart" }; }

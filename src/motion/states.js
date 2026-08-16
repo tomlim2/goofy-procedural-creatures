@@ -1,5 +1,5 @@
 // 유지 상태 — 들어가면 몇 초 머물다 돌아오는 것. 진행 곡선이 없고 on/off다.
-//   반감김 · ^^ 행복 눈 · 윙크 · 눈썹 상태 · 입 상태 · 갸웃(목표각 유지) · 팔 행위
+//   반감김 · ^^ 행복 눈 · 윙크 · 눈썹 상태 · 입 상태 · 갸웃(목표각 유지) · 팔 행위 · 둘러보기(얼굴 돌림 유지)
 // 문서: guidelines/motion/catalog.md
 //
 // 형태: { next: 다음 진입 시각, until: 유지 종료 시각(아니면 -1) }
@@ -15,6 +15,8 @@ export function initTilt(rng, M) { return { next: rng.float(M.tilt[0], M.tilt[1]
 // 행위 종류와 가중치는 table.js의 armActions, 행위의 내용은 actions.js.
 export function initArmAction(rng) { return { action: null, side: 1, start: -1, next: rng.float(8, 24), until: -1 }; }
 export function initWink(rng, M) { return { next: schedule(rng, M.wink), until: -1, side: 0 }; }
+// 둘러보기 — 한 방향(좌·우·위·아래·대각)으로 얼굴을 돌리고 몇 초 머문다. 시선도 그쪽으로 간다.
+export function initLook(rng, M) { return { next: schedule(rng, M.look), until: -1, dir: [0, 0] }; }
 export function initHappy(rng, M) { return { next: schedule(rng, M.happyHold), until: -1 }; }
 
 // 반감김 — lid를 최소 0.5로 올린다
@@ -72,6 +74,18 @@ export function stepArmAction(s, t, rng, M) {
   }
   if (s.until >= 0 && t >= s.until) { s.until = -1; s.action = null; s.start = -1; }
   return s.action ? { action: s.action, side: s.side, start: s.start, until: s.until } : null;
+}
+// 둘러보기 — 유지 중이면 방향 [x, y] (−1~1), 아니면 null. 방향은 8방 중 하나 × 종족 진폭.
+const LOOK_DIRS = [[-1, 0], [1, 0], [0, 1], [0, -1], [-1, 0.6], [1, 0.6], [-1, -0.5], [1, -0.5]];
+export function stepLook(s, t, rng, M) {
+  if (t >= s.next && s.until < 0) {
+    const d = rng.pick(LOOK_DIRS);
+    s.dir = [d[0] * M.lookAmp[0], d[1] * M.lookAmp[1]];
+    s.until = t + rng.float(M.lookHold[0], M.lookHold[1]);
+    s.next = t + rng.float(M.look[0], M.look[1]);
+  }
+  if (s.until >= 0 && t >= s.until) s.until = -1;
+  return s.until >= 0 ? s.dir : null;
 }
 export function stepMood(m, t, rng) {
   if (t >= m.nextMood && m.moodUntil < 0) { m.moodUntil = t + rng.float(1.5, 4); m.nextMood = t + rng.float(6, 16); }

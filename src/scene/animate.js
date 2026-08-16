@@ -14,6 +14,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     item.bodyFrames[k].visible = k === frame;
     item.headFrames[k].visible = k === frame;
+    item.faceFrames[k].visible = k === frame;
   }
 
   // 몸 전체 — 스웨이(발 축 회전), 부르르, 폴짝, 호흡+락킹+젤리+기지개
@@ -30,8 +31,12 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.headGroup.rotation.z = state.headAngle;
   item.headGroup.position.y = item.neckY + state.headBob;
 
-  // 얼굴 요 — 이목구비가 통째로 밀려 머리를 돌린 착시
-  item.faceGroup.position.x = state.faceYaw * item.headRx * 0.22;
+  // 얼굴 돌림 — 이목구비 그룹(눈·코·입·눈썹·안경·볼·수염·주둥이)을 통째로 밀고 살짝 눌러
+  // 머리를 돌린 착시. 좌우는 x로, 위아래는 y로. 원점은 머리 중심이라 눌림도 거기를 축으로 한다.
+  const [turnX, turnY] = state.faceTurn;
+  item.faceGroup.position.x = turnX * item.headRx * 0.26;
+  item.faceGroup.position.y = item.faceCy - item.neckY + turnY * item.headRy * 0.16;
+  item.faceGroup.scale.set(1 - Math.abs(turnX) * 0.12, 1 - Math.abs(turnY) * 0.08, 1);
 
   // 꼬리
   if (item.tailGroup) item.tailGroup.rotation.z = state.tailAngle;

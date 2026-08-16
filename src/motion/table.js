@@ -26,6 +26,8 @@ export const MOTION = {
     wink: null, happyHold: null,
     tailSwish: null, tailFlick: null,
     surprise: [8, 22], yaw: 0.5,
+    // 둘러보기 — 얼굴을 한 방향으로 돌리고 머문다. [간격], [유지], 진폭 [x, y]
+    look: [6, 16], lookHold: [1.5, 4], lookAmp: [1, 0.8],
     emotes: ["heart", "bang", "quest"]
   },
   pup: {
@@ -43,6 +45,8 @@ export const MOTION = {
     wink: null, happyHold: [6, 16],
     tailSwish: null, tailFlick: [3, 9],
     surprise: [10, 26], yaw: 0.7,
+    // 개는 자주, 위(주인 쪽)로도 잘 본다
+    look: [4, 12], lookHold: [1, 3], lookAmp: [1, 1],
     emotes: ["heart", "bang", "quest"]
   },
   cat: {
@@ -59,6 +63,8 @@ export const MOTION = {
     wink: [8, 20], happyHold: null,
     tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [4, 11],
     surprise: [9, 24], yaw: 0.8,
+    // 고양이는 드물게, 오래 응시
+    look: [8, 20], lookHold: [2, 5], lookAmp: [0.9, 0.9],
     emotes: ["heart", "quest", "bang"]
   },
   imp: {
@@ -80,6 +86,7 @@ export const MOTION = {
     wink: null, happyHold: null,
     tailSwish: null, tailFlick: null,
     surprise: [4, 12], yaw: 0.6,
+    look: [5, 14], lookHold: [1, 3], lookAmp: [1, 0.7],
     emotes: ["dots", "dots", "bang", "quest", "heart"]
   }
 };

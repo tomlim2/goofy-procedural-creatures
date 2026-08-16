@@ -1,6 +1,6 @@
 // 상시 리듬 — 멈추지 않고 계속 도는 진동. 사인파와 이징뿐, 이벤트 예약이 없다.
 //   호흡 · 스웨이(좌우) · 락킹(앞뒤) · 머리 롤(개) · 젤리 워블(도깨비) · 꼬리 스위시(고양이)
-//   시선 이징 · 얼굴 요 · 팔 진자 · 관절 지터
+//   시선 이징 · 얼굴 돌림 · 팔 진자 · 관절 지터
 // 문서: guidelines/motion/catalog.md
 //
 // init은 rng를 소비한다(위상·주기). step은 rng를 안 쓴다 — 리듬은 결정적이다.
@@ -53,9 +53,14 @@ export function stepGaze(g) {
   g.gaze = [g.gaze[0] + (g.gazeTarget[0] - g.gaze[0]) * 0.12, g.gaze[1] + (g.gazeTarget[1] - g.gaze[1]) * 0.12];
   return g.gaze;
 }
-export function stepYaw(g, M) {
-  g.faceYaw += (g.gaze[0] * M.yaw - g.faceYaw) * 0.06;
-  return g.faceYaw;
+// 얼굴 돌림 [x, y] (−1~1). 시선을 느리게 따라간다 — 동공이 먼저 가고 얼굴이 뒤따른다.
+// 둘러보기(look) 중에는 그 방향으로 끝까지 돈다. 위아래는 좌우보다 작게(M.yaw × 0.6).
+export function stepFaceTurn(g, M, look) {
+  const tx = look ? look[0] : g.gaze[0] * M.yaw;
+  const ty = look ? look[1] : g.gaze[1] * M.yaw * 0.6;
+  g.faceTurn[0] += (tx - g.faceTurn[0]) * 0.06;
+  g.faceTurn[1] += (ty - g.faceTurn[1]) * 0.06;
+  return g.faceTurn;
 }
 // 팔 진자 — 스웨이 반대 위상
 export function stepArmSwing(a, sway, t, M) {

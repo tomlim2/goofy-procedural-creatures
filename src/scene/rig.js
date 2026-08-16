@@ -17,13 +17,15 @@ export function buildCreature(spec, noise, birth = 0) {
   group.add(headGroup);
   headGroup.add(faceGroup);
 
-  // 보일 — 지터 위상만 다른 3벌. 몸·머리를 같은 인덱스로 토글한다.
+  // 보일 — 지터 위상만 다른 3벌. 몸·머리·얼굴을 같은 인덱스로 토글한다.
   const bodyFrames = [];
   const headFrames = [];
+  const faceFrames = [];
   let firstDrawn = null;
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const drawn = drawCreature(spec, k);
     if (!firstDrawn) firstDrawn = drawn;
+    const faceCy = drawn.faceCy;
 
     const bodyFrame = new THREE.Group();
     if (!drawn.body.fills.empty) bodyFrame.add(sketchMesh(drawn.body.fills, 0.92, 1));
@@ -38,9 +40,20 @@ export function buildCreature(spec, noise, birth = 0) {
     headFrame.visible = k === 0;
     headGroup.add(headFrame);
     headFrames.push(headFrame);
+
+    // 얼굴(눈·볼·코·수염·주둥이·안경) — faceGroup 안. 머리 잉크 위에 얹혀 통째로 밀린다.
+    const faceFrame = new THREE.Group();
+    if (!drawn.face.fills.empty) faceFrame.add(sketchMesh(drawn.face.fills, 0.92, 2.1, -faceCy));
+    if (!drawn.face.ink.empty) faceFrame.add(sketchMesh(drawn.face.ink, 1, 2.2, -faceCy));
+    faceFrame.visible = k === 0;
+    faceGroup.add(faceFrame);
+    faceFrames.push(faceFrame);
   }
   const neckY = firstDrawn.neckY;
+  const faceCy = firstDrawn.faceCy;
   headGroup.position.y = neckY;
+  // 얼굴 그룹 원점 = 머리 중심. 돌림이 여기를 축으로 밀고 누른다. 자식은 -faceCy로 미리 내려 굽는다.
+  faceGroup.position.y = faceCy - neckY;
 
   // 꼬리 — 피벗에 걸어 살랑거린다 (네발)
   let tailGroup = null;
@@ -91,12 +104,12 @@ export function buildCreature(spec, noise, birth = 0) {
     };
   });
 
-  // 눈썹·입 상태 — faceGroup 안에서 요(yaw)를 따라간다
+  // 눈썹·입 상태 — faceGroup 안에서 얼굴 돌림을 따라간다
   const kinds = facePartKinds(spec);
   const faceStates = {};
   for (const part of ["brow", "mouth"]) {
     faceStates[part] = kinds[part].map((kind, index) => {
-      const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 3, -neckY);
+      const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 3, -faceCy);
       mesh.visible = index === 0;
       faceGroup.add(mesh);
       return mesh;
@@ -107,7 +120,7 @@ export function buildCreature(spec, noise, birth = 0) {
   const eyeRigs = [];
   for (const eye of firstDrawn.eyes) {
     const rig = new THREE.Group();
-    rig.position.set(eye.x, eye.y - neckY, 0);
+    rig.position.set(eye.x, eye.y - faceCy, 0);
 
     const white = new Sketch(noise, 0.4);
     white.fill(blobPath(0, 0, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null }), "#f6f2e9");
@@ -153,13 +166,16 @@ export function buildCreature(spec, noise, birth = 0) {
     limbs,
     bodyFrames,
     headFrames,
+    faceFrames,
     eyeRigs,
     faceStates,
     // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다
     clock: makeClock(spec.seed, birth, spec.species, armRig(spec)),
     spec,
     neckY,
+    faceCy,
     headRx: firstDrawn.box.headRx,
+    headRy: firstDrawn.box.headRy,
     headTop: firstDrawn.headTop,
     boilFps: 8 + (spec.seed % 5) * 0.5,
     boilOffset: spec.seed % BOIL_FRAMES,

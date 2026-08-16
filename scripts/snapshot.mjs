@@ -40,6 +40,7 @@ for (const spec of grid) {
     seed: spec.seed,
     body: sketchHash(d.body.ink) + sketchHash(d.body.fills),
     head: sketchHash(d.head.ink) + sketchHash(d.head.fills),
+    face: sketchHash(d.face.ink) + sketchHash(d.face.fills),
     variant1: sketchHash(d1.head.ink),
     eyes: d.eyes.map((e) => [e.side, +e.x.toFixed(4), +e.y.toFixed(4), +e.r.toFixed(4)]),
     neckY: +d.neckY.toFixed(5),

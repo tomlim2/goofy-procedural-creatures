@@ -25,7 +25,7 @@ export const BIND_STATE = Object.freeze({
   browAlt: false, mouthAlt: false,
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
-  jellyX: 0, jellyY: 0, faceYaw: 0,
+  jellyX: 0, jellyY: 0, faceTurn: [0, 0],
   happy: false, winkSide: 0, tailAngle: 0,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, armAction: null, armSide: 0,
   legOffset: [0, 0, 0, 0]
@@ -63,6 +63,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const tailSwish = R.initTailSwish(rng, M);     // 23
   const tailFlick = E.initTailFlick(rng, M);     // 24
   const jelly = R.initJelly(rng, M);             // 25
+  const look = S.initLook(rng, M);               // 26
 
   // 강제 행위 (화면 ACTION 카드). 예약된 행위 대신 이걸 계속 한다. null이면 예약대로,
   // "idle"이면 행위 없이 idle만.
@@ -83,8 +84,11 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 얼굴
       const bl = E.stepBlink(blink, t, rng);
       E.stepGlanceTarget(glance, t, rng);
+      // 둘러보기 — 유지 중이면 시선 목표를 그쪽으로 잡고(동공이 먼저), 얼굴이 뒤따라 돈다
+      const looking = S.stepLook(look, t, rng, M);
+      if (looking) glance.gazeTarget = looking;
       const gaze = R.stepGaze(glance);
-      const faceYaw = R.stepYaw(glance, M);
+      const faceTurn = R.stepFaceTurn(glance, M, looking);
       let lid = bl.lid;
       let isHappy = bl.happy;
       lid = S.stepSquint(squint, t, rng, lid);
@@ -149,7 +153,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
         sway: sw.sway, rock: sw.rock, headAngle: tiltAngle + rollAngle, headBob,
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
-        jellyX: j.jellyX, jellyY: j.jellyY, faceYaw,
+        jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle,
         arms, armAction: act ? act.action : null, armSide: act ? act.side : 0,
         legOffset
