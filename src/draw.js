@@ -787,63 +787,131 @@ export function drawCreature(spec, variant = 0) {
   };
 }
 
-// 관절 팔다리. 각 지체는 피벗(어깨·엉덩이) 원점 기준으로 아래로 늘어진
-// 상태를 그린다. scene이 rotation.z로 흔든다.
+// 관절 팔다리. 각 지체는 피벗(어깨·엉덩이) 원점 기준으로 그린다.
+// scene이 rotation.z로 흔든다.
 //
-// 반환: [{ sketch, pivot: [x, y], kind: "arm"|"leg", side }]
+// 레퍼런스(관절부 4배 확대): 지체는 몸 윤곽 안쪽에서 나오고, 팔은 유형이
+// 여럿이며(뒷짐·소매+동그란 손·스텁+주먹·늘어짐), 다리 끝에는 항상 동그란
+// 발이 있다. 뿌리를 윤곽 안으로 넣어야 관절이 "박혀" 보인다.
+//
+// 반환: [{ sketch, pivot: [x, y], kind: "arm"|"leg", side, index, behind }]
 export function limbSketches(spec) {
   const rng = makeRng((spec.proportions.wobbleSeed + 303) >>> 0);
   const noise = makeNoise(rng);
   const box = layout(spec);
   const p = spec.proportions;
   const ink0 = spec.palette.ink;
+  const skin = spec.palette.skin;
+  const cloth = spec.palette.cloth;
   const limbs = [];
 
   const make = () => new Sketch(noise, p.wobble);
+  const dot = (s, x, y, r, color) => {
+    s.fill(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color);
+    s.outline(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), { color: ink0, width: 0.009 });
+  };
 
   if (box.quad) {
-    // 네 다리. 몸 밑에 매달려 엉덩이 축으로 흔들린다.
+    // 네 다리 — 몸통 밑에 붙은 짧은 스텁 + 발가락 표시.
+    // 뿌리는 몸 윤곽 안쪽(bodyH의 25% 위)에서 시작한다.
     const cx = box.bodyCx + box.bodyW * 0.35;
-    const hipY = box.legTop + box.bodyH * 0.15;
+    const hipY = box.legTop + box.bodyH * 0.25;
     [-0.62, -0.22, 0.28, 0.66].forEach((tt, i) => {
       const x = cx + box.bodyW * tt;
       const s = make();
       const len = hipY;
-      s.stroke([[0, 0], [noise(tt * 7.1) * 0.015, -len]], { color: ink0, width: 0.011 });
-      s.stroke([[-0.02, -len], [0.025, -len + 0.003]], { color: ink0, width: 0.01 });
-      limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side: i < 2 ? -1 : 1, index: i });
+      const lean = noise(tt * 7.1) * 0.012;
+      // 굵은 스텁 다리
+      s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.016 });
+      // 발 — 살짝 앞으로 나온 둥근 발끝 + 발가락 두 줄
+      s.stroke([[lean - 0.02, -len], [lean + 0.03, -len + 0.003]], { color: ink0, width: 0.012 });
+      s.stroke([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, width: 0.006 });
+      s.stroke([[lean + 0.018, -len + 0.002], [lean + 0.021, -len + 0.014]], { color: ink0, width: 0.006 });
+      limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side: i < 2 ? -1 : 1, index: i, behind: false });
     });
     return limbs;
   }
 
-  // 두발 — 다리 2개 (엉덩이 축)
-  const hipY = box.legTop;
+  // ── 두발 다리 ──
+  // 뿌리는 몸 밑단보다 살짝 위(윤곽 안). 끝에는 항상 발.
+  const hipY = box.legTop + 0.02;
+  const legKind = spec.parts.legs;
   for (const side of [-1, 1]) {
-    const x = side * box.bodyW * 0.5;
+    const spread = legKind === "wide" ? 0.72 : 0.5;
+    const x = side * box.bodyW * spread;
     const s = make();
-    if (spec.parts.legs === "bent") {
-      s.stroke([[0, 0], [side * 0.04, -hipY * 0.5], [side * 0.01, -hipY]], { color: ink0, width: 0.011 });
-    } else if (spec.parts.legs === "stub") {
-      s.stroke([[0, 0], [0, -hipY]], { color: ink0, width: 0.019 });
+    const len = hipY;
+    let footX = 0;
+    if (legKind === "bent") {
+      s.stroke([[0, 0], [side * 0.04, -len * 0.5], [side * 0.01, -len]], { color: ink0, width: 0.011 });
+      footX = side * 0.01;
+    } else if (legKind === "stub") {
+      s.stroke([[0, 0], [0, -len]], { color: ink0, width: 0.019 });
+    } else if (legKind === "tiptoe") {
+      // 발끝으로 선 가는 다리 — 발이 아래로 뾰족
+      s.stroke([[0, 0], [side * 0.008, -len]], { color: ink0, width: 0.009 });
+      s.stroke([[side * 0.008 - 0.012, -len + 0.012], [side * 0.008, -len], [side * 0.008 + 0.012, -len + 0.012]], { color: ink0, width: 0.009 });
+      limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
+      continue;
     } else {
-      s.stroke([[0, 0], [noise(side * 3.3) * 0.02, -hipY]], { color: ink0, width: 0.011 });
+      s.stroke([[0, 0], [noise(side * 3.3) * 0.02, -len]], { color: ink0, width: legKind === "wide" ? 0.014 : 0.011 });
+      footX = noise(side * 3.3) * 0.02;
     }
-    s.stroke([[-0.025, -hipY], [0.03, -hipY + 0.004]], { color: ink0, width: 0.011 });
-    limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side });
+    // 발
+    if (legKind === "boots") {
+      // 부츠 — 발목까지 채워진 덩어리
+      const boot = [[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]];
+      s.fill(boot, cloth === skin ? ink0 : darken(cloth, 0.75));
+      s.outline(boot, { color: ink0, width: 0.01 });
+    } else {
+      // 동그란 발 — 레퍼런스 기본
+      dot(s, footX + side * 0.008, -len + 0.012, 0.022, skin);
+    }
+    limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
   }
 
-  // 두발 — 팔 2개 (어깨 축). 쉼 포즈를 아래로 늘어진 기준 상태로 굽고
-  // 포즈(down/out/up)는 scene이 기준 각도로 준다.
-  const shoulderY = box.bodyTop - (box.bodyTop - box.legTop) * 0.25;
+  // ── 두발 팔 ──
+  const armKind = spec.parts.arms;
+  // 어깨는 몸 윤곽 안쪽. 몸 폭의 78%에서 시작해 소매가 윤곽을 덮는다.
+  const shoulderY = box.bodyTop - (box.bodyTop - box.legTop) * 0.22;
   for (const side of [-1, 1]) {
-    const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.9 : 0.95);
+    const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.7 : 0.78);
     const reach = 0.11 * p.armSpread;
     const s = make();
-    // 어깨에서 곧게 뻗은 팔. 살짝 굽음.
+
+    if (armKind === "behind") {
+      // 뒷짐 — 팔이 몸 뒤로 사라지고 팔꿈치 끝만 옆구리로 삐죽 나온다
+      s.stroke([[0, 0], [side * 0.03, -0.045], [side * 0.05, -0.08]], { color: ink0, width: 0.011 });
+      limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side, index: 0, behind: true });
+      continue;
+    }
+
+    if (armKind === "stubby") {
+      // 스텁 팔 + 주먹 — 짧고 굵게 옆으로
+      s.stroke([[0, 0], [side * reach * 0.45, -reach * 0.35]], { color: ink0, width: 0.017 });
+      dot(s, side * reach * 0.5, -reach * 0.4, 0.02, skin);
+      limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side, index: 0, behind: false });
+      continue;
+    }
+
+    if (armKind === "sleeve") {
+      // 소매 — 옷색 통 + 끝에 동그란 손
+      const sl = [[side * -0.012, 0.012], [side * 0.012, 0.012], [side * reach * 0.42, -reach * 0.62], [side * reach * 0.22, -reach * 0.7]];
+      s.fill(sl, cloth);
+      s.outline(sl, { color: ink0, width: 0.01 });
+      dot(s, side * reach * 0.34, -reach * 0.78, 0.022, skin);
+      limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side, index: 0, behind: false });
+      continue;
+    }
+
+    // down / out / up / mitten — 막대 팔. 끝에 손.
     s.stroke([[0, 0], [side * reach * 0.25, -reach * 0.5], [side * reach * 0.35, -reach]], { color: ink0, width: 0.01 });
-    // 손
-    s.stroke([[side * reach * 0.35 - 0.016, -reach], [side * reach * 0.35 + 0.016, -reach + 0.004]], { color: ink0, width: 0.01 });
-    limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side });
+    if (armKind === "mitten") {
+      dot(s, side * reach * 0.36, -reach * 1.02, 0.024, skin);
+    } else {
+      s.stroke([[side * reach * 0.35 - 0.016, -reach], [side * reach * 0.35 + 0.016, -reach + 0.004]], { color: ink0, width: 0.01 });
+    }
+    limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side, index: 0, behind: false });
   }
   return limbs;
 }
@@ -851,10 +919,12 @@ export function limbSketches(spec) {
 // 팔 쉼 포즈의 기준 각도. down은 늘어짐, out은 옆으로, up은 위로.
 export function armRestAngle(spec, side) {
   const pose = spec.parts.arms;
-  // side<0 (왼팔)은 양의 회전이 바깥쪽이다
   const outward = -side;
   if (pose === "up") return outward * 2.4;
   if (pose === "out") return outward * 1.35;
+  if (pose === "stubby") return outward * 0.9;
+  if (pose === "sleeve") return outward * 0.6;
+  if (pose === "behind") return outward * -0.2;
   return outward * 0.35;
 }
 

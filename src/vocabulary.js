@@ -18,10 +18,12 @@ export const SLOTS = {
   mouth: ["dot", "line", "teeth", "open", "wave", "smile", "pout", "omega", "zigzag"],
   body: ["bean", "box", "dress", "tube"],
   marks: ["none", "stripes", "dots", "patch", "hatch", "spots"],
-  legs: ["stick", "stub", "bent"],
+  // 다리 유형. 레퍼런스: 전부 끝에 동그란 발이 있고 몸 밑에서 나온다.
+  legs: ["stick", "stub", "bent", "boots", "wide", "tiptoe"],
   // 네발 종족 전용. 두발 종족은 그리지 않는다.
   tail: ["curl", "flag", "longtail", "stubtail"],
-  arms: ["down", "out", "up"]
+  // 팔 유형. 레퍼런스: 뒷짐·소매+동그란 손·스텁+주먹·늘어진 막대·벌림.
+  arms: ["down", "out", "up", "behind", "sleeve", "stubby", "mitten"]
 };
 
 // 아키타입 bias가 없는 슬롯의 기본 가중치.
@@ -39,7 +41,9 @@ export const DEFAULT_BIAS = {
   nose: [["hook", 3], ["dot", 2], ["wedge", 2], ["none", 2], ["long", 1]],
   face2: [["none", 5], ["blush", 2], ["freckles", 2], ["tears", 1.5]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
-  tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2]]
+  tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2]],
+  arms: [["down", 3], ["out", 2], ["sleeve", 3], ["mitten", 2], ["stubby", 2], ["behind", 2], ["up", 1]],
+  legs: [["stick", 3], ["boots", 3], ["stub", 2], ["bent", 2], ["wide", 1.5], ["tiptoe", 1]]
 };
 
 // 아키타입. 순수 랜덤 조합은 금방 "아까 본 것"처럼 보인다.
@@ -79,7 +83,8 @@ export const ARCHETYPES = [
       head: [["square", 3], ["block", 2], ["round", 2], ["wide", 1]],
       hair: [["scribble", 3], ["spikes", 2], ["none", 3]],
       marks: [["stripes", 3], ["patch", 2], ["hatch", 2], ["none", 2]],
-      arms: [["down", 3], ["out", 2]]
+      arms: [["down", 3], ["sleeve", 3], ["out", 1]],
+      legs: [["boots", 4], ["stick", 2], ["stub", 1]]
     }
   },
   {
@@ -90,7 +95,8 @@ export const ARCHETYPES = [
       eyes: [["wide", 4], ["ring", 3], ["spiral", 2]],
       head: [["tall", 3], ["round", 3], ["egg", 2], ["pear", 1]],
       body: [["tube", 3], ["bean", 2]],
-      legs: [["stick", 4], ["bent", 2]],
+      legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
+      arms: [["down", 3], ["mitten", 2], ["out", 2]],
       hair: [["none", 2], ["wisp", 2], ["tuft", 2], ["pigtails", 1], ["spikes", 1]],
       nose: [["none", 4], ["dot", 3], ["hook", 1]]
     }
@@ -103,7 +109,8 @@ export const ARCHETYPES = [
       hair: [["none", 3], ["tuft", 2], ["mop", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2]],
       body: [["bean", 4], ["dress", 2]],
-      legs: [["stub", 4], ["stick", 1]],
+      legs: [["stub", 4], ["wide", 2], ["stick", 1]],
+      arms: [["stubby", 4], ["behind", 2], ["down", 1]],
       horns: [["none", 5], ["nub", 2]]
     }
   },
@@ -199,7 +206,9 @@ export const SPECIES = [
       marks: [["stripes", 3], ["none", 2], ["hatch", 1]],
       face2: [["none", 6], ["tears", 1]],
       body: [["bean", 3], ["box", 1]],
-      brow: [["none", 3], ["flat", 2], ["angry", 2]]
+      brow: [["none", 3], ["flat", 2], ["angry", 2]],
+      arms: [["stubby", 5], ["down", 2], ["out", 1]],
+      legs: [["stub", 3], ["stick", 3], ["wide", 1]]
     }
   }
 ];

@@ -156,10 +156,12 @@ function buildCreature(spec, noise, birth = 0) {
   }
 
   // 팔다리 — 관절 피벗 그룹. rotation.z로 흔든다.
+  // 뒷짐 팔은 몸 뒤(renderOrder 0.5)로, 나머지는 몸 잉크 위(2.5)로 올려
+  // 소매·손이 몸 윤곽을 덮는다. 그래야 관절이 몸에 박혀 보인다.
   const limbs = limbSketches(spec).map((limb) => {
     const pivot = new THREE.Group();
     pivot.position.set(limb.pivot[0], limb.pivot[1], 0);
-    pivot.add(sketchMesh(limb.sketch, 1, 2));
+    pivot.add(sketchMesh(limb.sketch, 1, limb.behind ? 0.5 : 2.5));
     bodyGroup.add(pivot);
     const rest = limb.kind === "arm" ? armRestAngle(spec, limb.side) : 0;
     pivot.rotation.z = rest;
