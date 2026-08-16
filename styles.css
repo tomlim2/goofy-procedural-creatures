@@ -87,8 +87,8 @@ button:hover { background: rgba(43, 39, 36, 0.06); }
 button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 button.wide { width: 100%; }
 
-.seg { display: flex; gap: 6px; }
-.seg button { flex: 1; }
+.seg { display: flex; gap: 4px; }
+.seg button { flex: 1; padding: 6px 4px; }
 
 .hint { margin: 0; opacity: 0.45; }
 

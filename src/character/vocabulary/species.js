@@ -7,17 +7,36 @@ export const SPECIES = [
   {
     name: "kid",
     weight: 5,
-    // 사람에게 뿔·더듬이는 없다. 종족 bias가 아키타입(beast의 뿔, sprite의 더듬이)보다
-    // 우선이므로 여기서 막으면 kid 줄에는 절대 안 나온다. 그 성향들은 imp 줄에서 산다.
-    bias: {
-      horns: [["none", 1]]
-      // 외눈은 spec.js applyConstraints에서 막는다. 여기서 eyes bias를 주면
-      // 아키타입의 눈 성향(scholar의 dot·half, sprite의 wide·ring)까지 덮어써 버린다.
-    }
+    // 사람. 뿔·더듬이·외눈은 사람 것이 아니다.
+    // forbid는 "이 슬롯의 이 값이 나오면 이걸로 바꾼다". applyConstraints가 읽어서
+    // 결정적으로 덮어쓴다 — 아키타입 성향(scholar의 dot 눈 등)은 살아 있다.
+    forbid: {
+      horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
+      eyes: { cyclops: "wide" }
+    },
+    // 정체성 — census가 검사한다. 위반 개체가 나오면 버그다.
+    identity: {
+      skeleton: "biped",
+      horns: ["none"],
+      eyes: { not: ["cyclops"] },
+      arms: true,
+      tail: false
+    },
+    bias: {}
   },
   {
     name: "pup",
     weight: 2,
+    forbid: {
+      eyes: { cyclops: "dot" }
+    },
+    identity: {
+      skeleton: "quad",
+      horns: ["none", "nub"],
+      eyes: { not: ["cyclops"] },
+      arms: false,
+      tail: true
+    },
     bias: {
       ears: [["flap", 4], ["long", 4], ["round", 1], ["fold", 1]],
       horns: [["none", 8], ["nub", 1]],
@@ -34,6 +53,16 @@ export const SPECIES = [
   {
     name: "cat",
     weight: 2,
+    forbid: {
+      eyes: { cyclops: "slit" }
+    },
+    identity: {
+      skeleton: "quad",
+      horns: ["none"],
+      eyes: { not: ["cyclops"] },
+      arms: false,
+      tail: true
+    },
     bias: {
       ears: [["pointy", 5], ["fold", 2], ["round", 1]],
       horns: [["none", 1]],
@@ -51,6 +80,13 @@ export const SPECIES = [
   {
     name: "imp",
     weight: 2,
+    forbid: {},
+    identity: {
+      skeleton: "biped",
+      darkHead: true,
+      arms: true,
+      tail: false
+    },
     bias: {
       horns: [["curved", 3], ["straight", 2], ["antenna", 2], ["ram", 2], ["crown", 2], ["nub", 1]],
       ears: [["none", 5], ["pointy", 2]],

@@ -58,17 +58,31 @@ import('./src/creature.js').then(m => {
 같은 원리가 눈에도 적용돼 있다: 눈 **종류**(ring/dot/slit)는 슬롯이고, 깜빡임·개방도·
 윙크·^^는 clock 상태다. 새 파츠를 넣을 때 "이게 생김새인가 행동인가"를 먼저 묻는다.
 
-## 종족 제한은 어디에 두나
+## 종족 제한은 species.js에
 
-"사람에게는 X가 없다" 같은 종족 제한은 두 방법이 있고 효과가 다르다.
+"사람에게는 X가 없다" 같은 종족 제한은 **`species.js` 한 곳**에 둔다. 두 가지 필드가 있다.
 
-| 방법 | 어디 | 효과 | 언제 |
-| --- | --- | --- | --- |
-| 종족 bias | `species.js` `bias[slot]` | 그 슬롯의 **아키타입 성향까지 덮어쓴다** (종족 > 아키타입) | 슬롯 전체를 종족이 지배해야 할 때 (개 귀, 고양이 꼬리) |
-| 제약 | `spec.js` `applyConstraints` | 특정 값 하나만 결정적으로 바꾼다. 아키타입 성향은 산다 | 한 값만 막을 때 (사람의 외눈 → wide) |
+| 필드 | 뜻 | 효과 |
+| --- | --- | --- |
+| `forbid[slot] = { 값: 대체값 }` | 이 슬롯의 이 값이 나오면 대체값으로 | `applyConstraints`가 **맨 먼저** 읽어 결정적으로 덮어쓴다. 아키타입 성향(scholar의 dot 눈 등)은 산다 |
+| `bias[slot]` | 이 슬롯의 가중치 | 아키타입 bias보다 우선 — **슬롯 전체를 종족이 지배**한다. 개 귀·고양이 꼬리처럼 종족이 규정하는 슬롯에만 |
+| `identity` | 종족이 지켜야 할 것 (골격·뿔·눈·팔·꼬리·머리색) | `scripts/census.mjs`가 검사한다. 위반은 버그다 |
 
-kid의 뿔은 bias(`horns: none`)로 막았다 — 슬롯 전체가 없어야 하니까. kid의 외눈은 제약으로
-막았다 — eyes bias를 주면 scholar의 dot·half, sprite의 wide·ring 성향이 kid에서 다 죽는다.
+값 하나만 막을 때는 forbid, 슬롯 전체를 종족이 가져갈 때만 bias. spec.js·draw/에 종족 이름을
+하드코딩하지 않는다 (draw/의 종족 분기는 "그리기 방식"이 다를 때만 — 개 주둥이, 고양이 정수리 귀).
+
+## 분포는 census로 본다
+
+```bash
+node scripts/census.mjs              # 종족 × 슬롯 분포표 + 정체성 위반
+node scripts/census.mjs --slot hair  # 한 슬롯만
+node scripts/census.mjs --check      # 위반만 (exit 1)
+```
+
+죽은 값(어느 종족에서도 0%)이 보이면 bias 조정 대상이다. 실제로 hair의 mohawk·scribble이
+kid 아키타입 전부에 hair bias가 있어서 DEFAULT_BIAS가 안 쓰이는 바람에 0%였다.
+
+브라우저의 SPECIES 카드로 한 종족만 9×6에 놓고 볼 수 있다. 한 줄 7마리로는 색·파츠 분포를 판단할 수 없다.
 
 ## 그리기 함수가 지켜야 할 것
 

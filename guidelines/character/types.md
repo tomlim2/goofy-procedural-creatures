@@ -32,7 +32,7 @@
 
 | 종족 | 가중치 | 골격 | 색 | 전용/편향 파츠 | 지배 모션 |
 | --- | --- | --- | --- | --- | --- |
-| **kid** | 5 | 두발 | 팔레트 그대로 | **horns=none** (뿔·더듬이 없음 — beast·sprite 성향이 kid에서는 무력화). 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 자세 전환 |
+| **kid** | 5 | 두발 | 팔레트 그대로 | forbid: 뿔 전부→none, cyclops→wide. 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 자세 전환 |
 | **pup** | 2 | 네발 | 팔레트 그대로 | 늘어진 귀(flap/long), 주둥이+검은 코(코 슬롯이 형태 결정), 꼬리 flag/stubtail, 얼룩 | 머리 롤 상시·킁킁 딥, ^^ 행복 눈 유지, 꼬리 플릭 |
 | **cat** | 2 | 네발 | 팔레트 그대로 | 정수리 세모귀(pointy/fold), 수염, ω 입, 세로동공(slit), 꼬리 curl/longtail | 꼬리 스위시 상시, 윙크, 갸웃 크게, 기지개 |
 | **imp** | 2 | 두발 | 머리 DARKS 9색(먹·회갈·회청·자흑·녹흑…) 중 하나, 몸은 머리색 40% / 다른 어두운색 25% / 밝은 옷 35%, 얼굴은 종이색, 잉크는 #1c1917 | 긴 뿔(1.8배: curved/straight/antenna/ram/crown), 외눈(cyclops), 지그재그 입, 스텁 팔, 짧은 팔 | 젤리 워블 상시, 부르르·놀람 잦게, "..." 중얼 |
@@ -87,16 +87,28 @@
 | fillOffset | ±0.035 | 채색이 선 밖으로 어긋난다 (인쇄 어긋남) |
 | **pop** | POPS 5색, 14% 확률, 대상 hair/headgear/skin | 채도 있는 색 포인트. **한 판에 3개 상한** (`makeGrid`가 초과분을 끈다) |
 
+## 정체성 (identity)
+
+`species.js` `identity`. census가 검사하는 종족 불변식.
+
+| 종족 | skeleton | horns | eyes | arms | tail | 기타 |
+| --- | --- | --- | --- | --- | --- | --- |
+| kid | biped | none | not cyclops | ● | ✗ | |
+| pup | quad | none/nub | not cyclops | ✗ | ● | |
+| cat | quad | none | not cyclops | ✗ | ● | |
+| imp | biped | (자유) | (자유) | ● | ✗ | 머리 어두움(휘도<90) |
+
 ## 제약 (applyConstraints)
 
-같이 나오면 그림이 깨지는 조합. **다시 뽑지 않고 결정적으로 덮어쓴다.**
+같이 나오면 그림이 깨지는 조합. **다시 뽑지 않고 결정적으로 덮어쓴다.** 종족 forbid가 맨 먼저.
 
 - 헬멧·항아리 → 머리카락 없음. 모자·밴드 → 짧은 머리만
 - 모히칸 → 모자 없음. 왕관 뿔 → 모자 없음, 머리카락 none/tuft만
 - 더듬이 → 75% 확률로 귀 없음
 - 안대 → 어느 쪽인지 여기서 정함 (patchSide ±1, 없으면 99 — 외눈의 side 0과 충돌 방지)
 - 감은 눈 + 화난 눈썹 → 눈썹 flat
-- 외눈은 imp 전용 → 다른 종족은 wide로 덮어씀. 외눈 → 안경류 없음
+- 종족 forbid (species.js): kid 뿔→none·cyclops→wide, pup cyclops→dot, cat cyclops→slit. **맨 먼저** 적용
+- 외눈 → 안경류 없음
 - 안경·고글 → 60% 확률로 눈썹 없음
 - imp: 머리 DARKS 중 1, 몸은 머리색/다른 어두운색/밝은 옷 (40/25/35)
 - 매우 긴 팔 → 쉼 자세 out (늘어뜨리면 바닥을 뚫는다)

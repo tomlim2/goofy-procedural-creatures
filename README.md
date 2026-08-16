@@ -20,6 +20,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 
 - `R` 키 또는 NEW SEED — 새 시드
 - 주소창 해시가 시드다. `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다
+- SPECIES — ALL(고정 레인) / KID / CAT / PUP / IMP 한 종족만
 - GRID — 5×4 / 7×5 / 9×6
 
 ## 구조
@@ -36,6 +37,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | `src/scene/` | three.js. `rig.js`(캐릭터 지오메트리 → 계층) `animate.js`(모션 상태 → 리그) `paper.js` `material.js` `emote.js`, `index.js`(씬·루프·재생성) | rig.md |
 | `src/main.js` | 진입점. UI 배선 | |
 | `scripts/snapshot.mjs` | 리팩토링 전후 동작 불변 검증 (스펙·지오메트리·60초 모션 궤적) | |
+| `scripts/census.mjs` | 종족 × 슬롯 분포표, 정체성 위반 검사 (`--check`로 CI) | character/rules.md |
 | `reference/` | 참고 자료 출처와 차용 범위 | |
 | `guidelines/` | 캐릭터 / 모션 두 축의 카탈로그와 규칙 |
 

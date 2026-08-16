@@ -23,12 +23,20 @@ function pickSlot(rng, species, archetype, slot) {
 // 같이 나오면 그림이 깨지는 조합을 정리한다.
 // 랜덤을 다시 굴리지 않고 결정적으로 덮어써야 시드 재현이 유지된다.
 function applyConstraints(parts, rng, speciesName) {
+  // 종족 금지표를 가장 먼저 적용한다. species.js의 forbid를 읽어 결정적으로 덮어쓴다.
+  // "사람에게 뿔 없음", "외눈은 도깨비만" 같은 제한은 전부 거기 있다 — 여기 하드코딩하지 않는다.
+  // 맨 앞이어야 뒤의 제약(더듬이→귀 제거 등)이 금지된 값을 보고 오작동하지 않는다.
+  const forbid = (SPECIES.find((s) => s.name === speciesName) || {}).forbid || {};
+  for (const [slot, table] of Object.entries(forbid)) {
+    if (table[parts[slot]] !== undefined) parts[slot] = table[parts[slot]];
+  }
+
   // 헬멧과 항아리는 머리를 덮는다. 머리카락이 비집고 나올 자리가 없다.
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
     parts.hair = "none";
   } else if (parts.headgear !== "none" && parts.hair !== "none") {
     // 모자나 밴드면 짧은 머리만 남긴다.
-    const short = ["bob", "wisp", "sweep", "tuft"];
+    const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly"];
     if (!short.includes(parts.hair)) parts.hair = rng.pick(short);
   }
 
@@ -44,10 +52,6 @@ function applyConstraints(parts, rng, speciesName) {
 
   // 감은 눈에 화난 눈썹을 붙이면 표정이 읽히지 않는다.
   if (parts.eyes === "sleepy" && parts.brow === "angry") parts.brow = "flat";
-
-  // 외눈은 도깨비 것이다. 사람·개·고양이는 두 눈으로 되돌린다.
-  // 다시 뽑지 않고 결정적으로 덮어쓴다 — 시드 재현을 위해.
-  if (parts.eyes === "cyclops" && speciesName !== "imp") parts.eyes = "wide";
 
   // 외눈에는 안경류가 성립하지 않는다.
   if (parts.eyes === "cyclops") parts.eyewear = "none";
@@ -198,14 +202,15 @@ export function laneSpecies(rows) {
   return out;
 }
 
-export function makeGrid(baseSeed, count, columns) {
+// only에 종족명을 주면 전 줄을 그 종족으로 채운다 — 프리뷰용. 한 종족을 54마리
+// 한 판에 놓고 봐야 색·파츠 분포를 판단할 수 있다.
+export function makeGrid(baseSeed, count, columns, only = null) {
   const creatures = [];
   const rows = Math.ceil(count / columns);
 
   // 줄 종족은 고정 레인이다 (레퍼런스 영상과 동일): 위에서부터 사람·사람·고양이·개·도깨비.
-  // 행 수가 5가 아니면 이 순서를 비율대로 늘이고 줄인다 — 4행이면 사람·고양이·개·도깨비,
-  // 6행이면 사람·사람·고양이·개·개·도깨비 식으로.
-  const rowSpecies = laneSpecies(rows);
+  // 행 수가 5가 아니면 LANE_TABLE이 정한다.
+  const rowSpecies = only ? Array(rows).fill(only) : laneSpecies(rows);
 
   for (let i = 0; i < count; i += 1) {
     const species = rowSpecies[Math.floor(i / columns)];

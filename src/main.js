@@ -13,6 +13,8 @@ const scene = createScene(canvas);
 
 let columns = 7;
 let rows = 5;
+// 종족 프리뷰. null이면 고정 레인, 종족명이면 그 종족만.
+let only = null;
 let seed = readSeedFromHash() ?? (Math.random() * 0xffffffff) >>> 0;
 
 function readSeedFromHash() {
@@ -27,7 +29,7 @@ function render() {
   // 사실은 화면에 보여야 한다.
   seedLabel.textContent = formatSeed(seed);
   window.history.replaceState(null, "", `#${seed.toString(36)}`);
-  const specs = makeGrid(seed, columns * rows, columns);
+  const specs = makeGrid(seed, columns * rows, columns, only);
   scene.build(specs, columns);
   statusLabel.textContent = `${specs.length} ALIVE`;
 }
@@ -58,6 +60,16 @@ countSeg.addEventListener("click", (event) => {
   for (const node of countSeg.querySelectorAll("button")) node.classList.remove("on");
   button.classList.add("on");
   [columns, rows] = button.dataset.grid.split("x").map(Number);
+  render();
+});
+
+const speciesSeg = document.getElementById("speciesSeg");
+speciesSeg.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-species]");
+  if (!button) return;
+  for (const node of speciesSeg.querySelectorAll("button")) node.classList.remove("on");
+  button.classList.add("on");
+  only = button.dataset.species === "all" ? null : button.dataset.species;
   render();
 });
 
