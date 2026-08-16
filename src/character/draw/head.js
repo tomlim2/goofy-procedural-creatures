@@ -91,10 +91,14 @@ export function drawEars(ink, fills, spec, box) {
 // (법선 기울기의 절반 + 좌우 살짝 다르게) — 둥근 머리에선 자연히 벌어지고 납작한 머리에선 곧게 선다. 끝은 살짝 뭉툭.
 // 네모 머리(square·block)는 모서리에 앉으면 상자에 뿔이 되니 조금 안쪽(θ 0.52)에 세운다.
 // round·fold·flap·long은 고양이에게 없다(species forbid → pointy).
+//   pointy    기본 세모 — 옆선 살짝 오목(손그림 귀), 끝 뭉툭
+//   pointyMid 좁고 긴 세모 — 더 벌어진다(+0.15rad, 레퍼런스의 긴 귀는 30°쯤 벌어짐)
+//   pointyBig 넓고 낮은 귀 — 끝이 둥글고 옆선이 볼록(채색된 갈색·회색 고양이 귀)
+// 안쪽 귀는 개체마다: 이중선 50% · 먹 채움 15% · 홈 한 획 15% · 없음 20%.
 const CAT_EAR = {
-  pointy: { w: 0.05, h: 0.1, theta: 0.6 },
-  pointyMid: { w: 0.04, h: 0.14, theta: 0.55 },
-  pointyBig: { w: 0.06, h: 0.13, theta: 0.6 }
+  pointy: { w: 0.05, h: 0.1, theta: 0.6, lean: 0, tip: 0.006, bow: -0.12 },
+  pointyMid: { w: 0.04, h: 0.14, theta: 0.55, lean: 0.15, tip: 0.005, bow: -0.1 },
+  pointyBig: { w: 0.062, h: 0.11, theta: 0.6, lean: -0.02, tip: 0.016, bow: 0.12 }
 };
 export function drawCatEars(ink, fills, spec, box) {
   if (spec.species !== "cat") return;
@@ -105,7 +109,8 @@ export function drawCatEars(ink, fills, spec, box) {
   const ink0 = spec.palette.ink;
   const skin = spec.palette.skin;
   const seed = spec.proportions.wobbleSeed;
-  const inner = seed % 100 < 60 ? "line" : seed % 100 < 75 ? "dark" : "none";
+  const roll = seed % 100;
+  const inner = roll < 50 ? "line" : roll < 65 ? "dark" : roll < 80 ? "notch" : "none";
   const boxy = headShape(spec).square >= 1.4;   // square·block — 모서리보다 조금 안쪽에
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {
@@ -115,21 +120,31 @@ export function drawCatEars(ink, fills, spec, box) {
     let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
     const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
     const tx = side * ny, ty = -side * nx;
-    // 귀 축 — 법선 기울기의 절반 + 개체별 좌우 차이. 둥근 머리는 벌어지고 납작한 머리는 곧게 선다
+    // 귀 축 — 법선 기울기의 절반 + 유형별 벌어짐 + 개체별 좌우 차이. 둥근 머리는 벌어지고 납작한 머리는 곧게 선다
     const normalTilt = Math.atan2(nx * side, ny);
-    const lean = normalTilt * 0.5 + 0.02 + ((seed >> (side > 0 ? 3 : 5)) % 3) * 0.02;
+    const lean = normalTilt * 0.5 + 0.02 + def.lean + ((seed >> (side > 0 ? 3 : 5)) % 3) * 0.02;
     const ax = side * Math.sin(lean), ay = Math.cos(lean);
-    // 밑변은 접선을 따라(윤곽에 붙게), 안쪽으로 0.02. 끝은 축을 따라, 아주 짧게 잘라 뭉툭하게
+    // 밑변은 접선을 따라(윤곽에 붙게) 안쪽으로 inset. 끝은 축을 따라 h, 폭 tip. 옆선은 중간을 bow만큼 안(−)/밖(+)으로 휜다
     const baseAt = (v, inset) => [bx + tx * v - nx * inset, by + ty * v - ny * inset];
     const tipAt = (v) => [bx + ax * def.h + tx * v, by + ay * def.h + ty * v];
-    const tip = 0.006;
-    const path = [baseAt(-def.w, 0.02), tipAt(-tip), tipAt(tip), baseAt(def.w, 0.02)];
+    const sideAt = (v0, v1, k) => {   // 밑변 v0 → 끝 v1 사이 k(0~1) 지점, 옆선 휨 포함
+      const [x0, y0] = baseAt(v0, 0);
+      const [x1, y1] = tipAt(v1);
+      const bow = def.bow * def.w * Math.sin(Math.PI * k) * Math.sign(v0);
+      return [x0 + (x1 - x0) * k + tx * bow, y0 + (y1 - y0) * k + ty * bow];
+    };
+    const path = [
+      baseAt(-def.w, 0.02), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w, 0.02)
+    ];
     fills.fill(path, skin);
-    ink.stroke([baseAt(-def.w * 1.02, 0.024), tipAt(-tip), tipAt(tip), baseAt(def.w * 1.02, 0.024)], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
-    // 안쪽 귀 — 축을 따라 작은 세모
-    const innerPath = [baseAt(-def.w * 0.5, -0.012), [bx + ax * def.h * 0.62, by + ay * def.h * 0.62], baseAt(def.w * 0.5, -0.012)];
-    if (inner === "line") ink.stroke(innerPath, { color: ink0, width: 0.008 });
-    else if (inner === "dark") fills.fill(innerPath, darken(skin, isDark(skin) ? 1.5 : 0.62));
+    ink.stroke([
+      baseAt(-def.w * 1.02, 0.024), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w * 1.02, 0.024)
+    ], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
+    // 안쪽 귀
+    const innerTip = [bx + ax * def.h * 0.62, by + ay * def.h * 0.62];
+    if (inner === "line") ink.stroke([baseAt(-def.w * 0.5, -0.012), innerTip, baseAt(def.w * 0.5, -0.012)], { color: ink0, width: 0.008 });
+    else if (inner === "dark") fills.fill([baseAt(-def.w * 0.5, -0.012), innerTip, baseAt(def.w * 0.5, -0.012)], darken(skin, isDark(skin) ? 1.5 : 0.62));
+    else if (inner === "notch") ink.stroke([[bx + ax * 0.012 + tx * def.w * 0.1, by + ay * 0.012 + ty * def.w * 0.1], [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: ink0, width: 0.008 });
   }
 }
 
