@@ -29,6 +29,8 @@ export function drawCreature(spec, variant = 0) {
   const faceFills = new Sketch(noise, wobble);
   const frontInk = new Sketch(noise, wobble);
   const frontFills = new Sketch(noise, wobble);
+  const faceFrontInk = new Sketch(noise, wobble);
+  const faceFrontFills = new Sketch(noise, wobble);
   const box = layout(spec);
   const eyes = eyeGeometry(spec, box);
 
@@ -43,7 +45,8 @@ export function drawCreature(spec, variant = 0) {
   drawHorns(headInk, headFills, spec, box, noise);
   drawEyes(faceInk, faceFills, spec, box, eyes);
   drawFace2(faceInk, faceFills, spec, box, eyes);
-  drawNose(faceInk, faceFills, spec, box, eyes);
+  // 코·안경은 얼굴 **맨 앞**(눈 리그보다 위) — 놀라 커진 흰자·감긴 눈꺼풀이 코·안경테를 덮어 사라지게 하지 않는다
+  drawNose(faceFrontInk, faceFrontFills, spec, box, eyes);
   // 눈썹과 입은 여기서 굽지 않는다. 상태 전환을 위해 scene이
   // facePartSketch로 별도 메시를 세운다.
   if (spec.species === "cat") {
@@ -58,7 +61,7 @@ export function drawCreature(spec, variant = 0) {
       }
     }
   }
-  drawEyewear(faceInk, faceFills, spec, box, eyes);
+  drawEyewear(faceFrontInk, faceFrontFills, spec, box, eyes);
   drawHair(headInk, spec, box, noise);
   drawHeadgear(frontInk, frontFills, spec, box);   // 모자는 귀 다음 — 귀 밑동을 덮는다
 
@@ -72,6 +75,7 @@ export function drawCreature(spec, variant = 0) {
     head: { ink: headInk, fills: headFills },
     face: { ink: faceInk, fills: faceFills },
     front: { ink: frontInk, fills: frontFills },
+    faceFront: { ink: faceFrontInk, fills: faceFrontFills },
     eyes: live,
     box,
     // 머리 회전 축. 몸 꼭대기(턱 언저리)다.

@@ -11,6 +11,8 @@ const statusLabel = document.getElementById("status");
 const countSeg = document.getElementById("countSeg");
 
 const scene = createScene(canvas);
+// 디버그 손잡이 — 콘솔에서 window.menagerie.scene.creatures() 로 개체 리그를 들여다본다
+window.menagerie = { scene };
 
 let columns = 7;
 let rows = 5;

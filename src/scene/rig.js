@@ -27,9 +27,11 @@ export function buildCreature(spec, noise, birth = 0) {
     { key: "body", group: bodyGroup, dy: 0, fillOrder: 1, inkOrder: 1.5, fillOpacity: 0.92 },
     { key: "head", group: headGroup, dy: -neckY, fillOrder: 1.8, inkOrder: 2, fillOpacity: 1 },
     { key: "front", group: headGroup, dy: -neckY, fillOrder: 2.1, inkOrder: 2.2, fillOpacity: 1 },   // 머리 앞: 개·고양이 귀, 모자
-    { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 0.92 }
+    { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 0.92 },
+    // 얼굴 맨 앞: 코·안경 — 눈 리그(3~6)보다 위. 놀라 커진 흰자·눈꺼풀이 못 덮는다
+    { key: "faceFront", group: faceGroup, dy: -faceCy, fillOrder: 6.4, inkOrder: 6.5, fillOpacity: 0.92 }
   ];
-  const frames = { body: [], head: [], front: [], face: [] };
+  const frames = { body: [], head: [], front: [], face: [], faceFront: [] };
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const drawn = k === 0 ? firstDrawn : drawCreature(spec, k);
     for (const layer of LAYERS) {
@@ -100,7 +102,8 @@ export function buildCreature(spec, noise, birth = 0) {
   const faceStates = {};
   for (const part of ["brow", "mouth"]) {
     faceStates[part] = kinds[part].map((kind, index) => {
-      const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 3, -faceCy);
+      // 눈썹·입은 눈 리그(3~6)보다 위(6.6) — 감긴 눈꺼풀이 눈썹을, 놀라 커진 외눈 흰자가 입을 지우지 않는다
+      const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 6.6, -faceCy);
       mesh.visible = index === 0;
       faceGroup.add(mesh);
       return mesh;

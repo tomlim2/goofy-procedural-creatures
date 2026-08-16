@@ -215,5 +215,5 @@ export function createScene(canvas) {
     for (const item of creatures) applyForced(item);
   }
 
-  return { build, update, resize, setRegen, setBind, setBoil, setAction, renderer, scene, camera };
+  return { build, update, resize, setRegen, setBind, setBoil, setAction, renderer, scene, camera, creatures: () => creatures };
 }
