@@ -4,7 +4,7 @@
 //
 // 형태: { next: 다음 진입 시각, until: 유지 종료 시각(아니면 -1) }
 
-import { ACTIONS } from "./actions.js";
+import { ACTIONS, QUAD_ACTIONS } from "./actions.js";
 
 const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infinity);
 
@@ -86,6 +86,25 @@ export function stepLook(s, t, rng, M) {
   }
   if (s.until >= 0 && t >= s.until) s.until = -1;
   return s.until >= 0 ? s.dir : null;
+}
+// 네발 행위 — idle에서 행위(앞발 들기·뒷발 긁기·꼬리 흔들기)로 넘어갔다 돌아온다. table.js quadActions.
+// 돌려주는 것: { action, index(다리 0~3, 꼬리면 -1), start, until } 또는 null(idle).
+export function initQuadAction(rng, M) { return { action: null, index: -1, start: -1, next: schedule(rng, M.quadActions ? [6, 18] : null), until: -1 }; }
+export function stepQuadAction(s, t, rng, M) {
+  if (t >= s.next && s.until < 0) {
+    const pool = M.quadActions || [];
+    if (pool.length) {
+      s.action = rng.weighted(pool);
+      const def = QUAD_ACTIONS[s.action];
+      const pick = rng.chance(0.5) ? 0 : 1;
+      s.index = def.leg === "front" ? pick : def.leg === "hind" ? 2 + pick : -1;
+      s.start = t;
+      s.until = t + rng.float(def.hold[0], def.hold[1]);
+    }
+    s.next = t + rng.float(M.quadActionGap ? M.quadActionGap[0] : 10, M.quadActionGap ? M.quadActionGap[1] : 30);
+  }
+  if (s.until >= 0 && t >= s.until) { s.until = -1; s.action = null; s.start = -1; }
+  return s.action ? { action: s.action, index: s.index, start: s.start, until: s.until } : null;
 }
 export function stepMood(m, t, rng) {
   if (t >= m.nextMood && m.moodUntil < 0) { m.moodUntil = t + rng.float(1.5, 4); m.nextMood = t + rng.float(6, 16); }

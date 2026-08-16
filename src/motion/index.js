@@ -12,14 +12,14 @@ import { MOTION } from "./table.js";
 import * as R from "./rhythm.js";
 import * as E from "./events.js";
 import * as S from "./states.js";
-import { ACTIONS, bindArm, solveArms } from "./actions.js";
+import { ACTIONS, QUAD_ACTIONS, bindArm, solveArms } from "./actions.js";
 
 export { MOTION } from "./table.js";
-export { ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
+export { ACTIONS, QUAD_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
 
-// 바인드 상태 — 아무 모션도 받지 않은 캐릭터. 모든 값이 정지·기본이고 팔은 T포즈다.
-// scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다. 형태·파츠를 판단할 때 쓴다.
-// (모션의 기본 상태는 이게 아니라 idle이다 — actions.js. 바인드는 모션이 없을 때다.)
+// 바인드 상태 — 아무 모션도 받지 않은 캐릭터. 모든 값이 정지·기본이다: 두발은 팔 T포즈,
+// 네발은 다리 수직·꼬리 그린 그대로. scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다.
+// (모션의 기본 상태는 이게 아니라 idle이다 — 두발 A포즈, 네발 선 자세(legStance·tailIdle). 바인드는 모션이 없을 때다.)
 export const BIND_STATE = Object.freeze({
   breathe: 0, lid: 0, gaze: [0, 0], aperture: 1, regen: false, emote: null,
   browAlt: false, mouthAlt: false,
@@ -27,8 +27,8 @@ export const BIND_STATE = Object.freeze({
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
   happy: false, winkSide: 0, tailAngle: 0,
-  arms: { "-1": bindArm(-1), "1": bindArm(1) }, armAction: null, armSide: 0,
-  legOffset: [0, 0, 0, 0]
+  arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0,
+  legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
 });
 
 // rig: character/draw/limbs.js armRig(spec) — 어깨 위치·팔 길이·몸 앵커. 행위를 IK로 푸는 데 쓴다.
@@ -64,16 +64,17 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const tailFlick = E.initTailFlick(rng, M);     // 24
   const jelly = R.initJelly(rng, M);             // 25
   const look = S.initLook(rng, M);               // 26
+  const quadAction = S.initQuadAction(rng, M);   // 27
 
   // 강제 행위 (화면 ACTION 카드). 예약된 행위 대신 이걸 계속 한다. null이면 예약대로,
-  // "idle"이면 행위 없이 idle만.
+  // "idle"이면 행위 없이 idle만. 두발 행위(ACTIONS)와 네발 행위(QUAD_ACTIONS)는 각자 종족에서만 먹는다.
   let forced = null;
   let forcedSide = 1;
   let forcedStart = -1;
 
   return {
     force(action, side = 1) {
-      forced = action === "idle" || (action && ACTIONS[action]) ? action : null;
+      forced = action === "idle" || (action && (ACTIONS[action] || QUAD_ACTIONS[action])) ? action : null;
       forcedSide = side;
       forcedStart = -1;
     },
@@ -111,7 +112,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 예약은 강제 중에도 계속 돌린다(rng 소비를 같게 — 강제를 풀어도 시계가 흐트러지지 않는다).
       const scheduled = S.stepArmAction(armAction, t, rng, M);
       let act = scheduled;
-      if (forced === "idle") act = null;
+      if (forced === "idle" || (forced && QUAD_ACTIONS[forced])) act = null;
       else if (forced) {
         if (forcedStart < 0) forcedStart = t;
         act = { action: forced, side: forcedSide, start: forcedStart, until: Infinity };
@@ -128,17 +129,39 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         arm.elbow += off * 0.5;
       }
 
-      // 다리
-      const legOffset = [0, 0, 0, 0];
+      // 다리 — 기본은 idle 자세(네발은 legStance로 선 자세, 두발은 수직). 그 위에 까딱·스텝·폴짝·지터.
+      const legOffset = M.legStance ? [...M.legStance] : [0, 0, 0, 0];
+      const legOsc = [0, 0, 0, 0];
       E.stepLegTap(legTap, t, rng, M, legOffset);
       E.stepLegStep(legStep, t, rng, M, legOffset);
       if (hp.squashY < 0) { legOffset[0] += hp.squashY * 1.5; legOffset[1] -= hp.squashY * 1.5; }
       for (let i = 0; i < 4; i += 1) legOffset[i] += R.legJitter(t, i);
 
-      // 꼬리 · 젤리
-      let tailAngle = R.stepTailSwish(tailSwish, t);
+      // 꼬리 · 젤리 — 꼬리 기본은 idle 각(tailIdle), 그 위에 스위시·플릭
+      let tailAngle = (M.tailIdle || 0) + R.stepTailSwish(tailSwish, t);
       tailAngle += E.stepTailFlick(tailFlick, t, rng, M);
       const j = R.stepJelly(jelly, t);
+
+      // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
+      const scheduledQ = S.stepQuadAction(quadAction, t, rng, M);
+      let qact = scheduledQ;
+      if (forced === "idle" || (forced && ACTIONS[forced])) qact = null;
+      else if (forced && QUAD_ACTIONS[forced]) {
+        if (forcedStart < 0) forcedStart = t;
+        const def = QUAD_ACTIONS[forced];
+        const index = def.leg === "front" ? (forcedSide > 0 ? 1 : 0) : def.leg === "hind" ? (forcedSide > 0 ? 3 : 2) : -1;
+        qact = { action: forced, index, start: forcedStart, until: Infinity };
+      }
+      if (qact) {
+        const def = QUAD_ACTIONS[qact.action];
+        const env = Math.max(0, Math.min(1, Math.min((t - qact.start) / 0.35, (qact.until - t) / 0.35)));
+        const w = Math.sin((t - qact.start) * Math.PI * 2 * ((def.osc || def.tail?.osc || { hz: 1 }).hz)) * env;
+        if (qact.index >= 0) {
+          legOffset[qact.index] = def.angle;
+          if (def.osc) legOsc[qact.index] = def.osc.amp * w;
+        }
+        if (def.tail) tailAngle += def.tail.osc.amp * w;
+      }
 
       // 표정 상태 · 이벤트
       const md = S.stepMood(mood, t, rng);
@@ -155,8 +178,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle,
-        arms, armAction: act ? act.action : null, armSide: act ? act.side : 0,
-        legOffset
+        arms, legOffset, legOsc,
+        // 지금 하는 행위 (두발 팔 행위 또는 네발 행위) 와 어느 쪽(활동 팔 side / 다리 index). 디버그·통계용
+        action: act ? act.action : qact ? qact.action : null,
+        actionSide: act ? act.side : qact ? qact.index : 0
       };
     }
   };

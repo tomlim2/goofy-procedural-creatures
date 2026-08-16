@@ -79,7 +79,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 
 | 축 | 토글 | 값 | 뜻 |
 | --- | --- | --- | --- |
-| **포즈** (리그) | POSE MOTION/BIND, `B` | `scene.setBind` | BIND면 clock 대신 `BIND_STATE`, 관절 이징 즉시(snap). 시계는 계속 흘린다 |
+| **포즈** (리그) | POSE MOTION/BIND, `B` | `scene.setBind` | BIND면 clock 대신 `BIND_STATE`(두발 T포즈, 네발 다리 수직·꼬리 그린 그대로), 관절 이징 즉시(snap). 시계는 계속 흘린다 |
 | **잉크** (선) | INK BOIL/STILL, `I` | `scene.setBoil` | STILL이면 보일 0번 프레임 고정 |
 | 행위 강제 (디버그) | ACTION 카드 | `scene.setAction` | 두발 전원이 그 행위를 계속. IDLE은 행위 없음. `clock.force`. AUTO면 예약대로 |
 

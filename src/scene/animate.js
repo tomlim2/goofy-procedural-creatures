@@ -65,6 +65,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       }
     } else {
       target = state.legOffset[limb.index] || 0;
+      osc = state.legOsc ? state.legOsc[limb.index] || 0 : 0;
     }
     const ease = snap ? 1 : 0.12;
     limb.angle += (target - limb.angle) * ease;

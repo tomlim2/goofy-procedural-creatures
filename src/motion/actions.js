@@ -48,6 +48,16 @@ export const ACTIONS = {
   flap:   { pose: "flap",   arms: "both", hold: [1.5, 3], label: "파닥임 (좋아함)", emote: "heart" }
 };
 
+// 네발 행위 — 다리 하나나 꼬리를 잠깐 다르게. 네발 리그는 피벗 회전뿐이라 IK 없이 각도다.
+// idle(선 자세 — table.js legStance·tailIdle) 위에 겹치고, 정하지 않은 다리·꼬리는 idle 그대로.
+//   leg   어느 쌍에서 하나 뽑나 ("front" 앞다리 0/1, "hind" 뒷다리 2/3). angle: 피벗 각(rad, 음수 = 발이 머리 쪽으로)
+//   osc   이징 없이 얹는 진동 { amp, hz }. tail: 꼬리에 얹는 진동
+export const QUAD_ACTIONS = {
+  paw:     { leg: "front", angle: -1.0, osc: { amp: 0.25, hz: 3 }, hold: [1.5, 3],  label: "앞발 들기 (인사)" },
+  scratch: { leg: "hind",  angle: -0.9, osc: { amp: 0.15, hz: 6 }, hold: [1, 2.2],  label: "뒷발로 긁기" },
+  wag:     { tail: { osc: { amp: 0.35, hz: 4 } },                   hold: [1.5, 3],  label: "꼬리 흔들기" }
+};
+
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const FLOOR_MARGIN = 0.035;   // 손 점 반지름(0.022)보다 조금 크게
 

@@ -21,6 +21,8 @@ export const MOTION = {
     rock: 0.006,
     roll: null, dip: null,
     hop: [40, 90], stretch: null,
+    // 통통이 — 사람 30%는 idle 중 2.5~6초마다 제자리에서 살짝(절반 진폭) 뛴다
+    bounce: { chance: 0.3, gap: [2.5, 6], amp: 0.5 },
     tilt: [7, 18], tiltAmp: 0.1,
     jelly: null, shiver: [26, 60],
     wink: null, happyHold: null,
@@ -33,6 +35,10 @@ export const MOTION = {
   pup: {
     armActions: null, armActionGap: null,
     armSwing: 0,
+    // 네발 idle 자세 — 바인드(다리 수직·꼬리 그린 그대로)와 다르다. 앞다리는 살짝 앞, 뒷다리는 뒤로 딛고
+    // 꼬리는 올린다. 그 위에 리듬(호흡·롤·꼬리)과 행위가 얹힌다.
+    legStance: [-0.05, -0.02, 0.09, 0.06], tailIdle: 0.25,
+    quadActions: [["paw", 2], ["wag", 2.5], ["scratch", 1]], quadActionGap: [8, 22],
     // 레퍼런스의 개 다리는 4초 내내 바닥 고정. 몸이 흔들려 다리가 따라 보일 뿐이다.
     legTap: [14, 32], legStep: [30, 70],
     sway: [0.004, 0.01], swayPeriod: [3, 6],
@@ -52,6 +58,9 @@ export const MOTION = {
   cat: {
     armActions: null, armActionGap: null,
     armSwing: 0,
+    legStance: [-0.03, 0, 0.06, 0.03], tailIdle: 0.1,
+    // 고양이는 앞발 장난이 잦고 꼬리 흔들기는 드물다 (스위시가 상시라)
+    quadActions: [["paw", 2], ["scratch", 1], ["wag", 0.7]], quadActionGap: [10, 28],
     // 앞발 꾹꾹이 드물게, 스텝은 더 드물게
     legTap: [16, 36], legStep: [40, 90],
     sway: [0.002, 0.007], swayPeriod: [3.5, 7],
@@ -81,6 +90,8 @@ export const MOTION = {
     rock: 0.004,
     roll: null, dip: null,
     hop: [50, 110], stretch: null,
+    // 도깨비 통통이 35% — 젤리 워블과 함께 통통
+    bounce: { chance: 0.35, gap: [2, 5], amp: 0.5 },
     tilt: [8, 18], tiltAmp: 0.09,
     jelly: { amp: [0.008, 0.018], freq: [1.1, 1.9] }, shiver: [12, 30],
     wink: null, happyHold: null,
