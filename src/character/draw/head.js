@@ -2,6 +2,7 @@
 
 import { blobPath, arcPath } from "../../stroke.js";
 import { TAU, headShape, darken, isDark, eyeGeometry } from "./layout.js";
+import { LENS_SCALE } from "./face.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -253,11 +254,12 @@ export function drawHeadgear(ink, fills, spec, box) {
   const ry = box.headRy;
   const cy = box.headCy;
 
-  // 모자는 **눈썹 선 위**에 앉는다. 눈이 높이 달린 개체도 가리지 않게 눈 위쪽 끝(eyeGeometry)에서 재고,
-  // 폭은 그 높이에서의 머리 윤곽 반폭(타원)을 따른다 — 머리 크기·모양이 달라도 늘 머리에 맞는다.
+  // 모자는 **눈썹 선 위**에 앉는다. 눈이 높이 달린 개체도 가리지 않게 눈(안경·고글·안대·모노클 테 포함) 위쪽 끝에서
+  // 재고, 폭은 그 높이에서의 머리 윤곽 반폭(타원)을 따른다 — 머리 크기·모양이 달라도 늘 머리에 맞는다.
   const eyes = eyeGeometry(spec, box);
-  const eyeTop = eyes.reduce((m, e) => Math.max(m, e.y + e.r), cy);
-  const brow = Math.max(cy + ry * 0.42, eyeTop + ry * 0.12);
+  const rim = LENS_SCALE[spec.parts.eyewear] || (spec.parts.eyewear === "monocle" ? 1.5 : spec.parts.eyewear === "patch" ? 1.35 : 1);
+  const eyeTop = eyes.reduce((m, e) => Math.max(m, e.y + e.r * rim), cy);
+  const brow = Math.max(cy + ry * 0.42, eyeTop + ry * 0.1);
   const halfW = (y) => rx * Math.sqrt(Math.max(0.05, 1 - ((y - cy) / ry) ** 2));
   const crown = cy + ry;
   const tiltSide = spec.seed % 2 ? 1 : -1;

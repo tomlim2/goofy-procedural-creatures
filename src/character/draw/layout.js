@@ -25,6 +25,9 @@ export const BUILD = {
   small: { w: 0.75, h: 0.7, dressW: 0.8, stance: 0.45 }      // 작은 몸통 — 머리가 커 보인다
 };
 
+// 두발 머리 꼭대기 상한. 셀 높이 1.35에서 바닥선(0.16)을 뺀 1.19 안에 머리카락·모자까지 들어가야 한다
+export const MAX_HEAD_TOP = 1.05;
+
 // 다리 기장 배율 (legLength 슬롯). 네발도 같은 표를 쓴다 — short 네발이 닥스훈트다.
 export const LEG_LENGTH = { long: 1, medium: 0.65, short: 0.3 };
 // 네발 체격 (build 슬롯). w는 몸 길이 배율, h는 몸통 두께 배율, cx는 몸통 중심이 앞(머리) 기준점에서 얼마나 뒤에 있나.
@@ -88,9 +91,18 @@ export function layout(spec) {
   const bodyW = 0.23 * p.bodyWide * (spec.parts.body === "dress" ? build.dressW : build.w);
   const bodyTop = legTop + bodyH;
   const shape = headShape(spec);
-  const headRy = 0.3 * p.headScale * shape.ry;
-  const headRx = 0.3 * p.headScale * p.headWide * shape.rx;
-  const headCy = bodyTop + headRy * 0.72;
+  let headRy = 0.3 * p.headScale * shape.ry;
+  let headRx = 0.3 * p.headScale * p.headWide * shape.rx;
+  let headCy = bodyTop + headRy * 0.72;
+  // 셀 안에 들어가게 — 머리 꼭대기가 MAX_HEAD_TOP을 넘으면 머리를 그만큼 줄인다 (그 위에 머리카락·모자가 더 얹힌다).
+  // 왕머리 + 긴 다리 + 큰 몸이 겹치면 셀(1.19)을 넘어 윗줄을 침범한다
+  const top = headCy + headRy;
+  if (top > MAX_HEAD_TOP) {
+    const k = (MAX_HEAD_TOP - bodyTop) / (top - bodyTop);
+    headRy *= k;
+    headRx *= k;
+    headCy = bodyTop + headRy * 0.72;
+  }
 
   return { quad: false, legTop, bodyH, bodyW, bodyCx: 0, bodyTop, headRx, headRy, headCy };
 }
