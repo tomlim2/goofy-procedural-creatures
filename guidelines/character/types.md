@@ -9,7 +9,7 @@
 
 | 층 | 결정 단위 | 결정 시점 | 역할 |
 | --- | --- | --- | --- |
-| **종족** | 줄(row) | `makeGrid`가 줄마다 뽑는다 | 골격 — 두발/네발, 색, 전용 파츠, 지배 모션 |
+| **종족** | 줄(row) | 고정 레인 (`LANE_TABLE`) | 골격 — 두발/네발, 색, 전용 파츠, 지배 모션 |
 | **아키타입** | 개체 | `makeCreature` 첫 추첨 | 성향 — 파츠 가중치 편향 |
 | **비율 지터** | 개체 | `makeProportions` | 실루엣 — 머리 크기·비대칭·손떨림 |
 
@@ -17,8 +17,18 @@
 
 ## 종족 (SPECIES)
 
-`src/character/vocabulary/species.js`. 줄마다 뽑히고 바로 윗줄과 같으면 한 번 다시 뽑는다.
-kid이 흔해서 두 줄 연속도 자연스럽다.
+`src/character/vocabulary/species.js`. 종족은 **고정 레인**이다 — 위에서부터 사람·사람·고양이·개·도깨비
+(레퍼런스 영상 순서). `spec.js` `LANE_TABLE`이 행 수별 순서를 명시한다:
+
+| 행 | 레인 |
+| --- | --- |
+| 4 | kid · cat · pup · imp |
+| 5 | kid · kid · cat · pup · imp |
+| 6 | kid · kid · cat · pup · pup · imp |
+| 8 | kid · kid · kid · cat · cat · pup · imp · imp |
+
+표에 없는 행 수는 5줄 기준을 비율대로 늘인다. `SPECIES`의 `weight`는 레인 표에서는 쓰이지 않는다
+(랜덤 레인으로 되돌릴 때를 위해 남겨 둔다).
 
 | 종족 | 가중치 | 골격 | 색 | 전용/편향 파츠 | 지배 모션 |
 | --- | --- | --- | --- | --- | --- |

@@ -5,6 +5,6 @@
 // 움직임은 여기 없다. 그건 ../motion/이다.
 // 문서: guidelines/character/
 
-export { makeCreature, makeGrid } from "./spec.js";
+export { makeCreature, makeGrid, laneSpecies, LANES } from "./spec.js";
 export { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngle, tailSketch } from "./draw/index.js";
 export { SLOTS, DEFAULT_BIAS, ARCHETYPES, SPECIES, PAPER, INKS, FILLS, ACCENTS, POPS } from "./vocabulary/index.js";

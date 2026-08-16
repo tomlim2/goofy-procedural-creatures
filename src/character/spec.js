@@ -167,21 +167,37 @@ export function makeCreature(seed, speciesName = "kid") {
 //
 // 시드를 그냥 base+0, base+1... 로 주면 아키타입이 뭉쳐서 한 줄이 통째로
 // 비슷해 보이는 일이 생긴다. 미리 만들어 보고 이웃과 겹치면 다시 뽑는다.
+// 고정 레인. 위에서부터 사람·사람·고양이·개·도깨비 (레퍼런스 영상 순서).
+// 행 수별로 명시한다 — 리샘플링하면 4행에서 고양이가 빠지는 식으로 종족이 사라진다.
+export const LANES = ["kid", "kid", "cat", "pup", "imp"];
+
+const LANE_TABLE = {
+  4: ["kid", "cat", "pup", "imp"],
+  5: ["kid", "kid", "cat", "pup", "imp"],
+  6: ["kid", "kid", "cat", "pup", "pup", "imp"],
+  7: ["kid", "kid", "kid", "cat", "pup", "imp", "imp"],
+  8: ["kid", "kid", "kid", "cat", "cat", "pup", "imp", "imp"]
+};
+
+export function laneSpecies(rows) {
+  if (LANE_TABLE[rows]) return LANE_TABLE[rows];
+  // 표에 없는 행 수는 5줄 기준을 비율대로 늘인다
+  const out = [];
+  for (let r = 0; r < rows; r += 1) {
+    const k = Math.min(LANES.length - 1, Math.floor(((r + 0.5) / rows) * LANES.length));
+    out.push(LANES[k]);
+  }
+  return out;
+}
+
 export function makeGrid(baseSeed, count, columns) {
   const creatures = [];
   const rows = Math.ceil(count / columns);
 
-  // 줄마다 종족을 정한다. 바로 윗줄과 같으면 한 번만 다시 뽑는다.
-  // 사람(kid)은 흔해서 연속 두 줄이 나와도 자연스럽다.
-  const rowRng = makeRng((baseSeed ^ 0x51ed270b) >>> 0);
-  const rowSpecies = [];
-  for (let r = 0; r < rows; r += 1) {
-    let pick = rowRng.weighted(SPECIES.map((s) => [s, s.weight]));
-    if (r > 0 && pick.name === rowSpecies[r - 1]) {
-      pick = rowRng.weighted(SPECIES.map((s) => [s, s.weight]));
-    }
-    rowSpecies.push(pick.name);
-  }
+  // 줄 종족은 고정 레인이다 (레퍼런스 영상과 동일): 위에서부터 사람·사람·고양이·개·도깨비.
+  // 행 수가 5가 아니면 이 순서를 비율대로 늘이고 줄인다 — 4행이면 사람·고양이·개·도깨비,
+  // 6행이면 사람·사람·고양이·개·개·도깨비 식으로.
+  const rowSpecies = laneSpecies(rows);
 
   for (let i = 0; i < count; i += 1) {
     const species = rowSpecies[Math.floor(i / columns)];
