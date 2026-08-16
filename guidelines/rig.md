@@ -73,7 +73,7 @@ emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머
 | 팔다리 지체 (front, back) | pivot.rotation.z, elbow.rotation.z (이징된 목표각 + 이징 없는 진동), front/back visible |
 | 꼬리 | rotation.z |
 | 눈썹·입 쉼/대체 | visible |
-| 눈 리그 5메시 | scale, position, visible |
+| 눈 리그 5메시 | scale(개방도 × 개체 `eyePop` — 왕눈·외눈은 절반), position, visible |
 | — | group·headGroup·faceGroup의 position/rotation/scale |
 
 **매 프레임 지오메트리를 다시 만들지 않는다.** 예외는 이모지(트리거당 1회)와 재생성(개체 교체)뿐이다.

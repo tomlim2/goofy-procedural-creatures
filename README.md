@@ -23,6 +23,10 @@ three.js는 importmap으로 unpkg에서 받는다.
 나란히 그린다. FIX 드롭다운(`&fix=legLength:short`)으로 다른 슬롯 하나를 고정할 수 있고, `&values=bangs,bun`으로 그 슬롯의
 몇 값만 크게 놓고 볼 수 있다. 파츠 하나의 형태를 판단할 때. census가 숫자라면 이건 그림이다.
 
+`/audit.html?seed=…` — **얼굴 파츠 전수조사**. 판 하나(35마리)를 얼굴 상태 18가지(놀람·잠·깜빡임·^^·윙크·눈썹/입 전환·
+8방향 돌림·조합)로 그려, 눈·코·입·눈썹·안경·볼·잠 눈꺼풀을 하나씩 껐다 켰다 하며 픽셀 차이를 센다. 머리 폭의 4% 미만이면
+"안 보임"으로 적는다. 얼굴을 고쳤으면 돌린다 — 0건이어야 한다.
+
 | 조작 | |
 | --- | --- |
 | NEW SEED / `R` | 새 시드. 주소창 해시가 시드다 — `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다 |
@@ -47,6 +51,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js` `emoji.js`(글리프 모양) `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) |
 | `src/main.js` | 진입점. UI 배선 | |
 | `src/gallery.js` · `gallery.html` | 파츠 갤러리 — 슬롯값별로 같은 개체를 나란히 | |
+| `src/audit.js` · `audit.html` | 얼굴 파츠 전수조사 — 상태별로 파츠가 보이는지 픽셀로 센다 | [character/rules](guidelines/character/rules.md) |
 | `guidelines/` | 두 축의 카탈로그와 규칙. **고치기 전에 읽는다** | [README](guidelines/README.md) |
 | `reference/` | 무엇을 보고 만들었고 무엇을 가져오고 안 가져왔는지 | [README](reference/README.md) |
 | `scripts/` | 아래 § 스크립트 | |

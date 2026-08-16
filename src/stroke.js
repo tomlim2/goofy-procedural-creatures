@@ -95,6 +95,9 @@ export class Sketch {
       this.phase += 13.37;
       const sampled = resample(points, step);
       if (sampled.length < 2) continue;
+      // 표본이 양끝 둘뿐인 짧은 획(step보다 짧은 점·주근깨·세로 동공)은 끝 가늘어짐 때문에 폭이 0이 되어 사라진다.
+      // 가운데 표본을 하나 넣어 그 자리에서 제 폭을 갖게 한다 — 짧은 획은 작은 콩알로 남는다.
+      if (sampled.length === 2) sampled.splice(1, 0, [(sampled[0][0] + sampled[1][0]) / 2, (sampled[0][1] + sampled[1][1]) / 2]);
       const path = perturb(sampled, this.noise, jitter * this.wobble, this.phase);
 
       for (let i = 1; i < path.length; i += 1) {

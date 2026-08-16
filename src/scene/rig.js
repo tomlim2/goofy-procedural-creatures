@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyePop } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -139,9 +139,10 @@ export function buildCreature(spec, noise, birth = 0) {
     rig.add(lid);
 
     // ^^ — 행복하게 감은 눈. 눈꺼풀을 다 닫고 이 아치를 위에 얹는다.
+    // 얼굴 잉크(faceInk)로 — 도깨비처럼 머리가 먹빛이면 검정 아치는 머리에 묻혀 안 보인다
     const smileSketch = new Sketch(noise, 0.5);
     smileSketch.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), {
-      color: spec.palette.ink, width: 0.013
+      color: spec.faceInk || spec.palette.ink, width: 0.013
     });
     const smile = sketchMesh(smileSketch, 1, 6);
     smile.visible = false;
@@ -159,7 +160,7 @@ export function buildCreature(spec, noise, birth = 0) {
     if (firstDrawn.eyes.some((e) => e.side === eye.side)) continue;
     const cover = new Sketch(noise, 0.4);
     cover.fill(blobPath(0, 0, eye.r * 1.2, eye.r * 1.1, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
-    cover.stroke(arcPath(0, eye.r * 0.15, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: spec.palette.ink, width: 0.011 });
+    cover.stroke(arcPath(0, eye.r * 0.15, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: spec.faceInk || spec.palette.ink, width: 0.011 });
     const mesh = sketchMesh(cover, 1, 3.5);
     mesh.position.set(eye.x, eye.y - faceCy, 0);
     mesh.visible = false;
@@ -176,6 +177,8 @@ export function buildCreature(spec, noise, birth = 0) {
     limbs,
     frames,
     eyeRigs,
+    // 놀람 때 눈 리그가 커지는 배율의 감쇠. 왕눈(wide·cyclops)은 이미 커서 1.65배로 뻥 튀기면 코·볼·입까지 덮는다 — 절반만
+    eyePop: eyePop(spec),
     sleepLids,
     faceStates,
     // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다

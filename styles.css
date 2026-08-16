@@ -138,3 +138,15 @@ select.wide { width: 100%; }
   display: grid;
   place-content: center;
 }
+
+/* 얼굴 파츠 전수조사 — 덱이 넓고(보고서), 캔버스는 그만큼 밀린다 */
+.audit .deck { width: 360px; }
+.audit #stage { left: 0; width: 100%; }   /* 캔버스는 화면 전체 — 개체가 커야 픽셀 검사가 정확하다. 덱이 위에 뜬다 */
+.audit .report {
+  margin: 0;
+  max-height: 60vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 11px;
+  line-height: 1.5;
+}

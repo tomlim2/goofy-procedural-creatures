@@ -20,6 +20,7 @@
 | --- | --- | --- |
 | 파츠 하나의 **형태** | 파츠 갤러리 — 같은 개체에 슬롯값 전부(또는 `values=`로 고른 몇 개)를 나란히 | `/gallery.html?slot=…&species=…&fix=…&values=…` ([../README.md](../README.md) § 실행) |
 | 파츠 **분포**·종족 정체성 | `node scripts/census.mjs [--slot X \| --check]` | [character/rules.md](character/rules.md) § 분포는 census로 본다 |
+| 얼굴 파츠가 **어느 상태에서도 보이나** | 얼굴 파츠 전수조사 — 판 전체 × 얼굴 상태 18가지, 파츠별 픽셀 차이 | `/audit.html?seed=…` ([character/rules.md](character/rules.md) § 얼굴 파츠는 어느 상태에서도 보여야 한다) |
 | **행위** 하나가 어떻게 보이나 | 화면 ACTION 카드 (두발 전원 강제, IDLE) | [motion/catalog.md](motion/catalog.md) § 바인드 포즈와 팔 행위 |
 | 모션 **빈도** | 60초 시뮬로 발화를 센다 | [motion/rules.md](motion/rules.md) § 발화 빈도를 센다 |
 | 형태 판단 시 모션 잡음 | POSE BIND(T포즈 고정) · INK STILL(보일 정지) | [rig.md](rig.md) § 포즈와 잉크 |

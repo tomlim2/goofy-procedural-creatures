@@ -215,5 +215,12 @@ export function createScene(canvas) {
     for (const item of creatures) applyForced(item);
   }
 
-  return { build, update, resize, setRegen, setBind, setBoil, setAction, renderer, scene, camera, creatures: () => creatures };
+  // 디버그 — 한 개체에 임의 상태(BIND_STATE 위에 덮어쓴 필드)를 즉시 입히고 한 프레임 그린다.
+  // 얼굴 상태별로 파츠가 보이는지 픽셀로 전수조사할 때 쓴다 (guidelines/character/rules.md § 얼굴 파츠는 어느 상태에서도 보여야 한다).
+  function probe(item, overrides = {}) {
+    applyState(item, { ...BIND_STATE, ...overrides }, clockNow, noise, { snap: true, boil: false });
+    renderer.render(scene, camera);
+  }
+
+  return { build, update, resize, setRegen, setBind, setBoil, setAction, probe, renderer, scene, camera, creatures: () => creatures };
 }
