@@ -49,6 +49,7 @@ import('./src/creature.js').then(m => {
 | | 어디에 | 예 |
 | --- | --- | --- |
 | 형태 | `SLOTS.arms`, `SLOTS.legs` | stick / sleeve / stubby / mitten, boots / tiptoe |
+| 치수 | `SLOTS.armLength` | short / medium / long / verylong — 형태와 독립이라 조합이 4×4 |
 | 쉼 자세 | `proportions.armRest` (개체 성격) | rest / out / behind / up |
 | 자세 전환 | `clocks.js` armPose 상태 | 12~36초마다 다른 자세로 갔다 돌아온다 |
 

@@ -879,7 +879,9 @@ export function limbSketches(spec) {
   const shoulderY = box.bodyTop - (box.bodyTop - box.legTop) * 0.22;
   for (const side of [-1, 1]) {
     const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.7 : 0.78);
-    const reach = 0.11 * p.armSpread;
+    // 길이 = 형태와 독립인 슬롯 × 개체 지터. 매우 긴 팔은 바닥에 닿을 만큼이다.
+    const lengthScale = { short: 0.7, medium: 1.05, long: 1.6, verylong: 2.4 }[spec.parts.armLength] || 1;
+    const reach = 0.11 * p.armSpread * lengthScale;
 
     // front — 늘어진 기준 상태
     const front = make();
@@ -890,9 +892,21 @@ export function limbSketches(spec) {
       const sl = [[side * -0.012, 0.012], [side * 0.012, 0.012], [side * reach * 0.42, -reach * 0.62], [side * reach * 0.22, -reach * 0.7]];
       front.fill(sl, cloth);
       front.outline(sl, { color: ink0, width: 0.01 });
-      dot(front, side * reach * 0.34, -reach * 0.78, 0.022, skin);
+      // 긴 소매는 소매 끝에서 맨팔이 더 나온다
+      if (lengthScale > 1.3) {
+        front.stroke([[side * reach * 0.32, -reach * 0.68], [side * reach * 0.36, -reach * 0.95]], { color: ink0, width: 0.01 });
+        dot(front, side * reach * 0.37, -reach * 1.0, 0.022, skin);
+      } else {
+        dot(front, side * reach * 0.34, -reach * 0.78, 0.022, skin);
+      }
     } else {
-      front.stroke([[0, 0], [side * reach * 0.25, -reach * 0.5], [side * reach * 0.35, -reach]], { color: ink0, width: 0.01 });
+      // 긴 팔은 팔꿈치가 살짝 꺾여 늘어진다. 곧게 그리면 막대기다.
+      const elbow = lengthScale > 1.3 ? 0.06 * (lengthScale - 1) : 0;
+      front.stroke([
+        [0, 0],
+        [side * (reach * 0.25 + elbow), -reach * 0.5],
+        [side * reach * 0.35, -reach]
+      ], { color: ink0, width: 0.01 });
       if (armKind === "mitten") dot(front, side * reach * 0.36, -reach * 1.02, 0.024, skin);
       else front.stroke([[side * reach * 0.35 - 0.016, -reach], [side * reach * 0.35 + 0.016, -reach + 0.004]], { color: ink0, width: 0.01 });
     }

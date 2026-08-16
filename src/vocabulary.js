@@ -23,7 +23,9 @@ export const SLOTS = {
   // 네발 종족 전용. 두발 종족은 그리지 않는다.
   tail: ["curl", "flag", "longtail", "stubtail"],
   // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다.
-  arms: ["stick", "sleeve", "stubby", "mitten"]
+  arms: ["stick", "sleeve", "stubby", "mitten"],
+  // 팔 길이. 형태와 독립이라 짧은 소매 팔, 매우 긴 장갑 팔이 다 나온다.
+  armLength: ["short", "medium", "long", "verylong"]
 };
 
 // 아키타입 bias가 없는 슬롯의 기본 가중치.
@@ -43,6 +45,7 @@ export const DEFAULT_BIAS = {
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
+  armLength: [["short", 2], ["medium", 4], ["long", 2.5], ["verylong", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2], ["bent", 2], ["wide", 1.5], ["tiptoe", 1]]
 };
 
@@ -97,6 +100,7 @@ export const ARCHETYPES = [
       body: [["tube", 3], ["bean", 2]],
       legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
       arms: [["stick", 3], ["mitten", 2]],
+      armLength: [["long", 3], ["verylong", 2], ["medium", 2]],
       hair: [["none", 2], ["wisp", 2], ["tuft", 2], ["pigtails", 1], ["spikes", 1]],
       nose: [["none", 4], ["dot", 3], ["hook", 1]]
     }
@@ -111,6 +115,7 @@ export const ARCHETYPES = [
       body: [["bean", 4], ["dress", 2]],
       legs: [["stub", 4], ["wide", 2], ["stick", 1]],
       arms: [["stubby", 4], ["stick", 1]],
+      armLength: [["short", 4], ["medium", 1]],
       horns: [["none", 5], ["nub", 2]]
     }
   },
@@ -208,6 +213,7 @@ export const SPECIES = [
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]],
       arms: [["stubby", 5], ["stick", 2]],
+      armLength: [["short", 3], ["medium", 2], ["long", 1]],
       legs: [["stub", 3], ["stick", 3], ["wide", 1]]
     }
   }
