@@ -77,7 +77,7 @@ const MOTION = {
   }
 };
 
-export function makeClock(seed, birth = 0, species = "kid", armRest = "rest") {
+export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", noRest = false) {
   const rng = makeRng(seed ^ 0x5bf03635);
   const M = MOTION[species] || MOTION.kid;
 
@@ -348,7 +348,8 @@ export function makeClock(seed, birth = 0, species = "kid", armRest = "rest") {
       // 쉼 자세에서 이따금 다른 자세로. 뒷짐인 개체가 팔을 꺼내 벌리거나,
       // 늘어뜨린 개체가 잠깐 뒷짐지거나.
       if (t >= nextPoseChange && poseUntil < 0) {
-        const others = ["rest", "out", "behind", "up"].filter((p) => p !== restPose);
+        // 매우 긴 팔은 늘어뜨리면 바닥을 뚫으므로 rest 자세를 후보에서 뺀다
+        const others = ["rest", "out", "behind", "up"].filter((p) => p !== restPose && !(noRest && p === "rest"));
         armPose = rng.weighted(others.map((p) => [p, p === "up" ? 0.5 : p === "behind" ? 1.5 : 2]));
         poseUntil = t + rng.float(2, 6);
         nextPoseChange = t + rng.float(12, 36);

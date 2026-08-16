@@ -149,12 +149,16 @@ export function makeCreature(seed, speciesName = "kid") {
     else palette.skin = palette.pop.color;
   }
 
+  const proportions = makeProportions(rng, archetype);
+  // 매우 긴 팔을 늘어뜨리면 바닥을 뚫는다. 쉼 자세를 벌림으로 고정한다.
+  if (parts.armLength === "verylong" && proportions.armRest === "rest") proportions.armRest = "out";
+
   return {
     seed,
     species: species.name,
     archetype: archetype.name,
     parts,
-    proportions: makeProportions(rng, archetype),
+    proportions,
     palette,
     faceInk: species.name === "imp" ? "#e9e3d5" : null
   };

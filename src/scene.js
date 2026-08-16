@@ -239,7 +239,7 @@ function buildCreature(spec, noise, birth = 0) {
     headFrames,
     eyeRigs,
     faceStates,
-    clock: makeClock(spec.seed, birth, spec.species, spec.proportions.armRest),
+    clock: makeClock(spec.seed, birth, spec.species, spec.proportions.armRest, spec.parts.armLength === "verylong"),
     spec,
     neckY,
     headRx: firstDrawn.box.headRx,

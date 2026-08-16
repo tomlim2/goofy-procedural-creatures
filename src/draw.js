@@ -880,7 +880,8 @@ export function limbSketches(spec) {
   for (const side of [-1, 1]) {
     const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.7 : 0.78);
     // 길이 = 형태와 독립인 슬롯 × 개체 지터. 매우 긴 팔은 바닥에 닿을 만큼이다.
-    const lengthScale = { short: 0.7, medium: 1.05, long: 1.6, verylong: 2.4 }[spec.parts.armLength] || 1;
+    // 과감하게 벌린다. short는 손이 겨우 나오는 수준, verylong은 바닥을 쓸 만큼.
+    const lengthScale = { short: 0.45, medium: 1.1, long: 2.2, verylong: 3.6 }[spec.parts.armLength] || 1;
     const reach = 0.11 * p.armSpread * lengthScale;
 
     // front — 늘어진 기준 상태
@@ -901,7 +902,7 @@ export function limbSketches(spec) {
       }
     } else {
       // 긴 팔은 팔꿈치가 살짝 꺾여 늘어진다. 곧게 그리면 막대기다.
-      const elbow = lengthScale > 1.3 ? 0.06 * (lengthScale - 1) : 0;
+      const elbow = lengthScale > 1.3 ? 0.05 * (lengthScale - 1) : 0;
       front.stroke([
         [0, 0],
         [side * (reach * 0.25 + elbow), -reach * 0.5],
