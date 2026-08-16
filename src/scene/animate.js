@@ -6,9 +6,9 @@ import { buildEmote } from "./emote.js";
 import { disposeGroup } from "./material.js";
 import { BOIL_FRAMES } from "./rig.js";
 
-export function applyState(item, state, t, noise) {
-  // 보일 — 낮은 주기로 잉크 변형을 순환
-  const frame = Math.floor(t * item.boilFps + item.boilOffset) % BOIL_FRAMES;
+export function applyState(item, state, t, noise, { frozen = false } = {}) {
+  // 보일 — 낮은 주기로 잉크 변형을 순환. frozen이면 0번 프레임에 고정.
+  const frame = frozen ? 0 : Math.floor(t * item.boilFps + item.boilOffset) % BOIL_FRAMES;
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     item.bodyFrames[k].visible = k === frame;
     item.headFrames[k].visible = k === frame;
@@ -56,10 +56,11 @@ export function applyState(item, state, t, noise) {
     } else {
       target = state.legOffset[limb.index] || 0;
     }
-    limb.angle += (target - limb.angle) * 0.12;
+    const ease = frozen ? 1 : 0.12;
+    limb.angle += (target - limb.angle) * ease;
     limb.pivot.rotation.z = limb.angle;
     if (limb.elbow) {
-      limb.elbowAngle += (elbowTarget - limb.elbowAngle) * 0.12;
+      limb.elbowAngle += (elbowTarget - limb.elbowAngle) * ease;
       limb.elbow.rotation.z = limb.elbowAngle;
     }
   }

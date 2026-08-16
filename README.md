@@ -22,6 +22,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | 조작 | |
 | --- | --- |
 | NEW SEED / `R` | 새 시드. 주소창 해시가 시드다 — `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다 |
+| VIEW MOTION / BIND / `B` | BIND는 바인드 포즈 정지 그림 — 모션·보일 전부 멈춤. 형태·파츠를 판단할 때 |
 | REGEN STILL / LIVE / `S` | 기본 STILL. LIVE를 켜면 개체가 각자의 시계(6~14초)로 교체된다 (레퍼런스 동작) |
 | SPECIES ALL / KID / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
 | GRID 5×4 / 7×5 / 9×6 | |

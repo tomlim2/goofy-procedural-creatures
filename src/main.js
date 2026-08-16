@@ -63,6 +63,16 @@ countSeg.addEventListener("click", (event) => {
   render();
 });
 
+// 뷰. MOTION은 시계가 돌고, BIND는 바인드 포즈 정지 그림.
+const viewSeg = document.getElementById("viewSeg");
+viewSeg.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-view]");
+  if (!button) return;
+  for (const node of viewSeg.querySelectorAll("button")) node.classList.remove("on");
+  button.classList.add("on");
+  scene.setBind(button.dataset.view === "bind");
+});
+
 const speciesSeg = document.getElementById("speciesSeg");
 speciesSeg.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-species]");
@@ -75,6 +85,10 @@ speciesSeg.addEventListener("click", (event) => {
 
 window.addEventListener("keydown", (event) => {
   if (event.key === "r" || event.key === "R") reseed();
+  if (event.key === "b" || event.key === "B") {
+    const on = viewSeg.querySelector(".on").dataset.view;
+    viewSeg.querySelector(on === "bind" ? '[data-view="motion"]' : '[data-view="bind"]').click();
+  }
   if (event.key === "s" || event.key === "S") {
     const target = liveButtons.querySelector(live ? '[data-live="off"]' : '[data-live="on"]');
     target.click();

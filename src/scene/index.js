@@ -9,6 +9,7 @@ import { makePaperTexture } from "./paper.js";
 import { inkMaterial, disposeGroup } from "./material.js";
 import { buildCreature } from "./rig.js";
 import { applyState } from "./animate.js";
+import { BIND_STATE } from "../motion/index.js";
 
 const CELL_W = 1.0;
 const CELL_H = 1.35;
@@ -29,6 +30,9 @@ export function createScene(canvas) {
   let rows = 5;
   // 마지막 update의 전역 시각. 재생성·재빌드로 태어나는 시계의 출생 시각이 된다.
   let clockNow = 0;
+  // 바인드 뷰. 켜면 clock을 안 돌리고 모든 개체를 BIND_STATE로 정지시킨다.
+  // 보일도 멈춘다 — 완전한 정지 그림. 형태·파츠 판단용.
+  let bindView = false;
   // 재생성 스위치. 기본 꺼짐 — 형태는 NEW SEED로만 바뀐다.
   let regenEnabled = false;
 
@@ -152,6 +156,12 @@ export function createScene(canvas) {
     clockNow = t;
     for (let index = 0; index < creatures.length; index += 1) {
       const item = creatures[index];
+      if (bindView) {
+        // 시계는 흘려보내되(복귀 시 폭주 방지) 상태는 바인드로 고정. 보일 프레임 0.
+        item.clock.update(t);
+        applyState(item, BIND_STATE, 0, noise, { frozen: true });
+        continue;
+      }
       const state = item.clock.update(t);
       if (state.regen && regenEnabled) {
         regenerate(index);
@@ -166,5 +176,9 @@ export function createScene(canvas) {
     regenEnabled = value;
   }
 
-  return { build, update, resize, setRegen, renderer, scene, camera };
+  function setBind(value) {
+    bindView = value;
+  }
+
+  return { build, update, resize, setRegen, setBind, renderer, scene, camera };
 }

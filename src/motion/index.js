@@ -15,6 +15,18 @@ import * as S from "./states.js";
 
 export { MOTION } from "./table.js";
 
+// 바인드 상태 — 아무 모션도 받지 않은 캐릭터. 모든 값이 정지·기본이다.
+// scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다. 형태·파츠를 판단할 때 쓴다.
+export const BIND_STATE = Object.freeze({
+  breathe: 0, lid: 0, gaze: [0, 0], aperture: 1, regen: false, emote: null,
+  browAlt: false, mouthAlt: false,
+  sway: 0, rock: 0, headAngle: 0, headBob: 0,
+  hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
+  jellyX: 0, jellyY: 0, faceYaw: 0,
+  happy: false, winkSide: 0, tailAngle: 0,
+  armOffset: { "-1": 0, "1": 0 }, legOffset: [0, 0, 0, 0], armAction: "tpose"
+});
+
 export function makeClock(seed, birth = 0, species = "kid", noHang = false) {
   const rng = makeRng(seed ^ 0x5bf03635);
   const M = MOTION[species] || MOTION.kid;

@@ -67,6 +67,12 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 `drawCreature(spec, variant)`는 `wobbleSeed ^ (variant × 0x9e3779b9)`로 rng를 판다.
 변형 3벌은 구도가 같고 떨림만 다르다. 눈썹·입·팔다리·꼬리는 변형이 없다(정적 지터로 충분).
 
+## 바인드 뷰
+
+`scene.setBind(true)`면 update가 clock 대신 `BIND_STATE`를 `applyState(…, { frozen: true })`로 넣는다.
+frozen은 보일을 0번 프레임에 고정하고 관절 이징을 즉시(1.0)로 바꾼다. 시계는 계속 흘려보낸다 —
+안 흘리면 복귀 시 예약이 전부 과거가 되어 이벤트가 몰린다.
+
 ## 재생성 시
 
 `regenerate(index)`가 옛 그룹을 dispose하고 새 개체를 같은 슬롯에 세운다.
