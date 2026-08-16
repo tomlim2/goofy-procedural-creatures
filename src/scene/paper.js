@@ -25,15 +25,25 @@ export function makePaperTexture(seed) {
   }
   ctx.putImageData(image, 0, 0);
 
+  // 얼룩(둥근 흔적). 텍스처는 타일로 반복되므로 이음매가 없어야 한다 — 얼룩 하나를 3×3 이웃 위치에도
+  // 그려서 캔버스 가장자리에서 잘린 얼룩이 반대편으로 이어지게 한다. 안 그러면 가장자리에서
+  // 잘린 원이 반복될 때마다 곧은 날이 선다.
   for (let i = 0; i < 18; i += 1) {
     const x = rng.float(0, size);
     const y = rng.float(0, size);
     const r = rng.float(40, 160);
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
-    gradient.addColorStop(0, "rgba(150,132,104,0.05)");
-    gradient.addColorStop(1, "rgba(150,132,104,0)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    for (const ox of [-size, 0, size]) {
+      for (const oy of [-size, 0, size]) {
+        const cx = x + ox;
+        const cy = y + oy;
+        if (cx + r < 0 || cx - r > size || cy + r < 0 || cy - r > size) continue;
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        gradient.addColorStop(0, "rgba(150,132,104,0.05)");
+        gradient.addColorStop(1, "rgba(150,132,104,0)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      }
+    }
   }
 
   const texture = new THREE.CanvasTexture(canvas);
