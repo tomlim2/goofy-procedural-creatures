@@ -100,6 +100,27 @@ const CAT_EAR = {
   pointyMid: { w: 0.04, h: 0.14, theta: 0.55, lean: 0.15, tip: 0.005, bow: -0.1 },
   pointyBig: { w: 0.062, h: 0.11, theta: 0.6, lean: -0.02, tip: 0.016, bow: 0.12 }
 };
+// 머리 윤곽(초타원 + 위아래 폭 비 — drawHead가 그리는 그 모양) 위의 점과 바깥 단위 법선.
+// theta: 정수리에서 잰 매개변수 각(0 = 정수리, π/2 = 옆구리), side: ±1. 귀·뿔처럼 "윤곽에 붙는" 것은 타원이 아니라 이걸 쓴다 —
+// 네모 머리에서 타원 위 점은 윤곽 안쪽에 묻힌다. 네모 머리의 꼭짓점(모서리)은 θ = π/4다.
+export function headAnchor(spec, box, theta, side) {
+  const shape = headShape(spec);
+  const n = 2 + shape.square;
+  const pt = (th) => {
+    const c = Math.sin(th), sn = Math.cos(th);   // blobPath의 각 = π/2 − θ
+    const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
+    const uy = Math.sign(sn) * Math.pow(Math.abs(sn), 2 / n);
+    return [side * ux * box.headRx * (1 - shape.taper * uy), box.headCy + uy * box.headRy];
+  };
+  const [x, y] = pt(theta);
+  const [x0, y0] = pt(theta - 0.01), [x1, y1] = pt(theta + 0.01);
+  let tx = x1 - x0, ty = y1 - y0;
+  const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+  let nx = ty, ny = -tx;                                   // 접선을 90° 돌린 둘 중 머리 중심에서 멀어지는 쪽
+  if (nx * x + ny * (y - box.headCy) < 0) { nx = -nx; ny = -ny; }
+  return { x, y, nx, ny };
+}
+
 export function drawCatEars(ink, fills, spec, box) {
   if (spec.species !== "cat") return;
   const value = spec.parts.ears;
@@ -114,11 +135,9 @@ export function drawCatEars(ink, fills, spec, box) {
   const boxy = headShape(spec).square >= 1.4;   // square·block — 모서리보다 조금 안쪽에
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {
-    // 윤곽 위 뿌리와 그 자리의 바깥 법선 n·접선 t (바깥 양수)
-    const bx = side * rx * Math.sin(theta);
-    const by = cy + ry * Math.cos(theta);
-    let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
-    const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+    // 윤곽(실제 머리 모양) 위 뿌리와 그 자리의 바깥 법선 n·접선 t (바깥 양수)
+    const anchor = headAnchor(spec, box, theta, side);
+    const bx = anchor.x, by = anchor.y, nx = anchor.nx, ny = anchor.ny;
     const tx = side * ny, ty = -side * nx;
     // 귀 축 — 법선 기울기의 절반 + 유형별 벌어짐 + 개체별 좌우 차이. 둥근 머리는 벌어지고 납작한 머리는 곧게 선다
     const normalTilt = Math.atan2(nx * side, ny);
@@ -162,7 +181,9 @@ export function drawPupEars(ink, fills, spec, box) {
   const earFill = darken(spec.palette.skin, 0.8);
   const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
   const upper = kind === "pointy" || kind === "round" || kind === "fold";
-  const theta = upper ? 0.88 : 1.53;
+  // 위쪽 자리는 둥근 머리에서 θ≈50°, 네모 머리(square·block)에서는 **꼭짓점**(θ = 45°)에서 시작한다 — 세모귀가 모서리에서 뻗는다
+  const boxy = Math.min(1, headShape(spec).square / 1.5);
+  const theta = upper ? 0.88 - boxy * (0.88 - Math.PI / 4) : 1.53;
   const rx = box.headRx, ry = box.headRy;
   // 점 목록을 (cx, cy) 기준으로 angle만큼 돌린다 (반시계 양수)
   const rotate = (pts, cx, cy, angle) => {
@@ -173,11 +194,11 @@ export function drawPupEars(ink, fills, spec, box) {
     // 윤곽 위 자리와 바깥 법선 n, 접선 t(정수리 쪽 +). 뿌리는 거기서 법선으로 OUT만큼 **밖에** 둔다 —
     // 귀 몸통이 머리 밖 종이 위에 놓여야 보인다 (머리 위에 겹치면 채색이 비슷해 묻힌다).
     // 세모귀·접힌 귀는 밑변을 윤곽까지(u = −OUT) 끌어와 머리에 박힌 채 밖으로 뻗고, 로브는 안쪽 가장자리가 윤곽에 닿는다.
-    let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
-    const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+    const anchor = headAnchor(spec, box, theta, side);   // 실제 윤곽(네모 머리면 모서리) 위의 점과 법선
+    const nx = anchor.nx, ny = anchor.ny;
     const OUT = upper ? 0.02 : 0.09;   // 위쪽 귀(pointy·round·fold)는 머리에 바짝, 긴 귀(flap·long)는 얼굴 옆에 확실히 떨어져 늘어진다
-    const bx = side * rx * Math.sin(theta) + nx * OUT;
-    const by = box.headCy + ry * Math.cos(theta) + ny * OUT;
+    const bx = anchor.x + nx * OUT;
+    const by = anchor.y + ny * OUT;
     // 귀 축 = 법선의 반대 기울기 (수직 기준 거울상), 단 안쪽 기울기는 0.35rad까지만 — 더 기울면 끝이 정수리 안으로
     // 들어가 머리에 묻힌다. 접선은 뿌리 자리의 것 그대로.
     const normalTilt = Math.atan2(nx * side, ny);          // 수직에서 법선까지의 각 (바깥쪽 양수)
