@@ -42,7 +42,8 @@ export const SPECIES = [
     bias: {
       // 다리 — 레퍼런스의 굵은 스텁이 기본. 가는 다리·양말·떠 있는 발(레이맨식)도 섞인다
       legs: [["stub", 4], ["stick", 2], ["float", 1.5], ["boots", 1]],
-      ears: [["flap", 4], ["long", 4], ["round", 1], ["fold", 1]],
+      // 귀 — 늘어진 로브(flap·long)가 기본, 쫑긋(pointy)·동그란(round)·접힌(fold) 귀도 섞인다
+      ears: [["flap", 4], ["long", 3], ["pointy", 2], ["round", 1.5], ["fold", 1]],
       horns: [["none", 8], ["nub", 1]],
       hair: [["none", 5], ["tuft", 2], ["wisp", 1]],
       headgear: [["none", 8], ["cap", 1]],

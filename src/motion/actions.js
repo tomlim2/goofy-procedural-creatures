@@ -34,18 +34,18 @@ export const ARM_POSES = {
 };
 
 // 행위 = 자세 + 어느 팔(arms: "one" 한 팔 / "both" 두 팔) + 유지 시간. 정하지 않은 팔은 idle.
-// 한 팔 행위는 시작할 때 활동 팔의 좌우를 뽑는다. emote는 행위 중 머리 위 글리프.
+// 한 팔 행위는 시작할 때 활동 팔의 좌우를 뽑는다. emoji는 행위가 시작할 때 쏘는 이모지 트리거(emoji.js).
 export const ACTIONS = {
   wave:   { pose: "wave",   arms: "one",  hold: [1.5, 3], label: "손 흔들어 인사" },
   hi:     { pose: "hi",     arms: "one",  hold: [2, 4],   label: "한 손 들기 (저요)" },
   point:  { pose: "point",  arms: "one",  hold: [2, 4],   label: "가리키기" },
-  think:  { pose: "think",  arms: "one",  hold: [3, 6],   label: "턱에 손 (생각)" },
+  think:  { pose: "think",  arms: "one",  hold: [3, 6],   label: "턱에 손 (생각)", emoji: "quest" },
   salute: { pose: "salute", arms: "one",  hold: [2, 4],   label: "경례" },
   raise:  { pose: "raise",  arms: "both", hold: [2, 4],   label: "만세" },
   cross:  { pose: "cross",  arms: "both", hold: [3, 7],   label: "팔짱" },
   hips:   { pose: "hips",   arms: "both", hold: [3, 7],   label: "허리에 손" },
   behind: { pose: "behind", arms: "both", hold: [3, 7],   label: "뒷짐" },
-  flap:   { pose: "flap",   arms: "both", hold: [1.5, 3], label: "파닥임 (좋아함)", emote: "heart" }
+  flap:   { pose: "flap",   arms: "both", hold: [1.5, 3], label: "파닥임 (좋아함)", emoji: "heart" }
 };
 
 // 몸 행위 — 온몸이 하는 것(제자리 점프…). 팔 행위·네발 행위와 **다른 층**이라 겹친다:
@@ -74,7 +74,7 @@ export function jumpCurve(tau, def) {
 //   osc   이징 없이 얹는 진동 { amp, hz }. tail: 꼬리에 얹는 진동
 export const QUAD_ACTIONS = {
   scratch: { leg: "hind",  angle: -0.9, osc: { amp: 0.15, hz: 6 }, hold: [1, 2.2],  label: "뒷발로 긁기" },
-  wag:     { tail: { osc: { amp: 0.35, hz: 4 } },                   hold: [1.5, 3],  label: "꼬리 흔들기" }
+  wag:     { tail: { osc: { amp: 0.35, hz: 4 } },                   hold: [1.5, 3],  label: "꼬리 흔들기", emoji: "heart" }
 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

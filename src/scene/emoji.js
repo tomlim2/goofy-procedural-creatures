@@ -1,10 +1,11 @@
-// 이모트 글리프. 문서: guidelines/motion/catalog.md § 이모트
+// 이모지 글리프 (♥ ! ? …). 애니메이션 곡선은 motion/emoji.js가 주고 여기는 모양만 굽는다.
+// 문서: guidelines/motion/catalog.md § 이모지 애니메이션
 
 import { Sketch, arcPath } from "../stroke.js";
 import { sketchMesh } from "./material.js";
 
-// 이모트 글리프. 이벤트가 드물어서 그때그때 굽는다.
-export function buildEmote(kind, noise) {
+// 이모지 글리프. 드물어서 그때그때 굽는다.
+export function buildEmoji(kind, noise) {
   const sketch = new Sketch(noise, 0.6);
   if (kind === "heart") {
     const pts = [];

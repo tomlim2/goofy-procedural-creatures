@@ -39,15 +39,34 @@ export function drawEars(ink, fills, spec, box) {
   if (kind === "none") return;
 
   if (spec.species === "pup") {
-    // 개 귀는 머리 위옆에서 길게 늘어진다. 레퍼런스의 비글 귀.
+    // 개 귀 — 종류마다 다르다. 뿌리는 머리 위옆(0.72·headRx, 0.55·headRy). 채운 로브 + 두 번 덧그은 윤곽.
+    //   flap 늘어진 로브(레퍼런스 비글) · long 더 길게 턱 아래까지(바셋) · round 작은 동그란 귀(퍼그) ·
+    //   pointy 쫑긋 선 세모귀(셰퍼드) · fold 옆으로 접혀 끝만 늘어짐 · none 없음
+    const earFill = darken(spec.palette.skin, 0.8);
+    const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
     for (const side of [-1, 1]) {
       const bx = side * box.headRx * 0.72;
       const by = box.headCy + box.headRy * 0.55;
-      const lobe = blobPath(bx + side * 0.02, by - box.headRy * 0.55, 0.045, box.headRy * 0.62, {
-        lumps: 3, amount: 0.12, noise: null
-      });
-      fills.fill(lobe, darken(spec.palette.skin, 0.8));
-      ink.outline(lobe, { color: spec.palette.ink, width: 0.011, passes: 2 });
+      let path;
+      if (kind === "long") {
+        path = blobPath(bx + side * 0.025, by - box.headRy * 0.8, 0.042, box.headRy * 0.9, { lumps: 3, amount: 0.12, noise: null });
+      } else if (kind === "round") {
+        path = blobPath(bx + side * 0.01, by + box.headRy * 0.12, 0.042, 0.04, { lumps: 3, amount: 0.15, noise: null });
+      } else if (kind === "pointy") {
+        // 쫑긋 — 뿌리에서 위로 뻗는 세모
+        path = [[bx - side * 0.035, by - 0.01], [bx + side * 0.005, by + box.headRy * 0.62], [bx + side * 0.05, by + 0.005]];
+      } else if (kind === "fold") {
+        // 옆으로 접힌 귀 — 위쪽은 바깥으로 삐죽, 끝은 아래로 처진다
+        path = [
+          [bx - side * 0.02, by + 0.02], [bx + side * 0.06, by + 0.045], [bx + side * 0.075, by - 0.02],
+          [bx + side * 0.06, by - box.headRy * 0.45], [bx + side * 0.02, by - box.headRy * 0.4], [bx + side * 0.01, by - 0.03]
+        ];
+      } else {
+        // flap — 레퍼런스의 늘어진 로브
+        path = blobPath(bx + side * 0.02, by - box.headRy * 0.55, 0.045, box.headRy * 0.62, { lumps: 3, amount: 0.12, noise: null });
+      }
+      fills.fill(path, earFill);
+      ink.outline(path, earInk);
     }
     return;
   }

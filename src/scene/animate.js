@@ -2,7 +2,7 @@
 // 여기는 행위를 모른다 — 팔은 clock이 준 관절각(state.arms)을 이징해 넣을 뿐이다.
 // 문서: guidelines/motion/catalog.md § 상태 객체, guidelines/rig.md
 
-import { buildEmote } from "./emote.js";
+import { buildEmoji } from "./emoji.js";
 import { disposeGroup } from "./material.js";
 import { BOIL_FRAMES } from "./rig.js";
 
@@ -93,27 +93,26 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     rig.smile.visible = closed;
   }
 
-  // 이모트 (행위가 동반하는 것도 clock이 state.emote에 넣어 준다 — 파닥임의 ♥)
-  const emote = state.emote;
-  if (emote) {
-    if (!item.emoteMesh || item.emoteKind !== emote.kind) {
-      if (item.emoteMesh) {
-        disposeGroup(item.emoteMesh);
-        item.headGroup.remove(item.emoteMesh);
+  // 이모지 애니메이션 — 모션과 별개 층. clock의 이모지 채널이 종류·진행·곡선(dy·scale·rot·opacity)을 준다
+  const emoji = state.emoji;
+  if (emoji) {
+    if (!item.emojiMesh || item.emojiKind !== emoji.kind) {
+      if (item.emojiMesh) {
+        disposeGroup(item.emojiMesh);
+        item.headGroup.remove(item.emojiMesh);
       }
-      item.emoteMesh = buildEmote(emote.kind, noise);
-      item.emoteKind = emote.kind;
-      item.headGroup.add(item.emoteMesh);
+      item.emojiMesh = buildEmoji(emoji.kind, noise);
+      item.emojiKind = emoji.kind;
+      item.headGroup.add(item.emojiMesh);
     }
-    const k = emote.k;
-    const fade = Math.min(1, Math.min(k / 0.15, (1 - k) / 0.2));
-    item.emoteMesh.position.set(0.02, item.headTop - item.neckY + 0.15 + Math.sin(k * Math.PI * 3) * 0.015, 0);
-    item.emoteMesh.scale.setScalar(0.8 + 0.2 * fade);
-    item.emoteMesh.material.opacity = fade * 0.95;
-  } else if (item.emoteMesh) {
-    disposeGroup(item.emoteMesh);
-    item.headGroup.remove(item.emoteMesh);
-    item.emoteMesh = null;
-    item.emoteKind = null;
+    item.emojiMesh.position.set(0.02, item.headTop - item.neckY + 0.15 + emoji.dy, 0);
+    item.emojiMesh.scale.setScalar(emoji.scale);
+    item.emojiMesh.rotation.z = emoji.rot;
+    item.emojiMesh.material.opacity = emoji.opacity;
+  } else if (item.emojiMesh) {
+    disposeGroup(item.emojiMesh);
+    item.headGroup.remove(item.emojiMesh);
+    item.emojiMesh = null;
+    item.emojiKind = null;
   }
 }

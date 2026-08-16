@@ -1,6 +1,6 @@
 // 간헐 이벤트 — 예약된 시각에 시작해 짧게 진행하고 끝나는 것. 다음 예약을 rng로 잡는다.
 //   깜빡임 · 시선 다트 · 놀람 · 끄덕 · 킁킁 딥 · 기지개 · 부르르 (제자리 점프는 이벤트가 아니라 몸 행위 — actions.js)
-//   발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모트 · 재생성
+//   발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모지 예약 · 재생성
 // (한 팔 들기·손 흔들기는 이벤트가 아니라 행위다 — actions.js hi·wave. 나머지 팔도 같이 정해진다)
 // 문서: guidelines/motion/catalog.md
 //
@@ -16,7 +16,7 @@ export function initBlink(rng) { return { next: rng.float(0, 4), start: -1, happ
 export function initGlance(rng) { return { next: rng.float(0, 3), gaze: [0, 0], gazeTarget: [0, 0], faceTurn: [0, 0] }; }
 export function initSurprise(rng, M) { return { next: schedule(rng, M.surprise), start: -1 }; }
 export function initRegen(rng) { return { at: rng.float(6, 14) }; }
-export function initEmote(rng) { return { next: rng.float(5, 30), start: -1, kind: "heart" }; }
+export function initEmojiSchedule(rng) { return { next: rng.float(5, 30) }; }
 export function initDip(rng, M) { return { next: schedule(rng, M.dip), start: -1 }; }
 export function initNod(rng) { return { next: rng.float(9, 24), start: -1 }; }
 export function initStretch(rng, M) { return { next: schedule(rng, M.stretch), start: -1 }; }
@@ -140,16 +140,11 @@ export function stepRegen(r, t, rng) {
   if (t >= r.at) { r.at = t + rng.float(6, 14); return true; }
   return false;
 }
-export function stepEmote(e, t, rng, M) {
-  if (t >= e.next && e.start < 0) {
-    e.start = t;
-    e.kind = rng.pick(M.emotes);
+// idle 중 이모지 — 종족별 목록에서 하나를 뽑아 트리거할 종류만 돌려준다 (애니메이션은 emoji.js 채널이 한다)
+export function stepEmojiSchedule(e, t, rng, M) {
+  if (t >= e.next) {
     e.next = t + rng.float(14, 40);
-  }
-  if (e.start >= 0) {
-    const k = (t - e.start) / 2.2;
-    if (k >= 1) e.start = -1;
-    else return { kind: e.kind, k };
+    return rng.pick(M.emojis);
   }
   return null;
 }

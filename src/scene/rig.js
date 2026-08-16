@@ -185,7 +185,7 @@ export function buildCreature(spec, noise, birth = 0) {
     baseX: 0,
     baseY: 0,
     generation: 0,
-    emoteMesh: null,
-    emoteKind: null
+    emojiMesh: null,
+    emojiKind: null
   };
 }

@@ -13,15 +13,17 @@ import * as R from "./rhythm.js";
 import * as E from "./events.js";
 import * as S from "./states.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, bindArm, solveArms } from "./actions.js";
+import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
 
 export { MOTION } from "./table.js";
 export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
+export { EMOJI } from "./emoji.js";
 
 // 바인드 상태 — 아무 모션도 받지 않은 캐릭터. 모든 값이 정지·기본이다: 두발은 팔 T포즈,
 // 네발은 다리 수직·꼬리 그린 그대로. scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다.
 // (모션의 기본 상태는 이게 아니라 idle이다 — 두발 A포즈, 네발 선 자세(legStance·tailIdle). 바인드는 모션이 없을 때다.)
 export const BIND_STATE = Object.freeze({
-  breathe: 0, lid: 0, gaze: [0, 0], aperture: 1, regen: false, emote: null,
+  breathe: 0, lid: 0, gaze: [0, 0], aperture: 1, regen: false, emoji: null,
   browAlt: false, mouthAlt: false,
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
@@ -45,7 +47,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const squint = S.initSquint(rng);              // 5
   const regen = E.initRegen(rng);                // 6
   const mood = S.initMood(rng);                  // 7
-  const emote = E.initEmote(rng);                // 8
+  const emojiSchedule = E.initEmojiSchedule(rng); // 8
   const sway = R.initSway(rng, M);               // 9  (sway·rock)
   const roll = R.initRoll(rng, M);               // 10
   const dip = E.initDip(rng, M);                 // 11
@@ -72,6 +74,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   let forcedSide = 1;
   let forcedStart = -1;
   const biped = !!rig;   // 팔 리그가 있으면 두발
+  // 이모지 채널 — 모션과 별개 층. 예약(idle 중 가끔)과 모션의 이모지 트리거가 여기로 쏜다
+  const emoji = initEmoji();
+  let lastArm = null;    // 행위 시작 감지용 (시작할 때 한 번만 트리거)
+  let lastQuad = null;
 
   return {
     force(action, side = 1) {
@@ -96,7 +102,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       lid = S.stepSquint(squint, t, rng, lid);
       if (S.stepHappy(happy, t, rng, M)) { lid = 1; isHappy = true; }
       const winkSide = S.stepWink(wink, t, rng, M);
+      const apertureBefore = surprise.start;
       const aperture = E.stepSurprise(surprise, t, rng, M);
+      // 놀람이 막 시작하면 30%는 ! 를 쏜다 (이모지 트리거)
+      if (apertureBefore < 0 && surprise.start >= 0 && rng.chance(0.3)) triggerEmoji(emoji, "bang", t);
 
       // 몸통
       const sw = R.stepSway(sway, t, M);
@@ -179,13 +188,21 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 표정 상태 · 이벤트
       const md = S.stepMood(mood, t, rng);
       const regenNow = E.stepRegen(regen, t, rng);
-      let em = E.stepEmote(emote, t, rng, M);
       const br = R.stepBreathe(breathe, t);
-      // 행위가 이모트를 동반하면(파닥임 → ♥) 그게 우선
-      if (act && ACTIONS[act.action].emote) em = { kind: ACTIONS[act.action].emote, k: 0.5 };
+
+      // 이모지 — 예약된 것(idle 중 가끔) + 모션의 트리거(행위가 시작하는 순간 한 번). 채널이 애니메이션을 돈다
+      const scheduledEmoji = E.stepEmojiSchedule(emojiSchedule, t, rng, M);
+      if (scheduledEmoji) triggerEmoji(emoji, scheduledEmoji, t);
+      const armName = act ? act.action : null;
+      if (armName && armName !== lastArm && ACTIONS[armName].emoji) triggerEmoji(emoji, ACTIONS[armName].emoji, t);
+      lastArm = armName;
+      const quadName = qact ? qact.action : null;
+      if (quadName && quadName !== lastQuad && QUAD_ACTIONS[quadName].emoji) triggerEmoji(emoji, QUAD_ACTIONS[quadName].emoji, t);
+      lastQuad = quadName;
+      const em = stepEmoji(emoji, t);
 
       return {
-        breathe: br, lid, gaze, aperture, regen: regenNow, emote: em,
+        breathe: br, lid, gaze, aperture, regen: regenNow, emoji: em,
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
         sway: sw.sway, rock: sw.rock, headAngle: tiltAngle + rollAngle, headBob,
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,

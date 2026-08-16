@@ -19,7 +19,8 @@
 | 종류 | 파일 | 모션 |
 | --- | --- | --- |
 | 리듬 | `rhythm.js` | 호흡 · 스웨이 · 락킹 · 머리 롤 · 젤리 · 꼬리 스위시 · 시선 이징 · 얼굴 돌림 이징 · 팔 진자 · 관절 지터 |
-| 이벤트 | `events.js` | 깜빡임 · 시선 다트 · 놀람 · 끄덕 · 킁킁 딥 · 기지개 · 부르르 · 발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모트 · 재생성 |
+| 이벤트 | `events.js` | 깜빡임 · 시선 다트 · 놀람 · 끄덕 · 킁킁 딥 · 기지개 · 부르르 · 발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모지 예약 · 재생성 |
+| 이모지 | `emoji.js` | 머리 위 ♥ ! ? … — 모션이 아니라 **따로 트리거되는 애니메이션 층**. 종류별 곡선(떠오름·팝·갸웃·중얼), 채널 하나. 모션의 `emoji` 트리거와 idle 예약이 쏜다 |
 | 상태 | `states.js` | 반감김 · ^^ 행복 눈 · 윙크 · 갸웃 · 눈썹 상태 · 입 상태 · 둘러보기(얼굴 돌림 유지) · 행위 예약(팔·몸·네발 층 각각 — 언제 어떤 행위를) |
 | 행위 | `actions.js` | **idle**(기본 — 두발 A포즈, 네발 선 자세)과 행위의 **내용**, 세 층: 팔 `ACTIONS`(손 목표·팔꿈치 방향·진동, 어느 팔, IK) · 몸 `BODY_ACTIONS`(제자리 점프 — 공통) · 네발 `QUAD_ACTIONS`(다리 하나·꼬리 — 각도·진동). 층은 겹친다 |
 
@@ -52,7 +53,7 @@
 | action / actionSide | 팔 층(두발)·다리·꼬리 층(네발)의 행위 이름 또는 null / 활동 팔 side 또는 다리 index | 디버그·통계용. scene은 arms·legOffset만 본다 |
 | bodyAction | 몸 층의 행위 이름 또는 null | 제자리 점프 중이면 "jump". hopY·squash가 그 곡선이다 |
 | tailAngle | rad | tailGroup.rotation.z |
-| emote | {kind, k} | 머리 위 글리프 |
+| emoji | {kind, k, dy, scale, rot, opacity} 또는 null | 머리 위 글리프 — 이모지 채널의 프레임. scene은 그대로 입힌다 |
 | regen | bool | LIVE일 때 개체 교체 |
 
 ## 얼굴
@@ -193,15 +194,28 @@ ACTION 카드의 SCRATCH/WAG는 네발에게만 먹는다. 제자리 점프는 �
 | 상시 스위시 | — | **진폭 0.16~0.3, 주기 2.4~5초** |
 | 플릭 (0.35rad 감쇠, 0.5초) | 3~9s | 4~11s |
 
-## 이모트
+## 이모지 애니메이션
 
-머리 위 2.2초. 페이드 인·아웃, 3Hz 까딱거림. 간격 14~40초.
+머리 위 ♥ ! ? … 글리프. **모션이 아니라 따로 트리거되는 층**이다 (`motion/emoji.js`) — 모션이 이모지를 쥐고 있지 않고,
+쏘고 나면 이모지는 자기 길이만큼 혼자 논다. 채널은 하나(새 트리거가 이전 것을 끊는다). scene은 `state.emoji`의 프레임
+(dy·scale·rot·opacity)을 그대로 입히고 모양만 굽는다(`scene/emoji.js`).
 
-| 종족 | 종류 (가중) |
-| --- | --- |
-| human / pup | heart, bang(!), quest(?) |
-| cat | heart, quest, bang |
-| imp | **dots(...) ×2**, bang, quest, heart |
+| 이모지 | 길이 | 곡선 |
+| --- | --- | --- |
+| heart ♥ | 2.2초 | float — 떠오르며 심장박동처럼 커졌다 작아진다 |
+| bang ! | 1.3초 | pop — 크게 튀어나왔다 제자리, 살짝 떨림 |
+| quest ? | 2.2초 | wobble — 좌우로 갸웃갸웃 |
+| dots … | 2.6초 | mumble — 낮게 떠서 잔잔히 |
+
+**트리거** — 두 곳에서 온다.
+
+| 트리거 | 무엇을 | 언제 |
+| --- | --- | --- |
+| idle 예약 (`events.stepEmojiSchedule`) | 종족 목록에서 하나 — human/pup heart·bang·quest, cat heart·quest·bang, imp **dots×2**·bang·quest·heart | 14~40초마다 |
+| 행위 `emoji` 필드 (`ACTIONS`·`QUAD_ACTIONS`) | flap 파닥임 → ♥, think 생각 → ?, wag 꼬리 흔들기 → ♥ | 행위가 **시작하는 순간** 한 번 |
+| 이벤트 | 놀람(개방도) → ! | 놀람이 시작할 때 30% |
+
+새 모션에 이모지를 붙이려면 그 행위에 `emoji: "kind"`를 적는다 — 그게 이모지 트리거다. 발화 실측 human 3.6 · imp 4.4 · pup 5.6 · cat 4.2 회/분.
 
 ## 재생성
 
