@@ -97,14 +97,8 @@ select {
 }
 select.wide { width: 100%; }
 
-input[type="text"] {
-  font: inherit;
-  color: inherit;
-  background: transparent;
-  border: 1px solid var(--line);
-  padding: 6px 8px;
-}
-input.wide { width: 100%; }
+/* 나란한 셀렉트 둘 (갤러리 FIX) */
+.seg select { flex: 1; min-width: 0; }
 
 .seg { display: flex; gap: 4px; }
 .seg button { flex: 1; padding: 6px 4px; }

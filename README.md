@@ -20,7 +20,7 @@ node serve.mjs
 three.js는 importmap으로 unpkg에서 받는다.
 
 `/gallery.html?slot=legs&species=human` — **파츠 갤러리**. 슬롯 하나의 모든 값을 같은 개체(종족·시드 고정)에
-나란히 그린다. `&fix=legLength:short`로 다른 슬롯을 고정할 수 있다. 파츠 하나의 형태를 판단할 때.
+나란히 그린다. FIX 드롭다운(`&fix=legLength:short`)으로 다른 슬롯 하나를 고정할 수 있다. 파츠 하나의 형태를 판단할 때.
 census가 숫자라면 이건 그림이다.
 
 | 조작 | |
