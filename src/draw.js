@@ -871,59 +871,47 @@ export function limbSketches(spec) {
   }
 
   // ── 두발 팔 ──
+  // 형태(arms 슬롯)만 여기서 정한다. 자세는 scene이 회전과 앞/뒤 전환으로 준다.
+  // 팔마다 두 벌을 굽는다: front(몸 앞, 보통 자세)와 back(몸 뒤, 뒷짐).
+  // 뒷짐은 팔이 몸 뒤로 사라지고 팔꿈치 끝만 옆구리로 삐죽 나오는 형태라
+  // 회전만으로는 표현이 안 된다.
   const armKind = spec.parts.arms;
-  // 어깨는 몸 윤곽 안쪽. 몸 폭의 78%에서 시작해 소매가 윤곽을 덮는다.
   const shoulderY = box.bodyTop - (box.bodyTop - box.legTop) * 0.22;
   for (const side of [-1, 1]) {
     const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.7 : 0.78);
     const reach = 0.11 * p.armSpread;
-    const s = make();
 
-    if (armKind === "behind") {
-      // 뒷짐 — 팔이 몸 뒤로 사라지고 팔꿈치 끝만 옆구리로 삐죽 나온다
-      s.stroke([[0, 0], [side * 0.03, -0.045], [side * 0.05, -0.08]], { color: ink0, width: 0.011 });
-      limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side, index: 0, behind: true });
-      continue;
-    }
-
+    // front — 늘어진 기준 상태
+    const front = make();
     if (armKind === "stubby") {
-      // 스텁 팔 + 주먹 — 짧고 굵게 옆으로
-      s.stroke([[0, 0], [side * reach * 0.45, -reach * 0.35]], { color: ink0, width: 0.017 });
-      dot(s, side * reach * 0.5, -reach * 0.4, 0.02, skin);
-      limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side, index: 0, behind: false });
-      continue;
-    }
-
-    if (armKind === "sleeve") {
-      // 소매 — 옷색 통 + 끝에 동그란 손
+      front.stroke([[0, 0], [side * reach * 0.45, -reach * 0.35]], { color: ink0, width: 0.017 });
+      dot(front, side * reach * 0.5, -reach * 0.4, 0.02, skin);
+    } else if (armKind === "sleeve") {
       const sl = [[side * -0.012, 0.012], [side * 0.012, 0.012], [side * reach * 0.42, -reach * 0.62], [side * reach * 0.22, -reach * 0.7]];
-      s.fill(sl, cloth);
-      s.outline(sl, { color: ink0, width: 0.01 });
-      dot(s, side * reach * 0.34, -reach * 0.78, 0.022, skin);
-      limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side, index: 0, behind: false });
-      continue;
+      front.fill(sl, cloth);
+      front.outline(sl, { color: ink0, width: 0.01 });
+      dot(front, side * reach * 0.34, -reach * 0.78, 0.022, skin);
+    } else {
+      front.stroke([[0, 0], [side * reach * 0.25, -reach * 0.5], [side * reach * 0.35, -reach]], { color: ink0, width: 0.01 });
+      if (armKind === "mitten") dot(front, side * reach * 0.36, -reach * 1.02, 0.024, skin);
+      else front.stroke([[side * reach * 0.35 - 0.016, -reach], [side * reach * 0.35 + 0.016, -reach + 0.004]], { color: ink0, width: 0.01 });
     }
 
-    // down / out / up / mitten — 막대 팔. 끝에 손.
-    s.stroke([[0, 0], [side * reach * 0.25, -reach * 0.5], [side * reach * 0.35, -reach]], { color: ink0, width: 0.01 });
-    if (armKind === "mitten") {
-      dot(s, side * reach * 0.36, -reach * 1.02, 0.024, skin);
-    } else {
-      s.stroke([[side * reach * 0.35 - 0.016, -reach], [side * reach * 0.35 + 0.016, -reach + 0.004]], { color: ink0, width: 0.01 });
-    }
-    limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side, index: 0, behind: false });
+    // back — 뒷짐. 팔꿈치만 옆구리에서 삐죽. 형태에 따라 굵기만 다르다
+    const back = make();
+    const bw = armKind === "stubby" ? 0.017 : armKind === "sleeve" ? 0.014 : 0.011;
+    back.stroke([[0, 0], [side * 0.03, -0.045], [side * 0.05, -0.08]], { color: ink0, width: bw });
+
+    limbs.push({ sketch: front, backSketch: back, pivot: [x, shoulderY], kind: "arm", side, index: 0 });
   }
   return limbs;
 }
 
-// 팔 쉼 포즈의 기준 각도. down은 늘어짐, out은 옆으로, up은 위로.
-export function armRestAngle(spec, side) {
-  const pose = spec.parts.arms;
+// 팔 자세별 기준 회전각. 자세는 clock 상태이고 형태와 무관하다.
+export function armPoseAngle(pose, side) {
   const outward = -side;
   if (pose === "up") return outward * 2.4;
   if (pose === "out") return outward * 1.35;
-  if (pose === "stubby") return outward * 0.9;
-  if (pose === "sleeve") return outward * 0.6;
   if (pose === "behind") return outward * -0.2;
   return outward * 0.35;
 }

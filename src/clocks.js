@@ -77,7 +77,7 @@ const MOTION = {
   }
 };
 
-export function makeClock(seed, birth = 0, species = "kid") {
+export function makeClock(seed, birth = 0, species = "kid", armRest = "rest") {
   const rng = makeRng(seed ^ 0x5bf03635);
   const M = MOTION[species] || MOTION.kid;
 
@@ -147,6 +147,12 @@ export function makeClock(seed, birth = 0, species = "kid") {
 
   // ── 팔다리 ──
   const armSwingPhase = rng.float(0, Math.PI * 2);
+  // 팔 자세. 쉼 자세는 개체 성격(spec.proportions.armRest)이고 clock은
+  // 그 자세를 기본으로 두다가 이따금 다른 자세로 넘어갔다 돌아온다.
+  const restPose = armRest || "rest";
+  let armPose = restPose;
+  let nextPoseChange = rng.float(8, 24);
+  let poseUntil = -1;
   let nextArmLift = M.armLift ? rng.float(M.armLift[0], M.armLift[1]) : Infinity;
   let armLiftUntil = -1;
   let armLiftSide = 0;
@@ -338,6 +344,17 @@ export function makeClock(seed, birth = 0, species = "kid") {
       }
       if (armUntil >= 0 && t >= armUntil) armUntil = -1;
 
+      // ── 팔 자세 ──
+      // 쉼 자세에서 이따금 다른 자세로. 뒷짐인 개체가 팔을 꺼내 벌리거나,
+      // 늘어뜨린 개체가 잠깐 뒷짐지거나.
+      if (t >= nextPoseChange && poseUntil < 0) {
+        const others = ["rest", "out", "behind", "up"].filter((p) => p !== restPose);
+        armPose = rng.weighted(others.map((p) => [p, p === "up" ? 0.5 : p === "behind" ? 1.5 : 2]));
+        poseUntil = t + rng.float(2, 6);
+        nextPoseChange = t + rng.float(12, 36);
+      }
+      if (poseUntil >= 0 && t >= poseUntil) { poseUntil = -1; armPose = restPose; }
+
       // ── 팔 ──
       // 기본 흔들림: 스웨이와 반대 위상으로 살짝 진자 운동
       const armSwing = Math.sin((t / swayPeriod) * Math.PI * 2 + swayPhase + Math.PI + armSwingPhase * 0.3) * (M.armSwing || 0);
@@ -474,7 +491,7 @@ export function makeClock(seed, birth = 0, species = "kid") {
         hopY, squashX, squashY, stretchX, shiverX,
         jellyX, jellyY, faceYaw,
         armAlt: armUntil >= 0, happy, winkSide, tailAngle,
-        armOffset, legOffset
+        armOffset, legOffset, armPose
       };
     }
   };

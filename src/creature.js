@@ -97,6 +97,10 @@ function makeProportions(rng, archetype) {
     bodyLen: rng.around(1, 0.2),
     tailLift: rng.around(0, 1),
 
+    // 팔의 쉼 자세. 형태(arms 슬롯)와 별개다. 개체가 어떤 자세를 기본으로
+    // 두는지 — 대부분 늘어뜨리고, 일부는 벌리거나 뒷짐진 채 쉰다.
+    armRest: rng.weighted([["rest", 5], ["out", 2], ["behind", 2], ["up", 0.5]]),
+
     // 개체마다 손떨림 정도가 다르다. 어떤 놈은 반듯하고 어떤 놈은 엉망이다.
     wobble: rng.around(1, 0.55),
     wobbleSeed: rng.int(0, 100000)

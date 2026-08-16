@@ -6,7 +6,7 @@
 // 애니메이션 원칙: 생성은 개체당 한 번, 매 프레임은 변형만.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, armRestAngle, tailSketch } from "./draw.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngle, tailSketch } from "./draw.js";
 import { blobPath, arcPath, Sketch } from "./stroke.js";
 import { makeClock } from "./clocks.js";
 import { makeCreature } from "./creature.js";
@@ -156,16 +156,23 @@ function buildCreature(spec, noise, birth = 0) {
   }
 
   // 팔다리 — 관절 피벗 그룹. rotation.z로 흔든다.
-  // 뒷짐 팔은 몸 뒤(renderOrder 0.5)로, 나머지는 몸 잉크 위(2.5)로 올려
-  // 소매·손이 몸 윤곽을 덮는다. 그래야 관절이 몸에 박혀 보인다.
+  // 팔은 front(몸 잉크 위, 2.5)와 back(몸 뒤, 0.5) 두 메시를 갖고 자세에 따라
+  // 전환한다. 소매·손이 몸 윤곽을 덮어야 관절이 몸에 박혀 보인다.
   const limbs = limbSketches(spec).map((limb) => {
     const pivot = new THREE.Group();
     pivot.position.set(limb.pivot[0], limb.pivot[1], 0);
-    pivot.add(sketchMesh(limb.sketch, 1, limb.behind ? 0.5 : 2.5));
+    const front = sketchMesh(limb.sketch, 1, 2.5);
+    pivot.add(front);
+    let back = null;
+    if (limb.backSketch) {
+      back = sketchMesh(limb.backSketch, 1, 0.5);
+      back.visible = false;
+      pivot.add(back);
+    }
     bodyGroup.add(pivot);
-    const rest = limb.kind === "arm" ? armRestAngle(spec, limb.side) : 0;
+    const rest = limb.kind === "arm" ? armPoseAngle(spec.proportions.armRest, limb.side) : 0;
     pivot.rotation.z = rest;
-    return { pivot, kind: limb.kind, side: limb.side, index: limb.index ?? 0, rest, angle: rest };
+    return { pivot, front, back, kind: limb.kind, side: limb.side, index: limb.index ?? 0, angle: rest };
   });
 
   // 눈썹·입 상태 — faceGroup 안에서 요(yaw)를 따라간다
@@ -232,7 +239,7 @@ function buildCreature(spec, noise, birth = 0) {
     headFrames,
     eyeRigs,
     faceStates,
-    clock: makeClock(spec.seed, birth, spec.species),
+    clock: makeClock(spec.seed, birth, spec.species, spec.proportions.armRest),
     spec,
     neckY,
     headRx: firstDrawn.box.headRx,
@@ -430,14 +437,24 @@ export function createScene(canvas) {
       if (item.tailGroup) item.tailGroup.rotation.z = state.tailAngle;
 
       // 팔다리 — 목표 각도로 이징. 관절은 튀지 않고 따라간다.
+      // 팔은 자세(clock 상태)가 기준각과 앞/뒤를 정하고, 그 위에 지터·이벤트가 얹힌다.
       for (const limb of item.limbs) {
         let target;
         if (limb.kind === "arm") {
-          target = limb.rest + state.armOffset[String(limb.side)];
+          const behind = state.armPose === "behind";
+          target = armPoseAngle(state.armPose, limb.side) + state.armOffset[String(limb.side)];
+          if (limb.back) {
+            // 뒷짐 전환은 팔이 기준각 근처로 돌아온 뒤에 한다. 회전 중에 바꾸면 튄다.
+            const settled = Math.abs(target - limb.angle) < 0.35;
+            if (settled) {
+              limb.front.visible = !behind;
+              limb.back.visible = behind;
+            }
+          }
         } else {
           target = state.legOffset[limb.index] || 0;
         }
-        limb.angle += (target - limb.angle) * 0.18;
+        limb.angle += (target - limb.angle) * 0.12;
         limb.pivot.rotation.z = limb.angle;
       }
 
