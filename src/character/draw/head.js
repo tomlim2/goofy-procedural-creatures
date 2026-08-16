@@ -41,11 +41,11 @@ export function drawEars(ink, fills, spec, box) {
   if (spec.species === "pup") {
     // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위**(얼굴 양끝) — 안쪽에 두면 얼굴에서 돋는 것처럼 보인다.
     // 윤곽 위 점은 타원(headRx·headRy) 위 극각 θ(정수리에서 잰 각)로 잡고, 바깥 법선 n을 따라 세우거나 밑으로 늘어뜨린다.
-    //   pointy 쫑긋 선 세모귀(셰퍼드, θ 38°) · round 작은 동그란 귀(퍼그, 55°) · flap 늘어진 로브(레퍼런스 비글, 72°) ·
-    //   long 턱 아래까지(바셋, 72°) · fold 옆으로 접혀 끝만 처짐(72°) · none 없음. 채운 로브 + 두 번 덧그은 윤곽.
+    //   pointy 쫑긋 선 세모귀(셰퍼드, θ 38°) · round 작은 동그란 귀(퍼그, 55°) · 로브 셋은 **지름 끝**(가장 넓은 옆, 90°)에서
+    //   늘어진다 — flap 레퍼런스 비글 · long 턱 아래까지(바셋) · fold 옆으로 접혀 끝만 처짐 · none 없음. 채운 로브 + 두 번 덧그은 윤곽.
     const earFill = darken(spec.palette.skin, 0.8);
     const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
-    const theta = { pointy: 0.66, round: 0.96, flap: 1.26, long: 1.26, fold: 1.26 }[kind] || 1.26;
+    const theta = { pointy: 0.66, round: 0.96, flap: 1.5, long: 1.5, fold: 1.5 }[kind] || 1.5;
     for (const side of [-1, 1]) {
       // 윤곽 위 뿌리와 바깥 법선
       const rx = box.headRx, ry = box.headRy;
