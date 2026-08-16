@@ -1,5 +1,7 @@
 # 리그 구조
 
+> 기준: `src/scene/rig.js`, `src/scene/animate.js`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
+
 `src/scene/rig.js` `buildCreature`가 조립하고 `src/scene/animate.js` `applyState`가 매 프레임 상태를 입힌다. 개체 하나가 어떤 three.js 계층으로 조립되는지.
 
 ## 계층
@@ -9,7 +11,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 ├── bodyGroup
 │   ├── bodyFrame ×3         ← 보일 변형. 채색(1) + 잉크(2)
 │   ├── tailGroup            ← 꼬리 뿌리에 피벗 (네발)
-│   └── limb pivot ×N        ← 어깨·엉덩이 피벗. front(2.5) + back(0.5, 팔만)
+│   └── limb pivot ×N        ← 어깨·엉덩이 피벗. front(2.5) + back(0.5, 팔만). 자세는 motion/states.js
 └── headGroup                ← 원점 = 목(neckY = bodyTop). 갸웃·롤·끄덕·딥
     ├── headFrame ×3         ← 보일 변형. 채색(1) + 잉크(2)
     ├── emoteMesh            ← 이벤트 시에만

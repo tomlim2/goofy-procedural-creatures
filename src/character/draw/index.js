@@ -5,7 +5,7 @@ import { Sketch } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, eyeGeometry } from "./layout.js";
 import { drawHead, drawEars, drawHair, drawHeadgear, drawHorns } from "./head.js";
-import { drawEyes, drawFace2, drawBrow, drawEyewear, drawNose, drawMouth } from "./face.js";
+import { drawEyes, drawFace2, drawEyewear, drawNose } from "./face.js";
 import { drawBody, drawMarks } from "./body.js";
 
 export { facePartKinds, facePartSketch } from "./face.js";

@@ -9,8 +9,6 @@ const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infini
 export function initSquint(rng) { return { next: rng.float(6, 18), until: -1 }; }
 export function initMood(rng) { return { nextMood: rng.float(3, 10), moodUntil: -1, nextMouth: rng.float(2, 8), mouthUntil: -1 }; }
 export function initTilt(rng, M) { return { next: rng.float(M.tilt[0], M.tilt[1]), until: -1, target: 0, angle: 0 }; }
-// legacy 팔 포즈 토글 — scene은 더 이상 안 쓰지만 rng 순서 유지를 위해 남긴다
-export function initArmToggle(rng, M) { return { next: schedule(rng, M.arm), until: -1 }; }
 export function initArmPose(rng, restPose) { return { restPose, pose: restPose, next: rng.float(8, 24), until: -1 }; }
 export function initWink(rng, M) { return { next: schedule(rng, M.wink), until: -1, side: 0 }; }
 export function initHappy(rng, M) { return { next: schedule(rng, M.happyHold), until: -1 }; }
@@ -52,11 +50,6 @@ export function stepTilt(s, t, rng, M) {
   if (s.until >= 0 && t >= s.until) s.until = -1;
   s.angle += ((s.until >= 0 ? s.target : 0) - s.angle) * 0.07;
   return s.angle;
-}
-export function stepArmToggle(s, t, rng, M) {
-  if (t >= s.next && s.until < 0) { s.until = t + rng.float(1, 3); s.next = t + rng.float(M.arm[0], M.arm[1]); }
-  if (s.until >= 0 && t >= s.until) s.until = -1;
-  return s.until >= 0;
 }
 // 팔 자세 — 쉼 자세에서 이따금 다른 자세로. 형태(arms 슬롯)와 분리된 동작.
 export function stepArmPose(s, t, rng, noRest) {

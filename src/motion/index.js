@@ -36,18 +36,17 @@ export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", no
   const hop = E.initHop(rng, M);                 // 14
   const stretch = E.initStretch(rng, M);         // 15
   const shiver = E.initShiver(rng, M);           // 16
-  const armToggle = S.initArmToggle(rng, M);     // 17
-  const armSwing = R.initArmSwing(rng);          // 18
-  const armPose = S.initArmPose(rng, armRest || "rest"); // 19
-  const armLift = E.initArmLift(rng, M);         // 20
-  const armWave = E.initArmWave(rng, M);         // 21
-  const legTap = E.initLegTap(rng, M);           // 22
-  const legStep = E.initLegStep(rng, M);         // 23
-  const wink = S.initWink(rng, M);               // 24
-  const happy = S.initHappy(rng, M);             // 25
-  const tailSwish = R.initTailSwish(rng, M);     // 26
-  const tailFlick = E.initTailFlick(rng, M);     // 27
-  const jelly = R.initJelly(rng, M);             // 28
+  const armSwing = R.initArmSwing(rng);          // 17
+  const armPose = S.initArmPose(rng, armRest || "rest"); // 18
+  const armLift = E.initArmLift(rng, M);         // 19
+  const armWave = E.initArmWave(rng, M);         // 20
+  const legTap = E.initLegTap(rng, M);           // 21
+  const legStep = E.initLegStep(rng, M);         // 22
+  const wink = S.initWink(rng, M);               // 23
+  const happy = S.initHappy(rng, M);             // 24
+  const tailSwish = R.initTailSwish(rng, M);     // 25
+  const tailFlick = E.initTailFlick(rng, M);     // 26
+  const jelly = R.initJelly(rng, M);             // 27
 
   return {
     update(globalT) {
@@ -75,7 +74,6 @@ export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", no
       const hp = E.stepHop(hop, t, rng, M);
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
-      const armAlt = S.stepArmToggle(armToggle, t, rng, M);
 
       // 팔
       const pose = S.stepArmPose(armPose, t, rng, noRest);
@@ -119,7 +117,7 @@ export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", no
         sway: sw.sway, rock: sw.rock, headAngle: tiltAngle + rollAngle, headBob,
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceYaw,
-        armAlt, happy: isHappy, winkSide, tailAngle,
+        happy: isHappy, winkSide, tailAngle,
         armOffset, legOffset, armPose: pose
       };
     }

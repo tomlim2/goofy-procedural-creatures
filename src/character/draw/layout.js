@@ -5,7 +5,7 @@ export const TAU = Math.PI * 2;
 
 // 머리 윤곽 사전. 뽑히기만 하고 안 쓰이던 head 슬롯을 여기서 소비한다.
 // square는 각짐, taper는 위아래 폭 비(+면 아래가 넓다), rx/ry는 크기 배율.
-export const HEAD_SHAPES = {
+const HEAD_SHAPES = {
   round: { square: 0, taper: 0, rx: 1, ry: 1 },
   square: { square: 1.5, taper: 0, rx: 1, ry: 0.96 },
   tall: { square: 0.9, taper: -0.05, rx: 0.86, ry: 1.22 },

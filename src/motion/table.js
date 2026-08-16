@@ -17,7 +17,7 @@ export const MOTION = {
     hop: [40, 90], stretch: null,
     tilt: [7, 18], tiltAmp: 0.1,
     jelly: null, shiver: [26, 60],
-    arm: [5, 14], wink: null, happyHold: null,
+    wink: null, happyHold: null,
     tailSwish: null, tailFlick: null,
     surprise: [8, 22], yaw: 0.5,
     emotes: ["heart", "bang", "quest"]
@@ -33,7 +33,7 @@ export const MOTION = {
     hop: [30, 70], stretch: null,
     tilt: [9, 20], tiltAmp: 0.08,
     jelly: null, shiver: [40, 80],
-    arm: null, wink: null, happyHold: [6, 16],
+    wink: null, happyHold: [6, 16],
     tailSwish: null, tailFlick: [3, 9],
     surprise: [10, 26], yaw: 0.7,
     emotes: ["heart", "bang", "quest"]
@@ -48,7 +48,7 @@ export const MOTION = {
     hop: null, stretch: [10, 26],
     tilt: [5, 12], tiltAmp: 0.14,
     jelly: null, shiver: [40, 90],
-    arm: null, wink: [8, 20], happyHold: null,
+    wink: [8, 20], happyHold: null,
     tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [4, 11],
     surprise: [9, 24], yaw: 0.8,
     emotes: ["heart", "quest", "bang"]
@@ -63,7 +63,7 @@ export const MOTION = {
     hop: [50, 110], stretch: null,
     tilt: [8, 18], tiltAmp: 0.09,
     jelly: { amp: [0.008, 0.018], freq: [1.1, 1.9] }, shiver: [12, 30],
-    arm: [8, 20], wink: null, happyHold: null,
+    wink: null, happyHold: null,
     tailSwish: null, tailFlick: null,
     surprise: [4, 12], yaw: 0.6,
     emotes: ["dots", "dots", "bang", "quest", "heart"]

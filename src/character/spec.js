@@ -70,7 +70,6 @@ function makeProportions(rng, archetype) {
   return {
     headScale: rng.around(blob ? 1.14 : sprite ? 0.96 : 1.04, 0.34),
     headWide: rng.around(blob ? 1.16 : 1, 0.18),
-    headTilt: rng.around(0, 0.09),
 
     // 머리 외곽선을 얼마나 찌그러뜨릴지. 0이면 도형, 크면 손으로 그린 덩어리.
     headLumps: rng.int(4, 7),
