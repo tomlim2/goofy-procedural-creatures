@@ -11,7 +11,7 @@
 
 | | 어디에 | 예 |
 | --- | --- | --- |
-| 형태 | `SLOTS.arms`, `SLOTS.legs`, `SLOTS.armLength` | stick / sleeve / stubby / mitten, boots / tiptoe, short~verylong |
+| 형태 | `SLOTS.arms`, `SLOTS.legs`, `SLOTS.armLength` | stick / sleeve / stubby / mitten, boots / tiptoe, medium~verylong |
 | 바인드 포즈 | 코드 상수 (`BIND_POSE` = T포즈) | 모션이 없을 때. 캐릭터에 "자세"는 없다 |
 | 행위 | `motion/states.js` armAction, `motion/table.js` armActions | 만세 · 팔짱 · 허리손 · 뒷짐 · 늘어뜨림 · 파닥임(좋아함) |
 
