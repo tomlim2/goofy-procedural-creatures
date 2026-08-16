@@ -37,7 +37,7 @@ export const SPECIES = [
       eyes: { cyclops: "dot" },
       // 개에게 뿔·머리카락은 없다 — 전부 none (털이지 머리카락이 아니다)
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none" },
+      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none" },
       brow: { flat: "none", angry: "none", worry: "none" }   // 동물에게 눈썹은 없다 (상태 전환의 대체 눈썹도 막힌다)
     },
     identity: {
@@ -62,7 +62,7 @@ export const SPECIES = [
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1]],
       marks: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1]],
-      tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1]],
+      tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["plume", 2], ["hook", 0.5]],
       face2: [["none", 5], ["blush", 1]]
     }
   },
@@ -74,7 +74,7 @@ export const SPECIES = [
       // 고양이 귀 경계 — 늘어진 귀·없음은 정수리 귀로
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none" },
+      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none" },
       brow: { flat: "none", angry: "none", worry: "none" }
     },
     identity: {
@@ -100,7 +100,7 @@ export const SPECIES = [
       eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["cross", 2], ["wide", 2], ["dot", 1]],
       mouth: [["omega", 4], ["line", 2], ["dot", 2], ["wave", 1], ["smile", 1]],
       marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1]],
-      tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1]],
+      tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5], ["plume", 1.5]],
       face2: [["none", 5], ["blush", 1], ["freckles", 1]]
     }
   },

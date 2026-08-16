@@ -1,7 +1,7 @@
 // 팔다리·꼬리 — 관절 피벗 원점 기준으로 굽는다. 자세·행위는 여기 없다(motion/actions.js).
 // 문서: guidelines/character/parts.md § legs·tail·arms·armLength, guidelines/rig.md
 
-import { Sketch, blobPath } from "../../stroke.js";
+import { Sketch, blobPath, arcPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, darken, BUILD } from "./layout.js";
 
@@ -222,6 +222,27 @@ function armRigOf(spec, box) {
 }
 
 // 꼬리. 피벗(꼬리 뿌리) 원점 기준으로 그린다. scene이 회전시켜 살랑거린다.
+// 척추(점 목록)를 따라 좌우로 두께 w[i]만큼 부풀린 폐곡선 — 깃털 꼬리 몸통
+function plumePath(spine, w) {
+  const left = [], right = [];
+  for (let i = 0; i < spine.length; i += 1) {
+    const [x, y] = spine[i];
+    const [nx0, ny0] = spine[Math.max(0, i - 1)], [nx1, ny1] = spine[Math.min(spine.length - 1, i + 1)];
+    let dx = nx1 - nx0, dy = ny1 - ny0;
+    const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    left.push([x - dy * w[i], y + dx * w[i]]);
+    right.push([x + dy * w[i], y - dx * w[i]]);
+  }
+  return [...left, ...right.reverse()];
+}
+// 꺾은선 위 비율 t(0~1) 지점
+function lerpPath(pts, t) {
+  const seg = t * (pts.length - 1);
+  const i = Math.min(pts.length - 2, Math.floor(seg));
+  const k = seg - i;
+  return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * k, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * k];
+}
+
 export function tailSketch(spec) {
   const rng = makeRng((spec.proportions.wobbleSeed + 404) >>> 0);
   const noise = makeNoise(rng);
@@ -245,6 +266,31 @@ export function tailSketch(spec) {
     sketch.stroke([
       [0, 0], [0.07, 0.015], [0.14, 0.05], [0.18, 0.12 + p.tailLift * 0.02]
     ], { color: ink0, width: 0.011 });
+  } else if (kind === "hook") {
+    // 위로 섰다가 끝이 갈고리처럼 앞으로 꺾여 내려온다 (물음표 꼬리)
+    sketch.stroke([
+      [0, 0], [0.02, 0.08], [0.02, 0.16 + p.tailLift * 0.02], [-0.01, 0.215], [-0.045, 0.205], [-0.055, 0.165]
+    ], { color: ink0, width: 0.011 });
+  } else if (kind === "kink") {
+    // 꺾인 꼬리 — 마디마다 방향이 바뀐다
+    sketch.stroke([
+      [0, 0], [0.035, 0.06], [0.005, 0.11], [0.045, 0.16], [0.02, 0.21 + p.tailLift * 0.02]
+    ], { color: ink0, width: 0.011, jitter: 0.003 });
+  } else if (kind === "ring") {
+    // 등 위로 말린 고리(스피츠) — 뿌리에서 올라가 몸 쪽으로 한 바퀴 가까이 감긴다
+    sketch.stroke(arcPath(-0.03, 0.075, 0.078, 0.078, -1.2, 4.3, 22), { color: ink0, width: 0.012 });
+  } else if (kind === "plume") {
+    // 북슬한 깃털 꼬리 — 채운 길쭉한 덩어리 + 윤곽 + 털 획. 뒤·위로 뻗는다
+    const spine = [[0, 0], [0.06, 0.05], [0.11, 0.12], [0.135, 0.2 + p.tailLift * 0.02]];
+    const body = plumePath(spine, [0.018, 0.034, 0.038, 0.012]);
+    sketch.fill(body, spec.palette.skin);
+    sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
+    for (let i = 0; i < 6; i += 1) {
+      const t = 0.25 + i * 0.13;
+      const [x, y] = lerpPath(spine, t);
+      const side = i % 2 ? 1 : -1;
+      sketch.stroke([[x + side * 0.02, y - 0.006], [x + side * 0.045, y + 0.012]], { color: ink0, width: 0.007, jitter: 0.004 });
+    }
   } else {
     // stubtail — 뭉툭한 꼬리
     sketch.stroke([[0, 0], [0.035, 0.05]], { color: ink0, width: 0.02 });
