@@ -41,8 +41,8 @@ three.js는 importmap으로 unpkg에서 받는다.
 
 ## 고치기 전에
 
-[`guidelines/`](guidelines/README.md)를 먼저 읽는다. 시드 계약, 파츠 추가 절차,
-선·색·레이어 규칙이 있다.
+[`guidelines/`](guidelines/README.md)를 먼저 읽는다. 카탈로그(종족·파츠·모션·리그)와
+규칙(시드 계약·파츠 절차·그리기)이 있다.
 
 ## 다양성을 만드는 세 층
 
