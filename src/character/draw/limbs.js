@@ -1,9 +1,25 @@
-// 팔다리·꼬리 — 관절 피벗 원점 기준으로 굽는다. 자세는 여기 없다(motion/limbs.js).
-// 문서: guidelines/parts-catalog.md § legs·tail·arms·armLength, guidelines/rig.md
+// 팔다리·꼬리 — 관절 피벗 원점 기준으로 굽는다. 자세·행위는 여기 없다(motion/actions.js).
+// 문서: guidelines/character/parts.md § legs·tail·arms·armLength, guidelines/rig.md
 
 import { Sketch, blobPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, darken } from "./layout.js";
+
+// 팔 치수. 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기준 1, long은 그 1.64배(바닥을 쓸 만큼).
+// 기준 팔 길이 0.242는 옛 0.11×2.2 — 더 짧은 단계들은 손이 몸통 근처라 의미가 없어 뺐다.
+// 위팔:아래팔 = 0.48:0.52. 아래팔이 살짝 길어야 손이 멀리 간다.
+const ARM_BASE = 0.242;
+const ARM_LENGTH_SCALE = { medium: 1, long: 1.64 };
+
+function armDims(spec, box) {
+  const reach = ARM_BASE * spec.proportions.armSpread * (ARM_LENGTH_SCALE[spec.parts.armLength] || 1);
+  return {
+    x: box.bodyW * (spec.parts.body === "dress" ? 0.7 : 0.78),   // 어깨 x (오른팔. 왼팔은 -x)
+    y: box.bodyTop - (box.bodyTop - box.legTop) * 0.22,          // 어깨 y
+    upper: reach * 0.48,
+    lower: reach * 0.52
+  };
+}
 
 // 관절 팔다리. 각 지체는 피벗(어깨·엉덩이) 원점 기준으로 그린다.
 // scene이 rotation.z로 흔든다.
@@ -98,17 +114,12 @@ export function limbSketches(spec) {
   // 뒷짐은 팔이 몸 뒤로 사라지고 팔꿈치 끝만 옆구리로 삐죽 나오는 형태라
   // 회전만으로는 표현이 안 된다. back 스케치를 따로 굽는다.
   const armKind = spec.parts.arms;
-  const shoulderY = box.bodyTop - (box.bodyTop - box.legTop) * 0.22;
+  const dims = armDims(spec, box);
+  const shoulderY = dims.y;
+  const upperLen = dims.upper;
+  const lowerLen = dims.lower;
   for (const side of [-1, 1]) {
-    const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.7 : 0.78);
-    // 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기준 1, long은 그 1.64배(바닥을 쓸 만큼).
-    // 기준 팔 길이 0.242는 옛 0.11×2.2 — 더 짧은 단계들은 손이 몸통 근처라 의미가 없어 뺐다.
-    const ARM_BASE = 0.242;
-    const lengthScale = { medium: 1, long: 1.64 }[spec.parts.armLength] || 1;
-    const reach = ARM_BASE * p.armSpread * lengthScale;
-    // 위팔:아래팔 = 0.48:0.52. 아래팔이 살짝 길어야 손이 멀리 간다.
-    const upperLen = reach * 0.48;
-    const lowerLen = reach * 0.52;
+    const x = side * dims.x;
 
     const upper = make();
     const lower = make();
@@ -148,35 +159,31 @@ export function limbSketches(spec) {
   return limbs;
 }
 
-// 팔 각도 [어깨, 팔꿈치] — 바인드 포즈와 행위별 목표.
+// 바인드 포즈 — 캐릭터가 아무 모션도 받지 않았을 때의 팔. T포즈: 어깨 수평(1.57 outward),
+// 팔꿈치 0. 캐릭터에 "자세"란 없다 — 행위(만세·인사·팔짱…)는 전부 motion/actions.js다.
+// 행위가 끝나면 여기로 돌아온다.
 //
-// 바인드 포즈는 T포즈다: 어깨 수평(1.57 outward), 팔꿈치 0. 캐릭터에 "자세"란 없다 —
-// 모션(행위)이 없으면 T포즈다. 행위는 여기서 각도만 정의하고, 언제 어떤 행위를 하는지는
-// motion/이 정한다. 행위가 끝나면 T포즈로 돌아온다.
-//
-// 어깨각은 outward(몸 바깥) 양수. 팔꿈치각은 위팔 기준 아래팔이 얼마나 꺾이나 —
-// 양수면 안쪽(몸 쪽)으로 접힌다.
-//
-// 부호: 위팔은 (0, -len)으로 늘어진 채 굽고 rotation.z(반시계 양수)로 든다.
-// 왼팔(side -1, x<0)을 바깥(더 왼쪽)으로 들려면 시계방향 = 음수, 오른팔은 반시계 = 양수.
-// 그래서 outward = side다. (-side로 두면 팔이 몸 안쪽으로 접힌다.)
-export const BIND_POSE = "tpose";
+// [어깨각, 팔꿈치각]. outward(몸 바깥) 양수. 세계 rotation.z로 바꾸려면 side를 곱한다:
+// 위팔은 (0, -len)으로 늘어진 채 굽고 rotation.z(반시계 양수)로 든다. 왼팔(side -1, x<0)을
+// 바깥(더 왼쪽)으로 들려면 시계방향 = 음수, 오른팔은 반시계 = 양수. 그래서 outward = side다.
+export const BIND_ARM = [1.57, 0];
 
-export function armPoseAngles(action, side) {
-  const outward = side;
-  switch (action) {
-    case "tpose":  return [outward * 1.57, 0];              // 바인드. 어깨 수평, 곧게
-    case "raise":  return [outward * 2.4, outward * -0.5];   // 만세
-    case "cross":  return [outward * 0.35, outward * 2.0];  // 팔짱
-    case "behind": return [outward * -0.2, 0];              // 뒷짐 (back 스케치)
-    case "hips":   return [outward * 0.55, outward * 1.7];  // 허리에 손
-    case "hang":   return [outward * 0.35, outward * 0.35]; // 늘어뜨림
-    case "flap":   return [outward * 1.9, outward * -0.6];  // 파닥임 기준 (위에서 진동)
-    default:       return [outward * 1.57, 0];
-  }
-}
-export function armPoseAngle(action, side) {
-  return armPoseAngles(action, side)[0];
+// 팔 리그 서술 — 모션이 손 목표를 관절각으로 풀 때(IK) 쓰는 정적 치수. 전부 스펙에서 나온다.
+// 네발은 팔이 없어 null. 앵커는 몸 좌표(발바닥 원점, y 위), 오른팔 기준 — 왼팔은 x를 반전한다.
+export function armRig(spec) {
+  const box = layout(spec);
+  if (box.quad) return null;
+  const dims = armDims(spec, box);
+  return {
+    x: dims.x, y: dims.y, upper: dims.upper, lower: dims.lower,
+    anchors: {
+      ground: 0,                                                        // 바닥. 손이 이 아래로 못 간다
+      hip: [box.bodyW * 0.6, box.legTop + 0.04],                        // 허리(골반 옆)
+      chestFar: [-box.bodyW * 0.15, box.bodyTop - box.bodyH * 0.32],    // 반대쪽 가슴 (팔짱)
+      chin: [box.headRx * 0.18, box.bodyTop],                           // 턱
+      brow: [box.headRx * 0.5, box.headCy + box.headRy * 0.25]          // 눈썹 옆 (경례)
+    }
+  };
 }
 
 // 꼬리. 피벗(꼬리 뿌리) 원점 기준으로 그린다. scene이 회전시켜 살랑거린다.

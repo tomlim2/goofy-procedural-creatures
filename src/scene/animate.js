@@ -1,7 +1,7 @@
 // 상태 → 리그 적용. clock이 준 상태 객체를 three.js 그룹에 매 프레임 입힌다.
-// 문서: guidelines/motion.md § 상태 객체, guidelines/rig.md
+// 여기는 행위를 모른다 — 팔은 clock이 준 관절각(state.arms)을 이징해 넣을 뿐이다.
+// 문서: guidelines/motion/catalog.md § 상태 객체, guidelines/rig.md
 
-import { armPoseAngles } from "../character/index.js";
 import { buildEmote } from "./emote.js";
 import { disposeGroup } from "./material.js";
 import { BOIL_FRAMES } from "./rig.js";
@@ -37,22 +37,25 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   if (item.tailGroup) item.tailGroup.rotation.z = state.tailAngle;
 
   // 팔다리 — 목표 각도로 이징. 관절은 튀지 않고 따라간다.
-  // 팔은 자세(clock 상태)가 기준각과 앞/뒤를 정하고, 그 위에 지터·이벤트가 얹힌다.
+  // 팔은 clock이 행위를 IK로 풀어 준 [어깨, 팔꿈치] 세계각. 진동(osc)은 이징을 안 거치고 그대로 얹는다
+  // (인사의 손 흔들기·파닥임은 이징을 거치면 뭉개진다).
   for (const limb of item.limbs) {
     let target;
     let elbowTarget = 0;
+    let osc = 0;
+    let oscElbow = 0;
     if (limb.kind === "arm") {
-      const behind = state.armAction === "behind";
-      const [shoulder, elbowAngle] = armPoseAngles(state.armAction, limb.side);
-      target = shoulder + state.armOffset[String(limb.side)];
-      // 팔꿈치는 자세각 + 지터의 절반 (관절이 따로 끓는다)
-      elbowTarget = elbowAngle + state.armOffset[String(limb.side)] * 0.5;
+      const arm = state.arms[String(limb.side)];
+      target = arm.shoulder;
+      elbowTarget = arm.elbow;
+      osc = arm.oscShoulder;
+      oscElbow = arm.oscElbow;
       if (limb.back) {
-        // 뒷짐 전환은 팔이 기준각 근처로 돌아온 뒤에 한다. 회전 중에 바꾸면 튄다.
+        // 뒷짐 전환은 팔이 목표각 근처로 돌아온 뒤에 한다. 회전 중에 바꾸면 튄다.
         const settled = Math.abs(target - limb.angle) < 0.35;
         if (settled) {
-          limb.front.visible = !behind;
-          limb.back.visible = behind;
+          limb.front.visible = !arm.behind;
+          limb.back.visible = arm.behind;
         }
       }
     } else {
@@ -60,10 +63,10 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     }
     const ease = snap ? 1 : 0.12;
     limb.angle += (target - limb.angle) * ease;
-    limb.pivot.rotation.z = limb.angle;
+    limb.pivot.rotation.z = limb.angle + osc;
     if (limb.elbow) {
       limb.elbowAngle += (elbowTarget - limb.elbowAngle) * ease;
-      limb.elbow.rotation.z = limb.elbowAngle;
+      limb.elbow.rotation.z = limb.elbowAngle + oscElbow;
     }
   }
 
@@ -84,8 +87,8 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     rig.smile.visible = closed;
   }
 
-  // 이모트. 파닥임(좋아함) 행위 중에는 ♥를 띄운다
-  const emote = state.armAction === "flap" ? { kind: "heart", k: 0.5 } : state.emote;
+  // 이모트 (행위가 동반하는 것도 clock이 state.emote에 넣어 준다 — 파닥임의 ♥)
+  const emote = state.emote;
   if (emote) {
     if (!item.emoteMesh || item.emoteKind !== emote.kind) {
       if (item.emoteMesh) {

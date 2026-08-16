@@ -1,17 +1,20 @@
 // 종족별 모션 파라미터. 무엇이 어떤 주기로 얼마나 움직이는지는 전부 여기에 있다.
 // 새 모션은 여기에 종족별 값을 넣는 것부터 시작한다 (없는 종족은 null).
-// 문서: guidelines/motion.md
+// 문서: guidelines/motion/catalog.md
 
 export const BLINK_TIME = 0.13;
 
 // 종족별 모션 성격. [min, max]는 이벤트 간격(초), null은 그 모션 없음.
 export const MOTION = {
   kid: {
-    // 팔 행위 — 바인드(T포즈)에서 이따금 넘어갔다 돌아오는 것. [행위, 가중치]
-    armActions: [["cross", 2], ["hips", 2], ["raise", 1.5], ["behind", 1.5], ["hang", 1.5], ["flap", 1]],
+    // 팔 행위 — 바인드(T포즈)에서 이따금 넘어갔다 돌아오는 것. [행위, 가중치]. 내용은 actions.js
+    armActions: [
+      ["wave", 2], ["cross", 2], ["hips", 2], ["think", 1.5], ["raise", 1.5], ["behind", 1.5],
+      ["hang", 1.5], ["hi", 1], ["point", 1], ["flap", 1], ["salute", 0.7]
+    ],
     armActionGap: [12, 36],
-    // 팔: 레퍼런스에서 팔은 벌린 채 미세하게만 흔들린다. 큰 동작은 드물게.
-    armSwing: 0.045, armLift: [18, 40], armWave: [30, 70],
+    // 팔: 레퍼런스에서 팔은 벌린 채 미세하게만 흔들린다. 큰 동작은 드물게(행위).
+    armSwing: 0.045,
     // 다리: 발 까딱 드물게. 다리는 바닥에 붙어 거의 정지한다.
     legTap: [12, 30], legStep: null,
     sway: [0.012, 0.032], swayPeriod: [2.6, 4.6],
@@ -27,7 +30,7 @@ export const MOTION = {
   },
   pup: {
     armActions: null, armActionGap: null,
-    armSwing: 0, armLift: null, armWave: null,
+    armSwing: 0,
     // 레퍼런스의 개 다리는 4초 내내 바닥 고정. 몸이 흔들려 다리가 따라 보일 뿐이다.
     legTap: [14, 32], legStep: [30, 70],
     sway: [0.004, 0.01], swayPeriod: [3, 6],
@@ -44,7 +47,7 @@ export const MOTION = {
   },
   cat: {
     armActions: null, armActionGap: null,
-    armSwing: 0, armLift: null, armWave: null,
+    armSwing: 0,
     // 앞발 꾹꾹이 드물게, 스텝은 더 드물게
     legTap: [16, 36], legStep: [40, 90],
     sway: [0.002, 0.007], swayPeriod: [3.5, 7],
@@ -59,11 +62,14 @@ export const MOTION = {
     emotes: ["heart", "quest", "bang"]
   },
   imp: {
-    // 도깨비는 만세·파닥임을 더 자주. 팔짱은 짧은 팔이라 잘 안 보인다
-    armActions: [["raise", 2.5], ["flap", 2], ["hips", 1.5], ["behind", 1], ["hang", 1]],
+    // 도깨비는 만세·파닥임을 더 자주. 팔짱·생각은 드물게
+    armActions: [
+      ["raise", 2.5], ["flap", 2], ["wave", 1.5], ["hips", 1.5], ["hi", 1], ["point", 1],
+      ["behind", 1], ["hang", 1], ["salute", 0.5], ["think", 0.5]
+    ],
     armActionGap: [10, 30],
-    // 짧은 스텁 팔. 젤리 워블에 딸려 미세하게 떨릴 뿐이다.
-    armSwing: 0.06, armLift: [22, 50], armWave: [40, 90],
+    // 젤리 워블에 딸려 미세하게 떨린다.
+    armSwing: 0.06,
     legTap: [14, 34], legStep: null,
     sway: [0.015, 0.04], swayPeriod: [2, 3.8],
     rock: 0.004,

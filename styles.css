@@ -87,6 +87,16 @@ button:hover { background: rgba(43, 39, 36, 0.06); }
 button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 button.wide { width: 100%; }
 
+select {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 6px 8px;
+  cursor: pointer;
+}
+select.wide { width: 100%; }
+
 .seg { display: flex; gap: 4px; }
 .seg button { flex: 1; padding: 6px 4px; }
 

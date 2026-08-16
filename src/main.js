@@ -2,6 +2,7 @@
 
 import { createScene } from "./scene/index.js";
 import { makeGrid } from "./character/index.js";
+import { ACTIONS } from "./motion/index.js";
 import { formatSeed, seedFromString } from "./rng.js";
 
 const canvas = document.getElementById("stage");
@@ -82,6 +83,17 @@ inkSeg.addEventListener("click", (event) => {
   button.classList.add("on");
   scene.setBoil(button.dataset.ink === "boil");
 });
+
+// 행위 강제. AUTO는 각자 시계의 예약대로, 행위를 고르면 두발 전원이 그 행위를 계속한다.
+// 행위 하나(인사·경례·팔짱…)가 어떻게 보이는지 판단할 때 쓴다. 네발은 팔이 없어 그대로다.
+const actionSel = document.getElementById("actionSel");
+for (const [name, def] of Object.entries(ACTIONS)) {
+  const option = document.createElement("option");
+  option.value = name;
+  option.textContent = `${name.toUpperCase()} — ${def.label}`;
+  actionSel.appendChild(option);
+}
+actionSel.addEventListener("change", () => scene.setAction(actionSel.value || null));
 
 const speciesSeg = document.getElementById("speciesSeg");
 speciesSeg.addEventListener("click", (event) => {

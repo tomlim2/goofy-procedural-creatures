@@ -1,9 +1,9 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngles, BIND_POSE, tailSketch } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, armRig, tailSketch } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
-import { makeClock } from "../motion/index.js";
+import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
 
 export const BOIL_FRAMES = 3;
@@ -81,13 +81,13 @@ export function buildCreature(spec, noise, birth = 0) {
     bodyGroup.add(pivot);
 
     // 바인드 포즈(T)로 세운다. 행위는 clock이 준다.
-    const [restShoulder, restElbow] = limb.kind === "arm" ? armPoseAngles(BIND_POSE, limb.side) : [0, 0];
-    pivot.rotation.z = restShoulder;
-    if (elbow) elbow.rotation.z = restElbow;
+    const bind = limb.kind === "arm" ? bindArm(limb.side) : { shoulder: 0, elbow: 0 };
+    pivot.rotation.z = bind.shoulder;
+    if (elbow) elbow.rotation.z = bind.elbow;
     return {
       pivot, front, elbow, back,
       kind: limb.kind, side: limb.side, index: limb.index ?? 0,
-      angle: restShoulder, elbowAngle: restElbow
+      angle: bind.shoulder, elbowAngle: bind.elbow
     };
   });
 
@@ -155,7 +155,8 @@ export function buildCreature(spec, noise, birth = 0) {
     headFrames,
     eyeRigs,
     faceStates,
-    clock: makeClock(spec.seed, birth, spec.species, spec.parts.armLength === "long"),
+    // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다
+    clock: makeClock(spec.seed, birth, spec.species, armRig(spec)),
     spec,
     neckY,
     headRx: firstDrawn.box.headRx,

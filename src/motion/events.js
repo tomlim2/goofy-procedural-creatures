@@ -1,7 +1,8 @@
 // 간헐 이벤트 — 예약된 시각에 시작해 짧게 진행하고 끝나는 것. 다음 예약을 rng로 잡는다.
 //   깜빡임 · 시선 다트 · 놀람 · 끄덕 · 킁킁 딥 · 폴짝 · 기지개 · 부르르
-//   팔 들기 · 손 흔들기 · 발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모트 · 재생성
-// 문서: guidelines/motion/motion.md
+//   발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모트 · 재생성
+// (한 팔 들기·손 흔들기는 이벤트가 아니라 행위다 — actions.js hi·wave. 나머지 팔도 같이 정해진다)
+// 문서: guidelines/motion/catalog.md
 //
 // 형태: { next: 다음 시작 시각, start: 진행 중이면 시작 시각(아니면 -1) }
 // 진행 곡선은 k = (t - start) / duration. k>=1이면 끝.
@@ -21,8 +22,6 @@ export function initNod(rng) { return { next: rng.float(9, 24), start: -1 }; }
 export function initHop(rng, M) { return { next: schedule(rng, M.hop), start: -1 }; }
 export function initStretch(rng, M) { return { next: schedule(rng, M.stretch), start: -1 }; }
 export function initShiver(rng, M) { return { next: schedule(rng, M.shiver), start: -1 }; }
-export function initArmLift(rng, M) { return { next: schedule(rng, M.armLift), until: -1, side: 0 }; }
-export function initArmWave(rng, M) { return { next: schedule(rng, M.armWave), start: -1, side: 0 }; }
 export function initLegTap(rng, M) { return { next: schedule(rng, M.legTap), start: -1, index: 0 }; }
 export function initLegStep(rng, M) { return { next: schedule(rng, M.legStep), start: -1 }; }
 export function initTailFlick(rng, M) { return { next: schedule(rng, M.tailFlick), start: -1 }; }
@@ -113,28 +112,6 @@ export function stepShiver(e, t, rng, M) {
     else return Math.sin(k * Math.PI * 9) * 0.008 * (1 - k);
   }
   return 0;
-}
-export function stepArmLift(e, t, rng, M) {
-  if (t >= e.next && e.until < 0) {
-    e.side = rng.chance(0.5) ? -1 : 1;
-    e.until = t + rng.float(1.2, 3);
-    e.next = t + rng.float(M.armLift[0], M.armLift[1]);
-  }
-  if (e.until >= 0 && t >= e.until) { e.until = -1; e.side = 0; }
-  return e.side;
-}
-export function stepArmWave(e, t, rng, M) {
-  let k = -1;
-  if (t >= e.next && e.start < 0) {
-    e.start = t;
-    e.side = rng.chance(0.5) ? -1 : 1;
-    e.next = t + rng.float(M.armWave[0], M.armWave[1]);
-  }
-  if (e.start >= 0) {
-    k = (t - e.start) / 1.6;
-    if (k >= 1) { e.start = -1; k = -1; }
-  }
-  return { k, side: e.side };
 }
 export function stepLegTap(e, t, rng, M, legOffset) {
   if (t >= e.next && e.start < 0) {

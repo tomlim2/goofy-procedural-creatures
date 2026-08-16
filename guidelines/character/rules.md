@@ -12,8 +12,9 @@
 | | 어디에 | 예 |
 | --- | --- | --- |
 | 형태 | `SLOTS.arms`, `SLOTS.legs`, `SLOTS.armLength` | stick / sleeve / stubby / mitten, boots / tiptoe, medium / long |
-| 바인드 포즈 | 코드 상수 (`BIND_POSE` = T포즈) | 모션이 없을 때. 캐릭터에 "자세"는 없다 |
-| 행위 | `motion/states.js` armAction, `motion/table.js` armActions | 만세 · 팔짱 · 허리손 · 뒷짐 · 늘어뜨림 · 파닥임(좋아함) |
+| 바인드 포즈 | 코드 상수 (`draw/limbs.js` `BIND_ARM` = T포즈) | 모션이 없을 때. 캐릭터에 "자세"는 없다 |
+| 리그 서술 | `draw/limbs.js` `armRig(spec)` | 어깨 위치·팔 길이·몸 앵커(허리·턱·눈썹…). 캐릭터가 모션에 주는 정적 치수 — 행위를 이 개체에 IK로 풀 때 쓴다 |
+| 행위 | `motion/actions.js` (내용), `motion/table.js` armActions (종족별 빈도) | 만세 · 손 흔들어 인사 · 팔짱 · 허리손 · 턱에 손 · 경례 · 뒷짐 · 파닥임… 항상 두 팔을 다 정한다 |
 
 같은 원리가 눈에도 적용돼 있다: 눈 **종류**(ring/dot/slit)는 슬롯이고, 깜빡임·개방도·
 윙크·^^는 clock 상태다. 새 파츠를 넣을 때 "이게 생김새인가 행동인가"를 먼저 묻는다.

@@ -38,6 +38,12 @@ export function createScene(canvas) {
   let boilOn = true;
   // 재생성 스위치. 기본 꺼짐 — 형태는 NEW SEED로만 바뀐다.
   let regenEnabled = false;
+  // 강제 행위 (ACTION 카드). null이면 각자 시계의 예약대로. 행위 하나를 판단할 때 쓴다.
+  // 비대칭 행위의 활동 팔은 시드 홀짝으로 갈라 좌우가 섞여 보이게 한다.
+  let forcedAction = null;
+  function applyForced(item) {
+    item.clock.force(forcedAction, item.spec.seed % 2 ? 1 : -1);
+  }
 
   function clear() {
     for (const item of creatures) {
@@ -103,6 +109,7 @@ export function createScene(canvas) {
 
     specs.forEach((spec, index) => {
       const item = buildCreature(spec, noise, clockNow);
+      if (forcedAction) applyForced(item);
       const [x, y] = slotPosition(index);
       item.baseX = x;
       item.baseY = y;
@@ -137,6 +144,7 @@ export function createScene(canvas) {
     scene.remove(old.group);
 
     const item = buildCreature(spec, noise, clockNow);
+    if (forcedAction) applyForced(item);
     item.generation = old.generation + 1;
     const [x, y] = slotPosition(index);
     item.baseX = x;
@@ -187,5 +195,10 @@ export function createScene(canvas) {
     boilOn = value;
   }
 
-  return { build, update, resize, setRegen, setBind, setBoil, renderer, scene, camera };
+  function setAction(name) {
+    forcedAction = name || null;
+    for (const item of creatures) applyForced(item);
+  }
+
+  return { build, update, resize, setRegen, setBind, setBoil, setAction, renderer, scene, camera };
 }

@@ -44,8 +44,8 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 
 - **group** — 발바닥. scale로 호흡하면 발이 바닥에 붙은 채 늘어난다
 - **headGroup** — 목. 머리 지오메트리를 `-neckY`만큼 미리 내려서 굽는다. rotation.z가 턱 언저리를 축으로 돈다
-- **limb pivot** — 어깨(bodyTop 아래 22%, 몸 폭 78%) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다
-- **elbow** — 위팔 끝. 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽는다. 위팔:아래팔 = 0.48:0.52
+- **limb pivot** — 어깨(bodyTop 아래 22%, 몸 폭 78%) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다. 팔은 `bindArm(side)`(T포즈)로 세우고 clock의 `state.arms`가 관절각을 준다
+- **elbow** — 위팔 끝. 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽는다. 위팔:아래팔 = 0.48:0.52. 같은 치수를 `armRig(spec)`이 clock에 넘겨 행위를 IK로 푼다
 - **tailGroup** — 꼬리 뿌리(몸 뒤끝)
 - **eyeRig** — 눈 중심. scale이 개방도, pupil.position이 시선, lid.scale.y가 눈꺼풀
 
@@ -54,7 +54,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 | 한 번 굽는 것 (개체당) | 매 프레임 바꾸는 것 |
 | --- | --- |
 | 몸·머리 보일 3벌 | visible 토글 |
-| 팔다리 지체 (front, back) | pivot.rotation.z, front/back visible |
+| 팔다리 지체 (front, back) | pivot.rotation.z, elbow.rotation.z (이징된 목표각 + 이징 없는 진동), front/back visible |
 | 꼬리 | rotation.z |
 | 눈썹·입 쉼/대체 | visible |
 | 눈 리그 5메시 | scale, position, visible |
@@ -75,6 +75,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 | --- | --- | --- | --- |
 | **포즈** (리그) | POSE MOTION/BIND, `B` | `scene.setBind` | BIND면 clock 대신 `BIND_STATE`, 관절 이징 즉시(snap). 시계는 계속 흘린다 |
 | **잉크** (선) | INK BOIL/STILL, `I` | `scene.setBoil` | STILL이면 보일 0번 프레임 고정 |
+| 행위 강제 (디버그) | ACTION 카드 | `scene.setAction` | 두발 전원이 그 행위를 계속. `clock.force`. AUTO면 예약대로 |
 
 바인드 포즈는 리그의 상태이고 보일은 손그림 재질이다. 다른 축이라 따로 켠다 —
 "바인드인데 선은 끓는" 상태도, "모션 중인데 선은 고정" 상태도 볼 수 있다.

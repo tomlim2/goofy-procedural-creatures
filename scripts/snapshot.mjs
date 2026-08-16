@@ -46,15 +46,16 @@ for (const spec of grid) {
     limbs: draw.limbSketches(spec).map((l) => [l.kind, l.side, l.pivot.map((v) => +v.toFixed(5)), sketchHash(l.sketch), l.backSketch ? sketchHash(l.backSketch) : null]),
     tail: (() => { const t = draw.tailSketch(spec); return [t.pivot.map((v) => +v.toFixed(5)), sketchHash(t.sketch)]; })(),
     brow: kinds.brow.map((k) => sketchHash(draw.facePartSketch(spec, "brow", k))),
-    mouth: kinds.mouth.map((k) => sketchHash(draw.facePartSketch(spec, "mouth", k))),
-    armPose: ["rest", "out", "up", "behind"].map((p) => draw.armPoseAngle(p, -1))
+    mouth: kinds.mouth.map((k) => sketchHash(draw.facePartSketch(spec, "mouth", k)))
   };
   out.geometry.push(entry);
 }
 
 // 3. 모션 궤적 — 4종족, 60초, 매 10프레임 샘플
 for (const species of ["kid", "pup", "cat", "imp"]) {
-  const clock = clocks.makeClock(42, 3, species, false);
+  // 팔 리그 서술(armRig)이 있으면 넘긴다 — 모션 IK가 손 목표를 각도로 푸는 데 쓴다
+  const rig = draw.armRig ? draw.armRig(draw.makeCreature(42, species)) : false;
+  const clock = clocks.makeClock(42, 3, species, rig);
   const samples = [];
   for (let f = 0; f < 3600; f += 1) {
     const s = clock.update(3 + f / 60);

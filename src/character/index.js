@@ -6,5 +6,5 @@
 // 문서: guidelines/character/
 
 export { makeCreature, makeGrid, laneSpecies, LANES } from "./spec.js";
-export { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngle, armPoseAngles, BIND_POSE, tailSketch } from "./draw/index.js";
+export { drawCreature, facePartKinds, facePartSketch, limbSketches, armRig, BIND_ARM, tailSketch } from "./draw/index.js";
 export { SLOTS, DEFAULT_BIAS, ARCHETYPES, SPECIES, PAPER, INKS, FILLS, ACCENTS, POPS, DARKS } from "./vocabulary/index.js";

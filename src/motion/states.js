@@ -1,17 +1,19 @@
 // 유지 상태 — 들어가면 몇 초 머물다 돌아오는 것. 진행 곡선이 없고 on/off다.
-//   반감김 · ^^ 행복 눈 · 윙크 · 눈썹 상태 · 입 상태 · 갸웃(목표각 유지) · 팔 자세
-// 문서: guidelines/motion/motion.md
+//   반감김 · ^^ 행복 눈 · 윙크 · 눈썹 상태 · 입 상태 · 갸웃(목표각 유지) · 팔 행위
+// 문서: guidelines/motion/catalog.md
 //
 // 형태: { next: 다음 진입 시각, until: 유지 종료 시각(아니면 -1) }
+
+import { ACTIONS } from "./actions.js";
 
 const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infinity);
 
 export function initSquint(rng) { return { next: rng.float(6, 18), until: -1 }; }
 export function initMood(rng) { return { nextMood: rng.float(3, 10), moodUntil: -1, nextMouth: rng.float(2, 8), mouthUntil: -1 }; }
 export function initTilt(rng, M) { return { next: rng.float(M.tilt[0], M.tilt[1]), until: -1, target: 0, angle: 0 }; }
-// 팔 행위. 바인드 포즈(T)에서 이따금 행위(만세·팔짱·뒷짐·허리손·늘어뜨림·파닥임)로
-// 넘어갔다 돌아온다. 행위 종류와 가중치는 table.js의 armActions.
-export function initArmAction(rng) { return { action: "tpose", next: rng.float(8, 24), until: -1 }; }
+// 팔 행위. 바인드 포즈(T)에서 이따금 행위(만세·인사·팔짱·뒷짐·허리손·턱에 손…)로
+// 넘어갔다 돌아온다. 행위 종류와 가중치는 table.js의 armActions, 행위의 내용은 actions.js.
+export function initArmAction(rng) { return { action: null, side: 1, start: -1, next: rng.float(8, 24), until: -1 }; }
 export function initWink(rng, M) { return { next: schedule(rng, M.wink), until: -1, side: 0 }; }
 export function initHappy(rng, M) { return { next: schedule(rng, M.happyHold), until: -1 }; }
 
@@ -54,17 +56,22 @@ export function stepTilt(s, t, rng, M) {
   return s.angle;
 }
 // 팔 행위 — 바인드에서 행위로, 행위가 끝나면 바인드로. 형태(arms 슬롯)와 무관.
-export function stepArmAction(s, t, rng, M, noHang) {
+// 행위마다 유지 시간(hold)이 다르고, 비대칭 행위(인사·경례…)는 활동 팔의 좌우를 뽑는다.
+// 돌려주는 것: { action, side, start, until } 또는 null(바인드).
+export function stepArmAction(s, t, rng, M) {
   if (t >= s.next && s.until < 0) {
-    const pool = (M.armActions || []).filter(([a]) => !(noHang && a === "hang"));
+    const pool = M.armActions || [];
     if (pool.length) {
       s.action = rng.weighted(pool);
-      s.until = t + rng.float(2, 6);
+      s.side = rng.chance(0.5) ? -1 : 1;
+      const hold = ACTIONS[s.action].hold;
+      s.start = t;
+      s.until = t + rng.float(hold[0], hold[1]);
     }
     s.next = t + rng.float(M.armActionGap ? M.armActionGap[0] : 12, M.armActionGap ? M.armActionGap[1] : 36);
   }
-  if (s.until >= 0 && t >= s.until) { s.until = -1; s.action = "tpose"; }
-  return s.action;
+  if (s.until >= 0 && t >= s.until) { s.until = -1; s.action = null; s.start = -1; }
+  return s.action ? { action: s.action, side: s.side, start: s.start, until: s.until } : null;
 }
 export function stepMood(m, t, rng) {
   if (t >= m.nextMood && m.moodUntil < 0) { m.moodUntil = t + rng.float(1.5, 4); m.nextMood = t + rng.float(6, 16); }

@@ -1,7 +1,7 @@
 # MENAGERIE
 
 시드 하나에서 자라나는 손그림 크리처 그리드. 위에서부터 사람·사람·고양이·개·도깨비 다섯 줄이
-저마다의 시계로 숨쉬고, 깜빡이고, 두리번거리고, 놀라고, 팔짱을 꼈다 풀고, 이모트를 띄운다.
+저마다의 시계로 숨쉬고, 깜빡이고, 두리번거리고, 놀라고, 손 흔들어 인사하고, 팔짱을 꼈다 풀고, 이모트를 띄운다.
 선은 낮은 주기로 계속 끓는다(보일). 형태는 NEW SEED를 눌러야만 바뀐다.
 
 ## 목표
@@ -24,6 +24,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | NEW SEED / `R` | 새 시드. 주소창 해시가 시드다 — `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다 |
 | POSE MOTION / BIND / `B` | BIND는 리그를 바인드 포즈(T)에 고정. 형태·파츠를 판단할 때 |
 | INK BOIL / STILL / `I` | STILL은 선의 끓음(보일)을 멈춤. 포즈와 별개 축 — 모션 판단 시 잡음 제거 |
+| ACTION AUTO / 행위 | 두발 전원에게 행위 하나(인사·만세·팔짱·경례…)를 강제. 행위가 어떻게 보이는지 판단할 때 |
 | REGEN STILL / LIVE / `S` | 기본 STILL. LIVE를 켜면 개체가 각자의 시계(6~14초)로 교체된다 (레퍼런스 동작) |
 | SPECIES ALL / KID / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
 | GRID 5×4 / 7×5 / 9×6 | |
@@ -38,7 +39,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | [determinism](guidelines/determinism.md) |
 | `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 | [drawing](guidelines/drawing.md) |
 | **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획) | [character/](guidelines/character/) |
-| **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
+| **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지) `actions.js`(행위 — 두 팔의 손 목표, IK) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js` `emote.js` `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) |
 | `src/main.js` | 진입점. UI 배선 | |
 | `guidelines/` | 두 축의 카탈로그와 규칙. **고치기 전에 읽는다** | [README](guidelines/README.md) |
