@@ -11,11 +11,16 @@ import { layout, darken, BODY_WIDTH } from "./layout.js";
 const ARM_BASE = 0.242;
 const ARM_LENGTH_SCALE = { medium: 1, long: 1.64 };
 
+// 어깨 x — 몸통 좌우 윤곽 위. 몸 형태마다 어깨 높이(위에서 22%)에서의 반폭이 다르다:
+// box 1 · bean(타원) ≈0.85 · dress(사다리꼴, 위 0.6→아래 1.35) ≈0.76 · tube 0.62.
+// 팔은 몸통 옆구리에서 나와야 한다 — 안쪽에서 나오면 가슴 한가운데서 돋는 것처럼 보인다.
+const SHOULDER_X = { bean: 0.85, box: 0.98, dress: 0.76, tube: 0.63 };
+
 function armDims(spec, box) {
   const reach = ARM_BASE * spec.proportions.armSpread * (ARM_LENGTH_SCALE[spec.parts.armLength] || 1);
   return {
-    x: box.bodyW * (spec.parts.body === "dress" ? 0.7 : 0.78),   // 어깨 x (오른팔. 왼팔은 -x)
-    y: box.bodyTop - (box.bodyTop - box.legTop) * 0.22,          // 어깨 y
+    x: box.bodyW * (SHOULDER_X[spec.parts.body] || 0.85),   // 어깨 x (오른팔. 왼팔은 -x)
+    y: box.bodyTop - (box.bodyTop - box.legTop) * 0.22,     // 어깨 y
     upper: reach * 0.48,
     lower: reach * 0.52
   };
@@ -24,9 +29,9 @@ function armDims(spec, box) {
 // 관절 팔다리. 각 지체는 피벗(어깨·엉덩이) 원점 기준으로 그린다.
 // scene이 rotation.z로 흔든다.
 //
-// 레퍼런스(관절부 4배 확대): 지체는 몸 윤곽 안쪽에서 나오고, 팔은 유형이
-// 여럿이며(뒷짐·소매+동그란 손·스텁+주먹·늘어짐), 다리 끝에는 항상 동그란
-// 발이 있다. 뿌리를 윤곽 안으로 넣어야 관절이 "박혀" 보인다.
+// 레퍼런스(관절부 4배 확대): 팔은 유형이 여럿이며(뒷짐·소매+동그란 손·스텁+주먹·늘어짐),
+// 다리 끝에는 항상 동그란 발이 있다. 다리 뿌리는 몸 윤곽 안쪽(밑단 위)에서 시작해 관절이
+// "박혀" 보이고, 팔 뿌리는 몸통 좌우 윤곽 위(옆구리)다 — 안쪽이면 가슴에서 돋는 것처럼 보인다.
 //
 // 반환: [{ sketch, pivot: [x, y], kind: "arm"|"leg", side, index, behind }]
 export function limbSketches(spec) {

@@ -50,7 +50,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 - **group** — 발바닥. scale로 호흡하면 발이 바닥에 붙은 채 늘어난다
 - **headGroup** — 목. 머리 지오메트리를 `-neckY`만큼 미리 내려서 굽는다. rotation.z가 턱 언저리를 축으로 돈다
 - **faceGroup** — 머리 중심(headCy). 얼굴 지오메트리(얼굴 프레임·눈썹·입·눈 리그)를 `-faceCy`만큼 내려서 굽고 그룹을 `faceCy - neckY`에 둔다. 돌림의 이동·눌림이 이 점을 축으로 한다
-- **limb pivot** — 어깨(bodyTop 아래 22%, 몸 폭 78%) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다. 팔은 `bindArm(side)`(T포즈)로 세우고 clock의 `state.arms`가 관절각을 준다
+- **limb pivot** — 어깨(bodyTop 아래 22%, 몸통 좌우 윤곽 위 — 형태별 반폭 box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다. 팔은 `bindArm(side)`(T포즈)로 세우고 clock의 `state.arms`가 관절각을 준다
 - **elbow** — 위팔 끝. 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽는다. 위팔:아래팔 = 0.48:0.52. 같은 치수를 `armRig(spec)`이 clock에 넘겨 행위를 IK로 푼다
 - **tailGroup** — 꼬리 뿌리(몸 뒤끝)
 - **eyeRig** — 눈 중심. scale이 개방도, pupil.position이 시선, lid.scale.y가 눈꺼풀
