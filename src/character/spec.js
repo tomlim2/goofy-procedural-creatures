@@ -6,7 +6,7 @@
 //   2. 제약       — 같이 나올 수 없는 조합을 걷어낸다
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
-import { makeRng } from "./rng.js";
+import { makeRng } from "../rng.js";
 import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS } from "./vocabulary/index.js";
 
 function pickArchetype(rng) {

@@ -1,6 +1,6 @@
 // 머리 — 윤곽·귀·머리카락·모자·뿔. 문서: guidelines/parts-catalog.md § 머리
 
-import { blobPath, arcPath } from "../stroke.js";
+import { blobPath, arcPath } from "../../stroke.js";
 import { TAU, headShape, darken } from "./layout.js";
 
 export function drawHead(ink, fills, spec, box, noise) {

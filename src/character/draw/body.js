@@ -1,6 +1,6 @@
 // 몸 — 몸통·무늬. 문서: guidelines/parts-catalog.md § 몸
 
-import { blobPath } from "../stroke.js";
+import { blobPath } from "../../stroke.js";
 import { darken } from "./layout.js";
 
 export function drawBody(ink, fills, spec, box, noise) {

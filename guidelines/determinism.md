@@ -28,7 +28,7 @@ for (const slot of Object.keys(SLOTS)) parts[slot] = pickSlot(rng, archetype, sl
 반대로 다음은 **시드를 깨지 않는다.**
 
 - 가중치 숫자만 바꾸는 것 (`DEFAULT_BIAS`의 값 조정) — 결과는 달라지지만 호출 횟수는 같다
-- `draw/`만 고치는 것. 그리기는 스펙을 소비할 뿐 rng를 소비하지 않는다
+- `character/draw/`만 고치는 것. 그리기는 스펙을 소비할 뿐 rng를 소비하지 않는다
 - `stroke.js`의 폭·떨림 상수를 바꾸는 것
 
 시드를 깨는 변경을 했으면 커밋 메시지에 적는다.
@@ -51,7 +51,7 @@ while (!valid(parts)) parts = rollAgain(rng);
 
 ## 그리기용 난수는 따로 판다
 
-`draw/`는 `spec.proportions.wobbleSeed`로 자기 rng를 새로 만든다.
+`character/draw/`는 `spec.proportions.wobbleSeed`로 자기 rng를 새로 만든다.
 생성용 rng를 그리기에서 이어 쓰지 않는다. 그래야 그리기를 고쳐도 조합이 안 바뀐다.
 
 ## 확인 방법

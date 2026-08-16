@@ -1,7 +1,7 @@
 // 상태 → 리그 적용. clock이 준 상태 객체를 three.js 그룹에 매 프레임 입힌다.
 // 문서: guidelines/motion.md § 상태 객체, guidelines/rig.md
 
-import { armPoseAngle } from "../draw/index.js";
+import { armPoseAngle } from "../character/index.js";
 import { buildEmote } from "./emote.js";
 import { disposeGroup } from "./material.js";
 import { BOIL_FRAMES } from "./rig.js";

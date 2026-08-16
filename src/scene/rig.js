@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngle, tailSketch } from "../draw/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngle, tailSketch } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock } from "../motion/index.js";
 import { sketchMesh } from "./material.js";

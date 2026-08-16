@@ -1,9 +1,9 @@
 # 파츠 카탈로그
 
-`src/vocabulary/slots.js` `SLOTS`의 전체 목록. 17슬롯 102파츠. 그리기는 `src/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 17슬롯 102파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
-**규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([parts.md](parts.md) 참조).
-슬롯 추가·순서 변경은 rng 호출 수를 바꿔 **기존 시드를 깬다** ([determinism.md](determinism.md)).
+**규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
+슬롯 추가·순서 변경은 rng 호출 수를 바꿔 **기존 시드를 깬다** ([../determinism.md](../determinism.md)).
 
 ## 머리
 

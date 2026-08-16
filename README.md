@@ -24,22 +24,20 @@ three.js는 importmap으로 unpkg에서 받는다.
 
 ## 구조
 
-관심사를 네 층으로 끊었다. 무엇이 있는가, 무엇을 고를 것인가, 어떻게 그릴 것인가,
-언제 움직일 것인가를 섞지 않는다.
+**캐릭터**(무엇인가)와 **모션**(어떻게 움직이나) 두 축이다. 파츠별 애니메이션이 아니라,
+캐릭터는 시드가 정하는 정적인 전부이고 모션은 시계가 정하는 동적인 전부다. 둘을 잇는 게 scene의 리그다.
 
 | 파일 / 폴더 | 하는 일 | 문서 |
 | --- | --- | --- |
 | `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | determinism.md |
 | `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 | drawing.md |
-| `src/vocabulary/` | 어휘 — `slots.js`(SLOTS·DEFAULT_BIAS) `species.js` `archetypes.js` `palette.js` | character-types.md, parts-catalog.md |
-| `src/creature.js` | 시드 → 스펙. 종족·아키타입·제약·비율 지터·색 포인트 | character-types.md |
-| `src/draw/` | 스펙 → 획. `layout.js`(치수·윤곽) `head.js` `face.js` `body.js` `limbs.js`, `index.js`가 조립 | parts-catalog.md |
-| `src/motion/` | 개체별 시계. `table.js`(종족 파라미터) `face.js` `body.js` `limbs.js` `events.js`, `index.js`가 원본 rng 순서로 조립 | motion.md |
-| `src/scene/` | three.js. `rig.js`(계층 조립) `animate.js`(상태→리그) `paper.js` `material.js` `emote.js`, `index.js`(씬·루프·재생성) | rig.md |
+| **`src/character/`** | **무엇인가** — 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획) | character/ |
+| **`src/motion/`** | **어떻게 움직이나** — 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지), `index.js`가 원본 rng 순서로 조립 | motion/ |
+| `src/scene/` | three.js. `rig.js`(캐릭터 지오메트리 → 계층) `animate.js`(모션 상태 → 리그) `paper.js` `material.js` `emote.js`, `index.js`(씬·루프·재생성) | rig.md |
 | `src/main.js` | 진입점. UI 배선 | |
 | `scripts/snapshot.mjs` | 리팩토링 전후 동작 불변 검증 (스펙·지오메트리·60초 모션 궤적) | |
 | `reference/` | 참고 자료 출처와 차용 범위 | |
-| `guidelines/` | 이 랩을 고칠 때 지키는 규칙과 카탈로그 |
+| `guidelines/` | 캐릭터 / 모션 두 축의 카탈로그와 규칙 |
 
 ## 고치기 전에
 

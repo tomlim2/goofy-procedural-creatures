@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { makeRng } from "../rng.js";
-import { PAPER } from "../vocabulary/index.js";
+import { PAPER } from "../character/index.js";
 
 // 종이. 균일한 단색이면 선이 떠 보인다. 그레인과 얼룩을 절차적으로 굽는다.
 export function makePaperTexture(seed) {

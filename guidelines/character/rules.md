@@ -1,20 +1,22 @@
-# 파츠 규칙
+# 캐릭터 규칙
+
+`src/character/`를 고칠 때 지키는 것. 무엇이 있는지는 [types.md](types.md)·[parts.md](parts.md).
 
 ## 세 파일을 순서대로 고친다
 
 파츠 하나를 추가하려면 세 곳을 손대야 한다. 순서를 지킨다.
 
-1. **`src/vocabulary/slots.js`** — `SLOTS`에 이름을 넣는다. 이름은 `draw/`의 분기 키와 정확히 같아야 한다
-2. **`src/vocabulary/`** — 필요하면 `slots.js` `DEFAULT_BIAS`, `archetypes.js`·`species.js` `bias`에 가중치를 넣는다
-3. **`src/draw/`** — 파츠가 속한 파일(`head.js`/`face.js`/`body.js`/`limbs.js`)에 분기를 추가한다
+1. **`src/character/vocabulary/slots.js`** — `SLOTS`에 이름을 넣는다. 이름은 `draw/`의 분기 키와 정확히 같아야 한다
+2. **`src/character/vocabulary/`** — 필요하면 `slots.js` `DEFAULT_BIAS`, `archetypes.js`·`species.js` `bias`에 가중치를 넣는다
+3. **`src/character/draw/`** — 파츠가 속한 파일(`head.js`/`face.js`/`body.js`/`limbs.js`)에 분기를 추가한다
 
-`creature.js`는 대개 손대지 않는다. 새 조합이 다른 파츠와 충돌할 때만 `applyConstraints`에 넣는다.
+`spec.js`는 대개 손대지 않는다. 새 조합이 다른 파츠와 충돌할 때만 `applyConstraints`에 넣는다.
 
 ## 슬롯을 새로 만드는 건 다른 이야기다
 
 기존 슬롯에 선택지를 추가하는 것과 슬롯 자체를 새로 만드는 것은 무게가 다르다.
 슬롯 추가는 rng 호출 횟수를 늘리므로 **기존 시드를 전부 깬다.**
-[determinism.md](determinism.md)를 먼저 읽는다.
+[../determinism.md](../determinism.md)를 먼저 읽는다.
 
 ## 가중치는 눈이 아니라 숫자로 맞춘다
 
@@ -51,7 +53,7 @@ import('./src/creature.js').then(m => {
 | 형태 | `SLOTS.arms`, `SLOTS.legs` | stick / sleeve / stubby / mitten, boots / tiptoe |
 | 치수 | `SLOTS.armLength` | short / medium / long / verylong — 형태와 독립이라 조합이 4×4 |
 | 쉼 자세 | `proportions.armRest` (개체 성격) | rest / out / behind / up |
-| 자세 전환 | `motion/limbs.js` armPose 상태 | 12~36초마다 다른 자세로 갔다 돌아온다 |
+| 자세 전환 | `motion/states.js` armPose | 12~36초마다 다른 자세로 갔다 돌아온다 |
 
 같은 원리가 눈에도 적용돼 있다: 눈 **종류**(ring/dot/slit)는 슬롯이고, 깜빡임·개방도·
 윙크·^^는 clock 상태다. 새 파츠를 넣을 때 "이게 생김새인가 행동인가"를 먼저 묻는다.

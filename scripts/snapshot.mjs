@@ -14,9 +14,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 const label = process.argv[2] || "before";
 
-const { makeGrid } = await import(join(root, "src/creature.js"));
-const draw = await import(join(root, "src/draw.js")).catch(() => import(join(root, "src/draw/index.js")));
-const clocks = await import(join(root, "src/clocks.js")).catch(() => import(join(root, "src/motion/index.js")));
+const { makeGrid } = await import(join(root, "src/character/index.js"));
+const draw = await import(join(root, "src/character/index.js"));
+const clocks = await import(join(root, "src/motion/index.js"));
 
 const hash = (obj) => createHash("sha1").update(JSON.stringify(obj)).digest("hex").slice(0, 12);
 const round = (a) => Array.from(a, (v) => Math.round(v * 1e5) / 1e5);

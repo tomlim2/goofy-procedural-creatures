@@ -1,7 +1,7 @@
 // 진입점. 시드를 정하고, 그리드를 굽고, 시계를 돌린다.
 
 import { createScene } from "./scene/index.js";
-import { makeGrid } from "./creature.js";
+import { makeGrid } from "./character/index.js";
 import { formatSeed, seedFromString } from "./rng.js";
 
 const canvas = document.getElementById("stage");

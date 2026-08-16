@@ -1,18 +1,17 @@
-// 개체별 시계. 조각(face/body/limbs/events)을 원본과 같은 rng 호출 순서로 조립한다.
+// 개체별 시계. rhythm(상시) · events(간헐) · states(유지)를 조립한다.
 //
-// 순서가 곧 시드다. 초기화 순서와 update 내 호출 순서를 바꾸면 기존 시드의
-// 모션이 전부 달라진다 (guidelines/determinism.md). 조각을 옮기려면 두 곳 다 옮긴다.
+// ⚠ rng 호출 순서가 곧 시드다. 아래 init 순서와 update 순서는 원본(단일 함수
+// 시절)과 동일하게 고정돼 있다. 새 모션은 각 블록의 **끝에** 붙인다.
+// 순서를 바꾸면 기존 시드의 모션이 전부 달라진다 (guidelines/determinism.md).
 //
-// 모든 예약은 출생 시각(birth) 기준 상대 시간이다. 재생성으로 태어난 개체의
-// 시계가 절대 시간을 쓰면 예약이 전부 과거가 되어 매 프레임 재생성되는 폭주가 난다.
-// 문서: guidelines/motion.md
+// 모든 예약은 출생 시각(birth) 기준 상대 시간이다.
+// 문서: guidelines/motion/motion.md
 
 import { makeRng } from "../rng.js";
 import { MOTION } from "./table.js";
-import { initBlinkGaze, initSurprise, initSquint, initMood, initWink, initHappy, stepEyes, stepMood } from "./face.js";
-import { initBreathe, initBody, initJelly, stepBody, stepJelly, stepBreathe } from "./body.js";
-import { initArmToggle, initArms, initLegs, initTail, stepArmToggle, stepArms, stepLegs, stepTail } from "./limbs.js";
-import { initRegen, initEmote, stepRegen, stepEmote } from "./events.js";
+import * as R from "./rhythm.js";
+import * as E from "./events.js";
+import * as S from "./states.js";
 
 export { MOTION } from "./table.js";
 
@@ -20,50 +19,108 @@ export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", no
   const rng = makeRng(seed ^ 0x5bf03635);
   const M = MOTION[species] || MOTION.kid;
 
-  // ── 초기화. 원본 순서 그대로 ──
-  const breathe = initBreathe(rng);
-  const blinkGaze = initBlinkGaze(rng);
-  const surprise = initSurprise(rng, M);
-  const squint = initSquint(rng);
-  const regen = initRegen(rng);
-  const mood = initMood(rng);
-  const emote = initEmote(rng);
-  const body = initBody(rng, M);
-  const armToggle = initArmToggle(rng, M);
-  const arms = initArms(rng, M, armRest || "rest");
-  const legs = initLegs(rng, M);
-  const wink = initWink(rng, M);
-  const happy = initHappy(rng, M);
-  const tail = initTail(rng, M);
-  const jelly = initJelly(rng, M);
-
-  const face = { blinkGaze, surprise, squint, wink, happy };
+  // ── init: 원본 순서 ──
+  const breathe = R.initBreathe(rng);            // 1
+  const blink = E.initBlink(rng);                // 2
+  const glance = E.initGlance(rng);              // 3
+  const surprise = E.initSurprise(rng, M);       // 4
+  const squint = S.initSquint(rng);              // 5
+  const regen = E.initRegen(rng);                // 6
+  const mood = S.initMood(rng);                  // 7
+  const emote = E.initEmote(rng);                // 8
+  const sway = R.initSway(rng, M);               // 9  (sway·rock)
+  const roll = R.initRoll(rng, M);               // 10
+  const dip = E.initDip(rng, M);                 // 11
+  const tilt = S.initTilt(rng, M);               // 12
+  const nod = E.initNod(rng);                    // 13
+  const hop = E.initHop(rng, M);                 // 14
+  const stretch = E.initStretch(rng, M);         // 15
+  const shiver = E.initShiver(rng, M);           // 16
+  const armToggle = S.initArmToggle(rng, M);     // 17
+  const armSwing = R.initArmSwing(rng);          // 18
+  const armPose = S.initArmPose(rng, armRest || "rest"); // 19
+  const armLift = E.initArmLift(rng, M);         // 20
+  const armWave = E.initArmWave(rng, M);         // 21
+  const legTap = E.initLegTap(rng, M);           // 22
+  const legStep = E.initLegStep(rng, M);         // 23
+  const wink = S.initWink(rng, M);               // 24
+  const happy = S.initHappy(rng, M);             // 25
+  const tailSwish = R.initTailSwish(rng, M);     // 26
+  const tailFlick = E.initTailFlick(rng, M);     // 27
+  const jelly = R.initJelly(rng, M);             // 28
 
   return {
     update(globalT) {
       const t = globalT - birth;
 
-      // ── update. 원본 순서 그대로 ──
-      const eyes = stepEyes(face, t, rng, M);
-      const b = stepBody(body, t, rng, M);
-      const armAlt = stepArmToggle(armToggle, t, rng, M);
-      const a = stepArms(arms, t, rng, M, b, noRest);
-      const legOffset = stepLegs(legs, t, rng, M, b);
-      const tailAngle = stepTail(tail, t, rng, M);
-      const j = stepJelly(jelly, t);
-      const md = stepMood(mood, t, rng);
-      const regenNow = stepRegen(regen, t, rng);
-      const em = stepEmote(emote, t, rng, M);
-      const br = stepBreathe(breathe, t);
+      // ── update: 원본 순서 ──
+      // 얼굴
+      const bl = E.stepBlink(blink, t, rng);
+      E.stepGlanceTarget(glance, t, rng);
+      const gaze = R.stepGaze(glance);
+      const faceYaw = R.stepYaw(glance, M);
+      let lid = bl.lid;
+      let isHappy = bl.happy;
+      lid = S.stepSquint(squint, t, rng, lid);
+      if (S.stepHappy(happy, t, rng, M)) { lid = 1; isHappy = true; }
+      const winkSide = S.stepWink(wink, t, rng, M);
+      const aperture = E.stepSurprise(surprise, t, rng, M);
+
+      // 몸통
+      const sw = R.stepSway(sway, t, M);
+      const tiltAngle = S.stepTilt(tilt, t, rng, M);
+      const rollAngle = R.stepRoll(roll, t);
+      let headBob = E.stepNod(nod, t, rng);
+      headBob += E.stepDip(dip, t, rng, M);
+      const hp = E.stepHop(hop, t, rng, M);
+      const stretchX = E.stepStretch(stretch, t, rng, M);
+      const shiverX = E.stepShiver(shiver, t, rng, M);
+      const armAlt = S.stepArmToggle(armToggle, t, rng, M);
+
+      // 팔
+      const pose = S.stepArmPose(armPose, t, rng, noRest);
+      const swing = R.stepArmSwing(armSwing, sway, t, M);
+      const liftSide = E.stepArmLift(armLift, t, rng, M);
+      const wave = E.stepArmWave(armWave, t, rng, M);
+      const armOffset = { "-1": swing, "1": -swing };
+      for (const side of [-1, 1]) {
+        const key = String(side);
+        const outward = -side;
+        if (liftSide === side) armOffset[key] += outward * 0.55;
+        if (wave.k >= 0 && wave.side === side) {
+          const env = Math.sin(Math.min(1, wave.k) * Math.PI);
+          armOffset[key] += outward * 0.7 * env + Math.sin(wave.k * Math.PI * 6) * 0.18 * env;
+        }
+        if (hp.hopY > 0) armOffset[key] += outward * hp.hopY * 4;
+        armOffset[key] += R.armJitter(armSwing, t, side);
+      }
+
+      // 다리
+      const legOffset = [0, 0, 0, 0];
+      E.stepLegTap(legTap, t, rng, M, legOffset);
+      E.stepLegStep(legStep, t, rng, M, legOffset);
+      if (hp.squashY < 0) { legOffset[0] += hp.squashY * 1.5; legOffset[1] -= hp.squashY * 1.5; }
+      for (let i = 0; i < 4; i += 1) legOffset[i] += R.legJitter(t, i);
+
+      // 꼬리 · 젤리
+      let tailAngle = R.stepTailSwish(tailSwish, t);
+      tailAngle += E.stepTailFlick(tailFlick, t, rng, M);
+      const j = R.stepJelly(jelly, t);
+
+      // 표정 상태 · 이벤트
+      const md = S.stepMood(mood, t, rng);
+      const regenNow = E.stepRegen(regen, t, rng);
+      const em = E.stepEmote(emote, t, rng, M);
+      const br = R.stepBreathe(breathe, t);
 
       return {
-        breathe: br, lid: eyes.lid, gaze: eyes.gaze, aperture: eyes.aperture, regen: regenNow, emote: em,
+        breathe: br, lid, gaze, aperture, regen: regenNow, emote: em,
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
-        sway: b.sway, rock: b.rock, headAngle: b.headAngle, headBob: b.headBob,
-        hopY: b.hopY, squashX: b.squashX, squashY: b.squashY, stretchX: b.stretchX, shiverX: b.shiverX,
-        jellyX: j.jellyX, jellyY: j.jellyY, faceYaw: eyes.faceYaw,
-        armAlt, happy: eyes.happy, winkSide: eyes.winkSide, tailAngle,
-        armOffset: a.armOffset, legOffset, armPose: a.armPose
+        sway: sw.sway, rock: sw.rock, headAngle: tiltAngle + rollAngle, headBob,
+        hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
+        jellyX: j.jellyX, jellyY: j.jellyY, faceYaw,
+        armAlt, happy: isHappy, winkSide, tailAngle,
+        armOffset, legOffset, armPose: pose
       };
     }
   };

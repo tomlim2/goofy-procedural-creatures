@@ -1,8 +1,8 @@
 // 팔다리·꼬리 — 관절 피벗 원점 기준으로 굽는다. 자세는 여기 없다(motion/limbs.js).
 // 문서: guidelines/parts-catalog.md § legs·tail·arms·armLength, guidelines/rig.md
 
-import { Sketch, blobPath } from "../stroke.js";
-import { makeNoise, makeRng } from "../rng.js";
+import { Sketch, blobPath } from "../../stroke.js";
+import { makeNoise, makeRng } from "../../rng.js";
 import { layout, darken } from "./layout.js";
 
 // 관절 팔다리. 각 지체는 피벗(어깨·엉덩이) 원점 기준으로 그린다.

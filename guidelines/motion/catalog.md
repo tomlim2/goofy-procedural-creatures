@@ -1,6 +1,8 @@
 # 모션 카탈로그
 
-`src/motion/`. `table.js`가 종족별 파라미터, `face.js` `body.js` `limbs.js` `events.js`가 조각, `index.js`가 원본 rng 순서로 조립한다. 개체마다 시계가 하나씩 있고, 모든 예약은 **출생 시각 기준 상대 시간**이다.
+`src/motion/`. `table.js`가 종족별 파라미터, `rhythm.js`(상시 진동) `events.js`(간헐) `states.js`(유지)가
+모션 본체, `index.js`가 원본 rng 순서로 조립한다. 규칙은 [rules.md](rules.md).
+개체마다 시계가 하나씩 있고, 모든 예약은 **출생 시각 기준 상대 시간**이다.
 매 프레임 `update(t)`가 상태 객체를 돌려주고 `scene/animate.js`가 그것을 리그에 적용한다.
 
 **원칙** (레퍼런스 실측, video-notes 26~36):
@@ -132,7 +134,7 @@ front/back 전환은 팔이 기준각 근처(0.35rad 이내)로 돌아온 뒤에
 ## 새 모션을 넣을 때
 
 1. `motion/table.js`에 종족별 파라미터를 넣는다. 없는 종족은 `null`
-2. 해당 조각(`face.js`/`body.js`/`limbs.js`/`events.js`)에 `initXxx`·`stepXxx` 추가 → `motion/index.js`에서 **기존 순서 뒤에** 호출 (앞에 끼우면 시드가 깨진다)
+2. 종류를 정한다 — 리듬(`rhythm.js`) / 이벤트(`events.js`) / 상태(`states.js`) — 그 파일에 `initXxx`·`stepXxx` 추가 → `motion/index.js`에서 **기존 순서 뒤에** 호출 (앞에 끼우면 시드가 깨진다)
 3. `scene/animate.js` `applyState`에서 리그에 적용
 4. 60초 시뮬로 발화 빈도를 센다 (아래 명령). 눈으로만 판단하지 않는다
 
