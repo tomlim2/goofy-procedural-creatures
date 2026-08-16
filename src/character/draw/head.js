@@ -122,21 +122,27 @@ export function drawPupEars(ink, fills, spec, box) {
     const normalTilt = Math.atan2(nx * side, ny);          // 수직에서 법선까지의 각 (바깥쪽 양수)
     const lean = Math.min(normalTilt, 0.35);                // 귀 축의 안쪽 기울기
     const ax = -side * Math.sin(lean), ay = Math.cos(lean);
-    const tx = -ny * side, ty = nx * side;
-    const local = (u, v) => [bx + ax * u + tx * v, by + ay * u + ty * v];   // u 귀 축, v 접선
+    // 귀 국소 좌표: u는 귀 축(위·안쪽), v는 축에 수직(바깥쪽 양수). 축에 수직이어야 세모·접힌 귀가 납작해지지 않는다
+    const px = side * ay, py = -side * ax;
+    const local = (u, v) => [bx + ax * u + px * v, by + ay * u + py * v];
     let path;
     if (kind === "pointy") {
-      // 밑변은 윤곽까지 끌어와 박고, 끝은 귀 축을 따라 밖으로
+      // 밑변은 윤곽까지 끌어와 박고(u = −OUT), 끝은 귀 축을 따라 위로. 폭 0.09의 세모
       const len = ry * 0.6;
-      path = [local(-OUT - 0.005, 0.045), local(len, 0.005), local(-OUT - 0.005, -0.04)];
+      const b0 = -OUT - 0.01;
+      path = [local(b0, 0.05), local(len, 0.004), local(b0, -0.04)];
     } else if (kind === "round") {
       // 귀 축 방향으로 길쭉한 동그란 귀 — 안쪽이 윤곽에 살짝 걸친다
       const [cx, cy] = local(-OUT + 0.055, 0);
       path = rotate(blobPath(cx, cy, 0.036, 0.046, { lumps: 3, amount: 0.15, noise: null }), cx, cy, side * lean);
     } else if (kind === "fold") {
-      // 접힌 귀 — 윤곽에서 귀 축을 따라 삐죽 나갔다가 끝이 턱 쪽(−접선)으로 접혀 처진다
-      const b0 = -OUT - 0.005;
-      path = [local(b0, 0.03), local(0.07, 0.035), local(0.085, -0.01), local(0.06, -0.08), local(0.02, -0.065), local(b0, -0.03)];
+      // 접힌 귀 — 윤곽에서 귀 축을 따라 올라갔다가 끝이 바깥·아래로 접혀 처진다 (중력 방향)
+      const b0 = -OUT - 0.01;
+      const [ux, uy] = local(0.06, 0.02);           // 접히는 지점
+      path = [
+        local(b0, 0.045), local(0.05, 0.05), [ux + side * 0.02, uy], [ux + side * 0.055, uy - 0.05],
+        [ux + side * 0.02, uy - 0.07], [ux - side * 0.005, uy - 0.03], local(0.02, -0.03), local(b0, -0.03)
+      ];
     } else {
       // flap / long — 머리 옆에서 늘어지되 반대 기울기(0.25rad 안쪽)로 끝이 얼굴 쪽으로 모이는 로브
       const len = ry * (kind === "long" ? 0.95 : 0.65);
