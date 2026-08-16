@@ -3,7 +3,7 @@
 
 import { Sketch, blobPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
-import { layout, darken, BODY_WIDTH } from "./layout.js";
+import { layout, darken, BUILD } from "./layout.js";
 
 // 팔 치수. 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기준 1, long은 그 1.64배(바닥을 쓸 만큼).
 // 기준 팔 길이 0.242 — 이보다 짧으면 손이 몸통 근처라 팔로 안 보인다.
@@ -56,7 +56,7 @@ export function limbSketches(spec) {
     // 네 다리 — 앞다리 둘·뒷다리 둘이 각각 붙어 있다(옆에서 본 짐승). 뿌리는 몸 윤곽 안쪽(bodyH 25% 위).
     // 형태: stub(기본 — 굵은 스텁 + 발끝 + 발가락) · stick(가는 다리 + 둥근 발) · boots(양말) ·
     // float(레이맨식 — 다리 없이 발만 떠 있다). bent·tiptoe는 네발에서 stick으로 그린다.
-    // 기장은 layout이 legLength로 정한다(short = 닥스훈트). 몸 길이는 bodyWidth(box.bodyW).
+    // 기장은 layout이 legLength로 정한다(short = 닥스훈트). 몸 길이는 build(box.bodyW).
     const cx = box.bodyCx;
     const hipY = box.legTop + box.bodyH * 0.25;
     const kind = ["stub", "stick", "boots", "float"].includes(legKind) ? legKind : "stick";
@@ -94,8 +94,8 @@ export function limbSketches(spec) {
   // ── 두발 다리 ──
   // 뿌리는 몸 밑단보다 살짝 위(윤곽 안). 끝에는 항상 발.
   const hipY = box.legTop + 0.02;
-  // 스탠스(벌림)는 다리 형태가 아니라 몸통 폭이 정한다 — 넓은 몸이 넓은 스탠스를 받친다.
-  const spread = (BODY_WIDTH[spec.parts.bodyWidth] || BODY_WIDTH.medium).stance;
+  // 스탠스(벌림)는 다리 형태가 아니라 몸통 체격이 정한다 — 넓은 몸이 넓은 스탠스를 받친다.
+  const spread = (BUILD[spec.parts.build] || BUILD.medium).stance;
   for (const side of [-1, 1]) {
     const x = side * box.bodyW * spread;
     const s = make();

@@ -21,7 +21,7 @@ export const SLOTS = {
   marks: ["none", "stripes", "dots", "patch", "hatch", "spots"],
   // 다리 유형(형태만). 레퍼런스: 전부 끝에 동그란 발이 있고 몸 밑에서 나온다.
   // float는 레이맨식 — 다리 없이 발만 떠 있다. 벌린 정도(스탠스)는 여기 없다 —
-  // 몸통 폭(bodyWidth)이 정한다. 네발은 stub·stick·boots·float만 그리고 나머지는 stick으로 본다.
+  // 몸통 체격(build)이 정한다. 네발은 stub·stick·boots·float만 그리고 나머지는 stick으로 본다.
   legs: ["stick", "stub", "bent", "boots", "tiptoe", "float"],
   // 네발 종족 전용. 두발 종족은 그리지 않는다.
   tail: ["curl", "flag", "longtail", "stubtail"],
@@ -32,16 +32,17 @@ export const SLOTS = {
   // 다리 길이(기장). 형태와 독립 — 모든 다리 유형에 세 기장이 있다. 스케일이 아니라 기장만 바뀐다:
   // 몸이 바닥 가까이 내려앉고 발·굵기는 그대로다. 네발도 따른다 (short = 닥스훈트).
   legLength: ["long", "medium", "short"],
-  // 몸통 폭. 형태(body)와 독립 — 홀쭉한 통·땅딸막한 콩이 다 나온다. 다리 스탠스(벌림)와
-  // 어깨 위치가 이걸 따른다: 좁은 몸은 다리를 모으고, 넓은 몸은 벌린다.
-  // 네발에서는 몸 길이다(가로로 누운 몸의 너비 = 길이): wide가 닥스훈트·먼치킨 같은 긴 몸.
-  bodyWidth: ["narrow", "medium", "wide"]
+  // 몸통 체격. 형태(body)와 독립 — 홀쭉이 통·땅딸막한 콩·작은 몸통이 다 나온다.
+  // skinny 홀쭉이 · narrow 마름 · medium · wide 넓적 · small 작은 몸통(폭·높이 다 작다).
+  // 다리 스탠스(벌림)와 어깨 위치가 이걸 따른다: 좁은 몸은 다리를 모으고, 넓은 몸은 벌린다.
+  // 네발에서는 몸 길이·두께다: narrow 짧은 몸, wide 긴 몸(닥스훈트·먼치킨), skinny 얇은 몸, small 작은 몸.
+  build: ["skinny", "narrow", "medium", "wide", "small"]
 };
 
 // 뒤늦게 붙인 슬롯. makeCreature가 다른 모든 것(파츠·제약·색·비율) 뒤에 뽑는다 —
 // 그래야 앞선 rng 소비가 그대로라 기존 시드의 판이 유지된다(새 슬롯 값만 더해진다).
 // 새 슬롯은 여기 끝에 붙인다. 순서를 바꾸면 이 슬롯들의 값이 바뀐다.
-export const LATE_SLOTS = ["legLength", "bodyWidth"];
+export const LATE_SLOTS = ["legLength", "build"];
 
 // 아키타입 bias가 없는 슬롯의 기본 가중치.
 //
@@ -63,5 +64,5 @@ export const DEFAULT_BIAS = {
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],
   legLength: [["long", 3], ["medium", 2], ["short", 1]],
-  bodyWidth: [["medium", 4], ["narrow", 1.5], ["wide", 1.5]]
+  build: [["medium", 4], ["narrow", 1.5], ["wide", 1.5], ["skinny", 1], ["small", 1]]
 };

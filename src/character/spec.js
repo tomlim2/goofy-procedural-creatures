@@ -7,7 +7,7 @@
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
 import { makeRng } from "../rng.js";
-import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS } from "./vocabulary/index.js";
+import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, shade } from "./vocabulary/index.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -142,19 +142,10 @@ export function makeCreature(seed, speciesName = "human") {
     fillOffset: [rng.around(0, 0.035), rng.around(0, 0.035)]
   };
 
-  // 도깨비 색. 머리는 DARKS 9색 중 하나(먹·회갈·회청·자흑…), 몸은 머리와 같은 색 /
-  // 다른 어두운 색 / 밝은 옷 셋 중 하나. rng 호출 수는 종족과 무관하게 고정한다.
+  // 도깨비 머리색과 몸 색 추첨. rng 호출 수는 종족과 무관하게 고정한다 (판정은 아래).
   const darkHead = rng.pick(DARKS);
   const bodyRoll = rng.next();
-  const darkBody = rng.pick(DARKS.filter((c) => c !== darkHead));
-  if (species.name === "imp") {
-    palette.skin = darkHead;
-    if (bodyRoll < 0.4) palette.cloth = darkHead;
-    else if (bodyRoll < 0.65) palette.cloth = darkBody;
-    // 나머지 35%는 밝은 옷(FILLS) 그대로
-    // 잉크는 머리보다 더 어둡게 — 윤곽이 머리에 묻히지 않도록
-    palette.ink = "#1c1917";
-  }
+  rng.pick(DARKS);   // (호출 수 고정용 — 예전 "다른 어두운 색" 자리)
 
   // 색 포인트. 호출 수를 고정하기 위해 무조건 두 번 뽑고 나서 판정한다.
   const popRoll = rng.next();
@@ -164,6 +155,23 @@ export function makeCreature(seed, speciesName = "human") {
     // 도깨비 머리는 먹빛이라 피부 포인트가 무의미하다.
     if (species.name === "imp") palette.pop = null;
     else palette.skin = palette.pop.color;
+  }
+
+  // 몸 색. 사람은 옷이라 피부와 다른 색이지만, 개·고양이는 털이고 도깨비는 덩어리라 몸이 머리와
+  // **같거나 비슷한 색**이어야 한 몸으로 읽힌다. (색 포인트가 머리에 붙은 뒤에 정한다 — 몸이 따라가게)
+  if (species.name === "imp") {
+    // 도깨비: 머리는 DARKS 9색 중 하나(먹·회갈·회청·자흑…). 몸은 머리색 그대로 절반, 나머지는 같은 계열의 톤
+    palette.skin = darkHead;
+    if (bodyRoll < 0.5) palette.cloth = darkHead;
+    else if (bodyRoll < 0.8) palette.cloth = shade(darkHead, 1.35);   // 조금 밝은 톤
+    else palette.cloth = shade(darkHead, 0.75);                        // 조금 어두운 톤
+    // 잉크는 머리보다 더 어둡게 — 윤곽이 머리에 묻히지 않도록
+    palette.ink = "#1c1917";
+  } else if (species.name === "pup" || species.name === "cat") {
+    // 개·고양이: 몸은 머리(털)색 그대로 절반, 나머지는 같은 계열의 톤
+    if (bodyRoll < 0.5) palette.cloth = palette.skin;
+    else if (bodyRoll < 0.8) palette.cloth = shade(palette.skin, 0.9);   // 조금 어두운 톤
+    else palette.cloth = shade(palette.skin, 1.06);                       // 조금 밝은 톤
   }
 
   const proportions = makeProportions(rng, archetype);
