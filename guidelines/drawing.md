@@ -45,7 +45,7 @@ WebGL의 `linewidth`는 대부분의 환경에서 1로 고정된다. `THREE.Line
 매 프레임 획을 다시 만들지 않는다. 35마리 × 수십 획을 매 프레임 재생성하면 죽는다.
 
 - 정적인 선 → 크리처당 보일 변형 3벌(잉크+채색)을 미리 굽고 visible 토글로 순환한다.
-  변형은 `drawCreature(spec, variant)`의 지터 위상만 다르다
+  변형은 `draw/index.js` `drawCreature(spec, variant)`의 지터 위상만 다르다
 - 움직이는 것 → 분리된 리그만 변형한다. 계층:
   `group(발) ─ bodyGroup(보일 3벌·꼬리 피벗·팔다리 피벗) ─ headGroup(목 축, 보일 3벌) ─ faceGroup(요) ─ 눈 리그·눈썹·입`
   머리는 목(bodyTop)을 축으로 돌고, 꼬리·팔·다리는 각자의 피벗(뿌리·어깨·엉덩이)에

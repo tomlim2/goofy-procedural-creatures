@@ -6,7 +6,7 @@
 ## 금지
 
 - 생성 경로 어디에서도 `Math.random()`을 부르지 않는다. 난수는 전부 `makeRng(seed)`에서 나온다
-- `Date.now()`, `performance.now()`를 생성 경로에서 읽지 않는다. 시간은 `clocks.js`에서만 쓴다
+- `Date.now()`, `performance.now()`를 생성 경로에서 읽지 않는다. 시간은 `motion/`에서만 쓴다
 - 객체 키 순회 순서에 의존하는 코드를 넣지 않는다. 슬롯 순회는 `SLOTS`의 선언 순서를 따른다
 
 ## rng 호출 순서가 곧 시드다
@@ -28,7 +28,7 @@ for (const slot of Object.keys(SLOTS)) parts[slot] = pickSlot(rng, archetype, sl
 반대로 다음은 **시드를 깨지 않는다.**
 
 - 가중치 숫자만 바꾸는 것 (`DEFAULT_BIAS`의 값 조정) — 결과는 달라지지만 호출 횟수는 같다
-- `draw.js`만 고치는 것. 그리기는 스펙을 소비할 뿐 rng를 소비하지 않는다
+- `draw/`만 고치는 것. 그리기는 스펙을 소비할 뿐 rng를 소비하지 않는다
 - `stroke.js`의 폭·떨림 상수를 바꾸는 것
 
 시드를 깨는 변경을 했으면 커밋 메시지에 적는다.
@@ -51,7 +51,7 @@ while (!valid(parts)) parts = rollAgain(rng);
 
 ## 그리기용 난수는 따로 판다
 
-`draw.js`는 `spec.proportions.wobbleSeed`로 자기 rng를 새로 만든다.
+`draw/`는 `spec.proportions.wobbleSeed`로 자기 rng를 새로 만든다.
 생성용 rng를 그리기에서 이어 쓰지 않는다. 그래야 그리기를 고쳐도 조합이 안 바뀐다.
 
 ## 확인 방법

@@ -1,6 +1,6 @@
 # 리그 구조
 
-`src/scene.js` `buildCreature`. 개체 하나가 어떤 three.js 계층으로 조립되는지.
+`src/scene/rig.js` `buildCreature`가 조립하고 `src/scene/animate.js` `applyState`가 매 프레임 상태를 입힌다. 개체 하나가 어떤 three.js 계층으로 조립되는지.
 
 ## 계층
 

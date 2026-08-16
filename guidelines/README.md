@@ -11,7 +11,7 @@
 | [motion.md](motion.md) | 모션 전체 목록. 종족별 파라미터 표, 상태 객체, 팔 자세 |
 | [rig.md](rig.md) | three.js 계층, 원점 규칙, 무엇을 굽고 무엇을 변형하나 |
 | **규칙 — 어떻게 고치나** | |
-| [determinism.md](determinism.md) | 생성 로직(`rng`/`creature`/`vocabulary`)을 건드릴 때 |
+| [determinism.md](determinism.md) | 생성 로직(`rng`/`creature`/`vocabulary/`)을 건드릴 때 |
 | [parts.md](parts.md) | 파츠를 추가·삭제·변경할 때. 형태와 모션을 섞지 않는다 |
 | [drawing.md](drawing.md) | 선·색·레이어를 건드릴 때 |
 

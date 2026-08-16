@@ -4,9 +4,9 @@
 
 파츠 하나를 추가하려면 세 곳을 손대야 한다. 순서를 지킨다.
 
-1. **`src/vocabulary.js`** — `SLOTS`에 이름을 넣는다. 이름은 `draw.js`의 분기 키와 정확히 같아야 한다
-2. **`src/vocabulary.js`** — 필요하면 `DEFAULT_BIAS`와 아키타입 `bias`에 가중치를 넣는다
-3. **`src/draw.js`** — 해당 이름의 분기를 추가한다
+1. **`src/vocabulary/slots.js`** — `SLOTS`에 이름을 넣는다. 이름은 `draw/`의 분기 키와 정확히 같아야 한다
+2. **`src/vocabulary/`** — 필요하면 `slots.js` `DEFAULT_BIAS`, `archetypes.js`·`species.js` `bias`에 가중치를 넣는다
+3. **`src/draw/`** — 파츠가 속한 파일(`head.js`/`face.js`/`body.js`/`limbs.js`)에 분기를 추가한다
 
 `creature.js`는 대개 손대지 않는다. 새 조합이 다른 파츠와 충돌할 때만 `applyConstraints`에 넣는다.
 
@@ -43,7 +43,7 @@ import('./src/creature.js').then(m => {
 
 ## 형태와 모션을 섞지 않는다
 
-슬롯은 **형태(what it looks like)** 만 담는다. **자세·동작(what it does)** 은 `clocks.js`의
+슬롯은 **형태(what it looks like)** 만 담는다. **자세·동작(what it does)** 은 `motion/`의
 상태다. 한 슬롯에 둘을 섞으면 "뒷짐진 개체는 영원히 뒷짐"이 된다.
 
 | | 어디에 | 예 |
@@ -51,7 +51,7 @@ import('./src/creature.js').then(m => {
 | 형태 | `SLOTS.arms`, `SLOTS.legs` | stick / sleeve / stubby / mitten, boots / tiptoe |
 | 치수 | `SLOTS.armLength` | short / medium / long / verylong — 형태와 독립이라 조합이 4×4 |
 | 쉼 자세 | `proportions.armRest` (개체 성격) | rest / out / behind / up |
-| 자세 전환 | `clocks.js` armPose 상태 | 12~36초마다 다른 자세로 갔다 돌아온다 |
+| 자세 전환 | `motion/limbs.js` armPose 상태 | 12~36초마다 다른 자세로 갔다 돌아온다 |
 
 같은 원리가 눈에도 적용돼 있다: 눈 **종류**(ring/dot/slit)는 슬롯이고, 깜빡임·개방도·
 윙크·^^는 clock 상태다. 새 파츠를 넣을 때 "이게 생김새인가 행동인가"를 먼저 묻는다.

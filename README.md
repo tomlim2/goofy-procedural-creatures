@@ -27,17 +27,19 @@ three.js는 importmap으로 unpkg에서 받는다.
 관심사를 네 층으로 끊었다. 무엇이 있는가, 무엇을 고를 것인가, 어떻게 그릴 것인가,
 언제 움직일 것인가를 섞지 않는다.
 
-| 파일 | 하는 일 |
-| --- | --- |
-| `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 |
-| `src/vocabulary.js` | 파츠 어휘, 아키타입 성향, 기본 가중치, 팔레트 |
-| `src/creature.js` | 시드 → 스펙. 조합 규칙과 제약, 비율 지터 |
-| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 |
-| `src/draw.js` | 스펙 → 획. 파츠별 그리기 |
-| `src/clocks.js` | 개체별 시계. 종족 모션 테이블 — 호흡·깜빡임·시선·놀람·재생성·이모트에 더해 kid 락킹·팔 흔들기·팔 들기·손 흔들기·발 까딱, pup 머리 롤·행복 눈·제자리 스텝, cat 꼬리 스위시·윙크·기지개·꾹꾹이, imp 젤리 워블·팔 휘두르기·중얼거림 |
-| `src/scene.js` | three.js 씬, 그리드 배치, 종이 텍스처 |
-| `reference/` | 참고 자료 출처와 차용 범위 |
-| `guidelines/` | 이 랩을 고칠 때 지키는 규칙 |
+| 파일 / 폴더 | 하는 일 | 문서 |
+| --- | --- | --- |
+| `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | determinism.md |
+| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 | drawing.md |
+| `src/vocabulary/` | 어휘 — `slots.js`(SLOTS·DEFAULT_BIAS) `species.js` `archetypes.js` `palette.js` | character-types.md, parts-catalog.md |
+| `src/creature.js` | 시드 → 스펙. 종족·아키타입·제약·비율 지터·색 포인트 | character-types.md |
+| `src/draw/` | 스펙 → 획. `layout.js`(치수·윤곽) `head.js` `face.js` `body.js` `limbs.js`, `index.js`가 조립 | parts-catalog.md |
+| `src/motion/` | 개체별 시계. `table.js`(종족 파라미터) `face.js` `body.js` `limbs.js` `events.js`, `index.js`가 원본 rng 순서로 조립 | motion.md |
+| `src/scene/` | three.js. `rig.js`(계층 조립) `animate.js`(상태→리그) `paper.js` `material.js` `emote.js`, `index.js`(씬·루프·재생성) | rig.md |
+| `src/main.js` | 진입점. UI 배선 | |
+| `scripts/snapshot.mjs` | 리팩토링 전후 동작 불변 검증 (스펙·지오메트리·60초 모션 궤적) | |
+| `reference/` | 참고 자료 출처와 차용 범위 | |
+| `guidelines/` | 이 랩을 고칠 때 지키는 규칙과 카탈로그 |
 
 ## 고치기 전에
 

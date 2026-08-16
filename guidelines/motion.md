@@ -1,7 +1,7 @@
 # 모션 카탈로그
 
-`src/clocks.js`. 개체마다 시계가 하나씩 있고, 모든 예약은 **출생 시각 기준 상대 시간**이다.
-매 프레임 `update(t)`가 상태 객체를 돌려주고 `scene.js`가 그것을 리그에 적용한다.
+`src/motion/`. `table.js`가 종족별 파라미터, `face.js` `body.js` `limbs.js` `events.js`가 조각, `index.js`가 원본 rng 순서로 조립한다. 개체마다 시계가 하나씩 있고, 모든 예약은 **출생 시각 기준 상대 시간**이다.
+매 프레임 `update(t)`가 상태 객체를 돌려주고 `scene/animate.js`가 그것을 리그에 적용한다.
 
 **원칙** (레퍼런스 실측, video-notes 26~36):
 - 움직임은 이징으로 **매끄럽게**, 선(보일)만 8~10fps로 끓는다
@@ -131,14 +131,14 @@ front/back 전환은 팔이 기준각 근처(0.35rad 이내)로 돌아온 뒤에
 
 ## 새 모션을 넣을 때
 
-1. `MOTION` 테이블에 종족별 파라미터를 넣는다. 없는 종족은 `null`
-2. `makeClock` 상태 변수 → `update` 계산 → 반환 객체에 추가
-3. `scene.update`에서 리그에 적용
+1. `motion/table.js`에 종족별 파라미터를 넣는다. 없는 종족은 `null`
+2. 해당 조각(`face.js`/`body.js`/`limbs.js`/`events.js`)에 `initXxx`·`stepXxx` 추가 → `motion/index.js`에서 **기존 순서 뒤에** 호출 (앞에 끼우면 시드가 깨진다)
+3. `scene/animate.js` `applyState`에서 리그에 적용
 4. 60초 시뮬로 발화 빈도를 센다 (아래 명령). 눈으로만 판단하지 않는다
 
 ```bash
 node --input-type=module -e "
-import('./src/clocks.js').then(({makeClock}) => {
+import('./src/motion/index.js').then(({makeClock}) => {
   const c = makeClock(42, 0, 'kid');
   let n = 0;
   for (let f = 0; f < 3600; f++) { const s = c.update(f/60); if (s.YOUR_STATE) n++; }

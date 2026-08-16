@@ -15,7 +15,7 @@
 
 ## 종족 (SPECIES)
 
-`src/vocabulary.js` `SPECIES`. 줄마다 뽑히고 바로 윗줄과 같으면 한 번 다시 뽑는다.
+`src/vocabulary/species.js`. 줄마다 뽑히고 바로 윗줄과 같으면 한 번 다시 뽑는다.
 kid이 흔해서 두 줄 연속도 자연스럽다.
 
 | 종족 | 가중치 | 골격 | 색 | 전용/편향 파츠 | 지배 모션 |
@@ -30,7 +30,7 @@ kid이 흔해서 두 줄 연속도 자연스럽다.
 
 ## 아키타입 (ARCHETYPES)
 
-`src/vocabulary.js` `ARCHETYPES`. 성향이지 캐릭터가 아니다 — bias에 넣는 슬롯은
+`src/vocabulary/archetypes.js`. 성향이지 캐릭터가 아니다 — bias에 넣는 슬롯은
 그 성향을 규정하는 것만. 그리드에서는 좌·상 이웃과 겹치면 최대 8회 다시 뽑는다.
 
 | 아키타입 | 가중치 | 성향 | 편향 슬롯 |

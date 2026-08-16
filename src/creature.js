@@ -7,7 +7,7 @@
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
 import { makeRng } from "./rng.js";
-import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS } from "./vocabulary.js";
+import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS } from "./vocabulary/index.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
