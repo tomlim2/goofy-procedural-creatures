@@ -14,14 +14,14 @@ const BLINK_TIME = 0.13;
 // 종족별 모션 성격. [min, max]는 이벤트 간격(초), null은 그 모션 없음.
 const MOTION = {
   kid: {
-    // 팔: 스웨이에 맞춰 흔들리고, 이따금 들어 올리거나 손을 흔든다
-    armSwing: 0.18, armLift: [6, 16], armWave: [10, 26],
-    // 다리: 발 까딱, 폴짝 때 접힘
-    legTap: [4, 11], legStep: null,
+    // 팔: 레퍼런스에서 팔은 벌린 채 미세하게만 흔들린다. 큰 동작은 드물게.
+    armSwing: 0.045, armLift: [18, 40], armWave: [30, 70],
+    // 다리: 발 까딱 드물게. 다리는 바닥에 붙어 거의 정지한다.
+    legTap: [12, 30], legStep: null,
     sway: [0.012, 0.032], swayPeriod: [2.6, 4.6],
     rock: 0.006,
     roll: null, dip: null,
-    hop: [14, 34], stretch: null,
+    hop: [40, 90], stretch: null,
     tilt: [7, 18], tiltAmp: 0.1,
     jelly: null, shiver: [26, 60],
     arm: [5, 14], wink: null, happyHold: null,
@@ -31,8 +31,8 @@ const MOTION = {
   },
   pup: {
     armSwing: 0, armLift: null, armWave: null,
-    // 앞발 파닥, 제자리 스텝(네 발이 번갈아)
-    legTap: [3, 8], legStep: [8, 20],
+    // 레퍼런스의 개 다리는 4초 내내 바닥 고정. 몸이 흔들려 다리가 따라 보일 뿐이다.
+    legTap: [14, 32], legStep: [30, 70],
     sway: [0.004, 0.01], swayPeriod: [3, 6],
     rock: 0.003,
     roll: { amp: [0.07, 0.14], period: [2.4, 4.8] },
@@ -47,8 +47,8 @@ const MOTION = {
   },
   cat: {
     armSwing: 0, armLift: null, armWave: null,
-    // 앞발 꾹꾹이(느리게 번갈아), 스텝은 드물게
-    legTap: [5, 12], legStep: [14, 30],
+    // 앞발 꾹꾹이 드물게, 스텝은 더 드물게
+    legTap: [16, 36], legStep: [40, 90],
     sway: [0.002, 0.007], swayPeriod: [3.5, 7],
     rock: 0.004,
     roll: null, dip: null,
@@ -61,13 +61,13 @@ const MOTION = {
     emotes: ["heart", "quest", "bang"]
   },
   imp: {
-    // 팔을 크게 휘두르고 잘 들어 올린다
-    armSwing: 0.28, armLift: [5, 12], armWave: [12, 30],
-    legTap: [3, 9], legStep: null,
+    // 짧은 스텁 팔. 젤리 워블에 딸려 미세하게 떨릴 뿐이다.
+    armSwing: 0.06, armLift: [22, 50], armWave: [40, 90],
+    legTap: [14, 34], legStep: null,
     sway: [0.015, 0.04], swayPeriod: [2, 3.8],
     rock: 0.004,
     roll: null, dip: null,
-    hop: [20, 50], stretch: null,
+    hop: [50, 110], stretch: null,
     tilt: [8, 18], tiltAmp: 0.09,
     jelly: { amp: [0.008, 0.018], freq: [1.1, 1.9] }, shiver: [12, 30],
     arm: [8, 20], wink: null, happyHold: null,
@@ -364,13 +364,17 @@ export function makeClock(seed, birth = 0, species = "kid") {
       for (const side of [-1, 1]) {
         const key = String(side);
         const outward = -side;
-        if (armLiftSide === side) armOffset[key] += outward * 1.9;
+        // 레퍼런스 실측: 팔 동작은 작다. 들기 ~0.5rad, 손 흔들기는 그 위에 잔진동.
+        if (armLiftSide === side) armOffset[key] += outward * 0.55;
         if (armWaveK >= 0 && armWaveSide === side) {
           const env = Math.sin(Math.min(1, armWaveK) * Math.PI);
-          armOffset[key] += outward * 2.2 * env + Math.sin(armWaveK * Math.PI * 7) * 0.45 * env;
+          armOffset[key] += outward * 0.7 * env + Math.sin(armWaveK * Math.PI * 6) * 0.18 * env;
         }
-        // 폴짝 때 팔을 위로 던진다
-        if (hopY > 0) armOffset[key] += outward * hopY * 12;
+        // 폴짝 때 팔이 살짝 뜬다
+        if (hopY > 0) armOffset[key] += outward * hopY * 4;
+        // 관절 지터 — 팔도 선처럼 미세하게 끓는다. 이게 레퍼런스 팔의 실체다.
+        armOffset[key] += Math.sin(t * 7.3 + side * 2.1 + armSwingPhase) * 0.012
+          + Math.sin(t * 11.7 + side * 0.7) * 0.008;
       }
 
       // ── 다리 ──
@@ -384,7 +388,7 @@ export function makeClock(seed, birth = 0, species = "kid") {
       if (legTapStart >= 0) {
         const k = (t - legTapStart) / 0.9;
         if (k >= 1) legTapStart = -1;
-        else legOffset[legTapIndex] += Math.abs(Math.sin(k * Math.PI * 3)) * 0.22 * (legTapIndex % 2 ? -1 : 1);
+        else legOffset[legTapIndex] += Math.abs(Math.sin(k * Math.PI * 3)) * 0.09 * (legTapIndex % 2 ? -1 : 1);
       }
       // 제자리 스텝 — 네 발이 대각선으로 번갈아 (네발)
       if (t >= nextLegStep && legStepStart < 0) {
@@ -397,14 +401,16 @@ export function makeClock(seed, birth = 0, species = "kid") {
         else {
           const env = Math.sin(Math.min(1, k) * Math.PI);
           const ph = k * Math.PI * 2 * 3;
-          legOffset[0] += Math.sin(ph) * 0.18 * env;
-          legOffset[3] += Math.sin(ph) * 0.18 * env;
-          legOffset[1] += Math.sin(ph + Math.PI) * 0.18 * env;
-          legOffset[2] += Math.sin(ph + Math.PI) * 0.18 * env;
+          legOffset[0] += Math.sin(ph) * 0.07 * env;
+          legOffset[3] += Math.sin(ph) * 0.07 * env;
+          legOffset[1] += Math.sin(ph + Math.PI) * 0.07 * env;
+          legOffset[2] += Math.sin(ph + Math.PI) * 0.07 * env;
         }
       }
       // 폴짝 준비·착지 때 다리 접힘 (스쿼시와 함께)
-      if (squashY < 0) { legOffset[0] += squashY * 3; legOffset[1] -= squashY * 3; }
+      if (squashY < 0) { legOffset[0] += squashY * 1.5; legOffset[1] -= squashY * 1.5; }
+      // 다리 관절 지터 — 아주 미세하게. 바닥에 붙은 발이 떠 보이면 안 된다.
+      for (let i = 0; i < 4; i += 1) legOffset[i] += Math.sin(t * 6.1 + i * 1.9) * 0.006;
 
       // 꼬리 — 상시 스위시(고양이) + 간헐 플릭
       let tailAngle = tailSwish
