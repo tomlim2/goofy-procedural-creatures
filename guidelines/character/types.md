@@ -97,15 +97,15 @@
 | 종족 | skeleton | horns | eyes | arms | tail | 기타 |
 | --- | --- | --- | --- | --- | --- | --- |
 | human | biped | none | not cyclops | ● | ✗ | armLength medium만 |
-| pup | quad | none | not cyclops | ✗ | ● | |
-| cat | quad | none | not cyclops | ✗ | ● | |
+| pup | quad | none | not cyclops | ✗ | ● | hair none (털이지 머리카락이 아니다) |
+| cat | quad | none | not cyclops | ✗ | ● | hair none |
 | imp | biped | (자유) | (자유) | ● | ✗ | 머리 어두움(휘도<90) |
 
 ## 제약 (applyConstraints)
 
 같이 나오면 그림이 깨지는 조합. **다시 뽑지 않고 결정적으로 덮어쓴다.** 순서대로:
 
-1. **종족 forbid** (species.js) — 맨 먼저. human 뿔→none·cyclops→wide·long 팔→medium, pup 뿔→none·cyclops→dot, cat 뿔→none·cyclops→slit
+1. **종족 forbid** (species.js) — 맨 먼저. human 뿔→none·cyclops→wide·long 팔→medium, pup 뿔·머리카락→none·cyclops→dot, cat 뿔·머리카락→none·cyclops→slit
 2. 헬멧·항아리 → 머리카락 없음. 모자·밴드 → 짧은 머리만
 3. 모히칸 → 모자 없음. 왕관 뿔 → 모자 없음, 머리카락 none/tuft만
 4. 더듬이 → 75% 확률로 귀 없음
