@@ -5,7 +5,7 @@ import { Sketch } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, eyeGeometry } from "./layout.js";
 import { drawHead, drawEars, drawPupEars, drawCatEars, drawHair, drawHeadgear, drawHorns } from "./head.js";
-import { drawEyes, drawFace2, drawEyewear, drawNose } from "./face.js";
+import { drawEyes, drawFace2, drawEyewear, drawNose, drawWhiskers } from "./face.js";
 import { drawBody, drawMarks } from "./body.js";
 
 export { facePartKinds, facePartSketch } from "./face.js";
@@ -55,18 +55,7 @@ export function drawCreature(spec, variant = 0) {
   drawNose(faceFrontInk, faceFrontFills, spec, box, eyes);
   // 눈썹과 입은 여기서 굽지 않는다. 상태 전환을 위해 scene이
   // facePartSketch로 별도 메시를 세운다.
-  if (spec.species === "cat") {
-    const wy = box.headCy - box.headRy * 0.3;
-    for (const side of [-1, 1]) {
-      for (let i = 0; i < 3; i += 1) {
-        const y0 = wy + (i - 1) * 0.028;
-        faceInk.stroke([
-          [side * box.headRx * 0.3, y0],
-          [side * (box.headRx * 0.3 + 0.09), y0 + (i - 1) * 0.012]
-        ], { color: spec.palette.ink, width: 0.006, jitter: 0.004 });
-      }
-    }
-  }
+  drawWhiskers(faceInk, spec, box);   // 고양이 수염 — 얼굴 층이라 윤곽 위로 그려져 밖으로 뚫고 나올 수 있다
   drawEyewear(faceFrontInk, faceFrontFills, spec, box, eyes);
   drawHair(crownInk, spec, box, noise);
   drawHeadgear(frontInk, frontFills, spec, box);   // 모자는 귀 다음 — 귀 밑동을 덮는다

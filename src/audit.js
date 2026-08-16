@@ -4,7 +4,7 @@
 //   audit.html?seed=0z0y9qe
 //
 // 판단 기준(기대값):
-//   눈썹(none 아님)·입·코(주둥이)·안경·볼 — 모든 상태에서 보인다
+//   눈썹(none 아님)·입·코(주둥이)·안경·볼·수염(고양이) — 모든 상태에서 보인다
 //   정지 눈(dot·sleepy·cross·spiral·slit·half) — 잠들면 잠 눈꺼풀이 덮으므로 그때만 안 보여도 된다
 //   눈 리그의 동공(ring·wide·cyclops) — 깜빡임·^^·윙크(그쪽)·잠에는 감기니 그때는 빼고 본다
 //   ^^ 아치 — 행복·윙크(그쪽)일 때 보인다 · 잠 눈꺼풀 — 잠들었을 때 보인다
@@ -12,7 +12,7 @@
 import * as THREE from "three";
 import { createScene } from "./scene/index.js";
 import { makeGrid, layout, eyeGeometry, facePartKinds } from "./character/index.js";
-import { drawEyes, drawFace2, drawNose, drawEyewear } from "./character/draw/face.js";
+import { drawEyes, drawFace2, drawNose, drawEyewear, drawWhiskers } from "./character/draw/face.js";
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng, formatSeed } from "./rng.js";
 import { sketchMesh } from "./scene/material.js";
@@ -111,6 +111,7 @@ function audit() {
     if (spec.parts.face2 !== "none") mk("face2", (ink, fills) => drawFace2(ink, fills, spec, box, eyes), 2.3, 2.4, "face");
     if (spec.species === "pup" || spec.parts.nose !== "none") mk("nose", (ink, fills) => drawNose(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");
     if (spec.parts.eyewear !== "none") mk("eyewear", (ink, fills) => drawEyewear(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");
+    if (spec.species === "cat") mk("whiskers", (ink) => drawWhiskers(ink, spec, box), 2.3, 2.4, "face");
 
     const reg = region(item);
     const headPx = reg.w / 1.5;   // region 폭은 머리 폭의 1.5배 — 머리 폭(픽셀)

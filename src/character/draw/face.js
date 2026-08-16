@@ -99,6 +99,24 @@ export function drawFace2(ink, fills, spec, box, eyes) {
   }
 }
 
+// 고양이 수염 — 양쪽 세 가닥. 길이는 개체별(머리 반폭의 0.42~0.92배): 반 넘는 개체는 수염이 **머리 윤곽을 뚫고 밖으로** 나온다.
+// 얼굴 층(2.4)에 그리므로 윤곽·귀·모자 위에 얹히고 종이 위까지 뻗는다. 얼굴 돌림을 따라 같이 밀린다
+export function drawWhiskers(ink, spec, box) {
+  if (spec.species !== "cat") return;
+  const roll = (spec.proportions.wobbleSeed % 97) / 97;
+  const len = box.headRx * (0.42 + roll * 0.5);
+  const wy = box.headCy - box.headRy * 0.3;
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 3; i += 1) {
+      const y0 = wy + (i - 1) * 0.028;
+      const x0 = side * box.headRx * 0.3;
+      // 살짝 처지는 부채꼴 — 긴 수염일수록 끝이 더 벌어진다
+      ink.stroke([[x0, y0], [x0 + side * len * 0.55, y0 + (i - 1) * 0.008 * (len / 0.09)], [x0 + side * len, y0 + (i - 1) * 0.02 * (len / 0.09) - 0.004]],
+        { color: spec.palette.ink, width: 0.006, jitter: 0.004 });
+    }
+  }
+}
+
 export function drawBrow(ink, spec, box, eyes, kindOverride) {
   const kind = kindOverride || spec.parts.brow;
   if (kind === "none") return;
