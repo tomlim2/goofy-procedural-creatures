@@ -91,7 +91,8 @@ for (const slot of slots) {
   console.log();
 }
 
-if (violations.length) {
+if (checkOnly) {
+  if (violations.length) {
     console.log(`정체성 위반 ${violations.length}건`);
     for (const v of violations.slice(0, 30)) console.log("  " + v);
     process.exit(1);
