@@ -87,7 +87,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 
 ## 재생성 시
 
-`regenerate(index)`가 옛 그룹을 dispose하고 새 개체를 같은 슬롯에 세운다.
+`regenerate(index)`가 기존 그룹을 dispose하고 새 개체를 같은 슬롯에 세운다.
 새 시계는 `clockNow`를 출생 시각으로 받는다. 종족은 유지된다. `settle`도 같이 한다.
 
 ## 자주 깨지는 지점

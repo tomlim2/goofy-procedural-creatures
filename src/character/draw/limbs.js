@@ -6,7 +6,7 @@ import { makeNoise, makeRng } from "../../rng.js";
 import { layout, darken } from "./layout.js";
 
 // 팔 치수. 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기준 1, long은 그 1.64배(바닥을 쓸 만큼).
-// 기준 팔 길이 0.242는 옛 0.11×2.2 — 더 짧은 단계들은 손이 몸통 근처라 의미가 없어 뺐다.
+// 기준 팔 길이 0.242 — 이보다 짧으면 손이 몸통 근처라 팔로 안 보인다.
 // 위팔:아래팔 = 0.48:0.52. 아래팔이 살짝 길어야 손이 멀리 간다.
 const ARM_BASE = 0.242;
 const ARM_LENGTH_SCALE = { medium: 1, long: 1.64 };
@@ -160,8 +160,8 @@ export function limbSketches(spec) {
 }
 
 // 바인드 포즈 — 캐릭터가 아무 모션도 받지 않았을 때의 팔. T포즈: 어깨 수평(1.57 outward),
-// 팔꿈치 0. 캐릭터에 "자세"란 없다 — 행위(만세·인사·팔짱…)는 전부 motion/actions.js다.
-// 행위가 끝나면 여기로 돌아온다.
+// 팔꿈치 0. 캐릭터에 "자세"란 없다 — idle과 행위(만세·인사·팔짱…)는 전부 motion/actions.js다.
+// 화면에서 T포즈는 BIND 뷰에서만 보인다.
 //
 // [어깨각, 팔꿈치각]. outward(몸 바깥) 양수. 세계 rotation.z로 바꾸려면 side를 곱한다:
 // 위팔은 (0, -len)으로 늘어진 채 굽고 rotation.z(반시계 양수)로 든다. 왼팔(side -1, x<0)을
