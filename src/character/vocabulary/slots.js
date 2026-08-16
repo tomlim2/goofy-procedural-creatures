@@ -12,7 +12,8 @@ export const SLOTS = {
   hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep", "pigtails", "curly"],
   headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
-  ears: ["none", "round", "pointy", "flap", "long", "fold"],
+  // pointy는 크기 셋 — pointy(작음) · pointyMid(중간) · pointyBig(큼). 고양이 정수리 귀, 개 쫑긋 귀, 사람·도깨비 뾰족귀 다 같은 배율
+  ears: ["none", "round", "pointy", "pointyMid", "pointyBig", "flap", "long", "fold"],
   nose: ["hook", "dot", "wedge", "long", "none"],
   // 볼·눈가 디테일. 레퍼런스의 눈물 자국과 볼터치.
   face2: ["none", "tears", "blush", "freckles"],
@@ -53,7 +54,7 @@ export const DEFAULT_BIAS = {
   hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["bonnet", 1.5], ["helmet", 1], ["pot", 1]],
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
-  ears: [["none", 4], ["round", 2], ["pointy", 2], ["flap", 1], ["fold", 1]],
+  ears: [["none", 4], ["round", 2], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 1]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1]],
   marks: [["none", 4], ["stripes", 2], ["hatch", 2], ["dots", 2], ["patch", 1], ["spots", 1]],
   nose: [["hook", 3], ["dot", 2], ["wedge", 2], ["none", 2], ["long", 1]],

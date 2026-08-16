@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 108파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 110파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -74,8 +74,9 @@ beret(기운 원반 + 꼭지) / bonnet(양옆 눈높이에서 정수리 위로 �
 none / curved / straight / antenna(끝에 공) / nub(작은 혹) / ram(나선) / crown(정수리 스파이크 열).
 imp는 1.8배.
 
-### ears (6)
-none / round / pointy(옆으로 뾰족) / flap(아래로 늘어진 호) / long(긴 로브, 비-pup) / fold(접힌 삼각).
+### ears (8)
+none / round / pointy · pointyMid · pointyBig(뾰족귀 — 크기 셋: 1 · 1.4 · 1.85배, 모양은 같다) / flap(아래로 늘어진 호) / long(긴 로브, 비-pup) / fold(접힌 삼각).
+**cat**의 pointy는 정수리에 서고 크기 셋이 다 있다(중간 이상은 안쪽 귀 선이 하나 더). 종족 bias pointy 3 · pointyMid 3 · pointyBig 2 · fold 2 · round 1.
 **pup**은 같은 값을 개 귀로 그린다 — 뿌리는 **머리 윤곽 위 두 자리** — 위쪽 모서리(정수리보다 좀 밑, θ 50°: pointy·round·fold)와 옆구리(눈 양옆보다 조금 옆, θ 88°:
 flap·long) — 이고 귀는 그 자리의 법선을 **반대 기울기로 탄다**(수직 기준 거울상 축 — 세모귀·동그란 귀는 위·안쪽으로 기울어 서고, 로브는 늘어지되
 0.25~0.35rad 안쪽으로 모인다). 귀 몸통은 머리 **밖** 종이 위에 놓인다 — 위쪽 귀는 윤곽에 밑변을 박고 0.02 밖으로, 긴 귀(flap·long)는 0.09 밖으로

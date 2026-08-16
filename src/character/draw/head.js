@@ -35,22 +35,33 @@ export function drawHead(ink, fills, spec, box, noise) {
   return path;
 }
 
+// pointy 크기 배율. pointyMid·pointyBig는 모양은 pointy, 길이·폭만 크다
+const POINTY_SCALE = { pointy: 1, pointyMid: 1.4, pointyBig: 1.85 };
+const earKind = (value) => (POINTY_SCALE[value] ? "pointy" : value);
+
 export function drawEars(ink, fills, spec, box) {
-  const kind = spec.parts.ears;
+  const kind = earKind(spec.parts.ears);
+  const size = POINTY_SCALE[spec.parts.ears] || 1;
   if (kind === "none") return;
   // 개 귀는 머리 뒤가 아니라 **머리 위에** 그린다 (drawPupEars, 머리 다음) — 안쪽으로 기운 귀가 얼굴에 가려지지 않게
   if (spec.species === "pup") return;
 
   if (spec.species === "cat" && kind === "pointy") {
-    // 고양이 귀는 옆이 아니라 정수리에 선다
+    // 고양이 귀는 옆이 아니라 정수리에 선다. 크기 셋 — 큰 귀는 밑변도 넓고 안쪽 귀 선이 하나 더
     for (const side of [-1, 1]) {
       const bx = side * box.headRx * 0.55;
       const by = box.headCy + box.headRy * 0.78;
+      const w = 0.045 * (0.7 + 0.3 * size);
+      const h = 0.085 * size;
       ink.stroke([
-        [bx - side * 0.04, by],
-        [bx + side * 0.015, by + 0.085],
-        [bx + side * 0.055, by - 0.01]
+        [bx - side * w * 0.9, by],
+        [bx + side * w * 0.3, by + h],
+        [bx + side * w * 1.2, by - 0.01]
       ], { color: spec.palette.ink, width: 0.011 });
+      if (size > 1.2) {
+        // 안쪽 귀 선
+        ink.stroke([[bx - side * w * 0.35, by + 0.008], [bx + side * w * 0.3, by + h * 0.62]], { color: spec.palette.ink, width: 0.007 });
+      }
     }
     return;
   }
@@ -64,7 +75,8 @@ export function drawEars(ink, fills, spec, box) {
         color: spec.palette.ink, width: 0.011
       });
     } else if (kind === "pointy") {
-      ink.stroke([[x - 0.01, y + 0.05], [x + side * 0.075, y + 0.02], [x - 0.01, y - 0.05]], {
+      // 옆으로 뾰족한 귀 — 크기 배율(pointyMid·pointyBig)로 길고 넓어진다
+      ink.stroke([[x - 0.01, y + 0.05 * size], [x + side * 0.075 * size, y + 0.02], [x - 0.01, y - 0.05 * size]], {
         color: spec.palette.ink, width: 0.011
       });
     } else if (kind === "long") {
@@ -93,7 +105,8 @@ export function drawEars(ink, fills, spec, box) {
 // 개 귀 — 머리(채색·윤곽) **위에** 그린다. 안쪽으로 기운 귀라 머리 뒤에 그리면 얼굴에 묻힌다.
 export function drawPupEars(ink, fills, spec, box) {
   if (spec.species !== "pup") return;   // 개만. (빠지면 모든 종족 머리에 개 귀가 얹혀 뿔처럼 보인다)
-  const kind = spec.parts.ears;
+  const kind = earKind(spec.parts.ears);
+  const size = POINTY_SCALE[spec.parts.ears] || 1;
   if (kind === "none") return;
   // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위** 두 자리 중 하나고, 귀는 그 자리의 법선을 **반대 기울기로** 탄다
   // (법선을 수직에 대해 거울상으로 뒤집은 축 — 바깥으로 벌어지지 않고 안쪽으로 모인다):
@@ -129,10 +142,10 @@ export function drawPupEars(ink, fills, spec, box) {
     const local = (u, v) => [bx + ax * u + px * v, by + ay * u + py * v];
     let path;
     if (kind === "pointy") {
-      // 밑변은 윤곽까지 끌어와 박고(u = −OUT), 끝은 귀 축을 따라 위로. 폭 0.09의 세모
-      const len = ry * 0.6;
+      // 밑변은 윤곽까지 끌어와 박고(u = −OUT), 끝은 귀 축을 따라 위로. 폭 0.09의 세모 (크기 배율로 길고 넓게)
+      const len = ry * 0.6 * size;
       const b0 = -OUT - 0.01;
-      path = [local(b0, 0.05), local(len, 0.004), local(b0, -0.04)];
+      path = [local(b0, 0.05 * (0.8 + 0.2 * size)), local(len, 0.004), local(b0, -0.04 * (0.8 + 0.2 * size))];
     } else if (kind === "round") {
       // 귀 축 방향으로 길쭉한 동그란 귀 — 안쪽이 윤곽에 살짝 걸친다
       const [cx, cy] = local(-OUT + 0.055, 0);

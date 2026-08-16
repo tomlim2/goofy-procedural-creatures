@@ -8,7 +8,7 @@ export const ARCHETYPES = [
     weight: 3,
     bias: {
       horns: [["curved", 4], ["straight", 3], ["nub", 2], ["none", 1]],
-      ears: [["pointy", 3], ["flap", 2], ["round", 2], ["none", 1]],
+      ears: [["pointy", 2], ["pointyMid", 1], ["flap", 2], ["round", 2], ["none", 1]],
       mouth: [["teeth", 4], ["wave", 2], ["open", 2], ["line", 1]],
       nose: [["wedge", 3], ["hook", 2], ["dot", 2], ["none", 1]],
       hair: [["spikes", 3], ["mop", 2], ["mohawk", 2], ["tuft", 2], ["none", 2]],
