@@ -37,56 +37,8 @@ export function drawHead(ink, fills, spec, box, noise) {
 export function drawEars(ink, fills, spec, box) {
   const kind = spec.parts.ears;
   if (kind === "none") return;
-
-  if (spec.species === "pup") {
-    // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위** 두 자리 중 하나고, 귀는 그 자리의 **바깥 법선을 타고 기운다**:
-    //   위쪽 모서리(정수리보다 좀 밑, θ≈50°) — pointy 쫑긋 세모귀 · round 동그란 귀 · fold 접힌 귀. 법선(위·바깥) 방향으로 선다
-    //   옆구리(눈 양옆보다 조금 옆, θ≈88°) — flap 로브(레퍼런스 비글) · long 바셋. 늘어지되 법선 쪽으로 기울어 끝이 벌어진다
-    // θ는 타원(headRx·headRy) 위 극각(정수리에서 잰 각). 채운 로브 + 두 번 덧그은 윤곽. none은 없음.
-    const earFill = darken(spec.palette.skin, 0.8);
-    const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
-    const upper = kind === "pointy" || kind === "round" || kind === "fold";
-    const theta = upper ? 0.88 : 1.53;
-    const rx = box.headRx, ry = box.headRy;
-    // 점 목록을 (cx, cy) 기준으로 angle만큼 돌린다 (반시계 양수)
-    const rotate = (pts, cx, cy, angle) => {
-      const c = Math.cos(angle), s = Math.sin(angle);
-      return pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]);
-    };
-    for (const side of [-1, 1]) {
-      // 윤곽 위 뿌리(bx, by), 바깥 법선 n, 접선 t(정수리 쪽 +)
-      const bx = side * rx * Math.sin(theta);
-      const by = box.headCy + ry * Math.cos(theta);
-      let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
-      const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
-      const tx = -ny * side, ty = nx * side;
-      const local = (u, v) => [bx + nx * u + tx * v, by + ny * u + ty * v];   // u 법선, v 접선
-      const normalTilt = Math.atan2(nx * side, ny);   // 수직에서 법선까지의 각 (바깥쪽 양수)
-      let path;
-      if (kind === "pointy") {
-        // 밑변은 윤곽 위, 끝은 법선을 따라
-        const len = ry * 0.6;
-        path = [local(-0.01, 0.045), local(len, 0.005), local(-0.01, -0.04)];
-      } else if (kind === "round") {
-        // 법선 방향으로 길쭉한 동그란 귀
-        const [cx, cy] = local(0.03, 0);
-        path = rotate(blobPath(cx, cy, 0.036, 0.046, { lumps: 3, amount: 0.15, noise: null }), cx, cy, -side * normalTilt);
-      } else if (kind === "fold") {
-        // 접힌 귀 — 법선을 따라 삐죽 나갔다가 끝이 턱 쪽(−접선)으로 접혀 처진다
-        path = [local(-0.005, 0.03), local(0.07, 0.035), local(0.085, -0.01), local(0.06, -0.08), local(0.02, -0.065), local(-0.005, -0.03)];
-      } else {
-        // flap / long — 뿌리에서 늘어지되 법선 쪽으로 기울어(0.35rad) 끝이 바깥으로 벌어지는 로브
-        const len = ry * (kind === "long" ? 0.95 : 0.65);
-        const tilt = 0.35;
-        const cx = bx + side * Math.sin(tilt) * (len * 0.5 - 0.005);
-        const cy = by - Math.cos(tilt) * (len * 0.5 - 0.005);
-        path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
-      }
-      fills.fill(path, earFill);
-      ink.outline(path, earInk);
-    }
-    return;
-  }
+  // 개 귀는 머리 뒤가 아니라 **머리 위에** 그린다 (drawPupEars, 머리 다음) — 안쪽으로 기운 귀가 얼굴에 가려지지 않게
+  if (spec.species === "pup") return;
 
   if (spec.species === "cat" && kind === "pointy") {
     // 고양이 귀는 옆이 아니라 정수리에 선다
@@ -134,6 +86,61 @@ export function drawEars(ink, fills, spec, box) {
         color: spec.palette.ink, width: 0.011
       });
     }
+  }
+}
+
+// 개 귀 — 머리(채색·윤곽) **위에** 그린다. 안쪽으로 기운 귀라 머리 뒤에 그리면 얼굴에 묻힌다.
+export function drawPupEars(ink, fills, spec, box) {
+  const kind = spec.parts.ears;
+  if (kind === "none") return;
+  // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위** 두 자리 중 하나고, 귀는 그 자리의 법선을 **반대 기울기로** 탄다
+  // (법선을 수직에 대해 거울상으로 뒤집은 축 — 바깥으로 벌어지지 않고 안쪽으로 모인다):
+  //   위쪽 모서리(정수리보다 좀 밑, θ≈50°) — pointy 쫑긋 세모귀 · round 동그란 귀 · fold 접힌 귀. 위·안쪽으로 기울어 선다
+  //   옆구리(눈 양옆보다 조금 옆, θ≈88°) — flap 로브(레퍼런스 비글) · long 바셋. 늘어지되 끝이 얼굴 쪽으로 모인다
+  // θ는 타원(headRx·headRy) 위 극각(정수리에서 잰 각). 채운 로브 + 두 번 덧그은 윤곽. none은 없음.
+  const earFill = darken(spec.palette.skin, 0.8);
+  const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
+  const upper = kind === "pointy" || kind === "round" || kind === "fold";
+  const theta = upper ? 0.88 : 1.53;
+  const rx = box.headRx, ry = box.headRy;
+  // 점 목록을 (cx, cy) 기준으로 angle만큼 돌린다 (반시계 양수)
+  const rotate = (pts, cx, cy, angle) => {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    return pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]);
+  };
+  for (const side of [-1, 1]) {
+    // 윤곽 위 뿌리(bx, by), 바깥 법선 n, 접선 t(정수리 쪽 +)
+    const bx = side * rx * Math.sin(theta);
+    const by = box.headCy + ry * Math.cos(theta);
+    let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
+    const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+    // 귀 축 = 법선의 반대 기울기 (수직 기준 거울상). 접선은 뿌리 자리의 것 그대로.
+    const ax = -nx, ay = ny;
+    const tx = -ny * side, ty = nx * side;
+    const local = (u, v) => [bx + ax * u + tx * v, by + ay * u + ty * v];   // u 귀 축, v 접선
+    const normalTilt = Math.atan2(nx * side, ny);   // 수직에서 법선까지의 각 (바깥쪽 양수)
+    let path;
+    if (kind === "pointy") {
+      // 밑변은 윤곽 위, 끝은 법선을 따라
+      const len = ry * 0.6;
+      path = [local(-0.01, 0.045), local(len, 0.005), local(-0.01, -0.04)];
+    } else if (kind === "round") {
+      // 귀 축 방향으로 길쭉한 동그란 귀
+      const [cx, cy] = local(0.03, 0);
+      path = rotate(blobPath(cx, cy, 0.036, 0.046, { lumps: 3, amount: 0.15, noise: null }), cx, cy, side * normalTilt);
+    } else if (kind === "fold") {
+      // 접힌 귀 — 법선을 따라 삐죽 나갔다가 끝이 턱 쪽(−접선)으로 접혀 처진다
+      path = [local(-0.005, 0.03), local(0.07, 0.035), local(0.085, -0.01), local(0.06, -0.08), local(0.02, -0.065), local(-0.005, -0.03)];
+    } else {
+      // flap / long — 뿌리에서 늘어지되 반대 기울기(0.35rad 안쪽)로 끝이 얼굴 쪽으로 모이는 로브
+      const len = ry * (kind === "long" ? 0.95 : 0.65);
+      const tilt = -0.35;
+      const cx = bx + side * Math.sin(tilt) * (len * 0.5 - 0.005);
+      const cy = by - Math.cos(tilt) * (len * 0.5 - 0.005);
+      path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
+    }
+    fills.fill(path, earFill);
+    ink.outline(path, earInk);
   }
 }
 

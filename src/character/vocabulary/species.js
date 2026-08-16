@@ -30,11 +30,13 @@ export const SPECIES = [
     name: "pup",
     weight: 2,
     forbid: {
-      eyes: { cyclops: "dot" }
+      eyes: { cyclops: "dot" },
+      // 개에게 뿔은 없다 — 전부 none
+      horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" }
     },
     identity: {
       skeleton: "quad",
-      horns: ["none", "nub"],
+      horns: ["none"],
       eyes: { not: ["cyclops"] },
       arms: false,
       tail: true
@@ -44,7 +46,7 @@ export const SPECIES = [
       legs: [["stub", 4], ["stick", 2], ["float", 1.5], ["boots", 1]],
       // 귀 — 늘어진 로브(flap·long)가 기본, 쫑긋(pointy)·동그란(round)·접힌(fold) 귀도 섞인다
       ears: [["flap", 4], ["long", 3], ["pointy", 2], ["round", 1.5], ["fold", 1]],
-      horns: [["none", 8], ["nub", 1]],
+      horns: [["none", 1]],
       hair: [["none", 5], ["tuft", 2], ["wisp", 1]],
       headgear: [["none", 8], ["cap", 1]],
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
@@ -59,7 +61,8 @@ export const SPECIES = [
     name: "cat",
     weight: 2,
     forbid: {
-      eyes: { cyclops: "slit" }
+      eyes: { cyclops: "slit" },
+      horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" }
     },
     identity: {
       skeleton: "quad",

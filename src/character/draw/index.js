@@ -4,7 +4,7 @@
 import { Sketch } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, eyeGeometry } from "./layout.js";
-import { drawHead, drawEars, drawHair, drawHeadgear, drawHorns } from "./head.js";
+import { drawHead, drawEars, drawPupEars, drawHair, drawHeadgear, drawHorns } from "./head.js";
 import { drawEyes, drawFace2, drawEyewear, drawNose } from "./face.js";
 import { drawBody, drawMarks } from "./body.js";
 
@@ -35,6 +35,7 @@ export function drawCreature(spec, variant = 0) {
 
   drawEars(headInk, headFills, spec, box);
   drawHead(headInk, headFills, spec, box, noise);
+  drawPupEars(headInk, headFills, spec, box);   // 개 귀는 머리 위 (안쪽으로 기울어도 얼굴 밖으로 보이게)
   drawHorns(headInk, headFills, spec, box, noise);
   drawEyes(faceInk, faceFills, spec, box, eyes);
   drawFace2(faceInk, faceFills, spec, box, eyes);
