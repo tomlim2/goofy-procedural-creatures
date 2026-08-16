@@ -19,6 +19,7 @@ export { ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
 
 // 바인드 상태 — 아무 모션도 받지 않은 캐릭터. 모든 값이 정지·기본이고 팔은 T포즈다.
 // scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다. 형태·파츠를 판단할 때 쓴다.
+// (모션의 기본 상태는 이게 아니라 idle이다 — actions.js. 바인드는 모션이 없을 때다.)
 export const BIND_STATE = Object.freeze({
   breathe: 0, lid: 0, gaze: [0, 0], aperture: 1, regen: false, emote: null,
   browAlt: false, mouthAlt: false,
@@ -63,14 +64,15 @@ export function makeClock(seed, birth = 0, species = "kid", rig = null) {
   const tailFlick = E.initTailFlick(rng, M);     // 24
   const jelly = R.initJelly(rng, M);             // 25
 
-  // 강제 행위 (화면 ACTION 카드). 예약된 행위 대신 이걸 계속 한다. null이면 예약대로.
+  // 강제 행위 (화면 ACTION 카드). 예약된 행위 대신 이걸 계속 한다. null이면 예약대로,
+  // "idle"이면 행위 없이 idle만.
   let forced = null;
   let forcedSide = 1;
   let forcedStart = -1;
 
   return {
     force(action, side = 1) {
-      forced = action && ACTIONS[action] ? action : null;
+      forced = action === "idle" || (action && ACTIONS[action]) ? action : null;
       forcedSide = side;
       forcedStart = -1;
     },
@@ -100,11 +102,13 @@ export function makeClock(seed, birth = 0, species = "kid", rig = null) {
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
 
-      // 팔 — 행위(두 팔이 다 정해진다)를 리그에 IK로 풀고, 그 위에 진자·폴짝·지터를 얹는다.
+      // 팔 — 기본은 idle(A포즈), 행위가 있으면 그 행위가 정한 팔만 덮는다. 리그에 IK로 풀고,
+      // 그 위에 진자·폴짝·지터를 얹는다.
       // 예약은 강제 중에도 계속 돌린다(rng 소비를 같게 — 강제를 풀어도 시계가 흐트러지지 않는다).
       const scheduled = S.stepArmAction(armAction, t, rng, M);
       let act = scheduled;
-      if (forced) {
+      if (forced === "idle") act = null;
+      else if (forced) {
         if (forcedStart < 0) forcedStart = t;
         act = { action: forced, side: forcedSide, start: forcedStart, until: Infinity };
       }

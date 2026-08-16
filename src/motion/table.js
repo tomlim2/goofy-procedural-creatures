@@ -7,10 +7,10 @@ export const BLINK_TIME = 0.13;
 // 종족별 모션 성격. [min, max]는 이벤트 간격(초), null은 그 모션 없음.
 export const MOTION = {
   kid: {
-    // 팔 행위 — 바인드(T포즈)에서 이따금 넘어갔다 돌아오는 것. [행위, 가중치]. 내용은 actions.js
+    // 팔 행위 — idle(A포즈)에서 이따금 넘어갔다 돌아오는 것. [행위, 가중치]. 내용은 actions.js
     armActions: [
       ["wave", 2], ["cross", 2], ["hips", 2], ["think", 1.5], ["raise", 1.5], ["behind", 1.5],
-      ["hang", 1.5], ["hi", 1], ["point", 1], ["flap", 1], ["salute", 0.7]
+      ["hi", 1], ["point", 1], ["flap", 1], ["salute", 0.7]
     ],
     armActionGap: [12, 36],
     // 팔: 레퍼런스에서 팔은 벌린 채 미세하게만 흔들린다. 큰 동작은 드물게(행위).
@@ -65,7 +65,7 @@ export const MOTION = {
     // 도깨비는 만세·파닥임을 더 자주. 팔짱·생각은 드물게
     armActions: [
       ["raise", 2.5], ["flap", 2], ["wave", 1.5], ["hips", 1.5], ["hi", 1], ["point", 1],
-      ["behind", 1], ["hang", 1], ["salute", 0.5], ["think", 0.5]
+      ["behind", 1], ["salute", 0.5], ["think", 0.5]
     ],
     armActionGap: [10, 30],
     // 젤리 워블에 딸려 미세하게 떨린다.

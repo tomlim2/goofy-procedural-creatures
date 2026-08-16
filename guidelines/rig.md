@@ -75,15 +75,20 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 | --- | --- | --- | --- |
 | **포즈** (리그) | POSE MOTION/BIND, `B` | `scene.setBind` | BIND면 clock 대신 `BIND_STATE`, 관절 이징 즉시(snap). 시계는 계속 흘린다 |
 | **잉크** (선) | INK BOIL/STILL, `I` | `scene.setBoil` | STILL이면 보일 0번 프레임 고정 |
-| 행위 강제 (디버그) | ACTION 카드 | `scene.setAction` | 두발 전원이 그 행위를 계속. `clock.force`. AUTO면 예약대로 |
+| 행위 강제 (디버그) | ACTION 카드 | `scene.setAction` | 두발 전원이 그 행위를 계속. IDLE은 행위 없음. `clock.force`. AUTO면 예약대로 |
 
 바인드 포즈는 리그의 상태이고 보일은 손그림 재질이다. 다른 축이라 따로 켠다 —
 "바인드인데 선은 끓는" 상태도, "모션 중인데 선은 고정" 상태도 볼 수 있다.
 
+## 태어날 때
+
+`buildCreature`는 팔을 바인드(T)로 세운다. scene의 `settle`이 곧바로 시계의 현재 상태를 이징 없이(snap)
+입혀 idle에 앉힌다 — 안 그러면 첫 프레임에 T에서 idle로 팔이 휘돌며 내려오는 게 보인다.
+
 ## 재생성 시
 
 `regenerate(index)`가 옛 그룹을 dispose하고 새 개체를 같은 슬롯에 세운다.
-새 시계는 `clockNow`를 출생 시각으로 받는다. 종족은 유지된다.
+새 시계는 `clockNow`를 출생 시각으로 받는다. 종족은 유지된다. `settle`도 같이 한다.
 
 ## 자주 깨지는 지점
 

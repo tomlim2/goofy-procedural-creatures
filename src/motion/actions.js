@@ -1,9 +1,10 @@
 // 행위 카탈로그 — 캐릭터가 하는 "짓". 만세, 팔짱, 손 흔들어 인사, 턱 괴기, 경례…
 // 문서: guidelines/motion/catalog.md § 팔 행위
 //
-// 행위는 **항상 두 팔을 다 정한다.** "팔을 흔든다"가 아니라 "팔을 흔들어 인사한다"다 —
-// 한 팔은 들어 흔들고 다른 팔은 내린다. 한 팔만 정하고 나머지를 바인드(T)에 남기면
-// 마네킹이 한 팔만 까딱이는 그림이 된다.
+// 기본 모션은 **idle**이다 — 팔을 살짝 벌리고(A포즈) 숨쉬며 미세하게 흔들리는 상태. 행위는 idle
+// 위에 **겹친다**: 행위가 정한 부위만 바뀌고 나머지(다른 팔·몸·얼굴)는 idle이 계속된다.
+// 그래서 인사(wave)는 한 팔만 정한다 — 다른 팔은 idle로 내려가 있다. 만세·팔짱은 두 팔을 정한다.
+// 바인드(T포즈)는 행위가 아니다. 모션이 없을 때의 리그 상태이고 BIND 뷰에서만 보인다.
 //
 // 팔 자세는 관절각이 아니라 **손 목표**로 적는다. 리그(어깨 위치·위팔·아래팔 길이·몸 앵커,
 // character/draw/limbs.js armRig)를 받아 두 마디 IK로 각도를 푼다. 그래서 팔 길이가 달라도
@@ -19,7 +20,7 @@ import { BIND_ARM } from "../character/index.js";
 //   osc     자세 위에 얹는 진동 { shoulder, elbow: 진폭 rad, hz }. 이징을 안 거친다
 //   behind  뒷짐 — 팔이 몸 뒤로 사라지고 back 스케치만 보인다. IK 없음
 export const ARM_POSES = {
-  hang:   { hand: [0.12, -0.99], bend: "out", floor: true },
+  idle:   { hand: [0.5, -0.86], bend: "out", floor: true },   // 기본. 30° 벌린 A포즈, 팔꿈치 살짝
   raise:  { hand: [0.45, 0.88], bend: "out" },
   hi:     { hand: [0.3, 0.95], bend: "out" },
   wave:   { hand: [0.5, 0.7], bend: "out", osc: { shoulder: 0, elbow: 0.5, hz: 3 } },
@@ -32,20 +33,19 @@ export const ARM_POSES = {
   behind: { behind: true, shoulder: -0.2 }
 };
 
-// 행위 = [활동 팔 자세, 나머지 팔 자세] + 유지 시간. 두 자세가 같으면 대칭 행위.
-// 비대칭 행위는 시작할 때 활동 팔의 좌우를 뽑는다. emote는 행위 중 머리 위 글리프.
+// 행위 = 자세 + 어느 팔(arms: "one" 한 팔 / "both" 두 팔) + 유지 시간. 정하지 않은 팔은 idle.
+// 한 팔 행위는 시작할 때 활동 팔의 좌우를 뽑는다. emote는 행위 중 머리 위 글리프.
 export const ACTIONS = {
-  raise:  { arms: ["raise", "raise"],   hold: [2, 4],   label: "만세" },
-  cross:  { arms: ["cross", "cross"],   hold: [3, 7],   label: "팔짱" },
-  hips:   { arms: ["hips", "hips"],     hold: [3, 7],   label: "허리에 손" },
-  hang:   { arms: ["hang", "hang"],     hold: [3, 7],   label: "쉬어 (늘어뜨림)" },
-  behind: { arms: ["behind", "behind"], hold: [3, 7],   label: "뒷짐" },
-  flap:   { arms: ["flap", "flap"],     hold: [1.5, 3], label: "파닥임 (좋아함)", emote: "heart" },
-  wave:   { arms: ["wave", "hang"],     hold: [1.5, 3], label: "손 흔들어 인사" },
-  hi:     { arms: ["hi", "hang"],       hold: [2, 4],   label: "한 손 들기 (저요)" },
-  point:  { arms: ["point", "hang"],    hold: [2, 4],   label: "가리키기" },
-  think:  { arms: ["think", "hang"],    hold: [3, 6],   label: "턱에 손 (생각)" },
-  salute: { arms: ["salute", "hang"],   hold: [2, 4],   label: "경례" }
+  wave:   { pose: "wave",   arms: "one",  hold: [1.5, 3], label: "손 흔들어 인사" },
+  hi:     { pose: "hi",     arms: "one",  hold: [2, 4],   label: "한 손 들기 (저요)" },
+  point:  { pose: "point",  arms: "one",  hold: [2, 4],   label: "가리키기" },
+  think:  { pose: "think",  arms: "one",  hold: [3, 6],   label: "턱에 손 (생각)" },
+  salute: { pose: "salute", arms: "one",  hold: [2, 4],   label: "경례" },
+  raise:  { pose: "raise",  arms: "both", hold: [2, 4],   label: "만세" },
+  cross:  { pose: "cross",  arms: "both", hold: [3, 7],   label: "팔짱" },
+  hips:   { pose: "hips",   arms: "both", hold: [3, 7],   label: "허리에 손" },
+  behind: { pose: "behind", arms: "both", hold: [3, 7],   label: "뒷짐" },
+  flap:   { pose: "flap",   arms: "both", hold: [1.5, 3], label: "파닥임 (좋아함)", emote: "heart" }
 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -123,16 +123,19 @@ export function solveArm(rig, side, poseName, tau = 0, env = 0) {
   };
 }
 
-// 행위 하나를 두 팔에 푼다. act = { action, side(활동 팔), start, until } 또는 null(바인드).
+// 두 팔을 푼다. 기본은 idle, 행위(act = { action, side(활동 팔), start, until })가 있으면 그 행위가
+// 정한 팔만 덮어쓴다. 리그가 없으면(네발) 바인드.
 export function solveArms(rig, act, t) {
   const arms = {};
   const def = act && ACTIONS[act.action];
   // 진동 봉투 — 들어가고 나갈 때 0.35초 페이드. 없으면 행위가 끝나는 순간 팔이 튄다
   const env = def ? clamp(Math.min((t - act.start) / 0.35, (act.until - t) / 0.35), 0, 1) : 0;
   for (const side of [-1, 1]) {
-    if (!def || !rig) { arms[String(side)] = bindArm(side); continue; }
-    const poseName = side === act.side ? def.arms[0] : def.arms[1];
-    arms[String(side)] = solveArm(rig, side, poseName, t - act.start, env);
+    if (!rig) { arms[String(side)] = bindArm(side); continue; }
+    const covered = def && (def.arms === "both" || side === act.side);
+    arms[String(side)] = covered
+      ? solveArm(rig, side, def.pose, t - act.start, env)
+      : solveArm(rig, side, "idle", 0, 0);
   }
   return arms;
 }

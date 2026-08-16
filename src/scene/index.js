@@ -81,6 +81,13 @@ export function createScene(canvas) {
     }
   }
 
+  // 태어난 개체를 시계의 현재 상태에 즉시 앉힌다(이징 없이). 안 그러면 리그의 바인드(T)에서
+  // idle까지 팔이 휘돌며 내려오는 게 첫 프레임에 보인다. 바인드는 BIND 뷰에서만 보여야 한다.
+  function settle(item) {
+    if (bindView) return;
+    applyState(item, item.clock.update(clockNow), clockNow, noise, { snap: true, boil: boilOn });
+  }
+
   function slotPosition(index) {
     const width = columns * CELL_W;
     const height = rows * CELL_H;
@@ -114,6 +121,7 @@ export function createScene(canvas) {
       item.baseX = x;
       item.baseY = y;
       item.group.position.set(x, y, 0);
+      settle(item);
       scene.add(item.group);
       creatures.push(item);
     });
@@ -150,6 +158,7 @@ export function createScene(canvas) {
     item.baseX = x;
     item.baseY = y;
     item.group.position.set(x, y, 0);
+    settle(item);
     scene.add(item.group);
     creatures[index] = item;
   }
