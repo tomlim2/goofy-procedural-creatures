@@ -155,7 +155,7 @@ export function buildCreature(spec, noise, birth = 0) {
     headFrames,
     eyeRigs,
     faceStates,
-    clock: makeClock(spec.seed, birth, spec.species, spec.parts.armLength === "verylong"),
+    clock: makeClock(spec.seed, birth, spec.species, spec.parts.armLength === "long"),
     spec,
     neckY,
     headRx: firstDrawn.box.headRx,

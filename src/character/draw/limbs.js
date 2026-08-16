@@ -101,10 +101,11 @@ export function limbSketches(spec) {
   const shoulderY = box.bodyTop - (box.bodyTop - box.legTop) * 0.22;
   for (const side of [-1, 1]) {
     const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.7 : 0.78);
-    // 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기본, verylong은 바닥을 쓸 만큼.
-    // (short 0.45가 있었는데 손이 몸통에 붙어 의미가 없어 뺐다.)
-    const lengthScale = { medium: 1.1, long: 2.2, verylong: 3.6 }[spec.parts.armLength] || 1.1;
-    const reach = 0.11 * p.armSpread * lengthScale;
+    // 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기준 1, long은 그 1.64배(바닥을 쓸 만큼).
+    // 기준 팔 길이 0.242는 옛 0.11×2.2 — 더 짧은 단계들은 손이 몸통 근처라 의미가 없어 뺐다.
+    const ARM_BASE = 0.242;
+    const lengthScale = { medium: 1, long: 1.64 }[spec.parts.armLength] || 1;
+    const reach = ARM_BASE * p.armSpread * lengthScale;
     // 위팔:아래팔 = 0.48:0.52. 아래팔이 살짝 길어야 손이 멀리 간다.
     const upperLen = reach * 0.48;
     const lowerLen = reach * 0.52;

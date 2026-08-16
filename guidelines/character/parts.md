@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 17슬롯 101파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 17슬롯 100파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 슬롯 추가·순서 변경은 rng 호출 수를 바꿔 **기존 시드를 깬다** ([../determinism.md](../determinism.md)).
@@ -113,14 +113,14 @@ curl(위로 말림) / flag(위로 곧게) / longtail(뒤로 길게) / stubtail(�
 
 팔마다 **위팔·아래팔·back(뒷짐)** 세 벌을 굽는다. 위팔은 어깨 원점, 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽고, 리그가 바인드 포즈(T)로 세운다. 어깨는 몸 폭 78%(윤곽 안쪽). 소매는 위팔만 옷색이고 아래팔은 맨팔.
 
-### armLength (3)
-| 값 | 배율 |
-| --- | --- |
-| medium | 1.1 — 기본 |
-| long | 2.2 — 팔꿈치 꺾임 |
-| verylong | 3.6 — 바닥을 쓸 만큼. hang 행위는 안 한다 (바닥을 뚫는다) |
+### armLength (2)
+| 값 | 배율 | |
+| --- | --- | --- |
+| medium | 1 — 기준 (ARM_BASE 0.242 × armSpread) | 팔꿈치 살짝 꺾여 늘어짐 |
+| long | 1.64 — 바닥을 쓸 만큼 | hang 행위는 안 한다 (바닥을 뚫는다) |
 
-형태와 독립이라 4×3 조합 전부 나온다. (short 0.45가 있었으나 손이 몸통에 붙어 의미가 없어 뺐다.)
+형태와 독립이라 4×2 조합. 더 짧은 단계(short 0.45, 옛 medium 1.1)가 있었으나 손이 몸통 근처라
+의미가 없어 뺐다. 지금 medium이 옛 long이다.
 
 ## 렌더 순서
 

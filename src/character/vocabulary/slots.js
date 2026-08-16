@@ -26,7 +26,7 @@ export const SLOTS = {
   // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다.
   arms: ["stick", "sleeve", "stubby", "mitten"],
   // 팔 길이. 형태와 독립이라 짧은 소매 팔, 매우 긴 장갑 팔이 다 나온다.
-  armLength: ["medium", "long", "verylong"]
+  armLength: ["medium", "long"]
 };
 
 // 아키타입 bias가 없는 슬롯의 기본 가중치.
@@ -46,6 +46,6 @@ export const DEFAULT_BIAS = {
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
-  armLength: [["medium", 4], ["long", 2.5], ["verylong", 1]],
+  armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2], ["bent", 2], ["wide", 1.5], ["tiptoe", 1]]
 };
