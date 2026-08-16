@@ -19,6 +19,9 @@ node serve.mjs
 `http://127.0.0.1:7300`. native ES module을 쓰므로 `file://` 직접 실행은 지원하지 않는다.
 three.js는 importmap으로 unpkg에서 받는다.
 
+`/gallery.html?slot=legs&species=human` — **파츠 갤러리**. 슬롯 하나의 모든 값을 같은 개체(종족·시드 고정)에
+나란히 그린다. 파츠 하나의 형태를 판단할 때. census가 숫자라면 이건 그림이다.
+
 | 조작 | |
 | --- | --- |
 | NEW SEED / `R` | 새 시드. 주소창 해시가 시드다 — `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다 |
@@ -42,6 +45,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지) `actions.js`(idle과 행위 — 손 목표, IK) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js` `emote.js` `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) |
 | `src/main.js` | 진입점. UI 배선 | |
+| `src/gallery.js` · `gallery.html` | 파츠 갤러리 — 슬롯값별로 같은 개체를 나란히 | |
 | `guidelines/` | 두 축의 카탈로그와 규칙. **고치기 전에 읽는다** | [README](guidelines/README.md) |
 | `reference/` | 무엇을 보고 만들었고 무엇을 가져오고 안 가져왔는지 | [README](reference/README.md) |
 | `scripts/` | 아래 § 스크립트 | |

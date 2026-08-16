@@ -101,6 +101,31 @@ select.wide { width: 100%; }
 .seg button { flex: 1; padding: 6px 4px; }
 
 .hint { margin: 0; opacity: 0.45; }
+.hint a, .sub a { color: inherit; }
+
+/* 파츠 갤러리 — 캔버스를 덱 오른쪽·헤더 아래로 밀어 카드가 그림을 안 가린다.
+   라벨은 캔버스와 같은 상자에 놓고 gallery.js가 카메라 투영으로 위치를 잡는다 */
+.gallery #stage,
+.gallery .labels {
+  left: 252px;
+  top: 52px;
+  width: calc(100% - 252px);
+  height: calc(100% - 52px);
+}
+.gallery .deck { top: 52px; bottom: auto; }
+.labels {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.labels span {
+  position: absolute;
+  transform: translate(-50%, 0);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  opacity: 0.6;
+}
 
 .noscript {
   position: fixed;

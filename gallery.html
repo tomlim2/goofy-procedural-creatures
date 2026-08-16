@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MENAGERIE — 파츠 갤러리</title>
+<meta name="description" content="슬롯 하나의 모든 값을 같은 개체에 나란히. 종족·시드 고정.">
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body class="gallery">
+
+<canvas id="stage" aria-label="슬롯 값별 크리처"></canvas>
+<div id="labels" class="labels" aria-hidden="true"></div>
+
+<header class="bar">
+  <span class="mark">MENAGERIE</span>
+  <span class="sub">PARTS GALLERY · <a href="./index.html">← GRID</a></span>
+  <span class="status" id="status">BOOT</span>
+</header>
+
+<aside class="deck">
+  <section class="card">
+    <h2>SLOT</h2>
+    <select id="slotSel" class="wide" aria-label="슬롯"></select>
+  </section>
+
+  <section class="card">
+    <h2>SPECIES</h2>
+    <select id="speciesSel" class="wide" aria-label="종족"></select>
+  </section>
+
+  <section class="card">
+    <h2>SEED</h2>
+    <p class="seed" id="seed">·······</p>
+    <button id="reseed" class="wide">NEW SEED</button>
+  </section>
+
+  <section class="card">
+    <h2>POSE</h2>
+    <div class="row seg" id="poseSeg" role="group" aria-label="포즈">
+      <button data-pose="motion">MOTION</button>
+      <button data-pose="bind" class="on">BIND</button>
+    </div>
+  </section>
+
+  <p class="hint">같은 개체, 슬롯값만 바꿔 그림 · R 시드 · B 포즈 · 종족 forbid 값도 그린다</p>
+</aside>
+
+<noscript><p class="noscript">이 페이지는 WebGL과 자바스크립트가 필요합니다.</p></noscript>
+
+<script type="module" src="./src/gallery.js"></script>
+</body>
+</html>
