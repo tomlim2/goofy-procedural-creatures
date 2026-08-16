@@ -263,6 +263,17 @@ export function drawHeadgear(ink, fills, spec, box) {
   const halfW = (y) => rx * Math.sqrt(Math.max(0.05, 1 - ((y - cy) / ry) ** 2));
   const crown = cy + ry;
   const tiltSide = spec.seed % 2 ? 1 : -1;
+  // 머리를 덮는 모자(투구·캡)는 타원이 아니라 **머리 윤곽 모양**(각짐·위아래 폭 비)을 따라 살짝 크게 그린 뒤 눈썹 선에서
+  // 자른다 — 네모 머리의 모서리, 정수리의 머리카락까지 덮여야 한다. 윤곽 위쪽(y ≥ line)만 남기고 밑을 잇는다.
+  const shape = headShape(spec);
+  const cover = (grow, line) => {
+    const outline = blobPath(0, cy, rx * grow, ry * grow, { lumps: 3, amount: 0.05, noise: null, square: shape.square, taper: shape.taper });
+    const upper = outline.filter(([, y]) => y >= line);
+    // 자른 자리를 y = line 위 좌우 끝점으로 닫는다 (좌→우 순서 유지)
+    upper.sort((a, b) => Math.atan2(a[1] - line, a[0]) - Math.atan2(b[1] - line, b[0]));
+    const w = Math.max(...upper.map(([x]) => Math.abs(x)));
+    return { path: [[w, line], ...upper, [-w, line]], w };
+  };
 
   if (kind === "band") {
     // 이마 띠 — 눈썹 바로 위, 윤곽 밖으로 살짝 나가게
@@ -274,26 +285,22 @@ export function drawHeadgear(ink, fills, spec, box) {
   }
 
   if (kind === "helmet") {
-    // 투구 — 눈썹 위에서 정수리 위까지 덮는 돔. 아래 테두리 + 가운데 능선
+    // 투구 — 눈썹 위에서 정수리까지 머리 모양대로 덮는다(1.1배). 아래 테두리 + 가운데 능선
     const bottom = brow;
-    const w = halfW(bottom) * 1.08;
-    const h = crown + ry * 0.08 - bottom;
-    const shell = arcPath(0, bottom, w, h, Math.PI, TAU, 22);
-    fills.fill([...shell, [w, bottom], [-w, bottom]], accent);
-    ink.stroke(shell, { color: ink0, width: 0.013, passes: 2 });
-    ink.stroke([[-w * 1.03, bottom + 0.004], [w * 1.03, bottom - 0.004]], { color: ink0, width: 0.013 });
-    ink.stroke([[0, bottom + h * 0.15], [0.004, bottom + h * 0.98]], { color: ink0, width: 0.008 });
+    const { path, w } = cover(1.1, bottom);
+    fills.fill(path, accent);
+    ink.outline(path, { color: ink0, width: 0.013, passes: 2 });
+    ink.stroke([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0, width: 0.013 });
+    ink.stroke([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, width: 0.008 });
     return;
   }
 
   if (kind === "cap") {
-    // 야구 모자 — 정수리 돔 + 한쪽으로 나간 챙(눈썹 선). 챙은 살짝 처진다
-    const bottom = brow + ry * 0.06;
-    const w = halfW(bottom) * 0.98;
-    const h = crown + ry * 0.04 - bottom;
-    const shell = arcPath(0, bottom, w, h, Math.PI, TAU, 18);
-    fills.fill([...shell, [w, bottom], [-w, bottom]], accent);
-    ink.outline([...shell, [w, bottom], [-w, bottom]], { color: ink0, width: 0.012 });
+    // 야구 모자 — 머리 모양대로 덮는 돔(1.04배) + 한쪽으로 나간 챙(눈썹 선). 챙은 살짝 처진다
+    const bottom = brow + ry * 0.05;
+    const { path, w } = cover(1.04, bottom);
+    fills.fill(path, accent);
+    ink.outline(path, { color: ink0, width: 0.012 });
     const brim = [[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]];
     fills.fill(brim, accent);
     ink.outline(brim, { color: ink0, width: 0.012 });
