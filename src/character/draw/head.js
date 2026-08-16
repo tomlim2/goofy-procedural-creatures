@@ -39,43 +39,48 @@ export function drawEars(ink, fills, spec, box) {
   if (kind === "none") return;
 
   if (spec.species === "pup") {
-    // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위**(얼굴 양끝) — 안쪽에 두면 얼굴에서 돋는 것처럼 보인다.
-    // 윤곽 위 점은 타원(headRx·headRy) 위 극각 θ(정수리에서 잰 각)로 잡고, 바깥 법선 n을 따라 세우거나 밑으로 늘어뜨린다.
-    //   pointy 쫑긋 선 세모귀(셰퍼드, θ 38°) · round 작은 동그란 귀(퍼그, 55°) · 로브 셋은 **지름 끝**(가장 넓은 옆, 90°)에서
-    //   늘어진다 — flap 레퍼런스 비글 · long 턱 아래까지(바셋) · fold 옆으로 접혀 끝만 처짐 · none 없음. 채운 로브 + 두 번 덧그은 윤곽.
+    // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위** 두 자리 중 하나고, 귀는 그 자리의 **바깥 법선을 타고 기운다**:
+    //   위쪽 모서리(정수리보다 좀 밑, θ≈50°) — pointy 쫑긋 세모귀 · round 동그란 귀 · fold 접힌 귀. 법선(위·바깥) 방향으로 선다
+    //   옆구리(눈 양옆보다 조금 옆, θ≈88°) — flap 로브(레퍼런스 비글) · long 바셋. 늘어지되 법선 쪽으로 기울어 끝이 벌어진다
+    // θ는 타원(headRx·headRy) 위 극각(정수리에서 잰 각). 채운 로브 + 두 번 덧그은 윤곽. none은 없음.
     const earFill = darken(spec.palette.skin, 0.8);
     const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
-    const theta = { pointy: 0.66, round: 0.96, flap: 1.5, long: 1.5, fold: 1.5 }[kind] || 1.5;
+    const upper = kind === "pointy" || kind === "round" || kind === "fold";
+    const theta = upper ? 0.88 : 1.53;
+    const rx = box.headRx, ry = box.headRy;
+    // 점 목록을 (cx, cy) 기준으로 angle만큼 돌린다 (반시계 양수)
+    const rotate = (pts, cx, cy, angle) => {
+      const c = Math.cos(angle), s = Math.sin(angle);
+      return pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]);
+    };
     for (const side of [-1, 1]) {
-      // 윤곽 위 뿌리와 바깥 법선
-      const rx = box.headRx, ry = box.headRy;
+      // 윤곽 위 뿌리(bx, by), 바깥 법선 n, 접선 t(정수리 쪽 +)
       const bx = side * rx * Math.sin(theta);
       const by = box.headCy + ry * Math.cos(theta);
       let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
       const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
-      const tx = -ny * side, ty = nx * side;   // 접선 (바깥쪽 기준 좌우)
+      const tx = -ny * side, ty = nx * side;
+      const local = (u, v) => [bx + nx * u + tx * v, by + ny * u + ty * v];   // u 법선, v 접선
+      const normalTilt = Math.atan2(nx * side, ny);   // 수직에서 법선까지의 각 (바깥쪽 양수)
       let path;
       if (kind === "pointy") {
-        // 밑변은 윤곽 위, 끝은 법선 방향으로 위로
+        // 밑변은 윤곽 위, 끝은 법선을 따라
         const len = ry * 0.6;
-        path = [
-          [bx - tx * 0.04 - nx * 0.01, by - ty * 0.04 - ny * 0.01],
-          [bx + nx * len + tx * 0.005, by + ny * len + ty * 0.005],
-          [bx + tx * 0.045 - nx * 0.01, by + ty * 0.045 - ny * 0.01]
-        ];
+        path = [local(-0.01, 0.045), local(len, 0.005), local(-0.01, -0.04)];
       } else if (kind === "round") {
-        path = blobPath(bx + nx * 0.028, by + ny * 0.028, 0.042, 0.04, { lumps: 3, amount: 0.15, noise: null });
+        // 법선 방향으로 길쭉한 동그란 귀
+        const [cx, cy] = local(0.03, 0);
+        path = rotate(blobPath(cx, cy, 0.036, 0.046, { lumps: 3, amount: 0.15, noise: null }), cx, cy, -side * normalTilt);
       } else if (kind === "fold") {
-        // 옆으로 접힌 귀 — 뿌리에서 바깥으로 삐죽 나갔다가 끝이 아래로 처진다
-        const out = 0.075;
-        path = [
-          [bx - nx * 0.01, by + 0.025], [bx + side * out * 0.8, by + 0.05], [bx + side * out, by - 0.015],
-          [bx + side * out * 0.85, by - ry * 0.45], [bx + side * 0.03, by - ry * 0.4], [bx, by - 0.02]
-        ];
+        // 접힌 귀 — 법선을 따라 삐죽 나갔다가 끝이 턱 쪽(−접선)으로 접혀 처진다
+        path = [local(-0.005, 0.03), local(0.07, 0.035), local(0.085, -0.01), local(0.06, -0.08), local(0.02, -0.065), local(-0.005, -0.03)];
       } else {
-        // flap / long — 뿌리에서 바깥·아래로 늘어지는 로브
+        // flap / long — 뿌리에서 늘어지되 법선 쪽으로 기울어(0.35rad) 끝이 바깥으로 벌어지는 로브
         const len = ry * (kind === "long" ? 0.95 : 0.65);
-        path = blobPath(bx + side * 0.032, by - len * 0.5 + 0.01, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null });
+        const tilt = 0.35;
+        const cx = bx + side * Math.sin(tilt) * (len * 0.5 - 0.005);
+        const cy = by - Math.cos(tilt) * (len * 0.5 - 0.005);
+        path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
       }
       fills.fill(path, earFill);
       ink.outline(path, earInk);
