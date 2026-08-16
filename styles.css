@@ -49,7 +49,7 @@ html, body {
   bottom: 18px;
   width: 208px;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .card {
@@ -57,11 +57,11 @@ html, body {
   /* 반투명이면 뒤의 크리처가 비쳐서 버튼이 그림 밑에 깔린 것처럼 보인다 */
   background: #f2ecdf;
   box-shadow: 0 2px 12px rgba(43, 39, 36, 0.12);
-  padding: 10px 12px;
+  padding: 8px 12px;
 }
 
 .card h2 {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-size: 10px;
   letter-spacing: 0.22em;
   opacity: 0.55;

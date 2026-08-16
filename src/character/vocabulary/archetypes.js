@@ -66,7 +66,7 @@ export const ARCHETYPES = [
       body: [["bean", 4], ["dress", 2]],
       legs: [["stub", 4], ["wide", 2], ["stick", 1]],
       arms: [["stubby", 4], ["stick", 1]],
-      armLength: [["short", 4], ["medium", 1]],
+      armLength: [["medium", 3], ["long", 1]],
       horns: [["none", 5], ["nub", 2]]
     }
   },

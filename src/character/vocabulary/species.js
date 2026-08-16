@@ -101,7 +101,7 @@ export const SPECIES = [
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]],
       arms: [["stubby", 5], ["stick", 2]],
-      armLength: [["short", 3], ["medium", 2], ["long", 1]],
+      armLength: [["medium", 3], ["long", 1]],
       legs: [["stub", 3], ["stick", 3], ["wide", 1]]
     }
   }

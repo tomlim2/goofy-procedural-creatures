@@ -30,9 +30,12 @@ export function createScene(canvas) {
   let rows = 5;
   // 마지막 update의 전역 시각. 재생성·재빌드로 태어나는 시계의 출생 시각이 된다.
   let clockNow = 0;
-  // 바인드 뷰. 켜면 clock을 안 돌리고 모든 개체를 BIND_STATE로 정지시킨다.
-  // 보일도 멈춘다 — 완전한 정지 그림. 형태·파츠 판단용.
+  // 두 축이다.
+  //   pose: 리그 상태. bindView면 clock 대신 BIND_STATE — 관절·표정 전부 기본.
+  //   ink:  선 질감. boilOn이면 보일 3벌 순환, 아니면 0번 프레임 고정.
+  // 바인드 포즈는 리그의 상태이고 보일은 손그림 재질이다. 다른 축이라 따로 켠다.
   let bindView = false;
+  let boilOn = true;
   // 재생성 스위치. 기본 꺼짐 — 형태는 NEW SEED로만 바뀐다.
   let regenEnabled = false;
 
@@ -157,9 +160,9 @@ export function createScene(canvas) {
     for (let index = 0; index < creatures.length; index += 1) {
       const item = creatures[index];
       if (bindView) {
-        // 시계는 흘려보내되(복귀 시 폭주 방지) 상태는 바인드로 고정. 보일 프레임 0.
+        // 시계는 흘려보내되(복귀 시 폭주 방지) 리그는 바인드로 고정. 관절 이징 즉시.
         item.clock.update(t);
-        applyState(item, BIND_STATE, 0, noise, { frozen: true });
+        applyState(item, BIND_STATE, t, noise, { snap: true, boil: boilOn });
         continue;
       }
       const state = item.clock.update(t);
@@ -167,7 +170,7 @@ export function createScene(canvas) {
         regenerate(index);
         continue;
       }
-      applyState(item, state, t, noise);
+      applyState(item, state, t, noise, { boil: boilOn });
     }
     renderer.render(scene, camera);
   }
@@ -180,5 +183,9 @@ export function createScene(canvas) {
     bindView = value;
   }
 
-  return { build, update, resize, setRegen, setBind, renderer, scene, camera };
+  function setBoil(value) {
+    boilOn = value;
+  }
+
+  return { build, update, resize, setRegen, setBind, setBoil, renderer, scene, camera };
 }

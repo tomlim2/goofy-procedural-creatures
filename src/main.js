@@ -63,14 +63,24 @@ countSeg.addEventListener("click", (event) => {
   render();
 });
 
-// 뷰. MOTION은 시계가 돌고, BIND는 바인드 포즈 정지 그림.
-const viewSeg = document.getElementById("viewSeg");
-viewSeg.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-view]");
+// 포즈. MOTION은 시계가 리그를 움직이고, BIND는 리그를 바인드 포즈에 고정한다.
+const poseSeg = document.getElementById("poseSeg");
+poseSeg.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-pose]");
   if (!button) return;
-  for (const node of viewSeg.querySelectorAll("button")) node.classList.remove("on");
+  for (const node of poseSeg.querySelectorAll("button")) node.classList.remove("on");
   button.classList.add("on");
-  scene.setBind(button.dataset.view === "bind");
+  scene.setBind(button.dataset.pose === "bind");
+});
+
+// 잉크. BOIL은 선이 끓고(보일 3벌 순환), STILL은 0번 프레임 고정. 포즈와 별개 축.
+const inkSeg = document.getElementById("inkSeg");
+inkSeg.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-ink]");
+  if (!button) return;
+  for (const node of inkSeg.querySelectorAll("button")) node.classList.remove("on");
+  button.classList.add("on");
+  scene.setBoil(button.dataset.ink === "boil");
 });
 
 const speciesSeg = document.getElementById("speciesSeg");
@@ -86,8 +96,12 @@ speciesSeg.addEventListener("click", (event) => {
 window.addEventListener("keydown", (event) => {
   if (event.key === "r" || event.key === "R") reseed();
   if (event.key === "b" || event.key === "B") {
-    const on = viewSeg.querySelector(".on").dataset.view;
-    viewSeg.querySelector(on === "bind" ? '[data-view="motion"]' : '[data-view="bind"]').click();
+    const on = poseSeg.querySelector(".on").dataset.pose;
+    poseSeg.querySelector(on === "bind" ? '[data-pose="motion"]' : '[data-pose="bind"]').click();
+  }
+  if (event.key === "i" || event.key === "I") {
+    const on = inkSeg.querySelector(".on").dataset.ink;
+    inkSeg.querySelector(on === "boil" ? '[data-ink="still"]' : '[data-ink="boil"]').click();
   }
   if (event.key === "s" || event.key === "S") {
     const target = liveButtons.querySelector(live ? '[data-live="off"]' : '[data-live="on"]');

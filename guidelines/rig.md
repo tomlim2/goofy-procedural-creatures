@@ -67,11 +67,17 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 `drawCreature(spec, variant)`는 `wobbleSeed ^ (variant × 0x9e3779b9)`로 rng를 판다.
 변형 3벌은 구도가 같고 떨림만 다르다. 눈썹·입·팔다리·꼬리는 변형이 없다(정적 지터로 충분).
 
-## 바인드 뷰
+## 포즈와 잉크 — 두 축
 
-`scene.setBind(true)`면 update가 clock 대신 `BIND_STATE`를 `applyState(…, { frozen: true })`로 넣는다.
-frozen은 보일을 0번 프레임에 고정하고 관절 이징을 즉시(1.0)로 바꾼다. 시계는 계속 흘려보낸다 —
-안 흘리면 복귀 시 예약이 전부 과거가 되어 이벤트가 몰린다.
+`applyState(item, state, t, noise, { snap, boil })`.
+
+| 축 | 토글 | 값 | 뜻 |
+| --- | --- | --- | --- |
+| **포즈** (리그) | POSE MOTION/BIND, `B` | `scene.setBind` | BIND면 clock 대신 `BIND_STATE`, 관절 이징 즉시(snap). 시계는 계속 흘린다 |
+| **잉크** (선) | INK BOIL/STILL, `I` | `scene.setBoil` | STILL이면 보일 0번 프레임 고정 |
+
+바인드 포즈는 리그의 상태이고 보일은 손그림 재질이다. 다른 축이라 따로 켠다 —
+"바인드인데 선은 끓는" 상태도, "모션 중인데 선은 고정" 상태도 볼 수 있다.
 
 ## 재생성 시
 
