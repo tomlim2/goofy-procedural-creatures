@@ -20,8 +20,8 @@ node serve.mjs
 three.js는 importmap으로 unpkg에서 받는다.
 
 `/gallery.html?slot=legs&species=human` — **파츠 갤러리**. 슬롯 하나의 모든 값을 같은 개체(종족·시드 고정)에
-나란히 그린다. FIX 드롭다운(`&fix=legLength:short`)으로 다른 슬롯 하나를 고정할 수 있다. 파츠 하나의 형태를 판단할 때.
-census가 숫자라면 이건 그림이다.
+나란히 그린다. FIX 드롭다운(`&fix=legLength:short`)으로 다른 슬롯 하나를 고정할 수 있고, `&values=bangs,bun`으로 그 슬롯의
+몇 값만 크게 놓고 볼 수 있다. 파츠 하나의 형태를 판단할 때. census가 숫자라면 이건 그림이다.
 
 | 조작 | |
 | --- | --- |
@@ -74,7 +74,7 @@ node scripts/snapshot.mjs after        # 리팩토링 후 — diff 0이면 동�
 4. **비율 지터** — 머리 크기·너비·혹, 눈 크기·간격·좌우 비대칭, 몸 폭, 팔 길이, 손떨림.
    실루엣 다양성의 대부분이 여기서 나온다
 
-19슬롯 114파츠. 슬롯은 형태만 담고, 자세·동작은 모션이다. 길이·체격(`armLength` `legLength` `build`)은 형태와
+19슬롯 117파츠. 슬롯은 형태만 담고, 자세·동작은 모션이다. 길이·체격(`armLength` `legLength` `build`)은 형태와
 독립인 치수 슬롯 — 스케일이 아니라 기장·폭만 바뀌고, 다리 스탠스는 몸통 폭이 정한다.
 
 ## 손그림 질감

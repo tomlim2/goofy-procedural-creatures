@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 114파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 117파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -52,15 +52,21 @@ clock이 토글한다. 대체 표: none→flat, flat→worry, angry→flat, worr
 none / glasses(양쪽 원 + 다리, 알 반지름 = 눈 × 1.45) / goggles(큰 원 + 머리까지 끈, × 1.75) / patch(한쪽 안대 + 사선 끈) / monocle(한쪽 큰 원 + 줄).
 안경·고글은 **두 알이 겹치면 뺀다**(눈이 가까운 개체 — 눈에 맞춰 억지로 줄이지 않는다, `makeCreature`가 비율 확정 뒤 none으로).
 
-### hair (11)
+### hair (14)
 | 값 | 방식 |
 | --- | --- |
 | none | |
 | bob / mop / scribble / sweep | 정수리를 덮는 **스크리블** (`Sketch.scribble`). depth와 passes만 다르다 |
+| bangs | 바가지 — 정수리 스크리블 + 이마를 덮는 지그재그 스크리블 띠. 끝단은 **눈썹 선**(`browLine`, 모자와 같은 계산)에서 들쭉날쭉 멈춘다 |
+| longbob | bangs + 양옆으로 턱 선 근처까지 내려오는 굵은 세로 스크리블(얼굴을 감싸는 단발) |
+| bun | 똥머리 — 정수리를 얇게 덮고 그 위에 뭉치 하나 + 비녀 획. 모자를 못 쓴다 |
 | spikes / mohawk | 정수리에서 뻗는 짧은 획 (11개 / 7개 좁게) |
 | tuft / wisp | 몇 가닥 (4 / 7) |
 | pigtails | 양옆 뭉치 두 개 + 정수리 살짝 |
 | curly | 정수리를 따라 작은 원 7개 |
+
+사람만 머리카락이 있다(개·고양이는 forbid로 전부 none, 도깨비는 spikes/none). 앞머리·옆단발은 모자·밴드 밑으로 나와도 되는 "짧은 머리"에
+든다. 눈을 덮는 머리는 없다 — 캡 depth ≤ 0.45, 앞머리는 눈썹 선까지 ([rules.md](rules.md)).
 
 ### headgear (7)
 none / helmet(눈썹 위~정수리 위 돔 + 테두리 + 능선) / cap(정수리 돔 + 한쪽 챙) / band(이마 띠) / pot(눈썹 위에서 정수리보다 높이 솟는 통) /

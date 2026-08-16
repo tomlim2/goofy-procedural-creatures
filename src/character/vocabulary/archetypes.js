@@ -21,7 +21,7 @@ export const ARCHETYPES = [
     bias: {
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
       eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1]],
-      hair: [["bob", 3], ["wisp", 2], ["curly", 2], ["sweep", 2], ["none", 2]],
+      hair: [["bob", 3], ["bangs", 2], ["longbob", 1.5], ["wisp", 2], ["curly", 2], ["sweep", 2], ["none", 2]],
       headgear: [["none", 4], ["beret", 3], ["bonnet", 1], ["cap", 1]],
       mouth: [["line", 3], ["dot", 2], ["smile", 2]],
       nose: [["long", 3], ["hook", 3], ["dot", 1]],
@@ -75,7 +75,7 @@ export const ARCHETYPES = [
     weight: 2,
     bias: {
       headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5]],
-      hair: [["scribble", 3], ["mop", 2], ["curly", 2], ["none", 2], ["wisp", 1]],
+      hair: [["scribble", 3], ["mop", 2], ["curly", 2], ["bun", 1.5], ["none", 2], ["wisp", 1]],
       eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2]],
       marks: [["hatch", 3], ["stripes", 2], ["patch", 2], ["none", 2]],
       mouth: [["wave", 3], ["line", 2], ["dot", 2]],

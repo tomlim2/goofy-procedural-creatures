@@ -27,6 +27,8 @@ let slot = SLOTS[params.get("slot")] ? params.get("slot") : "legs";
 let species = SPECIES.some((s) => s.name === params.get("species")) ? params.get("species") : "human";
 let seed = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : (Math.random() * 0xffffffff) >>> 0;
 let bind = true;
+// values=a,b — 그 슬롯에서 볼 값만 (몇 개를 크게 놓고 볼 때). 슬롯에 없는 값은 무시, 하나도 안 남으면 전부
+const only = (params.get("values") || "").split(",").filter(Boolean);
 // 고정 슬롯 하나 { slot, value } — URL의 fix=slot:value
 let fix = (() => {
   const [slotName, value] = (params.get("fix") || "").split(":");
@@ -84,10 +86,11 @@ function build() {
   if (fix && fix.slot === slot) fix = null;   // 보고 있는 슬롯은 고정할 수 없다
   fillFixSelects();
   const fixed = fix ? { [fix.slot]: fix.value } : {};
-  window.history.replaceState(null, "", `?slot=${slot}&species=${species}&seed=${seed.toString(36)}${fix ? `&fix=${fix.slot}:${fix.value}` : ""}`);
+  const picked = SLOTS[slot].filter((value) => only.includes(value));
+  const values = picked.length ? picked : SLOTS[slot];
+  window.history.replaceState(null, "", `?slot=${slot}&species=${species}&seed=${seed.toString(36)}${fix ? `&fix=${fix.slot}:${fix.value}` : ""}${picked.length ? `&values=${picked.join(",")}` : ""}`);
 
   const base = makeCreature(seed, species);
-  const values = SLOTS[slot];
   const specs = values.map((value) => ({ ...base, parts: { ...base.parts, ...fixed, [slot]: value } }));
   // 열 수는 캔버스 비율에 맞춘다 — 한 줄로 늘어놓으면 개체가 너무 작다
   const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);

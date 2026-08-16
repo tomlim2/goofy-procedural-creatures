@@ -218,6 +218,15 @@ export function drawPupEars(ink, fills, spec, box) {
   }
 }
 
+// 눈썹 선 — 눈(안경·고글·모노클·안대 테 포함) 바로 위. 모자 챙과 앞머리 끝단이 여기서 멈춘다.
+export function browLine(spec, box) {
+  const { headCy: cy, headRy: ry } = box;
+  const eyes = eyeGeometry(spec, box);
+  const rim = LENS_SCALE[spec.parts.eyewear] || (spec.parts.eyewear === "monocle" ? 1.5 : spec.parts.eyewear === "patch" ? 1.35 : 1);
+  const eyeTop = eyes.reduce((m, e) => Math.max(m, e.y + e.r * rim), cy);
+  return Math.max(cy + ry * 0.42, eyeTop + ry * 0.1);
+}
+
 export function drawHair(ink, spec, box, noise) {
   const kind = spec.parts.hair;
   if (kind === "none") return;
@@ -289,6 +298,45 @@ export function drawHair(ink, spec, box, noise) {
     return;
   }
 
+  if (kind === "bangs" || kind === "longbob") {
+    // 앞머리 — 정수리 스크리블 + 이마를 덮는 촘촘한 세로 획(끝이 들쭉날쭉한 바가지 앞머리). 눈썹 선까지만
+    // 끝단은 눈썹 선 — 안경·고글 테 위까지만 (모자 챙과 같은 계산)
+    const fringeBottom = browLine(spec, box);
+    const cap = arcPath(0, cy, rx * 0.98, ry * 0.98, Math.PI * 0.92, Math.PI * 0.08, 20);
+    ink.scribble(cap, { color: ink0, passes: 11, width: 0.01, spread: ry * 0.2 });
+    // 이마 띠 — 위아래로 오가는 지그재그를 스크리블로 겹쳐 빽빽한 앞머리 덩어리. 아래 꼭짓점이 들쭉날쭉한 끝단
+    const teeth = 8;
+    const zig = [];
+    for (let i = 0; i <= teeth * 2; i += 1) {
+      const t = (i / (teeth * 2)) * 2 - 1;
+      const x = t * rx * 0.74;
+      const top = cy + ry * (0.78 - t * t * 0.14);
+      const bottom = fringeBottom + Math.abs(noise(i * 2.7 + spec.seed * 0.002)) * ry * 0.09;
+      zig.push([x, i % 2 === 0 ? top : bottom]);
+    }
+    ink.scribble(zig, { color: ink0, passes: 6, width: 0.01, spread: 0.014 });
+    if (kind === "longbob") {
+      // 옆으로 턱 선까지 내려오는 단발 — 머리 가장자리 안쪽에서 굵은 세로 스크리블이 얼굴을 감싼다
+      for (const side of [-1, 1]) {
+        const x = side * rx * 0.9;
+        const col = [[x - side * 0.03, cy + ry * 0.62], [x + side * 0.02, cy + ry * 0.1], [x + side * 0.03, cy - ry * 0.7]];
+        ink.scribble(col, { color: ink0, passes: 14, width: 0.01, spread: 0.045 });
+      }
+    }
+    return;
+  }
+
+  if (kind === "bun") {
+    // 똥머리 — 정수리를 얇게 덮고 위에 뭉치 하나 + 비녀 획
+    const cap = arcPath(0, cy, rx * 0.98, ry * 0.98, Math.PI * 0.82, Math.PI * 0.18, 16);
+    ink.scribble(cap, { color: ink0, passes: 7, width: 0.009, spread: ry * 0.14 });
+    const bx = 0.01, by = cy + ry * 1.05;
+    ink.scribble(arcPath(bx, by, 0.045, 0.04, 0, Math.PI * 2, 14), { color: ink0, passes: 8, width: 0.009, spread: 0.028 });
+    ink.outline(blobPath(bx, by, 0.048, 0.042, { lumps: 4, amount: 0.15, noise: null }), { color: ink0, width: 0.01 });
+    ink.stroke([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: ink0, width: 0.008 });
+    return;
+  }
+
   // bob / mop / scribble / sweep — 두피를 덮는 스크리블
   //
   // depth를 0.5까지 올리면 호가 머리 옆면 한가운데까지 내려온다. 거기서
@@ -316,10 +364,7 @@ export function drawHeadgear(ink, fills, spec, box) {
 
   // 모자는 **눈썹 선 위**에 앉는다. 눈이 높이 달린 개체도 가리지 않게 눈(안경·고글·안대·모노클 테 포함) 위쪽 끝에서
   // 재고, 폭은 그 높이에서의 머리 윤곽 반폭(타원)을 따른다 — 머리 크기·모양이 달라도 늘 머리에 맞는다.
-  const eyes = eyeGeometry(spec, box);
-  const rim = LENS_SCALE[spec.parts.eyewear] || (spec.parts.eyewear === "monocle" ? 1.5 : spec.parts.eyewear === "patch" ? 1.35 : 1);
-  const eyeTop = eyes.reduce((m, e) => Math.max(m, e.y + e.r * rim), cy);
-  const brow = Math.max(cy + ry * 0.42, eyeTop + ry * 0.1);
+  const brow = browLine(spec, box);
   const halfW = (y) => rx * Math.sqrt(Math.max(0.05, 1 - ((y - cy) / ry) ** 2));
   const crown = cy + ry;
   const tiltSide = spec.seed % 2 ? 1 : -1;

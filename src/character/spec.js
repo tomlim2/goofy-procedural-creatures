@@ -42,13 +42,13 @@ function applyConstraints(parts, rng, speciesName) {
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
     parts.hair = "none";
   } else if (parts.headgear !== "none" && parts.hair !== "none") {
-    // 모자나 밴드면 짧은 머리만 남긴다.
-    const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly"];
+    // 모자나 밴드면 짧은 머리만 남긴다 (앞머리·옆단발은 모자 밑으로 나와도 된다).
+    const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob"];
     if (!short.includes(parts.hair)) parts.hair = rng.pick(short);
   }
 
-  // 모히칸은 무엇도 쓰지 않는다.
-  if (parts.hair === "mohawk") parts.headgear = "none";
+  // 모히칸·똥머리는 무엇도 쓰지 않는다.
+  if (parts.hair === "mohawk" || parts.hair === "bun") parts.headgear = "none";
 
   // 더듬이가 있으면 귀까지 달지 않는다. 실루엣이 지저분해진다.
   if (parts.horns === "antenna" && rng.chance(0.75)) parts.ears = "none";
