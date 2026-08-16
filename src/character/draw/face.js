@@ -1,5 +1,5 @@
 // 얼굴 — 눈·눈썹·안경·코·볼·입. 눈썹과 입은 상태 전환 대상이라 별도 스케치로도 굽는다.
-// 문서: guidelines/parts-catalog.md § 머리 (eyes~mouth), guidelines/motion.md § 얼굴
+// 문서: guidelines/character/parts.md § 머리 (eyes~mouth), guidelines/motion/catalog.md § 얼굴
 
 import { Sketch, blobPath, arcPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";

@@ -1,4 +1,4 @@
-// 종족 — 골격. 문서: guidelines/character-types.md
+// 종족 — 골격. 문서: guidelines/character/types.md
 
 // 종족. 아키타입이 "성향"이라면 종족은 "골격"이다. 줄 단위로 정해져서
 // 한 판에 사람 줄, 개 줄, 고양이 줄, 도깨비 줄이 섞인다.

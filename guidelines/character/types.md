@@ -12,8 +12,9 @@
 | **종족** | 줄(row) | 고정 레인 (`LANE_TABLE`) | 골격 — 두발/네발, 색, 전용 파츠, 지배 모션 |
 | **아키타입** | 개체 | `makeCreature` 첫 추첨 | 성향 — 파츠 가중치 편향 |
 | **비율 지터** | 개체 | `makeProportions` | 실루엣 — 머리 크기·비대칭·손떨림 |
+| **치수 슬롯** | 개체 | `LATE_SLOTS` (맨 끝) | 형태와 독립인 길이·폭 — armLength·legLength·bodyWidth. 스케일이 아니라 기장·폭만 바뀐다 |
 
-파츠 선택 우선순위: **종족 bias > 아키타입 bias > DEFAULT_BIAS > 균등**.
+파츠 선택 우선순위: **종족 bias > 아키타입 bias > DEFAULT_BIAS > 균등**. 종족 `forbid`는 뽑힌 뒤 결정적으로 덮어쓴다.
 
 ## 종족 (SPECIES)
 
@@ -68,8 +69,8 @@
 | eyeGap / eyeHeight | 0.42 (0.12) / 0.03 (0.09) | |
 | eyeSizeSkew / eyeHeightSkew | 0 (0.22) / 0 (0.05) | **좌우 비대칭**. 손그림처럼 보이는 가장 값싼 장치 |
 | noseDrop / mouthDrop | 0.1 (0.06) / 0.3 (0.07) | 머리 중심 대비 코·입 높이 |
-| bodyScale / bodyWide | 0.52 (0.12) / 1 (0.2) | |
-| legLength / armSpread | 0.3 (0.12) / 1 (0.25) | |
+| bodyScale / bodyWide | 0.52 (0.12) / 1 (0.2) | 몸 높이·폭. 폭에는 `bodyWidth` 슬롯 배율(0.7 / 1 / 1.4)이 곱해진다 |
+| legLength / armSpread | 0.3 (0.12) / 1 (0.25) | 다리 기장(×0.55, `legLength` short면 ×0.3 더) · 팔 길이(×0.242, `armLength` long이면 ×1.64 더) |
 | bodyLen / tailLift | 1 (0.2) / 0 (1) | 네발용. 두발도 뽑는다 (rng 호출 수 고정) |
 | wobble | 1 (0.55) | 개체별 손떨림 배율. 반듯한 놈과 엉망인 놈이 섞여야 한다 |
 | wobbleSeed | 0~100000 | 그리기용 rng 시드. 생성 rng와 분리 |
@@ -99,14 +100,15 @@
 
 ## 제약 (applyConstraints)
 
-같이 나오면 그림이 깨지는 조합. **다시 뽑지 않고 결정적으로 덮어쓴다.** 종족 forbid가 맨 먼저.
+같이 나오면 그림이 깨지는 조합. **다시 뽑지 않고 결정적으로 덮어쓴다.** 순서대로:
 
-- 헬멧·항아리 → 머리카락 없음. 모자·밴드 → 짧은 머리만
-- 모히칸 → 모자 없음. 왕관 뿔 → 모자 없음, 머리카락 none/tuft만
-- 더듬이 → 75% 확률로 귀 없음
-- 안대 → 어느 쪽인지 여기서 정함 (patchSide ±1, 없으면 99 — 외눈의 side 0과 충돌 방지)
-- 감은 눈 + 화난 눈썹 → 눈썹 flat
-- 종족 forbid (species.js): human 뿔→none·cyclops→wide·long 팔→medium, pup cyclops→dot, cat cyclops→slit. **맨 먼저** 적용
-- 외눈 → 안경류 없음
-- 안경·고글 → 60% 확률로 눈썹 없음
-- imp: 머리 DARKS 중 1, 몸은 머리색/다른 어두운색/밝은 옷 (40/25/35)
+1. **종족 forbid** (species.js) — 맨 먼저. human 뿔→none·cyclops→wide·long 팔→medium, pup cyclops→dot, cat cyclops→slit
+2. 헬멧·항아리 → 머리카락 없음. 모자·밴드 → 짧은 머리만
+3. 모히칸 → 모자 없음. 왕관 뿔 → 모자 없음, 머리카락 none/tuft만
+4. 더듬이 → 75% 확률로 귀 없음
+5. 안대 → 어느 쪽인지 여기서 정함 (patchSide ±1, 없으면 99 — 외눈의 side 0과 충돌 방지)
+6. 감은 눈 + 화난 눈썹 → 눈썹 flat
+7. 외눈 → 안경류 없음
+8. 안경·고글 → 60% 확률로 눈썹 없음
+9. imp 팔레트: 머리 DARKS 중 1, 몸은 머리색/다른 어두운색/밝은 옷 (40/25/35) — `makeCreature`에서
+10. 치수 슬롯(`LATE_SLOTS`)을 뽑은 뒤 종족 forbid를 **한 번 더** — 그 슬롯에도 제한이 걸리게

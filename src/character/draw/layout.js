@@ -1,5 +1,5 @@
 // 치수와 윤곽. 스펙에서 실제 좌표를 뽑는다. 그리기 함수들이 전부 이 값을 공유한다.
-// 문서: guidelines/parts-catalog.md § head, guidelines/rig.md § 원점 규칙
+// 문서: guidelines/character/parts.md § head, guidelines/rig.md § 원점 규칙
 
 export const TAU = Math.PI * 2;
 
@@ -57,8 +57,7 @@ export function layout(spec) {
     const shape = headShape(spec);
     const headRy = 0.23 * p.headScale * shape.ry;
     const headRx = 0.23 * p.headScale * p.headWide * shape.rx;
-    // 머리는 몸 위에 얹는다. 겹치면 몸의 잉크가 얼굴 위로 비친다
-    // (잉크 메시는 채색 메시보다 항상 위에 있다).
+    // 머리는 몸 위에 얹는다 (머리 채색이 몸 잉크를 덮으므로 겹쳐도 몸통 선은 안 비친다).
     const headCy = bodyTop + headRy * 0.82;
     return { quad, legTop, bodyH, bodyW, bodyCx, bodyTop, headRx, headRy, headCy };
   }

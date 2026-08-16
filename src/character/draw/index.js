@@ -1,5 +1,5 @@
 // 스펙 → 획. 파츠별 그리기 함수를 조립한다. 무엇을 고를지는 여기서 정하지 않는다.
-// 문서: guidelines/parts-catalog.md, guidelines/rig.md
+// 문서: guidelines/character/parts.md, guidelines/rig.md
 
 import { Sketch } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";

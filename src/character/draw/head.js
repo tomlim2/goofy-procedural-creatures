@@ -1,4 +1,4 @@
-// 머리 — 윤곽·귀·머리카락·모자·뿔. 문서: guidelines/parts-catalog.md § 머리
+// 머리 — 윤곽·귀·머리카락·모자·뿔. 문서: guidelines/character/parts.md § 머리
 
 import { blobPath, arcPath } from "../../stroke.js";
 import { TAU, headShape, darken, isDark } from "./layout.js";

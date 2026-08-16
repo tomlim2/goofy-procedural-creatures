@@ -1,6 +1,6 @@
 // 파츠 어휘. 여기는 "무엇이 있는가"만 정의한다. 고르는 규칙은 ../creature.js,
 // 그리는 일은 ../draw/가 한다. 셋을 섞지 않는다.
-// 문서: guidelines/parts-catalog.md
+// 문서: guidelines/character/parts.md
 
 // 슬롯별 선택지. 이름은 draw.js의 그리기 함수 키와 1:1로 맞춘다.
 export const SLOTS = {

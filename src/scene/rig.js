@@ -27,15 +27,17 @@ export function buildCreature(spec, noise, birth = 0) {
     if (!firstDrawn) firstDrawn = drawn;
     const faceCy = drawn.faceCy;
 
+    // 몸 채색(1) → 몸 잉크(1.5) → 머리 채색(1.8) → 머리 잉크(2). 머리 채색이 몸 잉크 위라
+    // 머리가 몸통을 덮는 자리에 몸통 윤곽선이 비치지 않는다. 머리 채색은 그래서 불투명하다.
     const bodyFrame = new THREE.Group();
     if (!drawn.body.fills.empty) bodyFrame.add(sketchMesh(drawn.body.fills, 0.92, 1));
-    bodyFrame.add(sketchMesh(drawn.body.ink, 1, 2));
+    bodyFrame.add(sketchMesh(drawn.body.ink, 1, 1.5));
     bodyFrame.visible = k === 0;
     bodyGroup.add(bodyFrame);
     bodyFrames.push(bodyFrame);
 
     const headFrame = new THREE.Group();
-    if (!drawn.head.fills.empty) headFrame.add(sketchMesh(drawn.head.fills, 0.92, 1, -drawn.neckY));
+    if (!drawn.head.fills.empty) headFrame.add(sketchMesh(drawn.head.fills, 1, 1.8, -drawn.neckY));
     headFrame.add(sketchMesh(drawn.head.ink, 1, 2, -drawn.neckY));
     headFrame.visible = k === 0;
     headGroup.add(headFrame);
@@ -177,7 +179,8 @@ export function buildCreature(spec, noise, birth = 0) {
     headRx: firstDrawn.box.headRx,
     headRy: firstDrawn.box.headRy,
     headTop: firstDrawn.headTop,
-    boilFps: 8 + (spec.seed % 5) * 0.5,
+    // 보일 주기. 개체별로 살짝 다르게 (약 2.7~3.3fps). 빠르면 그림이 떨려 보이고 느리면 굳는다
+    boilFps: (8 + (spec.seed % 5) * 0.5) / 3,
     boilOffset: spec.seed % BOIL_FRAMES,
     baseX: 0,
     baseY: 0,

@@ -1,4 +1,4 @@
-// 몸 — 몸통·무늬. 문서: guidelines/parts-catalog.md § 몸
+// 몸 — 몸통·무늬. 문서: guidelines/character/parts.md § 몸
 
 import { blobPath } from "../../stroke.js";
 import { darken, isDark } from "./layout.js";

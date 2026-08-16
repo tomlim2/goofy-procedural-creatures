@@ -1,4 +1,4 @@
-// 아키타입 — 성향. 문서: guidelines/character-types.md
+// 아키타입 — 성향. 문서: guidelines/character/types.md
 
 // 아키타입. 순수 랜덤 조합은 금방 "아까 본 것"처럼 보인다.
 // 성향을 먼저 뽑고 그 안에서 변주해야 35마리가 서로 달라 보인다.

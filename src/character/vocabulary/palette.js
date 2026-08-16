@@ -1,4 +1,4 @@
-// 팔레트. 문서: guidelines/character-types.md § 팔레트
+// 팔레트. 문서: guidelines/character/types.md § 팔레트
 
 // 종이 위에서 성립하는 색만 쓴다. 채도를 올리면 손그림 느낌이 바로 깨진다.
 export const PAPER = "#efe9dd";

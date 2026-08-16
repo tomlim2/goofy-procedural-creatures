@@ -1,4 +1,4 @@
-// 이모트 글리프. 문서: guidelines/motion.md § 이모트
+// 이모트 글리프. 문서: guidelines/motion/catalog.md § 이모트
 
 import { Sketch, arcPath } from "../stroke.js";
 import { sketchMesh } from "./material.js";
