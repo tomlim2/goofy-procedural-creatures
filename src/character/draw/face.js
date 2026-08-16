@@ -48,12 +48,15 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       });
       fills.fill(blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), ink0);
     } else if (kind === "half") {
-      ink.outline(blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.1, noise: null }), {
-        color: ink0, width: 0.011
-      });
-      ink.stroke([[eye.x - eye.r * 1.1, eye.y + eye.r * 0.25], [eye.x + eye.r * 1.1, eye.y + eye.r * 0.35]], {
+      // 반쯤 감은 눈 — 원 전체에 선을 긋지 않는다(원+선은 "선 그어진 동그라미"로 뭉개져 읽힌다).
+      // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양
+      const lidY = eye.r * 0.3;
+      const a0 = Math.asin(lidY / eye.r);   // 눈꺼풀 선이 원과 만나는 각
+      ink.stroke(arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18), { color: ink0, width: 0.011 });
+      ink.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], {
         color: ink0, width: 0.013
       });
+      fills.fill(blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink0);
     }
     // ring / wide는 여기서 그리지 않는다. scene이 흰자·동공·눈꺼풀을
     // 별도 메시로 세워 개방도(놀람)를 움직인다.
