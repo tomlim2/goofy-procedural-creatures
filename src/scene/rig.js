@@ -179,8 +179,8 @@ export function buildCreature(spec, noise, birth = 0) {
     headRx: firstDrawn.box.headRx,
     headRy: firstDrawn.box.headRy,
     headTop: firstDrawn.headTop,
-    // 보일 주기. 개체별로 살짝 다르게 (약 2.7~3.3fps). 빠르면 그림이 떨려 보이고 느리면 굳는다
-    boilFps: (8 + (spec.seed % 5) * 0.5) / 3,
+    // 보일 주기. 개체별로 살짝 다르게 (약 0.53~0.67fps — 1.5~1.9초에 한 번). 빠르면 그림이 떨려 보인다
+    boilFps: (8 + (spec.seed % 5) * 0.5) / 15,
     boilOffset: spec.seed % BOIL_FRAMES,
     baseX: 0,
     baseY: 0,

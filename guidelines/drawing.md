@@ -49,7 +49,7 @@ WebGL의 `linewidth`는 대부분의 환경에서 1로 고정된다. `THREE.Line
 
 ## 보일
 
-같은 그림을 지터 위상만 다르게 3벌 굽고(`drawCreature(spec, variant)`) 개체별 약 2.7~3.3fps로 visible을
+같은 그림을 지터 위상만 다르게 3벌 굽고(`drawCreature(spec, variant)`) 개체별 약 0.53~0.67fps(1.5~1.9초에 한 번)로 visible을
 순환한다. 스크리블 채움도 변형마다 다시 그려져 함께 끓는다.
 
 **보일은 재질이지 모션이 아니다.** 캐릭터가 바인드 포즈로 정지해 있어도 선은 끓는다 — 종이 위 연필선이
