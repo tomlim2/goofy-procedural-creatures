@@ -97,7 +97,8 @@ export function makeClock(seed, birth = 0, species = "kid", noHang = false) {
       const flapping = action === "flap" ? Math.sin(t * Math.PI * 12) * 0.35 : 0;
       for (const side of [-1, 1]) {
         const key = String(side);
-        const outward = -side;
+        // outward = side (draw/limbs.js armPoseAngles와 같은 부호 규약)
+        const outward = side;
         if (flapping) armOffset[key] += outward * flapping;
         if (liftSide === side) armOffset[key] += outward * 0.55;
         if (wave.k >= 0 && wave.side === side) {

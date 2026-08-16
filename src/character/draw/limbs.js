@@ -154,10 +154,14 @@ export function limbSketches(spec) {
 //
 // 어깨각은 outward(몸 바깥) 양수. 팔꿈치각은 위팔 기준 아래팔이 얼마나 꺾이나 —
 // 양수면 안쪽(몸 쪽)으로 접힌다.
+//
+// 부호: 위팔은 (0, -len)으로 늘어진 채 굽고 rotation.z(반시계 양수)로 든다.
+// 왼팔(side -1, x<0)을 바깥(더 왼쪽)으로 들려면 시계방향 = 음수, 오른팔은 반시계 = 양수.
+// 그래서 outward = side다. (-side로 두면 팔이 몸 안쪽으로 접힌다.)
 export const BIND_POSE = "tpose";
 
 export function armPoseAngles(action, side) {
-  const outward = -side;
+  const outward = side;
   switch (action) {
     case "tpose":  return [outward * 1.57, 0];              // 바인드. 어깨 수평, 곧게
     case "raise":  return [outward * 2.4, outward * -0.5];   // 만세
