@@ -168,18 +168,28 @@ export function buildCreature(spec, noise, birth = 0) {
 
   // 잠 눈꺼풀 — 정지 눈(dot·cross·slit…)은 얼굴 잉크에 구워져 있어 감을 수 없다. 잘 때 그 위에 덮는 살색 덮개 + 감은 선.
   // 살아 있는 눈은 자기 눈꺼풀(lid)이 있어 필요 없다
-  const sleepLids = [];
+  // 정지 눈(dot·sleepy·cross·spiral·slit·half)의 덮개 — 잠(감은 눈 선)과 ^^·윙크(미소 아치)를 위해 살색 덮개 + 아치 둘.
+  // 살아 있는 눈의 lid·shut·smile과 짝이다: 정지 눈도 자면 감고, 행복하면 ^^로 웃는다
+  const staticLids = [];
   for (const eye of eyeGeometry(spec, layout(spec))) {
     if (eye.side === spec.parts.patchSide) continue;
     if (firstDrawn.eyes.some((e) => e.side === eye.side)) continue;
-    const cover = new Sketch(noise, 0.4);
-    cover.fill(blobPath(0, 0, eye.r * 1.2, eye.r * 1.1, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
-    cover.stroke(arcPath(0, eye.r * 0.15, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: spec.faceInk || spec.palette.ink, width: 0.011 });
-    const mesh = sketchMesh(cover, 1, 3.5);
-    mesh.position.set(eye.x, eye.y - faceCy, 0);
-    mesh.visible = false;
-    faceGroup.add(mesh);
-    sleepLids.push(mesh);
+    const ink0 = spec.faceInk || spec.palette.ink;
+    const coverSketch = new Sketch(noise, 0.4);
+    coverSketch.fill(blobPath(0, 0, eye.r * 1.2, eye.r * 1.1, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
+    const shutSketch = new Sketch(noise, 0.4);
+    shutSketch.stroke(arcPath(0, eye.r * 0.15, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink0, width: 0.011 });
+    const smileSketch = new Sketch(noise, 0.5);
+    smileSketch.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0, width: 0.013 });
+    const cover = sketchMesh(coverSketch, 1, 3.5);
+    const shut = sketchMesh(shutSketch, 1, 3.6);
+    const smile = sketchMesh(smileSketch, 1, 3.6);
+    for (const m of [cover, shut, smile]) {
+      m.position.set(eye.x, eye.y - faceCy, 0);
+      m.visible = false;
+      faceGroup.add(m);
+    }
+    staticLids.push({ cover, shut, smile, eye });
   }
 
   return {
@@ -194,7 +204,7 @@ export function buildCreature(spec, noise, birth = 0) {
     eyeRigs,
     // 놀람 때 눈 리그가 커지는 배율의 감쇠. 왕눈(wide·cyclops)은 이미 커서 1.65배로 뻥 튀기면 코·볼·입까지 덮는다 — 절반만
     eyePop: eyePop(spec),
-    sleepLids,
+    staticLids,
     faceStates,
     // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다
     clock: makeClock(spec.seed, birth, spec.species, motionRig(spec)),

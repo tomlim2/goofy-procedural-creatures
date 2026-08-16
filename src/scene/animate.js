@@ -95,8 +95,14 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.faceStates.mouth[0].visible = !state.mouthAlt;
   item.faceStates.mouth[1].visible = state.mouthAlt;
 
-  // 잠 눈꺼풀 (정지 눈 위 덮개) — 반쯤 넘게 잠들면 보인다
-  for (const lid of item.sleepLids) lid.visible = (state.sleep || 0) > 0.5;
+  // 정지 눈 덮개 — 반쯤 넘게 잠들면 감은 눈 선, ^^·윙크(그쪽)면 미소 아치. 살아 있는 눈의 lid/shut/smile과 같은 규칙
+  const asleep = (state.sleep || 0) > 0.5;
+  for (const lid of item.staticLids) {
+    const happyEye = state.happy || (state.winkSide !== 0 && lid.eye.side === state.winkSide);
+    lid.cover.visible = asleep || happyEye;
+    lid.smile.visible = happyEye;
+    lid.shut.visible = asleep && !happyEye;
+  }
 
   // 눈 — 개방도·시선·깜빡임·^^·윙크. 개방도(놀람)는 개체의 eyePop만큼만 (왕눈은 절반)
   for (const rig of item.eyeRigs) {

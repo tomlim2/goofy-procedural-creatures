@@ -41,13 +41,12 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       }
       ink.stroke(spiral, { color: ink0, width: 0.009, jitter: 0.004 });
     } else if (kind === "slit") {
-      // 아몬드 윤곽 + 세로 동공
-      ink.outline(blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.62, { lumps: 3, amount: 0.1, noise: null }), {
+      // 아몬드 윤곽 + **채운** 세로 동공(방추). 얇은 획이면 눈이 작을 때 윤곽 두 선이 붙어 뭉개지고 동공은 안 읽힌다 —
+      // 아몬드를 조금 높이고(0.7r) 동공을 면으로 채워 멀리서도 고양이 눈으로 보이게
+      ink.outline(blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, { lumps: 3, amount: 0.1, noise: null }), {
         color: ink0, width: 0.01
       });
-      ink.stroke([[eye.x, eye.y - eye.r * 0.5], [eye.x + 0.004, eye.y + eye.r * 0.5]], {
-        color: ink0, width: 0.013
-      });
+      fills.fill(blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), ink0);
     } else if (kind === "half") {
       ink.outline(blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.1, noise: null }), {
         color: ink0, width: 0.011
