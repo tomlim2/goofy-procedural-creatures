@@ -4,7 +4,15 @@
 // 한 판에 사람 줄, 개 줄, 고양이 줄, 도깨비 줄이 섞인다.
 // bias는 아키타입보다 우선한다. 골격이 성향보다 먼저다.
 export const SPECIES = [
-  { name: "kid", weight: 5, bias: {} },
+  {
+    name: "kid",
+    weight: 5,
+    // 사람에게 뿔·더듬이는 없다. 종족 bias가 아키타입(beast의 뿔, sprite의 더듬이)보다
+    // 우선이므로 여기서 막으면 kid 줄에는 절대 안 나온다. 그 성향들은 imp 줄에서 산다.
+    bias: {
+      horns: [["none", 1]]
+    }
+  },
   {
     name: "pup",
     weight: 2,
