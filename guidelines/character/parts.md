@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 104파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 106파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -90,40 +90,48 @@ bean(찌그러진 타원) / box / dress(아래가 넓은 사다리꼴) / tube(�
 네발은 슬롯값과 무관하게 가로 blob.
 
 ### bodyWidth (3)
-| 값 | 몸 폭 배율 | 몸 높이 | 다리 스탠스 (몸 반폭 대비) | |
-| --- | --- | --- | --- | --- |
-| narrow | 0.7 (dress 0.75) | ×1.08 홀쭉 | 0.4 — 다리를 모은다 | sprite |
-| medium | 1 | ×1 | 0.5 | 기본 |
-| wide | 1.4 (dress 1.15 — 밑단이 셀을 넘지 않게) | ×0.92 땅딸막 | 0.68 — 다리를 벌린다 | blob |
+두발에서는 몸통 **폭**, 네발에서는 몸통 **길이**다 (네발 몸은 가로로 누워 있어 실루엣의 너비가 곧 길이).
+
+| 값 | 두발: 몸 폭 배율 | 두발: 몸 높이 | 두발: 다리 스탠스 (몸 반폭 대비) | 네발: 몸 길이 배율 | |
+| --- | --- | --- | --- | --- | --- |
+| narrow | 0.7 (dress 0.75) | ×1.08 홀쭉 | 0.4 — 다리를 모은다 | 0.7 짧은 몸 | sprite |
+| medium | 1 | ×1 | 0.5 | 1 | 기본 |
+| wide | 1.4 (dress 1.15 — 밑단이 셀을 넘지 않게) | ×0.92 땅딸막 | 0.68 — 다리를 벌린다 | 1.45 긴 몸 (닥스훈트·먼치킨). 몸 중심을 머리 쪽으로 당겨 꼬리가 셀을 덜 넘게 | blob |
 
 형태(body)와 독립이라 4×3 조합. **다리 스탠스(벌림)는 다리 슬롯이 아니라 여기서 정한다** — 넓은 몸이 넓은 스탠스를
-받치고, 좁은 몸은 다리를 모은다. 어깨 위치(몸통 윤곽 위)도 같이 따라온다. `layout()` `BODY_WIDTH`. 네발은 무시.
-`LATE_SLOTS`. 갤러리: `gallery.html?slot=bodyWidth&fix=legLength:medium`.
+받치고, 좁은 몸은 다리를 모은다. 어깨 위치(몸통 윤곽 위)도 같이 따라온다. 네발은 앞뒤 다리 쌍이 몸 길이를 따라 벌어진다.
+`layout()` `BODY_WIDTH`(두발)·`QUAD_BODY_LEN`(네발). `LATE_SLOTS`. 갤러리: `gallery.html?slot=bodyWidth&fix=legLength:long`.
 
 ### marks (6)
 none / stripes(가로 3줄) / dots(4점) / patch(왼쪽 해칭) / hatch(전체 사선) / spots(달마시안 얼룩 3개).
 
-### legs (5)
-| 값 | 그리기 |
-| --- | --- |
-| stick | 가는 선 + 동그란 발 |
-| stub | 굵은 선 (0.019) + 동그란 발 |
-| bent | 무릎 꺾임 + 동그란 발 |
-| boots | 선 + 옷색 부츠 채움 |
-| tiptoe | 가는 선 + 아래로 뾰족한 발 |
-
-형태만이다. 벌린 정도(스탠스)는 `bodyWidth`가, 기장은 `legLength`가 정한다 — 5×2×3 조합.
-
-두발은 엉덩이(밑단 위 0.02)에 피벗. **네발**은 슬롯값과 무관하게 굵은 스텁 4개 + 발가락, 뿌리는 bodyH 25% 위.
-
-### legLength (2)
-| 값 | 기장 | |
+### legs (6)
+| 값 | 두발 | 네발 (고양이·개) |
 | --- | --- | --- |
-| medium | legLength 비율 × 0.55 (≈0.17) | 기준 |
-| short | 그 30% (≈0.05) | 몸이 바닥에 거의 내려앉는다. **스케일이 아니라 기장만** — 발·굵기·부츠 높이는 그대로 |
+| stick | 가는 선 + 동그란 발 | 가는 다리 + 둥근 발 |
+| stub | 굵은 선 (0.019) + 동그란 발 | **기본** — 굵은 스텁 + 앞으로 나온 발끝 + 발가락 두 줄 (레퍼런스) |
+| bent | 무릎 꺾임 + 동그란 발 | stick으로 그린다 |
+| boots | 선 + 옷색 부츠 채움 | 양말 — 발목까지 작은 부츠 |
+| tiptoe | 가는 선 + 아래로 뾰족한 발 | stick으로 그린다 |
+| **float** | 레이맨식 — 다리 선 없이 큼직한 발만 떠 있다 (반지름 0.03) | 발만 떠 있다 (0.024) |
 
-형태(legs)와 독립이라 5×2 조합 — 모든 다리 유형에 짧은 판이 있다. `layout()`이 `legTop`에서 곱하므로 몸·머리·어깨가
-같이 내려온다. 네발은 무시. `LATE_SLOTS`라 맨 끝에 뽑는다. 갤러리: `gallery.html?slot=legs&fix=legLength:short`.
+형태만이다. 벌린 정도(스탠스)는 `bodyWidth`가, 기장은 `legLength`가 정한다 — 6×3×3 조합.
+float도 엉덩이 피벗에 걸려 있어 관절 지터·발 까딱이 발을 둥둥 흔든다.
+
+두발은 엉덩이(밑단 위 0.02)에 피벗. **네발**은 앞다리 둘·뒷다리 둘이 각각 **붙어 있다**(옆에서 본 짐승 — 쌍 안 간격
+max(0.03, 몸 길이 16%)), 앞쌍은 몸 중심에서 −60%, 뒷쌍은 +60%. 뿌리는 bodyH 25% 위. 종족 bias: pup stub 4 · stick 2 ·
+float 1.5 · boots 1, cat stub 3 · stick 3 · float 1.5 · boots 1.
+
+### legLength (3)
+| 값 | 기장 (두발) | 기장 (네발) | |
+| --- | --- | --- | --- |
+| long | legLength 비율 × 0.55 (≈0.17) | × 0.4 (≈0.12) | 기준 |
+| medium | 그 65% | 65% | |
+| short | 그 30% (≈0.05) | 30% — 닥스훈트·먼치킨 | 몸이 바닥에 거의 내려앉는다. **스케일이 아니라 기장만** — 발·굵기·부츠 높이는 그대로 |
+
+형태(legs)와 독립이라 모든 다리 유형에 세 기장이 있다. `layout()`이 `legTop`에서 곱하므로(`LEG_LENGTH`) 몸·머리·어깨가
+같이 내려온다. 네발도 따른다. `LATE_SLOTS`라 맨 끝에 뽑는다. 기본 가중치 long 3 · medium 2 · short 1.
+갤러리: `gallery.html?slot=legs&fix=legLength:short`.
 
 ### tail (4) — 네발 전용
 curl(위로 말림) / flag(위로 곧게) / longtail(뒤로 길게) / stubtail(뭉툭). 꼬리 뿌리에 피벗.

@@ -6,7 +6,7 @@ import { darken, isDark } from "./layout.js";
 export function drawBody(ink, fills, spec, box, noise) {
   if (box.quad) {
     // 가로로 누운 몸. 머리가 앞쪽을 덮으므로 몸은 뒤로 뻗는다.
-    const cx = box.bodyCx + box.bodyW * 0.35;
+    const cx = box.bodyCx;
     const cy = (box.legTop + box.bodyTop) / 2;
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02

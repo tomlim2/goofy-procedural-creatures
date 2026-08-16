@@ -23,6 +23,15 @@ export const BODY_WIDTH = {
   wide: { w: 1.4, h: 0.92, dressW: 1.15, stance: 0.68 }
 };
 
+// 다리 기장 배율 (legLength 슬롯). 네발도 같은 표를 쓴다 — short 네발이 닥스훈트다.
+export const LEG_LENGTH = { long: 1, medium: 0.65, short: 0.3 };
+// 네발 몸 길이 (bodyWidth 슬롯). w는 몸 길이 배율, cx는 몸통 중심이 앞(머리) 기준점에서 얼마나 뒤에 있나.
+export const QUAD_BODY_LEN = {
+  narrow: { w: 0.7, cx: 0.35 },
+  medium: { w: 1, cx: 0.35 },
+  wide: { w: 1.45, cx: 0.22 }
+};
+
 export function headShape(spec) {
   return HEAD_SHAPES[spec.parts.head] || HEAD_SHAPES.round;
 }
@@ -49,10 +58,14 @@ export function layout(spec) {
   if (quad) {
     // 네발 골격. 몸이 가로로 눕고 머리가 몸 앞(왼쪽)에 얹힌다.
     // 키가 작아서 사람 줄과 나란히 서면 레퍼런스처럼 층이 낮아진다.
-    const legTop = p.legLength * 0.4;
+    // 다리 기장 — 네발도 슬롯을 따른다. long이 기준, medium은 65%, short(닥스훈트)는 30%
+    const legTop = p.legLength * 0.4 * (LEG_LENGTH[spec.parts.legLength] || 1);
     const bodyH = 0.15 * (p.bodyScale / 0.52);
-    const bodyW = 0.18 * p.bodyLen;
-    const bodyCx = 0.08;
+    // 몸 길이 — 네발에서 bodyWidth 슬롯은 몸통 길이다: narrow 짧은 몸, wide 긴 몸(닥스훈트·먼치킨).
+    // 긴 몸은 중심을 머리 쪽으로 당겨(0.35→0.22) 꼬리 끝이 셀을 덜 넘게 한다.
+    const bodyLen = QUAD_BODY_LEN[spec.parts.bodyWidth] || QUAD_BODY_LEN.medium;
+    const bodyW = 0.18 * p.bodyLen * bodyLen.w;
+    const bodyCx = 0.08 + bodyW * bodyLen.cx;   // 몸통 중심 x. 머리(x=0)는 앞(왼쪽)에 얹힌다
     const bodyTop = legTop + bodyH;
     const shape = headShape(spec);
     const headRy = 0.23 * p.headScale * shape.ry;
@@ -62,8 +75,8 @@ export function layout(spec) {
     return { quad, legTop, bodyH, bodyW, bodyCx, bodyTop, headRx, headRy, headCy };
   }
 
-  // 다리 기장. short는 스케일이 아니라 길이만 30% — 몸이 바닥에 거의 내려앉고 발·굵기는 그대로.
-  const legTop = p.legLength * 0.55 * (spec.parts.legLength === "short" ? 0.3 : 1);
+  // 다리 기장. 스케일이 아니라 길이만 — long 기준, medium 65%, short 30%(몸이 바닥에 거의 내려앉는다). 발·굵기는 그대로.
+  const legTop = p.legLength * 0.55 * (LEG_LENGTH[spec.parts.legLength] || 1);
   // 몸통 폭(bodyWidth 슬롯) × 개체 지터. 넓으면 조금 땅딸막하게, 좁으면 조금 홀쭉하게.
   // dress는 밑단이 1.35배 퍼지므로 wide를 덜 준다 — 셀(±0.45)을 넘지 않게.
   const width = BODY_WIDTH[spec.parts.bodyWidth] || BODY_WIDTH.medium;

@@ -20,19 +20,21 @@ export const SLOTS = {
   body: ["bean", "box", "dress", "tube"],
   marks: ["none", "stripes", "dots", "patch", "hatch", "spots"],
   // 다리 유형(형태만). 레퍼런스: 전부 끝에 동그란 발이 있고 몸 밑에서 나온다.
-  // 벌린 정도(스탠스)는 여기 없다 — 몸통 폭(bodyWidth)이 정한다. 넓은 몸이 넓은 스탠스를 받친다.
-  legs: ["stick", "stub", "bent", "boots", "tiptoe"],
+  // float는 레이맨식 — 다리 없이 발만 떠 있다. 벌린 정도(스탠스)는 여기 없다 —
+  // 몸통 폭(bodyWidth)이 정한다. 네발은 stub·stick·boots·float만 그리고 나머지는 stick으로 본다.
+  legs: ["stick", "stub", "bent", "boots", "tiptoe", "float"],
   // 네발 종족 전용. 두발 종족은 그리지 않는다.
   tail: ["curl", "flag", "longtail", "stubtail"],
   // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다.
   arms: ["stick", "sleeve", "stubby", "mitten"],
   // 팔 길이. 형태와 독립이라 짧은 소매 팔, 매우 긴 장갑 팔이 다 나온다.
   armLength: ["medium", "long"],
-  // 다리 길이(기장). 형태와 독립 — 모든 다리 유형에 짧은 판이 있다. 스케일이 아니라 기장만 짧다:
-  // 몸이 바닥 가까이 내려앉고 발·굵기는 그대로다. 네발은 무시한다.
-  legLength: ["medium", "short"],
+  // 다리 길이(기장). 형태와 독립 — 모든 다리 유형에 세 기장이 있다. 스케일이 아니라 기장만 바뀐다:
+  // 몸이 바닥 가까이 내려앉고 발·굵기는 그대로다. 네발도 따른다 (short = 닥스훈트).
+  legLength: ["long", "medium", "short"],
   // 몸통 폭. 형태(body)와 독립 — 홀쭉한 통·땅딸막한 콩이 다 나온다. 다리 스탠스(벌림)와
-  // 어깨 위치가 이걸 따른다: 좁은 몸은 다리를 모으고, 넓은 몸은 벌린다. 네발은 무시한다.
+  // 어깨 위치가 이걸 따른다: 좁은 몸은 다리를 모으고, 넓은 몸은 벌린다.
+  // 네발에서는 몸 길이다(가로로 누운 몸의 너비 = 길이): wide가 닥스훈트·먼치킨 같은 긴 몸.
   bodyWidth: ["narrow", "medium", "wide"]
 };
 
@@ -59,7 +61,7 @@ export const DEFAULT_BIAS = {
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
-  legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["tiptoe", 1]],
-  legLength: [["medium", 3], ["short", 1]],
+  legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],
+  legLength: [["long", 3], ["medium", 2], ["short", 1]],
   bodyWidth: [["medium", 4], ["narrow", 1.5], ["wide", 1.5]]
 };

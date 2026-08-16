@@ -40,6 +40,8 @@ export const SPECIES = [
       tail: true
     },
     bias: {
+      // 다리 — 레퍼런스의 굵은 스텁이 기본. 가는 다리·양말·떠 있는 발(레이맨식)도 섞인다
+      legs: [["stub", 4], ["stick", 2], ["float", 1.5], ["boots", 1]],
       ears: [["flap", 4], ["long", 4], ["round", 1], ["fold", 1]],
       horns: [["none", 8], ["nub", 1]],
       hair: [["none", 5], ["tuft", 2], ["wisp", 1]],
@@ -66,6 +68,7 @@ export const SPECIES = [
       tail: true
     },
     bias: {
+      legs: [["stub", 3], ["stick", 3], ["float", 1.5], ["boots", 1]],
       ears: [["pointy", 5], ["fold", 2], ["round", 1]],
       horns: [["none", 1]],
       hair: [["none", 6], ["tuft", 1]],
@@ -105,7 +108,7 @@ export const SPECIES = [
       arms: [["stubby", 5], ["stick", 2]],
       // 바닥을 쓰는 긴 팔은 도깨비의 것 (사람은 forbid). 도깨비 열에 눈에 띌 만큼
       armLength: [["medium", 3], ["long", 2]],
-      legs: [["stub", 3], ["stick", 3]]
+      legs: [["stub", 3], ["stick", 3], ["float", 1]]
     }
   }
 ];

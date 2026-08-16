@@ -50,22 +50,42 @@ export function limbSketches(spec) {
     s.outline(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), { color: ink0, width: 0.009 });
   };
 
+  const legKind = spec.parts.legs;
+
   if (box.quad) {
-    // 네 다리 — 몸통 밑에 붙은 짧은 스텁 + 발가락 표시.
-    // 뿌리는 몸 윤곽 안쪽(bodyH의 25% 위)에서 시작한다.
-    const cx = box.bodyCx + box.bodyW * 0.35;
+    // 네 다리 — 앞다리 둘·뒷다리 둘이 각각 붙어 있다(옆에서 본 짐승). 뿌리는 몸 윤곽 안쪽(bodyH 25% 위).
+    // 형태: stub(기본 — 굵은 스텁 + 발끝 + 발가락) · stick(가는 다리 + 둥근 발) · boots(양말) ·
+    // float(레이맨식 — 다리 없이 발만 떠 있다). bent·tiptoe는 네발에서 stick으로 그린다.
+    // 기장은 layout이 legLength로 정한다(short = 닥스훈트). 몸 길이는 bodyWidth(box.bodyW).
+    const cx = box.bodyCx;
     const hipY = box.legTop + box.bodyH * 0.25;
-    [-0.62, -0.22, 0.28, 0.66].forEach((tt, i) => {
-      const x = cx + box.bodyW * tt;
+    const kind = ["stub", "stick", "boots", "float"].includes(legKind) ? legKind : "stick";
+    const gap = Math.max(0.03, box.bodyW * 0.16);          // 한 쌍 안의 두 다리 간격
+    const front = cx - box.bodyW * 0.6;
+    const back = cx + box.bodyW * 0.6;
+    [front - gap / 2, front + gap / 2, back - gap / 2, back + gap / 2].forEach((x, i) => {
       const s = make();
       const len = hipY;
-      const lean = noise(tt * 7.1) * 0.012;
-      // 굵은 스텁 다리
-      s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.016 });
-      // 발 — 살짝 앞으로 나온 둥근 발끝 + 발가락 두 줄
-      s.stroke([[lean - 0.02, -len], [lean + 0.03, -len + 0.003]], { color: ink0, width: 0.012 });
-      s.stroke([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, width: 0.006 });
-      s.stroke([[lean + 0.018, -len + 0.002], [lean + 0.021, -len + 0.014]], { color: ink0, width: 0.006 });
+      const lean = noise(i * 7.1) * 0.012;
+      if (kind === "float") {
+        // 떠 있는 발 — 다리 선 없이 발만. 관절 지터로 발이 둥둥 흔들린다
+        dot(s, lean + 0.006, -len + 0.014, 0.024, skin);
+      } else if (kind === "stick") {
+        s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.01 });
+        dot(s, lean + 0.006, -len + 0.012, 0.02, skin);
+      } else if (kind === "boots") {
+        // 양말 — 발목까지 채운 작은 부츠
+        s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.012 });
+        const boot = [[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]];
+        s.fill(boot, cloth === skin ? ink0 : darken(cloth, 0.75));
+        s.outline(boot, { color: ink0, width: 0.009 });
+      } else {
+        // 굵은 스텁 다리 + 살짝 앞으로 나온 둥근 발끝 + 발가락 두 줄 (레퍼런스)
+        s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.016 });
+        s.stroke([[lean - 0.02, -len], [lean + 0.03, -len + 0.003]], { color: ink0, width: 0.012 });
+        s.stroke([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, width: 0.006 });
+        s.stroke([[lean + 0.018, -len + 0.002], [lean + 0.021, -len + 0.014]], { color: ink0, width: 0.006 });
+      }
       limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side: i < 2 ? -1 : 1, index: i, behind: false });
     });
     return limbs;
@@ -74,7 +94,6 @@ export function limbSketches(spec) {
   // ── 두발 다리 ──
   // 뿌리는 몸 밑단보다 살짝 위(윤곽 안). 끝에는 항상 발.
   const hipY = box.legTop + 0.02;
-  const legKind = spec.parts.legs;
   // 스탠스(벌림)는 다리 형태가 아니라 몸통 폭이 정한다 — 넓은 몸이 넓은 스탠스를 받친다.
   const spread = (BODY_WIDTH[spec.parts.bodyWidth] || BODY_WIDTH.medium).stance;
   for (const side of [-1, 1]) {
@@ -82,6 +101,12 @@ export function limbSketches(spec) {
     const s = make();
     const len = hipY;
     let footX = 0;
+    if (legKind === "float") {
+      // 레이맨식 — 다리 없이 큼직한 발만 떠 있다. 관절 지터·발 까딱이 발을 둥둥 흔든다
+      dot(s, side * 0.008, -len + 0.016, 0.03, skin);
+      limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
+      continue;
+    }
     if (legKind === "bent") {
       s.stroke([[0, 0], [side * 0.04, -len * 0.5], [side * 0.01, -len]], { color: ink0, width: 0.011 });
       footX = side * 0.01;
@@ -202,7 +227,7 @@ export function tailSketch(spec) {
 
   const p = spec.proportions;
   const ink0 = spec.palette.ink;
-  const cx = box.bodyCx + box.bodyW * 0.35;
+  const cx = box.bodyCx;
   const pivot = [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1];
   const kind = spec.parts.tail;
 
