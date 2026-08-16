@@ -39,31 +39,43 @@ export function drawEars(ink, fills, spec, box) {
   if (kind === "none") return;
 
   if (spec.species === "pup") {
-    // 개 귀 — 종류마다 다르다. 뿌리는 머리 위옆(0.72·headRx, 0.55·headRy). 채운 로브 + 두 번 덧그은 윤곽.
-    //   flap 늘어진 로브(레퍼런스 비글) · long 더 길게 턱 아래까지(바셋) · round 작은 동그란 귀(퍼그) ·
-    //   pointy 쫑긋 선 세모귀(셰퍼드) · fold 옆으로 접혀 끝만 늘어짐 · none 없음
+    // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위**(얼굴 양끝) — 안쪽에 두면 얼굴에서 돋는 것처럼 보인다.
+    // 윤곽 위 점은 타원(headRx·headRy) 위 극각 θ(정수리에서 잰 각)로 잡고, 바깥 법선 n을 따라 세우거나 밑으로 늘어뜨린다.
+    //   pointy 쫑긋 선 세모귀(셰퍼드, θ 38°) · round 작은 동그란 귀(퍼그, 55°) · flap 늘어진 로브(레퍼런스 비글, 72°) ·
+    //   long 턱 아래까지(바셋, 72°) · fold 옆으로 접혀 끝만 처짐(72°) · none 없음. 채운 로브 + 두 번 덧그은 윤곽.
     const earFill = darken(spec.palette.skin, 0.8);
     const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
+    const theta = { pointy: 0.66, round: 0.96, flap: 1.26, long: 1.26, fold: 1.26 }[kind] || 1.26;
     for (const side of [-1, 1]) {
-      const bx = side * box.headRx * 0.72;
-      const by = box.headCy + box.headRy * 0.55;
+      // 윤곽 위 뿌리와 바깥 법선
+      const rx = box.headRx, ry = box.headRy;
+      const bx = side * rx * Math.sin(theta);
+      const by = box.headCy + ry * Math.cos(theta);
+      let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
+      const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+      const tx = -ny * side, ty = nx * side;   // 접선 (바깥쪽 기준 좌우)
       let path;
-      if (kind === "long") {
-        path = blobPath(bx + side * 0.025, by - box.headRy * 0.8, 0.042, box.headRy * 0.9, { lumps: 3, amount: 0.12, noise: null });
-      } else if (kind === "round") {
-        path = blobPath(bx + side * 0.01, by + box.headRy * 0.12, 0.042, 0.04, { lumps: 3, amount: 0.15, noise: null });
-      } else if (kind === "pointy") {
-        // 쫑긋 — 뿌리에서 위로 뻗는 세모
-        path = [[bx - side * 0.035, by - 0.01], [bx + side * 0.005, by + box.headRy * 0.62], [bx + side * 0.05, by + 0.005]];
-      } else if (kind === "fold") {
-        // 옆으로 접힌 귀 — 위쪽은 바깥으로 삐죽, 끝은 아래로 처진다
+      if (kind === "pointy") {
+        // 밑변은 윤곽 위, 끝은 법선 방향으로 위로
+        const len = ry * 0.6;
         path = [
-          [bx - side * 0.02, by + 0.02], [bx + side * 0.06, by + 0.045], [bx + side * 0.075, by - 0.02],
-          [bx + side * 0.06, by - box.headRy * 0.45], [bx + side * 0.02, by - box.headRy * 0.4], [bx + side * 0.01, by - 0.03]
+          [bx - tx * 0.04 - nx * 0.01, by - ty * 0.04 - ny * 0.01],
+          [bx + nx * len + tx * 0.005, by + ny * len + ty * 0.005],
+          [bx + tx * 0.045 - nx * 0.01, by + ty * 0.045 - ny * 0.01]
+        ];
+      } else if (kind === "round") {
+        path = blobPath(bx + nx * 0.028, by + ny * 0.028, 0.042, 0.04, { lumps: 3, amount: 0.15, noise: null });
+      } else if (kind === "fold") {
+        // 옆으로 접힌 귀 — 뿌리에서 바깥으로 삐죽 나갔다가 끝이 아래로 처진다
+        const out = 0.075;
+        path = [
+          [bx - nx * 0.01, by + 0.025], [bx + side * out * 0.8, by + 0.05], [bx + side * out, by - 0.015],
+          [bx + side * out * 0.85, by - ry * 0.45], [bx + side * 0.03, by - ry * 0.4], [bx, by - 0.02]
         ];
       } else {
-        // flap — 레퍼런스의 늘어진 로브
-        path = blobPath(bx + side * 0.02, by - box.headRy * 0.55, 0.045, box.headRy * 0.62, { lumps: 3, amount: 0.12, noise: null });
+        // flap / long — 뿌리에서 바깥·아래로 늘어지는 로브
+        const len = ry * (kind === "long" ? 0.95 : 0.65);
+        path = blobPath(bx + side * 0.032, by - len * 0.5 + 0.01, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null });
       }
       fills.fill(path, earFill);
       ink.outline(path, earInk);
