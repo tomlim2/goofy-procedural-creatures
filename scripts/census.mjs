@@ -3,7 +3,7 @@
 //   node scripts/census.mjs --slot eyes → 한 슬롯만
 //   node scripts/census.mjs --check     → 위반만 (CI용, 위반 있으면 exit 1)
 //
-// "kid에 외눈이 새고 있다" 같은 것을 요청 전에 잡는다. 눈으로 보지 말고 센다.
+// "사람에 외눈이 새고 있다" 같은 것을 요청 전에 잡는다. 눈으로 보지 말고 센다.
 
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -33,6 +33,7 @@ for (const sp of SPECIES) {
     const where = `${sp.name} seed=${c.seed}`;
     if (id.horns && !id.horns.includes(c.parts.horns)) violations.push(`${where}: horns=${c.parts.horns} (허용: ${id.horns.join("/")})`);
     if (id.eyes?.not && id.eyes.not.includes(c.parts.eyes)) violations.push(`${where}: eyes=${c.parts.eyes} 금지`);
+    if (id.armLength && !id.armLength.includes(c.parts.armLength)) violations.push(`${where}: armLength=${c.parts.armLength} (허용: ${id.armLength.join("/")})`);
     if (id.darkHead) {
       const v = parseInt(c.palette.skin.slice(1), 16);
       const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);

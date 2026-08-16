@@ -5,20 +5,22 @@
 // bias는 아키타입보다 우선한다. 골격이 성향보다 먼저다.
 export const SPECIES = [
   {
-    name: "kid",
+    name: "human",
     weight: 5,
-    // 사람. 뿔·더듬이·외눈은 사람 것이 아니다.
+    // 사람. 뿔·더듬이·외눈은 사람 것이 아니고, 바닥을 쓰는 긴 팔(long)은 도깨비 것이다.
     // forbid는 "이 슬롯의 이 값이 나오면 이걸로 바꾼다". applyConstraints가 읽어서
     // 결정적으로 덮어쓴다 — 아키타입 성향(scholar의 dot 눈 등)은 살아 있다.
     forbid: {
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      eyes: { cyclops: "wide" }
+      eyes: { cyclops: "wide" },
+      armLength: { long: "medium" }
     },
     // 정체성 — census가 검사한다. 위반 개체가 나오면 버그다.
     identity: {
       skeleton: "biped",
       horns: ["none"],
       eyes: { not: ["cyclops"] },
+      armLength: ["medium"],
       arms: true,
       tail: false
     },
@@ -101,7 +103,8 @@ export const SPECIES = [
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]],
       arms: [["stubby", 5], ["stick", 2]],
-      armLength: [["medium", 4], ["long", 1]],
+      // 바닥을 쓰는 긴 팔은 도깨비의 것 (사람은 forbid). 도깨비 열에 눈에 띌 만큼
+      armLength: [["medium", 3], ["long", 2]],
       legs: [["stub", 3], ["stick", 3], ["wide", 1]]
     }
   }

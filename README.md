@@ -26,7 +26,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | INK BOIL / STILL / `I` | STILL은 선의 끓음(보일)을 멈춤. 포즈와 별개 축 — 모션 판단 시 잡음 제거 |
 | ACTION AUTO / IDLE / 행위 | 두발 전원에게 행위 하나(인사·만세·팔짱·경례…)를 강제. IDLE은 행위 없이 기본 모션만. 행위가 어떻게 보이는지 판단할 때 |
 | REGEN STILL / LIVE / `S` | 기본 STILL. LIVE를 켜면 개체가 각자의 시계(6~14초)로 교체된다 (레퍼런스 동작) |
-| SPECIES ALL / KID / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
+| SPECIES ALL / HUMAN / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
 | GRID 5×4 / 7×5 / 9×6 | |
 
 ## 구조

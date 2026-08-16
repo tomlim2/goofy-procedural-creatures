@@ -59,9 +59,9 @@
 | --- | --- | --- | --- |
 | 깜빡임 | 1.8~6.5초, 0.13초 | 공통 | 22%는 연속 두 번. 22%는 ^^로 닫힘 |
 | 시선 이동 | 1.4~5초 | 공통 | 목표까지 0.12 이징 |
-| 얼굴 요 | 시선 추종 | yaw 배율 kid 0.5 / pup 0.7 / cat 0.8 / imp 0.6 | 이목구비 전체가 밀려 머리 돌린 착시 |
+| 얼굴 요 | 시선 추종 | yaw 배율 human 0.5 / pup 0.7 / cat 0.8 / imp 0.6 | 이목구비 전체가 밀려 머리 돌린 착시 |
 | 반감김 유지 | 8~20초, 1.2~2.8초 | 공통 | lid 0.5 |
-| 놀람 (개방도) | 간격 표 참조, 1.1초 | kid 8~22 / pup 10~26 / cat 9~24 / **imp 4~12** | 눈 리그 1.65배 |
+| 놀람 (개방도) | 간격 표 참조, 1.1초 | human 8~22 / pup 10~26 / cat 9~24 / **imp 4~12** | 눈 리그 1.65배 |
 | ^^ 행복 유지 | 6~16초, 2~5초 | **pup만** | |
 | 윙크 | 8~20초, 0.5~1.3초 | **cat만** | |
 | 눈썹 전환 | 6~16초, 1.5~4초 | 공통 | ALT_BROW 표 |
@@ -69,7 +69,7 @@
 
 ## 몸통
 
-| 모션 | 파라미터 | kid | pup | cat | imp |
+| 모션 | 파라미터 | human | pup | cat | imp |
 | --- | --- | --- | --- | --- | --- |
 | 호흡 | 주기 2.6~5.4초 | ● | ● | ● | ● |
 | 스웨이 (좌우) | 진폭 rad, 주기 | 0.012~0.032, 2.6~4.6s | 0.004~0.01 | 0.002~0.007 | **0.015~0.04, 2~3.8s** |
@@ -88,7 +88,7 @@
 레퍼런스 실측(video-notes 33~36): 팔은 벌린 채 미세하게만 흔들리고, 다리는 바닥에 못 박혀 있다.
 큰 이벤트는 4개체 × 4초 어디에도 없다. 그래서 상시 진폭은 보일 수준, 이벤트는 드물고 작다.
 
-| 모션 | kid | imp | pup / cat |
+| 모션 | human | imp | pup / cat |
 | --- | --- | --- | --- |
 | 팔 진자 (스웨이 반대 위상) | 0.045 | 0.06 | — |
 | 팔 관절 지터 | 7.3Hz 0.012 + 11.7Hz 0.008 | 같음 | — |
@@ -117,7 +117,7 @@
 언제 어떤 행위를 하는지는 `states.js` `stepArmAction`(종족별 목록·가중치는 `table.js` `armActions`, 간격은
 `armActionGap`), 행위의 **내용**은 `actions.js` `ACTIONS`·`ARM_POSES`다. 행위가 끝나면 idle로 돌아온다.
 
-| 행위 | 팔 | 자세 | 유지(초) | 뜻 | kid | imp |
+| 행위 | 팔 | 자세 | 유지(초) | 뜻 | human | imp |
 | --- | --- | --- | --- | --- | --- | --- |
 | **idle** | — | 30° 벌림, 팔꿈치 살짝, 바닥 위로 클램프 | 상시 | 기본 | ● | ● |
 | **wave** | 한 팔 | 손 위로, 팔꿈치 ±0.5rad 3Hz | 1.5~3 | **손 흔들어 인사** | 2 | 1.5 |
@@ -131,7 +131,7 @@
 | behind | 두 팔 | 몸 뒤 (back 스케치) | 3~7 | 뒷짐 | 1.5 | 1 |
 | flap | 두 팔 | 어깨 ±0.28·팔꿈치 ±0.12rad 5Hz | 1.5~3 | 파닥임(좋아함) + ♥ | 1 | 2 |
 
-네발(cat·pup)은 팔이 없어 항상 바인드. 발화는 kid 2.4회/분, imp 2.8회/분, 좌우 반반(60초×40개체 측정).
+네발(cat·pup)은 팔이 없어 항상 바인드. 발화는 human 2.4회/분, imp 2.8회/분, 좌우 반반(60초×40개체 측정).
 팔을 늘어뜨리는 행위는 따로 없다 — 그게 idle이다.
 
 **팔 자세는 손 목표로 적는다 (IK).** 관절각 표가 아니다. `ARM_POSES[이름]`은 손 목표(`hand`) — reach 배수
@@ -167,7 +167,7 @@ AUTO로 돌리면 예약대로(idle + 이따금 행위).
 
 | 종족 | 종류 (가중) |
 | --- | --- |
-| kid / pup | heart, bang(!), quest(?) |
+| human / pup | heart, bang(!), quest(?) |
 | cat | heart, quest, bang |
 | imp | **dots(...) ×2**, bang, quest, heart |
 
@@ -196,7 +196,7 @@ AUTO로 돌리면 예약대로(idle + 이따금 행위).
 ```bash
 node --input-type=module -e "
 Promise.all([import('./src/motion/index.js'), import('./src/character/index.js')]).then(([{makeClock}, {makeCreature, armRig}]) => {
-  const c = makeClock(42, 0, 'kid', armRig(makeCreature(42, 'kid')));
+  const c = makeClock(42, 0, 'human', armRig(makeCreature(42, 'human')));
   let n = 0;
   for (let f = 0; f < 3600; f++) { const s = c.update(f/60); if (s.YOUR_STATE) n++; }
   console.log(n, 'frames / 3600');

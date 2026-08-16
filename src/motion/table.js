@@ -6,7 +6,7 @@ export const BLINK_TIME = 0.13;
 
 // 종족별 모션 성격. [min, max]는 이벤트 간격(초), null은 그 모션 없음.
 export const MOTION = {
-  kid: {
+  human: {
     // 팔 행위 — idle(A포즈)에서 이따금 넘어갔다 돌아오는 것. [행위, 가중치]. 내용은 actions.js
     armActions: [
       ["wave", 2], ["cross", 2], ["hips", 2], ["think", 1.5], ["raise", 1.5], ["behind", 1.5],

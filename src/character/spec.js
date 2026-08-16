@@ -114,7 +114,7 @@ function makeProportions(rng, archetype) {
   };
 }
 
-export function makeCreature(seed, speciesName = "kid") {
+export function makeCreature(seed, speciesName = "human") {
   const rng = makeRng(seed);
   const species = SPECIES.find((s) => s.name === speciesName) || SPECIES[0];
   const archetype = pickArchetype(rng);
@@ -179,14 +179,14 @@ export function makeCreature(seed, speciesName = "kid") {
 // 비슷해 보이는 일이 생긴다. 미리 만들어 보고 이웃과 겹치면 다시 뽑는다.
 // 고정 레인. 위에서부터 사람·사람·고양이·개·도깨비 (레퍼런스 영상 순서).
 // 행 수별로 명시한다 — 리샘플링하면 4행에서 고양이가 빠지는 식으로 종족이 사라진다.
-export const LANES = ["kid", "kid", "cat", "pup", "imp"];
+export const LANES = ["human", "human", "cat", "pup", "imp"];
 
 const LANE_TABLE = {
-  4: ["kid", "cat", "pup", "imp"],
-  5: ["kid", "kid", "cat", "pup", "imp"],
-  6: ["kid", "kid", "cat", "pup", "pup", "imp"],
-  7: ["kid", "kid", "kid", "cat", "pup", "imp", "imp"],
-  8: ["kid", "kid", "kid", "cat", "cat", "pup", "imp", "imp"]
+  4: ["human", "cat", "pup", "imp"],
+  5: ["human", "human", "cat", "pup", "imp"],
+  6: ["human", "human", "cat", "pup", "pup", "imp"],
+  7: ["human", "human", "human", "cat", "pup", "imp", "imp"],
+  8: ["human", "human", "human", "cat", "cat", "pup", "imp", "imp"]
 };
 
 export function laneSpecies(rows) {

@@ -33,9 +33,9 @@ export const BIND_STATE = Object.freeze({
 
 // rig: character/draw/limbs.js armRig(spec) — 어깨 위치·팔 길이·몸 앵커. 행위를 IK로 푸는 데 쓴다.
 // 네발은 null (팔이 없다).
-export function makeClock(seed, birth = 0, species = "kid", rig = null) {
+export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const rng = makeRng(seed ^ 0x5bf03635);
-  const M = MOTION[species] || MOTION.kid;
+  const M = MOTION[species] || MOTION.human;
 
   // ── init: 고정 순서 ──
   const breathe = R.initBreathe(rng);            // 1

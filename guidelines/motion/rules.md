@@ -68,7 +68,7 @@ hip·chin·brow·chestFar)와 팔꿈치가 튀어나오는 쪽만 적고, `solve
 ```bash
 node --input-type=module -e "
 Promise.all([import('./src/motion/index.js'), import('./src/character/index.js')]).then(([{makeClock}, {makeCreature, armRig}]) => {
-  const c = makeClock(42, 0, 'kid', armRig(makeCreature(42, 'kid')));
+  const c = makeClock(42, 0, 'human', armRig(makeCreature(42, 'human')));
   let n = 0;
   for (let f = 0; f < 3600; f++) { const s = c.update(f/60); if (s.YOUR_STATE) n++; }
   console.log(n, 'frames / 3600');

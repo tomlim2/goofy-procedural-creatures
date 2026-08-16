@@ -51,7 +51,6 @@ export const ARCHETYPES = [
       body: [["tube", 3], ["bean", 2]],
       legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
       arms: [["stick", 3], ["mitten", 2]],
-      armLength: [["long", 3], ["medium", 2]],
       hair: [["none", 2], ["wisp", 2], ["tuft", 1.5], ["pigtails", 2], ["curly", 1], ["spikes", 1]],
       nose: [["none", 4], ["dot", 3], ["hook", 1]]
     }
@@ -66,7 +65,6 @@ export const ARCHETYPES = [
       body: [["bean", 4], ["dress", 2]],
       legs: [["stub", 4], ["wide", 2], ["stick", 1]],
       arms: [["stubby", 4], ["stick", 1]],
-      armLength: [["medium", 4], ["long", 1]],
       horns: [["none", 5], ["nub", 2]]
     }
   },

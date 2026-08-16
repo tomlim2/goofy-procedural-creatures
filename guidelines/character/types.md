@@ -22,20 +22,20 @@
 
 | 행 | 레인 |
 | --- | --- |
-| 4 | kid · cat · pup · imp |
-| 5 | kid · kid · cat · pup · imp |
-| 6 | kid · kid · cat · pup · pup · imp |
-| 8 | kid · kid · kid · cat · cat · pup · imp · imp |
+| 4 | human · cat · pup · imp |
+| 5 | human · human · cat · pup · imp |
+| 6 | human · human · cat · pup · pup · imp |
+| 8 | human · human · human · cat · cat · pup · imp · imp |
 
 표에 없는 행 수는 5줄 기준을 비율대로 늘인다. `SPECIES`의 `weight`는 레인 표에서는 쓰이지 않는다
 (랜덤 레인으로 되돌릴 때를 위해 남겨 둔다).
 
 | 종족 | 가중치 | 골격 | 색 | 전용/편향 파츠 | 지배 모션 |
 | --- | --- | --- | --- | --- | --- |
-| **kid** | 5 | 두발 | 팔레트 그대로 | forbid: 뿔 전부→none, cyclops→wide. 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 자세 전환 |
+| **human** | 5 | 두발 | 팔레트 그대로 | forbid: 뿔 전부→none, cyclops→wide, 긴 팔(long)→medium. 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 행위(인사·팔짱·생각…) |
 | **pup** | 2 | 네발 | 팔레트 그대로 | 늘어진 귀(flap/long), 주둥이+검은 코(코 슬롯이 형태 결정), 꼬리 flag/stubtail, 얼룩 | 머리 롤 상시·킁킁 딥, ^^ 행복 눈 유지, 꼬리 플릭 |
 | **cat** | 2 | 네발 | 팔레트 그대로 | 정수리 세모귀(pointy/fold), 수염, ω 입, 세로동공(slit), 꼬리 curl/longtail | 꼬리 스위시 상시, 윙크, 갸웃 크게, 기지개 |
-| **imp** | 2 | 두발 | 머리 DARKS 9색(먹·회갈·회청·자흑·녹흑…) 중 하나, 몸은 머리색 40% / 다른 어두운색 25% / 밝은 옷 35%, 얼굴은 종이색, 잉크는 #1c1917 | 긴 뿔(1.8배: curved/straight/antenna/ram/crown), 외눈(cyclops), 지그재그 입, 스텁 팔, 짧은 팔 | 젤리 워블 상시, 부르르·놀람 잦게, "..." 중얼 |
+| **imp** | 2 | 두발 | 머리 DARKS 9색(먹·회갈·회청·자흑·녹흑…) 중 하나, 몸은 머리색 40% / 다른 어두운색 25% / 밝은 옷 35%, 얼굴은 종이색, 잉크는 #1c1917 | 긴 뿔(1.8배: curved/straight/antenna/ram/crown), 외눈(cyclops), 지그재그 입, 스텁 팔, **바닥을 쓰는 긴 팔(long)은 도깨비만** (bias 3:2, 40%) | 젤리 워블 상시, 부르르·놀람 잦게, 만세·파닥임 잦게, "..." 중얼 |
 
 네발 골격은 몸이 가로로 눕고 머리가 몸 위에 얹힌다. 키가 낮아 사람 줄과 나란히 서면
 레퍼런스처럼 층이 낮아진다. 팔이 없고 다리 4개 + 꼬리다.
@@ -50,8 +50,8 @@
 | **beast** | 3 | 뿔·귀·이빨 | horns(curved/straight), ears(pointy/flap), mouth(teeth), nose(wedge/hook), hair(spikes/mop), head(round/wide) |
 | **scholar** | 2 | 안경·단발·베레 | eyewear(glasses/monocle), eyes(dot/half/sleepy), hair(bob/wisp/curly/sweep), headgear(beret), mouth(line), nose(long/hook), horns(none) |
 | **trooper** | 3 | 헬멧·안대·줄무늬·부츠 | headgear(helmet/cap/band/pot), eyewear(patch/goggles), head(square/block), hair(scribble/spikes), marks(stripes/patch/hatch), arms(sleeve/stick), legs(boots) |
-| **sprite** | 3 | 더듬이·왕눈·긴 팔다리 | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), legs(stick/tiptoe), arms(stick/mitten), armLength(long), hair(none/wisp/tuft/pigtails), nose(none/dot) |
-| **blob** | 2 | 넓적·대머리·뭉툭한 팔다리 | head(wide/round/pear), hair(none/tuft/mop), eyes(dot/ring/half), body(bean/dress), legs(stub/wide), arms(stubby), armLength(medium), horns(none/nub) |
+| **sprite** | 3 | 더듬이·왕눈·긴 팔다리 | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), legs(stick/tiptoe), arms(stick/mitten), hair(none/wisp/tuft/pigtails), nose(none/dot) |
+| **blob** | 2 | 넓적·대머리·뭉툭한 팔다리 | head(wide/round/pear), hair(none/tuft/mop), eyes(dot/ring/half), body(bean/dress), legs(stub/wide), arms(stubby), horns(none/nub) |
 | **wanderer** | 2 | 밴드·졸린 눈·해칭 | headgear(band/pot/cap), eyes(half/sleepy/cross), marks(hatch/stripes/patch), mouth(wave/line), body(dress/bean) |
 
 ## 비율 지터 (proportions)
@@ -92,7 +92,7 @@
 
 | 종족 | skeleton | horns | eyes | arms | tail | 기타 |
 | --- | --- | --- | --- | --- | --- | --- |
-| kid | biped | none | not cyclops | ● | ✗ | |
+| human | biped | none | not cyclops | ● | ✗ | armLength medium만 |
 | pup | quad | none/nub | not cyclops | ✗ | ● | |
 | cat | quad | none | not cyclops | ✗ | ● | |
 | imp | biped | (자유) | (자유) | ● | ✗ | 머리 어두움(휘도<90) |
@@ -106,7 +106,7 @@
 - 더듬이 → 75% 확률로 귀 없음
 - 안대 → 어느 쪽인지 여기서 정함 (patchSide ±1, 없으면 99 — 외눈의 side 0과 충돌 방지)
 - 감은 눈 + 화난 눈썹 → 눈썹 flat
-- 종족 forbid (species.js): kid 뿔→none·cyclops→wide, pup cyclops→dot, cat cyclops→slit. **맨 먼저** 적용
+- 종족 forbid (species.js): human 뿔→none·cyclops→wide·long 팔→medium, pup cyclops→dot, cat cyclops→slit. **맨 먼저** 적용
 - 외눈 → 안경류 없음
 - 안경·고글 → 60% 확률로 눈썹 없음
 - imp: 머리 DARKS 중 1, 몸은 머리색/다른 어두운색/밝은 옷 (40/25/35)
