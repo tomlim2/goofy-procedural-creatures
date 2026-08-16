@@ -33,12 +33,14 @@ export const SPECIES = [
       eyes: { cyclops: "dot" },
       // 개에게 뿔·머리카락은 없다 — 전부 none (털이지 머리카락이 아니다)
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none" }
+      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none" },
+      brow: { flat: "none", angry: "none", worry: "none" }   // 동물에게 눈썹은 없다 (상태 전환의 대체 눈썹도 막힌다)
     },
     identity: {
       skeleton: "quad",
       horns: ["none"],
       hair: ["none"],
+      brow: ["none"],
       eyes: { not: ["cyclops"] },
       arms: false,
       tail: true
@@ -65,12 +67,14 @@ export const SPECIES = [
     forbid: {
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none" }
+      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none" },
+      brow: { flat: "none", angry: "none", worry: "none" }
     },
     identity: {
       skeleton: "quad",
       horns: ["none"],
       hair: ["none"],
+      brow: ["none"],
       eyes: { not: ["cyclops"] },
       arms: false,
       tail: true

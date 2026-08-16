@@ -4,6 +4,7 @@
 import { Sketch, blobPath, arcPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { TAU, layout, eyeGeometry } from "./layout.js";
+import { SPECIES } from "../vocabulary/species.js";
 
 export function drawEyes(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyes;
@@ -238,10 +239,13 @@ const ALT_BROW = { none: "flat", flat: "worry", angry: "flat", worry: "flat" };
 
 const ALT_MOUTH = { dot: "line", line: "wave", teeth: "open", open: "line", wave: "line", smile: "open" };
 
+// 쉼/대체 두 벌. 대체 값에도 종족 forbid를 적용한다 — 눈썹이 없는 종족(개·고양이)이 기분 전환 때 눈썹을 달면 안 된다
 export function facePartKinds(spec) {
+  const forbid = (SPECIES.find((s) => s.name === spec.species) || {}).forbid || {};
+  const allow = (slot, value) => (forbid[slot] && forbid[slot][value] !== undefined ? forbid[slot][value] : value);
   return {
-    brow: [spec.parts.brow, ALT_BROW[spec.parts.brow] || "flat"],
-    mouth: [spec.parts.mouth, ALT_MOUTH[spec.parts.mouth] || "line"]
+    brow: [spec.parts.brow, allow("brow", ALT_BROW[spec.parts.brow] || "flat")],
+    mouth: [spec.parts.mouth, allow("mouth", ALT_MOUTH[spec.parts.mouth] || "line")]
   };
 }
 

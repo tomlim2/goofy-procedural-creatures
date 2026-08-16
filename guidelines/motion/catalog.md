@@ -2,9 +2,9 @@
 
 > 기준: `src/motion/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/motion/`. `table.js`가 종족별 파라미터, `rhythm.js`(상시 진동) `events.js`(간헐) `states.js`(유지)가
-모션 본체, `actions.js`가 행위 카탈로그(만세·인사·팔짱…의 내용), `index.js`가 고정 rng 순서로 조립한다.
-규칙은 [rules.md](rules.md).
+`src/motion/`. `table.js`가 종족별 파라미터, `rhythm.js`(상시 진동) `events.js`(간헐) `states.js`(유지·행위 예약)가
+모션 본체, `actions.js`가 idle과 행위의 내용(팔·몸·네발 세 층), `emoji.js`가 이모지 층, `index.js`가 고정 rng 순서로
+조립한다. 규칙은 [rules.md](rules.md).
 개체마다 시계가 하나씩 있고, 모든 예약은 **출생 시각 기준 상대 시간**이다.
 매 프레임 `update(t)`가 상태 객체를 돌려주고 `scene/animate.js`가 그것을 리그에 적용한다.
 
@@ -117,7 +117,7 @@
 
 **행위는 idle 위에 겹친다.** 행위가 정한 부위만 바뀌고 나머지(다른 팔·몸·얼굴)는 idle이 계속된다.
 그래서 인사(wave)는 **한 팔만** 정한다 — "손 흔들기는 손 움직임만". 다른 팔은 idle로 내려가 있다.
-만세·팔짱은 두 팔을 정한다. 한 팔 행위는 시작할 때 활동 팔의 좌우를 뽑는다(`armSide`).
+만세·팔짱은 두 팔을 정한다. 한 팔 행위는 시작할 때 활동 팔의 좌우를 뽑는다(`actionSide`).
 언제 어떤 행위를 하는지는 `states.js` `stepArmAction`(종족별 목록·가중치는 `table.js` `armActions`, 간격은
 `armActionGap`), 행위의 **내용**은 `actions.js` `ACTIONS`·`ARM_POSES`다. 행위가 끝나면 idle로 돌아온다.
 
@@ -154,9 +154,9 @@
 행위에 들어가고 나갈 때 0.35초 봉투로 페이드해 끝나는 순간 팔이 튀지 않게 한다.
 front/back(뒷짐) 전환은 어깨각이 목표 0.35rad 이내로 돌아온 뒤에만 한다.
 
-**행위 하나만 보려면** 화면 ACTION 카드에서 고른다. 두발 전원이 그 행위를 계속한다(한 팔 행위의 활동 팔은
-시드 홀짝으로 좌우 섞임). IDLE은 행위 없이 idle만. `clock.force(action, side)`, `scene.setAction(name)`.
-AUTO로 돌리면 예약대로(idle + 이따금 행위).
+**행위 하나만 보려면** 화면 ACTION 카드에서 고른다. 그 층을 가진 종족 전원이 그 행위를 계속하고(팔 행위는 두발, 몸 행위는
+전원, 네발 행위는 네발) 다른 층은 idle이 된다. 한 팔 행위의 활동 팔은 시드 홀짝으로 좌우 섞임. IDLE은 모든 층 idle.
+`clock.force(action, side)`, `scene.setAction(name)`. AUTO로 돌리면 예약대로(idle + 이따금 행위, 층끼리 겹침).
 
 ### 몸 행위 — 층은 겹친다
 
@@ -181,7 +181,7 @@ ACTION 카드로 하나를 강제하면 그 층만 계속하고 다른 층은 id
 | 행위 | 무엇 | 유지(초) | 뜻 | pup | cat |
 | --- | --- | --- | --- | --- | --- |
 | scratch | 뒷다리 하나를 −0.9rad(앞·위로) + ±0.15rad 6Hz | 1~2.2 | 뒷발로 긁기 | 1 | 1 |
-| wag | 꼬리 ±0.35rad 4Hz | 1.5~3 | 꼬리 흔들기 | 2.5 | 0.7 |
+| wag | 꼬리 ±0.35rad 4Hz | 1.5~3 | 꼬리 흔들기 (개만 — 고양이는 개처럼 흔들지 않는다) | 2.5 | — |
 
 간격 pup 8~22초 / cat 10~28초. 어느 다리인지는 시작할 때 쌍 안에서 뽑는다(`actionSide` = 다리 index).
 진동은 `legOsc`(다리)·`tailAngle`(꼬리)에 이징 없이, 0.35초 봉투로. 앞발 들고 인사하는 행위는 없다 — 사람 같아 보인다.
@@ -236,9 +236,13 @@ ACTION 카드의 SCRATCH/WAG는 네발에게만 먹는다. 제자리 점프는 �
 3. `scene/animate.js` `applyState`에서 리그에 적용
 4. 60초 시뮬로 발화 빈도를 센다 (아래 명령). 눈으로만 판단하지 않는다
 
-**새 팔 행위**는 더 짧다: `actions.js` `ARM_POSES`에 자세(손 목표·bend), `ACTIONS`에 행위(자세·arms one/both·hold·label),
-`table.js` `armActions`에 종족별 가중치. rng 순서는 안 바뀐다. 손 위치는 계산으로 확인한다 —
-`solveArm` 결과를 FK로 되돌려 손이 앵커에 닿는지·바닥 위인지 본 뒤, 화면 ACTION 카드로 강제해 본다.
+**새 행위**는 더 짧다 — 먼저 어느 **층**인지 정한다(팔 `ACTIONS` / 몸 `BODY_ACTIONS` / 네발 `QUAD_ACTIONS`, [rules.md](rules.md)).
+- 팔: `ARM_POSES`에 자세(손 목표·bend), `ACTIONS`에 행위(자세·arms one/both·hold·label), `table.js` `armActions`에 종족별
+  가중치. 손 위치는 계산으로 확인한다 — `solveArm` 결과를 FK로 되돌려 손이 앵커에 닿는지·바닥 위인지 본 뒤 ACTION 카드로 강제해 본다
+- 몸: `BODY_ACTIONS`에 곡선(지금은 jump — 필요하면 `jumpCurve`처럼 곡선 함수를 하나 더), `table.js` `bodyActions`
+- 네발: `QUAD_ACTIONS`에 어느 다리·각도·진동 또는 꼬리 진동, `table.js` `quadActions`
+- 이모지를 동반하면 그 행위에 `emoji: "kind"` 한 줄 (§ 이모지 애니메이션)
+rng 순서는 안 바뀐다 (예약 층은 이미 있다).
 
 ```bash
 node --input-type=module -e "

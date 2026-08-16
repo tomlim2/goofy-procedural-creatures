@@ -76,8 +76,22 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const biped = !!rig;   // 팔 리그가 있으면 두발
   // 이모지 채널 — 모션과 별개 층. 예약(idle 중 가끔)과 모션의 이모지 트리거가 여기로 쏜다
   const emoji = initEmoji();
-  let lastArm = null;    // 행위 시작 감지용 (시작할 때 한 번만 트리거)
-  let lastQuad = null;
+  const lastAction = { arm: null, quad: null };   // 행위 시작 감지용 (시작할 때 한 번만 트리거)
+
+  // 행위 층 하나를 정한다: 강제가 없으면 예약된 것, 강제가 이 층 것이면 그것(계속), 다른 층 것이거나 "idle"이면 null.
+  // makeForced(def, start)가 강제 행위의 { action, …, start, until }을 만든다.
+  const resolveLayer = (t, scheduled, defs, applies, makeForced) => {
+    if (!forced) return scheduled;
+    if (!(applies && defs[forced])) return null;
+    if (forcedStart < 0) forcedStart = t;
+    return makeForced(defs[forced], forcedStart);
+  };
+  // 행위가 막 시작했고 이모지 트리거가 있으면 쏜다
+  const fireEmoji = (key, act, defs, t) => {
+    const name = act ? act.action : null;
+    if (name && name !== lastAction[key] && defs[name].emoji) triggerEmoji(emoji, defs[name].emoji, t);
+    lastAction[key] = name;
+  };
 
   return {
     force(action, side = 1) {
@@ -113,18 +127,13 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const rollAngle = R.stepRoll(roll, t);
       let headBob = E.stepNod(nod, t, rng);
       headBob += E.stepDip(dip, t, rng, M);
-      // 몸 행위(제자리 점프) — 팔·네발 행위와 다른 층. 예약은 강제 중에도 돌린다(rng 소비 고정)
-      const scheduledB = S.stepBodyAction(bodyAction, t, rng, M);
-      let bact = scheduledB;
-      if (forced && !BODY_ACTIONS[forced]) bact = null;            // 다른 층을 강제 중이거나 idle → 몸은 idle
-      else if (forced && BODY_ACTIONS[forced]) {
-        if (forcedStart < 0) forcedStart = t;
-        const def = BODY_ACTIONS[forced];
-        // 강제 점프는 쉬었다 반복 — 점프 길이 + 1.2초 주기로 되풀이
+      // 몸 행위(제자리 점프) — 팔·네발 행위와 다른 층. 예약은 강제 중에도 돌린다(rng 소비 고정).
+      // 강제 점프는 쉬었다 반복 — 점프 길이 + 1.2초 주기
+      const bact = resolveLayer(t, S.stepBodyAction(bodyAction, t, rng, M), BODY_ACTIONS, true, (def, start0) => {
         const period = def.hops * def.dur + 1.2;
-        const start = forcedStart + Math.floor((t - forcedStart) / period) * period;
-        bact = { action: forced, start, until: start + def.hops * def.dur };
-      }
+        const start = start0 + Math.floor((t - start0) / period) * period;
+        return { action: forced, start, until: start + def.hops * def.dur };
+      });
       const hp = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, squashX: 0, squashY: 0 };
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
@@ -132,13 +141,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 팔 — 기본은 idle(A포즈), 행위가 있으면 그 행위가 정한 팔만 덮는다. 리그에 IK로 풀고,
       // 그 위에 진자·점프·지터를 얹는다.
       // 예약은 강제 중에도 계속 돌린다(rng 소비를 같게 — 강제를 풀어도 시계가 흐트러지지 않는다).
-      const scheduled = S.stepArmAction(armAction, t, rng, M);
-      let act = scheduled;
-      if (forced && !(biped && ACTIONS[forced])) act = null;      // 다른 층 강제·idle → 팔은 idle
-      else if (forced) {
-        if (forcedStart < 0) forcedStart = t;
-        act = { action: forced, side: forcedSide, start: forcedStart, until: Infinity };
-      }
+      const act = resolveLayer(t, S.stepArmAction(armAction, t, rng, M), ACTIONS, biped,
+        (def, start) => ({ action: forced, side: forcedSide, start, until: Infinity }));
       const arms = solveArms(rig, act, t);
       const swing = R.stepArmSwing(armSwing, sway, t, M);
       for (const side of [-1, 1]) {
@@ -165,15 +169,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const j = R.stepJelly(jelly, t);
 
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
-      const scheduledQ = S.stepQuadAction(quadAction, t, rng, M);
-      let qact = scheduledQ;
-      if (forced && !(!biped && QUAD_ACTIONS[forced])) qact = null;   // 다른 층 강제·idle → 네발 다리·꼬리는 idle
-      else if (forced && QUAD_ACTIONS[forced]) {
-        if (forcedStart < 0) forcedStart = t;
-        const def = QUAD_ACTIONS[forced];
+      const qact = resolveLayer(t, S.stepQuadAction(quadAction, t, rng, M), QUAD_ACTIONS, !biped, (def, start) => {
         const index = def.leg === "front" ? (forcedSide > 0 ? 1 : 0) : def.leg === "hind" ? (forcedSide > 0 ? 3 : 2) : -1;
-        qact = { action: forced, index, start: forcedStart, until: Infinity };
-      }
+        return { action: forced, index, start, until: Infinity };
+      });
       if (qact) {
         const def = QUAD_ACTIONS[qact.action];
         const env = Math.max(0, Math.min(1, Math.min((t - qact.start) / 0.35, (qact.until - t) / 0.35)));
@@ -193,12 +192,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 이모지 — 예약된 것(idle 중 가끔) + 모션의 트리거(행위가 시작하는 순간 한 번). 채널이 애니메이션을 돈다
       const scheduledEmoji = E.stepEmojiSchedule(emojiSchedule, t, rng, M);
       if (scheduledEmoji) triggerEmoji(emoji, scheduledEmoji, t);
-      const armName = act ? act.action : null;
-      if (armName && armName !== lastArm && ACTIONS[armName].emoji) triggerEmoji(emoji, ACTIONS[armName].emoji, t);
-      lastArm = armName;
-      const quadName = qact ? qact.action : null;
-      if (quadName && quadName !== lastQuad && QUAD_ACTIONS[quadName].emoji) triggerEmoji(emoji, QUAD_ACTIONS[quadName].emoji, t);
-      lastQuad = quadName;
+      fireEmoji("arm", act, ACTIONS, t);
+      fireEmoji("quad", qact, QUAD_ACTIONS, t);
       const em = stepEmoji(emoji, t);
 
       return {

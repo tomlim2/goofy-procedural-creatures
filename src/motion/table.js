@@ -60,8 +60,8 @@ export const MOTION = {
     armActions: null, armActionGap: null,
     armSwing: 0,
     legStance: [-0.03, 0, 0.06, 0.03], tailIdle: 0.1,
-    // 고양이 꼬리 흔들기는 드물다 (스위시가 상시라)
-    quadActions: [["scratch", 1], ["wag", 0.7]], quadActionGap: [10, 28],
+    // 고양이는 개처럼 꼬리를 흔들지 않는다 — 꼬리는 상시 스위시·플릭뿐. 행위는 뒷발 긁기만
+    quadActions: [["scratch", 1]], quadActionGap: [10, 28],
     // 앞발 꾹꾹이 드물게, 스텝은 더 드물게
     legTap: [16, 36], legStep: [40, 90],
     sway: [0.002, 0.007], swayPeriod: [3.5, 7],

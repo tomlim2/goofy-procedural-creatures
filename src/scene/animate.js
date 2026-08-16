@@ -14,11 +14,8 @@ const EMOJI_TARGET = new THREE.Vector3();
 export function applyState(item, state, t, noise, { snap = false, boil = true } = {}) {
   // 보일 — 낮은 주기로 잉크 변형을 순환. 꺼져 있으면 0번 프레임에 고정.
   const frame = boil ? Math.floor(t * item.boilFps + item.boilOffset) % BOIL_FRAMES : 0;
-  for (let k = 0; k < BOIL_FRAMES; k += 1) {
-    item.bodyFrames[k].visible = k === frame;
-    item.headFrames[k].visible = k === frame;
-    item.faceFrames[k].visible = k === frame;
-    item.hatFrames[k].visible = k === frame;
+  for (const list of Object.values(item.frames)) {
+    for (let k = 0; k < BOIL_FRAMES; k += 1) list[k].visible = k === frame;
   }
 
   // 몸 전체 — 스웨이(발 축 회전), 부르르, 점프, 호흡+락킹+젤리+기지개

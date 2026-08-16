@@ -17,52 +17,31 @@ export function buildCreature(spec, noise, birth = 0) {
   group.add(headGroup);
   headGroup.add(faceGroup);
 
-  // 보일 — 지터 위상만 다른 3벌. 몸·머리·얼굴을 같은 인덱스로 토글한다.
-  const bodyFrames = [];
-  const headFrames = [];
-  const faceFrames = [];
-  const hatFrames = [];
-  let firstDrawn = null;
-  for (let k = 0; k < BOIL_FRAMES; k += 1) {
-    const drawn = drawCreature(spec, k);
-    if (!firstDrawn) firstDrawn = drawn;
-    const faceCy = drawn.faceCy;
-
-    // 몸 채색(1) → 몸 잉크(1.5) → 머리 채색(1.8) → 머리 잉크(2). 머리 채색이 몸 잉크 위라
-    // 머리가 몸통을 덮는 자리에 몸통 윤곽선이 비치지 않는다. 머리 채색은 그래서 불투명하다.
-    const bodyFrame = new THREE.Group();
-    if (!drawn.body.fills.empty) bodyFrame.add(sketchMesh(drawn.body.fills, 0.92, 1));
-    bodyFrame.add(sketchMesh(drawn.body.ink, 1, 1.5));
-    bodyFrame.visible = k === 0;
-    bodyGroup.add(bodyFrame);
-    bodyFrames.push(bodyFrame);
-
-    const headFrame = new THREE.Group();
-    if (!drawn.head.fills.empty) headFrame.add(sketchMesh(drawn.head.fills, 1, 1.8, -drawn.neckY));
-    headFrame.add(sketchMesh(drawn.head.ink, 1, 2, -drawn.neckY));
-    headFrame.visible = k === 0;
-    headGroup.add(headFrame);
-    headFrames.push(headFrame);
-
-    // 얼굴(눈·볼·코·수염·주둥이·안경) — faceGroup 안. 머리 잉크·모자 위에 얹혀 통째로 밀린다 (눈이 모자에 가리지 않게)
-    const faceFrame = new THREE.Group();
-    if (!drawn.face.fills.empty) faceFrame.add(sketchMesh(drawn.face.fills, 0.92, 2.3, -faceCy));
-    if (!drawn.face.ink.empty) faceFrame.add(sketchMesh(drawn.face.ink, 1, 2.4, -faceCy));
-    faceFrame.visible = k === 0;
-    faceGroup.add(faceFrame);
-    faceFrames.push(faceFrame);
-
-    // 모자 — 머리 잉크 위, 얼굴 아래(2.1/2.2). 윤곽·머리카락·뿔 밑동을 덮되 눈·안경은 못 덮는다.
-    // 머리를 따라 돌고, 얼굴 돌림은 안 따라간다
-    const hatFrame = new THREE.Group();
-    if (!drawn.hat.fills.empty) hatFrame.add(sketchMesh(drawn.hat.fills, 1, 2.1, -drawn.neckY));
-    if (!drawn.hat.ink.empty) hatFrame.add(sketchMesh(drawn.hat.ink, 1, 2.2, -drawn.neckY));
-    hatFrame.visible = k === 0;
-    headGroup.add(hatFrame);
-    hatFrames.push(hatFrame);
-  }
+  // 보일 — 지터 위상만 다른 3벌. 몸·머리·모자·얼굴을 같은 인덱스로 토글한다 (animate가 frames를 돈다).
+  // 렌더 순서(guidelines/rig.md가 단일 소스): 몸 채색 1 → 몸 잉크 1.5 → 머리 채색 1.8(불투명 — 몸통 윤곽선이 머리에
+  // 안 비치게) → 머리 잉크 2 → 모자 2.1/2.2(윤곽·머리카락·뿔 밑동을 덮되 눈은 못 덮는다) → 얼굴 2.3/2.4(통째로 밀린다).
+  const firstDrawn = drawCreature(spec, 0);
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
+  const LAYERS = [
+    { key: "body", group: bodyGroup, dy: 0, fillOrder: 1, inkOrder: 1.5, fillOpacity: 0.92 },
+    { key: "head", group: headGroup, dy: -neckY, fillOrder: 1.8, inkOrder: 2, fillOpacity: 1 },
+    { key: "hat", group: headGroup, dy: -neckY, fillOrder: 2.1, inkOrder: 2.2, fillOpacity: 1 },
+    { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 0.92 }
+  ];
+  const frames = { body: [], head: [], hat: [], face: [] };
+  for (let k = 0; k < BOIL_FRAMES; k += 1) {
+    const drawn = k === 0 ? firstDrawn : drawCreature(spec, k);
+    for (const layer of LAYERS) {
+      const pair = drawn[layer.key];
+      const frame = new THREE.Group();
+      if (!pair.fills.empty) frame.add(sketchMesh(pair.fills, layer.fillOpacity, layer.fillOrder, layer.dy));
+      if (!pair.ink.empty) frame.add(sketchMesh(pair.ink, 1, layer.inkOrder, layer.dy));
+      frame.visible = k === 0;
+      layer.group.add(frame);
+      frames[layer.key].push(frame);
+    }
+  }
   headGroup.position.y = neckY;
   // 얼굴 그룹 원점 = 머리 중심. 돌림이 여기를 축으로 밀고 누른다. 자식은 -faceCy로 미리 내려 굽는다.
   faceGroup.position.y = faceCy - neckY;
@@ -176,10 +155,7 @@ export function buildCreature(spec, noise, birth = 0) {
     faceGroup,
     tailGroup,
     limbs,
-    bodyFrames,
-    headFrames,
-    faceFrames,
-    hatFrames,
+    frames,
     eyeRigs,
     faceStates,
     // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다

@@ -33,6 +33,7 @@ for (const sp of SPECIES) {
     const where = `${sp.name} seed=${c.seed}`;
     if (id.horns && !id.horns.includes(c.parts.horns)) violations.push(`${where}: horns=${c.parts.horns} (허용: ${id.horns.join("/")})`);
     if (id.hair && !id.hair.includes(c.parts.hair)) violations.push(`${where}: hair=${c.parts.hair} (허용: ${id.hair.join("/")})`);
+    if (id.brow && !id.brow.includes(c.parts.brow)) violations.push(`${where}: brow=${c.parts.brow} (허용: ${id.brow.join("/")})`);
     if (id.eyes?.not && id.eyes.not.includes(c.parts.eyes)) violations.push(`${where}: eyes=${c.parts.eyes} 금지`);
     if (id.armLength && !id.armLength.includes(c.parts.armLength)) violations.push(`${where}: armLength=${c.parts.armLength} (허용: ${id.armLength.join("/")})`);
     if (id.darkHead) {

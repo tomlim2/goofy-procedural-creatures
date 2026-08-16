@@ -57,23 +57,31 @@ export function stepTilt(s, t, rng, M) {
   s.angle += ((s.until >= 0 ? s.target : 0) - s.angle) * 0.07;
   return s.angle;
 }
-// 팔 행위 — idle에서 행위로, 행위가 끝나면 idle로. 형태(arms 슬롯)와 무관.
-// 행위마다 유지 시간(hold)이 다르고, 한 팔 행위(인사·경례…)는 활동 팔의 좌우를 뽑는다.
-// 돌려주는 것: { action, side, start, until } 또는 null(idle).
-export function stepArmAction(s, t, rng, M) {
+// ── 행위 층 예약 (팔·몸·네발 공통) ──
+// idle에서 행위로 넘어갔다가 hold가 끝나면 idle로. 층마다 예약이 따로 돌아 서로 겹친다(점프하며 인사).
+// rng 순서: weighted(행위) → [chance(좌우)] → [float(hold)] → float(gap). 층 옵션이 이 순서를 바꾸지 않는다.
+//   pool  [행위, 가중치] (table.js). 없으면 예약만 흘린다
+//   gap   다음 시작까지 [min, max]. defaultGap은 표에 없을 때
+//   defs  행위 표 (actions.js). side: 활동 쪽을 뽑나. hold(def, rng): 유지 시간
+function stepActionLayer(s, t, rng, pool, gap, defaultGap, defs, { side = false, hold }) {
   if (t >= s.next && s.until < 0) {
-    const pool = M.armActions || [];
     if (pool.length) {
       s.action = rng.weighted(pool);
-      s.side = rng.chance(0.5) ? -1 : 1;
-      const hold = ACTIONS[s.action].hold;
+      s.side = side ? (rng.chance(0.5) ? -1 : 1) : 0;
       s.start = t;
-      s.until = t + rng.float(hold[0], hold[1]);
+      s.until = t + hold(defs[s.action], rng);
     }
-    s.next = t + rng.float(M.armActionGap ? M.armActionGap[0] : 12, M.armActionGap ? M.armActionGap[1] : 36);
+    s.next = t + rng.float(gap ? gap[0] : defaultGap[0], gap ? gap[1] : defaultGap[1]);
   }
   if (s.until >= 0 && t >= s.until) { s.until = -1; s.action = null; s.start = -1; }
   return s.action ? { action: s.action, side: s.side, start: s.start, until: s.until } : null;
+}
+const holdFromDef = (def, rng) => rng.float(def.hold[0], def.hold[1]);
+
+// 팔 행위 (두발). 형태(arms 슬롯)와 무관. 한 팔 행위(인사·경례…)는 활동 팔의 좌우를 뽑는다.
+// 돌려주는 것: { action, side, start, until } 또는 null(idle).
+export function stepArmAction(s, t, rng, M) {
+  return stepActionLayer(s, t, rng, M.armActions || [], M.armActionGap, [12, 36], ACTIONS, { side: true, hold: holdFromDef });
 }
 // 둘러보기 — 유지 중이면 방향 [x, y] (−1~1), 아니면 null. 방향은 8방 중 하나 × 종족 진폭.
 const LOOK_DIRS = [[-1, 0], [1, 0], [0, 1], [0, -1], [-1, 0.6], [1, 0.6], [-1, -0.5], [1, -0.5]];
@@ -87,41 +95,21 @@ export function stepLook(s, t, rng, M) {
   if (s.until >= 0 && t >= s.until) s.until = -1;
   return s.until >= 0 ? s.dir : null;
 }
-// 몸 행위 — idle하다가 가끔 온몸으로(제자리 점프). 팔·네발 행위와 다른 층이라 같이 일어난다. table.js bodyActions.
+// 몸 행위 — idle하다가 가끔 온몸으로(제자리 점프). 유지는 점프 수 × 한 번 길이(rng 없음). table.js bodyActions.
 // 돌려주는 것: { action, start, until } 또는 null.
-export function initBodyAction(rng, M) { return { action: null, start: -1, next: schedule(rng, M.bodyActions ? M.bodyActionGap : null), until: -1 }; }
+export function initBodyAction(rng, M) { return { action: null, side: 0, start: -1, next: schedule(rng, M.bodyActions ? M.bodyActionGap : null), until: -1 }; }
 export function stepBodyAction(s, t, rng, M) {
-  if (t >= s.next && s.until < 0) {
-    const pool = M.bodyActions || [];
-    if (pool.length) {
-      s.action = rng.weighted(pool);
-      const def = BODY_ACTIONS[s.action];
-      s.start = t;
-      s.until = t + def.hops * def.dur;
-    }
-    s.next = t + rng.float(M.bodyActionGap[0], M.bodyActionGap[1]);
-  }
-  if (s.until >= 0 && t >= s.until) { s.until = -1; s.action = null; s.start = -1; }
-  return s.action ? { action: s.action, start: s.start, until: s.until } : null;
+  return stepActionLayer(s, t, rng, M.bodyActions || [], M.bodyActionGap, [10, 25], BODY_ACTIONS, { hold: (def) => def.hops * def.dur });
 }
-// 네발 행위 — idle에서 행위(앞발 들기·뒷발 긁기·꼬리 흔들기)로 넘어갔다 돌아온다. table.js quadActions.
-// 돌려주는 것: { action, index(다리 0~3, 꼬리면 -1), start, until } 또는 null(idle).
-export function initQuadAction(rng, M) { return { action: null, index: -1, start: -1, next: schedule(rng, M.quadActions ? [6, 18] : null), until: -1 }; }
+// 네발 행위 — 뒷발 긁기·꼬리 흔들기. 어느 다리인지는 쌍 안에서 뽑는다(index 0~3, 꼬리면 -1). table.js quadActions.
+// 돌려주는 것: { action, index, start, until } 또는 null(idle).
+export function initQuadAction(rng, M) { return { action: null, side: 0, start: -1, next: schedule(rng, M.quadActions ? [6, 18] : null), until: -1 }; }
 export function stepQuadAction(s, t, rng, M) {
-  if (t >= s.next && s.until < 0) {
-    const pool = M.quadActions || [];
-    if (pool.length) {
-      s.action = rng.weighted(pool);
-      const def = QUAD_ACTIONS[s.action];
-      const pick = rng.chance(0.5) ? 0 : 1;
-      s.index = def.leg === "front" ? pick : def.leg === "hind" ? 2 + pick : -1;
-      s.start = t;
-      s.until = t + rng.float(def.hold[0], def.hold[1]);
-    }
-    s.next = t + rng.float(M.quadActionGap ? M.quadActionGap[0] : 10, M.quadActionGap ? M.quadActionGap[1] : 30);
-  }
-  if (s.until >= 0 && t >= s.until) { s.until = -1; s.action = null; s.start = -1; }
-  return s.action ? { action: s.action, index: s.index, start: s.start, until: s.until } : null;
+  const r = stepActionLayer(s, t, rng, M.quadActions || [], M.quadActionGap, [10, 30], QUAD_ACTIONS, { side: true, hold: holdFromDef });
+  if (!r) return null;
+  const def = QUAD_ACTIONS[r.action];
+  const pick = r.side < 0 ? 0 : 1;
+  return { action: r.action, index: def.leg === "front" ? pick : def.leg === "hind" ? 2 + pick : -1, start: r.start, until: r.until };
 }
 export function stepMood(m, t, rng) {
   if (t >= m.nextMood && m.moodUntil < 0) { m.moodUntil = t + rng.float(1.5, 4); m.nextMood = t + rng.float(6, 16); }
