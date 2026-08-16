@@ -21,8 +21,8 @@ export const MOTION = {
     rock: 0.006,
     roll: null, dip: null,
     hop: [40, 90], stretch: null,
-    // 통통이 — 사람 30%는 idle 중 2.5~6초마다 제자리에서 살짝(절반 진폭) 뛴다
-    bounce: { chance: 0.3, gap: [2.5, 6], amp: 0.5 },
+    // 통통이 — 사람 30%는 idle하다가 가끔(10~25초) 제자리에서 살짝(절반 진폭) 연속 3번 뛴다
+    bounce: { chance: 0.3, gap: [10, 25], count: 3, amp: 0.5 },
     tilt: [7, 18], tiltAmp: 0.1,
     jelly: null, shiver: [26, 60],
     wink: null, happyHold: null,
@@ -90,8 +90,8 @@ export const MOTION = {
     rock: 0.004,
     roll: null, dip: null,
     hop: [50, 110], stretch: null,
-    // 도깨비 통통이 35% — 젤리 워블과 함께 통통
-    bounce: { chance: 0.35, gap: [2, 5], amp: 0.5 },
+    // 도깨비 통통이 35% — 가끔(8~20초) 살짝 3연속. 젤리 워블과 함께 통통
+    bounce: { chance: 0.35, gap: [8, 20], count: 3, amp: 0.5 },
     tilt: [8, 18], tiltAmp: 0.09,
     jelly: { amp: [0.008, 0.018], freq: [1.1, 1.9] }, shiver: [12, 30],
     wink: null, happyHold: null,

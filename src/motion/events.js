@@ -19,10 +19,11 @@ export function initRegen(rng) { return { at: rng.float(6, 14) }; }
 export function initEmote(rng) { return { next: rng.float(5, 30), start: -1, kind: "heart" }; }
 export function initDip(rng, M) { return { next: schedule(rng, M.dip), start: -1 }; }
 export function initNod(rng) { return { next: rng.float(9, 24), start: -1 }; }
-// 폴짝. 일부 개체(M.bounce.chance)는 "통통이" — 몇 초마다 제자리에서 살짝 뛴다(진폭 절반). 나머지는 드물게 크게
+// 폴짝. 일부 개체(M.bounce.chance)는 "통통이" — idle하다가 가끔 제자리에서 살짝(진폭 절반) 연속 3번 뛴다.
+// 나머지는 드물게 한 번 크게.
 export function initHop(rng, M) {
   const bouncy = M.bounce ? rng.chance(M.bounce.chance) : false;
-  return { next: bouncy ? rng.float(M.bounce.gap[0], M.bounce.gap[1]) : schedule(rng, M.hop), start: -1, bouncy };
+  return { next: bouncy ? rng.float(M.bounce.gap[0], M.bounce.gap[1]) : schedule(rng, M.hop), start: -1, bouncy, left: 0 };
 }
 export function initStretch(rng, M) { return { next: schedule(rng, M.stretch), start: -1 }; }
 export function initShiver(rng, M) { return { next: schedule(rng, M.shiver), start: -1 }; }
@@ -91,15 +92,22 @@ export function stepHop(e, t, rng, M) {
   let hopY = 0, squashX = 0, squashY = 0;
   if (t >= e.next && e.start < 0) {
     e.start = t;
+    e.left = e.bouncy ? M.bounce.count - 1 : 0;   // 통통이는 연속 — 남은 점프 수
     e.next = t + (e.bouncy ? rng.float(M.bounce.gap[0], M.bounce.gap[1]) : rng.float(M.hop[0], M.hop[1]));
   }
   if (e.start >= 0) {
-    const a = e.bouncy ? M.bounce.amp : 1;   // 통통이는 살짝
-    const k = (t - e.start) / 0.55;
-    if (k >= 1) e.start = -1;
-    else if (k < 0.2) { squashY = -0.07 * a * Math.sin((k / 0.2) * Math.PI); squashX = -squashY * 0.8; }
-    else if (k < 0.8) { const j = (k - 0.2) / 0.6; hopY = Math.sin(j * Math.PI) * 0.05 * a; squashY = 0.05 * a * Math.sin(j * Math.PI); squashX = -squashY * 0.7; }
-    else { squashY = -0.05 * a * Math.sin(((k - 0.8) / 0.2) * Math.PI); squashX = -squashY * 0.8; }
+    const a = e.bouncy ? M.bounce.amp : 1;      // 통통이는 살짝
+    const dur = e.bouncy ? 0.42 : 0.55;          // 통통이는 잽싸게
+    let k = (t - e.start) / dur;
+    if (k >= 1) {
+      if (e.left > 0) { e.left -= 1; e.start = t; k = 0; }   // 쉬지 않고 바로 다음 점프
+      else e.start = -1;
+    }
+    if (e.start >= 0) {
+      if (k < 0.2) { squashY = -0.07 * a * Math.sin((k / 0.2) * Math.PI); squashX = -squashY * 0.8; }
+      else if (k < 0.8) { const j = (k - 0.2) / 0.6; hopY = Math.sin(j * Math.PI) * 0.05 * a; squashY = 0.05 * a * Math.sin(j * Math.PI); squashX = -squashY * 0.7; }
+      else { squashY = -0.05 * a * Math.sin(((k - 0.8) / 0.2) * Math.PI); squashX = -squashY * 0.8; }
+    }
   }
   return { hopY, squashX, squashY };
 }
