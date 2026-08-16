@@ -235,7 +235,8 @@ export function drawMouth(ink, fills, spec, box, kindOverride) {
 }
 
 // 눈썹·입의 대체 상태. 쉬는 상태에서 이따금 이 상태로 넘어갔다 돌아온다.
-const ALT_BROW = { none: "flat", flat: "worry", angry: "flat", worry: "flat" };
+// 눈썹이 없는 개체는 대체도 없다 — 없는 파트를 기분 전환 때 그려 넣지 않는다. 눈썹 전환은 눈썹이 있을 때만 보인다
+const ALT_BROW = { none: "none", flat: "worry", angry: "flat", worry: "flat" };
 
 const ALT_MOUTH = { dot: "line", line: "wave", teeth: "open", open: "line", wave: "line", smile: "open" };
 
