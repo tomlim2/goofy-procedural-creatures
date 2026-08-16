@@ -21,6 +21,7 @@ export function buildCreature(spec, noise, birth = 0) {
   const bodyFrames = [];
   const headFrames = [];
   const faceFrames = [];
+  const hatFrames = [];
   let firstDrawn = null;
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const drawn = drawCreature(spec, k);
@@ -43,13 +44,22 @@ export function buildCreature(spec, noise, birth = 0) {
     headGroup.add(headFrame);
     headFrames.push(headFrame);
 
-    // 얼굴(눈·볼·코·수염·주둥이·안경) — faceGroup 안. 머리 잉크 위에 얹혀 통째로 밀린다.
+    // 얼굴(눈·볼·코·수염·주둥이·안경) — faceGroup 안. 머리 잉크·모자 위에 얹혀 통째로 밀린다 (눈이 모자에 가리지 않게)
     const faceFrame = new THREE.Group();
-    if (!drawn.face.fills.empty) faceFrame.add(sketchMesh(drawn.face.fills, 0.92, 2.1, -faceCy));
-    if (!drawn.face.ink.empty) faceFrame.add(sketchMesh(drawn.face.ink, 1, 2.2, -faceCy));
+    if (!drawn.face.fills.empty) faceFrame.add(sketchMesh(drawn.face.fills, 0.92, 2.3, -faceCy));
+    if (!drawn.face.ink.empty) faceFrame.add(sketchMesh(drawn.face.ink, 1, 2.4, -faceCy));
     faceFrame.visible = k === 0;
     faceGroup.add(faceFrame);
     faceFrames.push(faceFrame);
+
+    // 모자 — 머리 잉크 위, 얼굴 아래(2.1/2.2). 윤곽·머리카락·뿔 밑동을 덮되 눈·안경은 못 덮는다.
+    // 머리를 따라 돌고, 얼굴 돌림은 안 따라간다
+    const hatFrame = new THREE.Group();
+    if (!drawn.hat.fills.empty) hatFrame.add(sketchMesh(drawn.hat.fills, 1, 2.1, -drawn.neckY));
+    if (!drawn.hat.ink.empty) hatFrame.add(sketchMesh(drawn.hat.ink, 1, 2.2, -drawn.neckY));
+    hatFrame.visible = k === 0;
+    headGroup.add(hatFrame);
+    hatFrames.push(hatFrame);
   }
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
@@ -169,6 +179,7 @@ export function buildCreature(spec, noise, birth = 0) {
     bodyFrames,
     headFrames,
     faceFrames,
+    hatFrames,
     eyeRigs,
     faceStates,
     // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다

@@ -8,6 +8,8 @@
 
 import { makeRng } from "../rng.js";
 import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, shade } from "./vocabulary/index.js";
+import { layout, eyeGeometry } from "./draw/layout.js";
+import { LENS_SCALE } from "./draw/face.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -180,6 +182,18 @@ export function makeCreature(seed, speciesName = "human") {
   // 종족 forbid는 다시 한 번 — 이 슬롯들에도 적용되게.
   for (const slot of LATE_SLOTS) parts[slot] = pickSlot(rng, species, archetype, slot);
   applyForbid(parts, species.name);
+
+  // 안경·고글은 두 알이 겹치면(눈이 가까우면) 뺀다 — 겹친 안경테는 실수처럼 보인다. 눈에 맞춰 억지로 줄이지 않는다.
+  // 비율이 정해진 뒤에야 알 수 있어서 여기서 결정적으로 덮어쓴다 (rng 없음).
+  if (parts.eyewear === "glasses" || parts.eyewear === "goggles") {
+    const draft = { seed, species: species.name, parts, proportions, palette };
+    const eyes = eyeGeometry(draft, layout(draft));
+    if (eyes.length === 2) {
+      const scale = LENS_SCALE[parts.eyewear];
+      const gap = Math.hypot(eyes[1].x - eyes[0].x, eyes[1].y - eyes[0].y);
+      if (gap < (eyes[0].r + eyes[1].r) * scale * 1.02) parts.eyewear = "none";
+    }
+  }
 
   return {
     seed,

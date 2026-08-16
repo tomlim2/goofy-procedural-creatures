@@ -27,6 +27,8 @@ export function drawCreature(spec, variant = 0) {
   const headFills = new Sketch(noise, wobble);
   const faceInk = new Sketch(noise, wobble);
   const faceFills = new Sketch(noise, wobble);
+  const hatInk = new Sketch(noise, wobble);
+  const hatFills = new Sketch(noise, wobble);
   const box = layout(spec);
   const eyes = eyeGeometry(spec, box);
 
@@ -56,7 +58,8 @@ export function drawCreature(spec, variant = 0) {
   }
   drawEyewear(faceInk, faceFills, spec, box, eyes);
   drawHair(headInk, spec, box, noise);
-  drawHeadgear(headInk, headFills, spec, box);
+  // 모자는 머리 **앞**에 따로 굽는다 — 머리 윤곽·머리카락·뿔 밑동을 덮는다 (한 스케치에 넣으면 윤곽선이 모자를 뚫고 비친다)
+  drawHeadgear(hatInk, hatFills, spec, box);
 
   // 동공이 움직이는 눈만 골라 넘긴다. 외눈도 살아 있다.
   const live = ["ring", "wide", "cyclops"].includes(spec.parts.eyes)
@@ -67,6 +70,7 @@ export function drawCreature(spec, variant = 0) {
     body: { ink: bodyInk, fills: bodyFills },
     head: { ink: headInk, fills: headFills },
     face: { ink: faceInk, fills: faceFills },
+    hat: { ink: hatInk, fills: hatFills },
     eyes: live,
     box,
     // 머리 회전 축. 몸 꼭대기(턱 언저리)다.

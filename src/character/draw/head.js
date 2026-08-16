@@ -1,7 +1,7 @@
 // 머리 — 윤곽·귀·머리카락·모자·뿔. 문서: guidelines/character/parts.md § 머리
 
 import { blobPath, arcPath } from "../../stroke.js";
-import { TAU, headShape, darken, isDark } from "./layout.js";
+import { TAU, headShape, darken, isDark, eyeGeometry } from "./layout.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -253,36 +253,59 @@ export function drawHeadgear(ink, fills, spec, box) {
   const ry = box.headRy;
   const cy = box.headCy;
 
+  // 모자는 **눈썹 선 위**에 앉는다. 눈이 높이 달린 개체도 가리지 않게 눈 위쪽 끝(eyeGeometry)에서 재고,
+  // 폭은 그 높이에서의 머리 윤곽 반폭(타원)을 따른다 — 머리 크기·모양이 달라도 늘 머리에 맞는다.
+  const eyes = eyeGeometry(spec, box);
+  const eyeTop = eyes.reduce((m, e) => Math.max(m, e.y + e.r), cy);
+  const brow = Math.max(cy + ry * 0.42, eyeTop + ry * 0.12);
+  const halfW = (y) => rx * Math.sqrt(Math.max(0.05, 1 - ((y - cy) / ry) ** 2));
+  const crown = cy + ry;
+  const tiltSide = spec.seed % 2 ? 1 : -1;
+
   if (kind === "band") {
-    const y = cy + ry * 0.5;
-    ink.stroke([[-rx * 0.95, y], [rx * 0.95, y + 0.01]], { color: accent, width: 0.028 });
+    // 이마 띠 — 눈썹 바로 위, 윤곽 밖으로 살짝 나가게
+    const y = brow + ry * 0.08;
+    const w = halfW(y) * 1.05;
+    ink.stroke([[-w, y], [w, y + 0.006]], { color: accent, width: 0.03 });
+    ink.stroke([[-w, y + 0.014], [w, y + 0.02]], { color: ink0, width: 0.006, jitter: 0.003 });
     return;
   }
 
   if (kind === "helmet") {
-    const shell = arcPath(0, cy + ry * 0.1, rx * 1.06, ry * 0.98, Math.PI, TAU, 22);
-    fills.fill([...shell, [rx * 1.06, cy + ry * 0.1], [-rx * 1.06, cy + ry * 0.1]], accent);
+    // 투구 — 눈썹 위에서 정수리 위까지 덮는 돔. 아래 테두리 + 가운데 능선
+    const bottom = brow;
+    const w = halfW(bottom) * 1.08;
+    const h = crown + ry * 0.08 - bottom;
+    const shell = arcPath(0, bottom, w, h, Math.PI, TAU, 22);
+    fills.fill([...shell, [w, bottom], [-w, bottom]], accent);
     ink.stroke(shell, { color: ink0, width: 0.013, passes: 2 });
-    ink.stroke([[-rx * 1.08, cy + ry * 0.12], [rx * 1.08, cy + ry * 0.12]], { color: ink0, width: 0.011 });
+    ink.stroke([[-w * 1.03, bottom + 0.004], [w * 1.03, bottom - 0.004]], { color: ink0, width: 0.013 });
+    ink.stroke([[0, bottom + h * 0.15], [0.004, bottom + h * 0.98]], { color: ink0, width: 0.008 });
     return;
   }
 
   if (kind === "cap") {
-    const shell = arcPath(0, cy + ry * 0.35, rx * 0.95, ry * 0.7, Math.PI, TAU, 18);
-    fills.fill([...shell, [rx * 0.95, cy + ry * 0.35], [-rx * 0.95, cy + ry * 0.35]], accent);
-    ink.stroke(shell, { color: ink0, width: 0.012 });
-    ink.stroke([[-rx * 0.2, cy + ry * 0.36], [-rx * 1.35, cy + ry * 0.28]], { color: ink0, width: 0.014 });
+    // 야구 모자 — 정수리 돔 + 한쪽으로 나간 챙(눈썹 선). 챙은 살짝 처진다
+    const bottom = brow + ry * 0.06;
+    const w = halfW(bottom) * 0.98;
+    const h = crown + ry * 0.04 - bottom;
+    const shell = arcPath(0, bottom, w, h, Math.PI, TAU, 18);
+    fills.fill([...shell, [w, bottom], [-w, bottom]], accent);
+    ink.outline([...shell, [w, bottom], [-w, bottom]], { color: ink0, width: 0.012 });
+    const brim = [[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]];
+    fills.fill(brim, accent);
+    ink.outline(brim, { color: ink0, width: 0.012 });
     return;
   }
 
   if (kind === "beret") {
-    // 베레. 한쪽으로 기운 납작한 원반 + 꼭지.
-    const tilt = (spec.seed % 2 ? 1 : -1) * 0.16;
+    // 베레 — 정수리에 한쪽으로 기울여 얹은 납작한 원반 + 꼭지
+    const tilt = tiltSide * 0.16;
     const bx = -tilt * rx * 0.8;
-    const by = cy + ry * 0.82;
+    const by = Math.max(cy + ry * 0.82, brow + ry * 0.35);
     const cos = Math.cos(tilt);
     const sin = Math.sin(tilt);
-    const disc = blobPath(0, 0, rx * 0.92, ry * 0.3, { lumps: 4, amount: 0.12, noise: null })
+    const disc = blobPath(0, 0, rx * 0.95, ry * 0.3, { lumps: 4, amount: 0.12, noise: null })
       .map(([x, y]) => [bx + x * cos - y * sin, by + x * sin + y * cos]);
     fills.fill(disc, accent);
     ink.outline(disc, { color: ink0, width: 0.012, passes: 2 });
@@ -291,23 +314,25 @@ export function drawHeadgear(ink, fills, spec, box) {
   }
 
   if (kind === "bonnet") {
-    // 보닛 — 머리를 감싸는 두툼한 구름 테
-    const rim = arcPath(0, cy, rx * 1.18, ry * 1.16, Math.PI * 1.15, -Math.PI * 0.15, 26);
-    ink.stroke(rim, { color: accent, width: 0.05, jitter: 0.012 });
+    // 보닛 — 머리를 감싸는 두툼한 테. 양옆 눈높이에서 정수리 위로 넘어간다
+    const rim = arcPath(0, cy, rx * 1.2, ry * 1.14, Math.PI * 1.02, -Math.PI * 0.02, 26);
+    ink.stroke(rim, { color: accent, width: 0.055, jitter: 0.012 });
     ink.stroke(rim, { color: ink0, width: 0.01, jitter: 0.01, passes: 2 });
+    // 턱 밑 리본 자리 대신 양끝 매듭 점
+    for (const side of [-1, 1]) {
+      ink.stroke([[side * rx * 1.2, cy - 0.01], [side * rx * 1.15, cy - 0.05]], { color: ink0, width: 0.01 });
+    }
     return;
   }
 
-  // pot — 머리에 뒤집어쓴 통
-  const top = cy + ry * 1.05;
-  const box2 = [
-    [-rx * 0.75, cy + ry * 0.3],
-    [-rx * 0.62, top],
-    [rx * 0.62, top],
-    [rx * 0.75, cy + ry * 0.3]
-  ];
-  fills.fill(box2, accent);
-  ink.outline(box2, { color: ink0, width: 0.012 });
+  // pot — 머리에 뒤집어쓴 통. 눈썹 위에서 시작해 정수리보다 높이 솟는다
+  const bottom = brow + ry * 0.12;
+  const w = halfW(bottom) * 0.9;
+  const top = crown + ry * 0.28;
+  const pot = [[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]];
+  fills.fill(pot, accent);
+  ink.outline(pot, { color: ink0, width: 0.012 });
+  ink.stroke([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, width: 0.008 });
 }
 
 export function drawHorns(ink, fills, spec, box, noise) {

@@ -110,6 +110,9 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
   }
 }
 
+// 안경알 반지름 = 눈 반지름 × 배율. spec.js가 두 알이 겹치는지 판정할 때도 같은 값을 쓴다.
+export const LENS_SCALE = { glasses: 1.45, goggles: 1.75 };
+
 export function drawEyewear(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyewear;
   if (kind === "none") return;
@@ -137,7 +140,7 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
     return;
   }
 
-  const scale = kind === "goggles" ? 1.75 : 1.45;
+  const scale = LENS_SCALE[kind] || 1.45;
   for (const eye of eyes) {
     ink.outline(blobPath(eye.x, eye.y, eye.r * scale, eye.r * scale * 0.92, { lumps: 4, amount: 0.06, noise: null }), {
       color: ink0, width: 0.011

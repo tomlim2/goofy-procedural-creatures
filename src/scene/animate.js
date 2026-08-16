@@ -18,6 +18,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     item.bodyFrames[k].visible = k === frame;
     item.headFrames[k].visible = k === frame;
     item.faceFrames[k].visible = k === frame;
+    item.hatFrames[k].visible = k === frame;
   }
 
   // 몸 전체 — 스웨이(발 축 회전), 부르르, 점프, 호흡+락킹+젤리+기지개

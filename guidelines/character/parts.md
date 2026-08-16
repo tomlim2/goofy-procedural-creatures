@@ -49,7 +49,8 @@ none / flat / angry(안쪽 내림) / worry(안쪽 올림). **상태 전환 대�
 clock이 토글한다. 대체 표: none→flat, flat→worry, angry→flat, worry→flat.
 
 ### eyewear (5)
-none / glasses(양쪽 원 + 다리) / goggles(큰 원 + 머리까지 끈) / patch(한쪽 안대 + 사선 끈) / monocle(한쪽 큰 원 + 줄).
+none / glasses(양쪽 원 + 다리, 알 반지름 = 눈 × 1.45) / goggles(큰 원 + 머리까지 끈, × 1.75) / patch(한쪽 안대 + 사선 끈) / monocle(한쪽 큰 원 + 줄).
+안경·고글은 **두 알이 겹치면 뺀다**(눈이 가까운 개체 — 눈에 맞춰 억지로 줄이지 않는다, `makeCreature`가 비율 확정 뒤 none으로).
 
 ### hair (11)
 | 값 | 방식 |
@@ -62,7 +63,12 @@ none / glasses(양쪽 원 + 다리) / goggles(큰 원 + 머리까지 끈) / patc
 | curly | 정수리를 따라 작은 원 7개 |
 
 ### headgear (7)
-none / helmet(머리 위 반원 채움) / cap(챙 있는 반원) / band(가로 띠) / pot(뒤집어쓴 통) / beret(기운 원반 + 꼭지) / bonnet(머리를 감싸는 두툼한 테). 색은 accent 또는 pop.
+none / helmet(눈썹 위~정수리 위 돔 + 테두리 + 능선) / cap(정수리 돔 + 한쪽 챙) / band(이마 띠) / pot(눈썹 위에서 정수리보다 높이 솟는 통) /
+beret(기운 원반 + 꼭지) / bonnet(양옆 눈높이에서 정수리 위로 넘어가는 두툼한 테). 색은 accent 또는 pop.
+
+**전부 눈썹 선 위에 앉는다** — 눈 위쪽 끝(`eyeGeometry`)에서 재서 눈이 높이 달린 개체도 가리지 않고, 폭은 그 높이의 머리 윤곽
+반폭을 따라 머리 크기·모양에 맞는다. 모자는 머리 **앞**의 별도 층(채색 2.1·잉크 2.2 — 윤곽·머리카락·뿔 밑동을 덮되 눈·안경은 못 덮는다,
+[../rig.md](../rig.md)).
 
 ### horns (7)
 none / curved / straight / antenna(끝에 공) / nub(작은 혹) / ram(나선) / crown(정수리 스파이크 열).
