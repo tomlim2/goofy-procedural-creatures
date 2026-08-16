@@ -1,7 +1,7 @@
 // 머리 — 윤곽·귀·머리카락·모자·뿔. 문서: guidelines/parts-catalog.md § 머리
 
 import { blobPath, arcPath } from "../../stroke.js";
-import { TAU, headShape, darken } from "./layout.js";
+import { TAU, headShape, darken, isDark } from "./layout.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -20,9 +20,9 @@ export function drawHead(ink, fills, spec, box, noise) {
   // 연필 스크리블. 플랫 채색 위를 같은 계열 어두운 톤의 지그재그 한 획으로
   // 덮어 획 방향을 남긴다. 도깨비는 먹빛 위에 살짝 밝은 톤으로 긁는다.
   const scribbleAngle = Math.PI * (0.14 + noise(p.wobbleSeed * 0.03) * 0.22);
-  if (spec.species === "imp") {
+  if (isDark(spec.palette.skin)) {
     fills.scribbleFill(0.01, box.headCy, box.headRx * 0.82, box.headRy * 0.8, {
-      color: darken(spec.palette.ink, 1.6), angle: scribbleAngle, gap: 0.03, width: 0.006
+      color: darken(spec.palette.skin, 1.5), angle: scribbleAngle, gap: 0.03, width: 0.006
     });
   } else {
     fills.scribbleFill(0.01, box.headCy, box.headRx * 0.8, box.headRy * 0.76, {

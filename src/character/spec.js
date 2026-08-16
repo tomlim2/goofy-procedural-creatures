@@ -7,7 +7,7 @@
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
 import { makeRng } from "../rng.js";
-import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS } from "./vocabulary/index.js";
+import { SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS } from "./vocabulary/index.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -128,14 +128,18 @@ export function makeCreature(seed, speciesName = "kid") {
     fillOffset: [rng.around(0, 0.035), rng.around(0, 0.035)]
   };
 
+  // 도깨비 색. 머리는 DARKS 9색 중 하나(먹·회갈·회청·자흑…), 몸은 머리와 같은 색 /
+  // 다른 어두운 색 / 밝은 옷 셋 중 하나. rng 호출 수는 종족과 무관하게 고정한다.
+  const darkHead = rng.pick(DARKS);
+  const bodyRoll = rng.next();
+  const darkBody = rng.pick(DARKS.filter((c) => c !== darkHead));
   if (species.name === "imp") {
-    // 도깨비 머리는 먹빛, 얼굴은 종이색. 몸은 레퍼런스처럼 밝은 줄무늬도 나오도록
-    // 절반만 먹빛으로 둔다. rng 호출 수는 조건과 무관하게 고정한다.
-    const darkBody = rng.next() < 0.5;
-    palette.skin = palette.ink;
-    if (darkBody) palette.cloth = palette.ink;
-  } else {
-    rng.next();
+    palette.skin = darkHead;
+    if (bodyRoll < 0.4) palette.cloth = darkHead;
+    else if (bodyRoll < 0.65) palette.cloth = darkBody;
+    // 나머지 35%는 밝은 옷(FILLS) 그대로
+    // 잉크는 머리보다 더 어둡게 — 윤곽이 머리에 묻히지 않도록
+    palette.ink = "#1c1917";
   }
 
   // 색 포인트. 호출 수를 고정하기 위해 무조건 두 번 뽑고 나서 판정한다.
