@@ -98,7 +98,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | human | biped | none | not cyclops | ● | ✗ | none·round(·Mid)·pointy(·Mid·Big)·flap·fold(·Mid) | armLength medium만 |
 | pup | quad | none | not cyclops | ✗ | ● | flap·long·pointy(·Mid)·round(·Mid)·fold(·Mid) | hair·brow none (털이지 머리카락이 아니다) |
-| cat | quad | none | not cyclops | ✗ | ● | pointy·round·fold 각 크기 셋 (늘어진 귀 없음) | hair·brow none |
+| cat | quad | none | not cyclops | ✗ | ● | pointy · pointyMid · pointyBig (세모귀만) | hair·brow none |
 | imp | biped | (자유) | (자유) | ● | ✗ | none·pointy | 머리 어두움(휘도<90) |
 
 ## 제약 (applyConstraints)

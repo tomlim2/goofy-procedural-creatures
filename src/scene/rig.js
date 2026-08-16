@@ -19,17 +19,17 @@ export function buildCreature(spec, noise, birth = 0) {
 
   // 보일 — 지터 위상만 다른 3벌. 몸·머리·모자·얼굴을 같은 인덱스로 토글한다 (animate가 frames를 돈다).
   // 렌더 순서(guidelines/rig.md가 단일 소스): 몸 채색 1 → 몸 잉크 1.5 → 머리 채색 1.8(불투명 — 몸통 윤곽선이 머리에
-  // 안 비치게) → 머리 잉크 2 → 모자 2.1/2.2(윤곽·머리카락·뿔 밑동을 덮되 눈은 못 덮는다) → 얼굴 2.3/2.4(통째로 밀린다).
+  // 안 비치게) → 머리 잉크 2 → 머리 앞 2.1/2.2(개·고양이 귀·모자 — 윤곽·머리카락·뿔 밑동을 덮되 눈은 못 덮는다) → 얼굴 2.3/2.4(통째로 밀린다).
   const firstDrawn = drawCreature(spec, 0);
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
   const LAYERS = [
     { key: "body", group: bodyGroup, dy: 0, fillOrder: 1, inkOrder: 1.5, fillOpacity: 0.92 },
     { key: "head", group: headGroup, dy: -neckY, fillOrder: 1.8, inkOrder: 2, fillOpacity: 1 },
-    { key: "hat", group: headGroup, dy: -neckY, fillOrder: 2.1, inkOrder: 2.2, fillOpacity: 1 },
+    { key: "front", group: headGroup, dy: -neckY, fillOrder: 2.1, inkOrder: 2.2, fillOpacity: 1 },   // 머리 앞: 개·고양이 귀, 모자
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 0.92 }
   ];
-  const frames = { body: [], head: [], hat: [], face: [] };
+  const frames = { body: [], head: [], front: [], face: [] };
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const drawn = k === 0 ? firstDrawn : drawCreature(spec, k);
     for (const layer of LAYERS) {

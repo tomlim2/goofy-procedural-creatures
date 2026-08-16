@@ -84,11 +84,12 @@ round·pointy·fold는 **크기 셋**(1 · 1.4 · 1.8배, 모양은 같다) — 
 | --- | --- | --- |
 | human | none · round(·Mid) · pointy(·Mid·Big) · flap · fold(·Mid) | 옆(눈높이 조금 위). long·왕귀 없음 |
 | pup | flap · long · pointy(·Mid) · round(·Mid) · fold(·Mid) | 머리 위·옆구리에 채운 귀 (§ 개 귀). none·왕귀 없음 |
-| cat | pointy·round·fold 각 크기 셋 | **정수리 쪽 윤곽 위** — pointy 38°(정수리 가까이), fold 50°·round 55°(정수리~눈 사이). 늘어진 귀(flap·long)·none 없음 |
+| cat | pointy(기본) · pointyMid(좁고 긴) · pointyBig(넓고 큰) | **정수리 양쪽 모서리(~35°)의 채운 세모 혹** — 밑변을 윤곽 안으로 넣어 머리와 한 덩어리, 머리와 같은 굵기·2회 윤곽, 살짝 바깥으로 기움. 안쪽 귀는 개체별(이중선 50% · 어둡게 채움 15% · 끝 술 10%). round·fold·flap·long·none 없음(레퍼런스에 없다) |
 | imp | none · pointy(작은 것만) | 옆 |
 
-**cat**은 정수리 귀만이다 — 열린 세모(중간 이상은 안쪽 귀 선), 동그란 귀, 접힌 귀(스코티시 폴드). 머리 뒤에 그려 윤곽 안쪽은 머리 채색에
-묻힌다. bias pointy 2 · pointyMid 2 · pointyBig 1.5 · round 1 · roundMid 1 · roundBig 0.5 · fold 1 · foldMid 1 · foldBig 0.5.
+**cat**은 세모귀만이다 (레퍼런스 영상 35마리 실측: 정수리 모서리의 작은 세모, 윤곽선이 귀 안으로 이어지고 채색된 머리는 귀도 같은 색,
+일부 안쪽 세모·먹 채움·끝 술). 머리 **앞 층**(front)에 채운 도형으로 그려 머리 윤곽선이 귀 밑동을 뚫고 비치지 않는다.
+bias pointy 3 · pointyMid 2 · pointyBig 1.5.
 **pup**은 같은 값을 개 귀로 그린다 — 뿌리는 **머리 윤곽 위 두 자리** — 위쪽 모서리(정수리보다 좀 밑, θ 50°: pointy·round·fold)와 옆구리(눈 양옆보다 조금 옆, θ 88°:
 flap·long) — 이고 귀는 그 자리의 법선을 **반대 기울기로 탄다**(수직 기준 거울상 축 — 세모귀·동그란 귀는 위·안쪽으로 기울어 서고, 로브는 늘어지되
 0.25~0.35rad 안쪽으로 모인다). 귀 몸통은 머리 **밖** 종이 위에 놓인다 — 위쪽 귀는 윤곽에 밑변을 박고 0.02 밖으로, 긴 귀(flap·long)는 0.09 밖으로

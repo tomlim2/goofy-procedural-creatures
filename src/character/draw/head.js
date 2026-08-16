@@ -45,7 +45,7 @@ export function drawEars(ink, fills, spec, box) {
   if (kind === "none") return;
   // 개 귀는 머리 뒤가 아니라 **머리 위에** 그린다 (drawPupEars, 머리 다음) — 안쪽으로 기운 귀가 얼굴에 가려지지 않게
   if (spec.species === "pup") return;
-  if (spec.species === "cat") { drawCatEars(ink, spec, box, kind, size); return; }
+  if (spec.species === "cat") return;   // 고양이 귀는 머리 앞 층 (drawCatEars) — 채운 세모 혹이라 머리 위에 얹혀야 한다
 
   const y = box.headCy - box.headRy * 0.05;
 
@@ -83,38 +83,48 @@ export function drawEars(ink, fills, spec, box) {
   }
 }
 
-// 고양이 귀 — 정수리 쪽 윤곽 위에 선다: 정수리~눈 사이 위쪽(round 55° · fold 50°) 또는 정수리에 가까이(pointy 38°).
-// 세모·동그란·접힌 귀 각각 크기 셋. 머리 뒤에 그려서 윤곽 안쪽 부분은 머리 채색에 묻힌다(박혀 보임).
-// 늘어진 귀(flap·long)는 고양이에게 없다 — 들어오면 pointy로 그린다.
-function drawCatEars(ink, spec, box, kind, size) {
+// 고양이 귀 — 머리 실루엣의 **혹**. 정수리 양쪽 모서리(정수리에서 ~35°)에 채운 세모를 세우고 밑변은 윤곽 안으로 넣어
+// 머리와 한 덩어리로 붙인다(레퍼런스: 윤곽선이 귀 안으로 이어지고 채색된 머리는 귀도 같은 색). 윤곽은 머리와 같은 굵기·2회.
+// 머리 앞 층(front)에 그려 채움이 머리 윤곽선을 덮는다. 세 비율 — pointy 기본 · pointyMid 좁고 긴 · pointyBig 넓고 큰.
+// 안쪽 귀는 개체마다: 절반은 안쪽 작은 세모(이중선), 15%는 어둡게 채움, 10%는 귀 끝 술. 살짝 바깥으로 기울고 좌우가 조금 다르다.
+// round·fold·flap·long은 고양이에게 없다(species forbid → pointy).
+const CAT_EAR = {
+  pointy: { w: 0.05, h: 0.095, theta: 0.6 },
+  pointyMid: { w: 0.042, h: 0.135, theta: 0.55 },
+  pointyBig: { w: 0.075, h: 0.125, theta: 0.62 }
+};
+export function drawCatEars(ink, fills, spec, box) {
+  if (spec.species !== "cat") return;
+  const value = spec.parts.ears;
+  if (value === "none") return;
+  const def = CAT_EAR[value] || CAT_EAR.pointy;
   const rx = box.headRx, ry = box.headRy, cy = box.headCy;
-  const shape = kind === "round" || kind === "fold" ? kind : "pointy";
-  const theta = { pointy: 0.66, fold: 0.87, round: 0.96 }[shape];
   const ink0 = spec.palette.ink;
+  const skin = spec.palette.skin;
+  const seed = spec.proportions.wobbleSeed;
+  const inner = seed % 100 < 50 ? "line" : seed % 100 < 65 ? "dark" : seed % 100 < 75 ? "tuft" : "none";
   for (const side of [-1, 1]) {
-    // 윤곽 위 뿌리, 바깥 법선 n, 접선 t(정수리 쪽 +)
-    const bx = side * rx * Math.sin(theta);
-    const by = cy + ry * Math.cos(theta);
-    let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
+    // 윤곽 위 뿌리와 접선. 귀 축은 수직에서 바깥으로 살짝(0.1~0.2rad, 좌우 다르게) 기운다
+    const bx = side * rx * Math.sin(def.theta);
+    const by = cy + ry * Math.cos(def.theta);
+    let nx = side * Math.sin(def.theta) / rx, ny = Math.cos(def.theta) / ry;
     const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
-    const tx = -ny * side, ty = nx * side;
-    const local = (u, v) => [bx + nx * u + tx * v, by + ny * u + ty * v];
-    if (shape === "pointy") {
-      // 열린 세모 — 밑변은 윤곽 안, 끝은 법선을 따라. 중간 이상은 안쪽 귀 선 하나 더
-      const w = 0.042 * (0.7 + 0.3 * size);
-      const h = 0.085 * size;
-      ink.stroke([local(-0.014, w * 0.95), local(h, -w * 0.1), local(-0.014, -w * 1.05)], { color: ink0, width: 0.011 });
-      if (size > 1.2) ink.stroke([local(0.004, w * 0.35), local(h * 0.6, -w * 0.02)], { color: ink0, width: 0.007 });
-    } else if (shape === "round") {
-      const [cxr, cyr] = local(0.018 * size, 0);
-      ink.outline(blobPath(cxr, cyr, 0.03 * size, 0.032 * size, { lumps: 3, amount: 0.15, noise: null }), { color: ink0, width: 0.011 });
-    } else {
-      // 접힌 귀 — 올라갔다가 끝이 턱 쪽으로 꺾여 처진다 (스코티시 폴드)
-      const w = 0.04 * (0.7 + 0.3 * size);
-      ink.stroke([
-        local(-0.012, w * 0.9), local(0.05 * size, w * 0.5), local(0.06 * size, -w * 0.3),
-        local(0.03 * size, -w * 1.4), local(-0.012, -w * 1.05)
-      ], { color: ink0, width: 0.011 });
+    const lean = 0.12 + ((seed >> (side > 0 ? 3 : 5)) % 3) * 0.04;
+    const ax = side * Math.sin(lean), ay = Math.cos(lean);          // 귀 축 (바깥·위)
+    const px = side * ay, py = -side * ax;                          // 축에 수직 (바깥 양수)
+    const local = (u, v) => [bx + ax * u + px * v, by + ay * u + py * v];
+    // 밑변은 윤곽 안으로 0.02 — 머리와 붙는다. 끝은 살짝 바깥
+    const base = -0.02;
+    const path = [local(base, -def.w), local(def.h, def.w * 0.08), local(base, def.w)];
+    fills.fill(path, skin);
+    ink.stroke([local(base - 0.004, -def.w * 1.02), local(def.h, def.w * 0.08), local(base - 0.004, def.w * 1.02)], { color: ink0, width: 0.014, passes: 2 });
+    if (inner === "line") {
+      ink.stroke([local(0.012, -def.w * 0.5), local(def.h * 0.62, def.w * 0.05), local(0.012, def.w * 0.5)], { color: ink0, width: 0.008 });
+    } else if (inner === "dark") {
+      fills.fill([local(0.012, -def.w * 0.5), local(def.h * 0.62, def.w * 0.05), local(0.012, def.w * 0.5)], darken(skin, isDark(skin) ? 1.5 : 0.62));
+    } else if (inner === "tuft") {
+      ink.stroke([local(def.h * 0.98, def.w * 0.05), local(def.h * 1.16, def.w * 0.2)], { color: ink0, width: 0.008 });
+      ink.stroke([local(def.h * 0.92, def.w * 0.2), local(def.h * 1.08, def.w * 0.4)], { color: ink0, width: 0.007 });
     }
   }
 }

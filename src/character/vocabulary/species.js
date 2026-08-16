@@ -70,7 +70,7 @@ export const SPECIES = [
     name: "cat",
     weight: 2,
     forbid: {
-      ears: { flap: "pointy", long: "pointyMid", none: "pointy" },
+      ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig" },
       // 고양이 귀 경계 — 늘어진 귀·없음은 정수리 귀로
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
@@ -78,7 +78,7 @@ export const SPECIES = [
       brow: { flat: "none", angry: "none", worry: "none" }
     },
     identity: {
-      ears: ["pointy", "pointyMid", "pointyBig", "round", "roundMid", "roundBig", "fold", "foldMid", "foldBig"],   // 정수리 귀만 — 늘어진 귀(flap·long)·none 없음
+      ears: ["pointy", "pointyMid", "pointyBig"],   // 정수리 세모귀만 (레퍼런스) — 동그란·접힌·늘어진 귀·none 없음
       skeleton: "quad",
       horns: ["none"],
       hair: ["none"],
@@ -90,11 +90,8 @@ export const SPECIES = [
     bias: {
       legs: [["stub", 3], ["stick", 3], ["float", 1.5], ["boots", 1]],
       // 정수리 귀 — 세모·동그란·접힌 귀 각각 작음·중간·큼. 늘어진 귀(flap·long)는 고양이에게 없다
-      ears: [
-        ["pointy", 2], ["pointyMid", 2], ["pointyBig", 1.5],
-        ["round", 1], ["roundMid", 1], ["roundBig", 0.5],
-        ["fold", 1], ["foldMid", 1], ["foldBig", 0.5]
-      ],
+      // 세모귀만 — 기본 · 좁고 긴(Mid) · 넓고 큰(Big). 레퍼런스에 동그란·접힌·늘어진 귀는 없다
+      ears: [["pointy", 3], ["pointyMid", 2], ["pointyBig", 1.5]],
       horns: [["none", 1]],
       hair: [["none", 1]],
       headgear: [["none", 1]],

@@ -4,7 +4,7 @@
 import { Sketch } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, eyeGeometry } from "./layout.js";
-import { drawHead, drawEars, drawPupEars, drawHair, drawHeadgear, drawHorns } from "./head.js";
+import { drawHead, drawEars, drawPupEars, drawCatEars, drawHair, drawHeadgear, drawHorns } from "./head.js";
 import { drawEyes, drawFace2, drawEyewear, drawNose } from "./face.js";
 import { drawBody, drawMarks } from "./body.js";
 
@@ -27,8 +27,8 @@ export function drawCreature(spec, variant = 0) {
   const headFills = new Sketch(noise, wobble);
   const faceInk = new Sketch(noise, wobble);
   const faceFills = new Sketch(noise, wobble);
-  const hatInk = new Sketch(noise, wobble);
-  const hatFills = new Sketch(noise, wobble);
+  const frontInk = new Sketch(noise, wobble);
+  const frontFills = new Sketch(noise, wobble);
   const box = layout(spec);
   const eyes = eyeGeometry(spec, box);
 
@@ -37,7 +37,9 @@ export function drawCreature(spec, variant = 0) {
 
   drawEars(headInk, headFills, spec, box);
   drawHead(headInk, headFills, spec, box, noise);
-  drawPupEars(headInk, headFills, spec, box);   // 개 귀는 머리 위 (안쪽으로 기울어도 얼굴 밖으로 보이게)
+  // 머리 앞 층 — 개 귀·고양이 귀·모자. 머리 잉크 위에 채움이 얹혀야 윤곽선이 귀·모자를 뚫고 비치지 않는다
+  drawPupEars(frontInk, frontFills, spec, box);
+  drawCatEars(frontInk, frontFills, spec, box);
   drawHorns(headInk, headFills, spec, box, noise);
   drawEyes(faceInk, faceFills, spec, box, eyes);
   drawFace2(faceInk, faceFills, spec, box, eyes);
@@ -58,8 +60,7 @@ export function drawCreature(spec, variant = 0) {
   }
   drawEyewear(faceInk, faceFills, spec, box, eyes);
   drawHair(headInk, spec, box, noise);
-  // 모자는 머리 **앞**에 따로 굽는다 — 머리 윤곽·머리카락·뿔 밑동을 덮는다 (한 스케치에 넣으면 윤곽선이 모자를 뚫고 비친다)
-  drawHeadgear(hatInk, hatFills, spec, box);
+  drawHeadgear(frontInk, frontFills, spec, box);   // 모자는 귀 다음 — 귀 밑동을 덮는다
 
   // 동공이 움직이는 눈만 골라 넘긴다. 외눈도 살아 있다.
   const live = ["ring", "wide", "cyclops"].includes(spec.parts.eyes)
@@ -70,7 +71,7 @@ export function drawCreature(spec, variant = 0) {
     body: { ink: bodyInk, fills: bodyFills },
     head: { ink: headInk, fills: headFills },
     face: { ink: faceInk, fills: faceFills },
-    hat: { ink: hatInk, fills: hatFills },
+    front: { ink: frontInk, fills: frontFills },
     eyes: live,
     box,
     // 머리 회전 축. 몸 꼭대기(턱 언저리)다.
