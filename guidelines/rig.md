@@ -11,7 +11,10 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 ├── bodyGroup
 │   ├── bodyFrame ×3         ← 보일 변형. 채색(1) + 잉크(2)
 │   ├── tailGroup            ← 꼬리 뿌리에 피벗 (네발)
-│   └── limb pivot ×N        ← 어깨·엉덩이 피벗. front(2.5) + back(0.5, 팔만). 자세는 motion/states.js
+│   └── limb pivot ×N        ← 어깨·엉덩이 피벗
+│       ├── front             ← 위팔 (또는 다리). renderOrder 2.5
+│       │   └── elbow         ← 팔꿈치 피벗 + 아래팔 (팔만). 어깨각·팔꿈치각 따로
+│       └── back              ← 뒷짐 (팔만, 0.5)
 └── headGroup                ← 원점 = 목(neckY = bodyTop). 갸웃·롤·끄덕·딥
     ├── headFrame ×3         ← 보일 변형. 채색(1) + 잉크(2)
     ├── emoteMesh            ← 이벤트 시에만
@@ -29,6 +32,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·폴�
 - **group** — 발바닥. scale로 호흡하면 발이 바닥에 붙은 채 늘어난다
 - **headGroup** — 목. 머리 지오메트리를 `-neckY`만큼 미리 내려서 굽는다. rotation.z가 턱 언저리를 축으로 돈다
 - **limb pivot** — 어깨(bodyTop 아래 22%, 몸 폭 78%) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다
+- **elbow** — 위팔 끝. 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽는다. 위팔:아래팔 = 0.48:0.52
 - **tailGroup** — 꼬리 뿌리(몸 뒤끝)
 - **eyeRig** — 눈 중심. scale이 개방도, pupil.position이 시선, lid.scale.y가 눈꺼풀
 

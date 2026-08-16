@@ -106,7 +106,8 @@ function makeProportions(rng, archetype) {
 
     // 팔의 쉼 자세. 형태(arms 슬롯)와 별개다. 개체가 어떤 자세를 기본으로
     // 두는지 — 대부분 늘어뜨리고, 일부는 벌리거나 뒷짐진 채 쉰다.
-    armRest: rng.weighted([["rest", 5], ["out", 2], ["behind", 2], ["up", 0.5]]),
+    // 두발의 기본은 T포즈 — 어깨에서 수평으로 곧게. 소수는 늘어뜨리거나 뒷짐진 채 쉰다.
+    armRest: rng.weighted([["tpose", 6], ["rest", 1.5], ["behind", 1.5], ["hips", 1], ["out", 0.5]]),
 
     // 개체마다 손떨림 정도가 다르다. 어떤 놈은 반듯하고 어떤 놈은 엉망이다.
     wobble: rng.around(1, 0.55),
@@ -161,8 +162,8 @@ export function makeCreature(seed, speciesName = "kid") {
   }
 
   const proportions = makeProportions(rng, archetype);
-  // 매우 긴 팔을 늘어뜨리면 바닥을 뚫는다. 쉼 자세를 벌림으로 고정한다.
-  if (parts.armLength === "verylong" && proportions.armRest === "rest") proportions.armRest = "out";
+  // 매우 긴 팔을 늘어뜨리면 바닥을 뚫는다. T포즈로 고정한다.
+  if (parts.armLength === "verylong" && proportions.armRest === "rest") proportions.armRest = "tpose";
 
   return {
     seed,

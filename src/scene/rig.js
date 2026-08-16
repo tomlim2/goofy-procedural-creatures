@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngle, tailSketch } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngles, tailSketch } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -55,11 +55,23 @@ export function buildCreature(spec, noise, birth = 0) {
   // 팔다리 — 관절 피벗 그룹. rotation.z로 흔든다.
   // 팔은 front(몸 잉크 위, 2.5)와 back(몸 뒤, 0.5) 두 메시를 갖고 자세에 따라
   // 전환한다. 소매·손이 몸 윤곽을 덮어야 관절이 몸에 박혀 보인다.
+  // 팔은 두 관절이다: pivot(어깨) ─ front(위팔) ─ elbow(팔꿈치 피벗) ─ lower(아래팔).
+  // 어깨각과 팔꿈치각을 따로 줘야 팔이 접힌다.
   const limbs = limbSketches(spec).map((limb) => {
     const pivot = new THREE.Group();
     pivot.position.set(limb.pivot[0], limb.pivot[1], 0);
-    const front = sketchMesh(limb.sketch, 1, 2.5);
+    const front = new THREE.Group();
+    front.add(sketchMesh(limb.sketch, 1, 2.5));
     pivot.add(front);
+
+    let elbow = null;
+    if (limb.lowerSketch) {
+      elbow = new THREE.Group();
+      elbow.position.set(limb.elbow[0], limb.elbow[1], 0);
+      elbow.add(sketchMesh(limb.lowerSketch, 1, 2.5));
+      front.add(elbow);
+    }
+
     let back = null;
     if (limb.backSketch) {
       back = sketchMesh(limb.backSketch, 1, 0.5);
@@ -67,9 +79,15 @@ export function buildCreature(spec, noise, birth = 0) {
       pivot.add(back);
     }
     bodyGroup.add(pivot);
-    const rest = limb.kind === "arm" ? armPoseAngle(spec.proportions.armRest, limb.side) : 0;
-    pivot.rotation.z = rest;
-    return { pivot, front, back, kind: limb.kind, side: limb.side, index: limb.index ?? 0, angle: rest };
+
+    const [restShoulder, restElbow] = limb.kind === "arm" ? armPoseAngles(spec.proportions.armRest, limb.side) : [0, 0];
+    pivot.rotation.z = restShoulder;
+    if (elbow) elbow.rotation.z = restElbow;
+    return {
+      pivot, front, elbow, back,
+      kind: limb.kind, side: limb.side, index: limb.index ?? 0,
+      angle: restShoulder, elbowAngle: restElbow
+    };
   });
 
   // 눈썹·입 상태 — faceGroup 안에서 요(yaw)를 따라간다

@@ -54,8 +54,10 @@ export function stepTilt(s, t, rng, M) {
 // 팔 자세 — 쉼 자세에서 이따금 다른 자세로. 형태(arms 슬롯)와 분리된 동작.
 export function stepArmPose(s, t, rng, noRest) {
   if (t >= s.next && s.until < 0) {
-    const others = ["rest", "out", "behind", "up"].filter((p) => p !== s.restPose && !(noRest && p === "rest"));
-    s.pose = rng.weighted(others.map((p) => [p, p === "up" ? 0.5 : p === "behind" ? 1.5 : 2]));
+    // 쉼 자세에서 잠깐 넘어가는 자세들. 접힌 팔(hips·cross)이 여기서 나온다.
+    const others = ["tpose", "rest", "out", "behind", "up", "hips", "cross"].filter((p) => p !== s.restPose && !(noRest && p === "rest"));
+    const weight = { tpose: 1.5, rest: 1.5, out: 1.5, behind: 1.5, up: 0.7, hips: 2, cross: 1.5 };
+    s.pose = rng.weighted(others.map((p) => [p, weight[p]]));
     s.until = t + rng.float(2, 6);
     s.next = t + rng.float(12, 36);
   }

@@ -1,7 +1,7 @@
 // 상태 → 리그 적용. clock이 준 상태 객체를 three.js 그룹에 매 프레임 입힌다.
 // 문서: guidelines/motion.md § 상태 객체, guidelines/rig.md
 
-import { armPoseAngle } from "../character/index.js";
+import { armPoseAngles } from "../character/index.js";
 import { buildEmote } from "./emote.js";
 import { disposeGroup } from "./material.js";
 import { BOIL_FRAMES } from "./rig.js";
@@ -38,9 +38,13 @@ export function applyState(item, state, t, noise) {
   // 팔은 자세(clock 상태)가 기준각과 앞/뒤를 정하고, 그 위에 지터·이벤트가 얹힌다.
   for (const limb of item.limbs) {
     let target;
+    let elbowTarget = 0;
     if (limb.kind === "arm") {
       const behind = state.armPose === "behind";
-      target = armPoseAngle(state.armPose, limb.side) + state.armOffset[String(limb.side)];
+      const [shoulder, elbowAngle] = armPoseAngles(state.armPose, limb.side);
+      target = shoulder + state.armOffset[String(limb.side)];
+      // 팔꿈치는 자세각 + 지터의 절반 (관절이 따로 끓는다)
+      elbowTarget = elbowAngle + state.armOffset[String(limb.side)] * 0.5;
       if (limb.back) {
         // 뒷짐 전환은 팔이 기준각 근처로 돌아온 뒤에 한다. 회전 중에 바꾸면 튄다.
         const settled = Math.abs(target - limb.angle) < 0.35;
@@ -54,6 +58,10 @@ export function applyState(item, state, t, noise) {
     }
     limb.angle += (target - limb.angle) * 0.12;
     limb.pivot.rotation.z = limb.angle;
+    if (limb.elbow) {
+      limb.elbowAngle += (elbowTarget - limb.elbowAngle) * 0.12;
+      limb.elbow.rotation.z = limb.elbowAngle;
+    }
   }
 
   // 눈썹·입 상태
