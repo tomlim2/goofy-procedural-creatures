@@ -6,7 +6,7 @@
 // 애니메이션 원칙: 생성은 개체당 한 번, 매 프레임은 변형만.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, armPoseKinds, armSketch, tailSketch } from "./draw.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, armRestAngle, tailSketch } from "./draw.js";
 import { blobPath, arcPath, Sketch } from "./stroke.js";
 import { makeClock } from "./clocks.js";
 import { makeCreature } from "./creature.js";
@@ -155,17 +155,16 @@ function buildCreature(spec, noise, birth = 0) {
     bodyGroup.add(tailGroup);
   }
 
-  // 팔 — 포즈 2벌 토글 (두발)
-  const armKinds = armPoseKinds(spec);
-  const armMeshes = [];
-  if (!firstDrawn.quad) {
-    armKinds.forEach((pose, index) => {
-      const mesh = sketchMesh(armSketch(spec, pose), 1, 2);
-      mesh.visible = index === 0;
-      bodyGroup.add(mesh);
-      armMeshes.push(mesh);
-    });
-  }
+  // 팔다리 — 관절 피벗 그룹. rotation.z로 흔든다.
+  const limbs = limbSketches(spec).map((limb) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(limb.pivot[0], limb.pivot[1], 0);
+    pivot.add(sketchMesh(limb.sketch, 1, 2));
+    bodyGroup.add(pivot);
+    const rest = limb.kind === "arm" ? armRestAngle(spec, limb.side) : 0;
+    pivot.rotation.z = rest;
+    return { pivot, kind: limb.kind, side: limb.side, index: limb.index ?? 0, rest, angle: rest };
+  });
 
   // 눈썹·입 상태 — faceGroup 안에서 요(yaw)를 따라간다
   const kinds = facePartKinds(spec);
@@ -226,7 +225,7 @@ function buildCreature(spec, noise, birth = 0) {
     headGroup,
     faceGroup,
     tailGroup,
-    armMeshes,
+    limbs,
     bodyFrames,
     headFrames,
     eyeRigs,
@@ -428,10 +427,16 @@ export function createScene(canvas) {
       // 꼬리
       if (item.tailGroup) item.tailGroup.rotation.z = state.tailAngle;
 
-      // 팔 포즈
-      if (item.armMeshes.length) {
-        item.armMeshes[0].visible = !state.armAlt;
-        item.armMeshes[1].visible = state.armAlt;
+      // 팔다리 — 목표 각도로 이징. 관절은 튀지 않고 따라간다.
+      for (const limb of item.limbs) {
+        let target;
+        if (limb.kind === "arm") {
+          target = limb.rest + state.armOffset[String(limb.side)];
+        } else {
+          target = state.legOffset[limb.index] || 0;
+        }
+        limb.angle += (target - limb.angle) * 0.18;
+        limb.pivot.rotation.z = limb.angle;
       }
 
       // 눈썹·입 상태

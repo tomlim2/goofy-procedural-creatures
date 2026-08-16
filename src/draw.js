@@ -700,40 +700,8 @@ function drawMarks(ink, spec, body) {
   }
 }
 
-function drawLimbs(ink, spec, box, body, noise) {
-  const ink0 = spec.palette.ink;
-  const p = spec.proportions;
-
-  if (box.quad) {
-    // 네 다리와 꼬리. 팔은 없다.
-    for (const t of [-0.62, -0.22, 0.28, 0.66]) {
-      const x = body.cx + body.w * t;
-      ink.stroke([[x, box.legTop], [x + noise(t * 7.1) * 0.015, 0]], { color: ink0, width: 0.011 });
-      ink.stroke([[x - 0.02, 0], [x + 0.025, 0.003]], { color: ink0, width: 0.01 });
-    }
-    // 꼬리는 본체에 굽지 않는다. scene이 tailSketch로 별도 메시를 세워
-    // 살랑거림을 움직인다.
-    return;
-  }
-
-  // 다리
-  for (const side of [-1, 1]) {
-    const x = side * box.bodyW * 0.5;
-    if (spec.parts.legs === "bent") {
-      ink.stroke([[x, box.legTop], [x + side * 0.04, box.legTop * 0.5], [x + side * 0.01, 0]], {
-        color: ink0, width: 0.011
-      });
-    } else if (spec.parts.legs === "stub") {
-      // 짧고 굵은 다리. 짧다고 바닥에서 띄우면 발만 공중에 남는다.
-      ink.stroke([[x, box.legTop], [x, 0]], { color: ink0, width: 0.019 });
-    } else {
-      ink.stroke([[x, box.legTop], [x + noise(side * 3.3) * 0.02, 0]], { color: ink0, width: 0.011 });
-    }
-    // 발
-    ink.stroke([[x - 0.025, 0], [x + 0.03, 0.004]], { color: ink0, width: 0.011 });
-  }
-
-  // 팔은 본체에 굽지 않는다. scene이 armSketch로 포즈 상태 메시를 세운다.
+function drawLimbs() {
+  // 팔·다리는 본체에 굽지 않는다. scene이 limbSketches로 관절 피벗 메시를 세운다.
 }
 
 // 눈썹·입의 대체 상태. 쉬는 상태에서 이따금 이 상태로 넘어갔다 돌아온다.
@@ -819,34 +787,75 @@ export function drawCreature(spec, variant = 0) {
   };
 }
 
-// 팔 포즈. 쉬는 포즈에서 이따금 다른 포즈로 넘어갔다 돌아온다.
-const ALT_ARMS = { down: "out", out: "up", up: "out" };
-
-export function armPoseKinds(spec) {
-  return [spec.parts.arms, ALT_ARMS[spec.parts.arms] || "down"];
-}
-
-export function armSketch(spec, pose) {
+// 관절 팔다리. 각 지체는 피벗(어깨·엉덩이) 원점 기준으로 아래로 늘어진
+// 상태를 그린다. scene이 rotation.z로 흔든다.
+//
+// 반환: [{ sketch, pivot: [x, y], kind: "arm"|"leg", side }]
+export function limbSketches(spec) {
   const rng = makeRng((spec.proportions.wobbleSeed + 303) >>> 0);
   const noise = makeNoise(rng);
-  const sketch = new Sketch(noise, spec.proportions.wobble);
   const box = layout(spec);
-  if (box.quad) return sketch;
-
   const p = spec.proportions;
   const ink0 = spec.palette.ink;
-  const shoulder = box.bodyTop - (box.bodyTop - box.legTop) * 0.25;
+  const limbs = [];
+
+  const make = () => new Sketch(noise, p.wobble);
+
+  if (box.quad) {
+    // 네 다리. 몸 밑에 매달려 엉덩이 축으로 흔들린다.
+    const cx = box.bodyCx + box.bodyW * 0.35;
+    const hipY = box.legTop + box.bodyH * 0.15;
+    [-0.62, -0.22, 0.28, 0.66].forEach((tt, i) => {
+      const x = cx + box.bodyW * tt;
+      const s = make();
+      const len = hipY;
+      s.stroke([[0, 0], [noise(tt * 7.1) * 0.015, -len]], { color: ink0, width: 0.011 });
+      s.stroke([[-0.02, -len], [0.025, -len + 0.003]], { color: ink0, width: 0.01 });
+      limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side: i < 2 ? -1 : 1, index: i });
+    });
+    return limbs;
+  }
+
+  // 두발 — 다리 2개 (엉덩이 축)
+  const hipY = box.legTop;
+  for (const side of [-1, 1]) {
+    const x = side * box.bodyW * 0.5;
+    const s = make();
+    if (spec.parts.legs === "bent") {
+      s.stroke([[0, 0], [side * 0.04, -hipY * 0.5], [side * 0.01, -hipY]], { color: ink0, width: 0.011 });
+    } else if (spec.parts.legs === "stub") {
+      s.stroke([[0, 0], [0, -hipY]], { color: ink0, width: 0.019 });
+    } else {
+      s.stroke([[0, 0], [noise(side * 3.3) * 0.02, -hipY]], { color: ink0, width: 0.011 });
+    }
+    s.stroke([[-0.025, -hipY], [0.03, -hipY + 0.004]], { color: ink0, width: 0.011 });
+    limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side });
+  }
+
+  // 두발 — 팔 2개 (어깨 축). 쉼 포즈를 아래로 늘어진 기준 상태로 굽고
+  // 포즈(down/out/up)는 scene이 기준 각도로 준다.
+  const shoulderY = box.bodyTop - (box.bodyTop - box.legTop) * 0.25;
   for (const side of [-1, 1]) {
     const x = side * box.bodyW * (spec.parts.body === "dress" ? 0.9 : 0.95);
     const reach = 0.11 * p.armSpread;
-    let end;
-    if (pose === "up") end = [x + side * reach, shoulder + 0.09];
-    else if (pose === "out") end = [x + side * reach * 1.5, shoulder + 0.01];
-    else end = [x + side * reach * 0.6, shoulder - 0.1];
-    sketch.stroke([[x, shoulder], end], { color: ink0, width: 0.01 });
-    sketch.stroke([[end[0] - 0.016, end[1]], [end[0] + 0.016, end[1] + 0.004]], { color: ink0, width: 0.01 });
+    const s = make();
+    // 어깨에서 곧게 뻗은 팔. 살짝 굽음.
+    s.stroke([[0, 0], [side * reach * 0.25, -reach * 0.5], [side * reach * 0.35, -reach]], { color: ink0, width: 0.01 });
+    // 손
+    s.stroke([[side * reach * 0.35 - 0.016, -reach], [side * reach * 0.35 + 0.016, -reach + 0.004]], { color: ink0, width: 0.01 });
+    limbs.push({ sketch: s, pivot: [x, shoulderY], kind: "arm", side });
   }
-  return sketch;
+  return limbs;
+}
+
+// 팔 쉼 포즈의 기준 각도. down은 늘어짐, out은 옆으로, up은 위로.
+export function armRestAngle(spec, side) {
+  const pose = spec.parts.arms;
+  // side<0 (왼팔)은 양의 회전이 바깥쪽이다
+  const outward = -side;
+  if (pose === "up") return outward * 2.4;
+  if (pose === "out") return outward * 1.35;
+  return outward * 0.35;
 }
 
 // 꼬리. 피벗(꼬리 뿌리) 원점 기준으로 그린다. scene이 회전시켜 살랑거린다.

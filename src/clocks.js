@@ -14,6 +14,10 @@ const BLINK_TIME = 0.13;
 // 종족별 모션 성격. [min, max]는 이벤트 간격(초), null은 그 모션 없음.
 const MOTION = {
   kid: {
+    // 팔: 스웨이에 맞춰 흔들리고, 이따금 들어 올리거나 손을 흔든다
+    armSwing: 0.18, armLift: [6, 16], armWave: [10, 26],
+    // 다리: 발 까딱, 폴짝 때 접힘
+    legTap: [4, 11], legStep: null,
     sway: [0.012, 0.032], swayPeriod: [2.6, 4.6],
     rock: 0.006,
     roll: null, dip: null,
@@ -26,6 +30,9 @@ const MOTION = {
     emotes: ["heart", "bang", "quest"]
   },
   pup: {
+    armSwing: 0, armLift: null, armWave: null,
+    // 앞발 파닥, 제자리 스텝(네 발이 번갈아)
+    legTap: [3, 8], legStep: [8, 20],
     sway: [0.004, 0.01], swayPeriod: [3, 6],
     rock: 0.003,
     roll: { amp: [0.07, 0.14], period: [2.4, 4.8] },
@@ -39,6 +46,9 @@ const MOTION = {
     emotes: ["heart", "bang", "quest"]
   },
   cat: {
+    armSwing: 0, armLift: null, armWave: null,
+    // 앞발 꾹꾹이(느리게 번갈아), 스텝은 드물게
+    legTap: [5, 12], legStep: [14, 30],
     sway: [0.002, 0.007], swayPeriod: [3.5, 7],
     rock: 0.004,
     roll: null, dip: null,
@@ -51,6 +61,9 @@ const MOTION = {
     emotes: ["heart", "quest", "bang"]
   },
   imp: {
+    // 팔을 크게 휘두르고 잘 들어 올린다
+    armSwing: 0.28, armLift: [5, 12], armWave: [12, 30],
+    legTap: [3, 9], legStep: null,
     sway: [0.015, 0.04], swayPeriod: [2, 3.8],
     rock: 0.004,
     roll: null, dip: null,
@@ -131,6 +144,21 @@ export function makeClock(seed, birth = 0, species = "kid") {
 
   let nextArm = M.arm ? rng.float(M.arm[0], M.arm[1]) : Infinity;
   let armUntil = -1;
+
+  // ── 팔다리 ──
+  const armSwingPhase = rng.float(0, Math.PI * 2);
+  let nextArmLift = M.armLift ? rng.float(M.armLift[0], M.armLift[1]) : Infinity;
+  let armLiftUntil = -1;
+  let armLiftSide = 0;
+  let nextArmWave = M.armWave ? rng.float(M.armWave[0], M.armWave[1]) : Infinity;
+  let armWaveStart = -1;
+  let armWaveSide = 0;
+
+  let nextLegTap = M.legTap ? rng.float(M.legTap[0], M.legTap[1]) : Infinity;
+  let legTapStart = -1;
+  let legTapIndex = 0;
+  let nextLegStep = M.legStep ? rng.float(M.legStep[0], M.legStep[1]) : Infinity;
+  let legStepStart = -1;
 
   let nextWink = M.wink ? rng.float(M.wink[0], M.wink[1]) : Infinity;
   let winkUntil = -1;
@@ -310,6 +338,74 @@ export function makeClock(seed, birth = 0, species = "kid") {
       }
       if (armUntil >= 0 && t >= armUntil) armUntil = -1;
 
+      // ── 팔 ──
+      // 기본 흔들림: 스웨이와 반대 위상으로 살짝 진자 운동
+      const armSwing = Math.sin((t / swayPeriod) * Math.PI * 2 + swayPhase + Math.PI + armSwingPhase * 0.3) * (M.armSwing || 0);
+      // 한 팔 들기 — 몇 초 유지
+      if (t >= nextArmLift && armLiftUntil < 0) {
+        armLiftSide = rng.chance(0.5) ? -1 : 1;
+        armLiftUntil = t + rng.float(1.2, 3);
+        nextArmLift = t + rng.float(M.armLift[0], M.armLift[1]);
+      }
+      if (armLiftUntil >= 0 && t >= armLiftUntil) { armLiftUntil = -1; armLiftSide = 0; }
+      // 손 흔들기 — 들어 올린 채 좌우로 파닥
+      let armWaveK = -1;
+      if (t >= nextArmWave && armWaveStart < 0) {
+        armWaveStart = t;
+        armWaveSide = rng.chance(0.5) ? -1 : 1;
+        nextArmWave = t + rng.float(M.armWave[0], M.armWave[1]);
+      }
+      if (armWaveStart >= 0) {
+        armWaveK = (t - armWaveStart) / 1.6;
+        if (armWaveK >= 1) { armWaveStart = -1; armWaveK = -1; }
+      }
+      // 팔별 목표 회전(기준각 대비 오프셋). 스무딩은 scene이 한다.
+      const armOffset = { "-1": armSwing, "1": -armSwing };
+      for (const side of [-1, 1]) {
+        const key = String(side);
+        const outward = -side;
+        if (armLiftSide === side) armOffset[key] += outward * 1.9;
+        if (armWaveK >= 0 && armWaveSide === side) {
+          const env = Math.sin(Math.min(1, armWaveK) * Math.PI);
+          armOffset[key] += outward * 2.2 * env + Math.sin(armWaveK * Math.PI * 7) * 0.45 * env;
+        }
+        // 폴짝 때 팔을 위로 던진다
+        if (hopY > 0) armOffset[key] += outward * hopY * 12;
+      }
+
+      // ── 다리 ──
+      // 발 까딱 — 한 발을 발끝 축으로 톡톡
+      let legOffset = [0, 0, 0, 0];
+      if (t >= nextLegTap && legTapStart < 0) {
+        legTapStart = t;
+        legTapIndex = rng.int(0, M.legStep ? 3 : 1);
+        nextLegTap = t + rng.float(M.legTap[0], M.legTap[1]);
+      }
+      if (legTapStart >= 0) {
+        const k = (t - legTapStart) / 0.9;
+        if (k >= 1) legTapStart = -1;
+        else legOffset[legTapIndex] += Math.abs(Math.sin(k * Math.PI * 3)) * 0.22 * (legTapIndex % 2 ? -1 : 1);
+      }
+      // 제자리 스텝 — 네 발이 대각선으로 번갈아 (네발)
+      if (t >= nextLegStep && legStepStart < 0) {
+        legStepStart = t;
+        nextLegStep = t + rng.float(M.legStep[0], M.legStep[1]);
+      }
+      if (legStepStart >= 0) {
+        const k = (t - legStepStart) / 2.4;
+        if (k >= 1) legStepStart = -1;
+        else {
+          const env = Math.sin(Math.min(1, k) * Math.PI);
+          const ph = k * Math.PI * 2 * 3;
+          legOffset[0] += Math.sin(ph) * 0.18 * env;
+          legOffset[3] += Math.sin(ph) * 0.18 * env;
+          legOffset[1] += Math.sin(ph + Math.PI) * 0.18 * env;
+          legOffset[2] += Math.sin(ph + Math.PI) * 0.18 * env;
+        }
+      }
+      // 폴짝 준비·착지 때 다리 접힘 (스쿼시와 함께)
+      if (squashY < 0) { legOffset[0] += squashY * 3; legOffset[1] -= squashY * 3; }
+
       // 꼬리 — 상시 스위시(고양이) + 간헐 플릭
       let tailAngle = tailSwish
         ? Math.sin((t / tailSwish.period) * Math.PI * 2 + tailSwish.phase) * tailSwish.amp
@@ -371,7 +467,8 @@ export function makeClock(seed, birth = 0, species = "kid") {
         sway, rock, headAngle: headAngle + rollAngle, headBob,
         hopY, squashX, squashY, stretchX, shiverX,
         jellyX, jellyY, faceYaw,
-        armAlt: armUntil >= 0, happy, winkSide, tailAngle
+        armAlt: armUntil >= 0, happy, winkSide, tailAngle,
+        armOffset, legOffset
       };
     }
   };
