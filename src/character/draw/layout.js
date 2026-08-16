@@ -15,6 +15,14 @@ const HEAD_SHAPES = {
   block: { square: 2.2, taper: 0, rx: 1.06, ry: 0.98 }
 };
 
+// 몸통 폭 클래스. w는 bodyW 배율, h는 bodyH 배율, dressW는 dress 몸통용 배율, stance는 다리 스탠스
+// (몸 반폭 대비 다리 x). 넓은 몸이 넓은 스탠스를 받치고, 좁은 몸은 다리를 모은다.
+export const BODY_WIDTH = {
+  narrow: { w: 0.7, h: 1.08, dressW: 0.75, stance: 0.4 },
+  medium: { w: 1, h: 1, dressW: 1, stance: 0.5 },
+  wide: { w: 1.4, h: 0.92, dressW: 1.15, stance: 0.68 }
+};
+
 export function headShape(spec) {
   return HEAD_SHAPES[spec.parts.head] || HEAD_SHAPES.round;
 }
@@ -57,8 +65,11 @@ export function layout(spec) {
 
   // 다리 기장. short는 스케일이 아니라 길이만 30% — 몸이 바닥에 거의 내려앉고 발·굵기는 그대로.
   const legTop = p.legLength * 0.55 * (spec.parts.legLength === "short" ? 0.3 : 1);
-  const bodyH = 0.28 * (p.bodyScale / 0.52);
-  const bodyW = 0.23 * p.bodyWide;
+  // 몸통 폭(bodyWidth 슬롯) × 개체 지터. 넓으면 조금 땅딸막하게, 좁으면 조금 홀쭉하게.
+  // dress는 밑단이 1.35배 퍼지므로 wide를 덜 준다 — 셀(±0.45)을 넘지 않게.
+  const width = BODY_WIDTH[spec.parts.bodyWidth] || BODY_WIDTH.medium;
+  const bodyH = 0.28 * (p.bodyScale / 0.52) * width.h;
+  const bodyW = 0.23 * p.bodyWide * (spec.parts.body === "dress" ? width.dressW : width.w);
   const bodyTop = legTop + bodyH;
   const shape = headShape(spec);
   const headRy = 0.3 * p.headScale * shape.ry;

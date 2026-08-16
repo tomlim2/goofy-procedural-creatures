@@ -49,6 +49,7 @@ export const ARCHETYPES = [
       eyes: [["wide", 4], ["ring", 3], ["spiral", 2]],
       head: [["tall", 3], ["round", 3], ["egg", 2], ["pear", 1]],
       body: [["tube", 3], ["bean", 2]],
+      bodyWidth: [["narrow", 3], ["medium", 1]],
       legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
       arms: [["stick", 3], ["mitten", 2]],
       hair: [["none", 2], ["wisp", 2], ["tuft", 1.5], ["pigtails", 2], ["curly", 1], ["spikes", 1]],
@@ -63,7 +64,8 @@ export const ARCHETYPES = [
       hair: [["none", 3], ["tuft", 2], ["mop", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2]],
       body: [["bean", 4], ["dress", 2]],
-      legs: [["stub", 4], ["wide", 2], ["stick", 1]],
+      bodyWidth: [["wide", 3], ["medium", 1]],
+      legs: [["stub", 4], ["stick", 1]],
       arms: [["stubby", 4], ["stick", 1]],
       horns: [["none", 5], ["nub", 2]]
     }

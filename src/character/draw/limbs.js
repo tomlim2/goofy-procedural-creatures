@@ -3,7 +3,7 @@
 
 import { Sketch, blobPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
-import { layout, darken } from "./layout.js";
+import { layout, darken, BODY_WIDTH } from "./layout.js";
 
 // 팔 치수. 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기준 1, long은 그 1.64배(바닥을 쓸 만큼).
 // 기준 팔 길이 0.242 — 이보다 짧으면 손이 몸통 근처라 팔로 안 보인다.
@@ -70,8 +70,9 @@ export function limbSketches(spec) {
   // 뿌리는 몸 밑단보다 살짝 위(윤곽 안). 끝에는 항상 발.
   const hipY = box.legTop + 0.02;
   const legKind = spec.parts.legs;
+  // 스탠스(벌림)는 다리 형태가 아니라 몸통 폭이 정한다 — 넓은 몸이 넓은 스탠스를 받친다.
+  const spread = (BODY_WIDTH[spec.parts.bodyWidth] || BODY_WIDTH.medium).stance;
   for (const side of [-1, 1]) {
-    const spread = legKind === "wide" ? 0.72 : 0.5;
     const x = side * box.bodyW * spread;
     const s = make();
     const len = hipY;
@@ -88,7 +89,7 @@ export function limbSketches(spec) {
       limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
       continue;
     } else {
-      s.stroke([[0, 0], [noise(side * 3.3) * 0.02, -len]], { color: ink0, width: legKind === "wide" ? 0.014 : 0.011 });
+      s.stroke([[0, 0], [noise(side * 3.3) * 0.02, -len]], { color: ink0, width: 0.011 });
       footX = noise(side * 3.3) * 0.02;
     }
     // 발

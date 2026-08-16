@@ -105,7 +105,7 @@ export const SPECIES = [
       arms: [["stubby", 5], ["stick", 2]],
       // 바닥을 쓰는 긴 팔은 도깨비의 것 (사람은 forbid). 도깨비 열에 눈에 띌 만큼
       armLength: [["medium", 3], ["long", 2]],
-      legs: [["stub", 3], ["stick", 3], ["wide", 1]]
+      legs: [["stub", 3], ["stick", 3]]
     }
   }
 ];

@@ -19,8 +19,9 @@ export const SLOTS = {
   mouth: ["dot", "line", "teeth", "open", "wave", "smile", "pout", "omega", "zigzag"],
   body: ["bean", "box", "dress", "tube"],
   marks: ["none", "stripes", "dots", "patch", "hatch", "spots"],
-  // 다리 유형. 레퍼런스: 전부 끝에 동그란 발이 있고 몸 밑에서 나온다.
-  legs: ["stick", "stub", "bent", "boots", "wide", "tiptoe"],
+  // 다리 유형(형태만). 레퍼런스: 전부 끝에 동그란 발이 있고 몸 밑에서 나온다.
+  // 벌린 정도(스탠스)는 여기 없다 — 몸통 폭(bodyWidth)이 정한다. 넓은 몸이 넓은 스탠스를 받친다.
+  legs: ["stick", "stub", "bent", "boots", "tiptoe"],
   // 네발 종족 전용. 두발 종족은 그리지 않는다.
   tail: ["curl", "flag", "longtail", "stubtail"],
   // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다.
@@ -29,13 +30,16 @@ export const SLOTS = {
   armLength: ["medium", "long"],
   // 다리 길이(기장). 형태와 독립 — 모든 다리 유형에 짧은 판이 있다. 스케일이 아니라 기장만 짧다:
   // 몸이 바닥 가까이 내려앉고 발·굵기는 그대로다. 네발은 무시한다.
-  legLength: ["medium", "short"]
+  legLength: ["medium", "short"],
+  // 몸통 폭. 형태(body)와 독립 — 홀쭉한 통·땅딸막한 콩이 다 나온다. 다리 스탠스(벌림)와
+  // 어깨 위치가 이걸 따른다: 좁은 몸은 다리를 모으고, 넓은 몸은 벌린다. 네발은 무시한다.
+  bodyWidth: ["narrow", "medium", "wide"]
 };
 
 // 뒤늦게 붙인 슬롯. makeCreature가 다른 모든 것(파츠·제약·색·비율) 뒤에 뽑는다 —
 // 그래야 앞선 rng 소비가 그대로라 기존 시드의 판이 유지된다(새 슬롯 값만 더해진다).
 // 새 슬롯은 여기 끝에 붙인다. 순서를 바꾸면 이 슬롯들의 값이 바뀐다.
-export const LATE_SLOTS = ["legLength"];
+export const LATE_SLOTS = ["legLength", "bodyWidth"];
 
 // 아키타입 bias가 없는 슬롯의 기본 가중치.
 //
@@ -55,6 +59,7 @@ export const DEFAULT_BIAS = {
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
-  legs: [["stick", 3], ["boots", 3], ["stub", 2], ["bent", 2], ["wide", 1.5], ["tiptoe", 1]],
-  legLength: [["medium", 3], ["short", 1]]
+  legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["tiptoe", 1]],
+  legLength: [["medium", 3], ["short", 1]],
+  bodyWidth: [["medium", 4], ["narrow", 1.5], ["wide", 1.5]]
 };

@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 18슬롯 102파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 104파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 슬롯 순서 변경은 rng 호출 순서를 바꿔 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에 붙여 맨 끝에 뽑으면 기존 판이
@@ -85,18 +85,30 @@ dot / line / teeth(선 + 이빨 3개) / open(검은 타원) / wave / smile / pou
 bean(찌그러진 타원) / box / dress(아래가 넓은 사다리꼴) / tube(좁은 통). 채색 + 스크리블 채움 + 외곽선.
 네발은 슬롯값과 무관하게 가로 blob.
 
+### bodyWidth (3)
+| 값 | 몸 폭 배율 | 몸 높이 | 다리 스탠스 (몸 반폭 대비) | |
+| --- | --- | --- | --- | --- |
+| narrow | 0.7 (dress 0.75) | ×1.08 홀쭉 | 0.4 — 다리를 모은다 | sprite |
+| medium | 1 | ×1 | 0.5 | 기본 |
+| wide | 1.4 (dress 1.15 — 밑단이 셀을 넘지 않게) | ×0.92 땅딸막 | 0.68 — 다리를 벌린다 | blob |
+
+형태(body)와 독립이라 4×3 조합. **다리 스탠스(벌림)는 다리 슬롯이 아니라 여기서 정한다** — 넓은 몸이 넓은 스탠스를
+받치고, 좁은 몸은 다리를 모은다. 어깨 위치(몸 폭 78%)도 같이 따라온다. `layout()` `BODY_WIDTH`. 네발은 무시.
+`LATE_SLOTS`. 갤러리: `gallery.html?slot=bodyWidth&fix=legLength:medium`.
+
 ### marks (6)
 none / stripes(가로 3줄) / dots(4점) / patch(왼쪽 해칭) / hatch(전체 사선) / spots(달마시안 얼룩 3개).
 
-### legs (6)
+### legs (5)
 | 값 | 그리기 |
 | --- | --- |
 | stick | 가는 선 + 동그란 발 |
 | stub | 굵은 선 (0.019) + 동그란 발 |
 | bent | 무릎 꺾임 + 동그란 발 |
 | boots | 선 + 옷색 부츠 채움 |
-| wide | 넓게 벌림 + 굵은 선 + 발 |
 | tiptoe | 가는 선 + 아래로 뾰족한 발 |
+
+형태만이다. 벌린 정도(스탠스)는 `bodyWidth`가, 기장은 `legLength`가 정한다 — 5×2×3 조합.
 
 두발은 엉덩이(밑단 위 0.02)에 피벗. **네발**은 슬롯값과 무관하게 굵은 스텁 4개 + 발가락, 뿌리는 bodyH 25% 위.
 
@@ -106,7 +118,7 @@ none / stripes(가로 3줄) / dots(4점) / patch(왼쪽 해칭) / hatch(전체 �
 | medium | legLength 비율 × 0.55 (≈0.17) | 기준 |
 | short | 그 30% (≈0.05) | 몸이 바닥에 거의 내려앉는다. **스케일이 아니라 기장만** — 발·굵기·부츠 높이는 그대로 |
 
-형태(legs)와 독립이라 6×2 조합 — 모든 다리 유형에 짧은 판이 있다. `layout()`이 `legTop`에서 곱하므로 몸·머리·어깨가
+형태(legs)와 독립이라 5×2 조합 — 모든 다리 유형에 짧은 판이 있다. `layout()`이 `legTop`에서 곱하므로 몸·머리·어깨가
 같이 내려온다. 네발은 무시. `LATE_SLOTS`라 맨 끝에 뽑는다. 갤러리: `gallery.html?slot=legs&fix=legLength:short`.
 
 ### tail (4) — 네발 전용

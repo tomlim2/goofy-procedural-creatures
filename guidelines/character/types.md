@@ -50,8 +50,8 @@
 | **beast** | 3 | 뿔·귀·이빨 | horns(curved/straight), ears(pointy/flap), mouth(teeth), nose(wedge/hook), hair(spikes/mop), head(round/wide) |
 | **scholar** | 2 | 안경·단발·베레 | eyewear(glasses/monocle), eyes(dot/half/sleepy), hair(bob/wisp/curly/sweep), headgear(beret), mouth(line), nose(long/hook), horns(none) |
 | **trooper** | 3 | 헬멧·안대·줄무늬·부츠 | headgear(helmet/cap/band/pot), eyewear(patch/goggles), head(square/block), hair(scribble/spikes), marks(stripes/patch/hatch), arms(sleeve/stick), legs(boots) |
-| **sprite** | 3 | 더듬이·왕눈·긴 팔다리 | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), legs(stick/tiptoe), arms(stick/mitten), hair(none/wisp/tuft/pigtails), nose(none/dot) |
-| **blob** | 2 | 넓적·대머리·뭉툭한 팔다리 | head(wide/round/pear), hair(none/tuft/mop), eyes(dot/ring/half), body(bean/dress), legs(stub/wide), arms(stubby), horns(none/nub) |
+| **sprite** | 3 | 더듬이·왕눈·긴 팔다리 | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), bodyWidth(narrow), legs(stick/tiptoe), arms(stick/mitten), hair(none/wisp/tuft/pigtails), nose(none/dot) |
+| **blob** | 2 | 넓적·대머리·뭉툭한 팔다리 | head(wide/round/pear), hair(none/tuft/mop), eyes(dot/ring/half), body(bean/dress), bodyWidth(wide), legs(stub), arms(stubby), horns(none/nub) |
 | **wanderer** | 2 | 밴드·졸린 눈·해칭 | headgear(band/pot/cap), eyes(half/sleepy/cross), marks(hatch/stripes/patch), mouth(wave/line), body(dress/bean) |
 
 ## 비율 지터 (proportions)
