@@ -12,10 +12,10 @@ import { MOTION } from "./table.js";
 import * as R from "./rhythm.js";
 import * as E from "./events.js";
 import * as S from "./states.js";
-import { ACTIONS, QUAD_ACTIONS, bindArm, solveArms } from "./actions.js";
+import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, bindArm, solveArms } from "./actions.js";
 
 export { MOTION } from "./table.js";
-export { ACTIONS, QUAD_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
+export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
 
 // 바인드 상태 — 아무 모션도 받지 않은 캐릭터. 모든 값이 정지·기본이다: 두발은 팔 T포즈,
 // 네발은 다리 수직·꼬리 그린 그대로. scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다.
@@ -27,7 +27,7 @@ export const BIND_STATE = Object.freeze({
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
   happy: false, winkSide: 0, tailAngle: 0,
-  arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0,
+  arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
 });
 
@@ -51,7 +51,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const dip = E.initDip(rng, M);                 // 11
   const tilt = S.initTilt(rng, M);               // 12
   const nod = E.initNod(rng);                    // 13
-  const hop = E.initHop(rng, M);                 // 14
+  const bodyAction = S.initBodyAction(rng, M);   // 14
   const stretch = E.initStretch(rng, M);         // 15
   const shiver = E.initShiver(rng, M);           // 16
   const armSwing = R.initArmSwing(rng);          // 17
@@ -66,15 +66,16 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const look = S.initLook(rng, M);               // 26
   const quadAction = S.initQuadAction(rng, M);   // 27
 
-  // 강제 행위 (화면 ACTION 카드). 예약된 행위 대신 이걸 계속 한다. null이면 예약대로,
-  // "idle"이면 행위 없이 idle만. 두발 행위(ACTIONS)와 네발 행위(QUAD_ACTIONS)는 각자 종족에서만 먹는다.
+  // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
+  // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
   let forced = null;
   let forcedSide = 1;
   let forcedStart = -1;
+  const biped = !!rig;   // 팔 리그가 있으면 두발
 
   return {
     force(action, side = 1) {
-      forced = action === "idle" || (action && (ACTIONS[action] || QUAD_ACTIONS[action])) ? action : null;
+      forced = action === "idle" || (action && (ACTIONS[action] || QUAD_ACTIONS[action] || BODY_ACTIONS[action])) ? action : null;
       forcedSide = side;
       forcedStart = -1;
     },
@@ -103,16 +104,28 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const rollAngle = R.stepRoll(roll, t);
       let headBob = E.stepNod(nod, t, rng);
       headBob += E.stepDip(dip, t, rng, M);
-      const hp = E.stepHop(hop, t, rng, M);
+      // 몸 행위(제자리 점프) — 팔·네발 행위와 다른 층. 예약은 강제 중에도 돌린다(rng 소비 고정)
+      const scheduledB = S.stepBodyAction(bodyAction, t, rng, M);
+      let bact = scheduledB;
+      if (forced && !BODY_ACTIONS[forced]) bact = null;            // 다른 층을 강제 중이거나 idle → 몸은 idle
+      else if (forced && BODY_ACTIONS[forced]) {
+        if (forcedStart < 0) forcedStart = t;
+        const def = BODY_ACTIONS[forced];
+        // 강제 점프는 쉬었다 반복 — 점프 길이 + 1.2초 주기로 되풀이
+        const period = def.hops * def.dur + 1.2;
+        const start = forcedStart + Math.floor((t - forcedStart) / period) * period;
+        bact = { action: forced, start, until: start + def.hops * def.dur };
+      }
+      const hp = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, squashX: 0, squashY: 0 };
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
 
       // 팔 — 기본은 idle(A포즈), 행위가 있으면 그 행위가 정한 팔만 덮는다. 리그에 IK로 풀고,
-      // 그 위에 진자·폴짝·지터를 얹는다.
+      // 그 위에 진자·점프·지터를 얹는다.
       // 예약은 강제 중에도 계속 돌린다(rng 소비를 같게 — 강제를 풀어도 시계가 흐트러지지 않는다).
       const scheduled = S.stepArmAction(armAction, t, rng, M);
       let act = scheduled;
-      if (forced === "idle" || (forced && QUAD_ACTIONS[forced])) act = null;
+      if (forced && !(biped && ACTIONS[forced])) act = null;      // 다른 층 강제·idle → 팔은 idle
       else if (forced) {
         if (forcedStart < 0) forcedStart = t;
         act = { action: forced, side: forcedSide, start: forcedStart, until: Infinity };
@@ -121,7 +134,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const swing = R.stepArmSwing(armSwing, sway, t, M);
       for (const side of [-1, 1]) {
         const arm = arms[String(side)];
-        // 진자(스웨이 역위상) · 폴짝 시 팔 위로 · 관절 지터. 팔꿈치는 절반 (관절이 따로 끓는다)
+        // 진자(스웨이 역위상) · 점프 시 팔 위로 · 관절 지터. 팔꿈치는 절반 (관절이 따로 끓는다)
         let off = -side * swing;
         if (hp.hopY > 0) off += side * hp.hopY * 4;
         off += R.armJitter(armSwing, t, side);
@@ -129,7 +142,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         arm.elbow += off * 0.5;
       }
 
-      // 다리 — 기본은 idle 자세(네발은 legStance로 선 자세, 두발은 수직). 그 위에 까딱·스텝·폴짝·지터.
+      // 다리 — 기본은 idle 자세(네발은 legStance로 선 자세, 두발은 수직). 그 위에 까딱·스텝·점프·지터.
       const legOffset = M.legStance ? [...M.legStance] : [0, 0, 0, 0];
       const legOsc = [0, 0, 0, 0];
       E.stepLegTap(legTap, t, rng, M, legOffset);
@@ -145,7 +158,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
       const scheduledQ = S.stepQuadAction(quadAction, t, rng, M);
       let qact = scheduledQ;
-      if (forced === "idle" || (forced && ACTIONS[forced])) qact = null;
+      if (forced && !(!biped && QUAD_ACTIONS[forced])) qact = null;   // 다른 층 강제·idle → 네발 다리·꼬리는 idle
       else if (forced && QUAD_ACTIONS[forced]) {
         if (forcedStart < 0) forcedStart = t;
         const def = QUAD_ACTIONS[forced];
@@ -179,9 +192,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle,
         arms, legOffset, legOsc,
-        // 지금 하는 행위 (두발 팔 행위 또는 네발 행위) 와 어느 쪽(활동 팔 side / 다리 index). 디버그·통계용
+        // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용
         action: act ? act.action : qact ? qact.action : null,
-        actionSide: act ? act.side : qact ? qact.index : 0
+        actionSide: act ? act.side : qact ? qact.index : 0,
+        bodyAction: bact ? bact.action : null
       };
     }
   };

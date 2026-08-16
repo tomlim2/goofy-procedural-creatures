@@ -48,12 +48,31 @@ export const ACTIONS = {
   flap:   { pose: "flap",   arms: "both", hold: [1.5, 3], label: "파닥임 (좋아함)", emote: "heart" }
 };
 
+// 몸 행위 — 온몸이 하는 것(제자리 점프…). 팔 행위·네발 행위와 **다른 층**이라 겹친다:
+// 점프하면서 인사할 수 있고, 개가 뛰면서 꼬리를 흔들 수 있다. 두발·네발 공통.
+//   jump: 살짝(amp) 잽싸게(dur초) hops번 연속 제자리 점프. 스쿼시&스트레치, 팔은 위로 딸려 오르고 다리는 접힌다
+export const BODY_ACTIONS = {
+  jump: { hops: 3, dur: 0.42, amp: 0.5, label: "제자리 점프 (살짝 3번)" }
+};
+
+// 점프 곡선. tau = 행위 시작 후 경과 시간. 한 점프 = 웅크림(20%) → 공중(60%) → 착지(20%), 쉬지 않고 이어진다.
+export function jumpCurve(tau, def) {
+  const hop = Math.floor(tau / def.dur);
+  if (hop >= def.hops || tau < 0) return { hopY: 0, squashX: 0, squashY: 0 };
+  const k = (tau - hop * def.dur) / def.dur;
+  const a = def.amp;
+  let hopY = 0, squashX = 0, squashY = 0;
+  if (k < 0.2) { squashY = -0.07 * a * Math.sin((k / 0.2) * Math.PI); squashX = -squashY * 0.8; }
+  else if (k < 0.8) { const j = (k - 0.2) / 0.6; hopY = Math.sin(j * Math.PI) * 0.05 * a; squashY = 0.05 * a * Math.sin(j * Math.PI); squashX = -squashY * 0.7; }
+  else { squashY = -0.05 * a * Math.sin(((k - 0.8) / 0.2) * Math.PI); squashX = -squashY * 0.8; }
+  return { hopY, squashX, squashY };
+}
+
 // 네발 행위 — 다리 하나나 꼬리를 잠깐 다르게. 네발 리그는 피벗 회전뿐이라 IK 없이 각도다.
 // idle(선 자세 — table.js legStance·tailIdle) 위에 겹치고, 정하지 않은 다리·꼬리는 idle 그대로.
 //   leg   어느 쌍에서 하나 뽑나 ("front" 앞다리 0/1, "hind" 뒷다리 2/3). angle: 피벗 각(rad, 음수 = 발이 머리 쪽으로)
 //   osc   이징 없이 얹는 진동 { amp, hz }. tail: 꼬리에 얹는 진동
 export const QUAD_ACTIONS = {
-  paw:     { leg: "front", angle: -1.0, osc: { amp: 0.25, hz: 3 }, hold: [1.5, 3],  label: "앞발 들기 (인사)" },
   scratch: { leg: "hind",  angle: -0.9, osc: { amp: 0.15, hz: 6 }, hold: [1, 2.2],  label: "뒷발로 긁기" },
   wag:     { tail: { osc: { amp: 0.35, hz: 4 } },                   hold: [1.5, 3],  label: "꼬리 흔들기" }
 };

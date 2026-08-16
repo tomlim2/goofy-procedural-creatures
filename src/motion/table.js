@@ -20,9 +20,9 @@ export const MOTION = {
     sway: [0.012, 0.032], swayPeriod: [2.6, 4.6],
     rock: 0.006,
     roll: null, dip: null,
-    hop: [40, 90], stretch: null,
-    // 통통이 — 사람 30%는 idle하다가 가끔(10~25초) 제자리에서 살짝(절반 진폭) 연속 3번 뛴다
-    bounce: { chance: 0.3, gap: [10, 25], count: 3, amp: 0.5 },
+    // 몸 행위 — idle하다가 가끔 제자리 점프(살짝 3번). 팔 행위와 겹친다(점프하며 인사)
+    bodyActions: [["jump", 1]], bodyActionGap: [10, 25],
+    stretch: null,
     tilt: [7, 18], tiltAmp: 0.1,
     jelly: null, shiver: [26, 60],
     wink: null, happyHold: null,
@@ -38,14 +38,15 @@ export const MOTION = {
     // 네발 idle 자세 — 바인드(다리 수직·꼬리 그린 그대로)와 다르다. 앞다리는 살짝 앞, 뒷다리는 뒤로 딛고
     // 꼬리는 올린다. 그 위에 리듬(호흡·롤·꼬리)과 행위가 얹힌다.
     legStance: [-0.05, -0.02, 0.09, 0.06], tailIdle: 0.25,
-    quadActions: [["paw", 2], ["wag", 2.5], ["scratch", 1]], quadActionGap: [8, 22],
+    quadActions: [["wag", 2.5], ["scratch", 1]], quadActionGap: [8, 22],
     // 레퍼런스의 개 다리는 4초 내내 바닥 고정. 몸이 흔들려 다리가 따라 보일 뿐이다.
     legTap: [14, 32], legStep: [30, 70],
     sway: [0.004, 0.01], swayPeriod: [3, 6],
     rock: 0.003,
     roll: { amp: [0.07, 0.14], period: [2.4, 4.8] },
     dip: [4, 10],
-    hop: [30, 70], stretch: null,
+    bodyActions: [["jump", 1]], bodyActionGap: [12, 30],
+    stretch: null,
     tilt: [9, 20], tiltAmp: 0.08,
     jelly: null, shiver: [40, 80],
     wink: null, happyHold: [6, 16],
@@ -59,14 +60,15 @@ export const MOTION = {
     armActions: null, armActionGap: null,
     armSwing: 0,
     legStance: [-0.03, 0, 0.06, 0.03], tailIdle: 0.1,
-    // 고양이는 앞발 장난이 잦고 꼬리 흔들기는 드물다 (스위시가 상시라)
-    quadActions: [["paw", 2], ["scratch", 1], ["wag", 0.7]], quadActionGap: [10, 28],
+    // 고양이 꼬리 흔들기는 드물다 (스위시가 상시라)
+    quadActions: [["scratch", 1], ["wag", 0.7]], quadActionGap: [10, 28],
     // 앞발 꾹꾹이 드물게, 스텝은 더 드물게
     legTap: [16, 36], legStep: [40, 90],
     sway: [0.002, 0.007], swayPeriod: [3.5, 7],
     rock: 0.004,
     roll: null, dip: null,
-    hop: null, stretch: [10, 26],
+    bodyActions: [["jump", 1]], bodyActionGap: [25, 60],   // 고양이는 드물게
+    stretch: [10, 26],
     tilt: [5, 12], tiltAmp: 0.14,
     jelly: null, shiver: [40, 90],
     wink: [8, 20], happyHold: null,
@@ -89,9 +91,8 @@ export const MOTION = {
     sway: [0.015, 0.04], swayPeriod: [2, 3.8],
     rock: 0.004,
     roll: null, dip: null,
-    hop: [50, 110], stretch: null,
-    // 도깨비 통통이 35% — 가끔(8~20초) 살짝 3연속. 젤리 워블과 함께 통통
-    bounce: { chance: 0.35, gap: [8, 20], count: 3, amp: 0.5 },
+    bodyActions: [["jump", 1]], bodyActionGap: [8, 20],   // 도깨비는 자주 — 젤리 워블과 함께 통통
+    stretch: null,
     tilt: [8, 18], tiltAmp: 0.09,
     jelly: { amp: [0.008, 0.018], freq: [1.1, 1.9] }, shiver: [12, 30],
     wink: null, happyHold: null,

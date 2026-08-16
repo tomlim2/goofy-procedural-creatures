@@ -2,7 +2,7 @@
 
 import { createScene } from "./scene/index.js";
 import { makeGrid } from "./character/index.js";
-import { ACTIONS, QUAD_ACTIONS } from "./motion/index.js";
+import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./motion/index.js";
 import { formatSeed, seedFromString } from "./rng.js";
 
 const canvas = document.getElementById("stage");
@@ -84,9 +84,9 @@ inkSeg.addEventListener("click", (event) => {
   scene.setBoil(button.dataset.ink === "boil");
 });
 
-// 행위 강제. AUTO는 각자 시계의 예약대로(idle + 이따금 행위), IDLE은 행위 없이 idle만,
-// 행위를 고르면 그 종족 전원이 그 행위를 계속한다(두발 행위는 사람·도깨비, 네발 행위는 고양이·개).
-// 행위 하나(인사·경례·앞발 들기…)가 어떻게 보이는지 판단할 때 쓴다.
+// 행위 강제. AUTO는 각자 시계의 예약대로(idle + 이따금 행위, 층끼리 겹침), IDLE은 모든 층 idle,
+// 행위를 고르면 그 층만 강제하고 다른 층은 idle (팔 행위는 사람·도깨비, 네발 행위는 고양이·개, 몸 행위는 전원).
+// 행위 하나(인사·경례·점프·긁기…)가 어떻게 보이는지 판단할 때 쓴다.
 const actionSel = document.getElementById("actionSel");
 {
   const option = document.createElement("option");
@@ -98,6 +98,13 @@ for (const [name, def] of Object.entries(ACTIONS)) {
   const option = document.createElement("option");
   option.value = name;
   option.textContent = `${name.toUpperCase()} — ${def.label}`;
+  actionSel.appendChild(option);
+}
+// 몸 행위 — 두발·네발 공통 (강제하면 쉬었다 반복)
+for (const [name, def] of Object.entries(BODY_ACTIONS)) {
+  const option = document.createElement("option");
+  option.value = name;
+  option.textContent = `${name.toUpperCase()} — ${def.label} (몸)`;
   actionSel.appendChild(option);
 }
 // 네발 행위 — 고양이·개에게만 먹는다 (두발은 idle)

@@ -17,7 +17,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     item.faceFrames[k].visible = k === frame;
   }
 
-  // 몸 전체 — 스웨이(발 축 회전), 부르르, 폴짝, 호흡+락킹+젤리+기지개
+  // 몸 전체 — 스웨이(발 축 회전), 부르르, 점프, 호흡+락킹+젤리+기지개
   item.group.rotation.z = state.sway;
   item.group.position.x = item.baseX + state.shiverX;
   item.group.position.y = item.baseY + state.hopY;
