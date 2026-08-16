@@ -30,11 +30,12 @@ export const BIND_STATE = Object.freeze({
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
   happy: false, winkSide: 0, tailAngle: 0,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
+  mode: "idle", sleep: 0,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
 });
 
-// rig: character/draw/limbs.js armRig(spec) — 어깨 위치·팔 길이·몸 앵커. 행위를 IK로 푸는 데 쓴다.
-// 네발은 null (팔이 없다).
+// rig: character/draw/limbs.js motionRig(spec) — { arm(두발 팔 IK 치수 | null), legTop, quad }.
+// 행위를 IK로 풀고, 네발이 엎드려 잘 때 몸이 내려앉는 거리를 안다.
 export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const rng = makeRng(seed ^ 0x5bf03635);
   const M = MOTION[species] || MOTION.human;
@@ -67,13 +68,21 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const jelly = R.initJelly(rng, M);             // 25
   const look = S.initLook(rng, M);               // 26
   const quadAction = S.initQuadAction(rng, M);   // 27
+  const mode = S.initMode(rng, M);               // 28 (기본 상태 idle/sleep — 상태가 하나뿐인 종족은 rng 안 씀)
+  const zzzPhase = rng.float(0, 6);              // 29 (잠 중 z 이모지 위상 — 매 프레임 rng 없이 6초마다)
 
   // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
   // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
   let forced = null;
+  let forcedMode = null;   // "sleep" | "idle" | null — ACTION 카드가 기본 상태도 정할 수 있다
   let forcedSide = 1;
   let forcedStart = -1;
-  const biped = !!rig;   // 팔 리그가 있으면 두발
+  const arm = rig ? rig.arm : null;
+  const biped = !!arm;   // 팔 리그가 있으면 두발
+  const canSleep = !!(rig && rig.quad);   // 잠 자세는 네발만 정의돼 있다
+  // 잠 정도 0~1. 상태가 바뀌면 여기로 이징한다 — 엎드리고 일어나는 게 튀지 않게. 태어날 때 자는 개체는 1로 시작
+  let sleepK = mode.mode === "sleep" && canSleep ? 1 : 0;
+  let zzzLast = -1;
   // 이모지 채널 — 모션과 별개 층. 예약(idle 중 가끔)과 모션의 이모지 트리거가 여기로 쏜다
   const emoji = initEmoji();
   const lastAction = { arm: null, quad: null };   // 행위 시작 감지용 (시작할 때 한 번만 트리거)
@@ -94,8 +103,13 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   };
 
   return {
+    // 강제. null → 예약대로. "idle" → 모든 층 idle·깨어 있음. "sleep" → 잠(네발). 행위 이름 → 그 층만 그 행위, 깨어 있음
     force(action, side = 1) {
-      forced = action === "idle" || (action && (ACTIONS[action] || QUAD_ACTIONS[action] || BODY_ACTIONS[action])) ? action : null;
+      if (!action) { forced = null; forcedMode = null; }
+      else if (action === "sleep") { forced = "idle"; forcedMode = "sleep"; }
+      else if (action === "idle") { forced = "idle"; forcedMode = "idle"; }
+      else if (ACTIONS[action] || QUAD_ACTIONS[action] || BODY_ACTIONS[action]) { forced = action; forcedMode = "idle"; }
+      else { forced = null; forcedMode = null; }
       forcedSide = side;
       forcedStart = -1;
     },
@@ -103,23 +117,37 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const t = globalT - birth;
 
       // ── update: 고정 순서 ──
+      // 기본 상태 — idle(서 있음)/sleep(엎드려 잠). 예약은 강제 중에도 돌린다. sleepK로 자세를 섞는다
+      const modeName = forcedMode || S.stepMode(mode, t, rng, M);
+      const asleep = modeName === "sleep" && canSleep;
+      sleepK += ((asleep ? 1 : 0) - sleepK) * 0.03;
+      if (sleepK < 0.001) sleepK = 0;
+      const awake = 1 - sleepK;
+
       // 얼굴
       const bl = E.stepBlink(blink, t, rng);
       E.stepGlanceTarget(glance, t, rng);
       // 둘러보기 — 유지 중이면 시선 목표를 그쪽으로 잡고(동공이 먼저), 얼굴이 뒤따라 돈다
       const looking = S.stepLook(look, t, rng, M);
-      if (looking) glance.gazeTarget = looking;
-      const gaze = R.stepGaze(glance);
-      const faceTurn = R.stepFaceTurn(glance, M, looking);
+      if (looking && !asleep) glance.gazeTarget = looking;
+      const gaze0 = R.stepGaze(glance);
+      const faceTurn0 = R.stepFaceTurn(glance, M, asleep ? null : looking);
+      // 잠 — 눈 감고 시선 가운데, 얼굴은 살짝 아래로
+      const gaze = [gaze0[0] * awake, gaze0[1] * awake];
+      const faceTurn = [faceTurn0[0] * awake, faceTurn0[1] * awake - 0.35 * sleepK];
       let lid = bl.lid;
       let isHappy = bl.happy;
       lid = S.stepSquint(squint, t, rng, lid);
       if (S.stepHappy(happy, t, rng, M)) { lid = 1; isHappy = true; }
-      const winkSide = S.stepWink(wink, t, rng, M);
+      const winkSide = sleepK > 0.5 ? 0 : S.stepWink(wink, t, rng, M);
+      if (sleepK > 0.5) S.stepWink(wink, t, rng, M);   // (rng 소비 고정 — 결과만 버린다)
       const apertureBefore = surprise.start;
-      const aperture = E.stepSurprise(surprise, t, rng, M);
-      // 놀람이 막 시작하면 30%는 ! 를 쏜다 (이모지 트리거)
-      if (apertureBefore < 0 && surprise.start >= 0 && rng.chance(0.3)) triggerEmoji(emoji, "bang", t);
+      const aperture0 = E.stepSurprise(surprise, t, rng, M);
+      // 놀람이 막 시작하면 30%는 ! 를 쏜다 (이모지 트리거). 자는 중엔 놀라지 않는다
+      if (apertureBefore < 0 && surprise.start >= 0 && rng.chance(0.3) && !asleep) triggerEmoji(emoji, "bang", t);
+      lid = Math.max(lid, sleepK);
+      const aperture = 1 + (aperture0 - 1) * awake;
+      if (sleepK > 0.5) isHappy = false;
 
       // 몸통
       const sw = R.stepSway(sway, t, M);
@@ -129,12 +157,15 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       headBob += E.stepDip(dip, t, rng, M);
       // 몸 행위(제자리 점프) — 팔·네발 행위와 다른 층. 예약은 강제 중에도 돌린다(rng 소비 고정).
       // 강제 점프는 쉬었다 반복 — 점프 길이 + 1.2초 주기
-      const bact = resolveLayer(t, S.stepBodyAction(bodyAction, t, rng, M), BODY_ACTIONS, true, (def, start0) => {
+      let bact = resolveLayer(t, S.stepBodyAction(bodyAction, t, rng, M), BODY_ACTIONS, true, (def, start0) => {
         const period = def.hops * def.dur + 1.2;
         const start = start0 + Math.floor((t - start0) / period) * period;
         return { action: forced, start, until: start + def.hops * def.dur };
       });
+      if (asleep) bact = null;   // 자는 중엔 행위 없음 (예약은 위에서 이미 돌렸다)
       const hp = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, squashX: 0, squashY: 0 };
+      // 잠 — 몸이 밑단까지 내려앉고 납작해진다
+      if (sleepK > 0 && rig) { hp.hopY -= rig.legTop * sleepK; hp.squashY -= 0.06 * sleepK; hp.squashX += 0.06 * sleepK; }
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
 
@@ -143,7 +174,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 예약은 강제 중에도 계속 돌린다(rng 소비를 같게 — 강제를 풀어도 시계가 흐트러지지 않는다).
       const act = resolveLayer(t, S.stepArmAction(armAction, t, rng, M), ACTIONS, biped,
         (def, start) => ({ action: forced, side: forcedSide, start, until: Infinity }));
-      const arms = solveArms(rig, act, t);
+      const arms = solveArms(arm, act, t);
       const swing = R.stepArmSwing(armSwing, sway, t, M);
       for (const side of [-1, 1]) {
         const arm = arms[String(side)];
@@ -169,10 +200,11 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const j = R.stepJelly(jelly, t);
 
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
-      const qact = resolveLayer(t, S.stepQuadAction(quadAction, t, rng, M), QUAD_ACTIONS, !biped, (def, start) => {
+      let qact = resolveLayer(t, S.stepQuadAction(quadAction, t, rng, M), QUAD_ACTIONS, !biped, (def, start) => {
         const index = def.leg === "front" ? (forcedSide > 0 ? 1 : 0) : def.leg === "hind" ? (forcedSide > 0 ? 3 : 2) : -1;
         return { action: forced, index, start, until: Infinity };
       });
+      if (asleep) qact = null;
       if (qact) {
         const def = QUAD_ACTIONS[qact.action];
         const env = Math.max(0, Math.min(1, Math.min((t - qact.start) / 0.35, (qact.until - t) / 0.35)));
@@ -184,10 +216,26 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         if (def.tail) tailAngle += def.tail.osc.amp * w;
       }
 
+      // 잠 자세 — 다리를 몸 밑으로 접고(앞다리는 뒤로, 뒷다리는 앞으로) 꼬리를 내리고 머리를 앞발에 얹는다.
+      // sleepK로 섞어 엎드리고 일어나는 게 부드럽다
+      if (sleepK > 0) {
+        const fold = [1.35, 1.25, -1.3, -1.2];
+        for (let i = 0; i < 4; i += 1) legOffset[i] = legOffset[i] * awake + fold[i] * sleepK;
+        tailAngle = tailAngle * awake - 0.55 * sleepK;
+      }
+      const sleepHead = sleepK * 0.32 * (seed % 2 ? 1 : -1);      // 머리를 한쪽으로 기울여 얹는다
+      const sleepBob = -0.05 * sleepK;
+
       // 표정 상태 · 이벤트
       const md = S.stepMood(mood, t, rng);
       const regenNow = E.stepRegen(regen, t, rng);
-      const br = R.stepBreathe(breathe, t);
+      // 호흡 — 자면 느리고 깊게
+      const br = R.stepBreathe(breathe, t * (1 - 0.35 * sleepK)) * (1 + 0.6 * sleepK);
+      // 잠 중 z — 6초마다 (위상은 개체별). rng 없이
+      if (sleepK > 0.5) {
+        const tick = Math.floor((t - zzzPhase) / 6);
+        if (tick !== zzzLast) { zzzLast = tick; triggerEmoji(emoji, "zzz", t); }
+      } else zzzLast = -1;
 
       // 이모지 — 예약된 것(idle 중 가끔) + 모션의 트리거(행위가 시작하는 순간 한 번). 채널이 애니메이션을 돈다
       const scheduledEmoji = E.stepEmojiSchedule(emojiSchedule, t, rng, M);
@@ -199,11 +247,12 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       return {
         breathe: br, lid, gaze, aperture, regen: regenNow, emoji: em,
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
-        sway: sw.sway, rock: sw.rock, headAngle: tiltAngle + rollAngle, headBob,
+        sway: sw.sway, rock: sw.rock, headAngle: (tiltAngle + rollAngle) * awake + sleepHead, headBob: headBob * awake + sleepBob,
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle,
         arms, legOffset, legOsc,
+        mode: modeName, sleep: sleepK,
         // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용
         action: act ? act.action : qact ? qact.action : null,
         actionSide: act ? act.side : qact ? qact.index : 0,

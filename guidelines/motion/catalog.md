@@ -21,7 +21,7 @@
 | 리듬 | `rhythm.js` | 호흡 · 스웨이 · 락킹 · 머리 롤 · 젤리 · 꼬리 스위시 · 시선 이징 · 얼굴 돌림 이징 · 팔 진자 · 관절 지터 |
 | 이벤트 | `events.js` | 깜빡임 · 시선 다트 · 놀람 · 끄덕 · 킁킁 딥 · 기지개 · 부르르 · 발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모지 예약 · 재생성 |
 | 이모지 | `emoji.js` | 머리 위 ♥ ! ? … — 모션이 아니라 **따로 트리거되는 애니메이션 층**. 종류별 곡선(떠오름·팝·갸웃·중얼), 채널 하나. 모션의 `emoji` 트리거와 idle 예약이 쏜다 |
-| 상태 | `states.js` | 반감김 · ^^ 행복 눈 · 윙크 · 갸웃 · 눈썹 상태 · 입 상태 · 둘러보기(얼굴 돌림 유지) · 행위 예약(팔·몸·네발 층 각각 — 언제 어떤 행위를) |
+| 상태 | `states.js` | **기본 상태(mode)** idle·sleep · 반감김 · ^^ 행복 눈 · 윙크 · 갸웃 · 눈썹 상태 · 입 상태 · 둘러보기(얼굴 돌림 유지) · 행위 예약(팔·몸·네발 층 각각 — 언제 어떤 행위를) |
 | 행위 | `actions.js` | **idle**(기본 — 두발 A포즈, 네발 선 자세)과 행위의 **내용**, 세 층: 팔 `ACTIONS`(손 목표·팔꿈치 방향·진동, 어느 팔, IK) · 몸 `BODY_ACTIONS`(제자리 점프 — 공통) · 네발 `QUAD_ACTIONS`(다리 하나·꼬리 — 각도·진동). 층은 겹친다 |
 
 ## 상태 객체
@@ -52,6 +52,7 @@
 | legOsc | [4] rad | 다리에 이징 없이 얹는 진동 (앞발 흔들기·긁기) |
 | action / actionSide | 팔 층(두발)·다리·꼬리 층(네발)의 행위 이름 또는 null / 활동 팔 side 또는 다리 index | 디버그·통계용. scene은 arms·legOffset만 본다 |
 | bodyAction | 몸 층의 행위 이름 또는 null | 제자리 점프 중이면 "jump". hopY·squash가 그 곡선이다 |
+| mode / sleep | "idle" · "sleep" / 0~1 | 기본 상태와 잠 정도(이징). sleep은 legOffset·hopY·lid·headAngle 등에 이미 섞여 있고, scene은 잠 눈꺼풀(정지 눈 덮개)만 이걸로 켠다 |
 | tailAngle | rad | tailGroup.rotation.z |
 | emoji | {kind, k, dy, scale, rot, opacity} 또는 null | 머리 위 글리프 — 이모지 채널의 프레임. scene은 그대로 입힌다 |
 | regen | bool | LIVE일 때 개체 교체 |
@@ -170,6 +171,23 @@ ACTION 카드로 하나를 강제하면 그 층만 계속하고 다른 층은 id
 
 `actions.js` `jumpCurve(tau, def)`. 곡선은 `hopY`·`squashX/Y`로 나가고 팔에는 `hopY×4`가 어깨에 더해진다.
 
+### 기본 상태(mode) — idle · sleep
+
+개체는 늘 어떤 **기본 상태**에 있다. 지금은 idle(서 있음)과 sleep(엎드려 잠) 둘이고, 걷기·달리기 같은 상태가 생기면 여기에 붙는다.
+행위 층은 이 위에 겹치고, sleep 중엔 행위·둘러보기·놀람·윙크가 쉰다. `states.js` `initMode/stepMode`, `table.js` `modes`(비율)·`modeHold`(유지).
+상태가 하나뿐인 종족(사람·도깨비)은 rng를 안 쓴다.
+
+| 종족 | 상태 비율 (시작·전환) | 유지 |
+| --- | --- | --- |
+| pup | idle 3 : sleep 1 | idle 40~120초, sleep 25~60초 |
+| cat | idle 2 : sleep 1 (더 자주, 더 오래) | idle 40~120초, sleep 30~90초 |
+| human · imp | idle만 | — |
+
+**잠 자세**(네발만 정의): `sleepK`(0.03/프레임 이징)로 idle과 섞는다 — 다리를 몸 밑으로 접고(앞다리 +1.35/+1.25, 뒷다리
+−1.3/−1.2 rad), 몸이 밑단(`rig.legTop`)까지 내려앉아 납작해지고(squash), 꼬리를 내리고(−0.55), 머리를 한쪽으로 기울여(0.32,
+시드 홀짝) 살짝 숙이고(−0.05), 눈을 감고(lid 1 — 정지 눈은 scene의 잠 눈꺼풀 덮개), 시선·얼굴 돌림은 가운데·아래로.
+호흡은 느리고(×0.65) 깊게(×1.6). 6초마다 z 이모지. 잠들고 깨는 건 이징이라 튀지 않는다. ACTION 카드 SLEEP으로 강제.
+
 ### 네발 idle과 행위
 
 네발도 **바인드 ≠ idle**이다. 바인드는 다리 수직·꼬리 그린 그대로(BIND 뷰). idle은 **선 자세** — 앞다리는 살짝
@@ -207,6 +225,7 @@ ACTION 카드의 SCRATCH/WAG는 네발에게만 먹는다. 제자리 점프는 �
 | bang ! | 1.3초 | pop — 크게 튀어나왔다 제자리, 살짝 떨림 |
 | quest ? | 2.2초 | wobble — 좌우로 갸웃갸웃 |
 | dots … | 2.6초 | mumble — 낮게 떠서 잔잔히 |
+| zzz z | 2.8초 | float — 떠오른다 (잠) |
 
 **트리거** — 두 곳에서 온다.
 
@@ -214,7 +233,8 @@ ACTION 카드의 SCRATCH/WAG는 네발에게만 먹는다. 제자리 점프는 �
 | --- | --- | --- |
 | idle 예약 (`events.stepEmojiSchedule`) | 종족 목록에서 하나 — human/pup heart·bang·quest, cat heart·quest·bang, imp **dots×2**·bang·quest·heart | 14~40초마다 |
 | 행위 `emoji` 필드 (`ACTIONS`·`QUAD_ACTIONS`) | flap 파닥임 → ♥, think 생각 → ?, wag 꼬리 흔들기 → ♥ | 행위가 **시작하는 순간** 한 번 |
-| 이벤트 | 놀람(개방도) → ! | 놀람이 시작할 때 30% |
+| 이벤트 | 놀람(개방도) → ! | 놀람이 시작할 때 30% (자는 중엔 안 놀란다) |
+| 기본 상태 | sleep → z | 자는 동안 6초마다 (개체별 위상, rng 없음) |
 
 새 모션에 이모지를 붙이려면 그 행위에 `emoji: "kind"`를 적는다 — 그게 이모지 트리거다. 발화 실측 human 3.6 · imp 4.4 · pup 5.6 · cat 4.2 회/분.
 

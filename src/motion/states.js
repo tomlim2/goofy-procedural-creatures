@@ -111,6 +111,23 @@ export function stepQuadAction(s, t, rng, M) {
   const pick = r.side < 0 ? 0 : 1;
   return { action: r.action, index: def.leg === "front" ? pick : def.leg === "hind" ? 2 + pick : -1, start: r.start, until: r.until };
 }
+// 기본 상태(mode) — 개체가 지금 어떤 상태로 있나: idle(서 있음) · sleep(엎드려 잠). 앞으로 walk·run이 여기 붙는다.
+// 행위 층(팔·몸·네발)은 이 위에 겹치고, sleep 중엔 행위·둘러보기·놀람이 쉰다. table.js modes/modeHold.
+// 상태를 하나만 가진 종족은 rng를 안 쓴다 (사람·도깨비 시드 보존).
+export function initMode(rng, M) {
+  const pool = M.modes || [["idle", 1]];
+  if (pool.length < 2) return { mode: pool[0][0], next: Infinity };
+  const mode = rng.weighted(pool);
+  return { mode, next: rng.float(M.modeHold[mode][0], M.modeHold[mode][1]) };
+}
+export function stepMode(s, t, rng, M) {
+  if (t >= s.next) {
+    const pool = (M.modes || []).filter(([m]) => m !== s.mode);   // 지금과 다른 상태로 넘어간다
+    s.mode = pool.length ? rng.weighted(pool) : "idle";
+    s.next = t + rng.float(M.modeHold[s.mode][0], M.modeHold[s.mode][1]);
+  }
+  return s.mode;
+}
 export function stepMood(m, t, rng) {
   if (t >= m.nextMood && m.moodUntil < 0) { m.moodUntil = t + rng.float(1.5, 4); m.nextMood = t + rng.float(6, 16); }
   if (m.moodUntil >= 0 && t >= m.moodUntil) m.moodUntil = -1;

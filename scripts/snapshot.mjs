@@ -55,8 +55,8 @@ for (const spec of grid) {
 
 // 3. 모션 궤적 — 4종족, 60초, 매 10프레임 샘플
 for (const species of ["human", "pup", "cat", "imp"]) {
-  // 팔 리그 서술(armRig)이 있으면 넘긴다 — 모션 IK가 손 목표를 각도로 푸는 데 쓴다
-  const rig = draw.armRig ? draw.armRig(draw.makeCreature(42, species)) : false;
+  // 리그 서술(motionRig)을 넘긴다 — 모션 IK가 손 목표를 각도로 풀고, 네발 잠에서 몸이 내려앉는 거리를 안다
+  const rig = draw.motionRig ? draw.motionRig(draw.makeCreature(42, species)) : false;
   const clock = clocks.makeClock(42, 3, species, rig);
   const samples = [];
   for (let f = 0; f < 3600; f += 1) {

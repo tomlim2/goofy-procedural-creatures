@@ -38,6 +38,8 @@ export const MOTION = {
     // 네발 idle 자세 — 바인드(다리 수직·꼬리 그린 그대로)와 다르다. 앞다리는 살짝 앞, 뒷다리는 뒤로 딛고
     // 꼬리는 올린다. 그 위에 리듬(호흡·롤·꼬리)과 행위가 얹힌다.
     legStance: [-0.05, -0.02, 0.09, 0.06], tailIdle: 0.25,
+    // 기본 상태 — 서 있기(idle)와 엎드려 잠(sleep)을 오간다. [상태, 가중치]는 시작·전환 때 뽑는 비율, 유지는 modeHold
+    modes: [["idle", 3], ["sleep", 1]], modeHold: { idle: [40, 120], sleep: [25, 60] },
     quadActions: [["wag", 2.5], ["scratch", 1]], quadActionGap: [8, 22],
     // 레퍼런스의 개 다리는 4초 내내 바닥 고정. 몸이 흔들려 다리가 따라 보일 뿐이다.
     legTap: [14, 32], legStep: [30, 70],
@@ -60,6 +62,8 @@ export const MOTION = {
     armActions: null, armActionGap: null,
     armSwing: 0,
     legStance: [-0.03, 0, 0.06, 0.03], tailIdle: 0.1,
+    // 고양이는 더 자주, 더 오래 잔다
+    modes: [["idle", 2], ["sleep", 1]], modeHold: { idle: [40, 120], sleep: [30, 90] },
     // 고양이는 개처럼 꼬리를 흔들지 않는다 — 꼬리는 상시 스위시·플릭뿐. 행위는 뒷발 긁기만
     quadActions: [["scratch", 1]], quadActionGap: [10, 28],
     // 앞발 꾹꾹이 드물게, 스텝은 더 드물게

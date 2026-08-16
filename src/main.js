@@ -100,6 +100,13 @@ for (const [name, def] of Object.entries(ACTIONS)) {
   option.textContent = `${name.toUpperCase()} — ${def.label}`;
   actionSel.appendChild(option);
 }
+// 기본 상태 — SLEEP은 네발을 엎드려 재운다 (사람·도깨비는 잠 자세가 없어 idle)
+{
+  const option = document.createElement("option");
+  option.value = "sleep";
+  option.textContent = "SLEEP — 잠 (네발)";
+  actionSel.appendChild(option);
+}
 // 몸 행위 — 두발·네발 공통 (강제하면 쉬었다 반복)
 for (const [name, def] of Object.entries(BODY_ACTIONS)) {
   const option = document.createElement("option");

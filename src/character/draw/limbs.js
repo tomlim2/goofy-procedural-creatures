@@ -199,11 +199,15 @@ export function limbSketches(spec) {
 // 바깥(더 왼쪽)으로 들려면 시계방향 = 음수, 오른팔은 반시계 = 양수. 그래서 outward = side다.
 export const BIND_ARM = [1.57, 0];
 
-// 팔 리그 서술 — 모션이 손 목표를 관절각으로 풀 때(IK) 쓰는 정적 치수. 전부 스펙에서 나온다.
-// 네발은 팔이 없어 null. 앵커는 몸 좌표(발바닥 원점, y 위), 오른팔 기준 — 왼팔은 x를 반전한다.
-export function armRig(spec) {
+// 리그 서술 — 모션이 이 개체 위에서 돌 때 필요한 정적 치수. 전부 스펙에서 나온다.
+//   arm    두발의 팔(IK): 어깨 위치·위팔·아래팔 길이·몸 앵커. 앵커는 몸 좌표(발바닥 원점, y 위), 오른팔 기준 — 왼팔은 x 반전. 네발은 null
+//   legTop 몸통 밑단 높이 — 네발이 엎드려 잘 때 몸이 내려앉는 거리
+export function motionRig(spec) {
   const box = layout(spec);
-  if (box.quad) return null;
+  return { arm: box.quad ? null : armRigOf(spec, box), legTop: box.legTop, quad: box.quad };
+}
+
+function armRigOf(spec, box) {
   const dims = armDims(spec, box);
   return {
     x: dims.x, y: dims.y, upper: dims.upper, lower: dims.lower,

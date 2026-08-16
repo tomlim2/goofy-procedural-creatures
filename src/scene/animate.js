@@ -83,6 +83,9 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.faceStates.mouth[0].visible = !state.mouthAlt;
   item.faceStates.mouth[1].visible = state.mouthAlt;
 
+  // 잠 눈꺼풀 (정지 눈 위 덮개) — 반쯤 넘게 잠들면 보인다
+  for (const lid of item.sleepLids) lid.visible = (state.sleep || 0) > 0.5;
+
   // 눈 — 개방도·시선·깜빡임·^^·윙크
   for (const rig of item.eyeRigs) {
     rig.rig.scale.setScalar(state.aperture);

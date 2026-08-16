@@ -7,7 +7,7 @@
 // 바인드(T포즈)는 행위가 아니다. 모션이 없을 때의 리그 상태이고 BIND 뷰에서만 보인다.
 //
 // 팔 자세는 관절각이 아니라 **손 목표**로 적는다. 리그(어깨 위치·위팔·아래팔 길이·몸 앵커,
-// character/draw/limbs.js armRig)를 받아 두 마디 IK로 각도를 푼다. 그래서 팔 길이가 달라도
+// character/draw/limbs.js motionRig().arm)를 받아 두 마디 IK로 각도를 푼다. 그래서 팔 길이가 달라도
 // "허리에 손"은 허리에, "턱에 손"은 턱에 간다. 손이 닿지 않으면 그쪽으로 곧게 뻗는다.
 
 import { BIND_ARM } from "../character/index.js";
@@ -108,6 +108,7 @@ function bendSign(lx, ly, want) {
 export function solveArm(rig, side, poseName, tau = 0, env = 0) {
   const pose = ARM_POSES[poseName];
   if (!pose || !rig) return bindArm(side);
+  const anchors = rig.anchors;
   if (pose.behind) return { shoulder: side * pose.shoulder, elbow: 0, behind: true, oscShoulder: 0, oscElbow: 0 };
 
   const a = rig.upper;
@@ -118,14 +119,14 @@ export function solveArm(rig, side, poseName, tau = 0, env = 0) {
   let tx;
   let ty;
   if (typeof pose.hand === "string") {
-    const anchor = rig.anchors[pose.hand];
+    const anchor = anchors[pose.hand];
     tx = anchor[0] - rig.x;
     ty = anchor[1] - rig.y;
   } else {
     tx = pose.hand[0] * reach;
     ty = pose.hand[1] * reach;
   }
-  if (pose.floor) ty = Math.max(ty, rig.anchors.ground - rig.y + FLOOR_MARGIN);
+  if (pose.floor) ty = Math.max(ty, anchors.ground - rig.y + FLOOR_MARGIN);
 
   // 두 마디 IK. d는 닿는 범위로 자른다 — 못 닿으면 곧게 뻗고, 너무 가까우면 최대로 접는다.
   const d = clamp(Math.hypot(tx, ty), Math.abs(a - b) + 1e-3, reach * 0.995);
@@ -153,18 +154,18 @@ export function solveArm(rig, side, poseName, tau = 0, env = 0) {
 }
 
 // 두 팔을 푼다. 기본은 idle, 행위(act = { action, side(활동 팔), start, until })가 있으면 그 행위가
-// 정한 팔만 덮어쓴다. 리그가 없으면(네발) 바인드.
-export function solveArms(rig, act, t) {
+// 정한 팔만 덮어쓴다. arm 리그가 없으면(네발) 바인드.
+export function solveArms(arm, act, t) {
   const arms = {};
   const def = act && ACTIONS[act.action];
   // 진동 봉투 — 들어가고 나갈 때 0.35초 페이드. 없으면 행위가 끝나는 순간 팔이 튄다
   const env = def ? clamp(Math.min((t - act.start) / 0.35, (act.until - t) / 0.35), 0, 1) : 0;
   for (const side of [-1, 1]) {
-    if (!rig) { arms[String(side)] = bindArm(side); continue; }
+    if (!arm) { arms[String(side)] = bindArm(side); continue; }
     const covered = def && (def.arms === "both" || side === act.side);
     arms[String(side)] = covered
-      ? solveArm(rig, side, def.pose, t - act.start, env)
-      : solveArm(rig, side, "idle", 0, 0);
+      ? solveArm(arm, side, def.pose, t - act.start, env)
+      : solveArm(arm, side, "idle", 0, 0);
   }
   return arms;
 }

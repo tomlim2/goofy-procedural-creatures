@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, armRig, tailSketch } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -148,6 +148,22 @@ export function buildCreature(spec, noise, birth = 0) {
     eyeRigs.push({ rig, pupil, lid, smile, eye });
   }
 
+  // 잠 눈꺼풀 — 정지 눈(dot·cross·slit…)은 얼굴 잉크에 구워져 있어 감을 수 없다. 잘 때 그 위에 덮는 살색 덮개 + 감은 선.
+  // 살아 있는 눈은 자기 눈꺼풀(lid)이 있어 필요 없다
+  const sleepLids = [];
+  for (const eye of eyeGeometry(spec, layout(spec))) {
+    if (eye.side === spec.parts.patchSide) continue;
+    if (firstDrawn.eyes.some((e) => e.side === eye.side)) continue;
+    const cover = new Sketch(noise, 0.4);
+    cover.fill(blobPath(0, 0, eye.r * 1.2, eye.r * 1.1, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
+    cover.stroke(arcPath(0, eye.r * 0.15, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: spec.palette.ink, width: 0.011 });
+    const mesh = sketchMesh(cover, 1, 3.5);
+    mesh.position.set(eye.x, eye.y - faceCy, 0);
+    mesh.visible = false;
+    faceGroup.add(mesh);
+    sleepLids.push(mesh);
+  }
+
   return {
     group,
     bodyGroup,
@@ -157,9 +173,10 @@ export function buildCreature(spec, noise, birth = 0) {
     limbs,
     frames,
     eyeRigs,
+    sleepLids,
     faceStates,
     // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다
-    clock: makeClock(spec.seed, birth, spec.species, armRig(spec)),
+    clock: makeClock(spec.seed, birth, spec.species, motionRig(spec)),
     spec,
     neckY,
     faceCy,

@@ -28,7 +28,7 @@ census가 숫자라면 이건 그림이다.
 | NEW SEED / `R` | 새 시드. 주소창 해시가 시드다 — `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다 |
 | POSE MOTION / BIND / `B` | BIND는 리그를 바인드 포즈(T)에 고정. 형태·파츠를 판단할 때 |
 | INK BOIL / STILL / `I` | STILL은 선의 끓음(보일)을 멈춤. 포즈와 별개 축 — 모션 판단 시 잡음 제거 |
-| ACTION AUTO / IDLE / 행위 | 행위 하나를 강제(그 층만, 다른 층은 idle) — 팔(인사·만세·팔짱·경례…, 두발), 몸(제자리 점프, 전원), 네발(긁기·꼬리 흔들기). AUTO는 층끼리 겹친다 — 점프하며 인사. IDLE은 모든 층 idle |
+| ACTION AUTO / IDLE / SLEEP / 행위 | 행위 하나를 강제(그 층만, 다른 층은 idle) — 팔(인사·만세·팔짱·경례…, 두발), 몸(제자리 점프, 전원), 네발(긁기·꼬리 흔들기). SLEEP은 네발을 엎드려 재운다. AUTO는 층끼리 겹치고 개·고양이는 이따금 잔다. IDLE은 모든 층 idle·깨어 있음 |
 | REGEN STILL / LIVE / `S` | 기본 STILL. LIVE를 켜면 개체가 각자의 시계(6~14초)로 교체된다 (레퍼런스 동작) |
 | SPECIES ALL / HUMAN / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
 | GRID 5×4 / 7×5 / 9×6 | |
@@ -43,7 +43,7 @@ census가 숫자라면 이건 그림이다.
 | `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | [determinism](guidelines/determinism.md) |
 | `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 | [drawing](guidelines/drawing.md) |
 | **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획) | [character/](guidelines/character/) |
-| **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지) `actions.js`(idle과 행위 — 팔·몸·네발 층) `emoji.js`(이모지 애니메이션 — 트리거 층) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
+| **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지 — 기본 상태 idle/sleep 포함) `actions.js`(idle과 행위 — 팔·몸·네발 층) `emoji.js`(이모지 애니메이션 — 트리거 층) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js` `emoji.js`(글리프 모양) `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) |
 | `src/main.js` | 진입점. UI 배선 | |
 | `src/gallery.js` · `gallery.html` | 파츠 갤러리 — 슬롯값별로 같은 개체를 나란히 | |

@@ -13,7 +13,8 @@ export const EMOJI = {
   heart: { dur: 2.2, anim: "float",  label: "♥ 좋아함" },
   bang:  { dur: 1.3, anim: "pop",    label: "! 놀람" },
   quest: { dur: 2.2, anim: "wobble", label: "? 갸웃" },
-  dots:  { dur: 2.6, anim: "mumble", label: "… 중얼" }
+  dots:  { dur: 2.6, anim: "mumble", label: "… 중얼" },
+  zzz:   { dur: 2.8, anim: "float",  label: "z 잠" }
 };
 
 // 이모지 채널 상태
