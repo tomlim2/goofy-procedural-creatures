@@ -87,8 +87,10 @@ export function drawEars(ink, fills, spec, box) {
 // 머리와 한 덩어리로 붙인다(레퍼런스: 윤곽선이 귀 안으로 이어지고 채색된 머리는 귀도 같은 색). 윤곽은 머리와 같은 굵기·2회.
 // 머리 앞 층(front)에 그려 채움이 머리 윤곽선을 덮는다. 세 비율 — pointy 기본 · pointyMid 좁고 긴 · pointyBig 넓고 큰.
 // 안쪽 귀는 개체마다: 60%는 안쪽 작은 세모(이중선), 15%는 어둡게 채움, 나머지 없음(술은 부엉이처럼 보여 뺐다).
-// 거의 수직에 아주 살짝만 바깥으로(0.05~0.1rad, 좌우 다르게). 끝은 살짝 뭉툭. 네모 머리(square·block)는 모서리에 앉으면
-// 상자에 뿔이 되니 조금 안쪽(θ 0.52)에 세운다. round·fold·flap·long은 고양이에게 없다(species forbid → pointy).
+// 붙는 자리의 **법선**을 따른다: 밑변은 그 자리의 윤곽 접선을 따라 앉히고(안쪽으로 0.02), 귀 축은 법선과 수직의 중간
+// (법선 기울기의 절반 + 좌우 살짝 다르게) — 둥근 머리에선 자연히 벌어지고 납작한 머리에선 곧게 선다. 끝은 살짝 뭉툭.
+// 네모 머리(square·block)는 모서리에 앉으면 상자에 뿔이 되니 조금 안쪽(θ 0.52)에 세운다.
+// round·fold·flap·long은 고양이에게 없다(species forbid → pointy).
 const CAT_EAR = {
   pointy: { w: 0.05, h: 0.1, theta: 0.6 },
   pointyMid: { w: 0.04, h: 0.14, theta: 0.55 },
@@ -107,24 +109,27 @@ export function drawCatEars(ink, fills, spec, box) {
   const boxy = headShape(spec).square >= 1.4;   // square·block — 모서리보다 조금 안쪽에
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {
-    // 윤곽 위 뿌리. 귀 축은 수직에서 바깥으로 아주 살짝(0.05~0.1rad, 좌우 다르게)
+    // 윤곽 위 뿌리와 그 자리의 바깥 법선 n·접선 t (바깥 양수)
     const bx = side * rx * Math.sin(theta);
     const by = cy + ry * Math.cos(theta);
-    const lean = 0.05 + ((seed >> (side > 0 ? 3 : 5)) % 3) * 0.025;
-    const ax = side * Math.sin(lean), ay = Math.cos(lean);          // 귀 축 (위, 살짝 바깥)
-    const px = side * ay, py = -side * ax;                          // 축에 수직 (바깥 양수)
-    const local = (u, v) => [bx + ax * u + px * v, by + ay * u + py * v];
-    // 밑변은 윤곽 안으로 0.02 — 머리와 붙는다. 끝은 아주 짧게 잘라 뭉툭하게(바늘 끝이 안 되게)
-    const base = -0.02;
+    let nx = side * Math.sin(theta) / rx, ny = Math.cos(theta) / ry;
+    const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+    const tx = side * ny, ty = -side * nx;
+    // 귀 축 — 법선 기울기의 절반 + 개체별 좌우 차이. 둥근 머리는 벌어지고 납작한 머리는 곧게 선다
+    const normalTilt = Math.atan2(nx * side, ny);
+    const lean = normalTilt * 0.5 + 0.02 + ((seed >> (side > 0 ? 3 : 5)) % 3) * 0.02;
+    const ax = side * Math.sin(lean), ay = Math.cos(lean);
+    // 밑변은 접선을 따라(윤곽에 붙게), 안쪽으로 0.02. 끝은 축을 따라, 아주 짧게 잘라 뭉툭하게
+    const baseAt = (v, inset) => [bx + tx * v - nx * inset, by + ty * v - ny * inset];
+    const tipAt = (v) => [bx + ax * def.h + tx * v, by + ay * def.h + ty * v];
     const tip = 0.006;
-    const path = [local(base, -def.w), local(def.h, -tip), local(def.h, tip), local(base, def.w)];
+    const path = [baseAt(-def.w, 0.02), tipAt(-tip), tipAt(tip), baseAt(def.w, 0.02)];
     fills.fill(path, skin);
-    ink.stroke([local(base - 0.004, -def.w * 1.02), local(def.h, -tip), local(def.h, tip), local(base - 0.004, def.w * 1.02)], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
-    if (inner === "line") {
-      ink.stroke([local(0.012, -def.w * 0.5), local(def.h * 0.62, def.w * 0.05), local(0.012, def.w * 0.5)], { color: ink0, width: 0.008 });
-    } else if (inner === "dark") {
-      fills.fill([local(0.012, -def.w * 0.5), local(def.h * 0.62, def.w * 0.05), local(0.012, def.w * 0.5)], darken(skin, isDark(skin) ? 1.5 : 0.62));
-    }
+    ink.stroke([baseAt(-def.w * 1.02, 0.024), tipAt(-tip), tipAt(tip), baseAt(def.w * 1.02, 0.024)], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
+    // 안쪽 귀 — 축을 따라 작은 세모
+    const innerPath = [baseAt(-def.w * 0.5, -0.012), [bx + ax * def.h * 0.62, by + ay * def.h * 0.62], baseAt(def.w * 0.5, -0.012)];
+    if (inner === "line") ink.stroke(innerPath, { color: ink0, width: 0.008 });
+    else if (inner === "dark") fills.fill(innerPath, darken(skin, isDark(skin) ? 1.5 : 0.62));
   }
 }
 
