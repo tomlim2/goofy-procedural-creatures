@@ -91,6 +91,7 @@ export function drawEars(ink, fills, spec, box) {
 
 // 개 귀 — 머리(채색·윤곽) **위에** 그린다. 안쪽으로 기운 귀라 머리 뒤에 그리면 얼굴에 묻힌다.
 export function drawPupEars(ink, fills, spec, box) {
+  if (spec.species !== "pup") return;   // 개만. (빠지면 모든 종족 머리에 개 귀가 얹혀 뿔처럼 보인다)
   const kind = spec.parts.ears;
   if (kind === "none") return;
   // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위** 두 자리 중 하나고, 귀는 그 자리의 법선을 **반대 기울기로** 탄다
