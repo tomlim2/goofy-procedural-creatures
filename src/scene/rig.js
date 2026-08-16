@@ -185,7 +185,10 @@ export function buildCreature(spec, noise, birth = 0) {
     baseX: 0,
     baseY: 0,
     generation: 0,
+    // 이모지는 머리에 붙이지 않는다 — 씬 루트의 emojiRoot에 두고 머리 위 지점을 이징으로 따라간다(끌려오는 느낌)
+    emojiRoot: new THREE.Group(),
     emojiMesh: null,
-    emojiKind: null
+    emojiKind: null,
+    emojiPos: null
   };
 }

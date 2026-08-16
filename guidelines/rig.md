@@ -17,13 +17,14 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·점�
 │       └── back              ← 뒷짐 (팔만, 0.5)
 └── headGroup                ← 원점 = 목(neckY = bodyTop). 갸웃·롤·끄덕·딥. 윤곽·귀·뿔·머리카락·모자
     ├── headFrame ×3         ← 보일 변형. 채색(1.8, 불투명) + 잉크(2)
-    ├── emojiMesh            ← 이모지 애니메이션 중에만
     └── faceGroup            ← 원점 = 머리 중심(headCy). 얼굴 돌림으로 x/y 이동 + 눌림. 이목구비 전부
         ├── faceFrame ×3         ← 보일 변형. 눈·볼·코·수염·주둥이·안경 채색(2.1) + 잉크(2.2)
         ├── faceStates.brow ×2   ← 쉼/대체
         ├── faceStates.mouth ×2
         └── eyeRig ×(0~2)        ← 살아 있는 눈만
             ├── white(3) · rim(4) · pupil(5) · lid(5) · smile(6)
+emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머리 위 지점(세계 좌표)을 이징(0.1)으로 따라간다 —
+                                  갸웃·점프 때 한 박자 늦게 끌려오고 끌리는 쪽으로 눕는다. 이모지 중에만 메시가 있다
 ```
 
 괄호 숫자는 renderOrder. `depthTest: false`라 이 숫자가 곧 앞뒤다. **이 표가 단일 소스다** — 새 메시를 넣을 때 여기를 갱신한다.

@@ -49,6 +49,8 @@ export function createScene(canvas) {
     for (const item of creatures) {
       disposeGroup(item.group);
       scene.remove(item.group);
+      disposeGroup(item.emojiRoot);
+      scene.remove(item.emojiRoot);
     }
     creatures = [];
     if (ground) {
@@ -123,6 +125,7 @@ export function createScene(canvas) {
       item.group.position.set(x, y, 0);
       settle(item);
       scene.add(item.group);
+      scene.add(item.emojiRoot);
       creatures.push(item);
     });
 
@@ -150,6 +153,8 @@ export function createScene(canvas) {
 
     disposeGroup(old.group);
     scene.remove(old.group);
+    disposeGroup(old.emojiRoot);
+    scene.remove(old.emojiRoot);
 
     const item = buildCreature(spec, noise, clockNow);
     if (forcedAction) applyForced(item);
@@ -160,6 +165,7 @@ export function createScene(canvas) {
     item.group.position.set(x, y, 0);
     settle(item);
     scene.add(item.group);
+    scene.add(item.emojiRoot);
     creatures[index] = item;
   }
 
