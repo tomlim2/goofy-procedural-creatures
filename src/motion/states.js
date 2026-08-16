@@ -9,7 +9,9 @@ const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infini
 export function initSquint(rng) { return { next: rng.float(6, 18), until: -1 }; }
 export function initMood(rng) { return { nextMood: rng.float(3, 10), moodUntil: -1, nextMouth: rng.float(2, 8), mouthUntil: -1 }; }
 export function initTilt(rng, M) { return { next: rng.float(M.tilt[0], M.tilt[1]), until: -1, target: 0, angle: 0 }; }
-export function initArmPose(rng, restPose) { return { restPose, pose: restPose, next: rng.float(8, 24), until: -1 }; }
+// 팔 행위. 바인드 포즈(T)에서 이따금 행위(만세·팔짱·뒷짐·허리손·늘어뜨림·파닥임)로
+// 넘어갔다 돌아온다. 행위 종류와 가중치는 table.js의 armActions.
+export function initArmAction(rng) { return { action: "tpose", next: rng.float(8, 24), until: -1 }; }
 export function initWink(rng, M) { return { next: schedule(rng, M.wink), until: -1, side: 0 }; }
 export function initHappy(rng, M) { return { next: schedule(rng, M.happyHold), until: -1 }; }
 
@@ -51,18 +53,18 @@ export function stepTilt(s, t, rng, M) {
   s.angle += ((s.until >= 0 ? s.target : 0) - s.angle) * 0.07;
   return s.angle;
 }
-// 팔 자세 — 쉼 자세에서 이따금 다른 자세로. 형태(arms 슬롯)와 분리된 동작.
-export function stepArmPose(s, t, rng, noRest) {
+// 팔 행위 — 바인드에서 행위로, 행위가 끝나면 바인드로. 형태(arms 슬롯)와 무관.
+export function stepArmAction(s, t, rng, M, noHang) {
   if (t >= s.next && s.until < 0) {
-    // 쉼 자세에서 잠깐 넘어가는 자세들. 접힌 팔(hips·cross)이 여기서 나온다.
-    const others = ["tpose", "rest", "out", "behind", "up", "hips", "cross"].filter((p) => p !== s.restPose && !(noRest && p === "rest"));
-    const weight = { tpose: 1.5, rest: 1.5, out: 1.5, behind: 1.5, up: 0.7, hips: 2, cross: 1.5 };
-    s.pose = rng.weighted(others.map((p) => [p, weight[p]]));
-    s.until = t + rng.float(2, 6);
-    s.next = t + rng.float(12, 36);
+    const pool = (M.armActions || []).filter(([a]) => !(noHang && a === "hang"));
+    if (pool.length) {
+      s.action = rng.weighted(pool);
+      s.until = t + rng.float(2, 6);
+    }
+    s.next = t + rng.float(M.armActionGap ? M.armActionGap[0] : 12, M.armActionGap ? M.armActionGap[1] : 36);
   }
-  if (s.until >= 0 && t >= s.until) { s.until = -1; s.pose = s.restPose; }
-  return s.pose;
+  if (s.until >= 0 && t >= s.until) { s.until = -1; s.action = "tpose"; }
+  return s.action;
 }
 export function stepMood(m, t, rng) {
   if (t >= m.nextMood && m.moodUntil < 0) { m.moodUntil = t + rng.float(1.5, 4); m.nextMood = t + rng.float(6, 16); }

@@ -9,7 +9,7 @@ import { drawEyes, drawFace2, drawEyewear, drawNose } from "./face.js";
 import { drawBody, drawMarks } from "./body.js";
 
 export { facePartKinds, facePartSketch } from "./face.js";
-export { limbSketches, armPoseAngle, armPoseAngles, tailSketch } from "./limbs.js";
+export { limbSketches, armPoseAngle, armPoseAngles, BIND_POSE, tailSketch } from "./limbs.js";
 
 // 스펙 하나를 그려서 지오메트리 재료를 돌려준다.
 // 머리와 몸을 분리해 굽는다 — scene이 머리만 굴리고 끄덕일 수 있게.

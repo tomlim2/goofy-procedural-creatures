@@ -21,7 +21,7 @@ for (const slot of Object.keys(SLOTS)) parts[slot] = pickSlot(rng, archetype, sl
 
 그래서 다음은 전부 **기존 시드를 깨는 변경**이다. 해도 되지만 알고 해야 한다.
 
-- `SLOTS`에 슬롯을 추가하거나 순서를 바꾸는 것
+- `SLOTS`에 슬롯을 추가하거나 순서를 바꾸는 것 (`character/vocabulary/slots.js`)
 - `makeCreature` 안에서 rng를 부르는 순서를 바꾸는 것
 - `applyConstraints`에서 `rng.chance()` 호출을 추가하거나 제거하는 것
 
@@ -45,9 +45,10 @@ if (parts.headgear === "helmet") parts.hair = "none";
 while (!valid(parts)) parts = rollAgain(rng);
 ```
 
-`rng.chance()`를 조건부로 부르는 것도 같은 문제를 만든다. 지금 코드에 두 군데
-(`horns === "antenna"`, 안경류의 눈썹 가림) 있는데, 조건이 참일 때만 부르므로
-그 뒤 값이 갈린다. 새로 추가할 때는 조건 밖에서 먼저 뽑아 두는 편이 안전하다.
+`rng.chance()`를 조건부로 부르는 것도 같은 문제를 만든다 — 조건이 참일 때만 부르면 그 뒤 값이
+갈린다. `applyConstraints`에 그런 곳이 몇 군데 있고(더듬이→귀, 안경→눈썹) 지금은 그 상태로
+고정돼 있다. 새로 추가할 때는 조건 밖에서 먼저 뽑아 두거나(호출 수 고정), 종족 제한이면
+`species.js` `forbid`를 쓴다(rng 없이 결정적 덮어쓰기).
 
 ## 그리기용 난수는 따로 판다
 
@@ -56,11 +57,12 @@ while (!valid(parts)) parts = rollAgain(rng);
 
 ## 확인 방법
 
+`scripts/snapshot.mjs`가 스펙·지오메트리·모션 궤적을 한 번에 검증한다 ([../README.md](../README.md) § 스크립트).
+
 ```bash
-node --input-type=module -e "
-import('./src/creature.js').then(m => {
-  const a = m.makeGrid(12345, 35, 7);
-  const b = m.makeGrid(12345, 35, 7);
-  console.log(JSON.stringify(a) === JSON.stringify(b) ? 'OK' : 'FAIL');
-});"
+node scripts/snapshot.mjs before   # 고치기 전
+node scripts/snapshot.mjs after    # 고친 뒤 — diff 0이면 동작 불변
 ```
+
+시드를 깨는 변경(슬롯 추가, rng 호출 순서 변경)을 의도적으로 했으면 `before`를 다시 찍어
+베이스라인을 갱신하고, 커밋 메시지에 "시드 재배열"이라고 적는다.

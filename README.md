@@ -1,7 +1,8 @@
 # MENAGERIE
 
-시드 하나에서 자라나는 손그림 크리처 그리드. 저마다의 시계로 숨쉬고, 깜빡이고, 두리번거리고,
-놀라고, 이모트를 띄우고, 이따금 다른 개체로 다시 그려진다. 선은 낮은 주기로 계속 끓는다(보일).
+시드 하나에서 자라나는 손그림 크리처 그리드. 위에서부터 사람·사람·고양이·개·도깨비 다섯 줄이
+저마다의 시계로 숨쉬고, 깜빡이고, 두리번거리고, 놀라고, 팔짱을 꼈다 풀고, 이모트를 띄운다.
+선은 낮은 주기로 계속 끓는다(보일). 형태는 NEW SEED를 눌러야만 바뀐다.
 
 ## 목표
 
@@ -18,46 +19,54 @@ node serve.mjs
 `http://127.0.0.1:7300`. native ES module을 쓰므로 `file://` 직접 실행은 지원하지 않는다.
 three.js는 importmap으로 unpkg에서 받는다.
 
-- `R` 키 또는 NEW SEED — 새 시드
-- 주소창 해시가 시드다. `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다
-- SPECIES — ALL(고정 레인) / KID / CAT / PUP / IMP 한 종족만
-- GRID — 5×4 / 7×5 / 9×6
+| 조작 | |
+| --- | --- |
+| NEW SEED / `R` | 새 시드. 주소창 해시가 시드다 — `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다 |
+| REGEN STILL / LIVE / `S` | 기본 STILL. LIVE를 켜면 개체가 각자의 시계(6~14초)로 교체된다 (레퍼런스 동작) |
+| SPECIES ALL / KID / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
+| GRID 5×4 / 7×5 / 9×6 | |
 
 ## 구조
 
-**캐릭터**(무엇인가)와 **모션**(어떻게 움직이나) 두 축이다. 파츠별 애니메이션이 아니라,
-캐릭터는 시드가 정하는 정적인 전부이고 모션은 시계가 정하는 동적인 전부다. 둘을 잇는 게 scene의 리그다.
+**캐릭터**(무엇인가)와 **모션**(어떻게 움직이나) 두 축이다. 캐릭터는 시드가 정하는 정적인 전부이고
+모션은 시계가 정하는 동적인 전부다. 파츠별 애니메이션이 아니다. 둘을 잇는 게 scene의 리그다.
 
-| 파일 / 폴더 | 하는 일 | 문서 |
+| 위치 | 하는 일 | 문서 |
 | --- | --- | --- |
-| `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | determinism.md |
-| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 | drawing.md |
-| **`src/character/`** | **무엇인가** — 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획) | character/ |
-| **`src/motion/`** | **어떻게 움직이나** — 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지), `index.js`가 원본 rng 순서로 조립 | motion/ |
-| `src/scene/` | three.js. `rig.js`(캐릭터 지오메트리 → 계층) `animate.js`(모션 상태 → 리그) `paper.js` `material.js` `emote.js`, `index.js`(씬·루프·재생성) | rig.md |
+| `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | [determinism](guidelines/determinism.md) |
+| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 | [drawing](guidelines/drawing.md) |
+| **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획) | [character/](guidelines/character/) |
+| **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
+| `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js` `emote.js` `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) |
 | `src/main.js` | 진입점. UI 배선 | |
-| `scripts/snapshot.mjs` | 리팩토링 전후 동작 불변 검증 (스펙·지오메트리·60초 모션 궤적) | |
-| `scripts/census.mjs` | 종족 × 슬롯 분포표, 정체성 위반 검사 (`--check`로 CI) | character/rules.md |
-| `reference/` | 참고 자료 출처와 차용 범위 | |
-| `guidelines/` | 캐릭터 / 모션 두 축의 카탈로그와 규칙 |
+| `guidelines/` | 두 축의 카탈로그와 규칙. **고치기 전에 읽는다** | [README](guidelines/README.md) |
+| `reference/` | 무엇을 보고 만들었고 무엇을 가져오고 안 가져왔는지 | [README](reference/README.md) |
+| `scripts/` | 아래 § 스크립트 | |
 
-## 고치기 전에
+## 스크립트
 
-[`guidelines/`](guidelines/README.md)를 먼저 읽는다. 카탈로그(종족·파츠·모션·리그)와
-규칙(시드 계약·파츠 절차·그리기)이 있다.
+```bash
+node scripts/census.mjs                # 종족 × 슬롯 분포표 + 정체성 위반. 파츠·가중치를 고쳤으면 본다
+node scripts/census.mjs --slot hair    # 한 슬롯만
+node scripts/census.mjs --check        # 위반만 (exit 1)
 
-## 다양성을 만드는 세 층
+node scripts/snapshot.mjs before       # 리팩토링 전 — 스펙·지오메트리·60초 모션 궤적을 찍는다
+node scripts/snapshot.mjs after        # 리팩토링 후 — diff 0이면 동작 불변
+```
 
-균등 랜덤으로 슬롯을 뽑으면 서른 마리쯤에서 "아까 본 것"이 나온다. 세 층을 겹친다.
+## 다양성을 만드는 층
 
-1. **아키타입** — `beast` `scholar` `trooper` `sprite` `blob` `wanderer` 여섯 성향을 먼저
-   뽑고 그 안에서 고른다. 그리드에서는 좌·상 이웃과 아키타입이 겹치면 다시 뽑는다.
-   종족(kid/pup/cat/imp)은 고정 레인(위에서부터 사람·사람·고양이·개·도깨비)이고 전용 파츠(외눈·왕관뿔·긴 귀·꼬리 4종 등)를
-   bias로 가져간다. 슬롯 17개, 파츠 총 102개. 슬롯은 형태만 담고 자세·동작은 clock 상태다.
-2. **기본 가중치** — 아키타입이 관여하지 않는 슬롯에도 가중치를 준다. 이게 없으면 선택지가
-   5개인 `eyewear`는 80%가 무언가를 쓰고, 9개인 `hair`는 눈에 띄는 종류가 안 나온다.
-3. **비율 지터** — 머리 크기·너비·혹의 수, 눈 크기·간격·좌우 비대칭, 몸 폭, 다리 길이,
-   손떨림 정도. 실루엣 다양성의 대부분이 여기서 나온다.
+균등 랜덤으로 슬롯을 뽑으면 서른 마리쯤에서 "아까 본 것"이 나온다. 네 층을 겹친다.
+
+1. **종족** — 줄 단위 고정 레인. 골격(두발/네발), 색, 전용 파츠, 지배 모션이 갈린다
+2. **아키타입** — `beast` `scholar` `trooper` `sprite` `blob` `wanderer` 여섯 성향을 개체마다 뽑고
+   그 안에서 고른다. 좌·상 이웃과 겹치면 다시 뽑는다
+3. **기본 가중치** — 아키타입이 관여하지 않는 슬롯에도 가중치를 준다. 없으면 선택지 수가 곧
+   확률이 되어 `eyewear`는 80%가 무언가를 쓴다
+4. **비율 지터** — 머리 크기·너비·혹, 눈 크기·간격·좌우 비대칭, 몸 폭, 팔 길이, 손떨림.
+   실루엣 다양성의 대부분이 여기서 나온다
+
+17슬롯 102파츠. 슬롯은 형태만 담고, 자세·동작은 모션이다.
 
 ## 손그림 질감
 
@@ -69,8 +78,9 @@ WebGL의 `linewidth`는 대부분 1로 고정되므로 `Line`으로는 굵기를
 - 끝으로 갈수록 얇아지고 중간에서 필압이 흔들린다
 - 외곽선은 2회 덧그어 겹친 자국을 남긴다
 - 머리는 원이 아니라 노이즈로 찌그러뜨린 폐곡선이다
-- 머리카락은 면을 칠하지 않고 왕복해 긋는 스크리블이다
+- 머리카락은 면을 칠하지 않고 왕복해 긋는 스크리블이다. 채색도 스크리블로 덮어 획 방향이 남는다
 - 채색은 선과 어긋나게 오프셋을 준다
+- 같은 그림을 지터 위상만 다르게 3벌 굽고 8~10fps로 순환한다(보일)
 
 ## 알아둘 것
 
@@ -78,8 +88,5 @@ WebGL의 `linewidth`는 대부분 1로 고정되므로 `Line`으로는 굵기를
   잉크가 중간 회색으로 밝아진다. `stroke.js`의 `srgbToLinear`가 이걸 보정한다
 - **모듈 캐시** — `serve.mjs`는 상대 경로 import에 `?v=` 를 붙인다. `Cache-Control: no-store`만으로는
   브라우저의 ES module map이 비워지지 않아 파일을 고쳐도 이전 코드가 실행되는 일이 있다
-
-## 참고
-
-무엇을 보고 만들었는지, 무엇을 가져오고 무엇을 안 가져왔는지는
-[`reference/`](reference/README.md)에 적어 뒀다.
+- **시드 재현** — 같은 시드는 같은 판이다. rng 호출 순서가 곧 시드라 슬롯 추가·순서 변경은
+  기존 시드를 깬다. 깨는 변경은 커밋에 "시드 재배열"이라고 적는다

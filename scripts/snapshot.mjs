@@ -54,7 +54,7 @@ for (const spec of grid) {
 
 // 3. 모션 궤적 — 4종족, 60초, 매 10프레임 샘플
 for (const species of ["kid", "pup", "cat", "imp"]) {
-  const clock = clocks.makeClock(42, 3, species, "behind", false);
+  const clock = clocks.makeClock(42, 3, species, false);
   const samples = [];
   for (let f = 0; f < 3600; f += 1) {
     const s = clock.update(3 + f / 60);

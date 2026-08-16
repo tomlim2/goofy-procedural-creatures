@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngles, tailSketch } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, armPoseAngles, BIND_POSE, tailSketch } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -80,7 +80,8 @@ export function buildCreature(spec, noise, birth = 0) {
     }
     bodyGroup.add(pivot);
 
-    const [restShoulder, restElbow] = limb.kind === "arm" ? armPoseAngles(spec.proportions.armRest, limb.side) : [0, 0];
+    // 바인드 포즈(T)로 세운다. 행위는 clock이 준다.
+    const [restShoulder, restElbow] = limb.kind === "arm" ? armPoseAngles(BIND_POSE, limb.side) : [0, 0];
     pivot.rotation.z = restShoulder;
     if (elbow) elbow.rotation.z = restElbow;
     return {
@@ -154,7 +155,7 @@ export function buildCreature(spec, noise, birth = 0) {
     headFrames,
     eyeRigs,
     faceStates,
-    clock: makeClock(spec.seed, birth, spec.species, spec.proportions.armRest, spec.parts.armLength === "verylong"),
+    clock: makeClock(spec.seed, birth, spec.species, spec.parts.armLength === "verylong"),
     spec,
     neckY,
     headRx: firstDrawn.box.headRx,

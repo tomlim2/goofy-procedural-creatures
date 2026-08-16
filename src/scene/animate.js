@@ -40,8 +40,8 @@ export function applyState(item, state, t, noise) {
     let target;
     let elbowTarget = 0;
     if (limb.kind === "arm") {
-      const behind = state.armPose === "behind";
-      const [shoulder, elbowAngle] = armPoseAngles(state.armPose, limb.side);
+      const behind = state.armAction === "behind";
+      const [shoulder, elbowAngle] = armPoseAngles(state.armAction, limb.side);
       target = shoulder + state.armOffset[String(limb.side)];
       // 팔꿈치는 자세각 + 지터의 절반 (관절이 따로 끓는다)
       elbowTarget = elbowAngle + state.armOffset[String(limb.side)] * 0.5;
@@ -81,18 +81,19 @@ export function applyState(item, state, t, noise) {
     rig.smile.visible = closed;
   }
 
-  // 이모트
-  if (state.emote) {
-    if (!item.emoteMesh || item.emoteKind !== state.emote.kind) {
+  // 이모트. 파닥임(좋아함) 행위 중에는 ♥를 띄운다
+  const emote = state.armAction === "flap" ? { kind: "heart", k: 0.5 } : state.emote;
+  if (emote) {
+    if (!item.emoteMesh || item.emoteKind !== emote.kind) {
       if (item.emoteMesh) {
         disposeGroup(item.emoteMesh);
         item.headGroup.remove(item.emoteMesh);
       }
-      item.emoteMesh = buildEmote(state.emote.kind, noise);
-      item.emoteKind = state.emote.kind;
+      item.emoteMesh = buildEmote(emote.kind, noise);
+      item.emoteKind = emote.kind;
       item.headGroup.add(item.emoteMesh);
     }
-    const k = state.emote.k;
+    const k = emote.k;
     const fade = Math.min(1, Math.min(k / 0.15, (1 - k) / 0.2));
     item.emoteMesh.position.set(0.02, item.headTop - item.neckY + 0.15 + Math.sin(k * Math.PI * 3) * 0.015, 0);
     item.emoteMesh.scale.setScalar(0.8 + 0.2 * fade);

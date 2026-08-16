@@ -15,7 +15,7 @@ import * as S from "./states.js";
 
 export { MOTION } from "./table.js";
 
-export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", noRest = false) {
+export function makeClock(seed, birth = 0, species = "kid", noHang = false) {
   const rng = makeRng(seed ^ 0x5bf03635);
   const M = MOTION[species] || MOTION.kid;
 
@@ -37,7 +37,7 @@ export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", no
   const stretch = E.initStretch(rng, M);         // 15
   const shiver = E.initShiver(rng, M);           // 16
   const armSwing = R.initArmSwing(rng);          // 17
-  const armPose = S.initArmPose(rng, armRest || "rest"); // 18
+  const armAction = S.initArmAction(rng);         // 18
   const armLift = E.initArmLift(rng, M);         // 19
   const armWave = E.initArmWave(rng, M);         // 20
   const legTap = E.initLegTap(rng, M);           // 21
@@ -76,14 +76,17 @@ export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", no
       const shiverX = E.stepShiver(shiver, t, rng, M);
 
       // 팔
-      const pose = S.stepArmPose(armPose, t, rng, noRest);
+      const action = S.stepArmAction(armAction, t, rng, M, noHang);
       const swing = R.stepArmSwing(armSwing, sway, t, M);
       const liftSide = E.stepArmLift(armLift, t, rng, M);
       const wave = E.stepArmWave(armWave, t, rng, M);
       const armOffset = { "-1": swing, "1": -swing };
+      // 파닥임 — 좋아서 팔을 들고 빠르게 아래위로 (6Hz)
+      const flapping = action === "flap" ? Math.sin(t * Math.PI * 12) * 0.35 : 0;
       for (const side of [-1, 1]) {
         const key = String(side);
         const outward = -side;
+        if (flapping) armOffset[key] += outward * flapping;
         if (liftSide === side) armOffset[key] += outward * 0.55;
         if (wave.k >= 0 && wave.side === side) {
           const env = Math.sin(Math.min(1, wave.k) * Math.PI);
@@ -118,7 +121,7 @@ export function makeClock(seed, birth = 0, species = "kid", armRest = "rest", no
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceYaw,
         happy: isHappy, winkSide, tailAngle,
-        armOffset, legOffset, armPose: pose
+        armOffset, legOffset, armAction: action
       };
     }
   };

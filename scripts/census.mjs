@@ -91,6 +91,40 @@ for (const slot of slots) {
   console.log();
 }
 
+if (violations.length) {
+    console.log(`정체성 위반 ${violations.length}건`);
+    for (const v of violations.slice(0, 30)) console.log("  " + v);
+    process.exit(1);
+  }
+  console.log(`정체성 위반 0건 (${BOARDS}판 ${Object.values(bySpecies).flat().length}마리)`);
+  process.exit(0);
+}
+
+// ── 분포표 ──
+const pad = (s, n) => String(s).padEnd(n);
+const pct = (n, total) => (total ? Math.round((n / total) * 100) : 0);
+
+console.log(`표본: ${BOARDS}판 · ` + speciesNames.map((n) => `${n} ${(bySpecies[n] || []).length}`).join(" · "));
+console.log();
+
+const slots = onlySlot ? [onlySlot] : Object.keys(SLOTS);
+for (const slot of slots) {
+  const values = SLOTS[slot];
+  if (!values) { console.log(`슬롯 없음: ${slot}`); continue; }
+  console.log(`## ${slot}`);
+  console.log(pad("", 10) + speciesNames.map((n) => pad(n, 8)).join(""));
+  for (const v of values) {
+    const row = speciesNames.map((n) => {
+      const list = bySpecies[n] || [];
+      const k = list.filter((c) => c.parts[slot] === v).length;
+      const p = pct(k, list.length);
+      return pad(p === 0 ? "·" : `${p}%`, 8);
+    });
+    console.log(pad(v, 10) + row.join(""));
+  }
+  console.log();
+}
+
 // 팔 자세(형태 아님, proportions)
 if (!onlySlot || onlySlot === "armRest") {
   console.log("## armRest (자세, proportions)");

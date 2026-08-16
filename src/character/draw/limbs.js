@@ -146,24 +146,31 @@ export function limbSketches(spec) {
   return limbs;
 }
 
-// 팔 자세별 기준 회전각 [어깨, 팔꿈치]. 자세는 clock 상태이고 형태와 무관하다.
+// 팔 각도 [어깨, 팔꿈치] — 바인드 포즈와 행위별 목표.
+//
+// 바인드 포즈는 T포즈다: 어깨 수평(1.57 outward), 팔꿈치 0. 캐릭터에 "자세"란 없다 —
+// 모션(행위)이 없으면 T포즈다. 행위는 여기서 각도만 정의하고, 언제 어떤 행위를 하는지는
+// motion/이 정한다. 행위가 끝나면 T포즈로 돌아온다.
+//
 // 어깨각은 outward(몸 바깥) 양수. 팔꿈치각은 위팔 기준 아래팔이 얼마나 꺾이나 —
-// 양수면 안쪽(몸 쪽)으로 접힌다. 0이면 곧게 편 팔.
-export function armPoseAngles(pose, side) {
+// 양수면 안쪽(몸 쪽)으로 접힌다.
+export const BIND_POSE = "tpose";
+
+export function armPoseAngles(action, side) {
   const outward = -side;
-  switch (pose) {
-    case "tpose":  return [outward * 1.57, 0];              // T포즈. 어깨에서 수평, 곧게. 두발의 기본
-    case "up":     return [outward * 2.4, outward * -0.5];   // 만세. 팔꿈치 살짝 바깥
-    case "out":    return [outward * 1.35, outward * -0.15]; // 벌림. 거의 곧게
+  switch (action) {
+    case "tpose":  return [outward * 1.57, 0];              // 바인드. 어깨 수평, 곧게
+    case "raise":  return [outward * 2.4, outward * -0.5];   // 만세
+    case "cross":  return [outward * 0.35, outward * 2.0];  // 팔짱
     case "behind": return [outward * -0.2, 0];              // 뒷짐 (back 스케치)
-    case "hips":   return [outward * 0.55, outward * 1.7];  // 허리에 손. 팔꿈치 크게 접음
-    case "cross":  return [outward * 0.35, outward * 2.0];  // 팔짱. 아래팔이 몸 앞으로
-    case "wave":   return [outward * 2.1, outward * -0.9];  // 손 흔들기 준비 자세
-    default:       return [outward * 0.35, outward * 0.35]; // rest. 살짝 굽혀 늘어뜨림
+    case "hips":   return [outward * 0.55, outward * 1.7];  // 허리에 손
+    case "hang":   return [outward * 0.35, outward * 0.35]; // 늘어뜨림
+    case "flap":   return [outward * 1.9, outward * -0.6];  // 파닥임 기준 (위에서 진동)
+    default:       return [outward * 1.57, 0];
   }
 }
-export function armPoseAngle(pose, side) {
-  return armPoseAngles(pose, side)[0];
+export function armPoseAngle(action, side) {
+  return armPoseAngles(action, side)[0];
 }
 
 // 꼬리. 피벗(꼬리 뿌리) 원점 기준으로 그린다. scene이 회전시켜 살랑거린다.

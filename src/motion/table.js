@@ -7,6 +7,9 @@ export const BLINK_TIME = 0.13;
 // 종족별 모션 성격. [min, max]는 이벤트 간격(초), null은 그 모션 없음.
 export const MOTION = {
   kid: {
+    // 팔 행위 — 바인드(T포즈)에서 이따금 넘어갔다 돌아오는 것. [행위, 가중치]
+    armActions: [["cross", 2], ["hips", 2], ["raise", 1.5], ["behind", 1.5], ["hang", 1.5], ["flap", 1]],
+    armActionGap: [12, 36],
     // 팔: 레퍼런스에서 팔은 벌린 채 미세하게만 흔들린다. 큰 동작은 드물게.
     armSwing: 0.045, armLift: [18, 40], armWave: [30, 70],
     // 다리: 발 까딱 드물게. 다리는 바닥에 붙어 거의 정지한다.
@@ -23,6 +26,7 @@ export const MOTION = {
     emotes: ["heart", "bang", "quest"]
   },
   pup: {
+    armActions: null, armActionGap: null,
     armSwing: 0, armLift: null, armWave: null,
     // 레퍼런스의 개 다리는 4초 내내 바닥 고정. 몸이 흔들려 다리가 따라 보일 뿐이다.
     legTap: [14, 32], legStep: [30, 70],
@@ -39,6 +43,7 @@ export const MOTION = {
     emotes: ["heart", "bang", "quest"]
   },
   cat: {
+    armActions: null, armActionGap: null,
     armSwing: 0, armLift: null, armWave: null,
     // 앞발 꾹꾹이 드물게, 스텝은 더 드물게
     legTap: [16, 36], legStep: [40, 90],
@@ -54,6 +59,9 @@ export const MOTION = {
     emotes: ["heart", "quest", "bang"]
   },
   imp: {
+    // 도깨비는 만세·파닥임을 더 자주. 팔짱은 짧은 팔이라 잘 안 보인다
+    armActions: [["raise", 2.5], ["flap", 2], ["hips", 1.5], ["behind", 1], ["hang", 1]],
+    armActionGap: [10, 30],
     // 짧은 스텁 팔. 젤리 워블에 딸려 미세하게 떨릴 뿐이다.
     armSwing: 0.06, armLift: [22, 50], armWave: [40, 90],
     legTap: [14, 34], legStep: null,
