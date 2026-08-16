@@ -25,6 +25,12 @@ export function drawCreature(spec, variant = 0) {
   const bodyFills = new Sketch(noise, wobble);
   const headInk = new Sketch(noise, wobble);
   const headFills = new Sketch(noise, wobble);
+  // 머리에 붙는 것들 — 얼굴 돌림 때 윤곽은 그대로 두고 이것들만 살짝 따라 밀린다(시차). 세 층:
+  //   crownBack(옆귀 — 머리 채색 뒤) · crown(뿔·머리카락 — 머리 잉크 위) · front(개·고양이 귀·모자 — 그 위)
+  const crownBackInk = new Sketch(noise, wobble);
+  const crownBackFills = new Sketch(noise, wobble);
+  const crownInk = new Sketch(noise, wobble);
+  const crownFills = new Sketch(noise, wobble);
   const faceInk = new Sketch(noise, wobble);
   const faceFills = new Sketch(noise, wobble);
   const frontInk = new Sketch(noise, wobble);
@@ -37,12 +43,12 @@ export function drawCreature(spec, variant = 0) {
   const body = drawBody(bodyInk, bodyFills, spec, box, noise);
   drawMarks(bodyInk, spec, body);
 
-  drawEars(headInk, headFills, spec, box);
+  drawEars(crownBackInk, crownBackFills, spec, box);   // 옆귀 — 머리 채색 뒤(뿌리가 머리에 가린다)
   drawHead(headInk, headFills, spec, box, noise);
   // 머리 앞 층 — 개 귀·고양이 귀·모자. 머리 잉크 위에 채움이 얹혀야 윤곽선이 귀·모자를 뚫고 비치지 않는다
   drawPupEars(frontInk, frontFills, spec, box);
   drawCatEars(frontInk, frontFills, spec, box);
-  drawHorns(headInk, headFills, spec, box, noise);
+  drawHorns(crownInk, crownFills, spec, box, noise);
   drawEyes(faceInk, faceFills, spec, box, eyes);
   drawFace2(faceInk, faceFills, spec, box, eyes);
   // 코·안경은 얼굴 **맨 앞**(눈 리그보다 위) — 놀라 커진 흰자·감긴 눈꺼풀이 코·안경테를 덮어 사라지게 하지 않는다
@@ -62,7 +68,7 @@ export function drawCreature(spec, variant = 0) {
     }
   }
   drawEyewear(faceFrontInk, faceFrontFills, spec, box, eyes);
-  drawHair(headInk, spec, box, noise);
+  drawHair(crownInk, spec, box, noise);
   drawHeadgear(frontInk, frontFills, spec, box);   // 모자는 귀 다음 — 귀 밑동을 덮는다
 
   // 동공이 움직이는 눈만 골라 넘긴다. 외눈도 살아 있다.
@@ -73,6 +79,8 @@ export function drawCreature(spec, variant = 0) {
   return {
     body: { ink: bodyInk, fills: bodyFills },
     head: { ink: headInk, fills: headFills },
+    crownBack: { ink: crownBackInk, fills: crownBackFills },
+    crown: { ink: crownInk, fills: crownFills },
     face: { ink: faceInk, fills: faceFills },
     front: { ink: frontInk, fills: frontFills },
     faceFront: { ink: faceFrontInk, fills: faceFrontFills },
