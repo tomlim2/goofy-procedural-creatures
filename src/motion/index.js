@@ -14,6 +14,7 @@ import * as E from "./events.js";
 import * as S from "./states.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, bindArm, solveArms } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
+import { ramp } from "./ease.js";
 
 export { MOTION } from "./table.js";
 export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
@@ -207,7 +208,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (asleep) qact = null;
       if (qact) {
         const def = QUAD_ACTIONS[qact.action];
-        const env = Math.max(0, Math.min(1, Math.min((t - qact.start) / 0.35, (qact.until - t) / 0.35)));
+        const env = ramp(Math.max(0, Math.min(1, Math.min((t - qact.start) / 0.35, (qact.until - t) / 0.35))));
         const w = Math.sin((t - qact.start) * Math.PI * 2 * ((def.osc || def.tail?.osc || { hz: 1 }).hz)) * env;
         if (qact.index >= 0) {
           legOffset[qact.index] = def.angle;

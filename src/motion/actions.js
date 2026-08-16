@@ -11,6 +11,7 @@
 // "허리에 손"은 허리에, "턱에 손"은 턱에 간다. 손이 닿지 않으면 그쪽으로 곧게 뻗는다.
 
 import { BIND_ARM } from "../character/index.js";
+import { ramp, bump } from "./ease.js";
 
 // 팔 자세 하나 = 한 팔이 취하는 것.
 //   hand    손 목표. [x, y]는 reach(위팔+아래팔) 배수 — 어깨 원점, x 바깥 양수, y 위 양수.
@@ -62,9 +63,10 @@ export function jumpCurve(tau, def) {
   const k = (tau - hop * def.dur) / def.dur;
   const a = def.amp;
   let hopY = 0, squashX = 0, squashY = 0;
-  if (k < 0.2) { squashY = -0.07 * a * Math.sin((k / 0.2) * Math.PI); squashX = -squashY * 0.8; }
+  // 웅크림·착지 눌림은 bump(양끝 속도 0). 공중 궤적은 sin — 발이 땅을 차는 순간은 원래 툭 튄다
+  if (k < 0.2) { squashY = -0.07 * a * bump(k / 0.2); squashX = -squashY * 0.8; }
   else if (k < 0.8) { const j = (k - 0.2) / 0.6; hopY = Math.sin(j * Math.PI) * 0.05 * a; squashY = 0.05 * a * Math.sin(j * Math.PI); squashX = -squashY * 0.7; }
-  else { squashY = -0.05 * a * Math.sin(((k - 0.8) / 0.2) * Math.PI); squashX = -squashY * 0.8; }
+  else { squashY = -0.05 * a * bump((k - 0.8) / 0.2); squashX = -squashY * 0.8; }
   return { hopY, squashX, squashY };
 }
 
@@ -159,7 +161,7 @@ export function solveArms(arm, act, t) {
   const arms = {};
   const def = act && ACTIONS[act.action];
   // 진동 봉투 — 들어가고 나갈 때 0.35초 페이드. 없으면 행위가 끝나는 순간 팔이 튄다
-  const env = def ? clamp(Math.min((t - act.start) / 0.35, (act.until - t) / 0.35), 0, 1) : 0;
+  const env = def ? ramp(clamp(Math.min((t - act.start) / 0.35, (act.until - t) / 0.35), 0, 1)) : 0;
   for (const side of [-1, 1]) {
     if (!arm) { arms[String(side)] = bindArm(side); continue; }
     const covered = def && (def.arms === "both" || side === act.side);

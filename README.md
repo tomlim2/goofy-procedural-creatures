@@ -47,7 +47,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | [determinism](guidelines/determinism.md) |
 | `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 | [drawing](guidelines/drawing.md) |
 | **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획) | [character/](guidelines/character/) |
-| **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지 — 기본 상태 idle/sleep 포함) `actions.js`(idle과 행위 — 팔·몸·네발 층) `emoji.js`(이모지 애니메이션 — 트리거 층) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
+| **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지 — 기본 상태 idle/sleep 포함) `actions.js`(idle과 행위 — 팔·몸·네발 층) `emoji.js`(이모지 애니메이션 — 트리거 층) `ease.js`(곡선 모양 — 봉투·추종, 전부 ease in/out) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js` `emoji.js`(글리프 모양) `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) |
 | `src/main.js` | 진입점. UI 배선 | |
 | `src/gallery.js` · `gallery.html` | 파츠 갤러리 — 슬롯값별로 같은 개체를 나란히 | |

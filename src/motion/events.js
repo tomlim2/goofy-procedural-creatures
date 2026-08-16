@@ -8,12 +8,16 @@
 // 진행 곡선은 k = (t - start) / duration. k>=1이면 끝.
 
 import { BLINK_TIME } from "./table.js";
+import { bump, bumps, envelope } from "./ease.js";
 
 const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infinity);
 
 // ── init (rng 소비) ──
 export function initBlink(rng) { return { next: rng.float(0, 4), start: -1, happy: false }; }
-export function initGlance(rng) { return { next: rng.float(0, 3), gaze: [0, 0], gazeTarget: [0, 0], faceTurn: [0, 0] }; }
+// gaze·faceTurn은 임계감쇠 추종({x, v} 둘씩) — 시선이 먼저 가고 얼굴이 뒤따른다 (rhythm.stepGaze·stepFaceTurn)
+export function initGlance(rng) {
+  return { next: rng.float(0, 3), gaze: [{ x: 0, v: 0 }, { x: 0, v: 0 }], gazeTarget: [0, 0], faceTurn: [{ x: 0, v: 0 }, { x: 0, v: 0 }] };
+}
 export function initSurprise(rng, M) { return { next: schedule(rng, M.surprise), start: -1 }; }
 export function initRegen(rng) { return { at: rng.float(6, 14) }; }
 export function initEmojiSchedule(rng) { return { next: rng.float(5, 30) }; }
@@ -39,7 +43,7 @@ export function stepBlink(e, t, rng) {
     const k = (t - e.start) / BLINK_TIME;
     if (k >= 1) e.start = -1;
     else {
-      lid = Math.sin(Math.min(1, k) * Math.PI);
+      lid = bump(k);
       if (e.happy && lid > 0.7) happy = true;
     }
   }
@@ -60,7 +64,8 @@ export function stepSurprise(e, t, rng, M) {
   if (e.start >= 0) {
     const k = (t - e.start) / 1.1;
     if (k >= 1) e.start = -1;
-    else return 1 + 0.65 * Math.pow(Math.sin(Math.PI * k), 0.6);
+    // 커지는 데 0.25(≈0.28초), 유지, 0.45(≈0.5초)에 걸쳐 풀림 — 양끝 속도 0
+    else return 1 + 0.65 * envelope(k, 0.25, 0.45);
   }
   return 1;
 }
@@ -69,7 +74,7 @@ export function stepNod(e, t, rng) {
   if (e.start >= 0) {
     const k = (t - e.start) / 0.7;
     if (k >= 1) e.start = -1;
-    else return -Math.abs(Math.sin(k * Math.PI * 2)) * 0.014;
+    else return -bumps(k, 2) * 0.014;
   }
   return 0;
 }
@@ -78,7 +83,7 @@ export function stepDip(e, t, rng, M) {
   if (e.start >= 0) {
     const k = (t - e.start) / 1.2;
     if (k >= 1) e.start = -1;
-    else return -Math.sin(Math.min(1, k) * Math.PI) * 0.035;
+    else return -bump(k) * 0.035;
   }
   return 0;
 }
@@ -87,7 +92,7 @@ export function stepStretch(e, t, rng, M) {
   if (e.start >= 0) {
     const k = (t - e.start) / 1.6;
     if (k >= 1) e.start = -1;
-    else return Math.sin(Math.min(1, k) * Math.PI) * 0.06;
+    else return bump(k) * 0.06;
   }
   return 0;
 }
@@ -96,7 +101,7 @@ export function stepShiver(e, t, rng, M) {
   if (e.start >= 0) {
     const k = (t - e.start) / 0.35;
     if (k >= 1) e.start = -1;
-    else return Math.sin(k * Math.PI * 9) * 0.008 * (1 - k);
+    else return Math.sin(k * Math.PI * 9) * 0.008 * envelope(k, 0.15, 0.7);
   }
   return 0;
 }
@@ -109,7 +114,7 @@ export function stepLegTap(e, t, rng, M, legOffset) {
   if (e.start >= 0) {
     const k = (t - e.start) / 0.9;
     if (k >= 1) e.start = -1;
-    else legOffset[e.index] += Math.abs(Math.sin(k * Math.PI * 3)) * 0.09 * (e.index % 2 ? -1 : 1);
+    else legOffset[e.index] += bumps(k, 3) * 0.09 * (e.index % 2 ? -1 : 1);
   }
 }
 export function stepLegStep(e, t, rng, M, legOffset) {
@@ -118,7 +123,7 @@ export function stepLegStep(e, t, rng, M, legOffset) {
     const k = (t - e.start) / 2.4;
     if (k >= 1) e.start = -1;
     else {
-      const env = Math.sin(Math.min(1, k) * Math.PI);
+      const env = bump(k);
       const ph = k * Math.PI * 2 * 3;
       legOffset[0] += Math.sin(ph) * 0.07 * env;
       legOffset[3] += Math.sin(ph) * 0.07 * env;
@@ -132,7 +137,7 @@ export function stepTailFlick(e, t, rng, M) {
   if (e.start >= 0) {
     const k = (t - e.start) / 0.5;
     if (k >= 1) e.start = -1;
-    else return Math.sin(k * Math.PI * 3) * 0.35 * (1 - k);
+    else return Math.sin(k * Math.PI * 3) * 0.35 * envelope(k, 0.15, 0.6);
   }
   return 0;
 }

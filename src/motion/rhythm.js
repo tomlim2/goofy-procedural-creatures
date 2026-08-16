@@ -5,6 +5,8 @@
 //
 // init은 rng를 소비한다(위상·주기). step은 rng를 안 쓴다 — 리듬은 결정적이다.
 
+import { damp } from "./ease.js";
+
 export function initBreathe(rng) {
   return { period: rng.float(2.6, 5.4), phase: rng.float(0, Math.PI * 2) };
 }
@@ -49,18 +51,17 @@ export function stepRoll(roll, t) {
   return roll ? Math.sin((t / roll.period) * Math.PI * 2 + roll.phase) * roll.amp : 0;
 }
 // 시선은 목표를 향해 이징. 목표 갱신(rng)은 events가 한다.
+// 시선 — 임계감쇠 추종(w 0.2 ≈ 0.4초에 95%). 지수 lerp보다 시작이 부드럽다
 export function stepGaze(g) {
-  g.gaze = [g.gaze[0] + (g.gazeTarget[0] - g.gaze[0]) * 0.12, g.gaze[1] + (g.gazeTarget[1] - g.gaze[1]) * 0.12];
-  return g.gaze;
+  return [damp(g.gaze[0], g.gazeTarget[0], 0.2), damp(g.gaze[1], g.gazeTarget[1], 0.2)];
 }
 // 얼굴 돌림 [x, y] (−1~1). 시선을 느리게 따라간다 — 동공이 먼저 가고 얼굴이 뒤따른다.
 // 둘러보기(look) 중에는 그 방향으로 끝까지 돈다. 위아래는 좌우보다 작게(M.yaw × 0.6).
+// 얼굴 돌림 — 임계감쇠 추종(w 0.1 ≈ 0.8초에 95%). 시선보다 느리다
 export function stepFaceTurn(g, M, look) {
-  const tx = look ? look[0] : g.gaze[0] * M.yaw;
-  const ty = look ? look[1] : g.gaze[1] * M.yaw * 0.6;
-  g.faceTurn[0] += (tx - g.faceTurn[0]) * 0.06;
-  g.faceTurn[1] += (ty - g.faceTurn[1]) * 0.06;
-  return g.faceTurn;
+  const tx = look ? look[0] : g.gaze[0].x * M.yaw;
+  const ty = look ? look[1] : g.gaze[1].x * M.yaw * 0.6;
+  return [damp(g.faceTurn[0], tx, 0.1), damp(g.faceTurn[1], ty, 0.1)];
 }
 // 팔 진자 — 스웨이 반대 위상
 export function stepArmSwing(a, sway, t, M) {

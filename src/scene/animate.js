@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { buildEmoji } from "./emoji.js";
 import { disposeGroup } from "./material.js";
 import { BOIL_FRAMES } from "./rig.js";
+import { damp } from "../motion/ease.js";
 
 const EMOJI_TARGET = new THREE.Vector3();
 
@@ -68,13 +69,18 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       target = state.legOffset[limb.index] || 0;
       osc = state.legOsc ? state.legOsc[limb.index] || 0 : 0;
     }
-    const ease = snap ? 1 : 0.12;
-    limb.angle += (target - limb.angle) * ease;
-    limb.pivot.rotation.z = limb.angle + osc;
-    if (limb.elbow) {
-      limb.elbowAngle += (elbowTarget - limb.elbowAngle) * ease;
-      limb.elbow.rotation.z = limb.elbowAngle + oscElbow;
+    // 임계감쇠 추종(ease in/out) — 지수 lerp는 첫 프레임이 가장 빨라 팔이 "툭" 올라간다
+    if (snap) { limb.angle = target; limb.angleV = 0; limb.elbowAngle = elbowTarget; limb.elbowV = 0; }
+    else {
+      const s = { x: limb.angle, v: limb.angleV || 0 };
+      damp(s, target, 0.18);
+      limb.angle = s.x; limb.angleV = s.v;
+      const e = { x: limb.elbowAngle, v: limb.elbowV || 0 };
+      damp(e, elbowTarget, 0.18);
+      limb.elbowAngle = e.x; limb.elbowV = e.v;
     }
+    limb.pivot.rotation.z = limb.angle + osc;
+    if (limb.elbow) limb.elbow.rotation.z = limb.elbowAngle + oscElbow;
   }
 
   // 눈썹·입 상태

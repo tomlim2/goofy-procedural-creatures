@@ -8,6 +8,8 @@
 //      쏘고 나면 이모지는 자기 애니메이션 길이만큼 혼자 논다.
 // 채널은 하나. 새 트리거가 오면 이전 것을 끊고 새로 시작한다.
 
+import { ramp, bump } from "./ease.js";
+
 // 이모지 종류. dur는 애니메이션 길이(초), anim은 곡선.
 export const EMOJI = {
   heart: { dur: 2.2, anim: "float",  label: "♥ 좋아함" },
@@ -33,8 +35,8 @@ export function stepEmoji(ch, t) {
   const def = EMOJI[ch.kind];
   const k = (t - ch.start) / def.dur;
   if (k >= 1 || k < 0) { ch.kind = null; ch.start = -1; return null; }
-  const fadeIn = Math.min(1, k / 0.15);
-  const fadeOut = Math.min(1, (1 - k) / 0.2);
+  const fadeIn = ramp(Math.min(1, k / 0.15));
+  const fadeOut = ramp(Math.min(1, (1 - k) / 0.2));
   const fade = Math.min(fadeIn, fadeOut);
   let dy = 0, scale = 1, rot = 0, opacity = fade * 0.95;
   if (def.anim === "float") {
@@ -43,7 +45,7 @@ export function stepEmoji(ch, t) {
     scale = 0.85 + 0.15 * fade + Math.max(0, Math.sin(k * Math.PI * 6)) * 0.12;
   } else if (def.anim === "pop") {
     // 튀어나옴 — 처음 크게 튀었다가 제자리, 살짝 떨림
-    const pop = k < 0.2 ? 1 + 0.5 * Math.sin((k / 0.2) * Math.PI) : 1;
+    const pop = k < 0.2 ? 1 + 0.5 * bump(k / 0.2) : 1;
     scale = pop * (0.9 + 0.1 * fade);
     dy = 0.02 * (1 - Math.min(1, k / 0.2));
     rot = Math.sin(k * Math.PI * 14) * 0.06 * (1 - k);
