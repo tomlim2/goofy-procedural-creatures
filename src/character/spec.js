@@ -22,7 +22,7 @@ function pickSlot(rng, species, archetype, slot) {
 
 // 같이 나오면 그림이 깨지는 조합을 정리한다.
 // 랜덤을 다시 굴리지 않고 결정적으로 덮어써야 시드 재현이 유지된다.
-function applyConstraints(parts, rng) {
+function applyConstraints(parts, rng, speciesName) {
   // 헬멧과 항아리는 머리를 덮는다. 머리카락이 비집고 나올 자리가 없다.
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
     parts.hair = "none";
@@ -44,6 +44,10 @@ function applyConstraints(parts, rng) {
 
   // 감은 눈에 화난 눈썹을 붙이면 표정이 읽히지 않는다.
   if (parts.eyes === "sleepy" && parts.brow === "angry") parts.brow = "flat";
+
+  // 외눈은 도깨비 것이다. 사람·개·고양이는 두 눈으로 되돌린다.
+  // 다시 뽑지 않고 결정적으로 덮어쓴다 — 시드 재현을 위해.
+  if (parts.eyes === "cyclops" && speciesName !== "imp") parts.eyes = "wide";
 
   // 외눈에는 안경류가 성립하지 않는다.
   if (parts.eyes === "cyclops") parts.eyewear = "none";
@@ -115,7 +119,7 @@ export function makeCreature(seed, speciesName = "kid") {
   for (const slot of Object.keys(SLOTS)) {
     parts[slot] = pickSlot(rng, species, archetype, slot);
   }
-  applyConstraints(parts, rng);
+  applyConstraints(parts, rng, species.name);
 
   const skin = rng.pick(FILLS);
   const palette = {

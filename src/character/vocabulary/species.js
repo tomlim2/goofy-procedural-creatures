@@ -11,6 +11,8 @@ export const SPECIES = [
     // 우선이므로 여기서 막으면 kid 줄에는 절대 안 나온다. 그 성향들은 imp 줄에서 산다.
     bias: {
       horns: [["none", 1]]
+      // 외눈은 spec.js applyConstraints에서 막는다. 여기서 eyes bias를 주면
+      // 아키타입의 눈 성향(scholar의 dot·half, sprite의 wide·ring)까지 덮어써 버린다.
     }
   },
   {
