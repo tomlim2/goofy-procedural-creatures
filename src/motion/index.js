@@ -79,8 +79,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   let forcedSide = 1;
   let forcedStart = -1;
   const arm = rig ? rig.arm : null;
-  const biped = !!arm;   // 팔 리그가 있으면 두발
-  const canSleep = !!(rig && rig.quad);   // 잠 자세는 네발만 정의돼 있다
+  const quad = !!(rig && rig.quad);
+  const armed = !!arm;   // 팔 리그가 있어야 팔 행위 층이 산다 (팔 없는 도깨비는 두발이어도 쉰다)
+  const canSleep = quad;   // 잠 자세는 네발만 정의돼 있다
   // 잠 정도 0~1. 상태가 바뀌면 여기로 이징한다 — 엎드리고 일어나는 게 튀지 않게. 태어날 때 자는 개체는 1로 시작
   let sleepK = mode.mode === "sleep" && canSleep ? 1 : 0;
   let zzzLast = -1;
@@ -173,8 +174,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 팔 — 기본은 idle(A포즈), 행위가 있으면 그 행위가 정한 팔만 덮는다. 리그에 IK로 풀고,
       // 그 위에 진자·점프·지터를 얹는다.
       // 예약은 강제 중에도 계속 돌린다(rng 소비를 같게 — 강제를 풀어도 시계가 흐트러지지 않는다).
-      const act = resolveLayer(t, S.stepArmAction(armAction, t, rng, M), ACTIONS, biped,
-        (def, start) => ({ action: forced, side: forcedSide, start, until: Infinity }));
+      const scheduledArm = S.stepArmAction(armAction, t, rng, M);   // 예약은 팔이 없어도 돌린다 (rng 소비 고정)
+      const act = armed ? resolveLayer(t, scheduledArm, ACTIONS, true,
+        (def, start) => ({ action: forced, side: forcedSide, start, until: Infinity })) : null;
       const arms = solveArms(arm, act, t);
       const swing = R.stepArmSwing(armSwing, sway, t, M);
       for (const side of [-1, 1]) {
@@ -201,7 +203,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const j = R.stepJelly(jelly, t);
 
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
-      let qact = resolveLayer(t, S.stepQuadAction(quadAction, t, rng, M), QUAD_ACTIONS, !biped, (def, start) => {
+      let qact = resolveLayer(t, S.stepQuadAction(quadAction, t, rng, M), QUAD_ACTIONS, quad, (def, start) => {
         const index = def.leg === "front" ? (forcedSide > 0 ? 1 : 0) : def.leg === "hind" ? (forcedSide > 0 ? 3 : 2) : -1;
         return { action: forced, index, start, until: Infinity };
       });

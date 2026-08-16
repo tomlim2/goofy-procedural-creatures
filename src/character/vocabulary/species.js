@@ -11,6 +11,7 @@ export const SPECIES = [
     // forbid는 "이 슬롯의 이 값이 나오면 이걸로 바꾼다". applyConstraints가 읽어서
     // 결정적으로 덮어쓴다 — 아키타입 성향(scholar의 dot 눈 등)은 살아 있다.
     forbid: {
+      arms: { none: "stick" },   // 사람은 팔이 있다 (팔 없음은 도깨비의 것)
       ears: { long: "flap", roundBig: "roundMid", foldBig: "foldMid" },   // 사람 귀 경계
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       eyes: { cyclops: "wide" },
@@ -114,7 +115,7 @@ export const SPECIES = [
       ears: ["none", "pointy"],   // 도깨비 귀는 없거나 뾰족 작은 것
       skeleton: "biped",
       darkHead: true,
-      arms: true,
+      // arms 미검사 — 도깨비는 팔이 없기도 하다 (arms none)
       tail: false
     },
     bias: {
@@ -130,7 +131,7 @@ export const SPECIES = [
       face2: [["none", 6], ["tears", 1]],
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]],
-      arms: [["stubby", 5], ["stick", 2]],
+      arms: [["stubby", 5], ["stick", 2], ["none", 2]],   // 팔 없는 덩어리도 있다
       // 바닥을 쓰는 긴 팔은 도깨비의 것 (사람은 forbid). 도깨비 열에 눈에 띌 만큼
       armLength: [["medium", 3], ["long", 2]],
       legs: [["stub", 3], ["stick", 3], ["float", 1]]

@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 121파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 122파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -180,13 +180,14 @@ kink(마디마다 꺾인 꼬리, 고양이) / ring(등 위로 한 바퀴 가까�
 kink 1.5 · plume 1.5 · stubtail 1 (kink는 고양이만, ring은 개만 나온다).
 두발은 뽑히지만 그리지 않는다.
 
-### arms — 형태 (4) — 두발 전용
+### arms — 형태 (5) — 두발 전용
 | 값 | 그리기 |
 | --- | --- |
 | stick | 가는 선 + 손 획 |
 | sleeve | 옷색 소매 채움 + 동그란 손. 긴 소매는 맨팔이 더 나온다 |
 | stubby | 짧고 굵은 선 (0.017) + 주먹 |
 | mitten | 선 + 동그란 손 |
+| none | **팔 없음** — 지체도 팔 리그도 없다. 도깨비만(bias 2/9 ≈ 23%, 사람은 forbid로 stick). 팔 행위 층이 쉰다(예약은 돌아 rng는 그대로), 몸 행위(점프)는 한다 |
 
 팔마다 **위팔·아래팔·back(뒷짐)** 세 벌을 굽는다. 위팔은 어깨 원점, 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽고, 리그가 바인드 포즈(T)로 세운다. 어깨는 **몸통 좌우 윤곽 위** — 팔이 옆구리에서 나온다 (형태별 반폭 `SHOULDER_X`: box 0.98 · bean 0.85 · dress 0.76 · tube 0.63; 위에서 22% 높이). 소매는 위팔만 옷색이고 아래팔은 맨팔.
 

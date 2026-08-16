@@ -36,7 +36,7 @@
 | **human** | 5 | 두발 | 팔레트 그대로 | forbid: 뿔 전부→none, cyclops→wide, 긴 팔(long)→medium. 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 행위(인사·팔짱·생각…) |
 | **pup** | 2 | 네발 | 머리(털)색, 몸은 같거나 비슷한 톤 | 늘어진 귀(flap/long), 주둥이+검은 코(코 슬롯이 형태 결정), 입은 주둥이 위 코 밑, 꼬리 flag/stubtail/ring/plume, 얼룩, 다리 stub 위주(stick·float·boots) | 머리 롤 상시·킁킁 딥, ^^ 행복 눈 유지, 꼬리 플릭 |
 | **cat** | 2 | 네발 | 머리(털)색, 몸은 같거나 비슷한 톤 | 정수리 세모귀(pointy/fold), 수염(개체별 길이 — 긴 건 윤곽 밖으로), ω 입, 세로동공(slit), 꼬리 curl/longtail/hook/kink, 다리 stub·stick(float·boots) | 꼬리 스위시 상시, 윙크, 갸웃 크게, 기지개 |
-| **imp** | 2 | 두발 | 머리 DARKS 9색(먹·회갈·회청·자흑·녹흑…) 중 하나, 몸은 머리색 50% / 밝은 톤 30% / 어두운 톤 20% (같은 계열), 얼굴은 종이색, 잉크는 #1c1917 | 긴 뿔(1.8배: curved/straight/antenna/ram/crown), 외눈(cyclops), 지그재그 입, 스텁 팔, **바닥을 쓰는 긴 팔(long)은 도깨비만** (bias 3:2, 40%) | 젤리 워블 상시, 부르르·놀람 잦게, 만세·파닥임 잦게, "..." 중얼 |
+| **imp** | 2 | 두발 | 머리 DARKS 9색(먹·회갈·회청·자흑·녹흑…) 중 하나, 몸은 머리색 50% / 밝은 톤 30% / 어두운 톤 20% (같은 계열), 얼굴은 종이색, 잉크는 #1c1917 | 긴 뿔(1.8배: curved/straight/antenna/ram/crown), 외눈(cyclops), 지그재그 입, 스텁 팔 — 또는 **팔 없음**(arms none, ≈23%), **바닥을 쓰는 긴 팔(long)은 도깨비만** (bias 3:2, 40%) | 젤리 워블 상시, 부르르·놀람 잦게, 만세·파닥임 잦게, "..." 중얼 |
 
 네발 골격은 몸이 가로로 눕고 머리가 몸 앞(왼쪽)에 얹힌다. 키가 낮아 사람 줄과 나란히 서면
 레퍼런스처럼 층이 낮아진다. 팔이 없고 다리 4개(앞쌍·뒷쌍) + 꼬리다. 치수 슬롯도 따른다 — `legLength`(short = 닥스훈트),
@@ -99,7 +99,7 @@
 | human | biped | none | not cyclops | ● | ✗ | none·round(·Mid)·pointy(·Mid·Big)·flap·fold(·Mid) | armLength medium만 |
 | pup | quad | none | not cyclops | ✗ | ● | flap·long·pointy(·Mid)·round(·Mid)·fold(·Mid) | hair·brow none (털이지 머리카락이 아니다) |
 | cat | quad | none | not cyclops | ✗ | ● | pointy · pointyMid · pointyBig (세모귀만) | hair·brow none |
-| imp | biped | (자유) | (자유) | ● | ✗ | none·pointy | 머리 어두움(휘도<90) |
+| imp | biped | (자유) | (자유) | ●/✗ (none 가능) | ✗ | none·pointy | 머리 어두움(휘도<90) |
 
 ## 제약 (applyConstraints)
 

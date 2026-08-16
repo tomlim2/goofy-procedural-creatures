@@ -145,6 +145,7 @@ export function limbSketches(spec) {
   // 뒷짐은 팔이 몸 뒤로 사라지고 팔꿈치 끝만 옆구리로 삐죽 나오는 형태라
   // 회전만으로는 표현이 안 된다. back 스케치를 따로 굽는다.
   const armKind = spec.parts.arms;
+  if (armKind === "none") return limbs;   // 팔 없음 — 지체도 리그도 없다 (도깨비 일부)
   const dims = armDims(spec, box);
   const shoulderY = dims.y;
   const upperLen = dims.upper;
@@ -204,7 +205,8 @@ export const BIND_ARM = [1.57, 0];
 //   legTop 몸통 밑단 높이 — 네발이 엎드려 잘 때 몸이 내려앉는 거리
 export function motionRig(spec) {
   const box = layout(spec);
-  return { arm: box.quad ? null : armRigOf(spec, box), legTop: box.legTop, quad: box.quad };
+  // arm은 팔이 있는 두발만. 팔 없는 두발(도깨비 arms none)은 arm null이지만 quad도 false — 팔 행위 층만 쉰다
+  return { arm: box.quad || spec.parts.arms === "none" ? null : armRigOf(spec, box), legTop: box.legTop, quad: box.quad };
 }
 
 function armRigOf(spec, box) {

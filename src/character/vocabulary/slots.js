@@ -29,8 +29,8 @@ export const SLOTS = {
   // 네발 종족 전용. 두발 종족은 그리지 않는다.
   // hook 위로 섰다 끝이 갈고리로 꺾임(고양이) · kink 꺾인 꼬리(고양이) · ring 등 위로 말린 고리(스피츠) · plume 북슬한 깃털 꼬리(채움 + 털 획)
   tail: ["curl", "flag", "longtail", "stubtail", "hook", "kink", "ring", "plume"],
-  // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다.
-  arms: ["stick", "sleeve", "stubby", "mitten"],
+  // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다. none은 팔 없음(도깨비 일부) — 팔 행위 층이 쉰다
+  arms: ["stick", "sleeve", "stubby", "mitten", "none"],
   // 팔 길이. 형태와 독립이라 짧은 소매 팔, 매우 긴 장갑 팔이 다 나온다.
   armLength: ["medium", "long"],
   // 다리 길이(기장). 형태와 독립 — 모든 다리 유형에 세 기장이 있다. 스케일이 아니라 기장만 바뀐다:
