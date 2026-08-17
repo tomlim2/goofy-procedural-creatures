@@ -32,7 +32,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | NEW SEED / `R` | 새 시드. 주소창 해시가 시드다 — `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다 |
 | POSE MOTION / BIND / `B` | BIND는 리그를 바인드 포즈(T)에 고정. 형태·파츠를 판단할 때 |
 | INK BOIL / STILL / `I` | STILL은 선의 끓음(보일)을 멈춤. 포즈와 별개 축 — 모션 판단 시 잡음 제거 |
-| ACTION AUTO / IDLE / SLEEP / WALK / 행위 | 행위 하나를 강제(그 층만, 다른 층은 idle) — 팔(인사·만세·팔짱·경례…, 두발), 몸(제자리 점프, 전원), 네발(긁기·꼬리 흔들기). SLEEP은 네발을 엎드려 재우고, WALK는 전원 제자리 걸음(팔 행위는 예약대로). AUTO는 층끼리 겹치고 개·고양이는 이따금 자고 모두 이따금 걷는다. IDLE은 모든 층 idle·깨어 있음 |
+| ACTION AUTO / IDLE / SLEEP / WALK / 행위 | 행위 하나를 강제(그 층만, 다른 층은 idle) — 팔(인사·만세·팔짱·경례…, 두발), 몸(제자리 점프, 전원), 네발(긁기·꼬리 흔들기). SLEEP은 네발을 엎드려 재우고, WALK는 전원 걷기 — 집↔밖 왕복(팔 행위는 예약대로). AUTO는 층끼리 겹치고 개·고양이는 이따금 자고 모두 이따금 걷는다. IDLE은 모든 층 idle·깨어 있음 |
 | REGEN STILL / LIVE / `S` | 기본 STILL. LIVE를 켜면 개체가 각자의 시계(6~14초)로 교체된다 (레퍼런스 동작) |
 | SPECIES ALL / HUMAN / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
 | GRID 5×4 / 7×5 / 9×6 | |

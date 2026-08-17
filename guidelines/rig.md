@@ -82,7 +82,7 @@ emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머
 | 꼬리 | rotation.z |
 | 눈썹·입 쉼/대체 | visible |
 | 눈 리그 6메시 | pupil.scale(놀람 — 동공 1 → 0.5배), pupil.position(시선), lid.scale.y, visible (smile ^^ / shut 감은 눈 선) |
-| — | group·headGroup·faceGroup의 position/rotation/scale |
+| — | group·headGroup·crownGroup·earGroup·faceGroup의 position/rotation/scale — group.position.x에는 걷기로 옮긴 자리(walkX), group.scale.x에는 네발이 걷는 방향(facing ±1)이 들어간다 |
 
 **매 프레임 지오메트리를 다시 만들지 않는다.** 예외는 이모지(트리거당 1회)와 재생성(개체 교체)뿐이다.
 

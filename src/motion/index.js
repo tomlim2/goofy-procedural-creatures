@@ -14,7 +14,7 @@ import * as E from "./events.js";
 import * as S from "./states.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, bindArm, solveArms } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
-import { ramp } from "./ease.js";
+import { ramp, smoothstep } from "./ease.js";
 
 export { MOTION } from "./table.js";
 export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
@@ -31,7 +31,7 @@ export const BIND_STATE = Object.freeze({
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
   happy: false, winkSide: 0, tailAngle: 0,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
-  mode: "idle", sleep: 0, walk: 0,
+  mode: "idle", sleep: 0, walk: 0, walkX: 0, facing: 1,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
 });
 
@@ -88,6 +88,24 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const W = M.walk || null;
   let walkK = mode.mode === "walk" && W ? 1 : 0;
   const walkPhase = ((seed % 97) / 97) * Math.PI * 2;
+  // 걷기는 자리를 옮긴다 — 집(셀 가운데, x 0)에서 왼쪽이나 오른쪽으로 조금 걸어가 거기서 평소처럼 idle(자기도) 하다가,
+  // 다음 걷기는 **무조건 온 방향으로** 집에 돌아온다. leg = 한 번의 이동 { from, to, start, dur }. 속도는 종족(W.speed, 셀/초)
+  const trip = { x: 0, from: 0, to: 0, start: -1, dur: 0, dir: 0 };
+  let facing = 1;                 // 네발만 뒤집는다: 오른쪽으로 걸을 땐 -1(거울). 0을 지나며 종이처럼 얇아졌다 뒤집힌다
+  let lastMode = mode.mode;
+  const startLeg = (t) => {
+    const home = Math.abs(trip.x) < 1e-4;
+    if (home) {   // 집에서 출발 — 방향과 거리는 rng
+      trip.dir = rng.chance(0.5) ? 1 : -1;
+      trip.to = trip.dir * rng.float(W.trip[0], W.trip[1]);
+    } else {      // 밖에서 출발 — 집으로만
+      trip.dir = trip.x > 0 ? -1 : 1;
+      trip.to = 0;
+    }
+    trip.from = trip.x;
+    trip.start = t;
+    trip.dur = Math.abs(trip.to - trip.from) / W.speed;
+  };
   let zzzLast = -1;
   // 이모지 채널 — 모션과 별개 층. 예약(idle 중 가끔)과 모션의 이모지 트리거가 여기로 쏜다
   const emoji = initEmoji();
@@ -125,7 +143,26 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
 
       // ── update: 고정 순서 ──
       // 기본 상태 — idle(서 있음)/sleep(엎드려 잠). 예약은 강제 중에도 돌린다. sleepK로 자세를 섞는다
-      const modeName = forcedMode || S.stepMode(mode, t, rng, M);
+      let modeName = forcedMode || S.stepMode(mode, t, rng, M);
+      // 걷기 시작 — 이동 한 구간을 잡고, 걷기 유지는 도착까지로 맞춘다 (표의 walk 유지 대신 거리/속도)
+      if (W && modeName === "walk" && (lastMode !== "walk" || trip.start < 0)) {
+        startLeg(t);
+        if (!forcedMode) mode.next = t + trip.dur + 0.2;
+      }
+      if (W && modeName === "walk" && trip.start >= 0 && t >= trip.start + trip.dur) {
+        // 도착. 강제 걷기면 바로 다음 구간(집↔밖 왕복), 아니면 상태 기계가 idle로 넘긴다
+        trip.x = trip.to; trip.start = -1;
+        if (forcedMode === "walk") startLeg(t);
+        else { modeName = "idle"; mode.mode = "idle"; mode.next = t + rng.float(M.modeHold.idle[0], M.modeHold.idle[1]); }
+      }
+      if (trip.start >= 0 && modeName === "walk") {
+        const p = smoothstep(0, 1, (t - trip.start) / Math.max(trip.dur, 1e-6));
+        trip.x = trip.from + (trip.to - trip.from) * p;
+      }
+      lastMode = modeName;
+      // 네발은 걷는 방향을 본다 — 오른쪽이면 거울(-1). 집에 돌아와 서면 다시 왼쪽(+1). 밖에서 idle 중엔 마지막 방향 그대로
+      const facingTarget = !quad ? 1 : (modeName === "walk" && trip.start >= 0) ? (trip.dir > 0 ? -1 : 1) : (Math.abs(trip.x) < 1e-4 ? 1 : facing < 0 ? -1 : 1);
+      facing += (facingTarget - facing) * 0.18;
       const asleep = modeName === "sleep" && canSleep;
       sleepK += ((asleep ? 1 : 0) - sleepK) * 0.03;
       if (sleepK < 0.001) sleepK = 0;
@@ -141,7 +178,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const bl = E.stepBlink(blink, t, rng);
       E.stepGlanceTarget(glance, t, rng);
       // 둘러보기 — 유지 중이면 시선 목표를 그쪽으로 잡고(동공이 먼저), 얼굴이 뒤따라 돈다
-      const looking = S.stepLook(look, t, rng, M);
+      let looking = S.stepLook(look, t, rng, M);
+      if (!quad && modeName === "walk" && trip.start >= 0) looking = [trip.dir * 0.9, 0];   // 두발은 걷는 쪽을 본다
       if (looking && !asleep) glance.gazeTarget = looking;
       const gaze0 = R.stepGaze(glance);
       const faceTurn0 = R.stepFaceTurn(glance, M, asleep ? null : looking);
@@ -278,7 +316,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle,
         arms, legOffset, legOsc,
-        mode: modeName, sleep: sleepK, walk: walkK,
+        mode: modeName, sleep: sleepK, walk: walkK, walkX: trip.x, facing,
         // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용
         action: act ? act.action : qact ? qact.action : null,
         actionSide: act ? act.side : qact ? qact.index : 0,

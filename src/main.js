@@ -103,7 +103,7 @@ for (const [name, def] of Object.entries(ACTIONS)) {
   actionSel.appendChild(option);
 }
 // 기본 상태 — SLEEP은 네발을 엎드려 재운다 (사람·도깨비는 잠 자세가 없어 idle), WALK는 제자리 걸음 (전 종족, 팔 행위는 예약대로)
-for (const [value, label] of [["sleep", "SLEEP — 잠 (네발)"], ["walk", "WALK — 제자리 걸음"]]) {
+for (const [value, label] of [["sleep", "SLEEP — 잠 (네발)"], ["walk", "WALK — 걷기 (집↔밖 왕복)"]]) {
   const option = document.createElement("option");
   option.value = value;
   option.textContent = label;

@@ -19,7 +19,7 @@ export const MOTION = {
     legTap: [12, 30], legStep: null,
     // 기본 상태 — 서 있기(idle)와 제자리 걷기(walk)를 오간다. walk: hz 걸음 주파수 · leg 다리 진폭(rad) · bob 몸 들썩(단위) · sway 좌우 기움(rad)
     modes: [["idle", 4], ["walk", 1]], modeHold: { idle: [30, 90], walk: [6, 14] },
-    walk: { hz: 1.8, leg: 0.3, bob: 0.01, sway: 0.05, arm: 0.14 },
+    walk: { hz: 1.8, leg: 0.3, bob: 0.01, sway: 0.05, arm: 0.14, trip: [0.1, 0.18], speed: 0.045 },   // trip 나갔다 오는 거리(셀), speed 셀/초
     sway: [0.012, 0.032], swayPeriod: [2.6, 4.6],
     rock: 0.006,
     roll: null, dip: null,
@@ -43,7 +43,7 @@ export const MOTION = {
     legStance: [-0.05, -0.02, 0.09, 0.06], tailIdle: 0.25,
     // 기본 상태 — 서 있기(idle)와 엎드려 잠(sleep)을 오간다. [상태, 가중치]는 시작·전환 때 뽑는 비율, 유지는 modeHold
     modes: [["idle", 3], ["sleep", 1], ["walk", 1.5]], modeHold: { idle: [40, 120], sleep: [25, 60], walk: [6, 16] },
-    walk: { hz: 2.6, leg: 0.32, bob: 0.008, sway: 0, arm: 0 },   // 종종걸음 — 대각선 다리 쌍이 번갈아
+    walk: { hz: 2.6, leg: 0.32, bob: 0.008, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.07 },   // 종종걸음 — 대각선 다리 쌍이 번갈아
     quadActions: [["wag", 2.5], ["scratch", 1]], quadActionGap: [8, 22],
     // 레퍼런스의 개 다리는 4초 내내 바닥 고정. 몸이 흔들려 다리가 따라 보일 뿐이다.
     legTap: [14, 32], legStep: [30, 70],
@@ -68,7 +68,7 @@ export const MOTION = {
     legStance: [-0.03, 0, 0.06, 0.03], tailIdle: 0.1,
     // 고양이는 더 자주, 더 오래 잔다
     modes: [["idle", 2], ["sleep", 1], ["walk", 1]], modeHold: { idle: [40, 120], sleep: [30, 90], walk: [6, 14] },
-    walk: { hz: 2.2, leg: 0.28, bob: 0.006, sway: 0, arm: 0 },   // 느긋한 걸음
+    walk: { hz: 2.2, leg: 0.28, bob: 0.006, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.05 },   // 느긋한 걸음
     // 고양이는 개처럼 꼬리를 흔들지 않는다 — 꼬리는 상시 스위시·플릭뿐. 행위는 뒷발 긁기만
     quadActions: [["scratch", 1]], quadActionGap: [10, 28],
     // 앞발 꾹꾹이 드물게, 스텝은 더 드물게
@@ -98,7 +98,7 @@ export const MOTION = {
     armSwing: 0.06,
     legTap: [14, 34], legStep: null,
     modes: [["idle", 4], ["walk", 1]], modeHold: { idle: [25, 80], walk: [5, 12] },
-    walk: { hz: 2.3, leg: 0.36, bob: 0.012, sway: 0.06, arm: 0.16 },   // 통통 튀는 걸음
+    walk: { hz: 2.3, leg: 0.36, bob: 0.012, sway: 0.06, arm: 0.16, trip: [0.1, 0.18], speed: 0.06 },   // 통통 튀는 걸음
     sway: [0.015, 0.04], swayPeriod: [2, 3.8],
     rock: 0.004,
     roll: null, dip: null,

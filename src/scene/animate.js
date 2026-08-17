@@ -25,10 +25,11 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
 
   // 몸 전체 — 스웨이(발 축 회전), 부르르, 점프, 호흡+락킹+젤리+기지개
   item.group.rotation.z = state.sway;
-  item.group.position.x = item.baseX + state.shiverX;
+  // 걷기로 옮긴 자리(walkX) · 네발이 걷는 방향으로 뒤집힘(facing ±1, 0을 지나며 얇아졌다 뒤집힌다)
+  item.group.position.x = item.baseX + state.shiverX + (state.walkX || 0);
   item.group.position.y = item.baseY + state.hopY;
   item.group.scale.set(
-    1 + state.breathe * 0.006 + state.squashX + state.stretchX + state.jellyX,
+    (state.facing === undefined ? 1 : state.facing) * (1 + state.breathe * 0.006 + state.squashX + state.stretchX + state.jellyX),
     1 + state.breathe * 0.011 + state.rock + state.squashY + state.jellyY,
     1
   );
