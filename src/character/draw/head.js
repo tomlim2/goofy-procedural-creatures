@@ -212,6 +212,9 @@ export function drawPupEars(ink, fills, spec, box) {
     let path;
     let flap = null;    // 접힌 귀의 덮개 — 밑동 위에 겹쳐 그린다
     let crease = null;  // 접힘선 — 검은 털에서는 두 조각의 색이 같아 선이 없으면 접힌 게 안 보인다
+    // 밑동 윤곽을 **열린 선**으로 그릴 때 쓴다. 층 하나 안에서는 잉크가 채색보다 위라(guidelines/rig.md) 덮개 채색이 밑동 윤곽을 못 가린다 —
+    // 가려질 구간(덮개 밑)은 아예 긋지 않는다
+    let baseOutline = null;
     if (kind === "pointy") {
       // 세모귀 — **꼭짓점이 머리에 붙는다**(밑변이 아니다). 제일 위 꼭짓점을 윤곽(네모 머리면 모서리)에 박고,
       // 몸통은 거기서 바깥·아래로 처진다: 밑변이 바깥 끝. 크기 배율로 길고 넓게
@@ -251,6 +254,8 @@ export function drawPupEars(ink, fills, spec, box) {
         nAt(stand - drop, halfW * 1.05)
       ];
       crease = [nAt(stand, -halfW * 0.66), nAt(stand + 0.004 * k, halfW * 1.1)];
+      // 밑동 윤곽 — 안쪽 위 → 안쪽 아래 → 바깥 아래 → 덮개 끝 높이까지만. 윗변과 그 위 바깥변은 덮개가 덮으므로 긋지 않는다
+      baseOutline = [nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW), nAt(-0.014, halfW), nAt(stand - drop - 0.004 * k, halfW * 0.72)];
     } else {
       // flap / long — 머리 옆에서 늘어지되 반대 기울기(0.25rad 안쪽)로 끝이 얼굴 쪽으로 모이는 로브
       const len = ry * (kind === "long" ? 0.95 : 0.65);
@@ -260,7 +265,8 @@ export function drawPupEars(ink, fills, spec, box) {
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
     fills.fill(path, earFill);
-    ink.outline(path, earInk);
+    if (baseOutline) ink.stroke(baseOutline, earInk);
+    else ink.outline(path, earInk);
     if (flap) {
       // 덮개는 귀 안쪽 면이라 조금 더 어둡다 — 밝은 털에서는 색으로, 검은 털에서는 접힘선으로 읽힌다
       fills.fill(flap, shade(earFill, 0.78));
