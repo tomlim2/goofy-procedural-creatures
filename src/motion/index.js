@@ -76,7 +76,12 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const tailFollow = { x: 0, v: 0 };
   let tailPrevBase = null;
   const lash = { start: -1 };
-  const raise = { until: -1, start: -1 };
+  const raise = { until: -1, start: -1, style: "hook" };   // style: hook(끝을 안으로 굽혀 세움) | straight(빳빳이 세움)
+  const startRaise = (t) => {
+    raise.start = t;
+    raise.until = t + rng.float(TT.raise.hold[0], TT.raise.hold[1]);
+    raise.style = rng.chance(0.5) ? "hook" : "straight";
+  };
 
   // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
   // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
@@ -277,7 +282,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 놀람에 딸린 꼬리 — 채찍질(plain 변형 시작 때 lash 확률) · 세움(♥ 변형 시작 때) · 부풀림(시작 순간)
       let tailPuff = 0;
       if (TT && quad && startleBefore < 0 && surprise.start >= 0 && !asleep) {
-        if (surprise.variant === "heart" && TT.raise) { raise.start = t; raise.until = t + rng.float(TT.raise.hold[0], TT.raise.hold[1]); }
+        if (surprise.variant === "heart" && TT.raise) startRaise(t);
         else if (surprise.variant === "plain" && TT.lash > 0 && rng.chance(TT.lash)) lash.start = t;
       }
       if (TT && TT.puff && surprise.start >= 0) {
@@ -291,13 +296,20 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         else { const w = Math.sin(k * Math.PI * 6) * envelope(k, 0.12, 0.4); tailAngle += w * 0.6; tailTip += w * 0.4; }
       }
       if (raise.until >= 0) {
-        // 세움 — 뿌리를 위로 들고(ramp 0.4초) 유지, 끝은 잔떨림(quiver). 유지가 끝나면 0.6초에 내린다
+        // 세움 — 기분 좋을 때. 뿌리를 위로 들고(ramp 0.4초) 유지, 유지가 끝나면 0.6초에 내린다.
+        //   hook: 끝을 **안으로 굽혀**(머리 쪽으로 +0.8) 세우고 끝이 잔떨림(quiver)
+        //   straight: **빳빳이** 곧게 세운다(뿌리 +0.15 더, 끝은 굽힘 없이 곧게 — 골격의 굽음을 편다) 떨림 없음
         const kIn = ramp(Math.min(1, (t - raise.start) / 0.4));
         const kOut = t > raise.until ? 1 - ramp(Math.min(1, (t - raise.until) / 0.6)) : 1;
         const kr = kIn * kOut;
         if (t > raise.until + 0.6) raise.until = -1;
-        tailAngle += TT.raise.angle * kr;
-        tailTip += Math.sin(t * Math.PI * 2 * TT.raise.quiver[1]) * TT.raise.quiver[0] * kr;
+        if (raise.style === "hook") {
+          tailAngle += TT.raise.angle * kr;
+          tailTip += 0.8 * kr + Math.sin(t * Math.PI * 2 * TT.raise.quiver[1]) * TT.raise.quiver[0] * kr;
+        } else {
+          tailAngle += (TT.raise.angle + 0.15) * kr;
+          tailTip += -0.25 * kr;   // 골격의 안쪽 굽음을 살짝 펴서 곧게
+        }
       }
       const j = R.stepJelly(jelly, t);
 
@@ -352,6 +364,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 이모지 — 예약된 것(idle 중 가끔) + 모션의 트리거(행위가 시작하는 순간 한 번). 채널이 애니메이션을 돈다
       const scheduledEmoji = E.stepEmojiSchedule(emojiSchedule, t, rng, M);
       if (scheduledEmoji) triggerEmoji(emoji, scheduledEmoji, t);
+      // 기분 좋음(♥ 이모지)이면 고양이는 꼬리를 세운다 — 다음 프레임부터 (raise 상태는 위에서 읽는다)
+      if (scheduledEmoji === "heart" && TT && TT.raise && quad && !asleep && raise.until < 0) startRaise(t);
       fireEmoji("arm", act, ACTIONS, t);
       fireEmoji("quad", qact, QUAD_ACTIONS, t);
       const em = stepEmoji(emoji, t);

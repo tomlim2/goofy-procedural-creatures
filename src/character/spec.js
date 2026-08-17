@@ -42,8 +42,9 @@ function applyConstraints(parts, rng, speciesName) {
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
     parts.hair = "none";
   } else if (parts.headgear !== "none" && parts.hair !== "none") {
-    // 모자나 밴드면 짧은 머리만 남긴다 (앞머리·옆단발은 모자 밑으로 나와도 된다).
-    const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob"];
+    // 모자나 밴드면 짧은 머리만 남긴다 (앞머리·옆단발·두건형은 모자 밑으로 나와도 된다). 밴드는 구름형·고슴도치와도 어울린다(레퍼런스)
+    const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob", "helmet"];
+    if (parts.headgear === "band") short.push("cloud", "hedgehog");
     if (!short.includes(parts.hair)) parts.hair = rng.pick(short);
   }
 

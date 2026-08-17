@@ -15,7 +15,8 @@ export const SLOTS = {
   eyewear: ["none", "glasses", "goggles", "patch", "monocle"],
   // 헤어는 면을 칠하지 않고 펜으로 왕복해 긋는 스크리블로 그린다.
   // 레퍼런스 아이 줄: 앞머리 있는 바가지(bangs) · 옆으로 턱까지 내려오는 단발(longbob) · 정수리 똥머리(bun) 포함
-  hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep", "pigtails", "curly", "bangs", "longbob", "bun"],
+  // 레퍼런스 부피형: helmet 두건형(정수리~눈썹·귀를 감싸는 큰 덩어리) · cloud 구름형 곱슬(스캘럽 윤곽 큰 덩어리) · hedgehog 고슴도치(정수리 전면 짧은 가시)
+  hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep", "pigtails", "curly", "bangs", "longbob", "bun", "helmet", "cloud", "hedgehog"],
   headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
   // round·pointy·fold는 크기 셋 — 기본(작음) · Mid(중간, 1.4배) · Big(큼, 1.8배). 모양은 같고 크기만 다르다.
@@ -70,7 +71,7 @@ export const DEFAULT_BIAS = {
   // 종족·아키타입 bias가 없을 때. cyclops는 여기 없다 (도깨비 bias로만 나온다)
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
     ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1]],
-  hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1]],
+  hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1], ["helmet", 2], ["cloud", 1.5], ["hedgehog", 1.5]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["bonnet", 1.5], ["helmet", 1], ["pot", 1]],
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3]],
