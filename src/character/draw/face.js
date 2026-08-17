@@ -3,7 +3,7 @@
 
 import { Sketch, blobPath, arcPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
-import { TAU, layout, eyeGeometry, darken, isDark } from "./layout.js";
+import { TAU, layout, eyeGeometry } from "./layout.js";
 import { SPECIES } from "../vocabulary/species.js";
 
 // 이 눈이 안대에 가려졌나 — 안대가 있을 때만 patchSide를 본다 (갤러리 fix나 뒤늦은 제약으로 안대가 빠져도 눈이 같이 사라지지 않게)
@@ -61,11 +61,10 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // 늘 웃는 눈 ^^ — 위로 볼록한 아치 (행복 상태의 미소 아치와 같은 모양, 여기선 항상)
       ink.stroke(arcPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0, width: 0.013 });
     } else if (kind === "hollow") {
-      // 빈 눈 — 동공 없는 타원. 밝은 얼굴엔 흰자만 남은 멍한 눈, 먹빛 도깨비 머리엔 검은 눈구멍
-      const dark = isDark(spec.palette.skin);
-      const path = blobPath(eye.x, eye.y, eye.r * 0.9, eye.r * 1.05, { lumps: 3, amount: 0.1, noise: null });
-      fills.fill(path, dark ? darken(spec.palette.skin, 0.7) : "#f6f2e9");
-      ink.outline(path, { color: ink0, width: 0.011 });
+      // 빈 눈 — 보통 눈(ring)에서 동공만 뺀 것. 어느 종족이든 흰자 + 윤곽, 동공 없음 (도깨비도 검은 눈구멍이 아니라 흰 눈)
+      const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null });
+      fills.fill(path, "#f6f2e9");
+      ink.outline(path, { color: spec.palette.ink, width: 0.011, passes: 2 });
     } else if (kind === "half") {
       // 반쯤 감은 눈 — 원 전체에 선을 긋지 않는다(원+선은 "선 그어진 동그라미"로 뭉개져 읽힌다).
       // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양
