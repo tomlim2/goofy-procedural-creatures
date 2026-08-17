@@ -78,17 +78,19 @@ function applyConstraints(parts, rng, speciesName) {
 }
 
 // 실루엣을 가르는 연속값들. 파츠 조합보다 이쪽이 다양성에 더 크게 기여한다.
-function makeProportions(rng, archetype) {
+function makeProportions(rng, archetype, species) {
   const sprite = archetype.name === "sprite";
   const blob = archetype.name === "blob";
+  const human = species === "human";
 
   return {
     headScale: rng.around(blob ? 1.14 : sprite ? 0.96 : 1.04, 0.34),
     headWide: rng.around(blob ? 1.16 : 1, 0.18),
 
     // 머리 외곽선을 얼마나 찌그러뜨릴지. 0이면 도형, 크면 손으로 그린 덩어리.
+    // 사람 두상은 매끄럽게 — 혹을 1/3로(울퉁불퉁한 건 도깨비·동물). rng 호출 수는 같다 (배율만)
     headLumps: rng.int(4, 7),
-    headLump: rng.around(0.07, 0.045),
+    headLump: rng.around(0.07, 0.045) * (human ? 0.3 : 1),
 
     eyeSize: rng.around(sprite ? 0.24 : 0.17, 0.07),
     eyeGap: rng.around(0.42, 0.12),
@@ -176,7 +178,7 @@ export function makeCreature(seed, speciesName = "human") {
     else palette.cloth = shade(palette.skin, 1.06);                       // 조금 밝은 톤
   }
 
-  const proportions = makeProportions(rng, archetype);
+  const proportions = makeProportions(rng, archetype, species.name);
 
   // 뒤늦게 붙인 슬롯. 여기서 뽑아야 앞선 파츠·색·비율의 시드가 유지된다 (slots.js LATE_SLOTS).
   // 종족 forbid는 다시 한 번 — 이 슬롯들에도 적용되게.

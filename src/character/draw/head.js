@@ -31,7 +31,8 @@ export function drawHead(ink, fills, spec, box, noise) {
     });
   }
 
-  ink.outline(path, { color: spec.palette.ink, width: 0.014, jitter: 0.008, passes: 2 });
+  // 윤곽선 지터도 사람은 절반 — 두상이 매끄럽게 (선의 떨림 자체는 남는다)
+  ink.outline(path, { color: spec.palette.ink, width: 0.014, jitter: spec.species === "human" ? 0.004 : 0.008, passes: 2 });
   return path;
 }
 
