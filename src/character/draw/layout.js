@@ -110,7 +110,8 @@ export function layout(spec) {
 export function eyeGeometry(spec, box) {
   const p = spec.proportions;
   const gap = box.headRx * p.eyeGap;
-  const base = box.headRy * p.eyeSize * 1.35;
+  // wide(왕눈)는 ring보다 1.3배 — 이름만 다르고 같은 눈이면 안 된다
+  const base = box.headRy * p.eyeSize * 1.35 * (spec.parts.eyes === "wide" ? 1.3 : 1);
   const y = box.headCy + box.headRy * p.eyeHeight;
 
   // 외눈은 중앙에 하나만

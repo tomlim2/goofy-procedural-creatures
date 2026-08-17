@@ -110,8 +110,8 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   // 눈 — 놀람·시선·깜빡임·^^·윙크. 놀람은 눈을 키우지 않고 **동공만** 줄인다 (1 → 0.5배)
   for (const rig of item.eyeRigs) {
     rig.pupil.scale.setScalar(1 - 0.5 * (state.startle || 0));
-    rig.pupil.position.x = state.gaze[0] * rig.eye.r * 0.34;
-    rig.pupil.position.y = state.gaze[1] * rig.eye.r * 0.28;
+    rig.pupil.position.x = state.gaze[0] * rig.eye.r * rig.gazeScale;
+    rig.pupil.position.y = state.gaze[1] * rig.eye.r * rig.gazeScale * 0.82;
     const winked = state.winkSide !== 0 && rig.eye.side === state.winkSide;
     const closed = winked || state.happy;
     rig.lid.scale.y = closed ? 1 : state.lid;

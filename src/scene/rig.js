@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -117,31 +117,48 @@ export function buildCreature(spec, noise, birth = 0) {
     });
   }
 
-  // 눈 리그 — 흰자·윤곽·동공·눈꺼풀·스마일을 그룹으로 묶는다
+  // 눈 리그 — 흰자·윤곽·동공·눈꺼풀·스마일·감은 선을 그룹으로 묶는다. 종류: ring/wide/cyclops(둥근 흰자) · oval(세로 타원 흰자) ·
+  // bead(단추눈 — 흰자 없이 검은 구슬 + 하이라이트, 시선은 조금만)
   const eyeRigs = [];
+  const eyeKind = spec.parts.eyes;
+  const shape = eyeShape(spec);
   for (const eye of firstDrawn.eyes) {
     const rig = new THREE.Group();
     rig.position.set(eye.x, eye.y - faceCy, 0);
+    const rx = eye.r * shape.sx, ry = eye.r * shape.sy;
+    const bead = eyeKind === "bead";
 
-    const white = new Sketch(noise, 0.4);
-    white.fill(blobPath(0, 0, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null }), "#f6f2e9");
-    rig.add(sketchMesh(white, 1, 3));
+    if (!bead) {
+      const white = new Sketch(noise, 0.4);
+      white.fill(blobPath(0, 0, rx, ry, { lumps: 3, amount: 0.08, noise: null }), "#f6f2e9");
+      rig.add(sketchMesh(white, 1, 3));
 
-    const rim = new Sketch(noise, 0.6);
-    rim.outline(blobPath(0, 0, eye.r, eye.r, { lumps: 4, amount: 0.1, noise: null }), {
-      color: spec.palette.ink, width: 0.011, passes: 2
-    });
-    rig.add(sketchMesh(rim, 1, 4));
+      const rim = new Sketch(noise, 0.6);
+      rim.outline(blobPath(0, 0, rx, ry, { lumps: 4, amount: 0.1, noise: null }), {
+        color: spec.palette.ink, width: 0.011, passes: 2
+      });
+      rig.add(sketchMesh(rim, 1, 4));
+    }
 
     const pupilSketch = new Sketch(noise, 0.4);
-    pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
+    if (bead) {
+      // 구슬 + 왼쪽 위 하이라이트. 하이라이트도 동공 메시라 놀람 수축·시선을 같이 탄다.
+      // 먹빛 머리(도깨비)에선 검은 구슬이 묻히니 밝은 얼굴 잉크로 테를 두른다
+      const ball = blobPath(0, 0, eye.r * 0.85, eye.r * 0.85, { lumps: 3, amount: 0.08, noise: null });
+      pupilSketch.fill(ball, spec.palette.ink);
+      if (spec.faceInk) pupilSketch.outline(ball, { color: spec.faceInk, width: 0.01 });
+      pupilSketch.fill(blobPath(-eye.r * 0.3, eye.r * 0.32, eye.r * 0.2, eye.r * 0.17, { lumps: 3, amount: 0.1, noise: null }), "#f6f2e9");
+    } else {
+      pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
+    }
     const pupil = sketchMesh(pupilSketch, 0.95, 5);
     rig.add(pupil);
 
+    // 눈꺼풀 — 흰자(구슬)보다 살짝 큰 살색 덮개. 위 가장자리에 걸어 두고 scale.y로 내린다
     const lidSketch = new Sketch(noise, 0.4);
-    lidSketch.fill(blobPath(0, -eye.r * 1.15, eye.r * 1.25, eye.r * 1.15, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
+    lidSketch.fill(blobPath(0, -ry * 1.15, rx * 1.25, ry * 1.15, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
     const lid = sketchMesh(lidSketch, 1, 5);
-    lid.position.set(0, eye.r * 1.15, 0);
+    lid.position.set(0, ry * 1.15, 0);
     lid.scale.y = 0;
     rig.add(lid);
 
@@ -166,7 +183,8 @@ export function buildCreature(spec, noise, birth = 0) {
     rig.add(shut);
 
     faceGroup.add(rig);
-    eyeRigs.push({ rig, pupil, lid, smile, shut, eye });
+    // gazeScale: 시선에 동공이 움직이는 폭(눈 반지름 배). 구슬눈은 동공이 곧 눈이라 조금만
+    eyeRigs.push({ rig, pupil, lid, smile, shut, eye, gazeScale: bead ? 0.12 : 0.34 });
   }
 
   // 잠 눈꺼풀 — 정지 눈(dot·cross·slit…)은 얼굴 잉크에 구워져 있어 감을 수 없다. 잘 때 그 위에 덮는 살색 덮개 + 감은 선.
@@ -175,7 +193,7 @@ export function buildCreature(spec, noise, birth = 0) {
   // 살아 있는 눈의 lid·shut·smile과 짝이다: 정지 눈도 자면 감고, 행복하면 ^^로 웃는다
   const staticLids = [];
   for (const eye of eyeGeometry(spec, layout(spec))) {
-    if (eye.side === spec.parts.patchSide) continue;
+    if (patched(spec, eye)) continue;
     if (firstDrawn.eyes.some((e) => e.side === eye.side)) continue;
     const ink0 = spec.faceInk || spec.palette.ink;
     const coverSketch = new Sketch(noise, 0.4);

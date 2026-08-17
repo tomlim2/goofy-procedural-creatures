@@ -5,7 +5,9 @@
 // 슬롯별 선택지. 이름은 draw.js의 그리기 함수 키와 1:1로 맞춘다.
 export const SLOTS = {
   head: ["round", "square", "tall", "pear", "wide", "egg", "block"],
-  eyes: ["ring", "dot", "wide", "sleepy", "spiral", "cross", "half", "slit", "cyclops"],
+  // 살아 있는 눈(리그 — 동공·깜빡임·놀람): ring · wide(1.3배 큰 ring) · cyclops(외눈) · bead(단추눈 — 흰자 없이 검은 구슬 + 하이라이트) ·
+  // oval(세로 타원 왕눈). 정적 눈: dot · sleepy · half · spiral · cross · slit · line(일자눈 ㅡ ㅡ) · happy(늘 웃는 ^^) · hollow(빈 눈 — 동공 없는 타원)
+  eyes: ["ring", "dot", "wide", "sleepy", "spiral", "cross", "half", "slit", "cyclops", "bead", "oval", "line", "happy", "hollow"],
   brow: ["none", "flat", "angry", "worry"],
   eyewear: ["none", "glasses", "goggles", "patch", "monocle"],
   // 헤어는 면을 칠하지 않고 펜으로 왕복해 긋는 스크리블로 그린다.
@@ -54,6 +56,8 @@ export const LATE_SLOTS = ["legLength", "build"];
 // 80%가 무언가를 쓰고, 선택지가 9개인 hair는 눈에 띄는 종류가 거의 안 나온다.
 // "없음"이 흔해야 하는 슬롯과 흔하면 안 되는 슬롯을 여기서 가른다.
 export const DEFAULT_BIAS = {
+  // 종족·아키타입 bias가 없을 때. cyclops는 여기 없다 (도깨비 bias로만 나온다)
+  eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1]],
   hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["bonnet", 1.5], ["helmet", 1], ["pot", 1]],
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],

@@ -3,15 +3,25 @@
 
 import { Sketch, blobPath, arcPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
-import { TAU, layout, eyeGeometry } from "./layout.js";
+import { TAU, layout, eyeGeometry, darken, isDark } from "./layout.js";
 import { SPECIES } from "../vocabulary/species.js";
+
+// 이 눈이 안대에 가려졌나 — 안대가 있을 때만 patchSide를 본다 (갤러리 fix나 뒤늦은 제약으로 안대가 빠져도 눈이 같이 사라지지 않게)
+export function patched(spec, eye) { return spec.parts.eyewear === "patch" && spec.parts.patchSide === eye.side; }
+
+// 살아 있는 눈의 흰자 모양 — 반지름 r에 곱하는 가로·세로 배율. oval만 세로로 길다 (scene/rig.js가 같은 값으로 리그를 굽는다)
+export const EYE_SHAPE = { oval: { sx: 0.82, sy: 1.22 } };
+export function eyeShape(spec) { return EYE_SHAPE[spec.parts.eyes] || { sx: 1, sy: 1 }; }
+// 살아 있는 눈(리그로 세우는 눈) — 나머지는 얼굴 잉크에 정적으로 굽는다
+export const RIG_EYES = ["ring", "wide", "cyclops", "bead", "oval"];
 
 // 코·입·볼 자리를 잡을 때 보는 눈 밑선 — 흰자 위에 얹히면 같은 색(도깨비 밝은 잉크)이거나 덮여서 사라진다.
 // (놀람은 눈을 키우지 않고 동공만 줄이므로 흰자 크기는 그대로다)
 // x 자리에서 눈(흰자)이 닿으면 그 밑선(y)을, 아니면 Infinity를 준다. 파츠는 min(원래 y, 밑선 - 여유)에 앉는다
 export function eyeFloor(spec, eyes, x) {
-  const hit = eyes.filter((e) => e.r * 1.05 > Math.abs(x - e.x));
-  return hit.length ? Math.min(...hit.map((e) => e.y - e.r * 1.05)) : Infinity;
+  const { sx, sy } = eyeShape(spec);
+  const hit = eyes.filter((e) => e.r * sx * 1.05 > Math.abs(x - e.x));
+  return hit.length ? Math.min(...hit.map((e) => e.y - e.r * sy * 1.05)) : Infinity;
 }
 
 export function drawEyes(ink, fills, spec, box, eyes) {
@@ -19,7 +29,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
   const ink0 = spec.faceInk || spec.palette.ink;
 
   for (const eye of eyes) {
-    if (spec.parts.patchSide === eye.side) continue;
+    if (patched(spec, eye)) continue;
 
     if (kind === "dot") {
       fills.fill(blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0);
@@ -44,6 +54,18 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         color: ink0, width: 0.01
       });
       fills.fill(blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), ink0);
+    } else if (kind === "line") {
+      // 일자눈 ㅡ ㅡ — 무표정 대시. 살짝 바깥이 처진다
+      ink.stroke([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0, width: 0.013 });
+    } else if (kind === "happy") {
+      // 늘 웃는 눈 ^^ — 위로 볼록한 아치 (행복 상태의 미소 아치와 같은 모양, 여기선 항상)
+      ink.stroke(arcPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0, width: 0.013 });
+    } else if (kind === "hollow") {
+      // 빈 눈 — 동공 없는 타원. 밝은 얼굴엔 흰자만 남은 멍한 눈, 먹빛 도깨비 머리엔 검은 눈구멍
+      const dark = isDark(spec.palette.skin);
+      const path = blobPath(eye.x, eye.y, eye.r * 0.9, eye.r * 1.05, { lumps: 3, amount: 0.1, noise: null });
+      fills.fill(path, dark ? darken(spec.palette.skin, 0.7) : "#f6f2e9");
+      ink.outline(path, { color: ink0, width: 0.011 });
     } else if (kind === "half") {
       // 반쯤 감은 눈 — 원 전체에 선을 긋지 않는다(원+선은 "선 그어진 동그라미"로 뭉개져 읽힌다).
       // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양
@@ -55,7 +77,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       });
       fills.fill(blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink0);
     }
-    // ring / wide는 여기서 그리지 않는다. scene이 흰자·동공·눈꺼풀을
+    // ring / wide / cyclops / bead / oval(RIG_EYES)은 여기서 그리지 않는다. scene이 흰자·동공·눈꺼풀을
     // 별도 메시로 세워 놀람(동공 수축)·시선·눈꺼풀을 움직인다.
   }
 }
@@ -68,7 +90,7 @@ export function drawFace2(ink, fills, spec, box, eyes) {
   if (kind === "tears") {
     // 눈 아래로 흘러내리는 두 줄. 레퍼런스에서 자주 보이는 디테일.
     for (const eye of eyes) {
-      if (spec.parts.patchSide === eye.side) continue;
+      if (patched(spec, eye)) continue;
       for (const off of [-0.35, 0.35]) {
         const x = eye.x + eye.r * off;
         ink.stroke([
@@ -122,7 +144,7 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
   const ink0 = spec.faceInk || spec.palette.ink;
 
   for (const eye of eyes) {
-    if (spec.parts.patchSide === eye.side) continue;
+    if (patched(spec, eye)) continue;
     // 눈썹은 눈 위, 그러나 머리 안 — 외눈처럼 큰 눈은 1.9배 위가 머리 밖(종이 위)이라 사라진다
     const y = Math.min(eye.y + eye.r * (eye.side === 0 ? 1.35 : 1.9), box.headCy + box.headRy * 0.84);
     const half = Math.max(eye.r * 1.15, 0.022);   // 눈이 작아도 눈썹은 눈썹만큼은 길다
