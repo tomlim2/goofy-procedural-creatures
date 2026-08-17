@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 131파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 20슬롯 135파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -191,12 +191,31 @@ float 1.5 · boots 1, cat stub 3 · stick 3 · float 1.5 · boots 1.
 같이 내려온다. 네발도 따른다. `LATE_SLOTS`라 맨 끝에 뽑는다. 기본 가중치 long 3 · medium 2 · short 1.
 갤러리: `gallery.html?slot=legs&fix=legLength:short`.
 
-### tail (8) — 네발 전용
-curl(위로 말림) / flag(위로 곧게) / longtail(뒤로 길게) / stubtail(뭉툭) / hook(위로 섰다 끝이 갈고리로 꺾임 — 물음표, 고양이) /
-kink(마디마다 꺾인 꼬리, 고양이) / ring(등 위로 한 바퀴 가까이 말린 고리 — 스피츠, 개) / plume(북슬한 깃털 꼬리 — 채운 덩어리 + 윤곽 + 털 획).
-꼬리 뿌리에 피벗. 종족 bias — pup flag 4 · stubtail 3 · longtail 2 · ring 2 · plume 2 · curl 1 · hook 0.5 / cat curl 4 · longtail 3 · hook 2.5 · flag 2 ·
-kink 1.5 · plume 1.5 · stubtail 1 (kink는 고양이만, ring은 개만 나온다).
-두발은 뽑히지만 그리지 않는다.
+### tail — 골격 (7) × tailSkin — 스킨 (5) — 네발 전용
+꼬리는 **골격과 스킨** 두 슬롯이다. 골격(`tail`)은 척추의 모양(점 목록)이고, 스킨(`tailSkin`)은 그 위에 무엇을 입히나다. 어느 골격에든 어느
+스킨이든 입힌다 — 스텁 골격에 깃털 스킨이면 폼폼이다 (`limbs.js` `tailSpine`·`tubePath`).
+
+| 골격 (tail) | 척추 |
+| --- | --- |
+| curl | 위로 올라 앞으로 말림 |
+| flag | 위로 곧게 |
+| longtail | 뒤로 길게 뻗다 끝이 오름 |
+| stubtail | 뭉툭 (짧은 세 점) |
+| hook | 위로 섰다 끝이 갈고리로 꺾임 — 물음표 (고양이) |
+| kink | 마디마다 꺾임 (고양이) |
+| ring | 등 위로 한 바퀴 가까이 말린 고리 — 스피츠 (개) |
+
+| 스킨 (tailSkin) | 입히기 |
+| --- | --- |
+| line | 가는 선 한 획 (스텁은 굵게) — 레퍼런스의 기본 |
+| thick | 뿌리 굵고 끝으로 가늘어지는 채운 몸통(털색) + 윤곽 |
+| plume | 가운데가 부푼 채운 몸통 + 털 획 (북슬 — 스피츠·여우) |
+| tuft | 가는 선 + 끝에 채운 뭉치 (사자) |
+| ringed | 굵은 몸통에 어두운 띠 셋 (너구리·얼룩 고양이) |
+
+꼬리 뿌리에 피벗. 종족 bias — 골격: pup flag 4 · stubtail 3 · longtail 2 · ring 2 · curl 1 · hook 0.5 / cat curl 4 · longtail 3 · hook 2.5 · flag 2 ·
+kink 1.5 · stubtail 1 (kink는 고양이만, ring은 개만). 스킨: pup thick 3 · line 2 · plume 2 · tuft 1 · ringed 0.5 / cat line 3 · thick 2 · ringed 1.5 ·
+plume 1.5 · tuft 1. tailSkin은 늦은 슬롯(`LATE_SLOTS`)이다. 두발은 뽑히지만 그리지 않는다.
 
 ### arms — 형태 (5) — 두발 전용
 | 값 | 그리기 |
