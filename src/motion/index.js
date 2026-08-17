@@ -78,13 +78,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const lash = { start: -1 };
   // 표정은 잠깐 하다 말지 않는다 — ^^는 시작하면 **3초 이상** 간다 (깜빡임 ^^ 22%·♥ 이모지가 이걸 켠다). rng 없이 시각만
   let happyUntil = -1;
-  const happyWag = { x: 0, v: 0 };   // 웃을 때 꼬리 흔들기 봉투(임계감쇠로 켜고 끈다)
-  const raise = { until: -1, start: -1, style: "hook" };   // style: hook(끝을 안으로 굽혀 세움) | straight(빳빳이 세움)
-  const startRaise = (t) => {
-    raise.start = t;
-    raise.until = t + rng.float(TT.raise.hold[0], TT.raise.hold[1]);
-    raise.style = rng.chance(0.5) ? "hook" : "straight";
-  };
+  const happyWag = { x: 0, v: 0 };   // 웃을 때 꼬리 흔들기 봉투(임계감쇠로 켜고 끈다) — 개
+  // 세움(고양이) — 기분 좋은(^^) 동안 꼬리가 띡 선다. k 0~1은 선형으로 오르내리고(0.4초 위 / 0.6초 아래) ramp로 S자. style은 설 때마다 뽑는다:
+  // straight(빳빳이 곧게 위) | hook(끝 두 마디를 앞으로 굽혀 세움 + 끝 떨림). lastT는 dt용 (프레임 기반이라 결정적)
+  const raise = { k: 0, style: "straight", lastT: -1 };
 
   // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
   // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
@@ -290,10 +287,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         damp(happyWag, isHappy && !asleep ? 1 : 0, 0.3);
         if (happyWag.x > 0.01) tailAngle += Math.sin(t * Math.PI * 2 * M.wagOnHappy.hz) * M.wagOnHappy.amp * happyWag.x;
       }
-      // 놀람에 딸린 꼬리 — 채찍질(plain 변형 시작 때 lash 확률) · 세움(♥ 변형 시작 때) · 곤두섬(놀란 동안)
+      // 놀람에 딸린 꼬리 — 채찍질(plain 변형 시작 때 lash 확률) · 곤두섬(놀란 동안). (♥ 놀람의 세움은 ♥ 이모지 → ^^ 를 거쳐 아래 세움이 맡는다)
       if (TT && quad && startleBefore < 0 && surprise.start >= 0 && !asleep) {
-        if (surprise.variant === "heart" && TT.raise) startRaise(t);
-        else if (surprise.variant === "plain" && TT.lash > 0 && rng.chance(TT.lash)) lash.start = t;
+        if (surprise.variant === "plain" && TT.lash > 0 && rng.chance(TT.lash)) lash.start = t;
       }
       // 곤두섬 — 사람 눈이 깜짝 놀랄 때의 타이밍 법칙 그대로, 동공과 **같은 시계**: 0.1초 만에 곤두서고 놀란 3.8초 내내 서 있다가 0.1초에 가라앉는다
       // (startle = events.stepSurprise 봉투 × 깨어 있음). 굵기만 부푼다 (scene이 마디마다 척추에 수직으로 스케일)
@@ -304,15 +300,19 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         if (k >= 1) lash.start = -1;
         else { const w = Math.sin(k * Math.PI * 6) * envelope(k, 0.12, 0.4); tailAngle += w * 0.6; tailTip += w * 0.4; }
       }
+      // 세움 — 고양이는 **기분 좋을 때마다**(^^ — 깜빡임 ^^·♥ 이모지·♥ 놀람) 꼬리가 띡 선다. 골격 모양과 상관없이 scene이 관절마다 쉼 자세 → 곧게 선 자세로
+      // 섞는다(tailRaise 0~1). straight: 빳빳이 곧게 위 · hook: 끝 두 마디가 앞(머리 쪽)으로 굽고 끝이 잔떨림(quiver). 0.4초에 서고 웃는 동안(3초 이상) 서 있다가 0.6초에 내린다.
+      // 서 있는 동안은 **빳빳하다** — 스위시·톡톡·팔로스루를 (1 − tailRaise)로 죽인다 (안 죽이면 선 채로 흔들려 "딱" 서 보이지 않는다)
       let tailRaise = 0;
-      if (raise.until >= 0) {
-        // 세움 — 기분 좋을 때 꼬리가 **띡 선다**. 골격 모양과 상관없이 scene이 관절마다 쉼 자세 → 곧게 선 자세로 섞는다(tailRaise 0~1).
-        //   straight: 빳빳이 곧게 위 · hook: 끝 두 마디가 앞(머리 쪽)으로 굽고 끝이 잔떨림(quiver)
-        // 0.4초에 서고 3~5초 유지, 0.6초에 내린다
-        const kIn = ramp(Math.min(1, (t - raise.start) / 0.4));
-        const kOut = t > raise.until ? 1 - ramp(Math.min(1, (t - raise.until) / 0.6)) : 1;
-        tailRaise = kIn * kOut;
-        if (t > raise.until + 0.6) raise.until = -1;
+      if (TT && TT.raise && quad) {
+        const dt = raise.lastT < 0 ? 0 : Math.max(0, t - raise.lastT);
+        raise.lastT = t;
+        const wantUp = isHappy && !asleep;
+        if (wantUp && raise.k <= 0) raise.style = rng.chance(TT.raise.straight) ? "straight" : "hook";   // 설 때마다 모양을 뽑는다
+        raise.k += Math.max(-dt / 0.6, Math.min(dt / 0.4, (wantUp ? 1 : 0) - raise.k));
+        tailRaise = ramp(raise.k);
+        tailAngle *= 1 - tailRaise;
+        tailTip *= 1 - tailRaise;
         if (raise.style === "hook") tailTip += Math.sin(t * Math.PI * 2 * TT.raise.quiver[1]) * TT.raise.quiver[0] * tailRaise;
       }
       const j = R.stepJelly(jelly, t);
@@ -368,8 +368,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 이모지 — 예약된 것(idle 중 가끔) + 모션의 트리거(행위가 시작하는 순간 한 번). 채널이 애니메이션을 돈다
       const scheduledEmoji = E.stepEmojiSchedule(emojiSchedule, t, rng, M);
       if (scheduledEmoji) triggerEmoji(emoji, scheduledEmoji, t);
-      // 기분 좋음(♥ 이모지)이면 고양이는 꼬리를 세운다 — 다음 프레임부터 (raise 상태는 위에서 읽는다)
-      if (scheduledEmoji === "heart" && TT && TT.raise && quad && !asleep && raise.until < 0) startRaise(t);
+      // (♥ 이모지의 꼬리 세움은 따로 없다 — ♥ 이모지가 ^^ 를 켜고(happyUntil), 고양이는 ^^ 동안 꼬리를 세운다)
       fireEmoji("arm", act, ACTIONS, t);
       fireEmoji("quad", qact, QUAD_ACTIONS, t);
       const em = stepEmoji(emoji, t);

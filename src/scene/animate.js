@@ -57,11 +57,18 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     const bones = item.tailBones;
     const n = bones.length;
     const raise = state.tailRaise || 0;
-    // 세움 목표 — 마디 방향(세계각). straight: 전부 곧게 위(π/2, 끝은 살짝 뒤로 젖힘). hook: 아래 마디는 위, 끝 두 마디가 앞(머리 쪽)으로 굽는다
-    // 뿌리 마디는 살짝 뒤로 젖혀 시작해 꼬리가 몸에서 곧장 위로 서 보이게(엉덩이에서 나온다)
+    // 선 꼬리는 몸·머리 **위**(2.08 — 윤곽·두피 위 머리카락 위, 귀·얼굴 아래)에 그린다. 쉴 때(등 위 고리·말림)는 뒤(0.8, guidelines/rig.md).
+    // 고양이 넷 중 하나는 꼬리 뿌리가 큰 머리 실루엣 안에 있어서, 뒤에 둔 채로 세우면 머리에 가려 선 게 안 보인다 (item.orderBase = 개체 블록)
+    const front = raise > 0.5;
+    if (item.tailFront !== front) {
+      item.tailFront = front;
+      const order = (item.orderBase || 0) + (front ? 2.08 : 0.8);
+      item.tailGroup.traverse((node) => { if (node.isMesh) node.renderOrder = order; });
+    }
+    // 세움 목표 — 마디 방향(세계각). straight: **전부 정확히 위(π/2)** — 어떤 골격이든 딱 수직으로 선다. hook: 아래 두 마디는 위, 끝 두 마디가 앞(머리 쪽)으로 굽는다
     const targetAngle = (i) => {
-      if (state.tailRaiseStyle === "hook") return i >= n - 2 ? Math.PI * 0.5 + (i === n - 1 ? 1.15 : 0.55) : Math.PI * 0.5 - 0.1;
-      return Math.PI * 0.5 - 0.12 + (i === n - 1 ? -0.1 : 0);
+      if (state.tailRaiseStyle === "hook") return i >= n - 2 ? Math.PI * 0.5 + (i === n - 1 ? 1.15 : 0.55) : Math.PI * 0.5;
+      return Math.PI * 0.5;
     };
     let cum = 0;   // 지금까지의 누적 목표 회전(쉼 기준)
     for (let i = 0; i < n; i += 1) {
