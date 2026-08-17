@@ -182,6 +182,10 @@ export function drawPupEars(ink, fills, spec, box) {
   // θ는 타원(headRx·headRy) 위 극각(정수리에서 잰 각). 채운 로브 + 두 번 덧그은 윤곽. none은 없음.
   const earFill = shade(spec.palette.skin, 0.8);
   const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
+  // 안쪽 귀 — 개체마다(wobbleSeed, rng 없음): 같은 계열 톤 45% · 분홍(코·볼터치와 같은 색) 30% · 없음 25%.
+  // 늘어진 귀(flap·long)와 접힌 쪽 덮개에는 안 그린다 — 그쪽은 귀 **바깥면**이 보이는 자세다
+  const innerRoll = spec.proportions.wobbleSeed % 100;
+  const innerFill = innerRoll < 45 ? shade(earFill, isDark(earFill) ? 1.95 : 0.62) : innerRoll < 75 ? "#d9968a" : null;
   const upper = kind === "pointy" || kind === "round" || kind === "fold" || kind === "perk";
   // 위쪽 자리는 둥근 머리에서 θ≈50°, 네모 머리(square·block)에서는 **꼭짓점**(θ = 45°)에서 시작한다 — 세모귀가 모서리에서 뻗는다
   const boxy = Math.min(1, headShape(spec).square / 1.5);
@@ -278,6 +282,15 @@ export function drawPupEars(ink, fills, spec, box) {
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
     fills.fill(path, earFill);
+    // 안쪽 귀 — 귀 모양을 그대로 줄여 위쪽으로 조금 밀어 넣는다 (윤곽선은 없다 — 채운 얼룩이라 작아도 읽힌다).
+    // 접힌 쪽 귀(flap)와 늘어진 귀는 안쪽 면이 안 보이므로 건너뛴다
+    if (innerFill && !flap && kind !== "flap" && kind !== "long") {
+      let cx = 0, cy = 0;
+      for (const [x, y] of path) { cx += x; cy += y; }
+      cx /= path.length; cy /= path.length;
+      const up = 0.012 * size;
+      fills.fill(path.map(([x, y]) => [cx + (x - cx) * 0.58 + nx * up, cy + (y - cy) * 0.58 + ny * up]), innerFill);
+    }
     if (baseOutline) ink.stroke(baseOutline, earInk);
     else ink.outline(path, earInk);
     if (flap) {
