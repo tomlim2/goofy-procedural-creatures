@@ -209,10 +209,19 @@ export function drawPupEars(ink, fills, spec, box) {
     const local = (u, v) => [bx + ax * u + px * v, by + ay * u + py * v];
     let path;
     if (kind === "pointy") {
-      // 밑변은 윤곽까지 끌어와 박고(u = −OUT), 끝은 귀 축을 따라 위로. 폭 0.09의 세모 (크기 배율로 길고 넓게)
-      const len = ry * 0.6 * size;
-      const b0 = -OUT - 0.01;
-      path = [local(b0, 0.05 * (0.8 + 0.2 * size)), local(len, 0.004), local(b0, -0.04 * (0.8 + 0.2 * size))];
+      // 세모귀 — **꼭짓점이 머리에 붙는다**(밑변이 아니다). 제일 위 꼭짓점을 윤곽(네모 머리면 모서리)에 박고,
+      // 몸통은 거기서 바깥·아래로 처진다: 밑변이 바깥 끝. 크기 배율로 길고 넓게
+      const len = ry * 0.55 * size;
+      const w = 0.045 * (0.8 + 0.2 * size);                  // 밑변 반폭
+      const drop = 0.6;                                       // 축이 수평에서 아래로 처진 각(rad)
+      const ex = side * Math.cos(drop), ey = -Math.sin(drop); // 귀 축: 바깥·아래
+      const qx = -ey * side, qy = ex * side;                  // 축에 수직 (위·바깥 양수)
+      const tipX = anchor.x - nx * 0.012, tipY = anchor.y - ny * 0.012;   // 꼭짓점은 윤곽 살짝 안쪽 — 박힌다
+      path = [
+        [tipX, tipY],
+        [tipX + ex * len + qx * w, tipY + ey * len + qy * w],
+        [tipX + ex * len - qx * w * 0.9, tipY + ey * len - qy * w * 0.9]
+      ];
     } else if (kind === "round") {
       // 귀 축 방향으로 길쭉한 동그란 귀 — 안쪽이 윤곽에 살짝 걸친다 (크기 배율)
       const [cx, cy] = local(-OUT + 0.055 * size, 0);
