@@ -133,7 +133,11 @@ export function drawCatEars(ink, fills, spec, box) {
   const skin = spec.palette.skin;
   const seed = spec.proportions.wobbleSeed;
   const roll = seed % 100;
-  const inner = roll < 50 ? "line" : roll < 65 ? "dark" : roll < 80 ? "notch" : "none";
+  // 안쪽 귀 — 선(이중선) 45% · 채움 30% · 홈 15% · 없음 10%. 채움 색은 개체마다 분홍(코·볼터치와 같은 색) 또는 같은 계열 톤
+  const inner = roll < 45 ? "line" : roll < 75 ? "dark" : roll < 90 ? "notch" : "none";
+  const innerFill = (seed >> 7) % 2 ? "#d9968a" : shade(skin, isDark(skin) ? 1.5 : 0.62);
+  // 안쪽 선은 **털 위에 그리는 자국**이라 얼굴 잉크를 쓴다 — 검은 털에 검은 선은 묻혀 안 보인다 (윤곽선은 배경과 맞닿아 검정 그대로)
+  const innerInk = spec.faceInk || ink0;
   const boxy = headShape(spec).square >= 1.4;   // square·block — 모서리보다 조금 안쪽에
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {
@@ -161,11 +165,13 @@ export function drawCatEars(ink, fills, spec, box) {
     ink.stroke([
       baseAt(-def.w * 1.02, 0.024), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w * 1.02, 0.024)
     ], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
-    // 안쪽 귀
-    const innerTip = [bx + ax * def.h * 0.62, by + ay * def.h * 0.62];
-    if (inner === "line") ink.stroke([baseAt(-def.w * 0.5, -0.012), innerTip, baseAt(def.w * 0.5, -0.012)], { color: ink0, width: 0.008 });
-    else if (inner === "dark") fills.fill([baseAt(-def.w * 0.5, -0.012), innerTip, baseAt(def.w * 0.5, -0.012)], shade(skin, isDark(skin) ? 1.5 : 0.62));
-    else if (inner === "notch") ink.stroke([[bx + ax * 0.012 + tx * def.w * 0.1, by + ay * 0.012 + ty * def.w * 0.1], [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: ink0, width: 0.008 });
+    // 안쪽 귀 — **밑변이 귀 밑동에 붙는다**(밑동보다 위에 띄우면 귀 한복판에 뜬 얼룩이 된다). 폭은 귀의 0.62배, 끝은 높이의 0.7배
+    const innerTip = [bx + ax * def.h * 0.7, by + ay * def.h * 0.7];
+    const innerBase = [baseAt(-def.w * 0.62, 0.012), innerTip, baseAt(def.w * 0.62, 0.012)];
+    if (inner === "line") ink.stroke(innerBase, { color: innerInk, width: 0.008 });
+    else if (inner === "dark") fills.fill(innerBase, innerFill);
+    // 홈 — 밑동 가운데에서 귀 절반 높이까지 한 줄 (접힘 자국처럼 읽힌다)
+    else if (inner === "notch") ink.stroke([baseAt(0, 0.012), [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: innerInk, width: 0.008 });
   }
 }
 
