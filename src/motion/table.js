@@ -101,7 +101,7 @@ export const MOTION = {
     jelly: { amp: [0.008, 0.018], freq: [1.1, 1.9] }, shiver: [12, 30],
     wink: null, happyHold: null,
     tailSwish: null, tailFlick: null,
-    surprise: [4, 12], yaw: 0.6,
+    surprise: [6, 14], yaw: 0.6,
     look: [5, 14], lookHold: [1, 3], lookAmp: [1, 0.7],
     emojis: ["dots", "dots", "bang", "quest", "heart"]
   }

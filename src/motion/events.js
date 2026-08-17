@@ -56,17 +56,19 @@ export function stepGlanceTarget(g, t, rng) {
     g.next = t + rng.float(1.4, 5.0);
   }
 }
+// 놀람 길이(초): 0.1 수축 + 3.0 유지 + 0.4 회복
+export const SURPRISE_DUR = 3.5;
 export function stepSurprise(e, t, rng, M) {
   if (t >= e.next && e.start < 0) {
     e.start = t;
     e.next = t + rng.float(M.surprise[0], M.surprise[1]);
   }
   if (e.start >= 0) {
-    const k = (t - e.start) / 1.1;
+    const k = (t - e.start) / SURPRISE_DUR;
     if (k >= 1) e.start = -1;
-    // 놀람 정도 0~1: 0.25(≈0.28초)에 걸쳐 오르고, 유지, 0.45(≈0.5초)에 걸쳐 풀림 — 양끝 속도 0.
+    // 놀람 정도 0~1: 0.1초 만에 확 오르고(이징은 유지), 약 3초 유지, 0.4초에 걸쳐 풀림 — 양끝 속도 0.
     // scene은 이 값으로 **동공만** 줄인다(1 → 0.5배). 눈 자체는 안 커진다
-    else return envelope(k, 0.25, 0.45);
+    else return envelope(k, 0.1 / SURPRISE_DUR, 0.4 / SURPRISE_DUR);
   }
   return 0;
 }
