@@ -7,11 +7,12 @@ export const SLOTS = {
   head: ["round", "square", "tall", "pear", "wide", "egg", "block"],
   // 살아 있는 눈(리그 — 동공·깜빡임·놀람): ring · wide(1.3배 큰 ring) · cyclops(외눈) · oval(세로 타원 왕눈). (하이라이트 있는 눈망울 눈은 뺐다)
   // 정적 눈: dot · sleepy · half · spiral · cross · slit · line(일자눈 ㅡ ㅡ) · happy(늘 웃는 ^^) · hollow(빈 눈 — 동공 없는 타원) ·
-  //   scrawl(크레파스로 마구 그린 동그라미 — 한 획 세 바퀴 반, 선이 겹치고 삐져나온다. 정갈한 spiral과 다르다)
+  //   scrawl(크레파스로 마구 그린 동그라미 — 한 획 세 바퀴 반, 선이 겹치고 삐져나온다. 정갈한 spiral과 다르다) ·
+  //   lidded(무거운 눈꺼풀 — 큰 흰자 위를 채운 눈두덩이 덮고 그 밑으로 동공이 내다본다) · sharp(날카로운 나뭇잎 눈 — 코 쪽 끝이 뾰족하게 내려간다, 늘 심술난 인상)
   // 카오모지에서 온 것: squeeze(>_< 꼭 감음) · side(¬_¬ 곁눈질) · droop(´･ω･` 처진 눈꼬리). (◕ 눈망울 눈은 뺐다)
   // ☆_☆·♥_♥은 눈 종류가 아니라 놀람의 변형(motion/events.js stepSurprise)이다 — 잠깐 눈이 그렇게 바뀐다
   eyes: ["ring", "dot", "wide", "sleepy", "spiral", "cross", "half", "slit", "cyclops", "oval", "line", "happy", "hollow",
-    "squeeze", "side", "droop", "scrawl"],
+    "squeeze", "side", "droop", "scrawl", "lidded", "sharp"],
   brow: ["none", "flat", "angry", "worry"],
   eyewear: ["none", "glasses", "goggles", "patch", "monocle"],
   // 헤어는 면을 칠하지 않고 펜으로 왕복해 긋는 스크리블로 그린다.
@@ -85,7 +86,7 @@ export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mout
 export const DEFAULT_BIAS = {
   // 종족·아키타입 bias가 없을 때. cyclops는 여기 없다 (도깨비 bias로만 나온다)
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
-    ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5]],
+    ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5], ["lidded", 1.5], ["sharp", 1.5]],
   hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1], ["helmet", 2], ["cloud", 1.5], ["hedgehog", 1.5], ["long", 1.5], ["twintails", 1], ["ponytail", 1.5], ["apple", 1],
     ["verylong", 1], ["twintailsBall", 0.8], ["appleBig", 0.7]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1]],   // bonnet 비활성

@@ -130,6 +130,57 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // 살짝 찌그러진 원
       fills.fill(path, "#f6f2e9");
       fills.outline(path, { color: spec.palette.ink, width: 0.011, passes: 2 });   // 흰자 테는 검정 — 흰자 위라 늘 보인다
+    } else if (kind === "sharp") {
+      // 날카로운 눈 — 코 쪽 끝이 뾰족하게 내려간 나뭇잎 꼴(위 선은 곧고 굵게, 아래는 불룩) + 바깥으로 치우친 동공. 늘 심술난 인상(시크).
+      // 흰자 위에 그리는 것이라 잉크는 늘 어두운 팔레트 잉크
+      const dark = spec.palette.ink;
+      const out = eye.side === 0 ? 1 : eye.side;              // 외눈은 오른쪽 기준
+      const tipIn = [eye.x - out * eye.r * 1.02, eye.y - eye.r * 0.4];   // 코 쪽 뾰족한 끝 — 아래로 처진다
+      const tipOut = [eye.x + out * eye.r * 0.96, eye.y + eye.r * 0.14]; // 바깥 끝 — 위로
+      // a→b를 bow만큼 왼쪽(진행 방향 기준)으로 불린 호
+      const bowed = (a, b, bow, n) => {
+        const pts = [];
+        let dx = b[0] - a[0], dy = b[1] - a[1];
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len, ny = dx / len;
+        for (let i = 0; i <= n; i += 1) {
+          const t = i / n;
+          const k = Math.sin(Math.PI * t) * bow;
+          pts.push([a[0] + dx * t + nx * k, a[1] + dy * t + ny * k]);
+        }
+        return pts;
+      };
+      const upper = bowed(tipIn, tipOut, out * eye.r * 0.22, 10);    // 위 눈꺼풀 — 살짝 곧게
+      const lower = bowed(tipOut, tipIn, out * eye.r * 0.5, 10);     // 아래 — 불룩
+      const almond = [...upper, ...lower.slice(1, -1)];
+      fills.fill(almond, "#f6f2e9");
+      fills.outline(almond, { color: dark, width: 0.011, passes: 2 });
+      ink.stroke(upper, { color: dark, width: 0.015 });              // 위 눈꺼풀을 굵게 — 사나운 인상
+      fills.fill(blobPath(eye.x + out * eye.r * 0.22, eye.y - eye.r * 0.06, eye.r * 0.28, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null }), dark);
+    } else if (kind === "lidded") {
+      // 무거운 눈꺼풀 — 큰 흰자 위쪽을 **채운 눈꺼풀**(눈두덩)이 덮고 그 밑으로 동공이 내다본다. 반감김(half)이 선 하나라면 이건 덩어리다.
+      // 흰자 위에 그리는 것이라 잉크는 늘 어두운 팔레트 잉크 (밝은 얼굴 잉크로 그리면 흰자에 묻힌다)
+      const dark = spec.palette.ink;
+      const path = blobPath(eye.x, eye.y, eye.r, eye.r * 1.05, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });
+      fills.fill(path, "#f6f2e9");
+      fills.outline(path, { color: dark, width: 0.011, passes: 2 });
+      // 눈꺼풀 — 위쪽 호 + 가운데가 처진 아래 경계 (눈두덩이 눈을 짓누른다)
+      const rel = 0.16, a0 = Math.asin(rel);
+      const lid = [];
+      const steps = 18;
+      for (let i = 0; i <= steps; i += 1) {
+        const a = a0 + (Math.PI - 2 * a0) * (i / steps);
+        lid.push([eye.x + Math.cos(a) * eye.r, eye.y + Math.sin(a) * eye.r * 1.05]);
+      }
+      for (let i = 0; i <= 10; i += 1) {
+        const t = i / 10;
+        const x = eye.x + eye.r * (Math.cos(Math.PI - a0) * (1 - t) + Math.cos(a0) * t);
+        lid.push([x, eye.y + eye.r * (rel * 1.05) - Math.sin(Math.PI * t) * eye.r * 0.16]);
+      }
+      fills.fill(lid, dark);
+      // 동공 — 눈꺼풀 밑에서 반쯤 가린 채 내다본다 (개체별로 살짝 좌우)
+      const gaze = (spec.proportions.wobbleSeed % 5 - 2) * 0.06;
+      fills.fill(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null }), dark);
     } else if (kind === "half") {
       // 반쯤 감은 눈 — 원 전체에 선을 긋지 않는다(원+선은 "선 그어진 동그라미"로 뭉개져 읽힌다).
       // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양
