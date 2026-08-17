@@ -15,8 +15,11 @@ export { limbSketches, motionRig, BIND_ARM, tailSketch } from "./limbs.js";
 
 // 층 이름 — 스케치 쌍(잉크·채색) 하나씩. scene/rig.js가 같은 이름으로 메시를 세운다 (렌더 순서는 guidelines/rig.md)
 //   body 몸 · crownBack 옆귀 · head 머리 윤곽 · crown 뿔·머리카락(두피 위) · hairBack 뒷머리 · hairFront 앞머리 · front 개/고양이 귀 ·
-//   hat 모자 · face 볼·수염 · staticEyes 정지 눈 · faceFront 코·주둥이·안경
-export const LAYER_KEYS = ["body", "crownBack", "head", "crown", "hairBack", "hairFront", "front", "hat", "face", "staticEyes", "faceFront"];
+//   hat 모자 · face 볼·수염 · staticEyeBack/staticEyeFront 정지 눈(눈마다 한 층) · faceFront 코·주둥이·안경
+// 정지 눈은 **눈마다 따로** 굽는다 — 윙크처럼 한쪽만 아치로 바꿀 때 그 눈의 층만 끄고 다른 눈은 남겨야 한다 (두 눈이 한 메시면 반대쪽 눈이 같이 사라진다).
+// 작은 눈이 Back, 큰 눈이 Front — 겹치면 큰 눈이 앞(hollow의 흰자가 작은 눈의 테를 덮는다, 교차선 없음)
+export const STATIC_EYE_KEYS = ["staticEyeBack", "staticEyeFront"];
+export const LAYER_KEYS = ["body", "crownBack", "head", "crown", "hairBack", "hairFront", "front", "hat", "face", ...STATIC_EYE_KEYS, "faceFront"];
 
 // 스펙 하나를 그려서 지오메트리 재료를 돌려준다.
 // 몸·머리·얼굴을 분리해 굽는다 — scene이 머리만 굴리고 끄덕이고, 얼굴(이목구비)만 통째로
@@ -44,7 +47,17 @@ export function drawCreature(spec, variant = 0) {
   drawPupEars(L.front.ink, L.front.fills, spec, box);
   drawCatEars(L.front.ink, L.front.fills, spec, box);
   drawHorns(L.crown.ink, L.crown.fills, spec, box, noise);
-  drawEyes(L.staticEyes.ink, L.staticEyes.fills, spec, box, eyes);
+  // 정지 눈 — 안대에 안 가린 눈을 작은 것부터 층 하나씩(Back → Front). 살아 있는 눈(RIG_EYES)은 drawEyes가 안 그리므로 층이 빈다
+  const staticEyes = [...eyes].filter((e) => !patched(spec, e)).sort((a, b) => a.r - b.r)
+    .map((eye, i) => ({ key: STATIC_EYE_KEYS[i], side: eye.side, eye }));
+  staticEyes.forEach(({ key, eye }, i) => {
+    if (i > 0) {   // 획 위상을 앞 눈에서 이어받는다 — 두 눈을 한 스케치에 그리던 때와 같은 떨림 (지오메트리가 그대로다)
+      const prev = L[staticEyes[i - 1].key];
+      L[key].ink.phase = prev.ink.phase;
+      L[key].fills.phase = prev.fills.phase;
+    }
+    drawEyes(L[key].ink, L[key].fills, spec, box, [eye]);
+  });
   drawFace2(L.face.ink, L.face.fills, spec, box, eyes);
   // 코·안경은 얼굴 **맨 앞**(눈 리그보다 위) — 놀라 커진 흰자·감긴 눈꺼풀이 코·안경테를 덮어 사라지게 하지 않는다
   drawNose(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
@@ -61,6 +74,8 @@ export function drawCreature(spec, variant = 0) {
   return {
     ...L,
     eyes: live,
+    // 정지 눈 층 ↔ 눈 — [{ key, side, eye }] 작은 눈부터. 리그 눈이면 층은 비어 있다 (rig.js가 감은 눈·놀람 변형을 눈 자리에 세우는 데 쓴다)
+    staticEyes: RIG_EYES.includes(spec.parts.eyes) ? [] : staticEyes,
     box,
     // 머리 회전 축. 몸 꼭대기(턱 언저리)다.
     neckY: box.bodyTop,

@@ -38,7 +38,6 @@ const STATES = {
   turnDsurp: { faceTurn: [0, -1], startle: 1 }, sleepTurn: { sleep: 1, lid: 1, faceTurn: [0.5, -0.5] },
   starEyes: { startle: 1, eyeFx: { kind: "star", k: 1 } }, heartEyes: { startle: 1, eyeFx: { kind: "heart", k: 1 } }
 };
-const RIG_KINDS = ["ring", "wide", "cyclops", "oval"];
 // "보인다"의 문턱 — 머리 폭의 4%(픽셀). 점 입·점 코·주근깨 하나·작은 눈썹 하나가 이 정도다. 화면이 작으면 문턱도 내려간다
 const minPixels = (headPx) => Math.max(3, Math.round(headPx * 0.04));
 
@@ -102,16 +101,18 @@ function audit() {
     // 프레임에 섞여 굽힌 파츠(정지 눈·볼·코·안경)는 같은 그리기 함수로 임시 메시를 따로 굽고,
     // 원본 프레임을 숨긴 채 임시 메시만 껐다 켰다 한다
     const temp = [];
-    const mk = (label, fn, fillOrder, inkOrder, hideKey) => {
+    // hide: 임시 메시를 켜는 동안 숨길 원본 프레임 — 층 이름(item.frames의 키) 또는 프레임 목록. side: 눈 임시 메시의 좌우(윙크 판정용)
+    const mk = (label, fn, fillOrder, inkOrder, hide, side = 0) => {
       const ink = new Sketch(noise, spec.proportions.wobble);
       const fills = new Sketch(noise, spec.proportions.wobble);
       fn(ink, fills);
       const base = item.orderBase || 0;   // 개체 블록 오프셋 (scene/index.js stack) — 임시 메시도 같은 블록에
       const meshes = [sketchMesh(fills, 0.92, fillOrder + base, -item.faceCy), sketchMesh(ink, 0.92, inkOrder + base, -item.faceCy)];
       for (const m of meshes) { m.visible = false; item.faceGroup.add(m); }
-      temp.push({ label, meshes, hideKey });
+      temp.push({ label, meshes, hidden: typeof hide === "string" ? item.frames[hide] : hide, side });
     };
-    if (!RIG_KINDS.includes(spec.parts.eyes)) mk("eyes", (ink, fills) => drawEyes(ink, fills, spec, box, eyes), 2.3, 2.4, "staticEyes");
+    // 정지 눈은 눈마다 한 층 — 임시 메시도 눈마다 (윙크한 쪽만 대체되고 반대쪽은 남아야 한다)
+    for (const lid of item.staticLids) mk(`eyes${lid.eye.side < 0 ? 0 : 1}`, (ink, fills) => drawEyes(ink, fills, spec, box, [lid.eye]), 2.3, 2.4, lid.frames, lid.eye.side);
     if (spec.parts.face2 !== "none") mk("face2", (ink, fills) => drawFace2(ink, fills, spec, box, eyes), 2.3, 2.4, "face");
     if (spec.species === "pup" || spec.parts.nose !== "none") mk("nose", (ink, fills) => drawNose(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");
     if (spec.parts.eyewear !== "none") mk("eyewear", (ink, fills) => drawEyewear(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");
@@ -128,7 +129,8 @@ function audit() {
       const browIdx = ov.browAlt ? 1 : 0, mouthIdx = ov.mouthAlt ? 1 : 0;
       if (kinds.brow[browIdx] !== "none") parts.push(["brow", [item.faceStates.brow[browIdx]], true]);
       parts.push(["mouth", [item.faceStates.mouth[mouthIdx]], true]);
-      for (const t of temp) parts.push([t.label, t.meshes, t.label === "eyes" ? !(asleep || ov.happy || ov.winkSide || ov.eyeFx) : true, t.hideKey]);
+      // 정지 눈은 잠·^^·놀람 변형·**그쪽 윙크**에만 대체된다 — 반대쪽 눈은 윙크 중에도 보여야 한다
+      for (const t of temp) parts.push([t.label, t.meshes, t.label.startsWith("eyes") ? !(asleep || ov.happy || ov.eyeFx || (ov.winkSide && ov.winkSide === t.side)) : true, t.hidden]);
       item.eyeRigs.forEach((rig, i) => {
         const winked = ov.winkSide && rig.eye.side === ov.winkSide;
         const closed = winked || closedAll || asleep || !!ov.eyeFx;
@@ -145,11 +147,10 @@ function audit() {
         parts.push([`smile${i}`, [lid.smile], !!happyEye]);            // ^^·윙크 — 미소 아치
       });
 
-      for (const [label, meshes, expect, hideKey] of parts) {
+      for (const [label, meshes, expect, hidden] of parts) {
         if (!expect) continue;
         const key = label.replace(/\d$/, "");
         checked[key] = (checked[key] || 0) + 1;
-        const hidden = hideKey ? item.frames[hideKey] : null;
         if (hidden) for (const g of hidden) g.visible = false;
         for (const m of meshes) m.visible = true;
         renderer.render(scene.scene, cam);
@@ -158,7 +159,8 @@ function audit() {
         renderer.render(scene.scene, cam);
         const off = grab(reg);
         const d = diffCount(on, off);
-        if (hidden) { for (const g of hidden) g.visible = true; } else for (const m of meshes) m.visible = true;
+        if (hidden) hidden[0].visible = true;   // probe는 보일 0번 프레임만 켠다 — 그것만 되살린다
+        else for (const m of meshes) m.visible = true;
         if (d < MIN_PIXELS) {
           violations.push(`${spec.species} ${spec.seed.toString(36)} ${stateName} ${key} — eyes=${spec.parts.eyes} mouth=${spec.parts.mouth} nose=${spec.parts.nose} eyewear=${spec.parts.eyewear} face2=${spec.parts.face2} (${d}px)`);
         }

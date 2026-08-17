@@ -104,7 +104,7 @@ WebGL의 `linewidth`는 대부분 1로 고정되므로 `Line`으로는 굵기를
 - **색공간** — three.js는 정점 색을 선형 공간으로 본다. sRGB 헥스를 그대로 넣으면 어두운
   잉크가 중간 회색으로 밝아진다. `color.js`의 `srgbToLinear`(`hexToRgb`)가 이걸 보정한다
 - **성능** — 프레임 비용은 draw call 수다. 재질은 불투명도별로 공유하고(`scene/material.js`) 층 하나는 메시 하나(채색+잉크)다.
-  35마리에 draw call 538, 렌더 JS 0.7 ms/프레임. 재는 법과 규칙은 [guidelines/performance.md](guidelines/performance.md)
+  35마리에 draw call 550, 렌더 JS 0.8 ms/프레임. 재는 법과 규칙은 [guidelines/performance.md](guidelines/performance.md)
 - **모듈 캐시** — `serve.mjs`는 상대 경로 import에 `?v=` 를 붙인다. `Cache-Control: no-store`만으로는
   브라우저의 ES module map이 비워지지 않아 파일을 고쳐도 이전 코드가 실행되는 일이 있다
 - **시드 재현** — 같은 시드는 같은 판이다. rng 호출 순서가 곧 시드라 슬롯 순서 변경은 기존 시드를 깬다.

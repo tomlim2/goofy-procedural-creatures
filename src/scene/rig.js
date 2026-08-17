@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md, 메시·재질 수는 guidelines/performance.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath, STATIC_EYE_KEYS } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -41,10 +41,11 @@ export function buildCreature(spec, noise, birth = 0) {
   // 보일 — 지터 위상만 다른 3벌. 층마다 프레임(그룹) 3개를 같은 인덱스로 토글한다 (animate가 frames를 돈다).
   // 층 하나 = 메시 하나: 채색 스케치와 잉크 스케치를 한 지오메트리로 잇는다(채색이 밑, 잉크가 위 — draw call 절반). 채색은 전부 **불투명** —
   // 이웃과 겹칠 때 앞 개체가 뒤 개체를 윤곽·색·형태까지 완전히 가려야 한다.
-  // 예외는 얼굴(face)·정지 눈(staticEyes): 채색(2.3)과 잉크(2.4)를 따로 둔다 — 정지 눈의 채움(동공·흰자)이 얼굴 잉크(수염) **밑**에,
-  // 정지 눈의 잉크가 그 위에 와야 해서 두 층의 채색·잉크가 서로 엇갈린다.
+  // 예외는 얼굴(face)·정지 눈(staticEyeBack/Front — 눈마다 한 층): 채색(2.3)과 잉크(2.4)를 따로 둔다 — 정지 눈의 채움(동공·흰자)이
+  // 얼굴 잉크(수염) **밑**에, 정지 눈의 잉크가 그 위에 와야 해서 두 층의 채색·잉크가 서로 엇갈린다.
+  // 정지 눈이 눈마다 한 층인 건 윙크 때문이다 — 한쪽 눈만 아치로 바꾸려면 그 눈의 층만 꺼야 한다 (animate).
   // 렌더 순서(guidelines/rig.md가 단일 소스): 몸 1.5 → 뒷머리 1.55 → 옆귀 1.7 → 머리 2(채색이 몸 잉크를 덮는다) → 뿔·머리카락 2.06 →
-  // 개/고양이 귀 2.12 → 모자 2.16 → 얼굴 2.3/2.4 → 얼굴 맨 앞(코·안경) 6.5 → 앞머리 6.55
+  // 개/고양이 귀 2.12 → 모자 2.16 → 얼굴·정지 눈 2.3/2.4 → 얼굴 맨 앞(코·안경) 6.5 → 앞머리 6.55
   const firstDrawn = drawCreature(spec, 0);
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
@@ -57,7 +58,8 @@ export function buildCreature(spec, noise, birth = 0) {
     { key: "front", group: earGroup, dy: -neckY, order: 2.12 },      // 머리 앞: 개·고양이 귀
     { key: "hat", group: crownGroup, dy: -neckY, order: 2.16 },      // 모자 — 귀 위, 얼굴 아래
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },        // 채색·잉크 따로 (위 설명)
-    { key: "staticEyes", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },  // 정지 눈 — 놀람 변형 때 끈다
+    // 정지 눈 — 눈마다 한 층(작은 눈 Back → 큰 눈 Front, 겹치면 큰 눈이 앞). 잠·^^·윙크(그쪽)·놀람 변형 때 그 눈의 층을 끈다
+    ...STATIC_EYE_KEYS.map((key) => ({ key, group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 })),
     { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // 코·안경 — 눈 리그(3~)보다 위. 놀란 흰자·눈꺼풀이 못 덮는다
     { key: "hairFront", group: bangsGroup, dy: -neckY, order: 6.55 }   // 앞머리 — 코·안경 위, 눈썹·입(6.6) 아래
   ];
@@ -204,11 +206,10 @@ export function buildCreature(spec, noise, birth = 0) {
   // 안대에 가리지 않은 눈 전부 (정지 눈 포함) — 정지 눈의 감은 눈·놀람 변형 글리프를 눈 자리에 굽는다
   const allEyes = eyeGeometry(spec, layout(spec)).filter((eye) => !patched(spec, eye));
 
-  // 정지 눈(dot·sleepy·cross·spiral·slit·half…)의 감은 눈 — 잠(감은 눈 선)·^^·윙크(미소 아치). 덮개는 없다: 그때는 정지 눈 프레임을
-  // **끄고**(animate) 아치가 대신 선다. 살아 있는 눈의 open/shut/smile과 짝이다
+  // 정지 눈(dot·sleepy·cross·spiral·slit·half…)의 감은 눈 — 잠(감은 눈 선)·^^·윙크(미소 아치). 덮개는 없다: 그때는 **그 눈의** 정지 눈
+  // 층(frames)을 끄고(animate) 아치가 대신 선다 — 눈마다 층이 따로라 윙크한 쪽만 바뀌고 반대쪽 눈은 남는다. 살아 있는 눈의 open/shut/smile과 짝이다
   const staticLids = [];
-  for (const eye of allEyes) {
-    if (firstDrawn.eyes.some((e) => e.side === eye.side)) continue;   // 살아 있는 눈은 리그가 맡는다
+  for (const { key, eye } of firstDrawn.staticEyes) {
     const lids = lidSketches(eye, faceInk, noise, "static");
     const shut = sketchMesh(lids.shut, 1, 3.6);
     const smile = sketchMesh(lids.smile, 1, 3.6);
@@ -217,7 +218,7 @@ export function buildCreature(spec, noise, birth = 0) {
       m.visible = false;
       faceGroup.add(m);
     }
-    staticLids.push({ shut, smile, eye });
+    staticLids.push({ shut, smile, eye, frames: frames[key] });
   }
 
   // 놀람의 눈 변형 — ☆_☆ / ♥_♥. 덮지 않는다: 그동안 눈(정지 눈 프레임·눈 리그)을 **끄고** 그 자리에 글리프만 그린다 (6.32 — 코·안경 아래).

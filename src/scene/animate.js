@@ -125,16 +125,15 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.faceStates.mouth[0].visible = !state.mouthAlt;
   item.faceStates.mouth[1].visible = state.mouthAlt;
 
-  // 정지 눈 — 반쯤 넘게 잠들면 감은 눈 선, ^^·윙크(그쪽)면 미소 아치가 **대신** 선다(덮지 않고 정지 눈 프레임을 끈다).
+  // 정지 눈 — 눈마다 따로: 반쯤 넘게 잠들면 감은 눈 선, ^^·윙크(그쪽)면 미소 아치가 **대신** 선다(덮지 않고 **그 눈의** 정지 눈 층을 끈다).
+  // 윙크는 한쪽만 바뀐다 — 반대쪽 눈의 층은 그대로 켜 둔다 (두 눈을 한 층으로 끄면 반대쪽 눈이 사라진다)
   const asleep = (state.sleep || 0) > 0.5;
-  let staticReplaced = false;
   for (const lid of item.staticLids) {
     const happyEye = state.happy || (state.winkSide !== 0 && lid.eye.side === state.winkSide);
     lid.smile.visible = happyEye;
     lid.shut.visible = asleep && !happyEye;
-    if (happyEye || asleep) staticReplaced = true;
+    if (happyEye || asleep) for (const g of lid.frames) g.visible = false;
   }
-  if (staticReplaced) for (const g of item.frames.staticEyes) g.visible = false;
 
   // 눈 — 놀람·시선·깜빡임·^^·윙크. 놀람은 눈을 키우지 않고 **동공만** 줄인다 (1 → 0.5배).
   // 감는 건 덮는 게 아니라 **바꿔 그리기**: 뜬 눈(open) ↔ 감은 선(눈꺼풀 > 0.5) — 중간(반감김)은 없다. ^^·윙크는 미소 아치가 대신.
@@ -154,7 +153,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   // 놀람의 눈 변형 — ☆_☆ / ♥_♥. 그동안 눈(정지 눈 프레임·눈 리그)은 **끄고** 글리프로 대체한다 (덮지 않는다). 봉투(k)로 팝인/아웃 (0.7 → 1)
   const fx = state.eyeFx;
   const fxOn = !!fx && fx.k > 0.02;
-  if (fxOn) for (const g of item.frames.staticEyes) g.visible = false;
+  if (fxOn) for (const lid of item.staticLids) for (const g of lid.frames) g.visible = false;
   for (const rig of item.eyeRigs) rig.rig.visible = !fxOn;
   for (const e of item.eyeFx) {
     e.star.visible = fxOn && fx.kind === "star";

@@ -39,16 +39,21 @@ try {
   const oldSlots = (await import(pathToFileURL(join(oldRoot, "src/character/vocabulary/slots.js")).href)).SLOTS;
 
   const hash = (s) => createHash("sha1").update(JSON.stringify([Array.from(s.positions, (v) => Math.round(v * 1e6)), Array.from(s.colors, (v) => Math.round(v * 1e6))])).digest("hex").slice(0, 10);
-  const KEYS = ["body", "crownBack", "head", "crown", "hairBack", "hairFront", "front", "hat", "face", "staticEyes", "faceFront"];
+  // 층 = drawCreature 결과 중 { ink, fills } 쌍. 이름은 두 트리에서 다를 수 있다(층을 나누거나 합친 커밋) — 양쪽에 다 있는 층만 비교하고 나머지는 한 번 적는다
+  const layerKeys = (d) => Object.keys(d).filter((k) => d[k] && d[k].ink && d[k].fills);
+  const onlyOne = new Set();
   let n = 0;
   const diffs = [];
   const note = (label) => { if (diffs.length < 30) diffs.push(label); };
   const check = (spec, label) => {
     for (const v of [0, 1]) {
       const a = oldM.drawCreature(spec, v), b = newM.drawCreature(spec, v);
-      for (const k of KEYS) {
+      const ka = layerKeys(a), kb = layerKeys(b);
+      for (const k of ka) if (!kb.includes(k)) onlyOne.add(`${ref}에만: ${k}`);
+      for (const k of kb) if (!ka.includes(k)) onlyOne.add(`작업 트리에만: ${k}`);
+      for (const k of ka) {
+        if (!kb.includes(k)) continue;
         n += 1;
-        if (!a[k] || !b[k]) { note(`${label} ${k} (층 없음)`); continue; }
         if (hash(a[k].ink) !== hash(b[k].ink) || hash(a[k].fills) !== hash(b[k].fills)) note(`${label} ${k} variant ${v}`);
       }
     }
@@ -76,7 +81,8 @@ try {
   }
   console.log(`${ref} ↔ 작업 트리: 스케치 ${n}개 비교, 스펙 차이 ${specDiffs}건, 그리기 차이 ${diffs.length}건${diffs.length >= 30 ? " 이상" : ""}`);
   for (const d of diffs) console.log("  " + d);
-  process.exitCode = diffs.length || specDiffs ? 1 : 0;
+  if (onlyOne.size) console.log(`층 이름이 한쪽에만 있음(비교 안 함): ${[...onlyOne].join(" · ")}`);
+  process.exitCode = diffs.length || specDiffs || onlyOne.size ? 1 : 0;
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
