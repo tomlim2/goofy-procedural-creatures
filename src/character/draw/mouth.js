@@ -1,4 +1,4 @@
-// 입 — 19종. 문서: guidelines/character/parts.md § mouth
+// 입 — 20종. 문서: guidelines/character/parts.md § mouth
 // 종류마다 그리기 함수 하나 — MOUTH 표. 새 입은 여기 함수를 하나 붙이고 slots.js SLOTS.mouth에 이름을 넣는다.
 // 함수는 m(문맥)을 받는다: { ink, fills, spec, box, x·y(입 중심), w(반폭), openH(벌린 높이), ink0(입 잉크 — 얼굴 잉크), edge(흰 이빨 위의 테·줄 — 팔레트 잉크, 늘 어둡다) }
 // 자리·폭·잉크는 mouthPlacement가 정한다 — 종족(개는 주둥이 위)·mouthPos·mouthSize·개체 지터를 여기서 한 번에 푼다.
@@ -116,6 +116,11 @@ export const MOUTH = {
   omega: (m) => {
     m.ink.stroke(arcPath(m.x - m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, width: 0.01 });
     m.ink.stroke(arcPath(m.x + m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, width: 0.01 });
+  },
+  // 심술 입 — ω를 **뒤집은** 꼴(⌒⌒): 두 호가 위로 볼록해 가운데가 솟고 양끝이 처진다. 늘 뾰로통한 인상 (동물의 숲 시크한 얼굴)
+  smug: (m) => {
+    const hw = Math.max(0.014, m.w * 0.4);
+    for (const s of [-1, 1]) m.ink.stroke(arcPath(m.x + s * hw * 0.82, m.y - 0.006, hw, 0.032, 0, Math.PI), { color: m.ink0, width: 0.012 });
   },
   // 3 — 오므린 작은 입(카오모지 3). ω를 반으로 줄이고 굵게 — 고양이·귀여운 사람
   three: (m) => {

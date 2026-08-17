@@ -109,8 +109,8 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
       nose: [["dot", 5], ["none", 2]],
       eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["cross", 2], ["wide", 2], ["dot", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 2], ["sharp", 2]],
-      // 입 — ω 압도적, 오므린 3, 선·점, 야옹 o(meow), 혀 빼꼼(blep). 물결·웃음은 없다 (레퍼런스 4줄)
-      mouth: [["omega", 4], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
+      // 입 — ω 압도적, 뒤집은 ω(smug), 오므린 3, 선·점, 야옹 o(meow), 혀 빼꼼(blep). 물결·웃음은 없다 (레퍼런스 4줄)
+      mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
       marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1]],
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
@@ -140,7 +140,7 @@ export const SPECIES = [
       eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2]],
       nose: [["none", 4], ["dot", 2]],
       // 입 — 넓다(종족 배율 1.3 + wide). 이빨 격자·해칭 뭉치·지그재그·큰 송곳니·이빨 띠 두 줄로 벌린 shout·open (레퍼런스 5줄)
-      mouth: [["grimace", 3], ["scribble", 2], ["zigzag", 2], ["fangs", 3], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["line", 0.5]],
+      mouth: [["grimace", 3], ["scribble", 2], ["zigzag", 2], ["fangs", 3], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["smug", 1], ["line", 0.5]],
       mouthSize: [["normal", 2], ["wide", 2], ["small", 0.5]],
       marks: [["stripes", 3], ["none", 2], ["hatch", 1]],
       face2: [["none", 6], ["tears", 1]],
