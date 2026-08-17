@@ -370,14 +370,25 @@ const ALT_BROW = { none: "none", flat: "worry", angry: "flat", worry: "flat" };
 
 const ALT_MOUTH = { dot: "line", line: "wave", teeth: "open", open: "line", wave: "line", smile: "open" };
 
-// 쉼/대체 두 벌. 대체 값에도 종족 forbid를 적용한다 — 눈썹이 없는 종족(개·고양이)이 기분 전환 때 눈썹을 달면 안 된다
+// 쉼 / 대체 / **화남** 세 벌. 대체·화남 값에도 종족 forbid를 적용한다 — 눈썹이 없는 종족(개·고양이)이 기분 전환 때 눈썹을 달면 안 된다.
+// 화남(motion state.angry): 눈썹은 angry, 입은 이를 드러낸 teeth(쉼이 teeth면 zigzag). 눈은 scene이 사나운 눈 글리프로 바꿔 그린다 (rig.js angryEyeSketch)
 export function facePartKinds(spec) {
   const forbid = (SPECIES.find((s) => s.name === spec.species) || {}).forbid || {};
   const allow = (slot, value) => (forbid[slot] && forbid[slot][value] !== undefined ? forbid[slot][value] : value);
   return {
-    brow: [spec.parts.brow, allow("brow", ALT_BROW[spec.parts.brow] || "flat")],
-    mouth: [spec.parts.mouth, allow("mouth", ALT_MOUTH[spec.parts.mouth] || "line")]
+    brow: [spec.parts.brow, allow("brow", ALT_BROW[spec.parts.brow] || "flat"), allow("brow", spec.parts.brow === "none" ? "none" : "angry")],
+    mouth: [spec.parts.mouth, allow("mouth", ALT_MOUTH[spec.parts.mouth] || "line"), allow("mouth", spec.parts.mouth === "teeth" ? "zigzag" : "teeth")]
   };
+}
+
+// 사나운 눈(화남) — 눈을 **바꿔 그린다**: 안쪽(코 쪽)이 내려간 굵은 빗금 눈꺼풀 + 그 밑에서 노려보는 점 (＼ ／ 위에 점). 외눈은 수평 눈꺼풀.
+// 살아 있는 눈(리그)·정지 눈 둘 다 같은 모양 (scene/rig.js). 좌표는 눈 중심 원점
+export function angryEyeSketch(sketch, eye, ink) {
+  const r = eye.r;
+  const inward = -eye.side;   // 코 쪽 (외눈 0)
+  const lid = inward === 0 ? [[-r * 0.95, r * 0.45], [r * 0.95, r * 0.45]] : [[-inward * r * 0.95, r * 0.55], [inward * r * 0.95, r * 0.05]];
+  sketch.stroke(lid, { color: ink, width: 0.015, jitter: 0.004 });
+  sketch.fill(blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink);
 }
 
 // 눈썹 또는 입 한 상태를 독립 Sketch로 굽는다. scene이 상태별 메시로 세운다.

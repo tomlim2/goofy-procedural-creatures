@@ -5,6 +5,7 @@
 // 형태: { next: 다음 진입 시각, until: 유지 종료 시각(아니면 -1) }
 
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./actions.js";
+import { ramp } from "./ease.js";
 
 const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infinity);
 
@@ -19,6 +20,8 @@ export function initWink(rng, M) { return { next: schedule(rng, M.wink), until: 
 // 둘러보기 — 한 방향(좌·우·위·아래·대각)으로 얼굴을 돌리고 몇 초 머문다. 시선도 그쪽으로 간다.
 export function initLook(rng, M) { return { next: schedule(rng, M.look), until: -1, dir: [0, 0] }; }
 export function initHappy(rng, M) { return { next: schedule(rng, M.happyHold), until: -1 }; }
+// 화남 — 사나운 눈·이 드러낸 입(·눈썹 있으면 화난 눈썹), 고양이는 꼬리 털이 곤두선다. 표의 angry [간격] · angryHold [유지] (3초 이상)
+export function initAngry(rng, M) { return { next: schedule(rng, M.angry), start: -1, until: -1 }; }
 
 // ^^ 유지 — 눈을 다 감고 happy
 export function stepHappy(s, t, rng, M) {
@@ -28,6 +31,19 @@ export function stepHappy(s, t, rng, M) {
     else return true;
   }
   return false;
+}
+// 화남 0~1 — 표정은 사람 눈이 깜짝 놀랄 때의 법칙대로 0.1초에 확 오르고 유지 뒤 0.1초에 풀린다 (양끝 속도 0). rng는 시작할 때만
+export function stepAngry(s, t, rng, M) {
+  if (t >= s.next && s.until < 0) {
+    s.start = t;
+    s.until = t + rng.float(M.angryHold[0], M.angryHold[1]);
+    s.next = t + rng.float(M.angry[0], M.angry[1]);
+  }
+  if (s.until >= 0) {
+    if (t >= s.until + 0.1) { s.until = -1; return 0; }
+    return ramp(Math.min(1, (t - s.start) / 0.1)) * (t < s.until ? 1 : 1 - ramp((t - s.until) / 0.1));
+  }
+  return 0;
 }
 export function stepWink(s, t, rng, M) {
   if (t >= s.next && s.until < 0) {

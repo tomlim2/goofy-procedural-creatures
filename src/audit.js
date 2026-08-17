@@ -5,7 +5,7 @@
 //
 // 판단 기준(기대값):
 //   눈썹(none 아님)·입·코(주둥이)·안경·볼·수염(고양이) — 모든 상태에서 보인다
-//   정지 눈(dot·sleepy·cross·spiral·slit·half) — 잠·^^·윙크(그쪽)에는 덮개(감은 눈 선 / 미소 아치)가 대신 보인다
+//   정지 눈(dot·sleepy·cross·spiral·slit·half) — 잠·^^·윙크(그쪽)·화남에는 대체 글리프(감은 눈 선 / 미소 아치 / 사나운 눈)가 대신 보인다
 //   눈 리그의 동공(ring·wide·cyclops) — 깜빡임·^^·윙크(그쪽)·잠에는 감기니 그때는 빼고 본다. 대신 그때는
 //   감은 눈 선(shut)이 보여야 한다 — 눈이 감겼다고 얼굴에서 눈이 사라지면 안 된다
 //   ^^ 아치 — 행복·윙크(그쪽)일 때 보인다 · 잠 눈꺼풀 — 잠들었을 때 보인다
@@ -36,7 +36,8 @@ const STATES = {
   turnR: { faceTurn: [1, 0] }, turnL: { faceTurn: [-1, 0] }, turnU: { faceTurn: [0, 1] }, turnD: { faceTurn: [0, -1] },
   turnRU: { faceTurn: [1, 1] }, turnLD: { faceTurn: [-1, -1] }, turnRsurp: { faceTurn: [1, 0], startle: 1 },
   turnDsurp: { faceTurn: [0, -1], startle: 1 }, sleepTurn: { sleep: 1, lid: 1, faceTurn: [0.5, -0.5] },
-  starEyes: { startle: 1, eyeFx: { kind: "star", k: 1 } }, heartEyes: { startle: 1, eyeFx: { kind: "heart", k: 1 } }
+  starEyes: { startle: 1, eyeFx: { kind: "star", k: 1 } }, heartEyes: { startle: 1, eyeFx: { kind: "heart", k: 1 } },
+  angry: { angry: 1 }, angryTurn: { angry: 1, faceTurn: [-1, 0.5] }
 };
 // "보인다"의 문턱 — 머리 폭의 4%(픽셀). 점 입·점 코·주근깨 하나·작은 눈썹 하나가 이 정도다. 화면이 작으면 문턱도 내려간다
 const minPixels = (headPx) => Math.max(3, Math.round(headPx * 0.04));
@@ -126,25 +127,29 @@ function audit() {
       scene.probe(item, ov);
       const asleep = !!ov.sleep, closedAll = !!ov.lid || !!ov.happy;
       const parts = [];   // [라벨, 메시들, 보여야 하나, 숨길 프레임 키]
-      const browIdx = ov.browAlt ? 1 : 0, mouthIdx = ov.mouthAlt ? 1 : 0;
+      const angry = !!ov.angry;
+      const browIdx = angry ? 2 : ov.browAlt ? 1 : 0, mouthIdx = angry ? 2 : ov.mouthAlt ? 1 : 0;
       if (kinds.brow[browIdx] !== "none") parts.push(["brow", [item.faceStates.brow[browIdx]], true]);
       parts.push(["mouth", [item.faceStates.mouth[mouthIdx]], true]);
-      // 정지 눈은 잠·^^·놀람 변형·**그쪽 윙크**에만 대체된다 — 반대쪽 눈은 윙크 중에도 보여야 한다
-      for (const t of temp) parts.push([t.label, t.meshes, t.label.startsWith("eyes") ? !(asleep || ov.happy || ov.eyeFx || (ov.winkSide && ov.winkSide === t.side)) : true, t.hidden]);
+      // 정지 눈은 잠·^^·화남·놀람 변형·**그쪽 윙크**에만 대체된다 — 반대쪽 눈은 윙크 중에도 보여야 한다
+      for (const t of temp) parts.push([t.label, t.meshes, t.label.startsWith("eyes") ? !(asleep || ov.happy || angry || ov.eyeFx || (ov.winkSide && ov.winkSide === t.side)) : true, t.hidden]);
       item.eyeRigs.forEach((rig, i) => {
         const winked = ov.winkSide && rig.eye.side === ov.winkSide;
-        const closed = winked || closedAll || asleep || !!ov.eyeFx;
+        const closed = winked || closedAll || asleep || !!ov.eyeFx || angry;
         parts.push([`pupil${i}`, [rig.pupil], !closed]);
-        parts.push([`smile${i}`, [rig.smile], !!(winked || ov.happy)]);
+        parts.push([`smile${i}`, [rig.smile], !angry && !!(winked || ov.happy)]);
         // 감은 눈(깜빡임·잠)은 감은 눈 선이 있어야 한다 — "동공이 안 보여도 된다"가 "눈이 없어도 된다"는 뜻이 아니다
-        parts.push([`shut${i}`, [rig.shut], !winked && !ov.happy && (asleep || (ov.lid || 0) > 0.5)]);
+        parts.push([`shut${i}`, [rig.shut], !angry && !winked && !ov.happy && (asleep || (ov.lid || 0) > 0.5)]);
+        parts.push([`angry${i}`, [rig.angry], angry && !asleep]);   // 화남 — 사나운 눈이 대신 보인다
       });
       // 놀람 변형 — ☆/♥ 덮개는 그때 보여야 하고, 그 밑의 눈은 안 보여도 된다
       if (ov.eyeFx) item.eyeFx.forEach((e, i) => parts.push([`eyeFx${i}`, [ov.eyeFx.kind === "star" ? e.star : e.heart], true]));
       item.staticLids.forEach((lid, i) => {
-        const happyEye = !!ov.happy || (ov.winkSide && lid.eye.side === ov.winkSide);
+        const angryEye = angry && !asleep;
+        const happyEye = !angryEye && (!!ov.happy || (ov.winkSide && lid.eye.side === ov.winkSide));
         parts.push([`sleepLid${i}`, [lid.shut], asleep && !happyEye]);   // 잠 — 감은 눈 선 (덮개는 두고 선만 껐다 켠다)
         parts.push([`smile${i}`, [lid.smile], !!happyEye]);            // ^^·윙크 — 미소 아치
+        parts.push([`angry${i}`, [lid.angry], angryEye]);              // 화남 — 사나운 눈
       });
 
       for (const [label, meshes, expect, hidden] of parts) {

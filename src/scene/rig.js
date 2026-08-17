@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md, 메시·재질 수는 guidelines/performance.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath, STATIC_EYE_KEYS } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath, angryEyeSketch, STATIC_EYE_KEYS } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -35,7 +35,10 @@ function lidSketches(eye, ink, noise, style) {
   shut.stroke(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink, width: s.shutWidth });
   const smile = new Sketch(noise, 0.5);
   smile.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink, width: 0.013 });
-  return { shut, smile };
+  // 화남 — 사나운 눈(안쪽이 내려간 빗금 눈꺼풀 + 노려보는 점). 화내는 동안 뜬 눈을 끄고 이게 대신 선다 (character/draw/face.js angryEyeSketch)
+  const angry = new Sketch(noise, 0.5);
+  angryEyeSketch(angry, eye, ink);
+  return { shut, smile, angry };
 }
 
 export function buildCreature(spec, noise, birth = 0) {
@@ -180,7 +183,7 @@ export function buildCreature(spec, noise, birth = 0) {
     };
   });
 
-  // 눈썹·입 상태 — faceGroup 안에서 얼굴 돌림을 따라간다
+  // 눈썹·입 상태(쉼·대체·화남 세 벌) — faceGroup 안에서 얼굴 돌림을 따라간다
   const kinds = facePartKinds(spec);
   const faceStates = {};
   for (const part of ["brow", "mouth"]) {
@@ -230,10 +233,13 @@ export function buildCreature(spec, noise, birth = 0) {
     const shut = sketchMesh(lids.shut, 1, o + 0.35);
     shut.visible = false;
     rig.add(shut);
+    const angry = sketchMesh(lids.angry, 1, o + 0.35);
+    angry.visible = false;
+    rig.add(angry);
 
     faceGroup.add(rig);
     // gazeScale: 시선에 동공이 움직이는 폭(눈 반지름 배). 구슬눈은 동공이 곧 눈이라 조금만
-    eyeRigs.push({ rig, open, pupil, smile, shut, eye, gazeScale: 0.34 });
+    eyeRigs.push({ rig, open, pupil, smile, shut, angry, eye, gazeScale: 0.34 });
   }
 
   // 안대에 가리지 않은 눈 전부 (정지 눈 포함) — 정지 눈의 감은 눈·놀람 변형 글리프를 눈 자리에 굽는다
@@ -246,12 +252,13 @@ export function buildCreature(spec, noise, birth = 0) {
     const lids = lidSketches(eye, faceInk, noise, "static");
     const shut = sketchMesh(lids.shut, 1, 3.6);
     const smile = sketchMesh(lids.smile, 1, 3.6);
-    for (const m of [shut, smile]) {
+    const angry = sketchMesh(lids.angry, 1, 3.6);
+    for (const m of [shut, smile, angry]) {
       m.position.set(eye.x, eye.y - faceCy, 0);
       m.visible = false;
       faceGroup.add(m);
     }
-    staticLids.push({ shut, smile, eye, frames: frames[key] });
+    staticLids.push({ shut, smile, angry, eye, frames: frames[key] });
   }
 
   // 놀람의 눈 변형 — ☆_☆ / ♥_♥. 덮지 않는다: 그동안 눈(정지 눈 프레임·눈 리그)을 **끄고** 그 자리에 글리프만 그린다 (6.32 — 코·안경 아래).

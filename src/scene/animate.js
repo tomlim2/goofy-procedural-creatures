@@ -129,20 +129,23 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     if (limb.elbow) limb.elbow.rotation.z = limb.elbowAngle + oscElbow;
   }
 
-  // 눈썹·입 상태
-  item.faceStates.brow[0].visible = !state.browAlt;
-  item.faceStates.brow[1].visible = state.browAlt;
-  item.faceStates.mouth[0].visible = !state.mouthAlt;
-  item.faceStates.mouth[1].visible = state.mouthAlt;
+  // 눈썹·입 상태 — 화남(2번)이 우선, 아니면 대체(1번)/쉼(0번)
+  const angryOn = (state.angry || 0) > 0.5;
+  const browIdx = angryOn ? 2 : state.browAlt ? 1 : 0;
+  const mouthIdx = angryOn ? 2 : state.mouthAlt ? 1 : 0;
+  item.faceStates.brow.forEach((m, i) => { m.visible = i === browIdx; });
+  item.faceStates.mouth.forEach((m, i) => { m.visible = i === mouthIdx; });
 
-  // 정지 눈 — 눈마다 따로: 반쯤 넘게 잠들면 감은 눈 선, ^^·윙크(그쪽)면 미소 아치가 **대신** 선다(덮지 않고 **그 눈의** 정지 눈 층을 끈다).
-  // 윙크는 한쪽만 바뀐다 — 반대쪽 눈의 층은 그대로 켜 둔다 (두 눈을 한 층으로 끄면 반대쪽 눈이 사라진다)
+  // 정지 눈 — 눈마다 따로: 반쯤 넘게 잠들면 감은 눈 선, ^^·윙크(그쪽)면 미소 아치, 화나면 사나운 눈이 **대신** 선다(덮지 않고 **그 눈의** 정지 눈 층을 끈다).
+  // 윙크는 한쪽만 바뀐다 — 반대쪽 눈의 층은 그대로 켜 둔다 (두 눈을 한 층으로 끄면 반대쪽 눈이 사라진다). 우선순위: 잠 > 화남 > ^^/윙크
   const asleep = (state.sleep || 0) > 0.5;
   for (const lid of item.staticLids) {
-    const happyEye = state.happy || (state.winkSide !== 0 && lid.eye.side === state.winkSide);
+    const angryEye = angryOn && !asleep;
+    const happyEye = !angryEye && (state.happy || (state.winkSide !== 0 && lid.eye.side === state.winkSide));
+    lid.angry.visible = angryEye;
     lid.smile.visible = happyEye;
     lid.shut.visible = asleep && !happyEye;
-    if (happyEye || asleep) for (const g of lid.frames) g.visible = false;
+    if (happyEye || asleep || angryEye) for (const g of lid.frames) g.visible = false;
   }
 
   // 눈 — 놀람·시선·깜빡임·^^·윙크. 놀람은 눈을 키우지 않고 **동공만** 줄인다 (1 → 0.5배).
@@ -153,11 +156,13 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     rig.pupil.position.x = state.gaze[0] * rig.eye.r * rig.gazeScale;
     rig.pupil.position.y = state.gaze[1] * rig.eye.r * rig.gazeScale * 0.82;
     const winked = state.winkSide !== 0 && rig.eye.side === state.winkSide;
-    const smiling = winked || state.happy;
+    const angryEye = angryOn && !asleep;   // 화남 — 사나운 눈으로 바꿔 그린다 (잠보다 아래, ^^/윙크보다 위)
+    const smiling = !angryEye && (winked || state.happy);
     const lid = state.lid || 0;
+    rig.angry.visible = angryEye;
     rig.smile.visible = smiling;
-    rig.shut.visible = !smiling && lid > 0.5;
-    rig.open.visible = !smiling && lid <= 0.5;
+    rig.shut.visible = !angryEye && !smiling && lid > 0.5;
+    rig.open.visible = !angryEye && !smiling && lid <= 0.5;
   }
 
   // 놀람의 눈 변형 — ☆_☆ / ♥_♥. 그동안 눈(정지 눈 프레임·눈 리그)은 **끄고** 글리프로 대체한다 (덮지 않는다). 봉투(k)로 팝인/아웃 (0.7 → 1)

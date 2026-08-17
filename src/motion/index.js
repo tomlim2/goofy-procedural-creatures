@@ -24,7 +24,7 @@ export { EMOJI } from "./emoji.js";
 // 네발은 다리 수직·꼬리 그린 그대로. scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다.
 // (모션의 기본 상태는 이게 아니라 idle이다 — 두발 A포즈, 네발 선 자세(legStance·tailIdle). 바인드는 모션이 없을 때다.)
 export const BIND_STATE = Object.freeze({
-  breathe: 0, lid: 0, gaze: [0, 0], startle: 0, eyeFx: null, regen: false, emoji: null,
+  breathe: 0, lid: 0, gaze: [0, 0], startle: 0, eyeFx: null, angry: 0, regen: false, emoji: null,
   browAlt: false, mouthAlt: false,
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
@@ -71,6 +71,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const quadAction = S.initQuadAction(rng, M);   // 27
   const mode = S.initMode(rng, M);               // 28 (기본 상태 idle/sleep — 상태가 하나뿐인 종족은 rng 안 씀)
   const zzzPhase = rng.float(0, 6);              // 29 (잠 중 z 이모지 위상 — 매 프레임 rng 없이 6초마다)
+  const angry = S.initAngry(rng, M);             // 30 (화남 — 표에 angry가 없는 종족은 rng 안 씀)
   // 꼬리 끝 마디(고양이 위주) — 팔로스루 상태·채찍질·세움. 예약이 아니라 이벤트에 딸려 시작하므로 rng는 시작할 때만
   const TT = M.tailTip || null;
   const tailFollow = { x: 0, v: 0 };
@@ -218,8 +219,11 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       }
       lid = Math.max(lid, sleepK);
       const startle = startle0 * awake;   // 놀람 0~1 — 동공 수축량
-      // 놀람의 눈 변형 — ☆_☆ / ♥_♥ 로 눈이 바뀐다 (scene이 눈 위에 덮개+글리프를 얹는다). k는 놀람 봉투 그대로
-      const eyeFx = startle > 0 && surprise.variant && surprise.variant !== "plain" ? { kind: surprise.variant, k: startle } : null;
+      // 화남 0~1 — 사나운 눈·이 드러낸 입(·화난 눈썹)으로 **바꿔 그린다**(scene). 웃음보다 우선. 자면 안 낸다. 예약은 강제 중에도 돌린다
+      const angryK = S.stepAngry(angry, t, rng, M) * awake;
+      if (angryK > 0.5) isHappy = false;
+      // 놀람의 눈 변형 — ☆_☆ / ♥_♥ 로 눈이 바뀐다 (scene이 눈을 끄고 글리프로 대체). k는 놀람 봉투 그대로. 화내는 중엔 안 바뀐다 (사나운 눈이 우선)
+      const eyeFx = startle > 0 && surprise.variant && surprise.variant !== "plain" && angryK <= 0.5 ? { kind: surprise.variant, k: startle } : null;
       if (sleepK > 0.5) isHappy = false;
 
       // 몸통
@@ -294,9 +298,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (TT && quad && startleBefore < 0 && surprise.start >= 0 && !asleep) {
         if (surprise.variant === "plain" && TT.lash > 0 && rng.chance(TT.lash)) lash.start = t;
       }
-      // 곤두섬 — 사람 눈이 깜짝 놀랄 때의 타이밍 법칙 그대로, 동공과 **같은 시계**: 0.1초 만에 곤두서고 놀란 3.8초 내내 서 있다가 0.1초에 가라앉는다
-      // (startle = events.stepSurprise 봉투 × 깨어 있음). 굵기만 부푼다 (scene이 마디마다 척추에 수직으로 스케일)
-      const tailPuff = TT && quad && TT.puff ? startle * TT.puff : 0;
+      // 곤두섬 — 털은 무섭거나 **화날 때** 선다: 화남 봉투(angryK — 0.1초에 확, 유지, 0.1초에 풀림, 사람 눈이 깜짝 놀랄 때의 법칙) 그대로.
+      // 굵기만 부푼다 (scene이 마디마다 척추에 수직으로 스케일). 놀람에는 안 선다
+      const tailPuff = TT && quad && TT.puff ? angryK * TT.puff : 0;
       if (lash.start >= 0) {
         // 채찍질 — 뿌리+끝 크게 3번, 1초. 끝은 같은 방향으로 조금 덜
         const k = (t - lash.start) / 1.0;
@@ -376,7 +380,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const em = stepEmoji(emoji, t);
 
       return {
-        breathe: br, lid, gaze, startle, eyeFx, regen: regenNow, emoji: em,
+        breathe: br, lid, gaze, startle, eyeFx, angry: angryK, regen: regenNow, emoji: em,
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
         sway: sw.sway + (walkK > 0 && W ? Math.sin(ph) * W.sway * walkK : 0), rock: sw.rock,
         headAngle: (tiltAngle + rollAngle) * awake + sleepHead,

@@ -28,7 +28,7 @@ export const MOTION = {
     stretch: null,
     tilt: [7, 18], tiltAmp: 0.1,
     jelly: null, shiver: [26, 60],
-    wink: null, happyHold: null,
+    wink: null, happyHold: null, angry: null,
     tailSwish: null, tailFlick: null,
     surprise: [8, 22], yaw: 0.5,
     // 둘러보기 — 얼굴을 한 방향으로 돌리고 머문다. [간격], [유지], 진폭 [x, y]
@@ -56,7 +56,7 @@ export const MOTION = {
     stretch: null,
     tilt: [9, 20], tiltAmp: 0.08,
     jelly: null, shiver: [40, 80],
-    wink: null, happyHold: [6, 16],
+    wink: null, happyHold: [6, 16], angry: null,
     tailSwish: null, tailFlick: [3, 9],
     // 꼬리 끝 마디 — 개는 팔로스루만(흔들 때 끝이 늦게 따라온다). 나머지 고양이 전용은 null
     tailTip: { follow: 0.05, twitch: null, lash: 0, raise: null, puff: 0 },
@@ -89,9 +89,11 @@ export const MOTION = {
     tilt: [5, 12], tiltAmp: 0.14,
     jelly: null, shiver: [40, 90],
     wink: [8, 20], happyHold: null,
+    // 화남 — 25~60초마다 3~5초. 사나운 눈·이 드러낸 입, 그동안 꼬리 털이 곤두선다(tailTip.puff). 개는 아직 없다(null)
+    angry: [25, 60], angryHold: [3, 5],
     // 고양이 꼬리 — 개와 반대: 빠른 움직임은 짜증·흥분, 기쁨은 **세우는 것**. 느린 스위시(리듬) 위에 끝 마디 모션이 얹힌다
     //   follow 팔로스루(끝이 뿌리 속도에 늦게 따라옴) · twitch 끝만 톡톡(tailFlick 간격을 끝 마디에 씀) · lash 놀람(plain) 시작 때 채찍질 확률 ·
-    //   raise 기분 좋을 때(^^ 동안) 세움 — 관절 전부 정확히 수직, 굽는 변형 없음 (true/null) · puff 곤두섬 배율(놀란 동안 굵기만 — 동공과 같은 0.1/3.8/0.1 봉투)
+    //   raise 기분 좋을 때(^^ 동안) 세움 — 관절 전부 정확히 수직, 굽는 변형 없음 (true/null) · puff 곤두섬 배율(**화내는 동안** 굵기만 — 화남 봉투 0.1/유지/0.1 그대로)
     tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [8, 20],
     tailTip: { follow: 0.06, twitch: { amp: 0.35, hz: 6, dur: 0.5 }, lash: 0, raise: true, puff: 1 },   // 채찍질(lash)은 금지 — 고양이가 꼬리를 치는 모션은 없다
     surprise: [9, 24], yaw: 0.8,
@@ -118,7 +120,7 @@ export const MOTION = {
     stretch: null,
     tilt: [8, 18], tiltAmp: 0.09,
     jelly: { amp: [0.008, 0.018], freq: [1.1, 1.9] }, shiver: [12, 30],
-    wink: null, happyHold: null,
+    wink: null, happyHold: null, angry: null,
     tailSwish: null, tailFlick: null,
     surprise: [6, 14], yaw: 0.6,
     look: [5, 14], lookHold: [1, 3], lookAmp: [1, 0.7],
