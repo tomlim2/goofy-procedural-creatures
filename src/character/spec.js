@@ -7,15 +7,10 @@
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
 import { makeRng } from "../rng.js";
-import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, shade } from "./vocabulary/index.js";
+import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS } from "./vocabulary/index.js";
+import { shade, luminance } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
-
-// 헥스 색의 휘도(0~255) — 얼굴 잉크를 검정으로 할지 밝게 할지 가른다
-function luminance(hex) {
-  const v = parseInt(hex.slice(1), 16);
-  return 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
-}
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -192,34 +187,25 @@ export function makeCreature(seed, speciesName = "human") {
   for (const slot of LATE_SLOTS) parts[slot] = pickSlot(rng, species, archetype, slot);
   applyForbid(parts, species.name);
 
-  // 안경·고글은 두 알이 겹치면(눈이 가까우면) 뺀다 — 겹친 안경테는 실수처럼 보인다. 눈에 맞춰 억지로 줄이지 않는다.
-  // 비율이 정해진 뒤에야 알 수 있어서 여기서 결정적으로 덮어쓴다 (rng 없음).
-  if (parts.eyewear === "glasses" || parts.eyewear === "goggles") {
-    const draft = { seed, species: species.name, parts, proportions, palette };
-    const eyes = eyeGeometry(draft, layout(draft));
-    if (eyes.length === 2) {
-      const scale = LENS_SCALE[parts.eyewear];
-      const gap = Math.hypot(eyes[1].x - eyes[0].x, eyes[1].y - eyes[0].y);
-      if (gap < (eyes[0].r + eyes[1].r) * scale * 1.02) parts.eyewear = "none";
+  // 눈 자리가 정해진 뒤(비율·마지막 슬롯까지 뽑힌 뒤)에야 알 수 있는 안경류 제약 — 결정적으로 덮어쓴다 (rng 없음)
+  const eyes = eyeGeometry({ species: species.name, parts, proportions }, layout({ species: species.name, parts, proportions }));
+  const hadPatch = parts.eyewear === "patch";
+  if (eyes.length === 2) {
+    const [a, b] = eyes;
+    const gap = Math.hypot(b.x - a.x, b.y - a.y);
+    // 안경·고글은 두 알이 겹치면(눈이 가까우면) 뺀다 — 겹친 안경테는 실수처럼 보인다. 눈에 맞춰 억지로 줄이지 않는다
+    if ((parts.eyewear === "glasses" || parts.eyewear === "goggles") && gap < (a.r + b.r) * LENS_SCALE[parts.eyewear] * 1.02) parts.eyewear = "none";
+    // 안대는 **눈이 겹치는 개체에 안 씌운다** — 안대(눈 1.5배)가 다른 눈 위에 걸치면 실수처럼 보인다
+    if (parts.eyewear === "patch") {
+      const covered = eyes.find((e) => e.side === parts.patchSide) || a;
+      const other = covered === a ? b : a;
+      if (gap < covered.r * 1.5 + other.r + 0.004) parts.eyewear = "none";
     }
   }
-  // 짝눈(좌우 크기·높이가 눈에 띄게 다른 눈)에는 안대를 안 씌운다 — 한쪽을 가리면 남은 눈이 혼자 크거나 높아서 실수처럼 보인다.
-  // 비율이 정해진 뒤에 결정적으로 뺀다 (rng 없음). patchSide도 같이 지운다 (눈·눈썹이 그쪽을 건너뛰지 않게)
-  if (parts.eyewear === "patch" && (Math.abs(proportions.eyeSizeSkew) > 0.09 || Math.abs(proportions.eyeHeightSkew) > 0.03)) {
-    parts.eyewear = "none";
-    parts.patchSide = 99;
-  }
-  // 안대는 **눈이 겹치는 개체에도 안 씌운다** — 안대(눈 1.5배)가 다른 눈 위에 걸치면 실수처럼 보인다
-  if (parts.eyewear === "patch") {
-    const draft = { seed, species: species.name, parts, proportions, palette };
-    const eyes = eyeGeometry(draft, layout(draft));
-    if (eyes.length === 2) {
-      const patched = eyes.find((e) => e.side === parts.patchSide) || eyes[0];
-      const other = eyes.find((e) => e !== patched);
-      const d = Math.hypot(other.x - patched.x, other.y - patched.y);
-      if (d < patched.r * 1.5 + other.r + 0.004) { parts.eyewear = "none"; parts.patchSide = 99; }
-    }
-  }
+  // 짝눈(좌우 크기·높이가 눈에 띄게 다른 눈)에는 안대를 안 씌운다 — 한쪽을 가리면 남은 눈이 혼자 크거나 높아서 실수처럼 보인다
+  if (parts.eyewear === "patch" && (Math.abs(proportions.eyeSizeSkew) > 0.09 || Math.abs(proportions.eyeHeightSkew) > 0.03)) parts.eyewear = "none";
+  // 여기서 안대가 빠졌으면 patchSide도 지운다 (눈·눈썹이 그쪽을 건너뛰지 않게)
+  if (hadPatch && parts.eyewear !== "patch") parts.patchSide = 99;
 
   return {
     seed,

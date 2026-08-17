@@ -9,18 +9,18 @@ import { BOIL_FRAMES } from "./rig.js";
 import { damp } from "../motion/ease.js";
 
 const EMOJI_TARGET = new THREE.Vector3();
-// 얼굴 돌림 때 머리 부속물이 이목구비 이동량의 몇 배 움직이나 [x, y]. 1이면 얼굴과 같이, 0이면 윤곽과 같이, 음수면 반대로.
-// 뿔·머리카락·모자는 얼굴을 따라 덜, 귀는 **반대로** — 머리가 돌면 귀는 얼굴 반대편으로 돌아 나간다
-const CROWN_PARALLAX = [0.45, 0.3];
-const EAR_PARALLAX = [-0.4, -0.15];
-const BANGS_PARALLAX = [0.12, 0.08];   // 앞머리 — 얼굴 위에 있지만 머리에 붙은 것이라 아주 조금만
+// 얼굴 돌림 때 머리 부속물 그룹이 이목구비 이동량의 몇 배 움직이나 [그룹, x배, y배]. 1이면 얼굴과 같이, 0이면 윤곽과 같이, 음수면 반대로.
+// 뿔·머리카락·모자(crownGroup)는 얼굴을 따라 덜, 귀(earGroup)는 **반대로** — 머리가 돌면 귀는 얼굴 반대편으로 돌아 나간다,
+// 앞머리(bangsGroup)는 얼굴 위에 있지만 머리에 붙은 것이라 아주 조금만. 크기는 안 바뀐다 — 자리만 밀린다
+const PARALLAX = [["crownGroup", 0.45, 0.3], ["earGroup", -0.4, -0.15], ["bangsGroup", 0.12, 0.08]];
 
 // snap: 관절을 이징 없이 목표각으로 즉시 (바인드 뷰). boil: 보일 3벌 순환 여부 (선 질감).
 // 둘은 다른 축이다 — 바인드 포즈에서도 선은 끓을 수 있고, 모션 중에도 선을 고정할 수 있다.
 export function applyState(item, state, t, noise, { snap = false, boil = true } = {}) {
   // 보일 — 낮은 주기로 잉크 변형을 순환. 꺼져 있으면 0번 프레임에 고정.
   const frame = boil ? Math.floor(t * item.boilFps + item.boilOffset) % BOIL_FRAMES : 0;
-  for (const list of Object.values(item.frames)) {
+  for (const key in item.frames) {
+    const list = item.frames[key];
     for (let k = 0; k < BOIL_FRAMES; k += 1) list[k].visible = k === frame;
   }
 
@@ -42,16 +42,16 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   // 얼굴 돌림 — 이목구비 그룹(눈·코·입·눈썹·안경·볼·수염·주둥이)을 통째로 밀고 살짝 눌러
   // 머리를 돌린 착시. 좌우는 x로, 위아래는 y로. 원점은 머리 중심이라 눌림도 거기를 축으로 한다.
   const [turnX, turnY] = state.faceTurn;
-  item.faceGroup.position.x = turnX * item.headRx * 0.26;
-  item.faceGroup.position.y = item.faceCy - item.neckY + turnY * item.headRy * 0.16;
+  const shiftX = turnX * item.headRx * 0.26;
+  const shiftY = turnY * item.headRy * 0.16;
+  item.faceGroup.position.x = shiftX;
+  item.faceGroup.position.y = item.faceCy - item.neckY + shiftY;
   item.faceGroup.scale.set(1 - Math.abs(turnX) * 0.12, 1 - Math.abs(turnY) * 0.08, 1);
-  // 머리에 붙는 것은 위치만 밀린다(크기 그대로) — 시차. 뿔·머리카락·모자는 얼굴과 같은 방향으로 덜, 귀는 반대 방향으로
-  item.crownGroup.position.x = turnX * item.headRx * 0.26 * CROWN_PARALLAX[0];
-  item.crownGroup.position.y = turnY * item.headRy * 0.16 * CROWN_PARALLAX[1];
-  item.earGroup.position.x = turnX * item.headRx * 0.26 * EAR_PARALLAX[0];
-  item.earGroup.position.y = turnY * item.headRy * 0.16 * EAR_PARALLAX[1];
-  item.bangsGroup.position.x = turnX * item.headRx * 0.26 * BANGS_PARALLAX[0];
-  item.bangsGroup.position.y = turnY * item.headRy * 0.16 * BANGS_PARALLAX[1];
+  // 머리에 붙는 것은 위치만 밀린다(크기 그대로) — 시차 (PARALLAX)
+  for (const [key, kx, ky] of PARALLAX) {
+    item[key].position.x = shiftX * kx;
+    item[key].position.y = shiftY * ky;
+  }
 
   // 꼬리 — 네 마디 체인. 뿌리 각(tailAngle) + 끝 마디 상대각(tailTip) + 세움(tailRaise: 관절마다 쉼 자세 → 목표 자세로 섞음) + 부풀림
   if (item.tailGroup) {

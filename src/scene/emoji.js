@@ -51,5 +51,6 @@ export function buildEmoji(kind, noise) {
     sketch.fill([[0.004, 0.016], [0.018, 0.014], [0.013, -0.01], [0.001, -0.008]], "#2b2724");
     sketch.fill(blobPath(0.007, -0.03, 0.011, 0.011, { lumps: 3, amount: 0.15, noise: null }), "#2b2724");
   }
-  return sketchMesh(sketch, 0.95, EMOJI_ORDER);
+  // 재질을 혼자 쓴다(own) — animate가 페이드에 맞춰 opacity를 프레임마다 바꾼다. 공유 재질이면 같은 값을 쓰는 동공까지 같이 흐려진다
+  return sketchMesh(sketch, 0.95, EMOJI_ORDER, 0, { own: true });
 }

@@ -5,21 +5,8 @@
 // 법선으로 폭을 벌린다. 폭이 일정하지 않아야 펜처럼 보인다.
 
 import * as THREE from "three";
-
-// three.js는 정점 색을 선형 공간으로 보고 출력할 때 sRGB로 변환한다.
-// sRGB 헥스를 그대로 넣으면 어두운 색이 중간 회색으로 밝아진다.
-function srgbToLinear(channel) {
-  return channel < 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
-}
-
-function hexToRgb(hex) {
-  const value = parseInt(hex.slice(1), 16);
-  return [
-    srgbToLinear(((value >> 16) & 255) / 255),
-    srgbToLinear(((value >> 8) & 255) / 255),
-    srgbToLinear((value & 255) / 255)
-  ];
-}
+// 정점 색은 hexToRgb(선형 공간)를 거친다 — color.js. 우회하지 않는다 (guidelines/drawing.md § 색은 선형 공간으로 넣는다)
+import { hexToRgb } from "./color.js";
 
 // 획을 일정 간격으로 다시 찍는다. 이걸 안 하면 노이즈가 긴 구간에서만 먹는다.
 function resample(points, step) {
@@ -99,6 +86,12 @@ export class Sketch {
       // 가운데 표본을 하나 넣어 그 자리에서 제 폭을 갖게 한다 — 짧은 획은 작은 콩알로 남는다.
       if (sampled.length === 2) sampled.splice(1, 0, [(sampled[0][0] + sampled[1][0]) / 2, (sampled[0][1] + sampled[1][1]) / 2]);
       const path = perturb(sampled, this.noise, jitter * this.wobble, this.phase);
+      // 끝을 가늘게, 중간을 두껍게(taper). 여기에 노이즈로 필압 변화를 얹는다(press).
+      const phase = this.phase;
+      const noise = this.noise;
+      const taper = (t) => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 0.35);
+      const press = (t, k) => 0.75 + 0.45 * noise(phase * 0.5 + t * 6 + k);
+      const last = path.length - 1;
 
       for (let i = 1; i < path.length; i += 1) {
         const [ax, ay] = path[i - 1];
@@ -109,11 +102,8 @@ export class Sketch {
         dx /= length;
         dy /= length;
 
-        // 끝을 가늘게, 중간을 두껍게. 여기에 노이즈로 필압 변화를 얹는다.
-        const t0 = (i - 1) / (path.length - 1);
-        const t1 = i / (path.length - 1);
-        const taper = (t) => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 0.35);
-        const press = (t, k) => 0.75 + 0.45 * this.noise(this.phase * 0.5 + t * 6 + k);
+        const t0 = (i - 1) / last;
+        const t1 = i / last;
         const w0 = (width * taper(t0) * press(t0, 0)) / 2;
         const w1 = (width * taper(t1) * press(t1, 1)) / 2;
 
@@ -211,15 +201,31 @@ export class Sketch {
   }
 
   build() {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(this.positions, 3));
-    geometry.setAttribute("color", new THREE.Float32BufferAttribute(this.colors, 3));
-    return geometry;
+    return buildGeometry([this]);
   }
 
   get empty() {
     return this.positions.length === 0;
   }
+}
+
+// 스케치 여러 벌을 지오메트리 하나로. 앞의 것이 먼저 그려져 밑에 깔린다 — 채색 스케치 다음 잉크 스케치를 주면 한 메시로 한 층이 된다.
+// depthTest 없이 정점 순서가 곧 앞뒤라 스케치 안·스케치 사이 순서가 그대로 겹침 순서다
+export function buildGeometry(sketches) {
+  const filled = sketches.filter((s) => !s.empty);
+  const count = filled.reduce((n, s) => n + s.positions.length, 0);
+  const positions = new Float32Array(count);
+  const colors = new Float32Array(count);
+  let offset = 0;
+  for (const s of filled) {
+    positions.set(s.positions, offset);
+    colors.set(s.colors, offset);
+    offset += s.positions.length;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  return geometry;
 }
 
 // 불규칙한 폐곡선. 레퍼런스의 머리는 원이 아니라 울퉁불퉁한 덩어리다.

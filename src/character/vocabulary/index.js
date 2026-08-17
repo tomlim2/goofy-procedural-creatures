@@ -2,4 +2,4 @@
 export { SLOTS, LATE_SLOTS, DEFAULT_BIAS } from "./slots.js";
 export { ARCHETYPES } from "./archetypes.js";
 export { SPECIES } from "./species.js";
-export { PAPER, INKS, FILLS, ACCENTS, POPS, DARKS, shade } from "./palette.js";
+export { PAPER, INKS, FILLS, ACCENTS, POPS, DARKS } from "./palette.js";

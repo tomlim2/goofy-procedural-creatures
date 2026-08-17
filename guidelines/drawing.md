@@ -6,7 +6,8 @@ three.js는 정점 색을 **선형(linear) 공간**으로 보고 출력할 때 s
 sRGB 헥스를 그대로 넣으면 어두운 색이 밝아진다. 잉크 `#2b2724`(0.169)를 그대로 주면
 화면에서 **0.449 중간 회색**이 된다. 획을 아무리 두껍게 해도 회색인 채로 남는다.
 
-`stroke.js`의 `hexToRgb`가 `srgbToLinear`를 거치도록 돼 있다. **이 경로를 우회하지 않는다.**
+`color.js`의 `hexToRgb`가 `srgbToLinear`를 거치도록 돼 있고 `stroke.js`는 이것만 쓴다. **이 경로를 우회하지 않는다.**
+헥스 색을 다루는 유틸(`hexToRgb`·`luminance`·`isDark`·`shade`)은 전부 `src/color.js` 하나다 — 캐릭터(팔레트·얼굴 잉크 판정)와 그리기(정점 색·톤)가 같은 함수를 쓴다.
 
 캔버스로 구운 텍스처도 같다. `CanvasTexture`에는 `colorSpace = THREE.SRGBColorSpace`를 명시한다.
 
@@ -30,12 +31,16 @@ WebGL의 `linewidth`는 대부분의 환경에서 1로 고정된다. `THREE.Line
 `depthTest: false`로 그리므로 순서는 `renderOrder`가 전부 결정한다. 표는 [rig.md](rig.md) § 계층에
 한 번만 둔다 — 새 메시를 넣을 때 거기를 갱신한다. 채색이 잉크보다 뒤에 오면 선이 묻힌다.
 
+한 층의 채색과 잉크는 **한 메시**다 — `buildGeometry([fills, ink])`가 채색 스케치 다음 잉크 스케치를 한 지오메트리로 잇는다. 같은 메시 안에서는
+정점 순서가 곧 앞뒤라(depthTest 없음) 채색이 밑, 잉크가 위로 그려진다. 층을 둘로 나눠야 하는 건 다른 층의 무엇이 그 사이에 끼어야 할 때뿐이다
+(얼굴·정지 눈 — [rig.md](rig.md)). 메시 하나가 draw call 하나다 ([performance.md](performance.md)).
+
 ## 생성은 한 번, 애니메이션은 변형만
 
 매 프레임 획을 다시 만들지 않는다. 35마리 × 수십 획을 매 프레임 재생성하면 죽는다.
 
-- 정적인 선 → 크리처당 보일 변형 3벌(몸·뒷머리·옆귀·머리·뿔/머리카락·개/고양이 귀·모자·얼굴·정지 눈·얼굴 앞·앞머리 각각 잉크+채색)을 미리 굽고 visible 토글로 순환한다.
-  변형은 `character/draw/index.js` `drawCreature(spec, variant)`의 지터 위상만 다르다
+- 정적인 선 → 크리처당 보일 변형 3벌(층 11개 — 몸·뒷머리·옆귀·머리·뿔/머리카락·개/고양이 귀·모자·얼굴·정지 눈·얼굴 앞·앞머리, 층마다 채색+잉크 한 메시)을
+  미리 굽고 visible 토글로 순환한다. 변형은 `character/draw/index.js` `drawCreature(spec, variant)`의 지터 위상만 다르다. 재질은 불투명도별로 공유한다
 - 움직이는 것 → 분리된 리그만 변형한다. 계층:
   `group(발) ─ bodyGroup(보일 3벌·꼬리 피벗·팔다리 피벗) ─ headGroup(목 축, 보일 3벌) ─ faceGroup(돌림, 보일 3벌) ─ 눈 리그·눈썹·입`
   머리는 목(bodyTop)을 축으로 돌고, 꼬리·팔·다리는 각자의 피벗(뿌리·어깨·엉덩이)에

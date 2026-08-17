@@ -3,7 +3,8 @@
 
 import { Sketch, blobPath, arcPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
-import { layout, darken, BUILD } from "./layout.js";
+import { layout, BUILD } from "./layout.js";
+import { shade } from "../../color.js";
 
 // 팔 치수. 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기준 1, long은 그 1.64배(바닥을 쓸 만큼).
 // 기준 팔 길이 0.242 — 이보다 짧으면 손이 몸통 근처라 팔로 안 보인다.
@@ -77,7 +78,7 @@ export function limbSketches(spec) {
         // 양말 — 발목까지 채운 작은 부츠
         s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.012 });
         const boot = [[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]];
-        s.fill(boot, cloth === skin ? ink0 : darken(cloth, 0.75));
+        s.fill(boot, cloth === skin ? ink0 : shade(cloth, 0.75));
         s.outline(boot, { color: ink0, width: 0.009 });
       } else {
         // 굵은 스텁 다리 + 살짝 앞으로 나온 둥근 발끝 + 발가락 두 줄 (레퍼런스)
@@ -126,7 +127,7 @@ export function limbSketches(spec) {
     if (legKind === "boots") {
       // 부츠 — 발목까지 채워진 덩어리
       const boot = [[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]];
-      s.fill(boot, cloth === skin ? ink0 : darken(cloth, 0.75));
+      s.fill(boot, cloth === skin ? ink0 : shade(cloth, 0.75));
       s.outline(boot, { color: ink0, width: 0.01 });
     } else {
       // 동그란 발 — 레퍼런스 기본
@@ -224,9 +225,10 @@ function armRigOf(spec, box) {
 }
 
 // ── 꼬리 — 골격(tail) × 스킨(tailSkin) ──
-// 꼬리는 두 슬롯이다. **골격**(curl·flag·longtail·stubtail·hook·kink·ring)은 척추의 모양(점 목록, 피벗 원점)이고,
-// **스킨**(line·thick·plume·tuft·ringed)은 그 척추 위에 무엇을 입히나다 — 가는 선, 채운 굵은 꼬리, 북슬한 깃털, 끝 뭉치, 고리 무늬.
-// 어느 골격에든 어느 스킨이든 입힌다 (스텁 골격에 깃털 스킨 = 폼폼). scene이 뿌리를 회전시켜 살랑거린다.
+// 꼬리는 세 슬롯이다. **골격**(curl·flag·longtail·stubtail·hook·kink·ring)은 척추의 모양(점 목록, 피벗 원점)이고,
+// **스킨**(line·thick·plume·tuft·block·ball·puff, 비활성 ringed·wedge)은 그 척추 위에 무엇을 입히나다 — 가는 선, 채운 굵은 꼬리, 북슬한 깃털,
+// 끝 뭉치, 네모, 구슬, 몽실 뭉치 — 그리고 **기장**(tailLength)이 골격을 통째로 줄인다.
+// 어느 골격에든 어느 스킨이든 입힌다 (스텁 골격에 깃털 스킨 = 폼폼). scene이 네 마디 체인으로 세워 마디마다 돌린다 (아래 tailSketch).
 
 // 골격 — 척추 점 목록. tailLift(비율)로 끝이 조금 오르내린다
 function tailSpine(kind, lift) {
@@ -273,7 +275,6 @@ function alongSpine(spine, t) {
   const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
   return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, dx, dy };
 }
-// 척추를 t = split에서 둘로 가른다 → [뿌리 조각(원점 그대로), 끝 조각(가른 점 원점)]. 각 조각의 t 범위도 준다
 // 척추를 길이 기준으로 n등분한 마디들 → [{ spine(마디 원점 기준 점 목록), t0, t1, origin(꼬리 뿌리 기준), angle(쉼 자세의 방향) }]
 function splitSpineN(spine, n) {
   const ts = spineT(spine);
@@ -323,7 +324,7 @@ export function tailSketch(spec) {
     wedge: (t) => (stub ? 0.03 : 0.028) * (1 - t) + 0.001,
     ringed: (t) => (stub ? 0.024 : 0.019) * (1 - t * 0.55) + 0.004
   };
-  // 채운 몸통을 두 조각에 이어 그린다 — 채움은 조각마다, 윤곽은 양옆 선만(이음새에 가로선이 안 생기게), 끝은 뾰족하게 닫힌다
+  // 채운 몸통을 마디들에 이어 그린다 — 채움은 마디마다, 윤곽은 양옆 선만(이음새에 가로선이 안 생기게), 끝 마디에서 닫는다
   const tube = (widthAt) => {
     parts.forEach((part, i) => {
       const tMap = (t) => part.t0 + t * (part.t1 - part.t0);
@@ -344,7 +345,7 @@ export function tailSketch(spec) {
   };
 
   if (skin === "line") {
-    // 가는 선 — 손그림 꼬리 한 획 (스텁은 굵게). 두 조각을 이어 긋는다
+    // 가는 선 — 손그림 꼬리 한 획 (스텁은 굵게). 마디들을 이어 긋는다
     for (const [i, part] of parts.entries()) sketches[i].stroke(part.spine, { color: ink0, width: stub ? 0.02 : 0.011, jitter: 0.003 });
   } else if (skin === "thick" || skin === "block" || skin === "wedge") {
     tube(widthOf[skin]);
@@ -367,7 +368,7 @@ export function tailSketch(spec) {
     const tip = tipPart.spine[tipPart.spine.length - 1];
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
     const tipSk = sketches[sketches.length - 1];
-    tipSk.fill(ball, darken(fur, 0.82));
+    tipSk.fill(ball, shade(fur, 0.82));
     tipSk.outline(ball, { color: ink0, width: 0.01 });
   } else if (skin === "puff") {
     // 몽실 — 토끼 꼬리. 골격 길이와 상관없이 엉덩이 가까이(척추 0.3 지점) 북슬한 뭉치 하나 + 둘레 털 획 (뿌리 조각)
@@ -405,7 +406,7 @@ export function tailSketch(spec) {
     for (const t of stub ? [0.5] : [0.3, 0.55, 0.8]) {
       const a = at(t);
       const w = widthOf.ringed(t) * 1.15;
-      a.sk.stroke([[a.x + a.dy * w, a.y - a.dx * w], [a.x - a.dy * w, a.y + a.dx * w]], { color: darken(fur, 0.55), width: 0.014 });
+      a.sk.stroke([[a.x + a.dy * w, a.y - a.dx * w], [a.x - a.dy * w, a.y + a.dx * w]], { color: shade(fur, 0.55), width: 0.014 });
     }
   }
   return { sketches, bones: parts.map((p) => ({ origin: p.origin, angle: p.angle })), pivot };

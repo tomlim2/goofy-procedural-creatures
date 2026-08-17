@@ -1,5 +1,5 @@
 // 유지 상태 — 들어가면 몇 초 머물다 돌아오는 것. 진행 곡선이 없고 on/off다.
-//   반감김 · ^^ 행복 눈 · 윙크 · 눈썹 상태 · 입 상태 · 갸웃(목표각 유지) · 팔 행위 · 둘러보기(얼굴 돌림 유지)
+//   ^^ 행복 눈 · 윙크 · 눈썹 상태 · 입 상태 · 갸웃(목표각 유지) · 행위 층(팔·몸·네발) · 둘러보기(얼굴 돌림 유지) · 기본 상태(idle/sleep/walk)
 // 문서: guidelines/motion/catalog.md
 //
 // 형태: { next: 다음 진입 시각, until: 유지 종료 시각(아니면 -1) }
@@ -20,15 +20,6 @@ export function initWink(rng, M) { return { next: schedule(rng, M.wink), until: 
 export function initLook(rng, M) { return { next: schedule(rng, M.look), until: -1, dir: [0, 0] }; }
 export function initHappy(rng, M) { return { next: schedule(rng, M.happyHold), until: -1 }; }
 
-// 반감김 — lid를 최소 0.5로 올린다
-export function stepSquint(s, t, rng, lid) {
-  if (t >= s.next && s.until < 0) { s.until = t + rng.float(1.2, 2.8); s.next = t + rng.float(8, 20); }
-  if (s.until >= 0) {
-    if (t >= s.until) s.until = -1;
-    else return Math.max(lid, 0.5);
-  }
-  return lid;
-}
 // ^^ 유지 — 눈을 다 감고 happy
 export function stepHappy(s, t, rng, M) {
   if (t >= s.next && s.until < 0) { s.until = t + rng.float(3, 6); s.next = t + rng.float(M.happyHold[0], M.happyHold[1]); }   // ^^ 유지는 3초 이상

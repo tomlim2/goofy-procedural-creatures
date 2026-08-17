@@ -16,7 +16,8 @@ import { makeGrid, layout, eyeGeometry, facePartKinds } from "./character/index.
 import { drawEyes, drawFace2, drawNose, drawEyewear, drawWhiskers } from "./character/draw/face.js";
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng, formatSeed } from "./rng.js";
-import { sketchMesh } from "./scene/material.js";
+import { sketchMesh, disposeGroup } from "./scene/material.js";
+import { randomSeed } from "./ui.js";
 
 const COLS = 7, ROWS = 5;
 const canvas = document.getElementById("stage");
@@ -24,7 +25,7 @@ const report = document.getElementById("report");
 const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
 const params = new URLSearchParams(window.location.search);
-let seed = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : (Math.random() * 0xffffffff) >>> 0;
+let seed = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : randomSeed();
 
 const scene = createScene(canvas);
 
@@ -163,7 +164,7 @@ function audit() {
         }
       }
     }
-    for (const t of temp) for (const m of t.meshes) { item.faceGroup.remove(m); m.geometry.dispose(); m.material.dispose(); }
+    for (const t of temp) for (const m of t.meshes) { item.faceGroup.remove(m); disposeGroup(m); }   // 재질은 공유 — 지오메트리만 버린다
   }
   for (const other of list) other.group.visible = true;
   scene.update(0);
@@ -174,8 +175,9 @@ function audit() {
   return { violations, text: lines.join("\n") };
 }
 
-document.getElementById("reseed").addEventListener("click", () => { seed = (Math.random() * 0xffffffff) >>> 0; run(); });
-window.addEventListener("keydown", (e) => { if (e.key === "r" || e.key === "R") { seed = (Math.random() * 0xffffffff) >>> 0; run(); } });
+const reseed = () => { seed = randomSeed(); run(); };
+document.getElementById("reseed").addEventListener("click", reseed);
+window.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "r") reseed(); });
 window.addEventListener("resize", () => scene.resize());
 scene.resize();
 run();

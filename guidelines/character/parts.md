@@ -2,7 +2,8 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 22슬롯 150파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 22슬롯 150파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
+`headgear.js` 모자·뿔 · `face.js` 눈·눈썹·안경·코·볼·입·수염 · `body.js` 몸·무늬 · `limbs.js` 팔다리·꼬리).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -72,6 +73,7 @@ none / glasses(양쪽 원 + 다리, 알 반지름 = 눈 × 1.45) / goggles(큰 �
 눈이 혼자 크거나 높아 실수처럼 보인다 (비율 확정 뒤 none, patchSide도 지운다).
 
 ### hair (21)
+`hair.js` — 종류마다 그리기 함수 하나(`HAIR` 표: 이름 → 함수). 새 머리는 함수를 하나 붙이고 `SLOTS.hair`에 이름을 넣는다.
 머리카락은 **세 층**에 나눠 그린다(`drawHair(layers)`): **뒷머리**(back — 머리·얼굴 뒤 1.55, 귀 그룹 → 실루엣 밖·어깨 위로 보이는 부분만) ·
 **두피 위**(crown 2.06 — 머리 잉크 위·얼굴 아래) · **앞머리**(front 6.55 — 얼굴 위에 그리지만 머리에 붙은 것이라 얼굴 돌림엔 아주 조금만(12%) 따라간다; 눈썹·입 6.6은 앞머리
 위에 그려진다). 그래서 긴 머리·트윈테일·포니테일(뒤)과 앞머리·옆머리 커튼(앞)이 된다.
@@ -100,7 +102,7 @@ none / glasses(양쪽 원 + 다리, 알 반지름 = 눈 × 1.45) / goggles(큰 �
 ([rules.md](rules.md)).
 
 ### headgear (7)
-none / helmet(눈썹 위~정수리 위 돔 + 테두리 + 능선) / cap(정수리 돔 + 한쪽 챙) / band(이마 띠) / pot(눈썹 위에서 정수리보다 높이 솟는 통) /
+`headgear.js` `drawHeadgear`. none / helmet(눈썹 위~정수리 위 돔 + 테두리 + 능선) / cap(정수리 돔 + 한쪽 챙) / band(이마 띠) / pot(눈썹 위에서 정수리보다 높이 솟는 통) /
 beret(기운 원반 + 꼭지) / bonnet(양옆 눈높이에서 정수리 위로 넘어가는 두툼한 테 — **비활성**: 프릴 느낌이라 어떤 bias에도 없다, 자산·갤러리에만). 색은 accent 또는 pop.
 
 **전부 눈썹 선 위에 앉는다** — 눈(안경·고글·안대·모노클 테 포함) 위쪽 끝에서 재서 눈이 높이 달린 개체도 가리지 않고, 폭은 그 높이의 머리 윤곽
@@ -108,7 +110,7 @@ beret(기운 원반 + 꼭지) / bonnet(양옆 눈높이에서 정수리 위로 �
 [../rig.md](../rig.md)).
 
 ### horns (7)
-none / curved / straight / antenna(끝에 공) / nub(작은 혹) / ram(나선) / crown(정수리 스파이크 열).
+`headgear.js` `drawHorns`. none / curved / straight / antenna(끝에 공) / nub(작은 혹) / ram(나선) / crown(정수리 스파이크 열).
 imp는 1.8배.
 
 ### ears (12)

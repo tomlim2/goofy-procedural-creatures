@@ -11,12 +11,13 @@ import { buildCreature } from "./rig.js";
 import { applyState } from "./animate.js";
 import { BIND_STATE } from "../motion/index.js";
 
-const CELL_W = 1.0;
-const CELL_H = 1.35;
+// 셀 크기 — 개체 하나가 서는 칸. 바닥선은 칸 밑에서 0.16 위 (slotPosition). gallery가 라벨 자리 계산에 같이 쓴다
+export const CELL_W = 1.0;
+export const CELL_H = 1.35;
 
 export function createScene(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));   // (resize가 다시 잡는다 — 모니터를 옮기면 픽셀 비가 바뀐다)
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
@@ -30,6 +31,10 @@ export function createScene(canvas) {
   let rows = 5;
   // 마지막 update의 전역 시각. 재생성·재빌드로 태어나는 시계의 출생 시각이 된다.
   let clockNow = 0;
+  // 마지막 setSize·layout 때의 캔버스 CSS 크기(와 픽셀 비) — resize()는 바뀌었을 때만 일한다 (main이 매 프레임 부른다).
+  // canvas.width는 픽셀 비가 곱해진 값이라 clientWidth와 직접 비교하면 매 프레임 setSize가 불려 드로잉 버퍼가 프레임마다 다시 잡힌다
+  let sized = [0, 0, 0];
+  let laidOut = [0, 0];
   // 두 축이다.
   //   pose: 리그 상태. bindView면 clock 대신 BIND_STATE — 관절·표정 전부 기본.
   //   ink:  선 질감. boilOn이면 보일 3벌 순환, 아니면 0번 프레임 고정.
@@ -45,13 +50,16 @@ export function createScene(canvas) {
     item.clock.force(forcedAction, item.spec.seed % 2 ? 1 : -1);
   }
 
+  // 개체 하나를 씬에서 걷어낸다 — 지오메트리를 버리고(재질은 공유라 그대로) 그룹·이모지 루트를 뗀다
+  function discard(item) {
+    disposeGroup(item.group);
+    scene.remove(item.group);
+    disposeGroup(item.emojiRoot);
+    scene.remove(item.emojiRoot);
+  }
+
   function clear() {
-    for (const item of creatures) {
-      disposeGroup(item.group);
-      scene.remove(item.group);
-      disposeGroup(item.emojiRoot);
-      scene.remove(item.emojiRoot);
-    }
+    for (const item of creatures) discard(item);
     creatures = [];
     if (ground) {
       disposeGroup(ground);
@@ -64,6 +72,7 @@ export function createScene(canvas) {
     const width = columns * CELL_W;
     const height = rows * CELL_H;
     const aspect = canvas.clientWidth / canvas.clientHeight;
+    laidOut = [canvas.clientWidth, canvas.clientHeight];
     const gridAspect = width / height;
 
     let viewW = width * 1.08;
@@ -108,6 +117,19 @@ export function createScene(canvas) {
     item.orderBase = base;
   }
 
+  // 갓 조립한 개체를 슬롯 index에 세운다 — 강제 행위·자리·렌더 순서 블록·시계 상태 착석·씬 추가. build와 regenerate가 같이 쓴다
+  function place(item, index) {
+    if (forcedAction) applyForced(item);
+    const [x, y] = slotPosition(index);
+    item.baseX = x;
+    item.baseY = y;
+    item.group.position.set(x, y, 0);
+    stack(item, index);
+    settle(item);
+    scene.add(item.group);
+    scene.add(item.emojiRoot);
+  }
+
   function build(specs, cols) {
     clear();
     columns = cols;
@@ -128,15 +150,7 @@ export function createScene(canvas) {
 
     specs.forEach((spec, index) => {
       const item = buildCreature(spec, noise, clockNow);
-      if (forcedAction) applyForced(item);
-      const [x, y] = slotPosition(index);
-      item.baseX = x;
-      item.baseY = y;
-      item.group.position.set(x, y, 0);
-      stack(item, index);
-      settle(item);
-      scene.add(item.group);
-      scene.add(item.emojiRoot);
+      place(item, index);
       creatures.push(item);
     });
 
@@ -161,33 +175,23 @@ export function createScene(canvas) {
     const old = creatures[index];
     const nextSeed = (old.spec.seed + (old.generation + 1) * 48271) >>> 0;
     const spec = makeCreature(nextSeed, old.spec.species);
-
-    disposeGroup(old.group);
-    scene.remove(old.group);
-    disposeGroup(old.emojiRoot);
-    scene.remove(old.emojiRoot);
-
+    discard(old);
     const item = buildCreature(spec, noise, clockNow);
-    if (forcedAction) applyForced(item);
     item.generation = old.generation + 1;
-    const [x, y] = slotPosition(index);
-    item.baseX = x;
-    item.baseY = y;
-    item.group.position.set(x, y, 0);
-    stack(item, index);
-    settle(item);
-    scene.add(item.group);
-    scene.add(item.emojiRoot);
+    place(item, index);
     creatures[index] = item;
   }
 
   function resize() {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
-    if (canvas.width !== width || canvas.height !== height) {
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    if (width !== sized[0] || height !== sized[1] || dpr !== sized[2]) {
+      renderer.setPixelRatio(dpr);
       renderer.setSize(width, height, false);
+      sized = [width, height, dpr];
     }
-    layout();
+    if (width !== laidOut[0] || height !== laidOut[1]) layout();
   }
 
   function update(t) {

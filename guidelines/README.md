@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | **캐릭터** | `src/character/` | [character/types.md](character/types.md) 종족·아키타입·비율·팔레트·제약<br>[character/parts.md](character/parts.md) 22슬롯 150파츠 | [character/rules.md](character/rules.md) 파츠 추가 절차, 형태/모션 분리, 분포 기준 |
 | **모션** | `src/motion/` | [motion/catalog.md](motion/catalog.md) 상태 객체·종족별 파라미터·전 모션 | [motion/rules.md](motion/rules.md) 리듬/이벤트/상태 분류, rng 순서, 발화 측정 |
-| 공통 | `src/scene/` `src/stroke.js` `src/rng.js` | [rig.md](rig.md) three.js 계층·원점 | [determinism.md](determinism.md) 시드 계약<br>[drawing.md](drawing.md) 선·색·레이어 |
+| 공통 | `src/scene/` `src/stroke.js` `src/color.js` `src/rng.js` `src/ui.js` | [rig.md](rig.md) three.js 계층·원점 | [determinism.md](determinism.md) 시드 계약<br>[drawing.md](drawing.md) 선·색·레이어<br>[performance.md](performance.md) draw call·재질·측정 |
 
 ## 무엇으로 판단하나
 
@@ -24,7 +24,8 @@
 | **행위** 하나가 어떻게 보이나 | 화면 ACTION 카드 (두발 전원 강제, IDLE) | [motion/catalog.md](motion/catalog.md) § 바인드 포즈와 팔 행위 |
 | 모션 **빈도** | 60초 시뮬로 발화를 센다 | [motion/rules.md](motion/rules.md) § 발화 빈도를 센다 |
 | 형태 판단 시 모션 잡음 | POSE BIND(T포즈 고정) · INK STILL(보일 정지) | [rig.md](rig.md) § 포즈와 잉크 |
-| 리팩토링 전후 **불변** | `node scripts/snapshot.mjs before/after` | [determinism.md](determinism.md) |
+| 리팩토링 전후 **불변** | `node scripts/snapshot.mjs before/after` (스펙·판 하나의 지오메트리·모션 궤적) · `node scripts/drawdiff.mjs` (그리기 — 슬롯값 전부를 HEAD와) | [determinism.md](determinism.md) |
+| **성능** (프레임 비용) | 콘솔에서 `renderer.info.render.calls`와 프레임 시간을 잰다 | [performance.md](performance.md) § 어떻게 재나 |
 
 ## 한 줄 요약
 

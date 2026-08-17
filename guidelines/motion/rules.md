@@ -50,7 +50,8 @@ hip·chin·brow·chestFar)와 팔꿈치가 튀어나오는 쪽만 적고, `solve
 
 - 호흡·스웨이·꼬리 스위시·관절 지터 → 리듬
 - 깜빡임·놀람 → 이벤트 (제자리 점프는 몸 행위, 이모지는 별도 층 — 아래)
-- 반감김·윙크·^^·눈썹·입·갸웃·팔 행위 → 상태 (행위의 내용은 `actions.js`, 언제 하는지는 `states.js`)
+- 윙크·^^·눈썹·입·갸웃·둘러보기·행위 예약·기본 상태(idle/sleep/walk) → 상태 (행위의 내용은 `actions.js`, 언제 하는지는 `states.js`).
+  없앤 상태(반감김)는 `initSquint`만 남겨 rng 순서를 지킨다 — step은 지웠다
 
 ## 이징 — 모든 곡선은 부드럽게 들어가고 나온다
 
@@ -112,3 +113,5 @@ Promise.all([import('./src/motion/index.js'), import('./src/character/index.js')
 ## 리팩토링은 스냅샷으로
 
 `node scripts/snapshot.mjs before` → 고침 → `node scripts/snapshot.mjs after`. diff 0이어야 한다.
+스냅샷의 모션 궤적은 4종족 × 60초라 드문 가지(놀람 변형·꼬리 세움·걷기 왕복)는 안 지날 수 있다 — `motion/index.js update()`의 순서를
+옮기는 리팩토링은 rng 호출이 조건 안으로 들어가지 않는지 눈으로도 확인한다. (그리기 쪽은 `scripts/drawdiff.mjs`가 슬롯값 전부를 맞댄다)

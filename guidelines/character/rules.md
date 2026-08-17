@@ -45,7 +45,8 @@
 
 1. **`src/character/vocabulary/slots.js`** — `SLOTS`에 이름을 넣는다. 이름은 `draw/`의 분기 키와 정확히 같아야 한다
 2. **`src/character/vocabulary/`** — 필요하면 `slots.js` `DEFAULT_BIAS`, `archetypes.js`·`species.js` `bias`에 가중치를 넣는다
-3. **`src/character/draw/`** — 파츠가 속한 파일(`head.js`/`face.js`/`body.js`/`limbs.js`)에 분기를 추가한다
+3. **`src/character/draw/`** — 파츠가 속한 파일에 분기를 추가한다: 윤곽·귀 `head.js` · 머리카락 `hair.js`(`HAIR` 표에 함수 하나) ·
+   모자·뿔 `headgear.js` · 얼굴 `face.js` · 몸 `body.js` · 팔다리·꼬리 `limbs.js`
 
 `spec.js`는 대개 손대지 않는다. 새 조합이 다른 파츠와 충돌할 때만 `applyConstraints`에 넣는다.
 
@@ -136,3 +137,9 @@ bias를 가지면 `DEFAULT_BIAS`는 그 슬롯에서 쓰이지 않는다 — 어
 `gallery.html?slot=<슬롯>&species=<종족>&seed=<시드>` — 슬롯 하나의 모든 값을 **같은 개체**에 나란히
 그린다(종족·시드 고정, 슬롯값만 바꿈). 새 파츠를 그렸으면 여기서 이웃 값들과 나란히 놓고 본다.
 종족 forbid로 실제 판에는 안 나오는 값도 그린다 — 카탈로그지 추첨이 아니다. BIND가 기본(형태 판단), B로 모션.
+
+## 그리기 코드를 옮겼으면 drawdiff로 본다
+
+`node scripts/drawdiff.mjs [ref]` — 작업 트리의 그리기(층 11개 × 보일 2벌·팔다리·꼬리 마디·눈썹/입 상태)를 git 시점(기본 HEAD)과
+**슬롯값 전부 × 종족 × 시드**로 스케치 단위 해시 비교한다. 파일을 나누거나 분기를 표로 바꾸는 리팩토링은 이게 0건이어야 끝이다 —
+gallery는 눈이고 이건 숫자다. 형태를 **바꾸는** 커밋에서는 차이가 나는 게 맞다 (어느 슬롯값이 바뀌었는지 목록으로 확인한다).

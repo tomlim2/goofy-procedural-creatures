@@ -43,19 +43,7 @@ export function headShape(spec) {
   return HEAD_SHAPES[spec.parts.head] || HEAD_SHAPES.round;
 }
 
-// 채색보다 살짝 어두운 톤. 연필 음영에 쓴다.
-// 색이 어두운가. 도깨비 머리·몸처럼 어두운 면 위에는 스크리블을 밝게 긁는다.
-export function isDark(hex) {
-  const v = parseInt(hex.slice(1), 16);
-  const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
-  return lum < 90;
-}
-
-export function darken(hex, factor) {
-  const v = parseInt(hex.slice(1), 16);
-  const ch = (x) => Math.round(Math.max(0, Math.min(255, x * factor))).toString(16).padStart(2, "0");
-  return "#" + ch((v >> 16) & 255) + ch((v >> 8) & 255) + ch(v & 255);
-}
+// (색 톤·휘도 유틸은 src/color.js — shade·isDark)
 
 // 스펙에서 실제 치수를 뽑는다. 그리기 함수들이 전부 이 값을 공유한다.
 export function layout(spec) {

@@ -33,12 +33,7 @@ export const DARKS = [
   "#2f3a33"  // 녹흑
 ];
 
-// 같은 계열의 톤. factor < 1 어둡게, > 1 밝게. 개·고양이·도깨비의 몸을 머리색과 "비슷한 색"으로 줄 때 쓴다.
-export function shade(hex, factor) {
-  const v = parseInt(hex.slice(1), 16);
-  const ch = (x) => Math.round(Math.max(0, Math.min(255, x * factor))).toString(16).padStart(2, "0");
-  return "#" + ch((v >> 16) & 255) + ch((v >> 8) & 255) + ch(v & 255);
-}
+// (같은 계열의 톤을 만드는 shade는 src/color.js — 개·고양이·도깨비의 몸을 머리색과 "비슷한 색"으로 줄 때 spec.js가 쓴다)
 
 export const ACCENTS = [
   "#8a7f72",

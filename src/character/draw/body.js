@@ -1,7 +1,7 @@
 // 몸 — 몸통·무늬. 문서: guidelines/character/parts.md § 몸
 
 import { blobPath } from "../../stroke.js";
-import { darken, isDark } from "./layout.js";
+import { shade, isDark } from "../../color.js";
 
 export function drawBody(ink, fills, spec, box, noise) {
   if (box.quad) {
@@ -13,7 +13,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
     fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
     fills.scribbleFill(cx, cy, box.bodyW * 0.8, (box.bodyTop - box.legTop) * 0.4, {
-      color: darken(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
+      color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
       angle: Math.PI * 0.22, gap: 0.026, width: 0.006
     });
     ink.outline(path, { color: spec.palette.ink, width: 0.012, passes: 2 });
@@ -41,7 +41,7 @@ export function drawBody(ink, fills, spec, box, noise) {
 
   fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
   fills.scribbleFill(0, (top + bottom) / 2, w * 0.72, (top - bottom) * 0.4, {
-    color: darken(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
+    color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
     angle: Math.PI * 0.28, gap: 0.03, width: 0.006
   });
   ink.outline(path, { color: ink0, width: 0.012, passes: 2 });

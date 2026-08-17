@@ -60,6 +60,8 @@ while (!valid(parts)) parts = rollAgain(rng);
 ## 확인 방법
 
 `scripts/snapshot.mjs`가 스펙·지오메트리·모션 궤적을 한 번에 검증한다 ([../README.md](../README.md) § 스크립트).
+지오메트리 해시는 판 하나(35마리)의 층별 스케치라 모든 슬롯값을 지나지는 않는다 — 그리기 코드를 크게 옮겼으면(파일 분리·표로 바꾸기)
+`node scripts/drawdiff.mjs [ref]`로 이전 트리(git, 기본 HEAD)와 **슬롯값 전부 × 종족 × 시드**를 스케치 단위로 맞댄다. 0건이어야 한다.
 
 ```bash
 node scripts/snapshot.mjs before   # 고치기 전

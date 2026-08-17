@@ -45,14 +45,15 @@ three.js는 importmap으로 unpkg에서 받는다.
 | 위치 | 하는 일 | 문서 |
 | --- | --- | --- |
 | `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | [determinism](guidelines/determinism.md) |
-| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭 | [drawing](guidelines/drawing.md) |
-| **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획) | [character/](guidelines/character/) |
+| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭. `buildGeometry`(스케치 여러 벌 → 지오메트리 하나) | [drawing](guidelines/drawing.md) |
+| `src/color.js` | 헥스 색 유틸 — 선형 변환(`hexToRgb`), 휘도(`luminance`·`isDark`), 톤(`shade`). 캐릭터·그리기가 같이 쓴다 | [drawing](guidelines/drawing.md) § 색 |
+| **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획: `layout` `head` `hair` `headgear` `face` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지 — 기본 상태 idle/sleep/walk 포함) `actions.js`(idle과 행위 — 팔·몸·네발 층) `emoji.js`(이모지 애니메이션 — 트리거 층) `ease.js`(곡선 모양 — 봉투·추종, 전부 ease in/out) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
-| `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js` `emoji.js`(글리프 모양) `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) |
-| `src/main.js` | 진입점. UI 배선 | |
+| `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js`(공유 재질·메시) `emoji.js`(글리프 모양) `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
+| `src/main.js` · `src/ui.js` | 진입점. UI 배선 (`ui.js` — 세그먼트 버튼·옵션·rAF 루프 유틸, gallery·audit과 공유) | |
 | `src/gallery.js` · `gallery.html` | 파츠 갤러리 — 슬롯값별로 같은 개체를 나란히 | |
 | `src/audit.js` · `audit.html` | 얼굴 파츠 전수조사 — 상태별로 파츠가 보이는지 픽셀로 센다 | [character/rules](guidelines/character/rules.md) |
-| `guidelines/` | 두 축의 카탈로그와 규칙. **고치기 전에 읽는다** | [README](guidelines/README.md) |
+| `guidelines/` | 두 축의 카탈로그와 규칙, 성능·시드·그리기 규칙. **고치기 전에 읽는다** | [README](guidelines/README.md) |
 | `reference/` | 무엇을 보고 만들었고 무엇을 가져오고 안 가져왔는지 | [README](reference/README.md) |
 | `scripts/` | 아래 § 스크립트 | |
 
@@ -65,6 +66,8 @@ node scripts/census.mjs --check        # 위반만 (exit 1)
 
 node scripts/snapshot.mjs before       # 리팩토링 전 — 스펙·지오메트리·60초 모션 궤적을 찍는다
 node scripts/snapshot.mjs after        # 리팩토링 후 — diff 0이면 동작 불변
+
+node scripts/drawdiff.mjs [ref]        # 그리기 리팩토링 — 작업 트리를 git 시점(기본 HEAD)과 슬롯값 전부 × 종족 × 시드로 맞댄다. 0건이면 그리기 불변
 ```
 
 ## 다양성을 만드는 층
@@ -99,7 +102,9 @@ WebGL의 `linewidth`는 대부분 1로 고정되므로 `Line`으로는 굵기를
 ## 알아둘 것
 
 - **색공간** — three.js는 정점 색을 선형 공간으로 본다. sRGB 헥스를 그대로 넣으면 어두운
-  잉크가 중간 회색으로 밝아진다. `stroke.js`의 `srgbToLinear`가 이걸 보정한다
+  잉크가 중간 회색으로 밝아진다. `color.js`의 `srgbToLinear`(`hexToRgb`)가 이걸 보정한다
+- **성능** — 프레임 비용은 draw call 수다. 재질은 불투명도별로 공유하고(`scene/material.js`) 층 하나는 메시 하나(채색+잉크)다.
+  35마리에 draw call 538, 렌더 JS 0.7 ms/프레임. 재는 법과 규칙은 [guidelines/performance.md](guidelines/performance.md)
 - **모듈 캐시** — `serve.mjs`는 상대 경로 import에 `?v=` 를 붙인다. `Cache-Control: no-store`만으로는
   브라우저의 ES module map이 비워지지 않아 파일을 고쳐도 이전 코드가 실행되는 일이 있다
 - **시드 재현** — 같은 시드는 같은 판이다. rng 호출 순서가 곧 시드라 슬롯 순서 변경은 기존 시드를 깬다.
