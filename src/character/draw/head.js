@@ -38,7 +38,7 @@ export function drawHead(ink, fills, spec, box, noise) {
 }
 
 // 귀 크기 배율. Mid·Big는 모양은 같고 길이·폭만 크다. earKind()가 값을 기본 모양으로 돌린다
-const EAR_SIZE = { round: 1, roundMid: 1.4, roundBig: 1.8, pointy: 1, pointyMid: 1.4, pointyBig: 1.85, fold: 1, foldMid: 1.4, foldBig: 1.8 };
+const EAR_SIZE = { round: 1, roundMid: 1.4, roundBig: 1.8, pointy: 1, pointyMid: 1.4, pointyBig: 1.85, fold: 1, foldMid: 1.4, foldBig: 1.8, perk: 1, perkMid: 1.4, perkBig: 1.8 };
 const earKind = (value) => value.replace(/(Mid|Big)$/, "");
 
 export function drawEars(ink, fills, spec, box) {
@@ -182,7 +182,7 @@ export function drawPupEars(ink, fills, spec, box) {
   // θ는 타원(headRx·headRy) 위 극각(정수리에서 잰 각). 채운 로브 + 두 번 덧그은 윤곽. none은 없음.
   const earFill = shade(spec.palette.skin, 0.8);
   const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
-  const upper = kind === "pointy" || kind === "round" || kind === "fold";
+  const upper = kind === "pointy" || kind === "round" || kind === "fold" || kind === "perk";
   // 위쪽 자리는 둥근 머리에서 θ≈50°, 네모 머리(square·block)에서는 **꼭짓점**(θ = 45°)에서 시작한다 — 세모귀가 모서리에서 뻗는다
   const boxy = Math.min(1, headShape(spec).square / 1.5);
   const theta = upper ? 0.88 - boxy * (0.88 - Math.PI / 4) : 1.53;
@@ -233,29 +233,38 @@ export function drawPupEars(ink, fills, spec, box) {
       // 귀 축 방향으로 길쭉한 동그란 귀 — 안쪽이 윤곽에 살짝 걸친다 (크기 배율)
       const [cx, cy] = local(-OUT + 0.055 * size, 0);
       path = rotate(blobPath(cx, cy, 0.036 * size, 0.046 * size, { lumps: 3, amount: 0.15, noise: null }), cx, cy, side * lean);
-    } else if (kind === "fold") {
-      // 접힌 귀 — **선 밑동 + 그 위에서 바깥·아래로 꺾여 늘어진 덮개** 두 조각. 덮개가 밑동을 덮으며 접힘선이 드러난다.
-      // 끝이 위를 향해 굽으면 뿔로 읽힌다 — 덮개는 접힘선보다 **아래로** 내려와야 접힌 귀다. 크기 배율
+    } else if (kind === "fold" || kind === "perk") {
+      // 접힌 귀(fold) — **선 밑동 + 그 위에서 꺾여 늘어진 덮개** 두 조각. **한쪽만 접히고 반대쪽은 선 귀**다.
+      // 선 귀(perk) — 양쪽 다 곧게 선 세모. 끝이 위를 향해 굽으면 뿔로 읽힌다 — 덮개는 접힘선보다 **아래로** 내려와야 접힌 귀다. 크기 배율
       const k = size;
-      // 접힌 귀(버튼 이어)는 **머리 법선 좌표**로 그린다 — 밑변이 붙는 자리의 접선을 그대로 따르고 귀는 법선 방향으로 자란다.
+      // 선 귀·접힌 귀는 **머리 법선 좌표**로 그린다 — 밑변이 붙는 자리의 접선을 그대로 따르고 귀는 법선 방향으로 자란다.
       // (다른 귀처럼 안쪽으로 기운 축을 쓰면 밑동이 두피에서 떠 머리에 얹은 상자처럼 보인다)
       //   nu 법선 방향(머리 밖으로 자라는 높이) · nv 접선 방향(밑변 — + 쪽으로 접힌다)
       const tX = side * ny, tY = -side * nx;
       const nAt = (nu, nv) => [anchor.x + nx * nu + tX * nv, anchor.y + ny * nu + tY * nv];
       const halfW = 0.048 * k;         // 밑동 반폭 (접선 방향)
-      const stand = 0.085 * k;         // 접힘선까지 선 높이 (법선 방향)
-      const drop = 0.075 * k;          // 덮개가 접혀 내려가는 길이
-      // 밑동 — 밑변은 윤곽 안(−0.014)에 박히고 위로 갈수록 좁아지는 사다리꼴 (세모귀와 같은 문법)
-      path = [nAt(-0.014, halfW), nAt(stand, halfW * 0.66), nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW)];
-      // 덮개 — 접힘선에서 접선 방향(+nv)으로 꺾여 **밑동 옆·아래**로 늘어진다. 끝이 접힘선보다 낮아야 접힌 귀다
-      flap = [
-        nAt(stand + 0.006 * k, -halfW * 0.6),
-        nAt(stand + 0.004 * k, halfW * 1.15),
-        nAt(stand - drop, halfW * 1.05)
-      ];
-      crease = [nAt(stand, -halfW * 0.66), nAt(stand + 0.004 * k, halfW * 1.1)];
-      // 밑동 윤곽 — 안쪽 위 → 안쪽 아래 → 바깥 아래 → 덮개 끝 높이까지만. 윗변과 그 위 바깥변은 덮개가 덮으므로 긋지 않는다
-      baseOutline = [nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW), nAt(-0.014, halfW), nAt(stand - drop - 0.004 * k, halfW * 0.72)];
+      // 접힌 귀는 **한쪽만 접힌다** — 반대쪽은 선 귀다 (좌우가 다른 게 개답다). 접히는 쪽은 개체별(wobbleSeed, rng 없음)
+      const foldSide = spec.proportions.wobbleSeed % 2 ? 1 : -1;
+      if (kind === "perk" || side !== foldSide) {
+        // 선 귀 — 법선 방향으로 **곧게 선 세모**. 밑동은 좁고 위로 갈수록 빨리 좁아져 끝이 뾰족하다
+        // (넓적하고 낮으면 동그란 귀round와 구분이 안 된다)
+        const len = 0.16 * k, base = halfW * 0.86;
+        path = [nAt(-0.014, base), nAt(len * 0.62, base * 0.42), nAt(len, base * 0.06), nAt(len, -base * 0.06), nAt(len * 0.62, -base * 0.42), nAt(-0.014, -base)];
+      } else {
+        const stand = 0.085 * k;         // 접힘선까지 선 높이 (법선 방향)
+        const drop = 0.075 * k;          // 덮개가 접혀 내려가는 길이
+        // 밑동 — 밑변은 윤곽 안(−0.014)에 박히고 위로 갈수록 좁아지는 사다리꼴 (세모귀와 같은 문법)
+        path = [nAt(-0.014, halfW), nAt(stand, halfW * 0.66), nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW)];
+        // 덮개 — 접힘선에서 접선 방향(+nv)으로 꺾여 **밑동 옆·아래**로 늘어진다. 끝이 접힘선보다 낮아야 접힌 귀다
+        flap = [
+          nAt(stand + 0.006 * k, -halfW * 0.6),
+          nAt(stand + 0.004 * k, halfW * 1.15),
+          nAt(stand - drop, halfW * 1.05)
+        ];
+        crease = [nAt(stand, -halfW * 0.66), nAt(stand + 0.004 * k, halfW * 1.1)];
+        // 밑동 윤곽 — 안쪽 위 → 안쪽 아래 → 바깥 아래 → 덮개 끝 높이까지만. 윗변과 그 위 바깥변은 덮개가 덮으므로 긋지 않는다
+        baseOutline = [nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW), nAt(-0.014, halfW), nAt(stand - drop - 0.004 * k, halfW * 0.72)];
+      }
     } else {
       // flap / long — 머리 옆에서 늘어지되 반대 기울기(0.25rad 안쪽)로 끝이 얼굴 쪽으로 모이는 로브
       const len = ry * (kind === "long" ? 0.95 : 0.65);

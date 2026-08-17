@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 171파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 174파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
 `headgear.js` 모자·뿔 · `face.js` 눈·눈썹·안경·코·주둥이·볼·수염 · `mouth.js` 입 · `faceStates.js` 눈썹·입의 상태 벌 · `body.js` 몸·무늬 · `limbs.js` 팔다리·꼬리).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
@@ -125,16 +125,17 @@ beret(기운 원반 + 꼭지) / bonnet(양옆 눈높이에서 정수리 위로 �
 `headgear.js` `drawHorns`. none / curved / straight / antenna(끝에 공) / nub(작은 혹) / ram(나선) / crown(정수리 스파이크 열).
 imp는 1.8배.
 
-### ears (12)
-none / round · roundMid · roundBig / pointy · pointyMid · pointyBig / flap(아래로 늘어진 호) / long(긴 로브) / fold · foldMid · foldBig.
-round·pointy·fold는 **크기 셋**(1 · 1.4 · 1.8배, 모양은 같다) — 값 이름의 Mid/Big를 떼면 모양이다(`earKind`, `EAR_SIZE`).
+### ears (15)
+none / round · roundMid · roundBig / pointy · pointyMid · pointyBig / flap(아래로 늘어진 호) / long(긴 로브) / fold · foldMid · foldBig / perk · perkMid · perkBig.
+round·pointy·fold·perk는 **크기 셋**(1 · 1.4 · 1.8배, 모양은 같다) — 값 이름의 Mid/Big를 떼면 모양이다(`earKind`, `EAR_SIZE`).
+**fold는 한쪽만 접힌다** — 반대쪽은 선 귀다(접히는 쪽은 개체별 `wobbleSeed`, rng 없음). 좌우가 다른 게 개답다. **perk**는 양쪽 다 선 귀.
 
 **종족별 경계** — 어느 종족이 어떤 귀를 갖나는 `species.js` `forbid.ears`(뽑힌 뒤 덮어씀)와 `identity.ears`(census 검사)로 긋는다.
 
 | 종족 | 귀 | 어디에 |
 | --- | --- | --- |
 | human | none · round(작은 것만) | 옆(눈높이 조금 위). 동물 귀(뾰족·늘어짐·접힘·긴 귀·왕귀)는 사람 것이 아니다 — 전부 round/none으로 |
-| pup | flap · long · pointy(·Mid) · round(·Mid) · fold(·Mid) | 머리 위·옆구리에 채운 귀 (§ 개 귀). none·왕귀 없음 |
+| pup | flap · long · pointy(·Mid) · round(·Mid) · fold(·Mid) · perk(·Mid) | 머리 위·옆구리에 채운 귀 (§ 개 귀). none·왕귀 없음 |
 | cat | pointy(기본 — 옆선 살짝 오목, 끝 뭉툭) · pointyMid(좁고 긴 — 더 벌어짐 +0.15rad) · pointyBig(넓고 낮은 — 끝 둥글고 옆선 볼록) | **정수리 양쪽 모서리(~35°, 네모 머리는 조금 안쪽 30°)의 채운 세모 혹** — 밑변을 윤곽 안으로 넣어 머리와 한 덩어리, 머리와 같은 굵기·2회 윤곽, 밑변은 붙는 자리의 접선을 따라 앉히고 귀 축은 그 자리 법선과 수직의 중간 + 유형별 벌어짐(둥근 머리는 벌어지고 납작한 머리는 곧게, 좌우 살짝 다르게). 안쪽 귀는 개체별(이중선 50% · 먹 채움 15% · 홈 한 획 15% · 없음 20%). round·fold·flap·long·none 없음(레퍼런스 70장 실측) |
 | imp | none · pointy(작은 것만) | 옆 |
 
@@ -147,7 +148,9 @@ bias pointy 3 · pointyMid 2 · pointyBig 1.5.
 떨어져 늘어진다 — 그리고 머리 **위에** 그린다(`drawPupEars`, 머리 다음). 채운 로브: flap 늘어진 로브(레퍼런스 비글) · long 턱 아래까지(바셋) · round 작은 동그란 귀(퍼그) ·
 pointy 세모귀 — **꼭짓점이 머리(모서리)에 박히고** 몸통이 바깥·아래로 처진다(밑변이 바깥 끝, 수평에서 0.6rad 아래) ·
 fold **접힌 귀**(버튼 이어) — **머리 법선 좌표**로 그린다: 밑변은 붙는 자리의 **접선**을 따라 윤곽 안에 박히고 귀는 **법선 방향**(머리 밖)으로 자란다.
-그 위에서 덮개가 접선 쪽으로 꺾여 **접힘선보다 아래로** 늘어진다. 다른 귀처럼 안쪽으로 기운 축을 쓰면 밑동이 두피에서 떠 **머리에 얹은 상자**로 보이고,
+그 위에서 덮개가 접선 쪽으로 꺾여 **접힘선보다 아래로** 늘어진다 — **한쪽 귀만**이고 반대쪽은 perk와 같은 선 귀다 ·
+perk **선 귀** — 같은 법선 좌표로 곧게 선 세모(밑동 좁고 위로 빨리 좁아져 끝이 뾰족하다; 넓적하고 낮으면 동그란 귀와 구분이 안 된다).
+다른 귀처럼 안쪽으로 기운 축을 쓰면 밑동이 두피에서 떠 **머리에 얹은 상자**로 보이고,
 끝이 위로 굽으면 뿔, 옆으로만 뻗으면 깃발이 된다. 덮개는 귀 안쪽 면이라 조금 더 어둡고 접힘선은 **잉크 한 획** — 검은 털에서는 두 조각의 색이 같아
 선이 없으면 접힌 게 안 보인다. 밑동 윤곽은 **열린 선**이다(덮개가 가리는 윗변·윗바깥변은 안 긋는다) — 층 하나 안에서는 잉크가 채색보다 위라
 덮개 채색이 밑동 윤곽을 못 가린다([../rig.md](../rig.md)) · none 없음. 종족 bias flap 4 · long 3 · pointy 2 · round 1.5 · fold 1.

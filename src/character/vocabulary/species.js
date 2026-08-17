@@ -13,7 +13,7 @@ export const SPECIES = [
       arms: { none: "stick" },   // 사람은 팔이 있다 (팔 없음은 도깨비의 것)
       face2: { tears: "none" },  // 눈물 자국은 사람에게 안 준다 (도깨비의 것)
       // 사람 귀는 사람 귀뿐 — 작은 동그란 귀(round)나 없음. 동물 귀(뾰족·늘어짐·접힘·긴 귀)는 사람에게 안 준다
-      ears: { roundMid: "round", roundBig: "round", pointy: "round", pointyMid: "round", pointyBig: "round", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none" },
+      ears: { roundMid: "round", roundBig: "round", pointy: "round", pointyMid: "round", pointyBig: "round", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "round", perkMid: "round", perkBig: "round" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       eyes: { cyclops: "wide" },
       armLength: { long: "medium" },
@@ -35,7 +35,7 @@ export const SPECIES = [
   {
     name: "pup",
     forbid: {
-      ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid" },
+      ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid", perkBig: "perkMid" },
       // 개 귀 경계 — 없음·왕귀는 개 귀로
       eyes: { cyclops: "dot" },
       // 개에게 뿔·머리카락은 없다 — 전부 none (털이지 머리카락이 아니다)
@@ -45,7 +45,7 @@ export const SPECIES = [
       legLength: { verylong: "long" }
     },
     identity: {
-      ears: ["flap", "long", "pointy", "pointyMid", "round", "roundMid", "fold", "foldMid"],   // 개 귀 — 늘어진 귀가 기본, none·왕귀 없음
+      ears: ["flap", "long", "pointy", "pointyMid", "round", "roundMid", "fold", "foldMid", "perk", "perkMid"],   // 개 귀 — 늘어진 귀가 기본, none·왕귀 없음
       skeleton: "quad",
       horns: ["none"],
       hair: ["none"],
@@ -59,7 +59,7 @@ export const SPECIES = [
       // 다리 — 레퍼런스의 굵은 스텁이 기본. 가는 다리·양말·떠 있는 발(레이맨식)도 섞인다
       legs: [["stub", 4], ["stick", 2], ["float", 1.5], ["boots", 1]],
       // 귀 — 늘어진 로브(flap·long)가 기본, 쫑긋(pointy)·동그란(round)·접힌(fold) 귀도 섞인다
-      ears: [["flap", 4], ["long", 3], ["pointy", 1.2], ["pointyMid", 0.8], ["round", 1], ["roundMid", 0.5], ["fold", 0.7], ["foldMid", 0.3]],
+      ears: [["flap", 4], ["long", 3], ["pointy", 1.2], ["pointyMid", 0.8], ["round", 1], ["roundMid", 0.5], ["fold", 1], ["foldMid", 0.6], ["perk", 1.2], ["perkMid", 0.6]],
       horns: [["none", 1]],
       hair: [["none", 1]],
       headgear: [["none", 8], ["cap", 1]],
@@ -79,7 +79,7 @@ export const SPECIES = [
   {
     name: "cat",
     forbid: {
-      ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig" },
+      ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
       // 고양이 귀 경계 — 늘어진 귀·없음은 정수리 귀로
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
@@ -123,7 +123,7 @@ export const SPECIES = [
   {
     name: "imp",
     forbid: {
-      ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none" }   // 도깨비 귀는 없거나 작은 뾰족귀
+      ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "pointy", perkMid: "pointy", perkBig: "pointy" }   // 도깨비 귀는 없거나 작은 뾰족귀
     },
     identity: {
       ears: ["none", "pointy"],   // 도깨비 귀는 없거나 뾰족 작은 것

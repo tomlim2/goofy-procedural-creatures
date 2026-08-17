@@ -27,7 +27,8 @@ export const SLOTS = {
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
   // round·pointy·fold는 크기 셋 — 기본(작음) · Mid(중간, 1.4배) · Big(큼, 1.8배). 모양은 같고 크기만 다르다.
   // 고양이 정수리 귀, 개 귀, 사람·도깨비 옆귀 다 같은 배율을 쓴다
-  ears: ["none", "round", "roundMid", "roundBig", "pointy", "pointyMid", "pointyBig", "flap", "long", "fold", "foldMid", "foldBig"],
+  // fold는 **한쪽만 접히고 반대쪽은 선다**(접히는 쪽은 개체별) · perk는 양쪽 다 선 귀
+  ears: ["none", "round", "roundMid", "roundBig", "pointy", "pointyMid", "pointyBig", "flap", "long", "fold", "foldMid", "foldBig", "perk", "perkMid", "perkBig"],
   nose: ["hook", "dot", "wedge", "long", "none"],
   // 볼·눈가 디테일. 레퍼런스의 눈물 자국과 볼터치.
   face2: ["none", "tears", "blush", "freckles"],
@@ -91,7 +92,7 @@ export const DEFAULT_BIAS = {
     ["verylong", 1], ["twintailsBall", 0.8], ["appleBig", 0.7]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1]],   // bonnet 비활성
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
-  ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3]],
+  ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3], ["perk", 0.7], ["perkMid", 0.3]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1]],
   marks: [["none", 4], ["stripes", 2], ["hatch", 2], ["dots", 2], ["patch", 1], ["spots", 1]],
   nose: [["hook", 3], ["dot", 2], ["wedge", 2], ["none", 2], ["long", 1]],
