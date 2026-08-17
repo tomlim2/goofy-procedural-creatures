@@ -69,7 +69,7 @@
 | eyeSize | 0.17 (0.07) — sprite 0.24 | |
 | eyeGap / eyeHeight | 0.42 (0.12) / 0.03 (0.09) | |
 | eyeSizeSkew / eyeHeightSkew | 0 (0.22) / 0 (0.05) | **좌우 비대칭**. 손그림처럼 보이는 가장 값싼 장치 |
-| noseDrop / mouthDrop | 0.1 (0.06) / 0.3 (0.07) | 머리 중심 대비 코·입 높이 |
+| noseDrop / mouthDrop | 0.1 (0.06) / 0.3 (0.07) | 머리 중심 대비 코 높이 / (mouthDrop은 뽑기만 한다 — 입 자리는 `mouthPos` 슬롯이 코 밑~턱 사이에서 정한다) |
 | bodyScale / bodyWide | 0.52 (0.12) / 1 (0.2) | 몸 높이·폭. 둘 다에 `build` 슬롯 배율(폭 0.5~1.4, 높이 0.7~1.15)이 곱해진다 |
 | legLength / armSpread | 0.3 (0.12) / 1 (0.25) | 다리 기장(×0.55, `legLength` short면 ×0.3 더) · 팔 길이(×0.242, `armLength` long이면 ×1.64 더) |
 | bodyLen / tailLift | 1 (0.2) / 0 (1) | 네발용. 두발도 뽑는다 (rng 호출 수 고정) |

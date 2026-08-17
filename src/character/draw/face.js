@@ -297,16 +297,28 @@ export function drawNose(ink, fills, spec, box, eyes) {
   }
 }
 
+// 코의 아래 끝 — 입 자리의 위 한계. 코가 없으면 (놀라 커진) 눈 밑선이나 머리 중심 조금 아래
+export function noseBottomY(spec, box, eyes) {
+  const kind = spec.parts.nose;
+  if (spec.species === "pup") return muzzleGeometry(spec, box).noseY - muzzleGeometry(spec, box).noseR;
+  if (kind === "none") return Math.min(eyeFloor(spec, eyes, 0) - 0.01, box.headCy - box.headRy * 0.04);
+  return noseY(spec, box, eyes) - (kind === "long" ? 0.045 : kind === "wedge" ? 0.02 : kind === "hook" ? 0.012 : 0.008);
+}
+
 export function drawMouth(ink, fills, spec, box, kindOverride) {
   const kind = kindOverride || spec.parts.mouth;
-  // 입도 (놀라 커진) 눈 아래 — 외눈·왕눈의 흰자 위에 얹히면 사라진다
   const eyes = eyeGeometry(spec, box);
-  let y = Math.min(box.headCy - box.headRy * spec.proportions.mouthDrop, eyeFloor(spec, eyes, 0) - 0.03);
+  // 입 자리 — 코 밑(noseBottomY)부터 턱 위(headCy − 0.86·ry)까지 사이에서 mouthPos로: high 0.22 · mid 0.5 · low 0.76.
+  // 그리고 (놀라 커진) 눈 아래 — 외눈·왕눈의 흰자 위에 얹히면 사라진다
+  const top = noseBottomY(spec, box, eyes) - 0.006;
+  const chin = box.headCy - box.headRy * 0.86;
+  const tPos = spec.parts.mouthPos === "high" ? 0.22 : spec.parts.mouthPos === "low" ? 0.76 : 0.5;
+  let y = Math.min(top + (chin - top) * tPos, eyeFloor(spec, eyes, 0) - 0.03);
   // 개 입은 밝은 주둥이 위에 앉으니 늘 검정 — 얼굴 잉크가 밝아도(짙은 털색) 그렇다
   const ink0 = spec.species === "pup" ? spec.palette.ink : (spec.faceInk || spec.palette.ink);
   let w = box.headRx * 0.38;
   // 벌린 입(open)의 높이 — 머리에 비례하고, 코 밑에서 끝난다 (코를 삼키면 코가 사라진다)
-  const noseBottom = spec.species === "pup" || spec.parts.nose === "none" ? Infinity : noseY(spec, box, eyes) - (spec.parts.nose === "long" ? 0.045 : 0.02);
+  const noseBottom = spec.species === "pup" || spec.parts.nose === "none" ? Infinity : top;
   const openH = Math.max(0.018, Math.min(0.05, box.headRy * 0.22, noseBottom - 0.008 - y));
   if (spec.species === "pup") {
     // 개는 입이 주둥이 위, 코 밑에 — 얼굴 비율(mouthDrop)이 아니라 주둥이 치수를 따른다. 코 덩어리에 겹치면 안 보인다

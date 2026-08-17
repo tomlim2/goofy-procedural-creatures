@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 21슬롯 147파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 22슬롯 150파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -147,8 +147,11 @@ none / tears(눈 아래 두 줄) / blush(볼 분홍 타원) / freckles(볼마다
 고양이 **수염**은 슬롯이 아니라 종족 고정(`drawWhiskers`) — 양쪽 세 가닥, 살짝 처지는 부채꼴. 길이는 개체별(머리 반폭의 0.42~0.92배)이라
 반 넘는 고양이는 수염이 **머리 윤곽을 뚫고 밖으로** 나온다 (얼굴 층 2.4라 윤곽·귀 위에 얹히고 종이까지 뻗는다).
 
-### mouth (9)
+### mouth (9) × mouthPos — 입 자리 (3)
 dot / line / teeth(선 + 이빨 3개) / open(검은 타원) / wave / smile / pout(작은 원) / omega(ω, 고양이) / zigzag(도깨비).
+입 **자리**는 `mouthPos` 슬롯(늦은 슬롯) — 코 밑(`noseBottomY`)부터 턱 위(headCy − 0.86·ry)까지 사이의 **high**(0.22 — 코 바로 밑) ·
+**mid**(0.5) · **low**(0.76 — 턱 가까이). 코가 없으면 위 한계는 눈 밑선/머리 중심 조금 아래. 개는 주둥이 규칙(코 밑 고정)이라 무시.
+어느 자리든 (놀라 커진) 눈 아래에 있어야 한다.
 **상태 전환 대상**. 대체 표: dot→line, line→wave, teeth→open, open→line, wave→line, smile→open.
 
 ## 몸
