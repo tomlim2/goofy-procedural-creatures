@@ -8,6 +8,7 @@ import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./actions.js";
 
 const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infinity);
 
+// (반감김 유지는 없앴다 — 눈은 뜨거나 감거나 둘 중 하나. init만 남겨 rng 순서를 유지한다)
 export function initSquint(rng) { return { next: rng.float(6, 18), until: -1 }; }
 export function initMood(rng) { return { nextMood: rng.float(3, 10), moodUntil: -1, nextMouth: rng.float(2, 8), mouthUntil: -1 }; }
 export function initTilt(rng, M) { return { next: rng.float(M.tilt[0], M.tilt[1]), until: -1, target: 0, angle: 0 }; }

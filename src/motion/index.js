@@ -46,7 +46,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const blink = E.initBlink(rng);                // 2
   const glance = E.initGlance(rng);              // 3
   const surprise = E.initSurprise(rng, M);       // 4
-  const squint = S.initSquint(rng);              // 5
+  S.initSquint(rng);                             // 5 (반감김 유지 — 없앴다. rng 소비만 유지해 이후 순서를 안 흔든다)
   const regen = E.initRegen(rng);                // 6
   const mood = S.initMood(rng);                  // 7
   const emojiSchedule = E.initEmojiSchedule(rng); // 8
@@ -200,7 +200,6 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const faceTurn = [faceTurn0[0] * awake, faceTurn0[1] * awake - 0.35 * sleepK];
       let lid = bl.lid;
       let isHappy = bl.happy;
-      lid = S.stepSquint(squint, t, rng, lid);
       if (S.stepHappy(happy, t, rng, M)) { lid = 1; isHappy = true; }
       // ♥ 이모지가 떠 있는 동안은 웃는다(^^) — 어디서 쏜 ♥이든 (idle 예약·파닥임·꼬리 흔들기·♥ 놀람). 개는 이게 꼬리 흔들기로 이어진다
       if (emoji.kind === "heart" && !asleep) { lid = 1; isHappy = true; }

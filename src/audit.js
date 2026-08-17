@@ -37,7 +37,7 @@ const STATES = {
   turnDsurp: { faceTurn: [0, -1], startle: 1 }, sleepTurn: { sleep: 1, lid: 1, faceTurn: [0.5, -0.5] },
   starEyes: { startle: 1, eyeFx: { kind: "star", k: 1 } }, heartEyes: { startle: 1, eyeFx: { kind: "heart", k: 1 } }
 };
-const RIG_KINDS = ["ring", "wide", "cyclops", "bead", "oval", "sparkle"];
+const RIG_KINDS = ["ring", "wide", "cyclops", "bead", "oval"];
 // "보인다"의 문턱 — 머리 폭의 4%(픽셀). 점 입·점 코·주근깨 하나·작은 눈썹 하나가 이 정도다. 화면이 작으면 문턱도 내려간다
 const minPixels = (headPx) => Math.max(3, Math.round(headPx * 0.04));
 
@@ -134,7 +134,7 @@ function audit() {
         parts.push([`pupil${i}`, [rig.pupil], !closed]);
         parts.push([`smile${i}`, [rig.smile], !!(winked || ov.happy)]);
         // 감은 눈(깜빡임·잠)은 감은 눈 선이 있어야 한다 — "동공이 안 보여도 된다"가 "눈이 없어도 된다"는 뜻이 아니다
-        parts.push([`shut${i}`, [rig.shut], !winked && !ov.happy && (asleep || !!ov.lid)]);
+        parts.push([`shut${i}`, [rig.shut], !winked && !ov.happy && (asleep || (ov.lid || 0) > 0.5)]);
       });
       // 놀람 변형 — ☆/♥ 덮개는 그때 보여야 하고, 그 밑의 눈은 안 보여도 된다
       if (ov.eyeFx) item.eyeFx.forEach((e, i) => parts.push([`eyeFx${i}`, [ov.eyeFx.kind === "star" ? e.star : e.heart], true]));

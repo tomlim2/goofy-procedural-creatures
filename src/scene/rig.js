@@ -143,7 +143,6 @@ export function buildCreature(spec, noise, birth = 0) {
     const rx = eye.r * shape.sx, ry = eye.r * shape.sy;
     const o = 3 + eyeOrder.indexOf(eye) * 0.5;   // 이 눈의 블록 시작
     const bead = eyeKind === "bead";
-    const sparkle = eyeKind === "sparkle";   // ◕ — 흰자 안을 거의 채우는 큰 동공 + 하이라이트
 
     if (!bead) {
       const white = new Sketch(noise, 0.4);
@@ -167,24 +166,17 @@ export function buildCreature(spec, noise, birth = 0) {
       pupilSketch.fill(ball, spec.palette.ink);
       if (spec.faceInk) pupilSketch.outline(ball, { color: spec.faceInk, width: 0.01 });
       pupilSketch.fill(blobPath(-eye.r * 0.3, eye.r * 0.32, eye.r * 0.2, eye.r * 0.17, { lumps: 3, amount: 0.1, noise: null }), "#f6f2e9");
-    } else if (sparkle) {
-      pupilSketch.fill(blobPath(0, 0, eye.r * 0.7, eye.r * 0.7, { lumps: 3, amount: 0.08, noise: null }), spec.palette.ink);
-      pupilSketch.fill(blobPath(-eye.r * 0.26, eye.r * 0.26, eye.r * 0.2, eye.r * 0.17, { lumps: 3, amount: 0.1, noise: null }), "#f6f2e9");
     } else {
       pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
     }
     const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
     rig.add(pupil);
+    // 뜬 눈(흰자·테·동공)은 open 그룹 — 감을 때 **덮지 않고 끈다**. 그 자리에 반감김·감은 선·^^ 글리프 중 하나가 대신 선다
+    const open = new THREE.Group();
+    for (const child of [...rig.children]) { rig.remove(child); open.add(child); }
+    rig.add(open);
 
-    // 눈꺼풀 — 흰자(구슬)보다 살짝 큰 살색 덮개. 위 가장자리에 걸어 두고 scale.y로 내린다
-    const lidSketch = new Sketch(noise, 0.4);
-    lidSketch.fill(blobPath(0, -ry * 1.15, rx * 1.25, ry * 1.15, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
-    const lid = sketchMesh(lidSketch, 1, o + 0.3);
-    lid.position.set(0, ry * 1.15, 0);
-    lid.scale.y = 0;
-    rig.add(lid);
-
-    // ^^ — 행복하게 감은 눈. 눈꺼풀을 다 닫고 이 아치를 위에 얹는다.
+    // ^^ — 행복하게 감은 눈. 뜬 눈을 끄고 이 아치가 대신 선다.
     // 얼굴 잉크(faceInk)로 — 도깨비처럼 머리가 먹빛이면 검정 아치는 머리에 묻혀 안 보인다
     const smileSketch = new Sketch(noise, 0.5);
     smileSketch.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), {
@@ -194,8 +186,7 @@ export function buildCreature(spec, noise, birth = 0) {
     smile.visible = false;
     rig.add(smile);
 
-    // 감은 눈 선 — 눈꺼풀이 다 내려왔을 때(깜빡임 꼭대기·잠) 살색 덮개 위에 얹는 아치. 이게 없으면 살아 있는 눈(ring·wide·cyclops)은
-    // 감는 순간 얼굴에서 아예 사라진다 — 잠든 개·고양이가 눈 없는 얼굴이 된다 (정지 눈의 잠 눈꺼풀 아치와 같은 역할)
+    // 감은 눈 선 — 눈꺼풀이 다 내려왔을 때(깜빡임 꼭대기·잠). 뜬 눈을 끄고 이 아치가 대신 선다 — 감은 눈이 빈 얼굴이 되지 않게
     const shutSketch = new Sketch(noise, 0.5);
     shutSketch.stroke(arcPath(0, eye.r * 0.1, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), {
       color: spec.faceInk || spec.palette.ink, width: 0.012
@@ -206,33 +197,28 @@ export function buildCreature(spec, noise, birth = 0) {
 
     faceGroup.add(rig);
     // gazeScale: 시선에 동공이 움직이는 폭(눈 반지름 배). 구슬눈은 동공이 곧 눈이라 조금만
-    eyeRigs.push({ rig, pupil, lid, smile, shut, eye, gazeScale: bead ? 0.12 : sparkle ? 0.14 : 0.34 });
+    eyeRigs.push({ rig, open, pupil, smile, shut, eye, gazeScale: bead ? 0.12 : 0.34 });
   }
 
-  // 잠 눈꺼풀 — 정지 눈(dot·cross·slit…)은 얼굴 잉크에 구워져 있어 감을 수 없다. 잘 때 그 위에 덮는 살색 덮개 + 감은 선.
-  // 살아 있는 눈은 자기 눈꺼풀(lid)이 있어 필요 없다
-  // 정지 눈(dot·sleepy·cross·spiral·slit·half)의 덮개 — 잠(감은 눈 선)과 ^^·윙크(미소 아치)를 위해 살색 덮개 + 아치 둘.
-  // 살아 있는 눈의 lid·shut·smile과 짝이다: 정지 눈도 자면 감고, 행복하면 ^^로 웃는다
+  // 정지 눈(dot·sleepy·cross·spiral·slit·half…)의 감은 눈 — 잠(감은 눈 선)·^^·윙크(미소 아치). 덮개는 없다: 그때는 정지 눈 프레임을
+  // **끄고**(animate) 아치가 대신 선다. 살아 있는 눈의 open/shut/smile과 짝이다
   const staticLids = [];
   for (const eye of eyeGeometry(spec, layout(spec))) {
     if (patched(spec, eye)) continue;
     if (firstDrawn.eyes.some((e) => e.side === eye.side)) continue;
     const ink0 = spec.faceInk || spec.palette.ink;
-    const coverSketch = new Sketch(noise, 0.4);
-    coverSketch.fill(blobPath(0, 0, eye.r * 1.2, eye.r * 1.1, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
     const shutSketch = new Sketch(noise, 0.4);
     shutSketch.stroke(arcPath(0, eye.r * 0.15, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink0, width: 0.011 });
     const smileSketch = new Sketch(noise, 0.5);
     smileSketch.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0, width: 0.013 });
-    const cover = sketchMesh(coverSketch, 1, 3.5);
     const shut = sketchMesh(shutSketch, 1, 3.6);
     const smile = sketchMesh(smileSketch, 1, 3.6);
-    for (const m of [cover, shut, smile]) {
+    for (const m of [shut, smile]) {
       m.position.set(eye.x, eye.y - faceCy, 0);
       m.visible = false;
       faceGroup.add(m);
     }
-    staticLids.push({ cover, shut, smile, eye });
+    staticLids.push({ shut, smile, eye });
   }
 
   // 놀람의 눈 변형 — ☆_☆ / ♥_♥. 덮지 않는다: 그동안 눈(정지 눈 프레임·눈 리그)을 **끄고** 그 자리에 글리프만 그린다 (6.32 — 코·안경 아래).

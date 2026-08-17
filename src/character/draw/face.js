@@ -13,7 +13,7 @@ export function patched(spec, eye) { return spec.parts.eyewear === "patch" && sp
 export const EYE_SHAPE = { oval: { sx: 0.82, sy: 1.22 } };
 export function eyeShape(spec) { return EYE_SHAPE[spec.parts.eyes] || { sx: 1, sy: 1 }; }
 // 살아 있는 눈(리그로 세우는 눈) — 나머지는 얼굴 잉크에 정적으로 굽는다
-export const RIG_EYES = ["ring", "wide", "cyclops", "bead", "oval", "sparkle"];
+export const RIG_EYES = ["ring", "wide", "cyclops", "bead", "oval"];
 
 // 별(☆) 꼭짓점 목록 — 바깥 r, 안쪽 r·inner, 위가 뾰족. 놀람의 ☆_☆ 눈 덮개(scene/rig.js)가 쓴다
 export function starPath(cx, cy, r, inner = 0.45) {

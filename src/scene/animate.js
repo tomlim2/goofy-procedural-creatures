@@ -104,26 +104,30 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.faceStates.mouth[0].visible = !state.mouthAlt;
   item.faceStates.mouth[1].visible = state.mouthAlt;
 
-  // 정지 눈 덮개 — 반쯤 넘게 잠들면 감은 눈 선, ^^·윙크(그쪽)면 미소 아치. 살아 있는 눈의 lid/shut/smile과 같은 규칙
+  // 정지 눈 — 반쯤 넘게 잠들면 감은 눈 선, ^^·윙크(그쪽)면 미소 아치가 **대신** 선다(덮지 않고 정지 눈 프레임을 끈다).
   const asleep = (state.sleep || 0) > 0.5;
+  let staticReplaced = false;
   for (const lid of item.staticLids) {
     const happyEye = state.happy || (state.winkSide !== 0 && lid.eye.side === state.winkSide);
-    lid.cover.visible = asleep || happyEye;
     lid.smile.visible = happyEye;
     lid.shut.visible = asleep && !happyEye;
+    if (happyEye || asleep) staticReplaced = true;
   }
+  if (staticReplaced) for (const g of item.frames.staticEyes) g.visible = false;
 
-  // 눈 — 놀람·시선·깜빡임·^^·윙크. 놀람은 눈을 키우지 않고 **동공만** 줄인다 (1 → 0.5배)
+  // 눈 — 놀람·시선·깜빡임·^^·윙크. 놀람은 눈을 키우지 않고 **동공만** 줄인다 (1 → 0.5배).
+  // 감는 건 덮는 게 아니라 **바꿔 그리기**: 뜬 눈(open) ↔ 감은 선(눈꺼풀 > 0.5) — 중간(반감김)은 없다. ^^·윙크는 미소 아치가 대신.
+  // 깜빡임(0.13초)은 뜬 눈 → 감은 선 → 뜬 눈 두 컷으로 지나간다
   for (const rig of item.eyeRigs) {
     rig.pupil.scale.setScalar(1 - 0.5 * (state.startle || 0));
     rig.pupil.position.x = state.gaze[0] * rig.eye.r * rig.gazeScale;
     rig.pupil.position.y = state.gaze[1] * rig.eye.r * rig.gazeScale * 0.82;
     const winked = state.winkSide !== 0 && rig.eye.side === state.winkSide;
-    const closed = winked || state.happy;
-    rig.lid.scale.y = closed ? 1 : state.lid;
-    rig.smile.visible = closed;
-    // 눈꺼풀이 거의 다 내려오면(깜빡임 꼭대기·잠) 감은 눈 선 — 감은 눈이 빈 얼굴이 되지 않게. ^^·윙크는 미소 아치가 대신한다
-    rig.shut.visible = !closed && state.lid > 0.85;
+    const smiling = winked || state.happy;
+    const lid = state.lid || 0;
+    rig.smile.visible = smiling;
+    rig.shut.visible = !smiling && lid > 0.5;
+    rig.open.visible = !smiling && lid <= 0.5;
   }
 
   // 놀람의 눈 변형 — ☆_☆ / ♥_♥. 그동안 눈(정지 눈 프레임·눈 리그)은 **끄고** 글리프로 대체한다 (덮지 않는다). 봉투(k)로 팝인/아웃 (0.7 → 1)
