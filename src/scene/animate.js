@@ -107,9 +107,9 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     lid.shut.visible = asleep && !happyEye;
   }
 
-  // 눈 — 개방도·시선·깜빡임·^^·윙크. 개방도(놀람)는 개체의 eyePop만큼만 (왕눈은 절반)
+  // 눈 — 놀람·시선·깜빡임·^^·윙크. 놀람은 눈을 키우지 않고 **동공만** 줄인다 (1 → 0.5배)
   for (const rig of item.eyeRigs) {
-    rig.rig.scale.setScalar(1 + (state.aperture - 1) * item.eyePop);
+    rig.pupil.scale.setScalar(1 - 0.5 * (state.startle || 0));
     rig.pupil.position.x = state.gaze[0] * rig.eye.r * 0.34;
     rig.pupil.position.y = state.gaze[1] * rig.eye.r * 0.28;
     const winked = state.winkSide !== 0 && rig.eye.side === state.winkSide;

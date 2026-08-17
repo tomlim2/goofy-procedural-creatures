@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyePop } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -206,8 +206,6 @@ export function buildCreature(spec, noise, birth = 0) {
     limbs,
     frames,
     eyeRigs,
-    // 놀람 때 눈 리그가 커지는 배율의 감쇠. 왕눈(wide·cyclops)은 이미 커서 1.65배로 뻥 튀기면 코·볼·입까지 덮는다 — 절반만
-    eyePop: eyePop(spec),
     staticLids,
     faceStates,
     // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다

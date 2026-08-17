@@ -44,7 +44,7 @@
 | faceTurn | [x, y] −1~1 | faceGroup.position x/y + scale 눌림 — 이목구비 전체가 밀려 머리를 돌린 착시 (x 0.26·headRx, y 0.16·headRy) |
 | gaze | [x, y] | pupil.position |
 | lid | 0~1 | lid.scale.y |
-| aperture | 배율 | eyeRig.scale — 놀람 |
+| startle | 0~1 | eyeRig.pupil.scale = 1 − 0.5·startle — 놀람. 눈은 그대로, **동공만** 줄어든다 |
 | happy | bool | 눈 닫고 ^^ 아치 |
 | winkSide | −1/0/1 | 한쪽만 lid 1 |
 | browAlt / mouthAlt | bool | 눈썹·입 상태 벌 토글 |
@@ -67,7 +67,7 @@
 | **얼굴 돌림** (좌우·위아래) | 시선 추종, 임계감쇠 w 0.1 (≈ 0.8초). 머리카락·모자·뿔(crownGroup)은 이목구비 이동량의 45%(x)·30%(y)만 같은 방향으로, 귀(earGroup)는 40%(x)·15%(y) **반대 방향**으로 밀린다 — 위치만, 크기 그대로 | yaw 배율 human 0.5 / pup 0.7 / cat 0.8 / imp 0.6 (위아래는 ×0.6) | 이목구비 전체(눈·코·입·눈썹·안경·볼·수염·주둥이)가 머리 안에서 밀리고 살짝 눌린다. 동공이 먼저 가고 얼굴이 뒤따른다 |
 | **둘러보기** (얼굴 돌림 유지) | 간격 human 6~16 / pup 4~12 / cat 8~20 / imp 5~14초, 유지 1~5초 | 진폭 [x, y] human [1, 0.8] / pup [1, 1] / cat [0.9, 0.9] / imp [1, 0.7] | 8방향 중 하나로 끝까지 돌리고 머문다. 시선도 그쪽 |
 | 반감김 유지 | 8~20초, 1.2~2.8초 | 공통 | lid 0.5 |
-| 놀람 (개방도) | 간격 표 참조, 1.1초 | human 8~22 / pup 10~26 / cat 9~24 / **imp 4~12** | 눈 리그 1.65배 (왕눈 wide·외눈 cyclops는 절반 — 개체의 `eyePop`). 0.28초에 커지고 유지, 0.5초에 풀림 (`envelope`) |
+| 놀람 (동공 수축) | 간격 표 참조, 1.1초 | human 8~22 / pup 10~26 / cat 9~24 / **imp 4~12** | 눈 크기는 그대로, **동공만 0.5배**로 (살아 있는 눈 ring·wide·cyclops). 0.28초에 줄고 유지, 0.5초에 풀림 (`envelope`) |
 | ^^ 행복 유지 | 6~16초, 2~5초 | **pup만** | 살아 있는 눈은 눈꺼풀+미소 아치, 정지 눈은 덮개+미소 아치 — 어느 눈이든 ^^가 된다 |
 | 윙크 | 8~20초, 0.5~1.3초 | **cat만** | 그쪽 눈만 ^^ (정지 눈도) |
 | 눈썹 전환 | 6~16초, 1.5~4초 | 공통 | ALT_BROW 표 (flat↔worry, angry→flat). **눈썹 none이면 대체도 none** — 없는 파트는 안 그린다 |
@@ -234,7 +234,7 @@ ACTION 카드의 SCRATCH/WAG는 네발에게만 먹는다. 제자리 점프는 �
 | --- | --- | --- |
 | idle 예약 (`events.stepEmojiSchedule`) | 종족 목록에서 하나 — human/pup heart·bang·quest, cat heart·quest·bang, imp **dots×2**·bang·quest·heart | 14~40초마다 |
 | 행위 `emoji` 필드 (`ACTIONS`·`QUAD_ACTIONS`) | flap 파닥임 → ♥, think 생각 → ?, wag 꼬리 흔들기 → ♥ | 행위가 **시작하는 순간** 한 번 |
-| 이벤트 | 놀람(개방도) → ! | 놀람이 시작할 때 30% (자는 중엔 안 놀란다) |
+| 이벤트 | 놀람(동공 수축) → ! | 놀람이 시작할 때 30% (자는 중엔 안 놀란다) |
 | 기본 상태 | sleep → z | 자는 동안 6초마다 (개체별 위상, rng 없음) |
 
 새 모션에 이모지를 붙이려면 그 행위에 `emoji: "kind"`를 적는다 — 그게 이모지 트리거다. 발화 실측 human 3.6 · imp 4.4 · pup 5.6 · cat 4.2 회/분.

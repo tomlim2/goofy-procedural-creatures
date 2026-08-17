@@ -64,10 +64,11 @@ export function stepSurprise(e, t, rng, M) {
   if (e.start >= 0) {
     const k = (t - e.start) / 1.1;
     if (k >= 1) e.start = -1;
-    // 커지는 데 0.25(≈0.28초), 유지, 0.45(≈0.5초)에 걸쳐 풀림 — 양끝 속도 0
-    else return 1 + 0.65 * envelope(k, 0.25, 0.45);
+    // 놀람 정도 0~1: 0.25(≈0.28초)에 걸쳐 오르고, 유지, 0.45(≈0.5초)에 걸쳐 풀림 — 양끝 속도 0.
+    // scene은 이 값으로 **동공만** 줄인다(1 → 0.5배). 눈 자체는 안 커진다
+    else return envelope(k, 0.25, 0.45);
   }
-  return 1;
+  return 0;
 }
 export function stepNod(e, t, rng) {
   if (t >= e.next && e.start < 0) { e.start = t; e.next = t + rng.float(9, 24); }

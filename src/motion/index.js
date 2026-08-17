@@ -24,7 +24,7 @@ export { EMOJI } from "./emoji.js";
 // 네발은 다리 수직·꼬리 그린 그대로. scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다.
 // (모션의 기본 상태는 이게 아니라 idle이다 — 두발 A포즈, 네발 선 자세(legStance·tailIdle). 바인드는 모션이 없을 때다.)
 export const BIND_STATE = Object.freeze({
-  breathe: 0, lid: 0, gaze: [0, 0], aperture: 1, regen: false, emoji: null,
+  breathe: 0, lid: 0, gaze: [0, 0], startle: 0, regen: false, emoji: null,
   browAlt: false, mouthAlt: false,
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
@@ -143,12 +143,12 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (S.stepHappy(happy, t, rng, M)) { lid = 1; isHappy = true; }
       const winkSide = sleepK > 0.5 ? 0 : S.stepWink(wink, t, rng, M);
       if (sleepK > 0.5) S.stepWink(wink, t, rng, M);   // (rng 소비 고정 — 결과만 버린다)
-      const apertureBefore = surprise.start;
-      const aperture0 = E.stepSurprise(surprise, t, rng, M);
+      const startleBefore = surprise.start;
+      const startle0 = E.stepSurprise(surprise, t, rng, M);
       // 놀람이 막 시작하면 30%는 ! 를 쏜다 (이모지 트리거). 자는 중엔 놀라지 않는다
-      if (apertureBefore < 0 && surprise.start >= 0 && rng.chance(0.3) && !asleep) triggerEmoji(emoji, "bang", t);
+      if (startleBefore < 0 && surprise.start >= 0 && rng.chance(0.3) && !asleep) triggerEmoji(emoji, "bang", t);
       lid = Math.max(lid, sleepK);
-      const aperture = 1 + (aperture0 - 1) * awake;
+      const startle = startle0 * awake;   // 놀람 0~1 — 동공 수축량
       if (sleepK > 0.5) isHappy = false;
 
       // 몸통
@@ -248,7 +248,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const em = stepEmoji(emoji, t);
 
       return {
-        breathe: br, lid, gaze, aperture, regen: regenNow, emoji: em,
+        breathe: br, lid, gaze, startle, regen: regenNow, emoji: em,
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
         sway: sw.sway, rock: sw.rock, headAngle: (tiltAngle + rollAngle) * awake + sleepHead, headBob: headBob * awake + sleepBob,
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,

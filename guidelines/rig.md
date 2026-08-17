@@ -71,7 +71,7 @@ emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머
 - **limb pivot** — 어깨(bodyTop 아래 22%, 몸통 좌우 윤곽 위 — 형태별 반폭 box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다. 팔은 `bindArm(side)`(T포즈)로 세우고 clock의 `state.arms`가 관절각을 준다
 - **elbow** — 위팔 끝. 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽는다. 위팔:아래팔 = 0.48:0.52. 같은 치수를 `armRig(spec)`이 clock에 넘겨 행위를 IK로 푼다
 - **tailGroup** — 꼬리 뿌리(몸 뒤끝)
-- **eyeRig** — 눈 중심. scale이 개방도, pupil.position이 시선, lid.scale.y가 눈꺼풀
+- **eyeRig** — 눈 중심. pupil.scale이 놀람(1 → 0.5), pupil.position이 시선, lid.scale.y가 눈꺼풀. 리그 자체는 안 커진다
 
 ## 무엇을 굽고 무엇을 변형하나
 
@@ -81,7 +81,7 @@ emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머
 | 팔다리 지체 (front, back) | pivot.rotation.z, elbow.rotation.z (이징된 목표각 + 이징 없는 진동), front/back visible |
 | 꼬리 | rotation.z |
 | 눈썹·입 쉼/대체 | visible |
-| 눈 리그 6메시 | scale(개방도 × 개체 `eyePop` — 왕눈·외눈은 절반), position, visible (smile ^^ / shut 감은 눈 선) |
+| 눈 리그 6메시 | pupil.scale(놀람 — 동공 1 → 0.5배), pupil.position(시선), lid.scale.y, visible (smile ^^ / shut 감은 눈 선) |
 | — | group·headGroup·faceGroup의 position/rotation/scale |
 
 **매 프레임 지오메트리를 다시 만들지 않는다.** 예외는 이모지(트리거당 1회)와 재생성(개체 교체)뿐이다.

@@ -6,15 +6,12 @@ import { makeNoise, makeRng } from "../../rng.js";
 import { TAU, layout, eyeGeometry } from "./layout.js";
 import { SPECIES } from "../vocabulary/species.js";
 
-// 놀람 때 눈 리그가 커지는 최대 배율(motion/events.js stepSurprise 1.65)과 왕눈·외눈의 감쇠(scene/rig.js eyePop 0.5).
-// 코·입·볼 자리를 잡을 때 "눈이 최대로 커졌을 때의 밑선"을 본다 — 커진 흰자 위에 얹히면 같은 색(도깨비 밝은 잉크)이거나 덮여서 사라진다
-export const SURPRISE_REACH = 1.65;
-export function eyePop(spec) { return spec.parts.eyes === "wide" || spec.parts.eyes === "cyclops" ? 0.5 : 1; }
-// x 자리에서 눈(최대로 커진 흰자)이 닿으면 그 밑선(y)을, 아니면 Infinity를 준다. 파츠는 min(원래 y, 밑선 - 여유)에 앉는다
+// 코·입·볼 자리를 잡을 때 보는 눈 밑선 — 흰자 위에 얹히면 같은 색(도깨비 밝은 잉크)이거나 덮여서 사라진다.
+// (놀람은 눈을 키우지 않고 동공만 줄이므로 흰자 크기는 그대로다)
+// x 자리에서 눈(흰자)이 닿으면 그 밑선(y)을, 아니면 Infinity를 준다. 파츠는 min(원래 y, 밑선 - 여유)에 앉는다
 export function eyeFloor(spec, eyes, x) {
-  const reach = 1 + (SURPRISE_REACH - 1) * eyePop(spec);
-  const hit = eyes.filter((e) => e.r * reach > Math.abs(x - e.x));
-  return hit.length ? Math.min(...hit.map((e) => e.y - e.r * reach)) : Infinity;
+  const hit = eyes.filter((e) => e.r * 1.05 > Math.abs(x - e.x));
+  return hit.length ? Math.min(...hit.map((e) => e.y - e.r * 1.05)) : Infinity;
 }
 
 export function drawEyes(ink, fills, spec, box, eyes) {
@@ -59,7 +56,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       fills.fill(blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink0);
     }
     // ring / wide는 여기서 그리지 않는다. scene이 흰자·동공·눈꺼풀을
-    // 별도 메시로 세워 개방도(놀람)를 움직인다.
+    // 별도 메시로 세워 놀람(동공 수축)·시선·눈꺼풀을 움직인다.
   }
 }
 
