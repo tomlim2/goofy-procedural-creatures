@@ -246,10 +246,14 @@ export function drawPupEars(ink, fills, spec, box) {
       // 접힌 귀는 **한쪽만 접힌다** — 반대쪽은 선 귀다 (좌우가 다른 게 개답다). 접히는 쪽은 개체별(wobbleSeed, rng 없음)
       const foldSide = spec.proportions.wobbleSeed % 2 ? 1 : -1;
       if (kind === "perk" || side !== foldSide) {
-        // 선 귀 — 법선 방향으로 **곧게 선 세모**. 밑동은 좁고 위로 갈수록 빨리 좁아져 끝이 뾰족하다
-        // (넓적하고 낮으면 동그란 귀round와 구분이 안 된다)
-        const len = 0.16 * k, base = halfW * 0.86;
-        path = [nAt(-0.014, base), nAt(len * 0.62, base * 0.42), nAt(len, base * 0.06), nAt(len, -base * 0.06), nAt(len * 0.62, -base * 0.42), nAt(-0.014, -base)];
+        // 선 귀 — 법선 방향으로 **곧게 선 세모**. 밑동은 넉넉하고(귀가 머리에 앉은 느낌) 끝은 **둥글게 뭉툭**하다
+        // (칼날처럼 뾰족하면 뿔, 넓적하고 낮으면 동그란 귀round가 된다)
+        const len = 0.155 * k, base = halfW * 1.1, tip = base * 0.34;   // tip 끝 반폭 — 이만큼이 둥근 끝이 된다
+        path = [
+          nAt(-0.014, base), nAt(len * 0.55, base * 0.62), nAt(len * 0.86, tip * 1.15),
+          nAt(len, tip * 0.55), nAt(len * 1.02, 0), nAt(len, -tip * 0.55),
+          nAt(len * 0.86, -tip * 1.15), nAt(len * 0.55, -base * 0.62), nAt(-0.014, -base)
+        ];
       } else {
         const stand = 0.085 * k;         // 접힘선까지 선 높이 (법선 방향)
         const drop = 0.075 * k;          // 덮개가 접혀 내려가는 길이
