@@ -234,17 +234,23 @@ export function drawPupEars(ink, fills, spec, box) {
       // 접힌 귀 — **선 밑동 + 그 위에서 바깥·아래로 꺾여 늘어진 덮개** 두 조각. 덮개가 밑동을 덮으며 접힘선이 드러난다.
       // 끝이 위를 향해 굽으면 뿔로 읽힌다 — 덮개는 접힘선보다 **아래로** 내려와야 접힌 귀다. 크기 배율
       const k = size;
-      const halfW = 0.05 * k;          // 밑동 반폭 — 세모귀처럼 넓다
-      const foldU = 0.085 * k;         // 접힘선 높이
-      path = [local(-OUT - 0.008, halfW), local(foldU, halfW * 0.72), local(foldU, -halfW * 0.72), local(-OUT - 0.008, -halfW)];
-      // 덮개 — 접힘선에서 **아래로 늘어진 세모**가 밑동 윗부분을 덮는다 (귀 끝이 앞으로 넘어간 것).
-      // 끝이 위를 향하면 뿔, 옆으로만 뻗으면 깃발이 된다 — 접힘선보다 확실히 **아래**로 내려오고 밑동 밖으로 조금 나가야 접힌 귀다
+      // 접힌 귀(버튼 이어)는 **머리 법선 좌표**로 그린다 — 밑변이 붙는 자리의 접선을 그대로 따르고 귀는 법선 방향으로 자란다.
+      // (다른 귀처럼 안쪽으로 기운 축을 쓰면 밑동이 두피에서 떠 머리에 얹은 상자처럼 보인다)
+      //   nu 법선 방향(머리 밖으로 자라는 높이) · nv 접선 방향(밑변 — + 쪽으로 접힌다)
+      const tX = side * ny, tY = -side * nx;
+      const nAt = (nu, nv) => [anchor.x + nx * nu + tX * nv, anchor.y + ny * nu + tY * nv];
+      const halfW = 0.048 * k;         // 밑동 반폭 (접선 방향)
+      const stand = 0.085 * k;         // 접힘선까지 선 높이 (법선 방향)
+      const drop = 0.075 * k;          // 덮개가 접혀 내려가는 길이
+      // 밑동 — 밑변은 윤곽 안(−0.014)에 박히고 위로 갈수록 좁아지는 사다리꼴 (세모귀와 같은 문법)
+      path = [nAt(-0.014, halfW), nAt(stand, halfW * 0.66), nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW)];
+      // 덮개 — 접힘선에서 접선 방향(+nv)으로 꺾여 **밑동 옆·아래**로 늘어진다. 끝이 접힘선보다 낮아야 접힌 귀다
       flap = [
-        local(foldU + 0.008 * k, -halfW * 0.75),  // 접힘선 안쪽 끝
-        local(foldU + 0.004 * k, halfW * 1.5),    // 접힘선 바깥 끝 — 밑동 밖으로 나간다
-        local(foldU - 0.06 * k, halfW * 0.55)     // 아래로 늘어진 끝
+        nAt(stand + 0.006 * k, -halfW * 0.6),
+        nAt(stand + 0.004 * k, halfW * 1.15),
+        nAt(stand - drop, halfW * 1.05)
       ];
-      crease = [local(foldU, -halfW * 0.72), local(foldU + 0.004 * k, halfW * 1.35)];
+      crease = [nAt(stand, -halfW * 0.66), nAt(stand + 0.004 * k, halfW * 1.1)];
     } else {
       // flap / long — 머리 옆에서 늘어지되 반대 기울기(0.25rad 안쪽)로 끝이 얼굴 쪽으로 모이는 로브
       const len = ry * (kind === "long" ? 0.95 : 0.65);
