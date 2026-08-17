@@ -117,10 +117,16 @@ export const MOUTH = {
     m.ink.stroke(arcPath(m.x - m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, width: 0.01 });
     m.ink.stroke(arcPath(m.x + m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, width: 0.01 });
   },
-  // 심술 입 — ω를 **뒤집은** 꼴(⌒⌒): 두 호가 위로 볼록해 가운데가 솟고 양끝이 처진다. 늘 뾰로통한 인상 (동물의 숲 시크한 얼굴)
+  // 심술 입 — **한 획**으로 가운데가 솟고 양끝이 뚝 떨어진다(y = peak·cos πt). 두 호를 나란히 놓으면 봉우리 둘로 읽혀 다른 얼굴이 된다.
+  // 작고 굵게 — 얼굴에서 점처럼 자리잡되 처진 양끝이 뾰로통함을 만든다
   smug: (m) => {
-    const hw = Math.max(0.014, m.w * 0.4);
-    for (const s of [-1, 1]) m.ink.stroke(arcPath(m.x + s * hw * 0.82, m.y - 0.006, hw, 0.032, 0, Math.PI), { color: m.ink0, width: 0.012 });
+    const hw = Math.max(0.016, m.w * 0.45), peak = 0.014;
+    const pts = [];
+    for (let i = 0; i <= 14; i += 1) {
+      const t = i / 14;
+      pts.push([m.x - hw + 2 * hw * t, m.y + peak * Math.cos(Math.PI * t)]);
+    }
+    m.ink.stroke(pts, { color: m.ink0, width: 0.014, jitter: 0.004 });
   },
   // 3 — 오므린 작은 입(카오모지 3). ω를 반으로 줄이고 굵게 — 고양이·귀여운 사람
   three: (m) => {

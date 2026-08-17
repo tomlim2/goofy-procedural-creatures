@@ -135,8 +135,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // 흰자 위에 그리는 것이라 잉크는 늘 어두운 팔레트 잉크
       const dark = spec.palette.ink;
       const out = eye.side === 0 ? 1 : eye.side;              // 외눈은 오른쪽 기준
-      const tipIn = [eye.x - out * eye.r * 1.02, eye.y - eye.r * 0.4];   // 코 쪽 뾰족한 끝 — 아래로 처진다
-      const tipOut = [eye.x + out * eye.r * 0.96, eye.y + eye.r * 0.14]; // 바깥 끝 — 위로
+      const tipIn = [eye.x - out * eye.r * 1.12, eye.y - eye.r * 0.46];   // 코 쪽 뾰족한 끝 — 아래로 처진다
+      const tipOut = [eye.x + out * eye.r * 1.05, eye.y + eye.r * 0.2];   // 바깥 끝 — 위로
       // a→b를 bow만큼 왼쪽(진행 방향 기준)으로 불린 호
       const bowed = (a, b, bow, n) => {
         const pts = [];
@@ -150,13 +150,15 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         }
         return pts;
       };
-      const upper = bowed(tipIn, tipOut, out * eye.r * 0.22, 10);    // 위 눈꺼풀 — 살짝 곧게
-      const lower = bowed(tipOut, tipIn, out * eye.r * 0.5, 10);     // 아래 — 불룩
+      const upper = bowed(tipIn, tipOut, out * eye.r * 0.16, 12);    // 위 눈꺼풀 — 거의 곧다(각진 인상)
+      const lower = bowed(tipOut, tipIn, out * eye.r * 0.78, 12);    // 아래 — 크게 불룩(흰자가 남을 만큼)
       const almond = [...upper, ...lower.slice(1, -1)];
       fills.fill(almond, "#f6f2e9");
       fills.outline(almond, { color: dark, width: 0.011, passes: 2 });
-      ink.stroke(upper, { color: dark, width: 0.015 });              // 위 눈꺼풀을 굵게 — 사나운 인상
-      fills.fill(blobPath(eye.x + out * eye.r * 0.22, eye.y - eye.r * 0.06, eye.r * 0.28, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null }), dark);
+      ink.stroke(upper, { color: dark, width: 0.016 });              // 위 눈꺼풀을 굵게 — 사나운 인상
+      // 동공 — 작은 점이 아니라 **위 눈꺼풀에 붙은 큰 덩어리**(눈 모양을 그대로 줄인 것). 바깥·위에 앉아 아래·안쪽에 흰 초승달만 남긴다
+      const anchor = upper[Math.round(upper.length * 0.58)];
+      fills.fill(almond.map(([x, y]) => [anchor[0] + (x - anchor[0]) * 0.5, anchor[1] + (y - anchor[1]) * 0.5]), dark);
     } else if (kind === "lidded") {
       // 무거운 눈꺼풀 — 큰 흰자 위쪽을 **채운 눈꺼풀**(눈두덩)이 덮고 그 밑으로 동공이 내다본다. 반감김(half)이 선 하나라면 이건 덩어리다.
       // 흰자 위에 그리는 것이라 잉크는 늘 어두운 팔레트 잉크 (밝은 얼굴 잉크로 그리면 흰자에 묻힌다)
