@@ -17,7 +17,8 @@ export const SPECIES = [
       ears: { roundMid: "round", roundBig: "round", pointy: "round", pointyMid: "round", pointyBig: "round", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       eyes: { cyclops: "wide" },
-      armLength: { long: "medium" }
+      armLength: { long: "medium" },
+      legLength: { verylong: "long" }   // 초장다리는 도깨비의 것
     },
     // 정체성 — census가 검사한다. 위반 개체가 나오면 버그다.
     identity: {
@@ -26,6 +27,7 @@ export const SPECIES = [
       horns: ["none"],
       eyes: { not: ["cyclops"] },
       armLength: ["medium"],
+      legLength: { not: ["verylong"] },   // 초장다리는 도깨비의 것
       arms: true,
       tail: false
     },
@@ -40,8 +42,9 @@ export const SPECIES = [
       eyes: { cyclops: "dot" },
       // 개에게 뿔·머리카락은 없다 — 전부 none (털이지 머리카락이 아니다)
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none" },
-      brow: { flat: "none", angry: "none", worry: "none" }   // 동물에게 눈썹은 없다 (상태 전환의 대체 눈썹도 막힌다)
+      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none", verylong: "none", twintailsBall: "none", appleBig: "none" },
+      brow: { flat: "none", angry: "none", worry: "none" },   // 동물에게 눈썹은 없다 (상태 전환의 대체 눈썹도 막힌다)
+      legLength: { verylong: "long" }
     },
     identity: {
       ears: ["flap", "long", "pointy", "pointyMid", "round", "roundMid", "fold", "foldMid"],   // 개 귀 — 늘어진 귀가 기본, none·왕귀 없음
@@ -50,6 +53,7 @@ export const SPECIES = [
       hair: ["none"],
       brow: ["none"],
       eyes: { not: ["cyclops"] },
+      legLength: { not: ["verylong"] },
       arms: false,
       tail: true
     },
@@ -79,8 +83,9 @@ export const SPECIES = [
       // 고양이 귀 경계 — 늘어진 귀·없음은 정수리 귀로
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none" },
-      brow: { flat: "none", angry: "none", worry: "none" }
+      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none", verylong: "none", twintailsBall: "none", appleBig: "none" },
+      brow: { flat: "none", angry: "none", worry: "none" },
+      legLength: { verylong: "long" }
     },
     identity: {
       ears: ["pointy", "pointyMid", "pointyBig"],   // 정수리 세모귀만 (레퍼런스) — 동그란·접힌·늘어진 귀·none 없음
@@ -89,6 +94,7 @@ export const SPECIES = [
       hair: ["none"],
       brow: ["none"],
       eyes: { not: ["cyclops"] },
+      legLength: { not: ["verylong"] },
       arms: false,
       tail: true
     },
@@ -140,7 +146,9 @@ export const SPECIES = [
       arms: [["stubby", 5], ["stick", 2], ["none", 2]],   // 팔 없는 덩어리도 있다
       // 바닥을 쓰는 긴 팔은 도깨비의 것 (사람은 forbid). 도깨비 열에 눈에 띌 만큼
       armLength: [["medium", 3], ["long", 2]],
-      legs: [["stub", 3], ["stick", 3], ["float", 1]]
+      legs: [["stub", 3], ["stick", 3], ["float", 1]],
+      // 초장다리(verylong — long의 두 배)는 도깨비의 것. 도깨비 열에 눈에 띌 만큼
+      legLength: [["long", 3], ["medium", 2], ["short", 1], ["verylong", 1.5]]
     }
   }
 ];

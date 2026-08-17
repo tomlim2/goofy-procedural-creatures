@@ -33,17 +33,42 @@ function longHair(h) {
   // 바깥 윤곽 두 줄
   for (const side of [-1, 1]) back.stroke([[side * rx * 1.15, cy + ry * 0.7], [side * rx * 1.25, cy], [side * rx * 1.28, shoulder]], { color: ink0, width: 0.011, jitter: 0.006 });
 }
-function twintails(h) {
+// 아주 긴 생머리 — 몸통 중간까지. 얼굴 양옆에서 어깨 위로 넘어와 가슴 옆까지 내려오는 두 커튼(가운데 가슴은 비운다 — 판 전체를 덮으면 망토가 된다)
+function veryLong(h) {
+  const { back, ink0, rx, ry, cy, noise, spec, box } = h;
+  cap(h, 0.52, 22, 12, ry * 0.24);
+  const chest = (box.bodyTop + box.legTop) / 2;   // 몸통 중간
+  const step = 0.013;
+  for (const side of [-1, 1]) {
+    for (let u = rx * 0.42; u <= rx * 1.15; u += step) {
+      const x = side * u;
+      const top = cy + ry * 0.55;
+      const bottom = chest + Math.abs(noise(u * 33 + spec.seed * 0.002)) * 0.05;
+      const flare = x * 0.08;
+      back.stroke([[x, top], [x + flare * 0.5, (top + bottom) / 2], [x + flare, bottom]], { color: ink0, width: 0.009, jitter: 0.004 });
+    }
+    // 바깥·안쪽 윤곽
+    back.stroke([[side * rx * 1.15, cy + ry * 0.6], [side * rx * 1.26, cy - ry * 0.4], [side * rx * 1.3, chest]], { color: ink0, width: 0.011, jitter: 0.006 });
+    back.stroke([[side * rx * 0.42, cy - ry * 0.9], [side * rx * 0.44, chest + 0.01]], { color: ink0, width: 0.01, jitter: 0.005 });
+  }
+}
+// 트윈테일 — 머리 양옆 위쪽에 묶고 뒤로 늘어지는 두 갈래. ball이면 끝에 동그란 뭉치
+const twintailsOf = (ball) => (h) => {
   const { back, ink0, rx, ry, cy } = h;
   cap(h, 0.52, 22, 12, ry * 0.24);
-  // 트윈테일 — 머리 양옆 위쪽에 묶고 뒤로 늘어지는 두 갈래
   for (const side of [-1, 1]) {
     const tx = side * rx * 0.95, ty = cy + ry * 0.35;
     const tail = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - 0.3]];
     back.scribble(tail, { color: ink0, passes: 12, width: 0.009, spread: 0.028 });
     back.stroke([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: ink0, width: 0.012 });   // 끈
+    if (ball) {
+      // 끝 뭉치 — 갈래 끝에 동그란 스크리블 덩어리 + 윤곽
+      const bx = tx + side * 0.05, by = ty - 0.34;
+      back.scribble(arcPath(bx, by, 0.05, 0.055, Math.PI * 0.5, Math.PI * 2.5, 12), { color: ink0, passes: 9, width: 0.009, spread: 0.032 });
+      back.outline(blobPath(bx, by, 0.057, 0.06, { lumps: 4, amount: 0.15, noise: null }), { color: ink0, width: 0.01, passes: 2 });
+    }
   }
-}
+};
 function ponytail(h) {
   const { back, ink0, rx, ry, cy, spec } = h;
   cap(h, 0.52, 22, 12, ry * 0.24);
@@ -55,16 +80,17 @@ function ponytail(h) {
   back.stroke([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: ink0, width: 0.012 });   // 끈
 }
 
-// 사과머리 — 정수리 한가운데 작은 뭉치가 사과 꼭지처럼 솟는다. 머리는 매끈, 끈 하나
-function apple(h) {
+// 사과머리 — 정수리 한가운데 뭉치가 사과 꼭지처럼 솟는다. 머리는 매끈, 끈 하나. size 1 작은 것(가닥 넷) · 1.7 큰 것(가닥 여섯, 길고 굵게)
+const appleOf = (size) => (h) => {
   const { crown, ink0, ry, cy } = h;
   const bx = 0.005, by = cy + ry * 1.0;
-  for (let i = 0; i < 4; i += 1) {
-    const a = Math.PI * (0.35 + 0.1 * i);
-    crown.stroke([[bx, by], [bx + Math.cos(a) * 0.05, by + Math.sin(a) * 0.055 + 0.01]], { color: ink0, width: 0.01 });
+  const count = size > 1 ? 6 : 4, spread = size > 1 ? 0.15 : 0.1;   // 가닥 수·벌어짐(π 배)
+  for (let i = 0; i < count; i += 1) {
+    const a = Math.PI * (0.5 + spread * (i - (count - 1) / 2));
+    crown.stroke([[bx, by], [bx + Math.cos(a) * 0.05 * size, by + Math.sin(a) * 0.055 * size + 0.01]], { color: ink0, width: 0.01 * Math.sqrt(size) });
   }
-  crown.stroke([[bx - 0.018, by - 0.006], [bx + 0.018, by - 0.002]], { color: ink0, width: 0.012 });   // 끈
-}
+  crown.stroke([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: ink0, width: 0.012 });   // 끈
+};
 
 // 가시머리. hedgehog는 정수리 **전면**(윤곽 줄 + 안쪽 줄)에 짧은 가시가 방사형으로 — 고슴도치 등처럼 덩어리로 읽힌다.
 // rings: [반지름 배율, 개수, 펼침(π 배), 기본 길이, 길이 변동]
@@ -244,9 +270,12 @@ export const HAIR = {
   helmet: voluminous("helmet"),
   cloud: voluminous("cloud"),
   long: longHair,
-  twintails,
+  verylong: veryLong,
+  twintails: twintailsOf(false),
+  twintailsBall: twintailsOf(true),
   ponytail,
-  apple
+  apple: appleOf(1),
+  appleBig: appleOf(1.7)
 };
 
 export function drawHair(layers, spec, box, noise) {

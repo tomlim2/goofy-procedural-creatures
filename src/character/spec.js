@@ -44,13 +44,13 @@ function applyConstraints(parts, rng, speciesName) {
     parts.hair = "none";
   } else if (parts.headgear !== "none" && parts.hair !== "none") {
     // 모자나 밴드면 짧은 머리만 남긴다 (앞머리·옆단발·두건형은 모자 밑으로 나와도 된다). 밴드는 구름형·고슴도치와도 어울린다(레퍼런스)
-    const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob", "helmet", "long", "twintails", "ponytail"];   // 뒷머리는 모자 밑으로 나온다
+    const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob", "helmet", "long", "verylong", "twintails", "twintailsBall", "ponytail"];   // 뒷머리는 모자 밑으로 나온다
     if (parts.headgear === "band") short.push("cloud", "hedgehog");
     if (!short.includes(parts.hair)) parts.hair = rng.pick(short);
   }
 
   // 모히칸·똥머리는 무엇도 쓰지 않는다.
-  if (parts.hair === "mohawk" || parts.hair === "bun" || parts.hair === "apple") parts.headgear = "none";
+  if (parts.hair === "mohawk" || parts.hair === "bun" || parts.hair === "apple" || parts.hair === "appleBig") parts.headgear = "none";
 
   // 더듬이가 있으면 귀까지 달지 않는다. 실루엣이 지저분해진다.
   if (parts.horns === "antenna" && rng.chance(0.75)) parts.ears = "none";

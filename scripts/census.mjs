@@ -37,6 +37,7 @@ for (const sp of SPECIES) {
     if (id.ears && !id.ears.includes(c.parts.ears)) violations.push(`${where}: ears=${c.parts.ears} (허용: ${id.ears.join("/")})`);
     if (id.eyes?.not && id.eyes.not.includes(c.parts.eyes)) violations.push(`${where}: eyes=${c.parts.eyes} 금지`);
     if (id.armLength && !id.armLength.includes(c.parts.armLength)) violations.push(`${where}: armLength=${c.parts.armLength} (허용: ${id.armLength.join("/")})`);
+    if (id.legLength?.not && id.legLength.not.includes(c.parts.legLength)) violations.push(`${where}: legLength=${c.parts.legLength} 금지`);
     if (id.darkHead) {
       const v = parseInt(c.palette.skin.slice(1), 16);
       const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);

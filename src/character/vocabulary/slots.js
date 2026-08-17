@@ -16,9 +16,10 @@ export const SLOTS = {
   // 헤어는 면을 칠하지 않고 펜으로 왕복해 긋는 스크리블로 그린다.
   // 레퍼런스 아이 줄: 앞머리 있는 바가지(bangs) · 옆으로 턱까지 내려오는 단발(longbob) · 정수리 똥머리(bun) 포함
   // 레퍼런스 부피형: helmet 두건형(정수리~눈썹·귀를 감싸는 큰 덩어리) · cloud 구름형 곱슬(스캘럽 윤곽 큰 덩어리) · hedgehog 고슴도치(정수리 전면 짧은 가시)
-  // 뒷머리 층이 생겨서 되는 것: long 긴 생머리(어깨까지) · twintails 트윈테일 · ponytail 포니테일 · apple 사과머리(정수리 꼭지)
+  // 뒷머리 층이 생겨서 되는 것: long 긴 생머리(어깨까지) · verylong 아주 긴 생머리(몸통 중간까지, 얼굴 양옆 커튼) · twintails 트윈테일 · twintailsBall 끝이 동그란 트윈테일 ·
+  // ponytail 포니테일 · apple 사과머리(정수리 꼭지, 작은 것) · appleBig 큰 사과머리
   hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep", "pigtails", "curly", "bangs", "longbob", "bun", "helmet", "cloud", "hedgehog",
-    "long", "twintails", "ponytail", "apple"],
+    "long", "twintails", "ponytail", "apple", "verylong", "twintailsBall", "appleBig"],
   // bonnet(프릴 보닛)은 **비활성** — 자산은 남기고 어떤 bias에도 안 넣는다 (뽑히지 않는다)
   headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
@@ -52,9 +53,10 @@ export const SLOTS = {
   arms: ["stick", "sleeve", "stubby", "mitten", "none"],
   // 팔 길이. 형태와 독립이라 짧은 소매 팔, 매우 긴 장갑 팔이 다 나온다.
   armLength: ["medium", "long"],
-  // 다리 길이(기장). 형태와 독립 — 모든 다리 유형에 세 기장이 있다. 스케일이 아니라 기장만 바뀐다:
+  // 다리 길이(기장). 형태와 독립 — 모든 다리 유형에 기장이 있다. 스케일이 아니라 기장만 바뀐다:
   // 몸이 바닥 가까이 내려앉고 발·굵기는 그대로다. 네발도 따른다 (short = 닥스훈트).
-  legLength: ["long", "medium", "short"],
+  // verylong 초장다리 — long의 **두 배**. 도깨비만 (사람·개·고양이는 forbid → long). 머리는 셀 상한(MAX_HEAD_TOP)에 맞춰 layout이 줄인다
+  legLength: ["long", "medium", "short", "verylong"],
   // 몸통 체격. 형태(body)와 독립 — 홀쭉이 통·땅딸막한 콩·작은 몸통이 다 나온다.
   // skinny 홀쭉이 · narrow 마름 · medium · wide 넓적 · small 작은 몸통(폭·높이 다 작다).
   // 다리 스탠스(벌림)와 어깨 위치가 이걸 따른다: 좁은 몸은 다리를 모으고, 넓은 몸은 벌린다.
@@ -76,7 +78,8 @@ export const DEFAULT_BIAS = {
   // 종족·아키타입 bias가 없을 때. cyclops는 여기 없다 (도깨비 bias로만 나온다)
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
     ["squeeze", 1], ["side", 1], ["droop", 1]],
-  hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1], ["helmet", 2], ["cloud", 1.5], ["hedgehog", 1.5], ["long", 1.5], ["twintails", 1], ["ponytail", 1.5], ["apple", 1]],
+  hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1], ["helmet", 2], ["cloud", 1.5], ["hedgehog", 1.5], ["long", 1.5], ["twintails", 1], ["ponytail", 1.5], ["apple", 1],
+    ["verylong", 1], ["twintailsBall", 0.8], ["appleBig", 0.7]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1]],   // bonnet 비활성
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3]],

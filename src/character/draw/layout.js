@@ -28,8 +28,8 @@ export const BUILD = {
 // 두발 머리 꼭대기 상한. 셀 높이 1.35에서 바닥선(0.16)을 뺀 1.19 안에 머리카락·모자까지 들어가야 한다
 export const MAX_HEAD_TOP = 1.05;
 
-// 다리 기장 배율 (legLength 슬롯). 네발도 같은 표를 쓴다 — short 네발이 닥스훈트다.
-export const LEG_LENGTH = { long: 1, medium: 0.65, short: 0.3 };
+// 다리 기장 배율 (legLength 슬롯). 네발도 같은 표를 쓴다 — short 네발이 닥스훈트다. verylong은 long의 두 배 (도깨비 초장다리)
+export const LEG_LENGTH = { long: 1, medium: 0.65, short: 0.3, verylong: 2 };
 // 네발 체격 (build 슬롯). w는 몸 길이 배율, h는 몸통 두께 배율, cx는 몸통 중심이 앞(머리) 기준점에서 얼마나 뒤에 있나.
 export const QUAD_BUILD = {
   skinny: { w: 1, h: 0.62, cx: 0.35 },       // 얇은 몸통
