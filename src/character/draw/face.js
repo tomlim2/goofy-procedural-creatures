@@ -339,8 +339,15 @@ export function drawMouth(ink, fills, spec, box, kindOverride) {
       color: ink0, width: 0.011
     });
   } else if (kind === "open") {
-    const hole = blobPath(0, y, w * 0.8, openH, { lumps: 3, amount: 0.15, noise: null });
-    fills.fill(hole, ink0);
+    // 벌린 입 — 동그란 구멍이 아니라 **윗입술은 곧고 아래만 둥근 그릇**(D를 눕힌 꼴): 채움 + 윗입술 선. 타원 덩어리는 동굴처럼 읽힌다
+    const hw = w * 0.85, top = y + openH * 0.35, bottom = y - openH * 0.95;
+    const bowl = [];
+    for (let i = 0; i <= 14; i += 1) {
+      const t = (i / 14) * Math.PI;
+      bowl.push([-hw * Math.cos(t), top - (top - bottom) * Math.sin(t)]);
+    }
+    fills.fill(bowl, ink0);
+    ink.stroke([[-hw * 1.05, top + 0.003], [hw * 1.05, top]], { color: ink0, width: 0.012 });   // 윗입술
   } else if (kind === "pout") {
     // 오리입 — 작은 동그라미
     ink.outline(blobPath(0, y, 0.022, 0.017, { lumps: 3, amount: 0.15, noise: null }), {
