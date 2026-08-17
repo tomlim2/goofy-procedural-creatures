@@ -58,7 +58,8 @@
 정적인 눈은 얼굴 잉크(faceGroup)에 굽는다 — 얼굴 돌림을 같이 따라간다. 살아 있는 눈(`RIG_EYES`)만 별도 눈 리그(흰자·윤곽·동공·눈꺼풀·^^·감은 선)로 세운다.
 새 아홉(bead·oval·line·happy·hollow, 카오모지의 squeeze·side·sparkle·droop)은 아직 종족을 안 가른다 — 모든 종족·아키타입
 bias에 같은 무게(1.5, hollow·squeeze·side·droop 1)로 들어 있다. (세모 눈 ◣_◢은 눈이 가까우면 하나로 붙어 빠졌고, ☆·♥은 놀람 변형으로 옮겼다)
-안대에 가린 눈은 `patched(spec, eye)`로 건너뛴다 — 안대가 있을 때만 (patchSide만 보면 안대가 뒤늦게 빠졌을 때 눈이 같이 사라진다).
+선으로만 그리는 눈(sleepy·line·happy·squeeze·droop·cross·half·side)은 좌우 대칭이다 — 짝눈은 흰자·동공이 있는 눈에만
+([rules.md](rules.md)). 안대에 가린 눈은 `patched(spec, eye)`로 건너뛴다 — 안대가 있을 때만 (patchSide만 보면 안대가 뒤늦게 빠졌을 때 눈이 같이 사라진다).
 
 ### brow — 눈썹 (4)
 none / flat / angry(안쪽 내림) / worry(안쪽 올림). **상태 전환 대상** — 쉼/대체 두 벌을 굽고
@@ -67,7 +68,7 @@ clock이 토글한다. 대체 표: none→flat, flat→worry, angry→flat, worr
 ### eyewear (5)
 none / glasses(양쪽 원 + 다리, 알 반지름 = 눈 × 1.45) / goggles(큰 원 + 머리까지 끈, × 1.75) / patch(한쪽 안대 + 사선 끈) / monocle(한쪽 큰 원 + 줄).
 안경·고글은 **두 알이 겹치면 뺀다**(눈이 가까운 개체 — 눈에 맞춰 억지로 줄이지 않는다, `makeCreature`가 비율 확정 뒤 none으로).
-안대는 **짝눈이면 뺀다** — 좌우 눈 크기(`eyeSizeSkew` > 0.09)나 높이(`eyeHeightSkew` > 0.03)가 눈에 띄게 다른 개체에 한쪽을 가리면 남은
+안대는 늘 **검은** 채움이다(물건) — 도깨비 먹빛 머리에서는 밝은 테를 두르고 끈만 밝은 잉크. 안대는 **짝눈이면 뺀다** — 좌우 눈 크기(`eyeSizeSkew` > 0.09)나 높이(`eyeHeightSkew` > 0.03)가 눈에 띄게 다른 개체에 한쪽을 가리면 남은
 눈이 혼자 크거나 높아 실수처럼 보인다 (비율 확정 뒤 none, patchSide도 지운다).
 
 ### hair (14)

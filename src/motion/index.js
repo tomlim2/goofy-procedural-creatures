@@ -263,11 +263,13 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // 꼬리 · 젤리 — 꼬리 기본은 idle 각(tailIdle), 그 위에 스위시·플릭
       let tailAngle = (M.tailIdle || 0) + R.stepTailSwish(tailSwish, t);
       tailAngle += E.stepTailFlick(tailFlick, t, rng, M);
-      if (walkK > 0 && W && quad) tailAngle += Math.sin(ph) * 0.12 * walkK;   // 걷기 — 꼬리가 걸음에 맞춰 살랑
+      if (walkK > 0 && W && quad && W.tail) tailAngle += Math.sin(ph) * W.tail * walkK;   // 걷기 — 개만 꼬리가 걸음에 맞춰 살랑 (table walk.tail)
       const j = R.stepJelly(jelly, t);
 
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
-      let qact = resolveLayer(t, S.stepQuadAction(quadAction, t, rng, M), QUAD_ACTIONS, quad, (def, start) => {
+      // 강제 네발 행위는 그 종족 목록에 있는 것만 — 고양이는 꼬리 흔들기(wag)를 안 한다 (표에 없다), 강제해도 idle
+      const quadApplies = quad && (!forced || (M.quadActions || []).some(([name]) => name === forced));
+      let qact = resolveLayer(t, S.stepQuadAction(quadAction, t, rng, M), QUAD_ACTIONS, quadApplies, (def, start) => {
         const index = def.leg === "front" ? (forcedSide > 0 ? 1 : 0) : def.leg === "hind" ? (forcedSide > 0 ? 3 : 2) : -1;
         return { action: forced, index, start, until: Infinity };
       });

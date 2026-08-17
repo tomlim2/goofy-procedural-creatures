@@ -120,9 +120,16 @@ export function eyeGeometry(spec, box) {
   }
 
   // 좌우를 일부러 어긋나게 둔다. 대칭이면 즉시 도형처럼 보인다.
+  // 단 **선으로만 그리는 눈**(sleepy·line·happy·squeeze·droop·cross·half·side)은 대칭이다 — 획 하나짜리 눈은 크기·높이가
+  // 다르면 "작은 눈"이 아니라 실수로 읽힌다 (흰자·동공이 있는 눈은 짝눈이어도 눈으로 읽힌다)
+  const lineEye = LINE_EYES.includes(spec.parts.eyes);
+  const sizeSkew = lineEye ? 0 : p.eyeSizeSkew;
+  const heightSkew = lineEye ? 0 : p.eyeHeightSkew;
   return [
-    { side: -1, x: -gap, y: y + box.headRy * p.eyeHeightSkew, r: base * (1 - p.eyeSizeSkew) },
-    { side: 1, x: gap, y: y - box.headRy * p.eyeHeightSkew, r: base * (1 + p.eyeSizeSkew) }
+    { side: -1, x: -gap, y: y + box.headRy * heightSkew, r: base * (1 - sizeSkew) },
+    { side: 1, x: gap, y: y - box.headRy * heightSkew, r: base * (1 + sizeSkew) }
   ];
 }
+// 선으로만 그리는 눈 — 좌우 대칭으로 둔다 (eyeGeometry)
+export const LINE_EYES = ["sleepy", "line", "happy", "squeeze", "droop", "cross", "half", "side"];
 

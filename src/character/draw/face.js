@@ -208,9 +208,12 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
   const ink0 = spec.faceInk || spec.palette.ink;
 
   if (kind === "patch") {
+    // 안대는 **물건**이라 늘 검다 — 도깨비의 밝은 얼굴 잉크로 채우면 흰 덩어리가 돼 실수처럼 보인다.
+    // 먹빛 머리에서는 밝은 테로 윤곽을 잡아 검은 안대가 읽히게 한다. 끈은 얼굴 잉크(밝은 머리 검정, 먹빛 머리 밝음)
     const eye = eyes.find((e) => e.side === spec.parts.patchSide) || eyes[0];
     const patch = blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.35, { lumps: 4, amount: 0.12, noise: null });
-    fills.fill(patch, ink0);
+    fills.fill(patch, spec.palette.ink);
+    if (spec.faceInk) ink.outline(patch, { color: spec.faceInk, width: 0.01, passes: 2 });
     // 끈은 머리를 가로지른다
     ink.stroke([[eye.x, eye.y + eye.r * 1.3], [-eye.side * box.headRx, box.headCy + box.headRy * 0.45]], {
       color: ink0, width: 0.009
