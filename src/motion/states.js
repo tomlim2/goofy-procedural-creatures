@@ -120,9 +120,10 @@ export function initMode(rng, M) {
   const mode = rng.weighted(pool);
   return { mode, next: rng.float(M.modeHold[mode][0], M.modeHold[mode][1]) };
 }
+// 전환은 idle을 거친다 — idle에서는 다른 상태 중 하나(가중치)로, 다른 상태에서는 idle로. 잠에서 바로 걷기로 넘어가지 않는다
 export function stepMode(s, t, rng, M) {
   if (t >= s.next) {
-    const pool = (M.modes || []).filter(([m]) => m !== s.mode);   // 지금과 다른 상태로 넘어간다
+    const pool = s.mode === "idle" ? (M.modes || []).filter(([m]) => m !== "idle") : [["idle", 1]];
     s.mode = pool.length ? rng.weighted(pool) : "idle";
     s.next = t + rng.float(M.modeHold[s.mode][0], M.modeHold[s.mode][1]);
   }

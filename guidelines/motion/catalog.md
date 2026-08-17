@@ -22,7 +22,7 @@
 | 이징 | `ease.js` | 모든 곡선의 모양 — `bump` `bumps` `envelope` `ramp`(봉투) · `damp`(임계감쇠 추종). 시작·끝 속도 0 ([rules.md](rules.md) § 이징) |
 | 이벤트 | `events.js` | 깜빡임 · 시선 다트 · 놀람 · 끄덕 · 킁킁 딥 · 기지개 · 부르르 · 발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모지 예약 · 재생성 |
 | 이모지 | `emoji.js` | 머리 위 ♥ ! ? … — 모션이 아니라 **따로 트리거되는 애니메이션 층**. 종류별 곡선(떠오름·팝·갸웃·중얼), 채널 하나. 모션의 `emoji` 트리거와 idle 예약이 쏜다 |
-| 상태 | `states.js` | **기본 상태(mode)** idle·sleep · 반감김 · ^^ 행복 눈 · 윙크 · 갸웃 · 눈썹 상태 · 입 상태 · 둘러보기(얼굴 돌림 유지) · 행위 예약(팔·몸·네발 층 각각 — 언제 어떤 행위를) |
+| 상태 | `states.js` | **기본 상태(mode)** idle·sleep·walk · 반감김 · ^^ 행복 눈 · 윙크 · 갸웃 · 눈썹 상태 · 입 상태 · 둘러보기(얼굴 돌림 유지) · 행위 예약(팔·몸·네발 층 각각 — 언제 어떤 행위를) |
 | 행위 | `actions.js` | **idle**(기본 — 두발 A포즈, 네발 선 자세)과 행위의 **내용**, 세 층: 팔 `ACTIONS`(손 목표·팔꿈치 방향·진동, 어느 팔, IK) · 몸 `BODY_ACTIONS`(제자리 점프 — 공통) · 네발 `QUAD_ACTIONS`(다리 하나·꼬리 — 각도·진동). 층은 겹친다 |
 
 ## 상태 객체
@@ -53,7 +53,7 @@
 | legOsc | [4] rad | 다리에 이징 없이 얹는 진동 (앞발 흔들기·긁기) |
 | action / actionSide | 팔 층(두발)·다리·꼬리 층(네발)의 행위 이름 또는 null / 활동 팔 side 또는 다리 index | 디버그·통계용. scene은 arms·legOffset만 본다 |
 | bodyAction | 몸 층의 행위 이름 또는 null | 제자리 점프 중이면 "jump". hopY·squash가 그 곡선이다 |
-| mode / sleep | "idle" · "sleep" / 0~1 | 기본 상태와 잠 정도(이징). sleep은 legOffset·hopY·lid·headAngle 등에 이미 섞여 있고, scene은 잠 눈꺼풀(정지 눈 덮개)만 이걸로 켠다 |
+| mode / sleep / walk | "idle" · "sleep" · "walk" / 0~1 / 0~1 | 기본 상태와 잠·걷기 정도(이징). 둘 다 legOffset·hopY·sway·arms 등에 이미 섞여 있다. scene은 잠 눈꺼풀(정지 눈 덮개)만 sleep으로 켠다 |
 | tailAngle | rad | tailGroup.rotation.z |
 | emoji | {kind, k, dy, scale, rot, opacity} 또는 null | 머리 위 글리프 — 이모지 채널의 프레임. scene은 그대로 입힌다 |
 | regen | bool | LIVE일 때 개체 교체 |
@@ -172,17 +172,23 @@ ACTION 카드로 하나를 강제하면 그 층만 계속하고 다른 층은 id
 
 `actions.js` `jumpCurve(tau, def)`. 곡선은 `hopY`·`squashX/Y`로 나가고 팔에는 `hopY×4`가 어깨에 더해진다.
 
-### 기본 상태(mode) — idle · sleep
+### 기본 상태(mode) — idle · sleep · walk
 
-개체는 늘 어떤 **기본 상태**에 있다. 지금은 idle(서 있음)과 sleep(엎드려 잠) 둘이고, 걷기·달리기 같은 상태가 생기면 여기에 붙는다.
-행위 층은 이 위에 겹치고, sleep 중엔 행위·둘러보기·놀람·윙크가 쉰다. `states.js` `initMode/stepMode`, `table.js` `modes`(비율)·`modeHold`(유지).
-상태가 하나뿐인 종족(사람·도깨비)은 rng를 안 쓴다.
+개체는 늘 어떤 **기본 상태**에 있다. idle(서 있음) · sleep(엎드려 잠, 네발) · walk(제자리 걸음, 전 종족). 달리기 같은 상태가 생기면 여기에 붙는다.
+행위 층은 이 위에 겹친다 — sleep 중엔 행위·둘러보기·놀람·윙크가 쉬고, walk 중엔 몸 행위(점프)·네발 행위가 쉬되 팔 행위는 그대로다(걸으며 인사).
+`states.js` `initMode/stepMode`, `table.js` `modes`(비율)·`modeHold`(유지)·`walk`(걸음 파라미터). **전환은 idle을 거친다** — idle에서
+다른 상태 하나로(가중치), 다른 상태에서는 idle로. 잠에서 바로 걷지 않는다.
 
-| 종족 | 상태 비율 (시작·전환) | 유지 |
-| --- | --- | --- |
-| pup | idle 3 : sleep 1 | idle 40~120초, sleep 25~60초 |
-| cat | idle 2 : sleep 1 (더 자주, 더 오래) | idle 40~120초, sleep 30~90초 |
-| human · imp | idle만 | — |
+| 종족 | 상태 비율 (idle에서 넘어갈 때) | 유지 | walk (hz 걸음 / leg 다리 rad / bob 들썩 / sway 기움 / arm 팔) |
+| --- | --- | --- | --- |
+| human | walk만 (idle 4 : walk 1로 시작) | idle 30~90초, walk 6~14초 | 1.8 / 0.30 / 0.010 / 0.05 / 0.14 |
+| imp | walk만 (idle 4 : walk 1) | idle 25~80초, walk 5~12초 | 2.3 / 0.36 / 0.012 / 0.06 / 0.16 — 통통 튀는 걸음 |
+| pup | sleep 1 : walk 1.5 (idle 3) | idle 40~120초, sleep 25~60초, walk 6~16초 | 2.6 / 0.32 / 0.008 / 0 / 0 — 종종걸음 |
+| cat | sleep 1 : walk 1 (idle 2) | idle 40~120초, sleep 30~90초, walk 6~14초 | 2.2 / 0.28 / 0.006 / 0 / 0 |
+
+**걷기**: `walkK`(0.06/프레임 이징)로 섞는다. 걸음 위상 ph = t·2π·hz + 개체 위상(시드) — 다리는 네발이면 대각선 쌍(0·3 / 1·2)이
+sin(ph)·leg로 번갈아 앞뒤로, 두발이면 두 다리가 번갈아 벌렸다 모은다(정면 걸음). 걸음마다(주기의 두 배) 몸이 bob만큼 들썩이고 머리도
+그 절반, 두발은 sway만큼 좌우로 기울고 팔이 다리와 엇갈려 arm만큼 흔들린다, 네발은 꼬리가 걸음에 맞춰 살랑(0.12). ACTION 카드 WALK로 강제.
 
 **잠 자세**(네발만 정의): `sleepK`(0.03/프레임 이징)로 idle과 섞는다 — 다리를 몸 밑으로 접고(앞다리 +1.35/+1.25, 뒷다리
 −1.3/−1.2 rad), 몸이 밑단(`rig.legTop`)까지 내려앉아 납작해지고(squash), 꼬리를 내리고(−0.55), 머리를 한쪽으로 기울여(0.32,

@@ -31,7 +31,7 @@ export const BIND_STATE = Object.freeze({
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
   happy: false, winkSide: 0, tailAngle: 0,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
-  mode: "idle", sleep: 0,
+  mode: "idle", sleep: 0, walk: 0,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
 });
 
@@ -75,7 +75,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
   // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
   let forced = null;
-  let forcedMode = null;   // "sleep" | "idle" | null — ACTION 카드가 기본 상태도 정할 수 있다
+  let forcedMode = null;   // "sleep" | "walk" | "idle" | null — ACTION 카드가 기본 상태도 정할 수 있다
   let forcedSide = 1;
   let forcedStart = -1;
   const arm = rig ? rig.arm : null;
@@ -84,6 +84,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const canSleep = quad;   // 잠 자세는 네발만 정의돼 있다
   // 잠 정도 0~1. 상태가 바뀌면 여기로 이징한다 — 엎드리고 일어나는 게 튀지 않게. 태어날 때 자는 개체는 1로 시작
   let sleepK = mode.mode === "sleep" && canSleep ? 1 : 0;
+  // 걷기 정도 0~1 (걷기 상태로 이징). 걸음 위상은 개체별로 어긋나게 — rng 없이 시드로
+  const W = M.walk || null;
+  let walkK = mode.mode === "walk" && W ? 1 : 0;
+  const walkPhase = ((seed % 97) / 97) * Math.PI * 2;
   let zzzLast = -1;
   // 이모지 채널 — 모션과 별개 층. 예약(idle 중 가끔)과 모션의 이모지 트리거가 여기로 쏜다
   const emoji = initEmoji();
@@ -109,6 +113,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
     force(action, side = 1) {
       if (!action) { forced = null; forcedMode = null; }
       else if (action === "sleep") { forced = "idle"; forcedMode = "sleep"; }
+      else if (action === "walk") { forced = null; forcedMode = "walk"; }   // 걷는 중에도 팔 행위는 예약대로 (걸으며 인사)
       else if (action === "idle") { forced = "idle"; forcedMode = "idle"; }
       else if (ACTIONS[action] || QUAD_ACTIONS[action] || BODY_ACTIONS[action]) { forced = action; forcedMode = "idle"; }
       else { forced = null; forcedMode = null; }
@@ -125,6 +130,12 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       sleepK += ((asleep ? 1 : 0) - sleepK) * 0.03;
       if (sleepK < 0.001) sleepK = 0;
       const awake = 1 - sleepK;
+      // 걷기 — 제자리 걸음. walkK로 들어가고 나온다(0.5초쯤). 걸음 위상 ph는 t 기반이라 끊기지 않는다
+      const walking = modeName === "walk" && !!W;
+      walkK += ((walking ? 1 : 0) - walkK) * 0.06;
+      if (walkK < 0.001) walkK = 0;
+      const ph = W ? t * Math.PI * 2 * W.hz + walkPhase : 0;
+      const stepBump = 0.5 - 0.5 * Math.cos(2 * ph);   // 걸음마다 한 번(주기의 두 배) 0→1→0
 
       // 얼굴
       const bl = E.stepBlink(blink, t, rng);
@@ -164,8 +175,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         const start = start0 + Math.floor((t - start0) / period) * period;
         return { action: forced, start, until: start + def.hops * def.dur };
       });
-      if (asleep) bact = null;   // 자는 중엔 행위 없음 (예약은 위에서 이미 돌렸다)
+      if (asleep || walkK > 0.5) bact = null;   // 자는 중·걷는 중엔 몸 행위 없음 (예약은 위에서 이미 돌렸다)
       const hp = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, squashX: 0, squashY: 0 };
+      // 걷기 — 걸음마다 몸이 살짝 들썩인다
+      if (walkK > 0 && W) hp.hopY += W.bob * stepBump * walkK;
       // 잠 — 몸이 밑단까지 내려앉고 납작해진다
       if (sleepK > 0 && rig) { hp.hopY -= rig.legTop * sleepK; hp.squashY -= 0.06 * sleepK; hp.squashX += 0.06 * sleepK; }
       const stretchX = E.stepStretch(stretch, t, rng, M);
@@ -183,7 +196,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         const arm = arms[String(side)];
         // 진자(스웨이 역위상) · 점프 시 팔 위로 · 관절 지터. 팔꿈치는 절반 (관절이 따로 끓는다)
         let off = -side * swing;
-        if (hp.hopY > 0) off += side * hp.hopY * 4;
+        if (hp.hopY > 0 && !(walkK > 0.5)) off += side * hp.hopY * 4;
+        if (walkK > 0 && W) off += Math.sin(ph + (side > 0 ? Math.PI : 0)) * W.arm * walkK;   // 걷기 — 팔이 다리와 엇갈려 흔들린다
         off += R.armJitter(armSwing, t, side);
         arm.shoulder += off;
         arm.elbow += off * 0.5;
@@ -195,11 +209,18 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       E.stepLegTap(legTap, t, rng, M, legOffset);
       E.stepLegStep(legStep, t, rng, M, legOffset);
       if (hp.squashY < 0) { legOffset[0] += hp.squashY * 1.5; legOffset[1] -= hp.squashY * 1.5; }
+      // 걷기 — 네발은 대각선 쌍(0·3 / 1·2)이 번갈아 앞뒤로, 두발은 두 다리가 번갈아 벌렸다 모은다(정면 걸음)
+      if (walkK > 0 && W) {
+        const s = Math.sin(ph) * W.leg * walkK;
+        if (quad) { legOffset[0] += s; legOffset[3] += s; legOffset[1] -= s; legOffset[2] -= s; }
+        else { legOffset[0] += s; legOffset[1] -= s; }
+      }
       for (let i = 0; i < 4; i += 1) legOffset[i] += R.legJitter(t, i);
 
       // 꼬리 · 젤리 — 꼬리 기본은 idle 각(tailIdle), 그 위에 스위시·플릭
       let tailAngle = (M.tailIdle || 0) + R.stepTailSwish(tailSwish, t);
       tailAngle += E.stepTailFlick(tailFlick, t, rng, M);
+      if (walkK > 0 && W && quad) tailAngle += Math.sin(ph) * 0.12 * walkK;   // 걷기 — 꼬리가 걸음에 맞춰 살랑
       const j = R.stepJelly(jelly, t);
 
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
@@ -207,7 +228,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         const index = def.leg === "front" ? (forcedSide > 0 ? 1 : 0) : def.leg === "hind" ? (forcedSide > 0 ? 3 : 2) : -1;
         return { action: forced, index, start, until: Infinity };
       });
-      if (asleep) qact = null;
+      if (asleep || walkK > 0.5) qact = null;   // 자는 중·걷는 중엔 네발 행위 없음
       if (qact) {
         const def = QUAD_ACTIONS[qact.action];
         const env = ramp(Math.max(0, Math.min(1, Math.min((t - qact.start) / 0.35, (qact.until - t) / 0.35))));
@@ -250,12 +271,14 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       return {
         breathe: br, lid, gaze, startle, regen: regenNow, emoji: em,
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
-        sway: sw.sway, rock: sw.rock, headAngle: (tiltAngle + rollAngle) * awake + sleepHead, headBob: headBob * awake + sleepBob,
+        sway: sw.sway + (walkK > 0 && W ? Math.sin(ph) * W.sway * walkK : 0), rock: sw.rock,
+        headAngle: (tiltAngle + rollAngle) * awake + sleepHead,
+        headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle,
         arms, legOffset, legOsc,
-        mode: modeName, sleep: sleepK,
+        mode: modeName, sleep: sleepK, walk: walkK,
         // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용
         action: act ? act.action : qact ? qact.action : null,
         actionSide: act ? act.side : qact ? qact.index : 0,

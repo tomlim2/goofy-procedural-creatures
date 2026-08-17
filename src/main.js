@@ -102,11 +102,11 @@ for (const [name, def] of Object.entries(ACTIONS)) {
   option.textContent = `${name.toUpperCase()} — ${def.label}`;
   actionSel.appendChild(option);
 }
-// 기본 상태 — SLEEP은 네발을 엎드려 재운다 (사람·도깨비는 잠 자세가 없어 idle)
-{
+// 기본 상태 — SLEEP은 네발을 엎드려 재운다 (사람·도깨비는 잠 자세가 없어 idle), WALK는 제자리 걸음 (전 종족, 팔 행위는 예약대로)
+for (const [value, label] of [["sleep", "SLEEP — 잠 (네발)"], ["walk", "WALK — 제자리 걸음"]]) {
   const option = document.createElement("option");
-  option.value = "sleep";
-  option.textContent = "SLEEP — 잠 (네발)";
+  option.value = value;
+  option.textContent = label;
   actionSel.appendChild(option);
 }
 // 몸 행위 — 두발·네발 공통 (강제하면 쉬었다 반복)
