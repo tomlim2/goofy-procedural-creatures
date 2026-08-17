@@ -44,7 +44,7 @@ export function stepBlink(e, t, rng) {
     if (k >= 1) e.start = -1;
     else {
       lid = bump(k);
-      if (e.happy && lid > 0.7) happy = true;
+      if (e.happy && lid > 0.7) happy = true;   // ^^ 깜빡임 — index.js가 이걸 3초 이상의 ^^ 유지로 늘린다
     }
   }
   return { lid, happy };

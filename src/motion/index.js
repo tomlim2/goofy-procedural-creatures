@@ -76,6 +76,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const tailFollow = { x: 0, v: 0 };
   let tailPrevBase = null;
   const lash = { start: -1 };
+  // 표정은 잠깐 하다 말지 않는다 — ^^는 시작하면 **3초 이상** 간다 (깜빡임 ^^ 22%·♥ 이모지가 이걸 켠다). rng 없이 시각만
+  let happyUntil = -1;
   const happyWag = { x: 0, v: 0 };   // 웃을 때 꼬리 흔들기 봉투(임계감쇠로 켜고 끈다)
   const raise = { until: -1, start: -1, style: "hook" };   // style: hook(끝을 안으로 굽혀 세움) | straight(빳빳이 세움)
   const startRaise = (t) => {
@@ -201,8 +203,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       let lid = bl.lid;
       let isHappy = bl.happy;
       if (S.stepHappy(happy, t, rng, M)) { lid = 1; isHappy = true; }
-      // ♥ 이모지가 떠 있는 동안은 웃는다(^^) — 어디서 쏜 ♥이든 (idle 예약·파닥임·꼬리 흔들기·♥ 놀람). 개는 이게 꼬리 흔들기로 이어진다
-      if (emoji.kind === "heart" && !asleep) { lid = 1; isHappy = true; }
+      // ♥ 이모지가 뜨면 웃는다(^^) — 어디서 쏜 ♥이든 (idle 예약·파닥임·꼬리 흔들기·♥ 놀람). 개는 이게 꼬리 흔들기로 이어진다.
+      // 깜빡임 ^^ 도 잠깐이 아니라 3.2초 유지로 늘린다 — 웃다 마는 얼굴은 없다
+      if ((emoji.kind === "heart" || bl.happy) && sleepK === 0) happyUntil = Math.max(happyUntil, t + 3.2);   // 잠들기 시작했으면 새로 웃지 않는다
+      if (t < happyUntil && !asleep) { lid = 1; isHappy = true; }
       const winkSide = sleepK > 0.5 ? 0 : S.stepWink(wink, t, rng, M);
       if (sleepK > 0.5) S.stepWink(wink, t, rng, M);   // (rng 소비 고정 — 결과만 버린다)
       const startleBefore = surprise.start;

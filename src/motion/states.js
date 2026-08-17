@@ -31,7 +31,7 @@ export function stepSquint(s, t, rng, lid) {
 }
 // ^^ 유지 — 눈을 다 감고 happy
 export function stepHappy(s, t, rng, M) {
-  if (t >= s.next && s.until < 0) { s.until = t + rng.float(2, 5); s.next = t + rng.float(M.happyHold[0], M.happyHold[1]); }
+  if (t >= s.next && s.until < 0) { s.until = t + rng.float(3, 6); s.next = t + rng.float(M.happyHold[0], M.happyHold[1]); }   // ^^ 유지는 3초 이상
   if (s.until >= 0) {
     if (t >= s.until) s.until = -1;
     else return true;
@@ -41,7 +41,7 @@ export function stepHappy(s, t, rng, M) {
 export function stepWink(s, t, rng, M) {
   if (t >= s.next && s.until < 0) {
     s.side = rng.chance(0.5) ? -1 : 1;
-    s.until = t + rng.float(0.5, 1.3);
+    s.until = t + rng.float(3, 5);   // 윙크는 3초 이상 — 잠깐 하다 마는 표정은 없다
     s.next = t + rng.float(M.wink[0], M.wink[1]);
   }
   if (s.until >= 0 && t >= s.until) { s.until = -1; s.side = 0; }
