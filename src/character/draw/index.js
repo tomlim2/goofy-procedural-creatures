@@ -64,7 +64,7 @@ export function drawCreature(spec, variant = 0) {
   // 눈썹과 입은 여기서 굽지 않는다. 상태 전환을 위해 scene이 facePartSketch로 별도 메시를 세운다.
   drawWhiskers(L.face.ink, spec, box);   // 고양이 수염 — 얼굴 층이라 윤곽 위로 그려져 밖으로 뚫고 나올 수 있다
   drawEyewear(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
-  // 머리카락 세 층 — 뒷머리(머리 뒤, 귀 그룹) · 두피 위(뿔과 같은 crown 잉크) · 앞머리(얼굴 위, 앞머리 그룹). hair.js 참조
+  // 머리카락 세 층 — 뒷머리(머리 뒤) · 두피 위(뿔과 같은 crown 잉크) · 앞머리(얼굴 위). 뒷머리·앞머리는 같은 그룹(hairGroup)이라 같이 밀린다. hair.js 참조
   drawHair({ back: L.hairBack.ink, crown: L.crown.ink, front: L.hairFront.ink }, spec, box, noise);
   drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // 모자는 귀보다 위 층 — 귀 밑동을 덮는다
 

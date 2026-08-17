@@ -28,14 +28,14 @@ export function buildCreature(spec, noise, birth = 0) {
   const bodyGroup = new THREE.Group();
   const headGroup = new THREE.Group();
   const earGroup = new THREE.Group();     // 귀(옆귀·개/고양이 귀) — 얼굴 돌림 때 얼굴과 **반대로** 밀린다
-  const crownGroup = new THREE.Group();   // 뿔·머리카락·모자 — 얼굴 돌림 때 얼굴과 같은 방향으로 덜 밀린다
-  const bangsGroup = new THREE.Group();   // 앞머리 — 얼굴 위에 그리지만 얼굴 돌림엔 **아주 조금만** 따라간다 (머리에 붙은 것)
+  const crownGroup = new THREE.Group();   // 뿔·두피 위 머리카락·모자 — 얼굴 돌림 때 얼굴과 같은 방향으로 덜 밀린다
+  const hairGroup = new THREE.Group();    // 앞머리·뒷머리 — 얼굴 돌림엔 **아주 조금만**, 둘이 같은 비율로 따라간다 (머리에 붙은 것)
   const faceGroup = new THREE.Group();
   group.add(bodyGroup);
   group.add(headGroup);
   headGroup.add(earGroup);
   headGroup.add(crownGroup);
-  headGroup.add(bangsGroup);
+  headGroup.add(hairGroup);
   headGroup.add(faceGroup);
 
   // 보일 — 지터 위상만 다른 3벌. 층마다 프레임(그룹) 3개를 같은 인덱스로 토글한다 (animate가 frames를 돈다).
@@ -51,7 +51,7 @@ export function buildCreature(spec, noise, birth = 0) {
   const faceCy = firstDrawn.faceCy;
   const LAYERS = [
     { key: "body", group: bodyGroup, dy: 0, order: 1.5 },
-    { key: "hairBack", group: earGroup, dy: -neckY, order: 1.55 },   // 뒷머리 — 머리·귀 뒤, 몸 위
+    { key: "hairBack", group: hairGroup, dy: -neckY, order: 1.55 },  // 뒷머리 — 머리·귀 뒤, 몸 위. 앞머리와 같은 그룹(같이 밀린다)
     { key: "crownBack", group: earGroup, dy: -neckY, order: 1.7 },   // 옆귀 — 머리 채색 뒤
     { key: "head", group: headGroup, dy: -neckY, order: 2 },
     { key: "crown", group: crownGroup, dy: -neckY, order: 2.06 },    // 뿔·머리카락 — 머리 잉크 위
@@ -61,7 +61,7 @@ export function buildCreature(spec, noise, birth = 0) {
     // 정지 눈 — 눈마다 한 층(작은 눈 Back → 큰 눈 Front, 겹치면 큰 눈이 앞). 잠·^^·윙크(그쪽)·놀람 변형 때 그 눈의 층을 끈다
     ...STATIC_EYE_KEYS.map((key) => ({ key, group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 })),
     { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // 코·안경 — 눈 리그(3~)보다 위. 놀란 흰자·눈꺼풀이 못 덮는다
-    { key: "hairFront", group: bangsGroup, dy: -neckY, order: 6.55 }   // 앞머리 — 코·안경 위, 눈썹·입(6.6) 아래
+    { key: "hairFront", group: hairGroup, dy: -neckY, order: 6.55 }    // 앞머리 — 코·안경 위, 눈썹·입(6.6) 아래
   ];
   const frames = {};
   for (const layer of LAYERS) frames[layer.key] = [];
@@ -250,7 +250,7 @@ export function buildCreature(spec, noise, birth = 0) {
     headGroup,
     earGroup,
     crownGroup,
-    bangsGroup,
+    hairGroup,
     faceGroup,
     tailGroup,
     tailBones,
