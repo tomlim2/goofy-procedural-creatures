@@ -1,10 +1,8 @@
-// 얼굴 — 눈·눈썹·안경·코·볼·입. 눈썹과 입은 상태 전환 대상이라 별도 스케치로도 굽는다.
-// 문서: guidelines/character/parts.md § 머리 (eyes~mouth), guidelines/motion/catalog.md § 얼굴
+// 얼굴 — 눈·눈썹·안경·코·주둥이·볼·수염. 입은 mouth.js, 눈썹·입의 상태 벌은 faceStates.js.
+// 문서: guidelines/character/parts.md § 머리 (eyes~nose), guidelines/motion/catalog.md § 얼굴
 
-import { Sketch, blobPath, arcPath } from "../../stroke.js";
-import { makeNoise, makeRng } from "../../rng.js";
-import { TAU, layout, eyeGeometry } from "./layout.js";
-import { SPECIES } from "../vocabulary/species.js";
+import { blobPath, arcPath } from "../../stroke.js";
+import { TAU } from "./layout.js";
 
 // 이 눈이 안대에 가려졌나 — 안대가 있을 때만 patchSide를 본다 (갤러리 fix나 뒤늦은 제약으로 안대가 빠져도 눈이 같이 사라지지 않게)
 export function patched(spec, eye) { return spec.parts.eyewear === "patch" && spec.parts.patchSide === eye.side; }
@@ -305,89 +303,6 @@ export function noseBottomY(spec, box, eyes) {
   return noseY(spec, box, eyes) - (kind === "long" ? 0.045 : kind === "wedge" ? 0.02 : kind === "hook" ? 0.012 : 0.008);
 }
 
-export function drawMouth(ink, fills, spec, box, kindOverride) {
-  const kind = kindOverride || spec.parts.mouth;
-  const eyes = eyeGeometry(spec, box);
-  // 입 자리 — 코 밑(noseBottomY)부터 턱 위(headCy − 0.86·ry)까지 사이에서 mouthPos로: high 0.22 · mid 0.5 · low 0.76.
-  // 그리고 (놀라 커진) 눈 아래 — 외눈·왕눈의 흰자 위에 얹히면 사라진다
-  const top = noseBottomY(spec, box, eyes) - 0.006;
-  const chin = box.headCy - box.headRy * 0.86;
-  const tPos = spec.parts.mouthPos === "high" ? 0.22 : spec.parts.mouthPos === "low" ? 0.76 : 0.5;
-  let y = Math.min(top + (chin - top) * tPos, eyeFloor(spec, eyes, 0) - 0.03);
-  // 개 입은 밝은 주둥이 위에 앉으니 늘 검정 — 얼굴 잉크가 밝아도(짙은 털색) 그렇다
-  const ink0 = spec.species === "pup" ? spec.palette.ink : (spec.faceInk || spec.palette.ink);
-  let w = box.headRx * 0.38;
-  // 벌린 입(open)의 높이 — 머리에 비례하고, 코 밑에서 끝난다 (코를 삼키면 코가 사라진다)
-  const noseBottom = spec.species === "pup" || spec.parts.nose === "none" ? Infinity : top;
-  const openH = Math.max(0.018, Math.min(0.05, box.headRy * 0.22, noseBottom - 0.008 - y));
-  if (spec.species === "pup") {
-    // 개는 입이 주둥이 위, 코 밑에 — 얼굴 비율(mouthDrop)이 아니라 주둥이 치수를 따른다. 코 덩어리에 겹치면 안 보인다
-    const m = muzzleGeometry(spec, box);
-    y = m.my - box.headRy * 0.12;
-    w = Math.min(w, m.rx * 0.72);
-  }
-
-  if (kind === "dot") {
-    // 점 입 — 짧은 획은 끝 가늘어짐 때문에 얇아지니 살짝 길고 굵게 (콩알 하나로 읽혀야 한다)
-    ink.stroke([[-0.015, y], [0.015, y]], { color: ink0, width: 0.017 });
-  } else if (kind === "line") {
-    ink.stroke([[-w, y], [w, y + 0.004]], { color: ink0, width: 0.011 });
-  } else if (kind === "smile") {
-    ink.stroke(arcPath(0, y + 0.03, w, 0.045, Math.PI, TAU), { color: ink0, width: 0.011 });
-  } else if (kind === "wave") {
-    ink.stroke([[-w, y], [-w * 0.3, y + 0.03], [w * 0.3, y - 0.02], [w, y + 0.015]], {
-      color: ink0, width: 0.011
-    });
-  } else if (kind === "open") {
-    // 벌린 입 — 동그란 구멍이 아니라 **윗입술은 곧고 아래만 둥근 그릇**(D를 눕힌 꼴): 채움 + 윗입술 선. 타원 덩어리는 동굴처럼 읽힌다
-    const hw = w * 0.85, top = y + openH * 0.35, bottom = y - openH * 0.95;
-    const bowl = [];
-    for (let i = 0; i <= 14; i += 1) {
-      const t = (i / 14) * Math.PI;
-      bowl.push([-hw * Math.cos(t), top - (top - bottom) * Math.sin(t)]);
-    }
-    fills.fill(bowl, ink0);
-    ink.stroke([[-hw * 1.05, top + 0.003], [hw * 1.05, top]], { color: ink0, width: 0.012 });   // 윗입술
-  } else if (kind === "pout") {
-    // 오리입 — 작은 동그라미
-    ink.outline(blobPath(0, y, 0.022, 0.017, { lumps: 3, amount: 0.15, noise: null }), {
-      color: ink0, width: 0.011
-    });
-  } else if (kind === "omega") {
-    // ω — 고양이 입
-    ink.stroke(arcPath(-w * 0.35, y + 0.012, w * 0.38, 0.028, Math.PI, TAU), { color: ink0, width: 0.01 });
-    ink.stroke(arcPath(w * 0.35, y + 0.012, w * 0.38, 0.028, Math.PI, TAU), { color: ink0, width: 0.01 });
-  } else if (kind === "zigzag") {
-    const zig = [];
-    for (let i = 0; i <= 6; i += 1) zig.push([-w + (2 * w * i) / 6, y + (i % 2 ? -0.016 : 0.012)]);
-    ink.stroke(zig, { color: ink0, width: 0.011 });
-  } else {
-    // teeth — 입선 위아래로 이가 삐져나온다
-    ink.stroke([[-w, y], [w, y]], { color: ink0, width: 0.012 });
-    for (let i = 0; i < 3; i += 1) {
-      const x = -w * 0.6 + i * w * 0.6;
-      ink.stroke([[x, y], [x + 0.012, y - 0.045]], { color: ink0, width: 0.009 });
-    }
-  }
-}
-
-// 눈썹·입의 대체 상태. 쉬는 상태에서 이따금 이 상태로 넘어갔다 돌아온다.
-// 눈썹이 없는 개체는 대체도 없다 — 없는 파트를 기분 전환 때 그려 넣지 않는다. 눈썹 전환은 눈썹이 있을 때만 보인다
-const ALT_BROW = { none: "none", flat: "worry", angry: "flat", worry: "flat" };
-
-const ALT_MOUTH = { dot: "line", line: "wave", teeth: "open", open: "line", wave: "line", smile: "open" };
-
-// 쉼 / 대체 / **화남** 세 벌. 대체·화남 값에도 종족 forbid를 적용한다 — 눈썹이 없는 종족(개·고양이)이 기분 전환 때 눈썹을 달면 안 된다.
-// 화남(motion state.angry): 눈썹은 angry, 입은 이를 드러낸 teeth(쉼이 teeth면 zigzag). 눈은 scene이 사나운 눈 글리프로 바꿔 그린다 (rig.js angryEyeSketch)
-export function facePartKinds(spec) {
-  const forbid = (SPECIES.find((s) => s.name === spec.species) || {}).forbid || {};
-  const allow = (slot, value) => (forbid[slot] && forbid[slot][value] !== undefined ? forbid[slot][value] : value);
-  return {
-    brow: [spec.parts.brow, allow("brow", ALT_BROW[spec.parts.brow] || "flat"), allow("brow", spec.parts.brow === "none" ? "none" : "angry")],
-    mouth: [spec.parts.mouth, allow("mouth", ALT_MOUTH[spec.parts.mouth] || "line"), allow("mouth", spec.parts.mouth === "teeth" ? "zigzag" : "teeth")]
-  };
-}
-
 // 사나운 눈(화남) — 눈을 **바꿔 그린다**: 안쪽(코 쪽)이 내려간 굵은 빗금 눈꺼풀 + 그 밑에서 노려보는 점 (＼ ／ 위에 점). 외눈은 수평 눈꺼풀.
 // 살아 있는 눈(리그)·정지 눈 둘 다 같은 모양 (scene/rig.js). 좌표는 눈 중심 원점
 export function angryEyeSketch(sketch, eye, ink) {
@@ -397,16 +312,3 @@ export function angryEyeSketch(sketch, eye, ink) {
   sketch.stroke(lid, { color: ink, width: 0.015, jitter: 0.004 });
   sketch.fill(blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink);
 }
-
-// 눈썹 또는 입 한 상태를 독립 Sketch로 굽는다. scene이 상태별 메시로 세운다.
-export function facePartSketch(spec, part, kind) {
-  const rng = makeRng((spec.proportions.wobbleSeed + (part === "brow" ? 101 : 202)) >>> 0);
-  const noise = makeNoise(rng);
-  const sketch = new Sketch(noise, spec.proportions.wobble);
-  const box = layout(spec);
-  const eyes = eyeGeometry(spec, box);
-  if (part === "brow") drawBrow(sketch, spec, box, eyes, kind);
-  else drawMouth(sketch, sketch, spec, box, kind);
-  return sketch;
-}
-

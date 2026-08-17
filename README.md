@@ -47,7 +47,7 @@ three.js는 importmap으로 unpkg에서 받는다.
 | `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | [determinism](guidelines/determinism.md) |
 | `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭. `buildGeometry`(스케치 여러 벌 → 지오메트리 하나) | [drawing](guidelines/drawing.md) |
 | `src/color.js` | 헥스 색 유틸 — 선형 변환(`hexToRgb`), 휘도(`luminance`·`isDark`), 톤(`shade`). 캐릭터·그리기가 같이 쓴다 | [drawing](guidelines/drawing.md) § 색 |
-| **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획: `layout` `head` `hair` `headgear` `face` `body` `limbs`) | [character/](guidelines/character/) |
+| **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지 — 기본 상태 idle/sleep/walk 포함) `actions.js`(idle과 행위 — 팔·몸·네발 층) `emoji.js`(이모지 애니메이션 — 트리거 층) `ease.js`(곡선 모양 — 봉투·추종, 전부 ease in/out) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js`(공유 재질·메시) `emoji.js`(글리프 모양) `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
 | `src/main.js` · `src/ui.js` | 진입점. UI 배선 (`ui.js` — 세그먼트 버튼·옵션·rAF 루프 유틸, gallery·audit과 공유) | |
@@ -82,7 +82,7 @@ node scripts/drawdiff.mjs [ref]        # 그리기 리팩토링 — 작업 트�
 4. **비율 지터** — 머리 크기·너비·혹, 눈 크기·간격·좌우 비대칭, 몸 폭, 팔 길이, 손떨림.
    실루엣 다양성의 대부분이 여기서 나온다
 
-22슬롯 154파츠. 슬롯은 형태만 담고, 자세·동작은 모션이다. 길이·체격(`armLength` `legLength` `build`)은 형태와
+23슬롯 167파츠. 슬롯은 형태만 담고, 자세·동작은 모션이다. 길이·체격(`armLength` `legLength` `build`)은 형태와
 독립인 치수 슬롯 — 스케일이 아니라 기장·폭만 바뀌고, 다리 스탠스는 몸통 폭이 정한다.
 
 ## 손그림 질감

@@ -6,7 +6,6 @@
 export const SPECIES = [
   {
     name: "human",
-    weight: 5,
     // 사람. 뿔·더듬이·외눈은 사람 것이 아니고, 바닥을 쓰는 긴 팔(long)은 도깨비 것이다.
     // forbid는 "이 슬롯의 이 값이 나오면 이걸로 바꾼다". applyConstraints가 읽어서
     // 결정적으로 덮어쓴다 — 아키타입 성향(scholar의 dot 눈 등)은 살아 있다.
@@ -35,7 +34,6 @@ export const SPECIES = [
   },
   {
     name: "pup",
-    weight: 2,
     forbid: {
       ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid" },
       // 개 귀 경계 — 없음·왕귀는 개 귀로
@@ -72,12 +70,14 @@ export const SPECIES = [
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
       tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // 개는 굵거나 북슬(스피츠), 토끼 같은 몽실 꼬리도. ringed·wedge 비활성
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
+      // 입 — 주둥이 밑 w(omega)가 기본, 짖는 o(open), 헥헥 혀(tongue), 선·점·웃음. 오리입·지그재그·가시 이빨은 없다 (레퍼런스 3줄)
+      mouth: [["omega", 4], ["line", 2], ["open", 2], ["tongue", 2], ["dot", 1.5], ["smile", 1]],
+      mouthSize: [["normal", 3], ["small", 1.5], ["wide", 0.5]],
       face2: [["none", 5], ["blush", 1]]
     }
   },
   {
     name: "cat",
-    weight: 2,
     forbid: {
       ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig" },
       // 고양이 귀 경계 — 늘어진 귀·없음은 정수리 귀로
@@ -109,7 +109,9 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
       nose: [["dot", 5], ["none", 2]],
       eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["cross", 2], ["wide", 2], ["dot", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1]],
-      mouth: [["omega", 4], ["line", 2], ["dot", 2], ["wave", 1], ["smile", 1]],
+      // 입 — ω 압도적, 오므린 3, 선·점, 야옹 o(meow), 혀 빼꼼(blep). 물결·웃음은 없다 (레퍼런스 4줄)
+      mouth: [["omega", 4], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
+      mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
       marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1]],
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
       tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // 고양이는 가는 선. ringed·wedge 비활성
@@ -119,7 +121,6 @@ export const SPECIES = [
   },
   {
     name: "imp",
-    weight: 2,
     forbid: {
       ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none" }   // 도깨비 귀는 없거나 작은 뾰족귀
     },
@@ -138,7 +139,9 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["goggles", 1]],
       eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1]],
       nose: [["none", 4], ["dot", 2]],
-      mouth: [["teeth", 3], ["zigzag", 3], ["wave", 2], ["open", 2], ["line", 1]],
+      // 입 — 넓다(종족 배율 1.3 + wide). 이빨 격자·해칭 뭉치·가시 이빨·지그재그·송곳니·네모 벌림 (레퍼런스 5줄)
+      mouth: [["grimace", 3], ["scribble", 2], ["teeth", 2], ["zigzag", 2], ["fangs", 2], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["line", 0.5]],
+      mouthSize: [["normal", 2], ["wide", 2], ["small", 0.5]],
       marks: [["stripes", 3], ["none", 2], ["hatch", 1]],
       face2: [["none", 6], ["tears", 1]],
       body: [["bean", 3], ["box", 1]],

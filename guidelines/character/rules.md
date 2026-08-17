@@ -46,7 +46,8 @@
 1. **`src/character/vocabulary/slots.js`** — `SLOTS`에 이름을 넣는다. 이름은 `draw/`의 분기 키와 정확히 같아야 한다
 2. **`src/character/vocabulary/`** — 필요하면 `slots.js` `DEFAULT_BIAS`, `archetypes.js`·`species.js` `bias`에 가중치를 넣는다
 3. **`src/character/draw/`** — 파츠가 속한 파일에 분기를 추가한다: 윤곽·귀 `head.js` · 머리카락 `hair.js`(`HAIR` 표에 함수 하나) ·
-   모자·뿔 `headgear.js` · 얼굴 `face.js` · 몸 `body.js` · 팔다리·꼬리 `limbs.js`
+   모자·뿔 `headgear.js` · 눈·안경·코·볼 `face.js` · 입 `mouth.js`(`MOUTH` 표에 함수 하나 — 자리·폭은 `mouthPlacement`가 준다) · 몸 `body.js` · 팔다리·꼬리 `limbs.js`.
+   입은 `faceStates.js`의 대체·화남·^^ 표에도 자리를 잡아 준다
 
 `spec.js`는 대개 손대지 않는다. 새 조합이 다른 파츠와 충돌할 때만 `applyConstraints`에 넣는다.
 

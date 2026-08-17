@@ -128,7 +128,7 @@ function audit() {
       const asleep = !!ov.sleep, closedAll = !!ov.lid || !!ov.happy;
       const parts = [];   // [라벨, 메시들, 보여야 하나, 숨길 프레임 키]
       const angry = !!ov.angry;
-      const browIdx = angry ? 2 : ov.browAlt ? 1 : 0, mouthIdx = angry ? 2 : ov.mouthAlt ? 1 : 0;
+      const browIdx = angry ? 2 : ov.browAlt ? 1 : 0, mouthIdx = angry ? 2 : ov.happy ? 3 : ov.mouthAlt ? 1 : 0;   // animate와 같은 우선순위
       if (kinds.brow[browIdx] !== "none") parts.push(["brow", [item.faceStates.brow[browIdx]], true]);
       parts.push(["mouth", [item.faceStates.mouth[mouthIdx]], true]);
       // 정지 눈은 잠·^^·화남·놀람 변형·**그쪽 윙크**에만 대체된다 — 반대쪽 눈은 윙크 중에도 보여야 한다

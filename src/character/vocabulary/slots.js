@@ -29,7 +29,10 @@ export const SLOTS = {
   nose: ["hook", "dot", "wedge", "long", "none"],
   // 볼·눈가 디테일. 레퍼런스의 눈물 자국과 볼터치.
   face2: ["none", "tears", "blush", "freckles"],
-  mouth: ["dot", "line", "teeth", "open", "wave", "smile", "pout", "omega", "zigzag"],
+  // 입 19종 (draw/mouth.js MOUTH 표). 레퍼런스: 사람은 아주 작은 입(점·선·처짐·3)이 기본이고 눈에 띄는 건 이빨 격자(grimace)·씨익(grin)·해칭(scribble),
+  // 개는 w(omega)·o(open)·혀(tongue), 고양이는 ω·3·야옹(meow)·혀 빼꼼(blep)·하악(fangs), 도깨비는 넓은 격자·해칭·가시 이빨(teeth)·지그재그·송곳니·네모 벌림(shout)
+  mouth: ["dot", "line", "teeth", "open", "wave", "smile", "pout", "omega", "zigzag",
+    "frown", "three", "grimace", "grin", "scribble", "tongue", "fangs", "shout", "meow", "blep"],
   body: ["bean", "box", "dress", "tube"],
   marks: ["none", "stripes", "dots", "patch", "hatch", "spots"],
   // 다리 유형(형태만). 레퍼런스: 전부 끝에 동그란 발이 있고 몸 밑에서 나온다.
@@ -49,6 +52,9 @@ export const SLOTS = {
   tailLength: ["long", "medium", "short"],
   // 입 **자리** — 코 밑부터 턱 위까지 사이의 어디에 앉나: high(코 바로 밑) · mid(중간) · low(턱 가까이). 개는 주둥이 규칙이라 무시
   mouthPos: ["mid", "high", "low"],
+  // 입 **크기** — 폭 배율 small 0.7 · normal 1 · wide 1.4 (draw/mouth.js MOUTH_SIZE). 레퍼런스는 아주 작은 입과 아주 넓은 입이 극단적으로 갈린다.
+  // 도깨비는 여기에 종족 배율 1.3이 더 곱해진다
+  mouthSize: ["normal", "small", "wide"],
   // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다. none은 팔 없음(도깨비 일부) — 팔 행위 층이 쉰다
   arms: ["stick", "sleeve", "stubby", "mitten", "none"],
   // 팔 길이. 형태와 독립이라 짧은 소매 팔, 매우 긴 장갑 팔이 다 나온다.
@@ -67,7 +73,7 @@ export const SLOTS = {
 // 뒤늦게 붙인 슬롯. makeCreature가 다른 모든 것(파츠·제약·색·비율) 뒤에 뽑는다 —
 // 그래야 앞선 rng 소비가 그대로라 기존 시드의 판이 유지된다(새 슬롯 값만 더해진다).
 // 새 슬롯은 여기 끝에 붙인다. 순서를 바꾸면 이 슬롯들의 값이 바뀐다.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize"];
 
 // 아키타입 bias가 없는 슬롯의 기본 가중치.
 //
@@ -91,7 +97,10 @@ export const DEFAULT_BIAS = {
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2], ["hook", 1.5], ["kink", 1], ["ring", 1.5]],
   tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["block", 1], ["ball", 1], ["puff", 1]],   // ringed·wedge 비활성
   tailLength: [["long", 3], ["medium", 2], ["short", 1.5]],
+  // 입 — 사람 기준(종족 bias가 없을 때). 작은 입이 기본, 격자·씨익·해칭은 양념. 가시 이빨·지그재그·야옹·혀 빼꼼은 종족 것이라 0
+  mouth: [["line", 3], ["dot", 2], ["smile", 2], ["frown", 1.5], ["three", 1.5], ["pout", 1], ["open", 1], ["wave", 1], ["grimace", 1], ["grin", 1], ["scribble", 0.3]],
   mouthPos: [["mid", 2], ["high", 1.5], ["low", 1.5]],
+  mouthSize: [["normal", 3], ["small", 2], ["wide", 1]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],

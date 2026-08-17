@@ -53,15 +53,6 @@ export function makeRng(seed) {
         if (roll <= 0) return value;
       }
       return entries[entries.length - 1][0];
-    },
-
-    shuffle: (list) => {
-      const out = list.slice();
-      for (let i = out.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(next() * (i + 1));
-        [out[i], out[j]] = [out[j], out[i]];
-      }
-      return out;
     }
   };
 

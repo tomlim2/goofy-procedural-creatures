@@ -9,7 +9,7 @@ export const ARCHETYPES = [
     bias: {
       horns: [["curved", 4], ["straight", 3], ["nub", 2], ["none", 1]],
       ears: [["pointy", 2], ["pointyMid", 1], ["flap", 2], ["round", 2], ["none", 1]],
-      mouth: [["teeth", 4], ["wave", 2], ["open", 2], ["line", 1]],
+      mouth: [["grimace", 3], ["teeth", 2], ["wave", 2], ["open", 2], ["line", 1]],
       nose: [["wedge", 3], ["hook", 2], ["dot", 2], ["none", 1]],
       hair: [["spikes", 3], ["hedgehog", 2], ["mop", 2], ["mohawk", 2], ["tuft", 2], ["none", 2]],
       head: [["round", 3], ["wide", 2], ["square", 2], ["pear", 1]]
@@ -23,7 +23,7 @@ export const ARCHETYPES = [
       eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1]],
       hair: [["bob", 3], ["helmet", 2], ["bangs", 2], ["longbob", 1.5], ["long", 1.5], ["verylong", 1], ["ponytail", 1], ["wisp", 2], ["curly", 2], ["cloud", 1], ["sweep", 2], ["none", 2]],
       headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet 비활성
-      mouth: [["line", 3], ["dot", 2], ["smile", 2]],
+      mouth: [["line", 3], ["dot", 2], ["smile", 2], ["three", 1.5], ["frown", 1]],
       nose: [["long", 3], ["hook", 3], ["dot", 1]],
       horns: [["none", 6], ["nub", 1]]
     }
@@ -78,7 +78,7 @@ export const ARCHETYPES = [
       hair: [["scribble", 3], ["mop", 2], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["bun", 1.5], ["appleBig", 0.8], ["ponytail", 1], ["verylong", 0.8], ["none", 2], ["wisp", 1]],
       eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1]],
       marks: [["hatch", 3], ["stripes", 2], ["patch", 2], ["none", 2]],
-      mouth: [["wave", 3], ["line", 2], ["dot", 2]],
+      mouth: [["wave", 3], ["line", 2], ["dot", 2], ["frown", 1.5], ["scribble", 1]],
       body: [["dress", 3], ["bean", 2]]
     }
   }

@@ -2,8 +2,8 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 22슬롯 154파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
-`headgear.js` 모자·뿔 · `face.js` 눈·눈썹·안경·코·볼·입·수염 · `body.js` 몸·무늬 · `limbs.js` 팔다리·꼬리).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 167파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
+`headgear.js` 모자·뿔 · `face.js` 눈·눈썹·안경·코·주둥이·볼·수염 · `mouth.js` 입 · `faceStates.js` 눈썹·입의 상태 벌 · `body.js` 몸·무늬 · `limbs.js` 팔다리·꼬리).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -154,12 +154,36 @@ none / tears(눈 아래 두 줄 — **사람에겐 없다**, forbid → none; �
 고양이 **수염**은 슬롯이 아니라 종족 고정(`drawWhiskers`) — 양쪽 세 가닥, 살짝 처지는 부채꼴. 길이는 개체별(머리 반폭의 0.42~0.92배)이라
 반 넘는 고양이는 수염이 **머리 윤곽을 뚫고 밖으로** 나온다 (얼굴 층 2.4라 윤곽·귀 위에 얹히고 종이까지 뻗는다).
 
-### mouth (9) × mouthPos — 입 자리 (3)
-dot / line / teeth(선 + 이빨 3개) / open(벌린 입 — 윗입술은 곧고 아래만 둥근 **그릇 꼴** 채움 + 윗입술 선. 타원 덩어리는 동굴처럼 읽혀 안 쓴다) / wave / smile / pout(작은 원) / omega(ω, 고양이) / zigzag(도깨비).
-입 **자리**는 `mouthPos` 슬롯(늦은 슬롯) — 코 밑(`noseBottomY`)부터 턱 위(headCy − 0.86·ry)까지 사이의 **high**(0.22 — 코 바로 밑) ·
-**mid**(0.5) · **low**(0.76 — 턱 가까이). 코가 없으면 위 한계는 눈 밑선/머리 중심 조금 아래. 개는 주둥이 규칙(코 밑 고정)이라 무시.
-어느 자리든 (놀라 커진) 눈 아래에 있어야 한다.
-**상태 전환 대상**. 대체 표: dot→line, line→wave, teeth→open, open→line, wave→line, smile→open.
+### mouth (19) × mouthPos — 입 자리 (3) × mouthSize — 입 크기 (3)
+`mouth.js` — 종류마다 그리기 함수 하나(`MOUTH` 표). 레퍼런스: 사람은 **아주 작은 입**이 기본이고 눈에 띄는 건 **이빨 격자**·씨익·해칭, 개는 w·o·혀,
+고양이는 ω·3·야옹·혀 빼꼼, 도깨비는 **넓은** 격자·해칭·가시 이빨·지그재그·송곳니·네모 벌림.
+
+| 값 | 모양 | 주로 |
+| --- | --- | --- |
+| dot / line / smile / wave | 점(짧고 굵은 콩알) / 선 / 웃음 호 / 물결 | 사람·개(선·점·웃음)·고양이(선·점) |
+| frown | ⌢ 처진 작은 호 | 사람 |
+| open | 벌린 입 — 윗입술은 곧고 아래만 둥근 **그릇 꼴** 채움 + 윗입술 선 (타원 덩어리는 동굴처럼 읽혀 안 쓴다) | 사람·개(짖음)·도깨비 |
+| shout | □ 네모 벌림 — 모서리 각진 채움 + 윗입술 선 | 도깨비 |
+| pout | 놀란 작은 o (윤곽) | 사람 |
+| meow | 야옹 — 작은 세로 타원 채움 | 고양이 |
+| omega | ω — 두 호가 아래로 볼록. 개는 코 밑 w | 고양이·개 |
+| three | 3 — ω를 반으로 줄이고 굵게(오므린 입, 카오모지 3) | 고양이·사람 |
+| blep | ω + 밑으로 분홍 혀 끝 | 고양이 |
+| tongue | 살짝 벌린 그릇 + 아래로 늘어진 분홍 혀(가운데 줄) — 개는 **^^ 때 대체 입**(헥헥) | 개·도깨비 |
+| teeth | 선 + 위로 삐진 가시 이빨 셋 | 도깨비 |
+| zigzag | 지그재그 | 도깨비 |
+| grimace | **이빨 격자** — 넓고 납작한 둥근 네모(흰 채움 + 윤곽) 안에 세로 줄 3~6 (폭 비례). 사람·개 **화남 입** | 도깨비·사람(트루퍼) |
+| grin | 씨익 — 넓은 웃음 호 안에 흰 이빨 + 세로 줄 둘 + 윗선 | 사람 |
+| scribble | 해칭 입 — 가로 빗금 다섯 뭉치 | 도깨비·사람 드물게 |
+| fangs | 선 + 양끝 아래로 흰 송곳니 둘 — 도깨비·고양이 **화남 입**(하악) | 도깨비 |
+
+**자리** `mouthPos`(늦은 슬롯) — 코 밑(`noseBottomY`)부터 턱 위(headCy − 0.86·ry)까지 사이의 **high**(0.22) · **mid**(0.5) · **low**(0.76). 코가 없으면 위 한계는
+눈 밑선/머리 중심 조금 아래. 개는 주둥이 규칙(코 밑 고정). 어느 자리든 (놀라 커진) 눈 아래에 있어야 한다. 두발은 개체(wobbleSeed)로 **±0.1rx 옆으로 비껴** 앉는다(레퍼런스,
+rng 없음). **크기** `mouthSize`(늦은 슬롯) — 폭 배율 small 0.7 · normal 1 · wide 1.4, 도깨비는 종족 배율 1.3이 더 곱해진다. 종족 편향: 사람 small↑, 도깨비 wide↑.
+흰 채움(격자·씨익·송곳니)은 종이빛 흰색, 혀는 볼터치 분홍 — 얼굴 잉크가 밝은 도깨비 얼굴에서도 읽힌다.
+
+**상태 벌**(`faceStates.js`): 쉼 / 대체(`ALT_MOUTH` — dot↔line, line↔wave, smile→grin, omega↔three, grimace→line, tongue→open, fangs→line, shout→open, meow·blep→omega, teeth→open, zigzag·scribble→wave, frown→line, pout→dot) /
+**화남**(`ANGRY_MOUTH` — 사람·개 grimace, 고양이·도깨비 fangs) / **^^**(`HAPPY_MOUTH` — 개만 tongue, 나머지는 쉼 입 그대로). 같은 종류면 메시를 나눠 쓴다.
 
 ## 몸
 

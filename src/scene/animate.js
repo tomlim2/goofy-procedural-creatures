@@ -129,12 +129,12 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     if (limb.elbow) limb.elbow.rotation.z = limb.elbowAngle + oscElbow;
   }
 
-  // 눈썹·입 상태 — 화남(2번)이 우선, 아니면 대체(1번)/쉼(0번)
+  // 눈썹·입 상태 벌 — 눈썹: 화남(2) > 대체(1) > 쉼(0). 입: 화남(2) > ^^(3, 개는 혀) > 대체(1) > 쉼(0). 같은 종류는 메시를 나눠 쓰므로 고른 메시만 켠다
   const angryOn = (state.angry || 0) > 0.5;
-  const browIdx = angryOn ? 2 : state.browAlt ? 1 : 0;
-  const mouthIdx = angryOn ? 2 : state.mouthAlt ? 1 : 0;
-  item.faceStates.brow.forEach((m, i) => { m.visible = i === browIdx; });
-  item.faceStates.mouth.forEach((m, i) => { m.visible = i === mouthIdx; });
+  const browOn = item.faceStates.brow[angryOn ? 2 : state.browAlt ? 1 : 0];
+  const mouthOn = item.faceStates.mouth[angryOn ? 2 : state.happy ? 3 : state.mouthAlt ? 1 : 0];
+  for (const m of item.faceStates.brow) m.visible = m === browOn;
+  for (const m of item.faceStates.mouth) m.visible = m === mouthOn;
 
   // 정지 눈 — 눈마다 따로: 반쯤 넘게 잠들면 감은 눈 선, ^^·윙크(그쪽)면 미소 아치, 화나면 사나운 눈이 **대신** 선다(덮지 않고 **그 눈의** 정지 눈 층을 끈다).
   // 윙크는 한쪽만 바뀐다 — 반대쪽 눈의 층은 그대로 켜 둔다 (두 눈을 한 층으로 끄면 반대쪽 눈이 사라진다). 우선순위: 잠 > 화남 > ^^/윙크

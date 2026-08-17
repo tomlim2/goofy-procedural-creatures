@@ -59,7 +59,7 @@ export const MOTION = {
     wink: null, happyHold: [6, 16], angry: null,
     tailSwish: null, tailFlick: [3, 9],
     // 꼬리 끝 마디 — 개는 팔로스루만(흔들 때 끝이 늦게 따라온다). 나머지 고양이 전용은 null
-    tailTip: { follow: 0.05, twitch: null, lash: 0, raise: null, puff: 0 },
+    tailTip: { follow: 0.05, twitch: null, raise: null, puff: 0 },
     surprise: [10, 26], yaw: 0.7,
     // 개는 자주, 위(주인 쪽)로도 잘 본다
     look: [4, 12], lookHold: [1, 3], lookAmp: [1, 1],
@@ -92,10 +92,10 @@ export const MOTION = {
     // 화남 — 25~60초마다 3~5초. 사나운 눈·이 드러낸 입, 그동안 꼬리 털이 곤두선다(tailTip.puff). 개는 아직 없다(null)
     angry: [25, 60], angryHold: [3, 5],
     // 고양이 꼬리 — 개와 반대: 빠른 움직임은 짜증·흥분, 기쁨은 **세우는 것**. 느린 스위시(리듬) 위에 끝 마디 모션이 얹힌다
-    //   follow 팔로스루(끝이 뿌리 속도에 늦게 따라옴) · twitch 끝만 톡톡(tailFlick 간격을 끝 마디에 씀) · lash 놀람(plain) 시작 때 채찍질 확률 ·
+    //   follow 팔로스루(끝이 뿌리 속도에 늦게 따라옴) · twitch 끝만 톡톡(tailFlick 간격을 끝 마디에 씀) ·
     //   raise 기분 좋을 때(^^ 동안) 세움 — 관절 전부 정확히 수직, 굽는 변형 없음 (true/null) · puff 곤두섬 배율(**화내는 동안** 굵기만 — 화남 봉투 0.1/유지/0.1 그대로)
     tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [8, 20],
-    tailTip: { follow: 0.06, twitch: { amp: 0.35, hz: 6, dur: 0.5 }, lash: 0, raise: true, puff: 1 },   // 채찍질(lash)은 금지 — 고양이가 꼬리를 치는 모션은 없다
+    tailTip: { follow: 0.06, twitch: { amp: 0.35, hz: 6, dur: 0.5 }, raise: true, puff: 1 },   // 채찍질(lash)은 없다 — 고양이가 꼬리를 치는 모션은 금지
     surprise: [9, 24], yaw: 0.8,
     // 고양이는 드물게, 오래 응시
     look: [8, 20], lookHold: [2, 5], lookAmp: [0.9, 0.9],

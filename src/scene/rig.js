@@ -183,16 +183,21 @@ export function buildCreature(spec, noise, birth = 0) {
     };
   });
 
-  // 눈썹·입 상태(쉼·대체·화남 세 벌) — faceGroup 안에서 얼굴 돌림을 따라간다
+  // 눈썹·입 상태 벌(눈썹 쉼·대체·화남 / 입 쉼·대체·화남·^^ — faceStates.js) — faceGroup 안에서 얼굴 돌림을 따라간다.
+  // 벌마다 메시 하나, 같은 종류가 두 벌에 있으면 메시를 나눠 쓴다(animate가 켤 메시를 하나 고르고 나머지를 끈다)
   const kinds = facePartKinds(spec);
   const faceStates = {};
   for (const part of ["brow", "mouth"]) {
+    const byKind = new Map();
     faceStates[part] = kinds[part].map((kind, index) => {
-      // 눈썹·입은 눈 리그(3~6)보다 위(6.6) — 감긴 눈꺼풀이 눈썹을, 놀라 커진 외눈 흰자가 입을 지우지 않는다
-      const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 6.6, -faceCy);
-      mesh.visible = index === 0;
-      faceGroup.add(mesh);
-      return mesh;
+      if (!byKind.has(kind)) {
+        // 눈썹·입은 눈 리그(3~6)보다 위(6.6) — 감긴 눈꺼풀이 눈썹을, 놀라 커진 외눈 흰자가 입을 지우지 않는다
+        const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 6.6, -faceCy);
+        mesh.visible = index === 0;
+        faceGroup.add(mesh);
+        byKind.set(kind, mesh);
+      }
+      return byKind.get(kind);
     });
   }
 

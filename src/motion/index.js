@@ -14,7 +14,7 @@ import * as E from "./events.js";
 import * as S from "./states.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, bindArm, solveArms } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
-import { ramp, smoothstep, envelope, damp } from "./ease.js";
+import { ramp, smoothstep, damp } from "./ease.js";
 
 export { MOTION } from "./table.js";
 export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
@@ -76,7 +76,6 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const TT = M.tailTip || null;
   const tailFollow = { x: 0, v: 0 };
   let tailPrevBase = null;
-  const lash = { start: -1 };
   // 표정은 잠깐 하다 말지 않는다 — ^^는 시작하면 **3초 이상** 간다 (깜빡임 ^^ 22%·♥ 이모지가 이걸 켠다). rng 없이 시각만
   let happyUntil = -1;
   const happyWag = { x: 0, v: 0 };   // 웃을 때 꼬리 흔들기 봉투(임계감쇠로 켜고 끈다) — 개
@@ -294,19 +293,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         damp(happyWag, isHappy && !asleep ? 1 : 0, 0.3);
         if (happyWag.x > 0.01) tailAngle += Math.sin(t * Math.PI * 2 * M.wagOnHappy.hz) * M.wagOnHappy.amp * happyWag.x;
       }
-      // 놀람에 딸린 꼬리 — 채찍질(plain 변형 시작 때 lash 확률) · 곤두섬(놀란 동안). (♥ 놀람의 세움은 ♥ 이모지 → ^^ 를 거쳐 아래 세움이 맡는다)
-      if (TT && quad && startleBefore < 0 && surprise.start >= 0 && !asleep) {
-        if (surprise.variant === "plain" && TT.lash > 0 && rng.chance(TT.lash)) lash.start = t;
-      }
       // 곤두섬 — 털은 무섭거나 **화날 때** 선다: 화남 봉투(angryK — 0.1초에 확, 유지, 0.1초에 풀림, 사람 눈이 깜짝 놀랄 때의 법칙) 그대로.
-      // 굵기만 부푼다 (scene이 마디마다 척추에 수직으로 스케일). 놀람에는 안 선다
+      // 굵기만 부푼다 (scene이 마디마다 척추에 수직으로 스케일). 놀람에는 안 선다. (♥ 놀람의 세움은 ♥ 이모지 → ^^ 를 거쳐 아래 세움이 맡는다.
+      // 꼬리 채찍질은 없다 — 고양이가 꼬리를 치는 모션은 금지, 개는 wag)
       const tailPuff = TT && quad && TT.puff ? angryK * TT.puff : 0;
-      if (lash.start >= 0) {
-        // 채찍질 — 뿌리+끝 크게 3번, 1초. 끝은 같은 방향으로 조금 덜
-        const k = (t - lash.start) / 1.0;
-        if (k >= 1) lash.start = -1;
-        else { const w = Math.sin(k * Math.PI * 6) * envelope(k, 0.12, 0.4); tailAngle += w * 0.6; tailTip += w * 0.4; }
-      }
       // 세움 — 고양이는 **기분 좋을 때마다**(^^ — 깜빡임 ^^·♥ 이모지·♥ 놀람) 꼬리가 띡 선다. 골격 모양과 상관없이 scene이 관절마다 쉼 자세 → **정확히 수직**으로
       // 섞는다(tailRaise 0~1) — 굽는 변형은 없다(굽으면 선 게 아니라 휜 것으로 보인다). 0.4초에 서고 웃는 동안(3초 이상) 서 있다가 0.6초에 내린다.
       // 서 있는 동안은 **빳빳하다** — 스위시·톡톡·팔로스루를 (1 − tailRaise)로 죽인다 (안 죽이면 선 채로 흔들려 "딱" 서 보이지 않는다). rng 없음

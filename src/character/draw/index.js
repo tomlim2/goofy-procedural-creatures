@@ -10,7 +10,7 @@ import { drawHeadgear, drawHorns } from "./headgear.js";
 import { drawEyes, drawFace2, drawEyewear, drawNose, drawWhiskers, RIG_EYES, patched } from "./face.js";
 import { drawBody, drawMarks } from "./body.js";
 
-export { facePartKinds, facePartSketch } from "./face.js";
+export { facePartKinds, facePartSketch } from "./faceStates.js";
 export { limbSketches, motionRig, BIND_ARM, tailSketch } from "./limbs.js";
 
 // 층 이름 — 스케치 쌍(잉크·채색) 하나씩. scene/rig.js가 같은 이름으로 메시를 세운다 (렌더 순서는 guidelines/rig.md)
@@ -66,7 +66,7 @@ export function drawCreature(spec, variant = 0) {
   drawFace2(L.face.ink, L.face.fills, spec, box, eyes);
   // 코·안경은 얼굴 **맨 앞**(눈 리그보다 위) — 놀라 커진 흰자·감긴 눈꺼풀이 코·안경테를 덮어 사라지게 하지 않는다
   drawNose(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
-  // 눈썹과 입은 여기서 굽지 않는다. 상태 전환을 위해 scene이 facePartSketch로 별도 메시를 세운다.
+  // 눈썹과 입은 여기서 굽지 않는다. 상태 전환(쉼·대체·화남·^^)을 위해 scene이 facePartSketch(faceStates.js)로 별도 메시를 세운다.
   drawWhiskers(L.face.ink, spec, box);   // 고양이 수염 — 얼굴 층이라 윤곽 위로 그려져 밖으로 뚫고 나올 수 있다
   drawEyewear(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
   // 머리카락 세 층 — 뒷머리(머리 뒤) · 두피 위(뿔과 같은 자리) · 앞머리(얼굴 위). 층마다 깊이가 달라 얼굴 돌림에 따로 밀린다 (rig.js DEPTH). hair.js 참조
