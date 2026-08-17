@@ -331,6 +331,18 @@ export function tailSketch(spec) {
     const body = tubePath(spine, (t) => (stub ? 0.03 : 0.028) * (1 - t) + 0.001);
     sketch.fill(body, fur);
     sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
+  } else if (skin === "puff") {
+    // 몽실 — 토끼 꼬리. 골격 길이와 상관없이 엉덩이 가까이(척추 0.3 지점) 북슬한 뭉치 하나 + 둘레 털 획
+    const a = alongSpine(spine, 0.3);
+    const r = 0.04;
+    const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
+    sketch.fill(pom, fur);
+    sketch.outline(pom, { color: ink0, width: 0.011, passes: 2 });
+    for (let i = 0; i < 6; i += 1) {
+      const ang = -1.0 + i * 0.66;   // 위·바깥 둘레
+      const x0 = a.x + Math.cos(ang) * r * 0.9, y0 = a.y + 0.004 + Math.sin(ang) * r * 0.85;
+      sketch.stroke([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, width: 0.007, jitter: 0.004 });
+    }
   } else if (skin === "ball") {
     // 동그라미 — 척추를 따라 구슬을 꿴 꼬리. 스텁이면 폼폼 하나(토끼)
     if (stub) {

@@ -38,7 +38,8 @@ export const SLOTS = {
   // 꼬리 **스킨** — 골격 위에 입히는 것. line 가는 선 한 획 · thick 채운 굵은 꼬리 · plume 북슬한 깃털(털 획) · tuft 끝 뭉치(사자) · ringed 고리 무늬(너구리) ·
   // block 네모(폭 일정, 끝이 각짐) · wedge 세모(뿌리 넓고 끝 뾰족) · ball 동그라미(척추를 따라 구슬, 스텁이면 폼폼 하나).
   // ringed·wedge는 쥐꼬리처럼 보여 **비활성** — 자산(그리기·갤러리)은 남기고 어떤 bias에도 안 넣는다 (뽑히지 않는다)
-  tailSkin: ["line", "thick", "plume", "tuft", "ringed", "block", "wedge", "ball"],
+  // puff 몽실 — 골격과 상관없이 엉덩이 쪽에 붙는 북슬한 토끼 꼬리(폼폼 + 털 획). 개
+  tailSkin: ["line", "thick", "plume", "tuft", "ringed", "block", "wedge", "ball", "puff"],
   // 꼬리 **기장** — 골격을 통째로 줄인다 (long 1 · medium 0.7 · short 0.45). 스킨 두께는 그대로
   tailLength: ["long", "medium", "short"],
   // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다. none은 팔 없음(도깨비 일부) — 팔 행위 층이 쉰다
@@ -79,7 +80,7 @@ export const DEFAULT_BIAS = {
   face2: [["none", 5], ["blush", 2], ["freckles", 2], ["tears", 1.5]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2], ["hook", 1.5], ["kink", 1], ["ring", 1.5]],
-  tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["block", 1], ["ball", 1]],   // ringed·wedge 비활성
+  tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["block", 1], ["ball", 1], ["puff", 1]],   // ringed·wedge 비활성
   tailLength: [["long", 3], ["medium", 2], ["short", 1.5]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
