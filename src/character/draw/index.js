@@ -34,6 +34,9 @@ export function drawCreature(spec, variant = 0) {
   const crownFills = new Sketch(noise, wobble);
   const faceInk = new Sketch(noise, wobble);
   const faceFills = new Sketch(noise, wobble);
+  // 정지 눈은 따로 굽는다 — 놀람 변형(☆_☆·♥_♥) 때 눈을 덮지 않고 **없앴다가** 글리프로 대체하려면 눈만 끌 수 있어야 한다
+  const staticEyeInk = new Sketch(noise, wobble);
+  const staticEyeFills = new Sketch(noise, wobble);
   const frontInk = new Sketch(noise, wobble);
   const frontFills = new Sketch(noise, wobble);
   const hatInk = new Sketch(noise, wobble);
@@ -52,7 +55,7 @@ export function drawCreature(spec, variant = 0) {
   drawPupEars(frontInk, frontFills, spec, box);
   drawCatEars(frontInk, frontFills, spec, box);
   drawHorns(crownInk, crownFills, spec, box, noise);
-  drawEyes(faceInk, faceFills, spec, box, eyes);
+  drawEyes(staticEyeInk, staticEyeFills, spec, box, eyes);
   drawFace2(faceInk, faceFills, spec, box, eyes);
   // 코·안경은 얼굴 **맨 앞**(눈 리그보다 위) — 놀라 커진 흰자·감긴 눈꺼풀이 코·안경테를 덮어 사라지게 하지 않는다
   drawNose(faceFrontInk, faceFrontFills, spec, box, eyes);
@@ -74,6 +77,7 @@ export function drawCreature(spec, variant = 0) {
     crownBack: { ink: crownBackInk, fills: crownBackFills },
     crown: { ink: crownInk, fills: crownFills },
     face: { ink: faceInk, fills: faceFills },
+    staticEyes: { ink: staticEyeInk, fills: staticEyeFills },
     front: { ink: frontInk, fills: frontFills },
     hat: { ink: hatInk, fills: hatFills },
     faceFront: { ink: faceFrontInk, fills: faceFrontFills },

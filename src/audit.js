@@ -109,7 +109,7 @@ function audit() {
       for (const m of meshes) { m.visible = false; item.faceGroup.add(m); }
       temp.push({ label, meshes, hideKey });
     };
-    if (!RIG_KINDS.includes(spec.parts.eyes)) mk("eyes", (ink, fills) => drawEyes(ink, fills, spec, box, eyes), 2.3, 2.4, "face");
+    if (!RIG_KINDS.includes(spec.parts.eyes)) mk("eyes", (ink, fills) => drawEyes(ink, fills, spec, box, eyes), 2.3, 2.4, "staticEyes");
     if (spec.parts.face2 !== "none") mk("face2", (ink, fills) => drawFace2(ink, fills, spec, box, eyes), 2.3, 2.4, "face");
     if (spec.species === "pup" || spec.parts.nose !== "none") mk("nose", (ink, fills) => drawNose(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");
     if (spec.parts.eyewear !== "none") mk("eyewear", (ink, fills) => drawEyewear(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");

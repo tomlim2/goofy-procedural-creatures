@@ -121,14 +121,15 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     rig.shut.visible = !closed && state.lid > 0.85;
   }
 
-  // 놀람의 눈 변형 — ☆_☆ / ♥_♥ 덮개. 놀람 봉투(k)로 팝인/아웃 (크기 0.7 → 1)
+  // 놀람의 눈 변형 — ☆_☆ / ♥_♥. 그동안 눈(정지 눈 프레임·눈 리그)은 **끄고** 글리프로 대체한다 (덮지 않는다). 봉투(k)로 팝인/아웃 (0.7 → 1)
   const fx = state.eyeFx;
+  const fxOn = !!fx && fx.k > 0.02;
+  if (fxOn) for (const g of item.frames.staticEyes) g.visible = false;
+  for (const rig of item.eyeRigs) rig.rig.visible = !fxOn;
   for (const e of item.eyeFx) {
-    const on = !!fx && fx.k > 0.02;
-    e.cover.visible = on;
-    e.star.visible = on && fx.kind === "star";
-    e.heart.visible = on && fx.kind === "heart";
-    if (on) {
+    e.star.visible = fxOn && fx.kind === "star";
+    e.heart.visible = fxOn && fx.kind === "heart";
+    if (fxOn) {
       const s = 0.7 + 0.3 * fx.k;
       e.star.scale.setScalar(s);
       e.heart.scale.setScalar(s);

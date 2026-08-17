@@ -43,6 +43,7 @@ for (const spec of grid) {
     crownBack: sketchHash(d.crownBack.ink) + sketchHash(d.crownBack.fills),
     crown: sketchHash(d.crown.ink) + sketchHash(d.crown.fills),
     face: sketchHash(d.face.ink) + sketchHash(d.face.fills),
+    staticEyes: sketchHash(d.staticEyes.ink) + sketchHash(d.staticEyes.fills),
     front: sketchHash(d.front.ink) + sketchHash(d.front.fills),
     hat: sketchHash(d.hat.ink) + sketchHash(d.hat.fills),
     faceFront: sketchHash(d.faceFront.ink) + sketchHash(d.faceFront.fills),
