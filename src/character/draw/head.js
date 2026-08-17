@@ -282,14 +282,12 @@ export function drawPupEars(ink, fills, spec, box) {
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
     fills.fill(path, earFill);
-    // 안쪽 귀 — 귀 모양을 그대로 줄여 위쪽으로 조금 밀어 넣는다 (윤곽선은 없다 — 채운 얼룩이라 작아도 읽힌다).
-    // 접힌 쪽 귀(flap)와 늘어진 귀는 안쪽 면이 안 보이므로 건너뛴다
+    // 안쪽 귀 — 귀 모양을 **밑동(얼굴과 만나는 자리)을 기준으로** 줄인 것. 밑변이 밑동에 그대로 붙고 위로 갈수록 좁아진다
+    // (가운데를 기준으로 줄이면 귀 한복판에 뜬 얼룩이 된다 — 레퍼런스의 안쪽 귀는 밑동에서 시작한다). 윤곽선은 없다 — 채운 얼룩이라 작아도 읽힌다.
+    // 접힌 쪽 귀(덮개가 있는 쪽)와 늘어진 귀는 귀 **바깥면**이 보이는 자세라 건너뛴다
     if (innerFill && !flap && kind !== "flap" && kind !== "long") {
-      let cx = 0, cy = 0;
-      for (const [x, y] of path) { cx += x; cy += y; }
-      cx /= path.length; cy /= path.length;
-      const up = 0.012 * size;
-      fills.fill(path.map(([x, y]) => [cx + (x - cx) * 0.58 + nx * up, cy + (y - cy) * 0.58 + ny * up]), innerFill);
+      const root = [anchor.x + nx * 0.004, anchor.y + ny * 0.004];   // 윤곽 살짝 밖 — 밑동 자리
+      fills.fill(path.map(([x, y]) => [root[0] + (x - root[0]) * 0.72, root[1] + (y - root[1]) * 0.72]), innerFill);
     }
     if (baseOutline) ink.stroke(baseOutline, earInk);
     else ink.outline(path, earInk);
