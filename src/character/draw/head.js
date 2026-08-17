@@ -284,17 +284,17 @@ export function drawPupEars(ink, fills, spec, box) {
     fills.fill(path, earFill);
     // 안쪽 귀 — 귀 모양을 **밑동(얼굴과 만나는 자리)을 기준으로** 줄인 것. 밑변이 밑동에 그대로 붙고 위로 갈수록 좁아진다
     // (가운데를 기준으로 줄이면 귀 한복판에 뜬 얼룩이 된다 — 레퍼런스의 안쪽 귀는 밑동에서 시작한다). 윤곽선은 없다 — 채운 얼룩이라 작아도 읽힌다.
-    // 접힌 쪽 귀(덮개가 있는 쪽)와 늘어진 귀는 귀 **바깥면**이 보이는 자세라 건너뛴다
-    if (innerFill && !flap && kind !== "flap" && kind !== "long") {
+    // 늘어진 귀(flap·long)만 건너뛴다 — 그 자세는 귀 **바깥면**이 보인다. 접힌 귀는 **밑동(선 부분)이 안쪽 면**이라 여기에도 그린다
+    if (innerFill && kind !== "flap" && kind !== "long") {
       const root = [anchor.x + nx * 0.004, anchor.y + ny * 0.004];   // 윤곽 살짝 밖 — 밑동 자리
       fills.fill(path.map(([x, y]) => [root[0] + (x - root[0]) * 0.72, root[1] + (y - root[1]) * 0.72]), innerFill);
     }
     if (baseOutline) ink.stroke(baseOutline, earInk);
     else ink.outline(path, earInk);
     if (flap) {
-      // 덮개는 접혀 넘어온 **귀 안쪽 면**이다 — 안쪽 귀 색(분홍·톤)을 그대로 칠한다. 안쪽 귀가 없는 개체는 조금 어두운 톤으로.
-      // 밝은 털에서는 색으로, 검은 털에서는 접힘선으로 읽힌다
-      fills.fill(flap, innerFill || shade(earFill, 0.78));
+      // 덮개는 접혀 넘어온 **귀 뒷면(바깥면)** 이다 — 안쪽 귀 색이 아니라 털색 톤이다(조금 어둡게 해서 밑동과 갈린다).
+      // 밝은 털에서는 톤으로, 검은 털에서는 접힘선으로 읽힌다. 안쪽 면(분홍·톤)은 덮개 **밑** 선 부분에 밑동부터 그려져 덮개가 그 위를 덮는다
+      fills.fill(flap, shade(earFill, 0.82));
       ink.outline(flap, earInk);
       ink.stroke(crease, { color: spec.palette.ink, width: 0.009 });
     }
