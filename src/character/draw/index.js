@@ -32,6 +32,9 @@ export function drawCreature(spec, variant = 0) {
   const crownBackFills = new Sketch(noise, wobble);
   const crownInk = new Sketch(noise, wobble);
   const crownFills = new Sketch(noise, wobble);
+  // 머리카락 세 층 — 뒷머리(머리 뒤, 귀 그룹) · 두피 위(crownInk) · 앞머리(얼굴 위, 얼굴 그룹). head.js drawHair 참조
+  const hairBackInk = new Sketch(noise, wobble);
+  const hairFrontInk = new Sketch(noise, wobble);
   const faceInk = new Sketch(noise, wobble);
   const faceFills = new Sketch(noise, wobble);
   // 정지 눈은 따로 굽는다 — 놀람 변형(☆_☆·♥_♥) 때 눈을 덮지 않고 **없앴다가** 글리프로 대체하려면 눈만 끌 수 있어야 한다
@@ -63,7 +66,7 @@ export function drawCreature(spec, variant = 0) {
   // facePartSketch로 별도 메시를 세운다.
   drawWhiskers(faceInk, spec, box);   // 고양이 수염 — 얼굴 층이라 윤곽 위로 그려져 밖으로 뚫고 나올 수 있다
   drawEyewear(faceFrontInk, faceFrontFills, spec, box, eyes);
-  drawHair(crownInk, spec, box, noise);
+  drawHair({ back: hairBackInk, crown: crownInk, front: hairFrontInk }, spec, box, noise);
   drawHeadgear(hatInk, hatFills, spec, box);   // 모자는 귀보다 위 층 — 귀 밑동을 덮는다
 
   // 동공이 움직이는 눈만 골라 넘긴다. 외눈도 살아 있다.
@@ -76,6 +79,8 @@ export function drawCreature(spec, variant = 0) {
     head: { ink: headInk, fills: headFills },
     crownBack: { ink: crownBackInk, fills: crownBackFills },
     crown: { ink: crownInk, fills: crownFills },
+    hairBack: { ink: hairBackInk, fills: new Sketch(noise, wobble) },
+    hairFront: { ink: hairFrontInk, fills: new Sketch(noise, wobble) },
     face: { ink: faceInk, fills: faceFills },
     staticEyes: { ink: staticEyeInk, fills: staticEyeFills },
     front: { ink: frontInk, fills: frontFills },

@@ -30,6 +30,7 @@ export function buildCreature(spec, noise, birth = 0) {
   const LAYERS = [
     // 채색은 전부 **불투명** — 이웃과 겹칠 때 앞 개체가 뒤 개체를 윤곽·색·형태까지 완전히 가려야 한다 (반투명이면 뒤 윤곽이 비친다)
     { key: "body", group: bodyGroup, dy: 0, fillOrder: 1, inkOrder: 1.5, fillOpacity: 1 },
+    { key: "hairBack", group: earGroup, dy: -neckY, fillOrder: 1.53, inkOrder: 1.55, fillOpacity: 1 },   // 뒷머리 — 머리·귀 뒤, 몸 위
     { key: "crownBack", group: earGroup, dy: -neckY, fillOrder: 1.6, inkOrder: 1.7, fillOpacity: 1 },   // 옆귀 — 머리 채색 뒤
     { key: "head", group: headGroup, dy: -neckY, fillOrder: 1.8, inkOrder: 2, fillOpacity: 1 },
     { key: "crown", group: crownGroup, dy: -neckY, fillOrder: 2.05, inkOrder: 2.06, fillOpacity: 1 },   // 뿔·머리카락 — 머리 잉크 위
@@ -38,9 +39,11 @@ export function buildCreature(spec, noise, birth = 0) {
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 1 },
     { key: "staticEyes", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 1 },   // 정지 눈 — 놀람 변형 때 끈다
     // 얼굴 맨 앞: 코·안경 — 눈 리그(3~6)보다 위. 놀라 커진 흰자·눈꺼풀이 못 덮는다
-    { key: "faceFront", group: faceGroup, dy: -faceCy, fillOrder: 6.4, inkOrder: 6.5, fillOpacity: 1 }
+    { key: "faceFront", group: faceGroup, dy: -faceCy, fillOrder: 6.4, inkOrder: 6.5, fillOpacity: 1 },
+    // 앞머리 — 얼굴 위(코·안경 위), 눈썹·입(6.6) 아래. 얼굴 그룹이라 이목구비와 같이 돈다
+    { key: "hairFront", group: faceGroup, dy: -faceCy, fillOrder: 6.53, inkOrder: 6.55, fillOpacity: 1 }
   ];
-  const frames = { body: [], crownBack: [], head: [], crown: [], front: [], hat: [], face: [], staticEyes: [], faceFront: [] };
+  const frames = { body: [], hairBack: [], crownBack: [], head: [], crown: [], front: [], hat: [], face: [], staticEyes: [], faceFront: [], hairFront: [] };
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const drawn = k === 0 ? firstDrawn : drawCreature(spec, k);
     for (const layer of LAYERS) {

@@ -258,14 +258,66 @@ export function browLine(spec, box) {
   return Math.max(cy + ry * 0.42, eyeTop + ry * 0.1);
 }
 
-export function drawHair(ink, spec, box, noise) {
+// 머리카락은 **세 층**에 나눠 그린다 — layers = { back, crown, front } (전부 잉크 스케치):
+//   back  뒷머리 — 머리·얼굴 **뒤**(1.55, 귀 그룹). 머리 실루엣 밖·어깨 위로 보이는 부분만 남는다 (긴 머리·트윈테일·포니테일·큰 덩어리)
+//   crown 두피 위 — 머리 잉크 위·얼굴 아래(2.06). 정수리 캡·가시·똥머리·사과머리
+//   front 앞머리 — 얼굴 **위**(6.55, 얼굴 그룹 — 이목구비와 같이 움직인다). 앞머리·옆머리 커튼. 눈썹(6.6)은 앞머리 위에 그려진다
+export function drawHair(layers, spec, box, noise) {
   const kind = spec.parts.hair;
   if (kind === "none") return;
+  const { back, crown, front } = layers;
+  const ink = crown;
   const pop = spec.palette.pop;
   const ink0 = pop && pop.target === "hair" ? pop.color : spec.palette.ink;
   const rx = box.headRx;
   const ry = box.headRy;
   const cy = box.headCy;
+  const shoulder = box.bodyTop - 0.02;   // 뒷머리가 내려오는 하한 (어깨)
+
+  if (kind === "long" || kind === "twintails" || kind === "ponytail") {
+    // 뒷머리가 있는 머리 — 정수리 캡(crown) + 뒤로 떨어지는 머리(back)
+    const cap = arcPath(0, cy, rx * 0.98, ry * 0.98, Math.PI * 1.02, -Math.PI * 0.02, 22);
+    crown.scribble(cap, { color: ink0, passes: 12, width: 0.01, spread: ry * 0.24 });
+    if (kind === "long") {
+      // 긴 생머리 — 머리 뒤에서 어깨까지 세로 획 커튼. 폭은 머리보다 조금 넓다
+      const step = 0.013;
+      for (let x = -rx * 1.15; x <= rx * 1.15; x += step) {
+        const top = cy + ry * 0.7;
+        const bottom = shoulder + Math.abs(noise(x * 33 + spec.seed * 0.002)) * 0.05;
+        const flare = x * 0.1;
+        back.stroke([[x, top], [x + flare * 0.5, (top + bottom) / 2], [x + flare, bottom]], { color: ink0, width: 0.009, jitter: 0.004 });
+      }
+      // 바깥 윤곽 두 줄
+      for (const side of [-1, 1]) back.stroke([[side * rx * 1.15, cy + ry * 0.7], [side * rx * 1.25, cy], [side * rx * 1.28, shoulder]], { color: ink0, width: 0.011, jitter: 0.006 });
+    } else if (kind === "twintails") {
+      // 트윈테일 — 머리 양옆 위쪽에 묶고 뒤로 늘어지는 두 갈래
+      for (const side of [-1, 1]) {
+        const tx = side * rx * 0.95, ty = cy + ry * 0.35;
+        const tail = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - 0.3]];
+        back.scribble(tail, { color: ink0, passes: 12, width: 0.009, spread: 0.028 });
+        back.stroke([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: ink0, width: 0.012 });   // 끈
+      }
+    } else {
+      // 포니테일 — 정수리 뒤에 하나로 묶어 위로 솟았다 뒤로 늘어진다 (묶은 쪽은 개체별)
+      const s = spec.seed % 2 ? 1 : -1;
+      const px0 = s * rx * 0.25, py0 = cy + ry * 0.92;
+      const tail = [[px0, py0], [px0 + s * 0.06, py0 + 0.06], [px0 + s * 0.13, py0 + 0.02], [px0 + s * 0.15, py0 - 0.14], [px0 + s * 0.11, py0 - 0.3]];
+      back.scribble(tail, { color: ink0, passes: 12, width: 0.009, spread: 0.026 });
+      back.stroke([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: ink0, width: 0.012 });   // 끈
+    }
+    return;
+  }
+
+  if (kind === "apple") {
+    // 사과머리 — 정수리 한가운데 작은 뭉치가 사과 꼭지처럼 솟는다. 머리는 매끈, 끈 하나
+    const bx = 0.005, by = cy + ry * 1.0;
+    for (let i = 0; i < 4; i += 1) {
+      const a = Math.PI * (0.35 + 0.1 * i);
+      crown.stroke([[bx, by], [bx + Math.cos(a) * 0.05, by + Math.sin(a) * 0.055 + 0.01]], { color: ink0, width: 0.01 });
+    }
+    crown.stroke([[bx - 0.018, by - 0.006], [bx + 0.018, by - 0.002]], { color: ink0, width: 0.012 });   // 끈
+    return;
+  }
 
   if (kind === "spikes" || kind === "mohawk" || kind === "hedgehog") {
     // 가시머리. hedgehog는 정수리 **전면**(윤곽 줄 + 안쪽 줄)에 짧은 가시가 방사형으로 — 고슴도치 등처럼 덩어리로 읽힌다
@@ -294,33 +346,39 @@ export function drawHair(ink, spec, box, noise) {
     const sideBottom = cy - ry * 0.45;   // 옆머리 하한 (귀 아래)
     // 바깥 경계 — 머리 윤곽 모양을 따라 키운 폐곡선의 윗부분(양옆은 sideBottom, 앞쪽 x 안은 brow까지)
     const outer = blobPath(0, cy, rx * grow, ry * grow, { lumps: kind === "cloud" ? 9 : 3, amount: kind === "cloud" ? 0.13 : 0.04, noise: null, square: shape.square, taper: shape.taper });
-    const frontHalf = rx * 0.8;
-    const bottomAt = (x) => (Math.abs(x) < frontHalf ? brow : sideBottom);
+    // 아래 경계 — 가운데는 눈썹 선, 옆으로 갈수록 **부드럽게** 귀 아래로 (계단이 지면 네모 상자처럼 읽힌다)
+    const bottomAt = (x) => {
+      const u = Math.abs(x) / rx;
+      const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
+      return brow * (1 - k) + sideBottom * k;
+    };
     const upper = outer.filter(([x, y]) => y >= bottomAt(x));
     upper.sort((a, b) => Math.atan2(a[1] - cy, a[0]) - Math.atan2(b[1] - cy, b[0]));
-    // 윤곽 — 위쪽 호(오른쪽→왼쪽 방향)만
-    if (kind === "cloud") ink.stroke(upper, { color: ink0, width: 0.011, jitter: 0.008 });
-    else ink.stroke(upper, { color: ink0, width: 0.01, jitter: 0.004 });
+    // 바깥 윤곽 — 머리보다 큰 덩어리의 위쪽 호. **뒷머리 층**(머리 뒤) — 머리 실루엣 밖으로 나온 부분만 보인다
+    if (kind === "cloud") back.stroke(upper, { color: ink0, width: 0.011, jitter: 0.008 });
+    else back.stroke(upper, { color: ink0, width: 0.01, jitter: 0.007 });
     if (kind === "helmet") {
-      // 세로 획을 촘촘히 — 위 경계에서 아래 경계(앞: 눈썹 선, 옆: 귀 아래)까지. 끝단은 들쭉날쭉
-      const step = 0.014;
+      // 머릿결 — 정수리에서 아래로 떨어지는 획을 촘촘히. 위 경계에서 아래 경계(가운데 눈썹 선 → 옆 귀 아래)까지,
+      // 끝은 저마다 들쭉날쭉(끝단에 직선을 긋지 않는다 — 그러면 챙 달린 투구가 된다), 옆으로 갈수록 살짝 바깥으로 벌어진다
+      const step = 0.012;
       const topAt = (x) => {
         const u = Math.min(0.999, Math.abs(x) / (rx * grow));
         return cy + ry * grow * Math.pow(1 - Math.pow(u, 2 + shape.square), 1 / (2 + shape.square));
       };
       for (let x = -rx * grow + step * 0.5; x < rx * grow; x += step) {
         const top = topAt(x) - 0.004;
-        const jag = Math.abs(noise(x * 40 + spec.seed * 0.003)) * ry * 0.08;
+        const jag = (noise(x * 40 + spec.seed * 0.003) * 0.9 + 0.3) * ry * 0.09;   // −0.05ry ~ +0.11ry
         const bottom = bottomAt(x) + jag;
         if (top - bottom < 0.02) continue;
-        ink.stroke([[x, top], [x + noise(x * 17) * 0.006, bottom]], { color: ink0, width: 0.009, jitter: 0.003 });
+        const fan = x * 0.08;   // 아래로 갈수록 바깥으로
+        // 앞(|x| < 0.8rx)은 이마를 덮는 앞머리 → 얼굴 위 층, 옆은 두피 위 층
+        const target = Math.abs(x) < rx * 0.8 ? front : crown;
+        target.stroke([[x, top], [x + fan * 0.5, (top + bottom) / 2], [x + fan + noise(x * 17) * 0.004, bottom]], { color: ink0, width: 0.009, jitter: 0.003 });
       }
-      // 앞머리 끝단 — 눈썹 선을 따라 톱니 한 줄
-      ink.stroke([[-frontHalf, brow + 0.004], [-frontHalf * 0.5, brow - 0.006], [0, brow + 0.005], [frontHalf * 0.5, brow - 0.006], [frontHalf, brow + 0.004]], { color: ink0, width: 0.01 });
     } else {
       // 구름형 — 안을 고리 스크리블로 채우고(곱슬), 스캘럽 가장자리에 작은 고리들
       const cap = arcPath(0, cy, rx * 1.02, ry * 1.0, Math.PI * 1.04, -Math.PI * 0.04, 24);
-      ink.scribble(cap, { color: ink0, passes: 20, width: 0.009, spread: ry * 0.36 });
+      crown.scribble(cap, { color: ink0, passes: 20, width: 0.009, spread: ry * 0.36 });
       for (let i = 0; i < 11; i += 1) {
         const k = i / 10;
         const angle = Math.PI * (1.0 - 1.0 * k);
@@ -328,7 +386,7 @@ export function drawHair(ink, spec, box, noise) {
         const by = cy + Math.sin(angle) * ry * grow * 0.96;
         if (by < bottomAt(bx)) continue;
         const r = 0.03 + noise(i * 4.4 + spec.seed * 0.002) * 0.012;
-        ink.outline(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0, width: 0.01, jitter: 0.008 });
+        back.outline(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0, width: 0.01, jitter: 0.008 });
       }
     }
     return;
@@ -339,10 +397,10 @@ export function drawHair(ink, spec, box, noise) {
     for (const side of [-1, 1]) {
       const bx = side * rx * 1.02;
       const by = cy + ry * 0.3;
-      ink.scribble(arcPath(bx, by, 0.045, 0.06, Math.PI * 0.5, Math.PI * 2.5, 12), {
+      back.scribble(arcPath(bx, by, 0.045, 0.06, Math.PI * 0.5, Math.PI * 2.5, 12), {
         color: ink0, passes: 7, width: 0.008, spread: 0.03
-      });
-      ink.stroke([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: ink0, width: 0.012 });
+      });   // 뭉치는 머리 뒤(귀 뒤)
+      back.stroke([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: ink0, width: 0.012 });
     }
     // 정수리 살짝
     ink.scribble(arcPath(0, cy, rx * 0.9, ry * 0.9, Math.PI * 0.72, Math.PI * 0.28, 10), {
@@ -385,7 +443,7 @@ export function drawHair(ink, spec, box, noise) {
     // 끝단은 눈썹 선 — 안경·고글 테 위까지만 (모자 챙과 같은 계산)
     const fringeBottom = browLine(spec, box);
     const cap = arcPath(0, cy, rx * 0.98, ry * 0.98, Math.PI * 0.92, Math.PI * 0.08, 20);
-    ink.scribble(cap, { color: ink0, passes: 11, width: 0.01, spread: ry * 0.2 });
+    crown.scribble(cap, { color: ink0, passes: 11, width: 0.01, spread: ry * 0.2 });
     // 이마 띠 — 위아래로 오가는 지그재그를 스크리블로 겹쳐 빽빽한 앞머리 덩어리. 아래 꼭짓점이 들쭉날쭉한 끝단
     const teeth = 8;
     const zig = [];
@@ -396,13 +454,13 @@ export function drawHair(ink, spec, box, noise) {
       const bottom = fringeBottom + Math.abs(noise(i * 2.7 + spec.seed * 0.002)) * ry * 0.09;
       zig.push([x, i % 2 === 0 ? top : bottom]);
     }
-    ink.scribble(zig, { color: ink0, passes: 6, width: 0.01, spread: 0.014 });
+    front.scribble(zig, { color: ink0, passes: 6, width: 0.01, spread: 0.014 });   // 앞머리 — 얼굴 위
     if (kind === "longbob") {
-      // 옆으로 턱 선까지 내려오는 단발 — 머리 가장자리 안쪽에서 굵은 세로 스크리블이 얼굴을 감싼다
+      // 옆으로 턱 선까지 내려오는 단발 — 얼굴 양옆을 감싸는 굵은 세로 스크리블 (앞머리 층 — 볼·귀 위)
       for (const side of [-1, 1]) {
         const x = side * rx * 0.9;
         const col = [[x - side * 0.03, cy + ry * 0.62], [x + side * 0.02, cy + ry * 0.1], [x + side * 0.03, cy - ry * 0.7]];
-        ink.scribble(col, { color: ink0, passes: 14, width: 0.01, spread: 0.045 });
+        front.scribble(col, { color: ink0, passes: 14, width: 0.01, spread: 0.045 });
       }
     }
     return;
@@ -424,12 +482,17 @@ export function drawHair(ink, spec, box, noise) {
   const depth = kind === "bob" ? 0.56 : kind === "sweep" ? 0.4 : kind === "mop" ? 0.62 : 0.6;
   const cap = arcPath(0, cy, rx * 0.98, ry * 0.98, Math.PI * (0.5 + depth), Math.PI * (0.5 - depth), 22);
   const passes = kind === "scribble" ? 22 : kind === "mop" ? 20 : 14;
-  ink.scribble(cap, {
+  crown.scribble(cap, {
     color: ink0,
     passes,
     width: kind === "scribble" ? 0.008 : 0.01,
     spread: ry * (kind === "sweep" ? 0.18 : kind === "mop" ? 0.3 : 0.26)
   });
+  // 뒷머리 — 머리보다 조금 큰 호를 머리 **뒤**에 한 겹 더 (실루엣 밖으로 삐져나오는 부피). sweep은 없음
+  if (kind !== "sweep") {
+    const backCap = arcPath(0, cy, rx * 1.1, ry * 1.08, Math.PI * (0.5 + depth + 0.05), Math.PI * (0.5 - depth - 0.05), 22);
+    back.scribble(backCap, { color: ink0, passes: 8, width: 0.009, spread: ry * 0.16 });
+  }
 }
 
 export function drawHeadgear(ink, fills, spec, box) {
