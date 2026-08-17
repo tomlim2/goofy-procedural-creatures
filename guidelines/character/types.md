@@ -88,7 +88,7 @@
 | **DARKS** | 9색 | imp 머리 전용 어두운 팔레트. 먹 · 갈흑 · 회갈 · 밝은 회갈 · 회청 · 청회 · 회 · 자흑 · 녹흑. 몸은 여기서 톤만 바꾼다(`shade`) |
 | accent | ACCENTS 4색 중 1 | 모자·밴드 색 |
 | fillOffset | ±0.035 | 채색이 선 밖으로 어긋난다 (인쇄 어긋남) |
-| **pop** | POPS 5색, 14% 확률, 대상 hair/headgear/skin | 채도 있는 색 포인트. **한 판에 3개 상한** (`makeGrid`가 초과분을 끈다) |
+| **pop** | POPS 5색, 14% 확률, 대상 hair/headgear/skin | 채도 있는 색 포인트. **한 판에 3개 상한** (`makeGrid`가 초과분을 끈다). 피부에 붙어 휘도 < 120이면 얼굴 잉크가 밝은 색으로 바뀐다(`faceInk`) |
 
 ## 정체성 (identity)
 

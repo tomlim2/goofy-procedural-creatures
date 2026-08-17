@@ -104,7 +104,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // 그러려면 작은 눈부터: 큰 눈이 뒤에 그려져 앞이 된다
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // 살짝 찌그러진 원
       fills.fill(path, "#f6f2e9");
-      fills.outline(path, { color: spec.palette.ink, width: 0.011, passes: 2 });
+      fills.outline(path, { color: spec.palette.ink, width: 0.011, passes: 2 });   // 흰자 테는 검정 — 흰자 위라 늘 보인다
     } else if (kind === "half") {
       // 반쯤 감은 눈 — 원 전체에 선을 긋지 않는다(원+선은 "선 그어진 동그라미"로 뭉개져 읽힌다).
       // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양
@@ -172,7 +172,7 @@ export function drawWhiskers(ink, spec, box) {
       const x0 = side * box.headRx * 0.3;
       // 살짝 처지는 부채꼴 — 긴 수염일수록 끝이 더 벌어진다
       ink.stroke([[x0, y0], [x0 + side * len * 0.55, y0 + (i - 1) * 0.008 * (len / 0.09)], [x0 + side * len, y0 + (i - 1) * 0.02 * (len / 0.09) - 0.004]],
-        { color: spec.palette.ink, width: 0.006, jitter: 0.004 });
+        { color: spec.faceInk || spec.palette.ink, width: 0.006, jitter: 0.004 });
     }
   }
 }
@@ -302,7 +302,8 @@ export function drawMouth(ink, fills, spec, box, kindOverride) {
   // 입도 (놀라 커진) 눈 아래 — 외눈·왕눈의 흰자 위에 얹히면 사라진다
   const eyes = eyeGeometry(spec, box);
   let y = Math.min(box.headCy - box.headRy * spec.proportions.mouthDrop, eyeFloor(spec, eyes, 0) - 0.03);
-  const ink0 = spec.faceInk || spec.palette.ink;
+  // 개 입은 밝은 주둥이 위에 앉으니 늘 검정 — 얼굴 잉크가 밝아도(짙은 털색) 그렇다
+  const ink0 = spec.species === "pup" ? spec.palette.ink : (spec.faceInk || spec.palette.ink);
   let w = box.headRx * 0.38;
   // 벌린 입(open)의 높이 — 머리에 비례하고, 코 밑에서 끝난다 (코를 삼키면 코가 사라진다)
   const noseBottom = spec.species === "pup" || spec.parts.nose === "none" ? Infinity : noseY(spec, box, eyes) - (spec.parts.nose === "long" ? 0.045 : 0.02);

@@ -11,6 +11,12 @@ import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCE
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
 
+// 헥스 색의 휘도(0~255) — 얼굴 잉크를 검정으로 할지 밝게 할지 가른다
+function luminance(hex) {
+  const v = parseInt(hex.slice(1), 16);
+  return 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
+}
+
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
 }
@@ -222,7 +228,9 @@ export function makeCreature(seed, speciesName = "human") {
     parts,
     proportions,
     palette,
-    faceInk: species.name === "imp" ? "#e9e3d5" : null
+    // 얼굴 잉크 — 머리색이 어두우면(도깨비 먹빛, 색 포인트 파랑·초록·붉은 갈색 피부: 휘도 < 120) 검정 대신 밝은 잉크로 이목구비를 그린다.
+    // 안 그러면 짙은 색 위에 검정 선이 묻혀 눈·입이 안 읽힌다
+    faceInk: species.name === "imp" || luminance(palette.skin) < 120 ? "#e9e3d5" : null
   };
 }
 
