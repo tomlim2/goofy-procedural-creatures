@@ -20,7 +20,7 @@ export const ARCHETYPES = [
     weight: 2,
     bias: {
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
-      eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1], ["star", 0.7], ["heart", 0.7]],
+      eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1]],
       hair: [["bob", 3], ["bangs", 2], ["longbob", 1.5], ["wisp", 2], ["curly", 2], ["sweep", 2], ["none", 2]],
       headgear: [["none", 4], ["beret", 3], ["bonnet", 1], ["cap", 1]],
       mouth: [["line", 3], ["dot", 2], ["smile", 2]],
@@ -46,7 +46,7 @@ export const ARCHETYPES = [
     weight: 3,
     bias: {
       horns: [["antenna", 5], ["nub", 2], ["none", 2]],
-      eyes: [["wide", 4], ["ring", 3], ["spiral", 2], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1], ["star", 0.7], ["heart", 0.7]],
+      eyes: [["wide", 4], ["ring", 3], ["spiral", 2], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1]],
       head: [["tall", 3], ["round", 3], ["egg", 2], ["pear", 1]],
       body: [["tube", 3], ["bean", 2]],
       build: [["narrow", 2], ["skinny", 2], ["medium", 1]],
@@ -62,7 +62,7 @@ export const ARCHETYPES = [
     bias: {
       head: [["wide", 4], ["round", 3], ["pear", 2]],
       hair: [["none", 3], ["tuft", 2], ["mop", 1]],
-      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1], ["star", 0.7], ["heart", 0.7]],
+      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1]],
       body: [["bean", 4], ["dress", 2]],
       build: [["wide", 3], ["medium", 1]],
       legs: [["stub", 4], ["stick", 1]],
@@ -76,7 +76,7 @@ export const ARCHETYPES = [
     bias: {
       headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5]],
       hair: [["scribble", 3], ["mop", 2], ["curly", 2], ["bun", 1.5], ["none", 2], ["wisp", 1]],
-      eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1], ["star", 0.7], ["heart", 0.7]],
+      eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1]],
       marks: [["hatch", 3], ["stripes", 2], ["patch", 2], ["none", 2]],
       mouth: [["wave", 3], ["line", 2], ["dot", 2]],
       body: [["dress", 3], ["bean", 2]]

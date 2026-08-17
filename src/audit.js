@@ -34,7 +34,8 @@ const STATES = {
   winkR: { winkSide: 1 }, winkL: { winkSide: -1 }, mouthAlt: { mouthAlt: true }, browAlt: { browAlt: true },
   turnR: { faceTurn: [1, 0] }, turnL: { faceTurn: [-1, 0] }, turnU: { faceTurn: [0, 1] }, turnD: { faceTurn: [0, -1] },
   turnRU: { faceTurn: [1, 1] }, turnLD: { faceTurn: [-1, -1] }, turnRsurp: { faceTurn: [1, 0], startle: 1 },
-  turnDsurp: { faceTurn: [0, -1], startle: 1 }, sleepTurn: { sleep: 1, lid: 1, faceTurn: [0.5, -0.5] }
+  turnDsurp: { faceTurn: [0, -1], startle: 1 }, sleepTurn: { sleep: 1, lid: 1, faceTurn: [0.5, -0.5] },
+  starEyes: { startle: 1, eyeFx: { kind: "star", k: 1 } }, heartEyes: { startle: 1, eyeFx: { kind: "heart", k: 1 } }
 };
 const RIG_KINDS = ["ring", "wide", "cyclops", "bead", "oval", "sparkle"];
 // "보인다"의 문턱 — 머리 폭의 4%(픽셀). 점 입·점 코·주근깨 하나·작은 눈썹 하나가 이 정도다. 화면이 작으면 문턱도 내려간다
@@ -125,15 +126,17 @@ function audit() {
       const browIdx = ov.browAlt ? 1 : 0, mouthIdx = ov.mouthAlt ? 1 : 0;
       if (kinds.brow[browIdx] !== "none") parts.push(["brow", [item.faceStates.brow[browIdx]], true]);
       parts.push(["mouth", [item.faceStates.mouth[mouthIdx]], true]);
-      for (const t of temp) parts.push([t.label, t.meshes, t.label === "eyes" ? !(asleep || ov.happy || ov.winkSide) : true, t.hideKey]);
+      for (const t of temp) parts.push([t.label, t.meshes, t.label === "eyes" ? !(asleep || ov.happy || ov.winkSide || ov.eyeFx) : true, t.hideKey]);
       item.eyeRigs.forEach((rig, i) => {
         const winked = ov.winkSide && rig.eye.side === ov.winkSide;
-        const closed = winked || closedAll || asleep;
+        const closed = winked || closedAll || asleep || !!ov.eyeFx;
         parts.push([`pupil${i}`, [rig.pupil], !closed]);
         parts.push([`smile${i}`, [rig.smile], !!(winked || ov.happy)]);
         // 감은 눈(깜빡임·잠)은 감은 눈 선이 있어야 한다 — "동공이 안 보여도 된다"가 "눈이 없어도 된다"는 뜻이 아니다
         parts.push([`shut${i}`, [rig.shut], !winked && !ov.happy && (asleep || !!ov.lid)]);
       });
+      // 놀람 변형 — ☆/♥ 덮개는 그때 보여야 하고, 그 밑의 눈은 안 보여도 된다
+      if (ov.eyeFx) item.eyeFx.forEach((e, i) => parts.push([`eyeFx${i}`, [ov.eyeFx.kind === "star" ? e.star : e.heart], true]));
       item.staticLids.forEach((lid, i) => {
         const happyEye = !!ov.happy || (ov.winkSide && lid.eye.side === ov.winkSide);
         parts.push([`sleepLid${i}`, [lid.shut], asleep && !happyEye]);   // 잠 — 감은 눈 선 (덮개는 두고 선만 껐다 켠다)

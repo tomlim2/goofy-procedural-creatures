@@ -15,8 +15,8 @@ export function eyeShape(spec) { return EYE_SHAPE[spec.parts.eyes] || { sx: 1, s
 // 살아 있는 눈(리그로 세우는 눈) — 나머지는 얼굴 잉크에 정적으로 굽는다
 export const RIG_EYES = ["ring", "wide", "cyclops", "bead", "oval", "sparkle"];
 
-// 별(☆) 꼭짓점 목록 — 바깥 r, 안쪽 r·inner, 위가 뾰족
-function starPath(cx, cy, r, inner = 0.45) {
+// 별(☆) 꼭짓점 목록 — 바깥 r, 안쪽 r·inner, 위가 뾰족. 놀람의 ☆_☆ 눈 덮개(scene/rig.js)가 쓴다
+export function starPath(cx, cy, r, inner = 0.45) {
   const pts = [];
   for (let i = 0; i < 10; i += 1) {
     const a = Math.PI / 2 + (i / 10) * Math.PI * 2;
@@ -25,8 +25,8 @@ function starPath(cx, cy, r, inner = 0.45) {
   }
   return pts;
 }
-// 하트(♥) 폐곡선 — 폭 w, 높이 h
-function heartPath(cx, cy, w, h) {
+// 하트(♥) 폐곡선 — 폭 w, 높이 h. 놀람의 ♥_♥ 눈 덮개(scene/rig.js)가 쓴다
+export function heartPath(cx, cy, w, h) {
   const pts = [];
   for (let i = 0; i <= 28; i += 1) {
     const a = (i / 28) * Math.PI * 2;
@@ -97,16 +97,6 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // ´･ω･` — 처진 눈꼬리. 점 눈 위에 바깥으로 내려가는 눈꺼풀 획 (시무룩)
       fills.fill(blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0);
       ink.stroke([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0, width: 0.011 });
-    } else if (kind === "star") {
-      // ☆_☆ — 별눈. 흰 채움 + 윤곽
-      const path = starPath(eye.x, eye.y, eye.r * 1.05);
-      fills.fill(path, "#f6f2e9");
-      ink.outline(path, { color: ink0, width: 0.01, step: 0.006 });
-    } else if (kind === "heart") {
-      // ♥_♥ — 하트눈. 붉은 채움 + 윤곽
-      const path = heartPath(eye.x, eye.y, eye.r * 0.95, eye.r * 0.8);
-      fills.fill(path, "#c9666a");
-      ink.outline(path, { color: ink0, width: 0.01, step: 0.006 });
     } else if (kind === "hollow") {
       // 빈 눈 — 보통 눈(ring)에서 동공만 뺀 것. 어느 종족이든 흰자 + 윤곽, 동공 없음 (도깨비도 검은 눈구멍이 아니라 흰 눈)
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null });

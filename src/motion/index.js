@@ -24,7 +24,7 @@ export { EMOJI } from "./emoji.js";
 // 네발은 다리 수직·꼬리 그린 그대로. scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다.
 // (모션의 기본 상태는 이게 아니라 idle이다 — 두발 A포즈, 네발 선 자세(legStance·tailIdle). 바인드는 모션이 없을 때다.)
 export const BIND_STATE = Object.freeze({
-  breathe: 0, lid: 0, gaze: [0, 0], startle: 0, regen: false, emoji: null,
+  breathe: 0, lid: 0, gaze: [0, 0], startle: 0, eyeFx: null, regen: false, emoji: null,
   browAlt: false, mouthAlt: false,
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
@@ -194,10 +194,15 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (sleepK > 0.5) S.stepWink(wink, t, rng, M);   // (rng 소비 고정 — 결과만 버린다)
       const startleBefore = surprise.start;
       const startle0 = E.stepSurprise(surprise, t, rng, M);
-      // 놀람이 막 시작하면 30%는 ! 를 쏜다 (이모지 트리거). 자는 중엔 놀라지 않는다
-      if (startleBefore < 0 && surprise.start >= 0 && rng.chance(0.3) && !asleep) triggerEmoji(emoji, "bang", t);
+      // 놀람이 막 시작하면 — ♥ 변형은 ♥ 이모지를 같이, 나머지는 30%로 ! 를 쏜다 (이모지 트리거). 자는 중엔 놀라지 않는다
+      if (startleBefore < 0 && surprise.start >= 0 && !asleep) {
+        if (surprise.variant === "heart") triggerEmoji(emoji, "heart", t);
+        else if (rng.chance(0.3)) triggerEmoji(emoji, "bang", t);
+      }
       lid = Math.max(lid, sleepK);
       const startle = startle0 * awake;   // 놀람 0~1 — 동공 수축량
+      // 놀람의 눈 변형 — ☆_☆ / ♥_♥ 로 눈이 바뀐다 (scene이 눈 위에 덮개+글리프를 얹는다). k는 놀람 봉투 그대로
+      const eyeFx = startle > 0 && surprise.variant && surprise.variant !== "plain" ? { kind: surprise.variant, k: startle } : null;
       if (sleepK > 0.5) isHappy = false;
 
       // 몸통
@@ -307,7 +312,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const em = stepEmoji(emoji, t);
 
       return {
-        breathe: br, lid, gaze, startle, regen: regenNow, emoji: em,
+        breathe: br, lid, gaze, startle, eyeFx, regen: regenNow, emoji: em,
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
         sway: sw.sway + (walkK > 0 && W ? Math.sin(ph) * W.sway * walkK : 0), rock: sw.rock,
         headAngle: (tiltAngle + rollAngle) * awake + sleepHead,

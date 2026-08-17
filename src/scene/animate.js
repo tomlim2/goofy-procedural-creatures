@@ -121,6 +121,20 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     rig.shut.visible = !closed && state.lid > 0.85;
   }
 
+  // 놀람의 눈 변형 — ☆_☆ / ♥_♥ 덮개. 놀람 봉투(k)로 팝인/아웃 (크기 0.7 → 1)
+  const fx = state.eyeFx;
+  for (const e of item.eyeFx) {
+    const on = !!fx && fx.k > 0.02;
+    e.cover.visible = on;
+    e.star.visible = on && fx.kind === "star";
+    e.heart.visible = on && fx.kind === "heart";
+    if (on) {
+      const s = 0.7 + 0.3 * fx.k;
+      e.star.scale.setScalar(s);
+      e.heart.scale.setScalar(s);
+    }
+  }
+
   // 이모지 애니메이션 — 모션과 별개 층. clock의 이모지 채널이 종류·진행·곡선(dy·scale·rot·opacity)을 준다.
   // 머리에 붙이지 않는다: 씬 루트(emojiRoot)에 두고 머리 위 지점(세계 좌표)을 이징으로 따라간다 —
   // 머리가 갸웃하고 몸이 뛰면 한 박자 늦게 끌려오는 느낌. 끌리는 방향으로 살짝 눕는다.

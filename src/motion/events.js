@@ -58,10 +58,12 @@ export function stepGlanceTarget(g, t, rng) {
 }
 // 놀람 길이(초): 0.1 수축 + 3.8 유지 + 0.1 회복
 export const SURPRISE_DUR = 4.0;
+// 놀람의 변형 — plain(동공 수축) 60% · star(☆_☆ 눈으로 바뀜, 감탄) 25% · heart(♥_♥ 눈, 반함) 15%. 시작할 때 뽑아 e.variant에 둔다
 export function stepSurprise(e, t, rng, M) {
   if (t >= e.next && e.start < 0) {
     e.start = t;
     e.next = t + rng.float(M.surprise[0], M.surprise[1]);
+    e.variant = rng.weighted([["plain", 60], ["star", 25], ["heart", 15]]);
   }
   if (e.start >= 0) {
     const k = (t - e.start) / SURPRISE_DUR;

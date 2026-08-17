@@ -58,7 +58,7 @@ function applyConstraints(parts, rng, speciesName) {
   parts.patchSide = parts.eyewear === "patch" ? (rng.chance(0.5) ? -1 : 1) : 99;
 
   // 감은 눈에 화난 눈썹을 붙이면 표정이 읽히지 않는다.
-  if (["sleepy", "happy", "squeeze", "droop", "heart", "star"].includes(parts.eyes) && parts.brow === "angry") parts.brow = "flat";
+  if (["sleepy", "happy", "squeeze", "droop"].includes(parts.eyes) && parts.brow === "angry") parts.brow = "flat";
 
   // 외눈에는 안경류가 성립하지 않는다.
   if (parts.eyes === "cyclops") parts.eyewear = "none";

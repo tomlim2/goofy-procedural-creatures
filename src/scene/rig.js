@@ -1,7 +1,7 @@
 // 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md.
 
 import * as THREE from "three";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh } from "./material.js";
@@ -217,8 +217,39 @@ export function buildCreature(spec, noise, birth = 0) {
     staticLids.push({ cover, shut, smile, eye });
   }
 
+  // 놀람의 눈 변형 덮개 — ☆_☆ / ♥_♥. 눈(정지·리그 모두) 위에 살색 덮개 + 글리프를 얹는다 (6.3 — 눈 리그 위, 코·안경 아래).
+  // 놀람이 star/heart 변형일 때만 보인다 (animate: state.eyeFx). 눈마다 둘 다 굽어 두고 종류에 맞는 것만 켠다
+  const eyeFx = [];
+  {
+    const shape = eyeShape(spec);
+    for (const eye of eyeGeometry(spec, layout(spec))) {
+      if (patched(spec, eye)) continue;
+      const rx = eye.r * shape.sx * 1.3, ry = eye.r * shape.sy * 1.3;
+      const coverSketch = new Sketch(noise, 0.4);
+      coverSketch.fill(blobPath(0, 0, rx, ry, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
+      const starSketch = new Sketch(noise, 0.5);
+      const star = starPath(0, 0, eye.r * 1.1);
+      starSketch.fill(star, "#f6f2e9");
+      starSketch.outline(star, { color: spec.palette.ink, width: 0.01, step: 0.006 });
+      const heartSketch = new Sketch(noise, 0.5);
+      const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
+      heartSketch.fill(heart, "#c9666a");
+      heartSketch.outline(heart, { color: spec.palette.ink, width: 0.01, step: 0.006 });
+      const cover = sketchMesh(coverSketch, 1, 6.3);
+      const starMesh = sketchMesh(starSketch, 1, 6.32);
+      const heartMesh = sketchMesh(heartSketch, 1, 6.32);
+      for (const m of [cover, starMesh, heartMesh]) {
+        m.position.set(eye.x, eye.y - faceCy, 0);
+        m.visible = false;
+        faceGroup.add(m);
+      }
+      eyeFx.push({ cover, star: starMesh, heart: heartMesh, eye });
+    }
+  }
+
   return {
     group,
+    eyeFx,
     bodyGroup,
     headGroup,
     earGroup,
