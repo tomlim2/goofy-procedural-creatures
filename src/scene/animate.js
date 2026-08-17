@@ -65,15 +65,12 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       const order = (item.orderBase || 0) + (front ? 2.08 : 0.8);
       item.tailGroup.traverse((node) => { if (node.isMesh) node.renderOrder = order; });
     }
-    // 세움 목표 — 마디 방향(세계각). straight: **전부 정확히 위(π/2)** — 어떤 골격이든 딱 수직으로 선다. hook: 아래 두 마디는 위, 끝 두 마디가 앞(머리 쪽)으로 굽는다
-    const targetAngle = (i) => {
-      if (state.tailRaiseStyle === "hook") return i >= n - 2 ? Math.PI * 0.5 + (i === n - 1 ? 1.15 : 0.55) : Math.PI * 0.5;
-      return Math.PI * 0.5;
-    };
+    // 세움 목표 — 마디 방향(세계각) **전부 정확히 위(π/2)**: 어떤 골격이든(말림·갈고리·꺾임) 딱 수직으로 선다. 굽는 변형은 없다 — 굽으면 선 게 아니라 휜 것이다
+    const UP = Math.PI * 0.5;
     let cum = 0;   // 지금까지의 누적 목표 회전(쉼 기준)
     for (let i = 0; i < n; i += 1) {
       const b = bones[i];
-      const want = targetAngle(i) - b.restAngle;   // 이 마디가 세계각 목표에 닿으려면 필요한 누적 회전
+      const want = UP - b.restAngle;   // 이 마디가 수직에 닿으려면 필요한 누적 회전
       const own = want - cum;                        // 부모까지의 회전을 뺀 이 관절의 몫
       cum = want;
       let rot = own * raise;

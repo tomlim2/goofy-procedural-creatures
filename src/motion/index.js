@@ -29,7 +29,7 @@ export const BIND_STATE = Object.freeze({
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
-  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0, tailRaiseStyle: "straight",
+  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
   mode: "idle", sleep: 0, walk: 0, walkX: 0, facing: 1,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
@@ -79,9 +79,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   // 표정은 잠깐 하다 말지 않는다 — ^^는 시작하면 **3초 이상** 간다 (깜빡임 ^^ 22%·♥ 이모지가 이걸 켠다). rng 없이 시각만
   let happyUntil = -1;
   const happyWag = { x: 0, v: 0 };   // 웃을 때 꼬리 흔들기 봉투(임계감쇠로 켜고 끈다) — 개
-  // 세움(고양이) — 기분 좋은(^^) 동안 꼬리가 띡 선다. k 0~1은 선형으로 오르내리고(0.4초 위 / 0.6초 아래) ramp로 S자. style은 설 때마다 뽑는다:
-  // straight(빳빳이 곧게 위) | hook(끝 두 마디를 앞으로 굽혀 세움 + 끝 떨림). lastT는 dt용 (프레임 기반이라 결정적)
-  const raise = { k: 0, style: "straight", lastT: -1 };
+  // 세움(고양이) — 기분 좋은(^^) 동안 꼬리가 띡 선다. k 0~1은 선형으로 오르내리고(0.4초 위 / 0.6초 아래) ramp로 S자. 모양은 하나 — 관절 전부 정확히 수직.
+  // lastT는 dt용 (프레임 기반이라 결정적)
+  const raise = { k: 0, lastT: -1 };
 
   // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
   // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
@@ -300,20 +300,17 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         if (k >= 1) lash.start = -1;
         else { const w = Math.sin(k * Math.PI * 6) * envelope(k, 0.12, 0.4); tailAngle += w * 0.6; tailTip += w * 0.4; }
       }
-      // 세움 — 고양이는 **기분 좋을 때마다**(^^ — 깜빡임 ^^·♥ 이모지·♥ 놀람) 꼬리가 띡 선다. 골격 모양과 상관없이 scene이 관절마다 쉼 자세 → 곧게 선 자세로
-      // 섞는다(tailRaise 0~1). straight: 빳빳이 곧게 위 · hook: 끝 두 마디가 앞(머리 쪽)으로 굽고 끝이 잔떨림(quiver). 0.4초에 서고 웃는 동안(3초 이상) 서 있다가 0.6초에 내린다.
-      // 서 있는 동안은 **빳빳하다** — 스위시·톡톡·팔로스루를 (1 − tailRaise)로 죽인다 (안 죽이면 선 채로 흔들려 "딱" 서 보이지 않는다)
+      // 세움 — 고양이는 **기분 좋을 때마다**(^^ — 깜빡임 ^^·♥ 이모지·♥ 놀람) 꼬리가 띡 선다. 골격 모양과 상관없이 scene이 관절마다 쉼 자세 → **정확히 수직**으로
+      // 섞는다(tailRaise 0~1) — 굽는 변형은 없다(굽으면 선 게 아니라 휜 것으로 보인다). 0.4초에 서고 웃는 동안(3초 이상) 서 있다가 0.6초에 내린다.
+      // 서 있는 동안은 **빳빳하다** — 스위시·톡톡·팔로스루를 (1 − tailRaise)로 죽인다 (안 죽이면 선 채로 흔들려 "딱" 서 보이지 않는다). rng 없음
       let tailRaise = 0;
       if (TT && TT.raise && quad) {
         const dt = raise.lastT < 0 ? 0 : Math.max(0, t - raise.lastT);
         raise.lastT = t;
-        const wantUp = isHappy && !asleep;
-        if (wantUp && raise.k <= 0) raise.style = rng.chance(TT.raise.straight) ? "straight" : "hook";   // 설 때마다 모양을 뽑는다
-        raise.k += Math.max(-dt / 0.6, Math.min(dt / 0.4, (wantUp ? 1 : 0) - raise.k));
+        raise.k += Math.max(-dt / 0.6, Math.min(dt / 0.4, (isHappy && !asleep ? 1 : 0) - raise.k));
         tailRaise = ramp(raise.k);
         tailAngle *= 1 - tailRaise;
         tailTip *= 1 - tailRaise;
-        if (raise.style === "hook") tailTip += Math.sin(t * Math.PI * 2 * TT.raise.quiver[1]) * TT.raise.quiver[0] * tailRaise;
       }
       const j = R.stepJelly(jelly, t);
 
@@ -381,7 +378,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
-        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailRaiseStyle: raise.style,
+        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise,
         arms, legOffset, legOsc,
         mode: modeName, sleep: sleepK, walk: walkK, walkX: trip.x, facing,
         // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용
