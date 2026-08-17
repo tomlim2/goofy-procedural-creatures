@@ -95,9 +95,9 @@ function makeProportions(rng, archetype, species) {
     headWide: rng.around(blob ? 1.16 : 1, 0.18),
 
     // 머리 외곽선을 얼마나 찌그러뜨릴지. 0이면 도형, 크면 손으로 그린 덩어리.
-    // 사람 두상은 매끄럽게 — 혹을 1/3로(울퉁불퉁한 건 도깨비·동물). rng 호출 수는 같다 (배율만)
+    // 사람 두상은 매끄럽되 손그림 떨림은 남긴다 — 혹을 절반으로(울퉁불퉁한 건 도깨비·동물). rng 호출 수는 같다 (배율만)
     headLumps: rng.int(4, 7),
-    headLump: rng.around(0.07, 0.045) * (human ? 0.3 : 1),
+    headLump: rng.around(0.07, 0.045) * (human ? 0.5 : 1),
 
     eyeSize: rng.around(sprite ? 0.24 : 0.17, 0.07),
     eyeGap: rng.around(0.42, 0.12),
