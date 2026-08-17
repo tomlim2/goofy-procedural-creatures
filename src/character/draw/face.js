@@ -58,6 +58,32 @@ export function drawEyes(ink, fills, spec, box, eyes) {
     } else if (kind === "cross") {
       ink.stroke([[eye.x - eye.r, eye.y - eye.r], [eye.x + eye.r, eye.y + eye.r]], { color: ink0, width: 0.011 });
       ink.stroke([[eye.x + eye.r, eye.y - eye.r], [eye.x - eye.r, eye.y + eye.r]], { color: ink0, width: 0.011 });
+    } else if (kind === "scrawl") {
+      // 크레파스로 마구 그린 동그라미 — 한 획으로 세 바퀴 반, 바퀴마다 반지름과 중심이 흔들려 선이 겹치고 삐져나온다.
+      // 정갈한 나선(spiral)과 다르다: 시작·끝이 안 맞물리고 획이 서로를 지나친다 (아이가 크레파스로 그린 눈)
+      // 한 바퀴를 조금 넘겨 그린 고리 넷을 겹친다 — 고리마다 중심·크기·기울기가 달라 획이 서로를 지나치고 끝이 안 맞물린다.
+      // (한 획으로 여러 바퀴 돌면 동심원이 되어 나선처럼 보인다 — 그건 spiral이다)
+      const wob = ink.noise;
+      const phase = eye.side * 5.5 + spec.proportions.wobbleSeed * 0.017;
+      for (let k = 0; k < 6; k += 1) {
+        const w1 = wob(phase + k * 3.7), w2 = wob(phase + 17 + k * 3.7), w3 = wob(phase + 41 + k * 3.7);
+        const cx = eye.x + eye.r * 0.17 * w1;
+        const cy = eye.y + eye.r * 0.15 * w2;
+        // 고리마다 크기가 층진다 — 큰 고리와 작은 고리가 섞여 덧그은 자국이 된다 (0.45~1.05배)
+        const grade = 0.45 + 0.6 * ((k * 0.37) % 1);
+        const rx = eye.r * Math.min(1.05, grade + 0.12 * w3);
+        const ry = eye.r * Math.min(1.05, grade + 0.12 * w1) * 0.92;
+        const tilt = w2 * 0.9;
+        const from = w3 * Math.PI;
+        const to = from + TAU + 0.8 + w1 * 0.6;   // 한 바퀴 + 여분 — 끝이 시작을 지나친다
+        const pts = [];
+        for (let i = 0; i <= 24; i += 1) {
+          const a = from + (to - from) * (i / 24);
+          const x = Math.cos(a) * rx, y = Math.sin(a) * ry;
+          pts.push([cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]);
+        }
+        ink.stroke(pts, { color: ink0, width: 0.012, jitter: 0.008, step: 0.014 });
+      }
     } else if (kind === "spiral") {
       const spiral = [];
       for (let i = 0; i <= 40; i += 1) {

@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 167파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 168파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
 `headgear.js` 모자·뿔 · `face.js` 눈·눈썹·안경·코·주둥이·볼·수염 · `mouth.js` 입 · `faceStates.js` 눈썹·입의 상태 벌 · `body.js` 몸·무늬 · `limbs.js` 팔다리·꼬리).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
@@ -31,7 +31,7 @@
 
 머리는 그 위에 노이즈 혹(headLumps)이 얹히고, 연필 스크리블 채움이 덮인다.
 
-### eyes — 눈 종류 (16)
+### eyes — 눈 종류 (17)
 | 값 | 그리기 | 살아 있나 (동공·깜빡임) |
 | --- | --- | --- |
 | ring | 흰자 + 윤곽 + 동공 | ● 눈 리그 |
@@ -51,7 +51,8 @@
 얼굴 프레임과 따로 굽는다(`staticEyes` 프레임).
 | sleepy | 아래로 감은 호 | ✗ |
 | half | 반감김 — 눈꺼풀 선 **아래쪽 호**만 + 눈꺼풀 선 + 선 밑 동공 (원 전체에 선을 그으면 "선 그어진 동그라미"로 뭉개진다) | ✗ |
-| spiral | 소용돌이 | ✗ |
+| spiral | 소용돌이 — **한 획으로 안으로 감기는** 정갈한 나선 | ✗ |
+| scrawl | 크레파스로 마구 그린 동그라미 — 한 바퀴를 조금 넘겨 그린 고리 **여섯**을 겹친다. 고리마다 중심·크기(0.45~1.05배)·기울기가 달라 획이 서로를 지나치고 끝이 안 맞물린다 (미미큐식 낙서 눈). 나선과 달리 동심원이 아니다 | ✗ |
 | cross | X | ✗ |
 | slit | 아몬드 윤곽(반높이 0.7r) + **채운** 세로 방추 동공 (얇은 획이면 작을 때 안 읽힌다) | ✗ |
 
