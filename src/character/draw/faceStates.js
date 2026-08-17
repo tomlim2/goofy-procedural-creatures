@@ -14,7 +14,7 @@ const ALT_BROW = { none: "none", flat: "worry", angry: "flat", worry: "flat" };
 
 // 입의 대체 상태 — 같은 기분의 이웃으로 살짝 바뀐다 (선↔물결, 점↔3, 웃음→씨익, 긴장↔격자…)
 const ALT_MOUTH = {
-  dot: "line", line: "wave", teeth: "open", open: "line", wave: "line", smile: "grin", pout: "dot", omega: "three", zigzag: "wave",
+  dot: "line", line: "wave", open: "line", wave: "line", smile: "grin", pout: "dot", omega: "three", zigzag: "wave",
   frown: "line", three: "omega", grimace: "line", grin: "smile", scribble: "wave", tongue: "open", fangs: "line", shout: "open", meow: "omega", blep: "omega", bracket: "line"
 };
 
