@@ -6,7 +6,7 @@
 // 문서: guidelines/character/
 
 export { makeCreature, makeGrid, laneSpecies, LANES } from "./spec.js";
-export { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, BIND_ARM, tailSketch, LAYER_KEYS, STATIC_EYE_KEYS } from "./draw/index.js";
+export { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, BIND_ARM, tailSketch, LAYER_KEYS, HAIR_KEYS, STATIC_EYE_KEYS } from "./draw/index.js";
 export { layout, eyeGeometry } from "./draw/layout.js";
 export { RIG_EYES, eyeShape, patched, starPath, heartPath } from "./draw/face.js";
 export { SLOTS, DEFAULT_BIAS, ARCHETYPES, SPECIES, PAPER, INKS, FILLS, ACCENTS, POPS, DARKS } from "./vocabulary/index.js";

@@ -9,11 +9,6 @@ import { BOIL_FRAMES } from "./rig.js";
 import { damp } from "../motion/ease.js";
 
 const EMOJI_TARGET = new THREE.Vector3();
-// 얼굴 돌림 때 머리 부속물 그룹이 이목구비 이동량의 몇 배 움직이나 [그룹, x배, y배]. 1이면 얼굴과 같이, 0이면 윤곽과 같이, 음수면 반대로.
-// 뿔·두피 위 머리카락·모자(crownGroup)는 얼굴을 따라 덜, 귀(earGroup)는 **반대로** — 머리가 돌면 귀는 얼굴 반대편으로 돌아 나간다,
-// 앞머리·뒷머리(hairGroup)는 머리에 붙은 것이라 아주 조금만 — 둘은 **같은 비율·같은 방향**(뒷머리가 앞머리와 다르게 밀리면 머리채가 갈라져 보인다).
-// 크기는 안 바뀐다 — 자리만 밀린다
-const PARALLAX = [["crownGroup", 0.45, 0.3], ["earGroup", -0.4, -0.15], ["hairGroup", 0.12, 0.08]];
 
 // snap: 관절을 이징 없이 목표각으로 즉시 (바인드 뷰). boil: 보일 3벌 순환 여부 (선 질감).
 // 둘은 다른 축이다 — 바인드 포즈에서도 선은 끓을 수 있고, 모션 중에도 선을 고정할 수 있다.
@@ -48,10 +43,11 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.faceGroup.position.x = shiftX;
   item.faceGroup.position.y = item.faceCy - item.neckY + shiftY;
   item.faceGroup.scale.set(1 - Math.abs(turnX) * 0.12, 1 - Math.abs(turnY) * 0.08, 1);
-  // 머리에 붙는 것은 위치만 밀린다(크기 그대로) — 시차 (PARALLAX)
-  for (const [key, kx, ky] of PARALLAX) {
-    item[key].position.x = shiftX * kx;
-    item[key].position.y = shiftY * ky;
+  // 머리에 붙는 층(귀·뿔·머리카락·모자)은 위치만 밀린다(크기 그대로) — fake 3D: 이동량 = 층의 깊이(rig.js DEPTH) × 이목구비 이동량.
+  // 앞(양수)은 얼굴 쪽으로, 뒤(음수)는 반대로. 뜻이 아니라 깊이가 정한다
+  for (const p of item.parallax) {
+    p.group.position.x = shiftX * p.depth;
+    p.group.position.y = shiftY * p.depth;
   }
 
   // 꼬리 — 네 마디 체인. 뿌리 각(tailAngle) + 끝 마디 상대각(tailTip) + 세움(tailRaise: 관절마다 쉼 자세 → 목표 자세로 섞음) + 곤두섬(tailPuff)

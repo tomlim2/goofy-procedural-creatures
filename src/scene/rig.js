@@ -8,6 +8,21 @@ import { sketchMesh } from "./material.js";
 
 export const BOIL_FRAMES = 3;
 
+// fake 3D 깊이(z) — 얼굴 돌림 때 층이 이목구비 이동량의 몇 배 밀리나. 1 = 이목구비(얼굴 앞면), 0 = 머리 윤곽(두개골 축, 안 밀림), 음수 = 뒤(반대로).
+// 층마다 **숫자 하나**로 정한다 — 앞에 있는지 뒤에 있는지가 이동량이다. 같은 뜻의 층이 같은 값을 갖는 건 태그일 뿐이고(귀 둘, 머리카락 앞·두피),
+// 뜻으로 묶어 같은 그룹에 넣지 않는다: 앞머리(얼굴 앞)와 뒷머리(머리 뒤)는 같은 머리카락이라도 깊이가 달라 다르게 밀린다.
+// scene/animate.js가 층마다 position = 깊이 × 이목구비 이동량 (x·y 같은 배율). 크기는 안 바뀐다. 문서: guidelines/rig.md § fake 3D 깊이
+export const DEPTH = {
+  face: 1,          // 이목구비 (faceGroup)
+  hat: 0.45,        // 모자 — 머리 위 앞쪽
+  horns: 0.45,      // 뿔
+  hairFront: 0.12,  // 앞머리 — 이마 위(얼굴 앞)지만 머리에 붙은 것이라 조금만
+  hairCrown: 0.12,  // 두피 위 머리카락 — 앞머리와 이어지는 캡·가시
+  hairBack: -0.12,  // 뒷머리 — 머리 **뒤**라 반대로, 앞머리와 같은 크기만큼
+  ears: -0.4,       // 귀(옆귀·개/고양이 귀) — 머리 옆·뒤, 머리가 돌면 얼굴 반대편으로 돌아 나간다
+  head: 0           // 윤곽 (headGroup 직접)
+};
+
 // 감은 눈 두 벌 — 감은 눈 선(shut: 아래로 볼록한 호)과 ^^ 미소 아치(smile: 위로 볼록). 살아 있는 눈(리그)과 정지 눈(staticLids)이 같은 모양을 쓴다 —
 // 감은 선만 살짝 다르다(정지 눈은 조금 위·얌전하게). 얼굴 잉크(faceInk)로 — 도깨비처럼 머리가 먹빛이면 검정 아치는 머리에 묻혀 안 보인다
 const LID_STYLE = {
@@ -27,16 +42,18 @@ export function buildCreature(spec, noise, birth = 0) {
   const group = new THREE.Group();
   const bodyGroup = new THREE.Group();
   const headGroup = new THREE.Group();
-  const earGroup = new THREE.Group();     // 귀(옆귀·개/고양이 귀) — 얼굴 돌림 때 얼굴과 **반대로** 밀린다
-  const crownGroup = new THREE.Group();   // 뿔·두피 위 머리카락·모자 — 얼굴 돌림 때 얼굴과 같은 방향으로 덜 밀린다
-  const hairGroup = new THREE.Group();    // 앞머리·뒷머리 — 얼굴 돌림엔 **아주 조금만**, 둘이 같은 비율로 따라간다 (머리에 붙은 것)
-  const faceGroup = new THREE.Group();
+  const faceGroup = new THREE.Group();    // 이목구비 — 얼굴 돌림의 이동·눌림 (깊이 1)
   group.add(bodyGroup);
   group.add(headGroup);
-  headGroup.add(earGroup);
-  headGroup.add(crownGroup);
-  headGroup.add(hairGroup);
   headGroup.add(faceGroup);
+  // 머리에 붙는 층(귀·뿔·머리카락·모자)은 층마다 제 그룹 — 깊이(DEPTH)만큼 밀린다. 그룹은 뜻이 아니라 깊이로 움직인다 (animate: item.parallax)
+  const parallax = [];
+  const depthGroup = (depth) => {
+    const g = new THREE.Group();
+    headGroup.add(g);
+    parallax.push({ group: g, depth });
+    return g;
+  };
 
   // 보일 — 지터 위상만 다른 3벌. 층마다 프레임(그룹) 3개를 같은 인덱스로 토글한다 (animate가 frames를 돈다).
   // 층 하나 = 메시 하나: 채색 스케치와 잉크 스케치를 한 지오메트리로 잇는다(채색이 밑, 잉크가 위 — draw call 절반). 채색은 전부 **불투명** —
@@ -44,25 +61,28 @@ export function buildCreature(spec, noise, birth = 0) {
   // 예외는 얼굴(face)·정지 눈(staticEyeBack/Front — 눈마다 한 층): 채색(2.3)과 잉크(2.4)를 따로 둔다 — 정지 눈의 채움(동공·흰자)이
   // 얼굴 잉크(수염) **밑**에, 정지 눈의 잉크가 그 위에 와야 해서 두 층의 채색·잉크가 서로 엇갈린다.
   // 정지 눈이 눈마다 한 층인 건 윙크 때문이다 — 한쪽 눈만 아치로 바꾸려면 그 눈의 층만 꺼야 한다 (animate).
-  // 렌더 순서(guidelines/rig.md가 단일 소스): 몸 1.5 → 뒷머리 1.55 → 옆귀 1.7 → 머리 2(채색이 몸 잉크를 덮는다) → 뿔·머리카락 2.06 →
+  // 렌더 순서(guidelines/rig.md가 단일 소스): 몸 1.5 → 뒷머리 1.55 → 옆귀 1.7 → 머리 2(채색이 몸 잉크를 덮는다) → 뿔 2.06 → 두피 위 머리카락 2.06 →
   // 개/고양이 귀 2.12 → 모자 2.16 → 얼굴·정지 눈 2.3/2.4 → 얼굴 맨 앞(코·안경) 6.5 → 앞머리 6.55
   const firstDrawn = drawCreature(spec, 0);
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
+  // 머리 층은 group 대신 depth — 아래에서 층마다 깊이 그룹을 만든다 (몸은 bodyGroup, 윤곽은 headGroup, 이목구비는 faceGroup)
   const LAYERS = [
     { key: "body", group: bodyGroup, dy: 0, order: 1.5 },
-    { key: "hairBack", group: hairGroup, dy: -neckY, order: 1.55 },  // 뒷머리 — 머리·귀 뒤, 몸 위. 앞머리와 같은 그룹(같이 밀린다)
-    { key: "crownBack", group: earGroup, dy: -neckY, order: 1.7 },   // 옆귀 — 머리 채색 뒤
+    { key: "hairBack", depth: DEPTH.hairBack, dy: -neckY, order: 1.55 },     // 뒷머리 — 머리·귀 뒤, 몸 위
+    { key: "crownBack", depth: DEPTH.ears, dy: -neckY, order: 1.7 },         // 옆귀 — 머리 채색 뒤
     { key: "head", group: headGroup, dy: -neckY, order: 2 },
-    { key: "crown", group: crownGroup, dy: -neckY, order: 2.06 },    // 뿔·머리카락 — 머리 잉크 위
-    { key: "front", group: earGroup, dy: -neckY, order: 2.12 },      // 머리 앞: 개·고양이 귀
-    { key: "hat", group: crownGroup, dy: -neckY, order: 2.16 },      // 모자 — 귀 위, 얼굴 아래
+    { key: "horns", depth: DEPTH.horns, dy: -neckY, order: 2.06 },           // 뿔 — 머리 잉크 위
+    { key: "hairCrown", depth: DEPTH.hairCrown, dy: -neckY, order: 2.06 },   // 두피 위 머리카락 — 뿔과 같은 자리·뿔 위
+    { key: "front", depth: DEPTH.ears, dy: -neckY, order: 2.12 },            // 머리 앞: 개·고양이 귀
+    { key: "hat", depth: DEPTH.hat, dy: -neckY, order: 2.16 },               // 모자 — 귀 위, 얼굴 아래
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },        // 채색·잉크 따로 (위 설명)
     // 정지 눈 — 눈마다 한 층(작은 눈 Back → 큰 눈 Front, 겹치면 큰 눈이 앞). 잠·^^·윙크(그쪽)·놀람 변형 때 그 눈의 층을 끈다
     ...STATIC_EYE_KEYS.map((key) => ({ key, group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 })),
     { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // 코·안경 — 눈 리그(3~)보다 위. 놀란 흰자·눈꺼풀이 못 덮는다
-    { key: "hairFront", group: hairGroup, dy: -neckY, order: 6.55 }    // 앞머리 — 코·안경 위, 눈썹·입(6.6) 아래
+    { key: "hairFront", depth: DEPTH.hairFront, dy: -neckY, order: 6.55 }    // 앞머리 — 코·안경 위, 눈썹·입(6.6) 아래
   ];
+  for (const layer of LAYERS) if (layer.group === undefined) layer.group = depthGroup(layer.depth);
   const frames = {};
   for (const layer of LAYERS) frames[layer.key] = [];
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
@@ -261,10 +281,8 @@ export function buildCreature(spec, noise, birth = 0) {
     eyeFx,
     bodyGroup,
     headGroup,
-    earGroup,
-    crownGroup,
-    hairGroup,
     faceGroup,
+    parallax,   // [{ group, depth }] — 머리에 붙는 층들. animate가 깊이 × 이목구비 이동량으로 민다
     tailGroup,
     tailBones,
     limbs,

@@ -41,7 +41,8 @@ for (const spec of grid) {
     body: sketchHash(d.body.ink) + sketchHash(d.body.fills),
     head: sketchHash(d.head.ink) + sketchHash(d.head.fills),
     crownBack: sketchHash(d.crownBack.ink) + sketchHash(d.crownBack.fills),
-    crown: sketchHash(d.crown.ink) + sketchHash(d.crown.fills),
+    // 뿔(horns)과 두피 위 머리카락(hairCrown)은 같은 자리(2.06)의 두 층 — 이어 하나로 적는다
+    crown: ["horns", "hairCrown"].map((k) => sketchHash(d[k].ink) + sketchHash(d[k].fills)).join(""),
     hairBack: sketchHash(d.hairBack.ink),
     hairFront: sketchHash(d.hairFront.ink),
     face: sketchHash(d.face.ink) + sketchHash(d.face.fills),

@@ -14,12 +14,14 @@ export { facePartKinds, facePartSketch } from "./face.js";
 export { limbSketches, motionRig, BIND_ARM, tailSketch } from "./limbs.js";
 
 // 층 이름 — 스케치 쌍(잉크·채색) 하나씩. scene/rig.js가 같은 이름으로 메시를 세운다 (렌더 순서는 guidelines/rig.md)
-//   body 몸 · crownBack 옆귀 · head 머리 윤곽 · crown 뿔·머리카락(두피 위) · hairBack 뒷머리 · hairFront 앞머리 · front 개/고양이 귀 ·
+//   body 몸 · crownBack 옆귀 · head 머리 윤곽 · horns 뿔 · hairBack 뒷머리 · hairCrown 두피 위 머리카락 · hairFront 앞머리 · front 개/고양이 귀 ·
 //   hat 모자 · face 볼·수염 · staticEyeBack/staticEyeFront 정지 눈(눈마다 한 층) · faceFront 코·주둥이·안경
+// 머리에 붙는 층(귀·뿔·머리카락·모자)은 scene/rig.js가 층마다 **깊이(DEPTH)** 를 줘 얼굴 돌림에 앞뒤로 다르게 민다 — 앞머리는 얼굴 쪽으로 조금, 뒷머리는 머리 뒤라 반대로
 // 정지 눈은 **눈마다 따로** 굽는다 — 윙크처럼 한쪽만 아치로 바꿀 때 그 눈의 층만 끄고 다른 눈은 남겨야 한다 (두 눈이 한 메시면 반대쪽 눈이 같이 사라진다).
 // 작은 눈이 Back, 큰 눈이 Front — 겹치면 큰 눈이 앞(hollow의 흰자가 작은 눈의 테를 덮는다, 교차선 없음)
 export const STATIC_EYE_KEYS = ["staticEyeBack", "staticEyeFront"];
-export const LAYER_KEYS = ["body", "crownBack", "head", "crown", "hairBack", "hairFront", "front", "hat", "face", ...STATIC_EYE_KEYS, "faceFront"];
+export const HAIR_KEYS = ["hairBack", "hairCrown", "hairFront"];
+export const LAYER_KEYS = ["body", "crownBack", "head", "horns", ...HAIR_KEYS, "front", "hat", "face", ...STATIC_EYE_KEYS, "faceFront"];
 
 // 스펙 하나를 그려서 지오메트리 재료를 돌려준다.
 // 몸·머리·얼굴을 분리해 굽는다 — scene이 머리만 굴리고 끄덕이고, 얼굴(이목구비)만 통째로
@@ -46,7 +48,10 @@ export function drawCreature(spec, variant = 0) {
   // 머리 앞 층 — 개 귀·고양이 귀. 머리 잉크 위에 채움이 얹혀야 윤곽선이 귀를 뚫고 비치지 않는다
   drawPupEars(L.front.ink, L.front.fills, spec, box);
   drawCatEars(L.front.ink, L.front.fills, spec, box);
-  drawHorns(L.crown.ink, L.crown.fills, spec, box, noise);
+  drawHorns(L.horns.ink, L.horns.fills, spec, box, noise);
+  // 두피 위 머리카락은 뿔과 같은 자리(2.06)에 그리되 층은 따로 — 획 위상만 뿔에서 이어받는다 (뿔·머리카락을 한 스케치에 그리던 때와 같은 떨림)
+  L.hairCrown.ink.phase = L.horns.ink.phase;
+  L.hairCrown.fills.phase = L.horns.fills.phase;
   // 정지 눈 — 안대에 안 가린 눈을 작은 것부터 층 하나씩(Back → Front). 살아 있는 눈(RIG_EYES)은 drawEyes가 안 그리므로 층이 빈다
   const staticEyes = [...eyes].filter((e) => !patched(spec, e)).sort((a, b) => a.r - b.r)
     .map((eye, i) => ({ key: STATIC_EYE_KEYS[i], side: eye.side, eye }));
@@ -64,8 +69,8 @@ export function drawCreature(spec, variant = 0) {
   // 눈썹과 입은 여기서 굽지 않는다. 상태 전환을 위해 scene이 facePartSketch로 별도 메시를 세운다.
   drawWhiskers(L.face.ink, spec, box);   // 고양이 수염 — 얼굴 층이라 윤곽 위로 그려져 밖으로 뚫고 나올 수 있다
   drawEyewear(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
-  // 머리카락 세 층 — 뒷머리(머리 뒤) · 두피 위(뿔과 같은 crown 잉크) · 앞머리(얼굴 위). 뒷머리·앞머리는 같은 그룹(hairGroup)이라 같이 밀린다. hair.js 참조
-  drawHair({ back: L.hairBack.ink, crown: L.crown.ink, front: L.hairFront.ink }, spec, box, noise);
+  // 머리카락 세 층 — 뒷머리(머리 뒤) · 두피 위(뿔과 같은 자리) · 앞머리(얼굴 위). 층마다 깊이가 달라 얼굴 돌림에 따로 밀린다 (rig.js DEPTH). hair.js 참조
+  drawHair({ back: L.hairBack.ink, crown: L.hairCrown.ink, front: L.hairFront.ink }, spec, box, noise);
   drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // 모자는 귀보다 위 층 — 귀 밑동을 덮는다
 
   // 동공이 움직이는 눈만 골라 넘긴다. 외눈도 살아 있다.
