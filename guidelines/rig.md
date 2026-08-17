@@ -11,7 +11,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·점�
 ├── bodyGroup
 │   ├── bodyFrame ×3         ← 보일 변형. 채색(1) + 잉크(1.5)
 │   ├── tailGroup            ← 꼬리 뿌리에 피벗 (네발). 0.8 — 몸통·머리 뒤
-│   │   └── tailTipGroup     ← 끝 마디. 척추 55% 지점 피벗 — 팔로스루·끝 톡톡·세움 떨림 (state.tailTip)
+│   │   └── bone[0] ⊃ bone[1] ⊃ bone[2] ⊃ bone[3]  ← 네 마디 체인 (관절 = 척추 4등분점). bone[0]에 tailAngle, bone[3]에 tailTip, tailRaise는 관절마다 목표각(세움)
 │   └── limb pivot ×N        ← 어깨·엉덩이 피벗
 │       ├── front             ← 위팔 (또는 다리). renderOrder 2.5
 │       │   └── elbow         ← 팔꿈치 피벗 + 아래팔 (팔만). 어깨각·팔꿈치각 따로
@@ -81,7 +81,7 @@ emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머
 - **crownGroup / earGroup / bangsGroup** — headGroup과 같은 원점(목). 얼굴 돌림 때 position만 — 뿔·머리카락·모자는 x 0.45배 · y 0.3배 같은 방향, 귀는 x −0.4배 · y −0.15배 반대 방향, 앞머리는 x 0.12배 · y 0.08배(아주 조금). scale은 건드리지 않는다 — 부속물은 자리만 옮기지 크기가 변하지 않는다
 - **limb pivot** — 어깨(bodyTop 아래 22%, 몸통 좌우 윤곽 위 — 형태별 반폭 box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다. 팔은 `bindArm(side)`(T포즈)로 세우고 clock의 `state.arms`가 관절각을 준다
 - **elbow** — 위팔 끝. 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽는다. 위팔:아래팔 = 0.48:0.52. 같은 치수를 `armRig(spec)`이 clock에 넘겨 행위를 IK로 푼다
-- **tailGroup** — 꼬리 뿌리(몸 뒤끝). **tailTipGroup** — 그 안, 척추 55% 지점(`tailSketch().tipPivot`). 스킨은 두 마디에 이어 굽는다
+- **tailGroup** — 꼬리 뿌리(몸 뒤끝). 안에 **네 마디 체인**(`tailSketch().bones` — 관절 원점·쉼 자세 방향). 스킨은 마디들에 이어 굽는다
 - **eyeRig** — 눈 중심. pupil.scale이 놀람(1 → 0.5), pupil.position이 시선, lid.scale.y가 눈꺼풀. 리그 자체는 안 커진다
 
 ## 무엇을 굽고 무엇을 변형하나

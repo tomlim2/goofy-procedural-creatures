@@ -274,32 +274,34 @@ function alongSpine(spine, t) {
   return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, dx, dy };
 }
 // 척추를 t = split에서 둘로 가른다 → [뿌리 조각(원점 그대로), 끝 조각(가른 점 원점)]. 각 조각의 t 범위도 준다
-function splitSpine(spine, split) {
+// 척추를 길이 기준으로 n등분한 마디들 → [{ spine(마디 원점 기준 점 목록), t0, t1, origin(꼬리 뿌리 기준), angle(쉼 자세의 방향) }]
+function splitSpineN(spine, n) {
   const ts = spineT(spine);
-  const cut = alongSpine(spine, split);
-  const base = [], tip = [];
-  for (let i = 0; i < spine.length; i += 1) {
-    if (ts[i] < split) base.push(spine[i]);
-    else tip.push(spine[i]);
+  const parts = [];
+  for (let k = 0; k < n; k += 1) {
+    const t0 = k / n, t1 = (k + 1) / n;
+    const a = alongSpine(spine, t0), b = alongSpine(spine, Math.min(1, t1));
+    const inner = spine.filter((_, i) => ts[i] > t0 && ts[i] < t1);
+    const pts = [[a.x, a.y], ...inner, [b.x, b.y]];
+    parts.push({
+      spine: pts.map(([x, y]) => [x - a.x, y - a.y]),
+      t0, t1, origin: [a.x, a.y],
+      angle: Math.atan2(b.y - a.y, b.x - a.x)
+    });
   }
-  base.push([cut.x, cut.y]);
-  const tipRel = [[0, 0], ...tip.map(([x, y]) => [x - cut.x, y - cut.y])];
-  return [
-    { spine: base, t0: 0, t1: split, origin: [0, 0] },
-    { spine: tipRel, t0: split, t1: 1, origin: [cut.x, cut.y] }
-  ];
+  return parts;
 }
 
-// 꼬리는 **두 마디**다 — 뿌리(피벗 = 꼬리 뿌리)와 끝(척추 55% 지점 피벗). scene이 둘을 따로 돌린다(스위시 팔로스루·끝 톡톡·세움 떨림).
-// 스킨은 두 마디에 이어서 입힌다 — 두께 함수는 전체 꼬리 기준 t로 계산해 이음새에서 굵기가 이어진다.
-export const TAIL_SPLIT = 0.55;
+// 꼬리는 **네 마디 체인**이다 — 척추를 4등분해 마디마다 관절(원점)을 두고, scene이 마디를 따로 돌린다:
+// 뿌리(0)에 스위시·wag·걷기·잠, 끝(3)에 톡톡·떨림·팔로스루, 그리고 **세움**은 관절 각을 쉼 자세 → 곧게 선 자세로 섞는다(마디마다 목표각).
+// 스킨은 마디들에 이어서 입힌다 — 두께 함수는 전체 꼬리 기준 t로 계산해 이음새에서 굵기가 이어진다.
+export const TAIL_BONES = 4;
 export function tailSketch(spec) {
   const rng = makeRng((spec.proportions.wobbleSeed + 404) >>> 0);
   const noise = makeNoise(rng);
-  const sketch = new Sketch(noise, spec.proportions.wobble);
-  const tipSketch = new Sketch(noise, spec.proportions.wobble);
   const box = layout(spec);
-  if (!box.quad) return { sketch, tipSketch, pivot: [0, 0], tipPivot: [0, 0] };
+  const sketches = Array.from({ length: TAIL_BONES }, () => new Sketch(noise, spec.proportions.wobble));
+  if (!box.quad) return { sketches, bones: [], pivot: [0, 0] };
 
   const p = spec.proportions;
   const ink0 = spec.palette.ink;
@@ -311,8 +313,7 @@ export function tailSketch(spec) {
   const skin = spec.parts.tailSkin || "line";
   const stub = spec.parts.tail === "stubtail";
   const fur = spec.palette.skin;   // 털색 = 머리색 (개·고양이는 몸도 같은 계열)
-  const parts = splitSpine(spine, TAIL_SPLIT);
-  const sketches = [sketch, tipSketch];
+  const parts = splitSpineN(spine, TAIL_BONES);
 
   // 두께 함수(전체 t 기준) — 스킨별
   const widthOf = {
@@ -336,9 +337,10 @@ export function tailSketch(spec) {
   };
   // 전체 t 지점의 자리와 그 조각 — 털 획·구슬·띠·뭉치를 놓을 때
   const at = (t) => {
-    const part = t < TAIL_SPLIT ? parts[0] : parts[1];
+    const idx = Math.min(parts.length - 1, Math.floor(Math.max(0, Math.min(0.999, t)) * parts.length));
+    const part = parts[idx];
     const local = (t - part.t0) / (part.t1 - part.t0);
-    return { ...alongSpine(part.spine, Math.max(0, Math.min(1, local))), sk: sketches[parts.indexOf(part)] };
+    return { ...alongSpine(part.spine, Math.max(0, Math.min(1, local))), sk: sketches[idx] };
   };
 
   if (skin === "line") {
@@ -364,8 +366,9 @@ export function tailSketch(spec) {
     const tipPart = parts[parts.length - 1];
     const tip = tipPart.spine[tipPart.spine.length - 1];
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
-    tipSketch.fill(ball, darken(fur, 0.82));
-    tipSketch.outline(ball, { color: ink0, width: 0.01 });
+    const tipSk = sketches[sketches.length - 1];
+    tipSk.fill(ball, darken(fur, 0.82));
+    tipSk.outline(ball, { color: ink0, width: 0.01 });
   } else if (skin === "puff") {
     // 몽실 — 토끼 꼬리. 골격 길이와 상관없이 엉덩이 가까이(척추 0.3 지점) 북슬한 뭉치 하나 + 둘레 털 획 (뿌리 조각)
     const a = at(0.3);
@@ -405,5 +408,5 @@ export function tailSketch(spec) {
       a.sk.stroke([[a.x + a.dy * w, a.y - a.dx * w], [a.x - a.dy * w, a.y + a.dx * w]], { color: darken(fur, 0.55), width: 0.014 });
     }
   }
-  return { sketch, tipSketch, pivot, tipPivot: parts[1].origin };
+  return { sketches, bones: parts.map((p) => ({ origin: p.origin, angle: p.angle })), pivot };
 }

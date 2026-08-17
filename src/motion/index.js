@@ -29,7 +29,7 @@ export const BIND_STATE = Object.freeze({
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
-  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0,
+  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0, tailRaiseStyle: "straight",
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
   mode: "idle", sleep: 0, walk: 0, walkX: 0, facing: 1,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
@@ -306,21 +306,16 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         if (k >= 1) lash.start = -1;
         else { const w = Math.sin(k * Math.PI * 6) * envelope(k, 0.12, 0.4); tailAngle += w * 0.6; tailTip += w * 0.4; }
       }
+      let tailRaise = 0;
       if (raise.until >= 0) {
-        // 세움 — 기분 좋을 때. 뿌리를 위로 들고(ramp 0.4초) 유지, 유지가 끝나면 0.6초에 내린다.
-        //   hook: 끝을 **안으로 굽혀**(머리 쪽으로 +0.8) 세우고 끝이 잔떨림(quiver)
-        //   straight: **빳빳이** 곧게 세운다(뿌리 +0.15 더, 끝은 굽힘 없이 곧게 — 골격의 굽음을 편다) 떨림 없음
+        // 세움 — 기분 좋을 때 꼬리가 **띡 선다**. 골격 모양과 상관없이 scene이 관절마다 쉼 자세 → 곧게 선 자세로 섞는다(tailRaise 0~1).
+        //   straight: 빳빳이 곧게 위 · hook: 끝 두 마디가 앞(머리 쪽)으로 굽고 끝이 잔떨림(quiver)
+        // 0.4초에 서고 3~5초 유지, 0.6초에 내린다
         const kIn = ramp(Math.min(1, (t - raise.start) / 0.4));
         const kOut = t > raise.until ? 1 - ramp(Math.min(1, (t - raise.until) / 0.6)) : 1;
-        const kr = kIn * kOut;
+        tailRaise = kIn * kOut;
         if (t > raise.until + 0.6) raise.until = -1;
-        if (raise.style === "hook") {
-          tailAngle += TT.raise.angle * kr;
-          tailTip += 0.8 * kr + Math.sin(t * Math.PI * 2 * TT.raise.quiver[1]) * TT.raise.quiver[0] * kr;
-        } else {
-          tailAngle += (TT.raise.angle + 0.15) * kr;
-          tailTip += -0.25 * kr;   // 골격의 안쪽 굽음을 살짝 펴서 곧게
-        }
+        if (raise.style === "hook") tailTip += Math.sin(t * Math.PI * 2 * TT.raise.quiver[1]) * TT.raise.quiver[0] * tailRaise;
       }
       const j = R.stepJelly(jelly, t);
 
@@ -389,7 +384,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
-        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff,
+        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailRaiseStyle: raise.style,
         arms, legOffset, legOsc,
         mode: modeName, sleep: sleepK, walk: walkK, walkX: trip.x, facing,
         // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용

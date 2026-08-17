@@ -53,12 +53,30 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.bangsGroup.position.x = turnX * item.headRx * 0.26 * BANGS_PARALLAX[0];
   item.bangsGroup.position.y = turnY * item.headRy * 0.16 * BANGS_PARALLAX[1];
 
-  // 꼬리 — 뿌리 각 + 끝 마디 상대각 + 부풀림(놀람, 균일 배율)
+  // 꼬리 — 네 마디 체인. 뿌리 각(tailAngle) + 끝 마디 상대각(tailTip) + 세움(tailRaise: 관절마다 쉼 자세 → 목표 자세로 섞음) + 부풀림
   if (item.tailGroup) {
-    item.tailGroup.rotation.z = state.tailAngle;
     const puff = 1 + 0.3 * (state.tailPuff || 0);
     item.tailGroup.scale.set(puff, puff, 1);
-    if (item.tailTipGroup) item.tailTipGroup.rotation.z = state.tailTip || 0;
+    const bones = item.tailBones;
+    const n = bones.length;
+    const raise = state.tailRaise || 0;
+    // 세움 목표 — 마디 방향(세계각). straight: 전부 곧게 위(π/2, 끝은 살짝 뒤로 젖힘). hook: 아래 마디는 위, 끝 두 마디가 앞(머리 쪽)으로 굽는다
+    // 뿌리 마디는 살짝 뒤로 젖혀 시작해 꼬리가 몸에서 곧장 위로 서 보이게(엉덩이에서 나온다)
+    const targetAngle = (i) => {
+      if (state.tailRaiseStyle === "hook") return i >= n - 2 ? Math.PI * 0.5 + (i === n - 1 ? 1.15 : 0.55) : Math.PI * 0.5 - 0.1;
+      return Math.PI * 0.5 - 0.12 + (i === n - 1 ? -0.1 : 0);
+    };
+    let cum = 0;   // 지금까지의 누적 목표 회전(쉼 기준)
+    for (let i = 0; i < n; i += 1) {
+      const b = bones[i];
+      const want = targetAngle(i) - b.restAngle;   // 이 마디가 세계각 목표에 닿으려면 필요한 누적 회전
+      const own = want - cum;                        // 부모까지의 회전을 뺀 이 관절의 몫
+      cum = want;
+      let rot = own * raise;
+      if (i === 0) rot += state.tailAngle;
+      if (i === n - 1) rot += state.tailTip || 0;
+      b.group.rotation.z = rot;
+    }
   }
 
   // 팔다리 — 목표 각도로 이징. 관절은 튀지 않고 따라간다.

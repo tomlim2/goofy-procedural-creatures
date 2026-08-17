@@ -54,7 +54,7 @@ for (const sp of SPECIES) {
       const limbs = limbSketches(c);
       const hasArms = limbs.some((l) => l.kind === "arm");
       const tail = tailSketch(c);
-      const hasTail = !(tail.sketch.empty && tail.tipSketch.empty);   // 두 마디 중 하나라도
+      const hasTail = tail.sketches.some((s) => !s.empty);   // 마디 중 하나라도
       const legs = limbs.filter((l) => l.kind === "leg").length;
       if (id.arms === true && !hasArms) violations.push(`${where}: 팔이 없다`);
       if (id.arms === false && hasArms) violations.push(`${where}: 팔이 있다`);
