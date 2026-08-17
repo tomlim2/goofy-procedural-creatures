@@ -292,8 +292,9 @@ export function drawPupEars(ink, fills, spec, box) {
     if (baseOutline) ink.stroke(baseOutline, earInk);
     else ink.outline(path, earInk);
     if (flap) {
-      // 덮개는 귀 안쪽 면이라 조금 더 어둡다 — 밝은 털에서는 색으로, 검은 털에서는 접힘선으로 읽힌다
-      fills.fill(flap, shade(earFill, 0.78));
+      // 덮개는 접혀 넘어온 **귀 안쪽 면**이다 — 안쪽 귀 색(분홍·톤)을 그대로 칠한다. 안쪽 귀가 없는 개체는 조금 어두운 톤으로.
+      // 밝은 털에서는 색으로, 검은 털에서는 접힘선으로 읽힌다
+      fills.fill(flap, innerFill || shade(earFill, 0.78));
       ink.outline(flap, earInk);
       ink.stroke(crease, { color: spec.palette.ink, width: 0.009 });
     }
