@@ -14,11 +14,13 @@ export function buildCreature(spec, noise, birth = 0) {
   const headGroup = new THREE.Group();
   const earGroup = new THREE.Group();     // 귀(옆귀·개/고양이 귀) — 얼굴 돌림 때 얼굴과 **반대로** 밀린다
   const crownGroup = new THREE.Group();   // 뿔·머리카락·모자 — 얼굴 돌림 때 얼굴과 같은 방향으로 덜 밀린다
+  const bangsGroup = new THREE.Group();   // 앞머리 — 얼굴 위에 그리지만 얼굴 돌림엔 **아주 조금만** 따라간다 (머리에 붙은 것)
   const faceGroup = new THREE.Group();
   group.add(bodyGroup);
   group.add(headGroup);
   headGroup.add(earGroup);
   headGroup.add(crownGroup);
+  headGroup.add(bangsGroup);
   headGroup.add(faceGroup);
 
   // 보일 — 지터 위상만 다른 3벌. 몸·머리·모자·얼굴을 같은 인덱스로 토글한다 (animate가 frames를 돈다).
@@ -40,8 +42,8 @@ export function buildCreature(spec, noise, birth = 0) {
     { key: "staticEyes", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 1 },   // 정지 눈 — 놀람 변형 때 끈다
     // 얼굴 맨 앞: 코·안경 — 눈 리그(3~6)보다 위. 놀라 커진 흰자·눈꺼풀이 못 덮는다
     { key: "faceFront", group: faceGroup, dy: -faceCy, fillOrder: 6.4, inkOrder: 6.5, fillOpacity: 1 },
-    // 앞머리 — 얼굴 위(코·안경 위), 눈썹·입(6.6) 아래. 얼굴 그룹이라 이목구비와 같이 돈다
-    { key: "hairFront", group: faceGroup, dy: -faceCy, fillOrder: 6.53, inkOrder: 6.55, fillOpacity: 1 }
+    // 앞머리 — 얼굴 위(코·안경 위), 눈썹·입(6.6) 아래. 머리 그룹(bangsGroup)이라 얼굴 돌림엔 아주 조금만 밀린다
+    { key: "hairFront", group: bangsGroup, dy: -neckY, fillOrder: 6.53, inkOrder: 6.55, fillOpacity: 1 }
   ];
   const frames = { body: [], hairBack: [], crownBack: [], head: [], crown: [], front: [], hat: [], face: [], staticEyes: [], faceFront: [], hairFront: [] };
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
@@ -242,6 +244,7 @@ export function buildCreature(spec, noise, birth = 0) {
     headGroup,
     earGroup,
     crownGroup,
+    bangsGroup,
     faceGroup,
     tailGroup,
     tailTipGroup,

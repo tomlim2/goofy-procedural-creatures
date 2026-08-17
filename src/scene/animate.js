@@ -13,6 +13,7 @@ const EMOJI_TARGET = new THREE.Vector3();
 // 뿔·머리카락·모자는 얼굴을 따라 덜, 귀는 **반대로** — 머리가 돌면 귀는 얼굴 반대편으로 돌아 나간다
 const CROWN_PARALLAX = [0.45, 0.3];
 const EAR_PARALLAX = [-0.4, -0.15];
+const BANGS_PARALLAX = [0.12, 0.08];   // 앞머리 — 얼굴 위에 있지만 머리에 붙은 것이라 아주 조금만
 
 // snap: 관절을 이징 없이 목표각으로 즉시 (바인드 뷰). boil: 보일 3벌 순환 여부 (선 질감).
 // 둘은 다른 축이다 — 바인드 포즈에서도 선은 끓을 수 있고, 모션 중에도 선을 고정할 수 있다.
@@ -49,6 +50,8 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.crownGroup.position.y = turnY * item.headRy * 0.16 * CROWN_PARALLAX[1];
   item.earGroup.position.x = turnX * item.headRx * 0.26 * EAR_PARALLAX[0];
   item.earGroup.position.y = turnY * item.headRy * 0.16 * EAR_PARALLAX[1];
+  item.bangsGroup.position.x = turnX * item.headRx * 0.26 * BANGS_PARALLAX[0];
+  item.bangsGroup.position.y = turnY * item.headRy * 0.16 * BANGS_PARALLAX[1];
 
   // 꼬리 — 뿌리 각 + 끝 마디 상대각 + 부풀림(놀람, 균일 배율)
   if (item.tailGroup) {
