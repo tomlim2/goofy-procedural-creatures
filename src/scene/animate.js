@@ -54,10 +54,10 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     item[key].position.y = shiftY * ky;
   }
 
-  // 꼬리 — 네 마디 체인. 뿌리 각(tailAngle) + 끝 마디 상대각(tailTip) + 세움(tailRaise: 관절마다 쉼 자세 → 목표 자세로 섞음) + 부풀림
+  // 꼬리 — 네 마디 체인. 뿌리 각(tailAngle) + 끝 마디 상대각(tailTip) + 세움(tailRaise: 관절마다 쉼 자세 → 목표 자세로 섞음) + 곤두섬(tailPuff)
   if (item.tailGroup) {
-    const puff = 1 + 0.3 * (state.tailPuff || 0);
-    item.tailGroup.scale.set(puff, puff, 1);
+    // 곤두섬 — **굵기만** 1 → 1.6배 (길이는 그대로): 마디마다 쉼 자세 척추 방향에 수직으로 스케일 (rig의 thick 그룹 — R(θ)·S(1,p)·R(−θ)). 눈(동공)과 같은 봉투
+    const puff = 1 + 0.6 * (state.tailPuff || 0);
     const bones = item.tailBones;
     const n = bones.length;
     const raise = state.tailRaise || 0;
@@ -77,6 +77,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       if (i === 0) rot += state.tailAngle;
       if (i === n - 1) rot += state.tailTip || 0;
       b.group.rotation.z = rot;
+      if (b.thick) b.thick.scale.y = puff;
     }
   }
 

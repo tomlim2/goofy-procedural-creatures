@@ -86,7 +86,7 @@ export const MOTION = {
     wink: [8, 20], happyHold: null,
     // 고양이 꼬리 — 개와 반대: 빠른 움직임은 짜증·흥분, 기쁨은 **세우는 것**. 느린 스위시(리듬) 위에 끝 마디 모션이 얹힌다
     //   follow 팔로스루(끝이 뿌리 속도에 늦게 따라옴) · twitch 끝만 톡톡(tailFlick 간격을 끝 마디에 씀) · lash 놀람(plain) 시작 때 채찍질 확률 ·
-    //   raise ♥ 놀람·♥ 이모지 때 세움 [유지 s] + 끝 떨림 quiver [amp, hz] · puff 놀람 순간 부풀림 배율
+    //   raise ♥ 놀람·♥ 이모지 때 세움 [유지 s] + 끝 떨림 quiver [amp, hz] · puff 곤두섬 배율(놀란 동안 굵기만 — 동공과 같은 0.1/3.8/0.1 봉투)
     tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [8, 20],
     tailTip: { follow: 0.06, twitch: { amp: 0.35, hz: 6, dur: 0.5 }, lash: 0, raise: { hold: [3, 5], angle: 0.9, quiver: [0.08, 12] }, puff: 1 },   // 채찍질(lash)은 금지 — 고양이가 꼬리를 치는 모션은 없다
     surprise: [9, 24], yaw: 0.8,

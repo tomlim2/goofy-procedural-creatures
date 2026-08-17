@@ -290,16 +290,14 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         damp(happyWag, isHappy && !asleep ? 1 : 0, 0.3);
         if (happyWag.x > 0.01) tailAngle += Math.sin(t * Math.PI * 2 * M.wagOnHappy.hz) * M.wagOnHappy.amp * happyWag.x;
       }
-      // 놀람에 딸린 꼬리 — 채찍질(plain 변형 시작 때 lash 확률) · 세움(♥ 변형 시작 때) · 부풀림(시작 순간)
-      let tailPuff = 0;
+      // 놀람에 딸린 꼬리 — 채찍질(plain 변형 시작 때 lash 확률) · 세움(♥ 변형 시작 때) · 곤두섬(놀란 동안)
       if (TT && quad && startleBefore < 0 && surprise.start >= 0 && !asleep) {
         if (surprise.variant === "heart" && TT.raise) startRaise(t);
         else if (surprise.variant === "plain" && TT.lash > 0 && rng.chance(TT.lash)) lash.start = t;
       }
-      if (TT && TT.puff && surprise.start >= 0) {
-        const kp = (t - surprise.start) / 1.2;
-        if (kp < 1) tailPuff = envelope(kp, 0.1, 0.5) * TT.puff;
-      }
+      // 곤두섬 — 사람 눈이 깜짝 놀랄 때의 타이밍 법칙 그대로, 동공과 **같은 시계**: 0.1초 만에 곤두서고 놀란 3.8초 내내 서 있다가 0.1초에 가라앉는다
+      // (startle = events.stepSurprise 봉투 × 깨어 있음). 굵기만 부푼다 (scene이 마디마다 척추에 수직으로 스케일)
+      const tailPuff = TT && quad && TT.puff ? startle * TT.puff : 0;
       if (lash.start >= 0) {
         // 채찍질 — 뿌리+끝 크게 3번, 1초. 끝은 같은 방향으로 조금 덜
         const k = (t - lash.start) / 1.0;

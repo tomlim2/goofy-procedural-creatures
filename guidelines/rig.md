@@ -13,6 +13,7 @@ group                        ← 원점 = 발바닥. 스웨이·부르르·점�
 │   ├── bodyFrame ×3         ← 보일 변형. 몸 채색+잉크 한 메시(1.5)
 │   ├── tailGroup            ← 꼬리 뿌리에 피벗 (네발). 0.8 — 몸통·머리 뒤
 │   │   └── bone[0] ⊃ bone[1] ⊃ bone[2] ⊃ bone[3]  ← 네 마디 체인 (관절 = 척추 4등분점). bone[0]에 tailAngle, bone[3]에 tailTip, tailRaise는 관절마다 목표각(세움)
+│   │       └── along(θ) ⊃ thick ⊃ back(−θ) ⊃ 마디 메시  ← 곤두섬(tailPuff): thick.scale.y — 쉼 자세 척추 방향 θ에 **수직으로만** 굵어진다 (길이·관절 자리 그대로)
 │   └── limb pivot ×N        ← 어깨·엉덩이 피벗
 │       ├── front             ← 위팔 (또는 다리). renderOrder 2.5
 │       │   └── elbow         ← 팔꿈치 피벗 + 아래팔 (팔만). 어깨각·팔꿈치각 따로
@@ -85,7 +86,7 @@ emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머
 - **crownGroup / earGroup / hairGroup** — headGroup과 같은 원점(목). 얼굴 돌림 때 position만 — 뿔·두피 위 머리카락·모자는 x 0.45배 · y 0.3배 같은 방향, 귀는 x −0.4배 · y −0.15배 반대 방향, 뒷머리·앞머리는 둘 다 x 0.12배 · y 0.08배(아주 조금, 같은 비율 — 앞뒤 머리채가 갈라지지 않게). scale은 건드리지 않는다 — 부속물은 자리만 옮기지 크기가 변하지 않는다
 - **limb pivot** — 어깨(bodyTop 아래 22%, 몸통 좌우 윤곽 위 — 형태별 반폭 box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다. 팔은 `bindArm(side)`(T포즈)로 세우고 clock의 `state.arms`가 관절각을 준다
 - **elbow** — 위팔 끝. 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽는다. 위팔:아래팔 = 0.48:0.52. 같은 치수를 `armRig(spec)`이 clock에 넘겨 행위를 IK로 푼다
-- **tailGroup** — 꼬리 뿌리(몸 뒤끝). 안에 **네 마디 체인**(`tailSketch().bones` — 관절 원점·쉼 자세 방향). 스킨은 마디들에 이어 굽는다
+- **tailGroup** — 꼬리 뿌리(몸 뒤끝). 안에 **네 마디 체인**(`tailSketch().bones` — 관절 원점·쉼 자세 방향). 스킨은 마디들에 이어 굽는다. 마디 메시는 along(θ)·thick·back(−θ) 세 그룹 안 — 곤두섬은 thick.scale.y(척추에 수직)만
 - **eyeRig** — 눈 중심. pupil.scale이 놀람(1 → 0.5), pupil.position이 시선, lid.scale.y가 눈꺼풀. 리그 자체는 안 커진다
 
 ## 무엇을 굽고 무엇을 변형하나
@@ -94,7 +95,7 @@ emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머
 | --- | --- |
 | 층 12개(몸·뒷머리·옆귀·머리·뿔/머리카락·개/고양이 귀·모자·얼굴·정지 눈 ×2(눈마다)·얼굴 앞·앞머리) × 보일 3벌 — 층당 메시 하나(얼굴·정지 눈은 채색·잉크 둘) | visible 토글 (정지 눈은 눈마다 — 잠·^^·윙크·놀람 변형에 그 눈만 끈다) |
 | 팔다리 지체 (front, back) | pivot.rotation.z, elbow.rotation.z (이징된 목표각 + 이징 없는 진동), front/back visible |
-| 꼬리 | rotation.z |
+| 꼬리 | 관절 rotation.z · 마디 thick.scale.y(곤두섬 — 굵기만) |
 | 눈썹·입 쉼/대체 | visible |
 | 눈 리그 | pupil.scale(놀람 — 동공 1 → 0.5배), pupil.position(시선), visible (open 뜬 눈 / shut 감은 선 / smile ^^) |
 | — | group·headGroup·crownGroup·earGroup·hairGroup·faceGroup의 position/rotation/scale — group.position.x에는 걷기로 옮긴 자리(walkX), group.scale.x에는 네발이 걷는 방향(facing ±1)이 들어간다 |

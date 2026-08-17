@@ -87,7 +87,9 @@ export function buildCreature(spec, noise, birth = 0) {
 
   // 꼬리 — 네 마디 체인 (limbs.js TAIL_BONES). tailGroup(뿌리 피벗) 안에 마디 그룹이 관절마다 겹겹이 들어간다: bone[i]는 bone[i-1]의 자식,
   // 원점은 관절(쉼 자세 척추 위). 몸통·머리 **뒤**(0.8) — 몸에 걸치는 부분(고리·말림)은 가려진다.
-  // animate: bone[0]에 tailAngle(스위시·wag·걷기·잠), 끝 마디에 tailTip(톡톡·떨림·팔로스루), 세움(tailRaise)은 관절마다 쉼→곧게 목표각을 섞는다
+  // animate: bone[0]에 tailAngle(스위시·wag·걷기·잠), 끝 마디에 tailTip(톡톡·떨림·팔로스루), 세움(tailRaise)은 관절마다 쉼→곧게 목표각을 섞는다.
+  // 곤두섬(tailPuff)은 **굵기만** — 마디 메시를 R(θ)·S(1,p)·R(−θ) 세 그룹(along·thick·back)으로 감싸 쉼 자세 척추 방향(θ)에 수직으로만 스케일한다.
+  // 관절(g)의 회전·자식 마디는 그 밖에 있어 길이·자리는 그대로다
   let tailGroup = null;
   const tailBones = [];
   const tail = tailSketch(spec);
@@ -99,9 +101,20 @@ export function buildCreature(spec, noise, birth = 0) {
     tail.bones.forEach((bone, i) => {
       const g = new THREE.Group();
       g.position.set(bone.origin[0] - prev[0], bone.origin[1] - prev[1], 0);
-      if (!tail.sketches[i].empty) g.add(sketchMesh(tail.sketches[i], 1, 0.8));
+      let thick = null;
+      if (!tail.sketches[i].empty) {
+        const along = new THREE.Group();
+        along.rotation.z = bone.angle;
+        thick = new THREE.Group();
+        const back = new THREE.Group();
+        back.rotation.z = -bone.angle;
+        back.add(sketchMesh(tail.sketches[i], 1, 0.8));
+        thick.add(back);
+        along.add(thick);
+        g.add(along);
+      }
       parent.add(g);
-      tailBones.push({ group: g, restAngle: bone.angle });
+      tailBones.push({ group: g, restAngle: bone.angle, thick });
       parent = g;
       prev = bone.origin;
     });
