@@ -129,8 +129,7 @@ export function buildCreature(spec, noise, birth = 0) {
     });
   }
 
-  // 눈 리그 — 흰자·윤곽·동공·눈꺼풀·스마일·감은 선을 그룹으로 묶는다. 종류: ring/wide/cyclops(둥근 흰자) · oval(세로 타원 흰자) ·
-  // bead(단추눈 — 흰자 없이 검은 구슬 + 하이라이트, 시선은 조금만)
+  // 눈 리그 — 흰자·윤곽·동공·스마일·감은 선을 그룹으로 묶는다. 종류: ring/wide/cyclops(둥근 흰자) · oval(세로 타원 흰자)
   const eyeRigs = [];
   const eyeKind = spec.parts.eyes;
   const shape = eyeShape(spec);
@@ -142,9 +141,8 @@ export function buildCreature(spec, noise, birth = 0) {
     rig.position.set(eye.x, eye.y - faceCy, 0);
     const rx = eye.r * shape.sx, ry = eye.r * shape.sy;
     const o = 3 + eyeOrder.indexOf(eye) * 0.5;   // 이 눈의 블록 시작
-    const bead = eyeKind === "bead";
 
-    if (!bead) {
+    {
       const white = new Sketch(noise, 0.4);
       // 완전한 원이 아니라 살짝 찌그러진 손그림 원 — 노이즈를 준다 (눈마다 위상 다르게)
       const wob = { lumps: 3, amount: 0.06, noise, phase: eye.side * 3.7 + spec.seed * 0.001 };
@@ -159,16 +157,7 @@ export function buildCreature(spec, noise, birth = 0) {
     }
 
     const pupilSketch = new Sketch(noise, 0.4);
-    if (bead) {
-      // 구슬 + 왼쪽 위 하이라이트. 하이라이트도 동공 메시라 놀람 수축·시선을 같이 탄다.
-      // 먹빛 머리(도깨비)에선 검은 구슬이 묻히니 밝은 얼굴 잉크로 테를 두른다
-      const ball = blobPath(0, 0, eye.r * 0.85, eye.r * 0.85, { lumps: 3, amount: 0.08, noise: null });
-      pupilSketch.fill(ball, spec.palette.ink);
-      if (spec.faceInk) pupilSketch.outline(ball, { color: spec.faceInk, width: 0.01 });
-      pupilSketch.fill(blobPath(-eye.r * 0.3, eye.r * 0.32, eye.r * 0.2, eye.r * 0.17, { lumps: 3, amount: 0.1, noise: null }), "#f6f2e9");
-    } else {
-      pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
-    }
+    pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
     const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
     rig.add(pupil);
     // 뜬 눈(흰자·테·동공)은 open 그룹 — 감을 때 **덮지 않고 끈다**. 그 자리에 반감김·감은 선·^^ 글리프 중 하나가 대신 선다
@@ -197,7 +186,7 @@ export function buildCreature(spec, noise, birth = 0) {
 
     faceGroup.add(rig);
     // gazeScale: 시선에 동공이 움직이는 폭(눈 반지름 배). 구슬눈은 동공이 곧 눈이라 조금만
-    eyeRigs.push({ rig, open, pupil, smile, shut, eye, gazeScale: bead ? 0.12 : 0.34 });
+    eyeRigs.push({ rig, open, pupil, smile, shut, eye, gazeScale: 0.34 });
   }
 
   // 정지 눈(dot·sleepy·cross·spiral·slit·half…)의 감은 눈 — 잠(감은 눈 선)·^^·윙크(미소 아치). 덮개는 없다: 그때는 정지 눈 프레임을

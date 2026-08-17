@@ -37,7 +37,7 @@ const STATES = {
   turnDsurp: { faceTurn: [0, -1], startle: 1 }, sleepTurn: { sleep: 1, lid: 1, faceTurn: [0.5, -0.5] },
   starEyes: { startle: 1, eyeFx: { kind: "star", k: 1 } }, heartEyes: { startle: 1, eyeFx: { kind: "heart", k: 1 } }
 };
-const RIG_KINDS = ["ring", "wide", "cyclops", "bead", "oval"];
+const RIG_KINDS = ["ring", "wide", "cyclops", "oval"];
 // "보인다"의 문턱 — 머리 폭의 4%(픽셀). 점 입·점 코·주근깨 하나·작은 눈썹 하나가 이 정도다. 화면이 작으면 문턱도 내려간다
 const minPixels = (headPx) => Math.max(3, Math.round(headPx * 0.04));
 

@@ -13,7 +13,7 @@ export function patched(spec, eye) { return spec.parts.eyewear === "patch" && sp
 export const EYE_SHAPE = { oval: { sx: 0.82, sy: 1.22 } };
 export function eyeShape(spec) { return EYE_SHAPE[spec.parts.eyes] || { sx: 1, sy: 1 }; }
 // 살아 있는 눈(리그로 세우는 눈) — 나머지는 얼굴 잉크에 정적으로 굽는다
-export const RIG_EYES = ["ring", "wide", "cyclops", "bead", "oval"];
+export const RIG_EYES = ["ring", "wide", "cyclops", "oval"];
 
 // 별(☆) 꼭짓점 목록 — 바깥 r, 안쪽 r·inner, 위가 뾰족. 놀람의 ☆_☆ 눈 덮개(scene/rig.js)가 쓴다
 export function starPath(cx, cy, r, inner = 0.45) {
@@ -116,7 +116,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       });
       fills.fill(blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink0);
     }
-    // ring / wide / cyclops / bead / oval(RIG_EYES)은 여기서 그리지 않는다. scene이 흰자·동공·눈꺼풀을
+    // ring / wide / cyclops / oval(RIG_EYES)은 여기서 그리지 않는다. scene이 흰자·동공·감은 선을
     // 별도 메시로 세워 놀람(동공 수축)·시선·눈꺼풀을 움직인다.
   }
 }

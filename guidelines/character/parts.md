@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 21슬롯 148파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 21슬롯 147파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -29,13 +29,12 @@
 
 머리는 그 위에 노이즈 혹(headLumps)이 얹히고, 연필 스크리블 채움이 덮인다.
 
-### eyes — 눈 종류 (17)
+### eyes — 눈 종류 (16)
 | 값 | 그리기 | 살아 있나 (동공·깜빡임) |
 | --- | --- | --- |
 | ring | 흰자 + 윤곽 + 동공 | ● 눈 리그 |
 | wide | ring보다 1.3배 크게 (`eyeGeometry`) | ● |
 | cyclops | 중앙 외눈 하나, 1.75배 | ● (side 0) |
-| bead | 단추눈 — 흰자 없이 검은 구슬(0.85r) + 왼쪽 위 하이라이트. 먹빛 머리엔 밝은 테. 시선은 조금만(0.12r) | ● |
 | oval | 세로 타원 왕눈 — 흰자 0.82r × 1.22r (`EYE_SHAPE`), 눈꺼풀도 그 높이 | ● |
 | dot | 검은 점 | ✗ 정적 |
 | line | 일자눈 ㅡ ㅡ — 무표정 대시 | ✗ |
@@ -55,8 +54,9 @@
 | slit | 아몬드 윤곽(반높이 0.7r) + **채운** 세로 방추 동공 (얇은 획이면 작을 때 안 읽힌다) | ✗ |
 
 정적인 눈은 얼굴 잉크(faceGroup)에 굽는다 — 얼굴 돌림을 같이 따라간다. 살아 있는 눈(`RIG_EYES`)만 별도 눈 리그(흰자·윤곽·동공·눈꺼풀·^^·감은 선)로 세운다.
-새 여덟(bead·oval·line·happy·hollow, 카오모지의 squeeze·side·droop)은 아직 종족을 안 가른다 — 모든 종족·아키타입
-bias에 같은 무게(1.5, hollow·squeeze·side·droop 1)로 들어 있다. (세모 눈 ◣_◢은 눈이 가까우면 하나로 붙어 빠졌고, ☆·♥은 놀람 변형으로 옮겼고, ◕ 눈망울 눈은 뺐다)
+새 일곱(oval·line·happy·hollow, 카오모지의 squeeze·side·droop)은 아직 종족을 안 가른다 — 모든 종족·아키타입
+bias에 같은 무게(1.5, hollow·squeeze·side·droop 1)로 들어 있다. (세모 눈 ◣_◢은 눈이 가까우면 하나로 붙어 빠졌고, ☆·♥은 놀람 변형으로 옮겼고,
+하이라이트 있는 눈망울 눈 둘 — 단추눈 bead·◕ sparkle — 은 뺐다)
 선으로만 그리는 눈(sleepy·line·happy·squeeze·droop·cross·half·side)은 좌우 대칭이다 — 짝눈은 흰자·동공이 있는 눈에만
 ([rules.md](rules.md)). 안대에 가린 눈은 `patched(spec, eye)`로 건너뛴다 — 안대가 있을 때만 (patchSide만 보면 안대가 뒤늦게 빠졌을 때 눈이 같이 사라진다).
 
