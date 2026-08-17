@@ -210,6 +210,8 @@ export function drawPupEars(ink, fills, spec, box) {
     const px = side * ay, py = -side * ax;
     const local = (u, v) => [bx + ax * u + px * v, by + ay * u + py * v];
     let path;
+    let flap = null;    // 접힌 귀의 덮개 — 밑동 위에 겹쳐 그린다
+    let crease = null;  // 접힘선 — 검은 털에서는 두 조각의 색이 같아 선이 없으면 접힌 게 안 보인다
     if (kind === "pointy") {
       // 세모귀 — **꼭짓점이 머리에 붙는다**(밑변이 아니다). 제일 위 꼭짓점을 윤곽(네모 머리면 모서리)에 박고,
       // 몸통은 거기서 바깥·아래로 처진다: 밑변이 바깥 끝. 크기 배율로 길고 넓게
@@ -229,14 +231,20 @@ export function drawPupEars(ink, fills, spec, box) {
       const [cx, cy] = local(-OUT + 0.055 * size, 0);
       path = rotate(blobPath(cx, cy, 0.036 * size, 0.046 * size, { lumps: 3, amount: 0.15, noise: null }), cx, cy, side * lean);
     } else if (kind === "fold") {
-      // 접힌 귀 — 윤곽에서 귀 축을 따라 올라갔다가 끝이 바깥·아래로 접혀 처진다 (중력 방향). 크기 배율
-      const b0 = -OUT - 0.01;
+      // 접힌 귀 — **선 밑동 + 그 위에서 바깥·아래로 꺾여 늘어진 덮개** 두 조각. 덮개가 밑동을 덮으며 접힘선이 드러난다.
+      // 끝이 위를 향해 굽으면 뿔로 읽힌다 — 덮개는 접힘선보다 **아래로** 내려와야 접힌 귀다. 크기 배율
       const k = size;
-      const [ux, uy] = local(0.06 * k, 0.02);       // 접히는 지점
-      path = [
-        local(b0, 0.045 * k), local(0.05 * k, 0.05 * k), [ux + side * 0.02 * k, uy], [ux + side * 0.055 * k, uy - 0.05 * k],
-        [ux + side * 0.02 * k, uy - 0.07 * k], [ux - side * 0.005, uy - 0.03 * k], local(0.02, -0.03 * k), local(b0, -0.03 * k)
+      const halfW = 0.05 * k;          // 밑동 반폭 — 세모귀처럼 넓다
+      const foldU = 0.085 * k;         // 접힘선 높이
+      path = [local(-OUT - 0.008, halfW), local(foldU, halfW * 0.72), local(foldU, -halfW * 0.72), local(-OUT - 0.008, -halfW)];
+      // 덮개 — 접힘선에서 **아래로 늘어진 세모**가 밑동 윗부분을 덮는다 (귀 끝이 앞으로 넘어간 것).
+      // 끝이 위를 향하면 뿔, 옆으로만 뻗으면 깃발이 된다 — 접힘선보다 확실히 **아래**로 내려오고 밑동 밖으로 조금 나가야 접힌 귀다
+      flap = [
+        local(foldU + 0.008 * k, -halfW * 0.75),  // 접힘선 안쪽 끝
+        local(foldU + 0.004 * k, halfW * 1.5),    // 접힘선 바깥 끝 — 밑동 밖으로 나간다
+        local(foldU - 0.06 * k, halfW * 0.55)     // 아래로 늘어진 끝
       ];
+      crease = [local(foldU, -halfW * 0.72), local(foldU + 0.004 * k, halfW * 1.35)];
     } else {
       // flap / long — 머리 옆에서 늘어지되 반대 기울기(0.25rad 안쪽)로 끝이 얼굴 쪽으로 모이는 로브
       const len = ry * (kind === "long" ? 0.95 : 0.65);
@@ -247,6 +255,12 @@ export function drawPupEars(ink, fills, spec, box) {
     }
     fills.fill(path, earFill);
     ink.outline(path, earInk);
+    if (flap) {
+      // 덮개는 귀 안쪽 면이라 조금 더 어둡다 — 밝은 털에서는 색으로, 검은 털에서는 접힘선으로 읽힌다
+      fills.fill(flap, shade(earFill, 0.78));
+      ink.outline(flap, earInk);
+      ink.stroke(crease, { color: spec.palette.ink, width: 0.009 });
+    }
   }
 }
 
