@@ -102,7 +102,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // 빈 눈 — 보통 눈(ring)에서 동공만 뺀 것. 어느 종족이든 흰자 + 윤곽, 동공 없음 (도깨비도 검은 눈구멍이 아니라 흰 눈).
       // 채움과 윤곽을 **같은 스케치(fills)** 에 눈마다 이어 그린다 — 두 눈이 겹치면 나중 눈(큰 눈)이 앞 눈의 윤곽을 덮는다 (교차선 없음).
       // 그러려면 작은 눈부터: 큰 눈이 뒤에 그려져 앞이 된다
-      const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null });
+      const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // 살짝 찌그러진 원
       fills.fill(path, "#f6f2e9");
       fills.outline(path, { color: spec.palette.ink, width: 0.011, passes: 2 });
     } else if (kind === "half") {
@@ -110,7 +110,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양
       const lidY = eye.r * 0.3;
       const a0 = Math.asin(lidY / eye.r);   // 눈꺼풀 선이 원과 만나는 각
-      ink.stroke(arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18), { color: ink0, width: 0.011 });
+      ink.stroke(arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18), { color: ink0, width: 0.011, jitter: 0.006 });
       ink.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], {
         color: ink0, width: 0.013
       });
@@ -214,7 +214,7 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
     // 안대는 **물건**이라 늘 검다 — 도깨비의 밝은 얼굴 잉크로 채우면 흰 덩어리가 돼 실수처럼 보인다.
     // 먹빛 머리에서는 밝은 테로 윤곽을 잡아 검은 안대가 읽히게 한다. 끈은 얼굴 잉크(밝은 머리 검정, 먹빛 머리 밝음)
     const eye = eyes.find((e) => e.side === spec.parts.patchSide) || eyes[0];
-    const patch = blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.35, { lumps: 4, amount: 0.12, noise: null });
+    const patch = blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.35, { lumps: 4, amount: 0.12, noise: fills.noise, phase: 1.3 });   // 살짝 찌그러진 안대
     fills.fill(patch, spec.palette.ink);
     if (spec.faceInk) ink.outline(patch, { color: spec.faceInk, width: 0.01, passes: 2 });
     // 끈은 머리를 가로지른다

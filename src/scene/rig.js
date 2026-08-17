@@ -147,11 +147,13 @@ export function buildCreature(spec, noise, birth = 0) {
 
     if (!bead) {
       const white = new Sketch(noise, 0.4);
-      white.fill(blobPath(0, 0, rx, ry, { lumps: 3, amount: 0.08, noise: null }), "#f6f2e9");
+      // 완전한 원이 아니라 살짝 찌그러진 손그림 원 — 노이즈를 준다 (눈마다 위상 다르게)
+      const wob = { lumps: 3, amount: 0.06, noise, phase: eye.side * 3.7 + spec.seed * 0.001 };
+      white.fill(blobPath(0, 0, rx, ry, wob), "#f6f2e9");
       rig.add(sketchMesh(white, 1, o));
 
       const rim = new Sketch(noise, 0.6);
-      rim.outline(blobPath(0, 0, rx, ry, { lumps: 4, amount: 0.1, noise: null }), {
+      rim.outline(blobPath(0, 0, rx, ry, { ...wob, lumps: 4, amount: 0.07 }), {
         color: spec.palette.ink, width: 0.011, passes: 2
       });
       rig.add(sketchMesh(rim, 1, o + 0.1));
