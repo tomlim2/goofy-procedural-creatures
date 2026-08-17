@@ -65,7 +65,7 @@ export const SPECIES = [
       headgear: [["none", 8], ["cap", 1]],
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
-      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1]],
+      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
       marks: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1]],
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
       tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // 개는 굵거나 북슬(스피츠), 토끼 같은 몽실 꼬리도. ringed·wedge 비활성
@@ -109,7 +109,7 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
       // 코 — 고양이는 슬롯을 고양이 코로 읽는다(face.js catNose): dot 작은 세모 · wedge 하트 · hook 세모+인중 · long 넓적+긴 인중 · none 없음
       nose: [["dot", 3], ["wedge", 2], ["hook", 2], ["long", 1], ["none", 1.5]],
-      eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["cross", 2], ["wide", 2], ["dot", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 2], ["sharp", 2]],
+      eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["cross", 2], ["wide", 2], ["dot", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 2], ["sharp", 2], ["soft", 2]],
       // 입 — ω 압도적, 뒤집은 ω(smug), 오므린 3, 선·점, 야옹 o(meow), 혀 빼꼼(blep). 물결·웃음은 없다 (레퍼런스 4줄)
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
@@ -138,7 +138,7 @@ export const SPECIES = [
       hair: [["none", 6], ["spikes", 2]],
       headgear: [["none", 1]],
       eyewear: [["none", 6], ["patch", 2], ["goggles", 1]],
-      eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2]],
+      eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2], ["soft", 2]],
       nose: [["none", 4], ["dot", 2]],
       // 입 — 넓다(종족 배율 1.3 + wide). 이빨 격자·해칭 뭉치·지그재그·큰 송곳니·이빨 띠 두 줄로 벌린 shout·open (레퍼런스 5줄)
       mouth: [["grimace", 3], ["scribble", 2], ["zigzag", 2], ["fangs", 3], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["smug", 1], ["line", 0.5]],
