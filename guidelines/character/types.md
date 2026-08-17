@@ -33,7 +33,7 @@
 
 | 종족 | 가중치 | 골격 | 색 | 전용/편향 파츠 | 지배 모션 |
 | --- | --- | --- | --- | --- | --- |
-| **human** | 5 | 두발 | 팔레트 그대로 | forbid: 뿔 전부→none, cyclops→wide, 긴 팔(long)→medium, 귀는 none·round만(뾰족·늘어짐·접힘→round/none — 동물 귀는 사람 것이 아니다). 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 행위(인사·팔짱·생각…) |
+| **human** | 5 | 두발 | 팔레트 그대로 | forbid: 뿔 전부→none, cyclops→wide, 긴 팔(long)→medium, 귀는 none·round만(뾰족·늘어짐·접힘→round/none — 동물 귀는 사람 것이 아니다), 눈물 자국(tears)→none. 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 행위(인사·팔짱·생각…) |
 | **pup** | 2 | 네발 | 머리(털)색, 몸은 같거나 비슷한 톤 | 늘어진 귀(flap/long), 주둥이+검은 코(코 슬롯이 형태 결정), 입은 주둥이 위 코 밑, 꼬리 골격 flag/stubtail/ring × 스킨 thick/plume, 얼룩, 다리 stub 위주(stick·float·boots) | 머리 롤 상시·킁킁 딥, ^^ 행복 눈 유지, 꼬리 플릭 |
 | **cat** | 2 | 네발 | 머리(털)색, 몸은 같거나 비슷한 톤 | 정수리 세모귀(pointy/fold), 수염(개체별 길이 — 긴 건 윤곽 밖으로), ω 입, 세로동공(slit), 꼬리 골격 curl/longtail/hook/kink × 스킨 line/ringed, 다리 stub·stick(float·boots) | 꼬리 스위시 상시, 윙크, 갸웃 크게, 기지개 |
 | **imp** | 2 | 두발 | 머리 DARKS 9색(먹·회갈·회청·자흑·녹흑…) 중 하나, 몸은 머리색 50% / 밝은 톤 30% / 어두운 톤 20% (같은 계열), 얼굴은 종이색, 잉크는 #1c1917 | 긴 뿔(1.8배: curved/straight/antenna/ram/crown), 외눈(cyclops), 지그재그 입, 스텁 팔 — 또는 **팔 없음**(arms none, ≈23%), **바닥을 쓰는 긴 팔(long)은 도깨비만** (bias 3:2, 40%) | 젤리 워블 상시, 부르르·놀람 잦게, 만세·파닥임 잦게, "..." 중얼 |

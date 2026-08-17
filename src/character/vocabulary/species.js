@@ -12,6 +12,7 @@ export const SPECIES = [
     // 결정적으로 덮어쓴다 — 아키타입 성향(scholar의 dot 눈 등)은 살아 있다.
     forbid: {
       arms: { none: "stick" },   // 사람은 팔이 있다 (팔 없음은 도깨비의 것)
+      face2: { tears: "none" },  // 눈물 자국은 사람에게 안 준다 (도깨비의 것)
       // 사람 귀는 사람 귀뿐 — 작은 동그란 귀(round)나 없음. 동물 귀(뾰족·늘어짐·접힘·긴 귀)는 사람에게 안 준다
       ears: { roundMid: "round", roundBig: "round", pointy: "round", pointyMid: "round", pointyBig: "round", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
