@@ -35,8 +35,11 @@ export const SLOTS = {
   // 꼬리 **골격** — 척추 모양만. curl 위로 말림 · flag 위로 곧게 · longtail 뒤로 길게 · stubtail 뭉툭 · hook 위로 섰다 갈고리(고양이) ·
   // kink 꺾인 꼬리(고양이) · ring 등 위로 말린 고리(스피츠). 무엇을 입히나는 tailSkin
   tail: ["curl", "flag", "longtail", "stubtail", "hook", "kink", "ring"],
-  // 꼬리 **스킨** — 골격 위에 입히는 것. line 가는 선 한 획 · thick 채운 굵은 꼬리 · plume 북슬한 깃털(털 획) · tuft 끝 뭉치(사자) · ringed 고리 무늬(너구리)
-  tailSkin: ["line", "thick", "plume", "tuft", "ringed"],
+  // 꼬리 **스킨** — 골격 위에 입히는 것. line 가는 선 한 획 · thick 채운 굵은 꼬리 · plume 북슬한 깃털(털 획) · tuft 끝 뭉치(사자) · ringed 고리 무늬(너구리) ·
+  // block 네모(폭 일정, 끝이 각짐) · wedge 세모(뿌리 넓고 끝 뾰족) · ball 동그라미(척추를 따라 구슬, 스텁이면 폼폼 하나)
+  tailSkin: ["line", "thick", "plume", "tuft", "ringed", "block", "wedge", "ball"],
+  // 꼬리 **기장** — 골격을 통째로 줄인다 (long 1 · medium 0.7 · short 0.45). 스킨 두께는 그대로
+  tailLength: ["long", "medium", "short"],
   // 팔 형태. 자세(늘어짐·벌림·들기·뒷짐)는 여기 없다 — 그건 clocks.js의 모션이다. none은 팔 없음(도깨비 일부) — 팔 행위 층이 쉰다
   arms: ["stick", "sleeve", "stubby", "mitten", "none"],
   // 팔 길이. 형태와 독립이라 짧은 소매 팔, 매우 긴 장갑 팔이 다 나온다.
@@ -54,7 +57,7 @@ export const SLOTS = {
 // 뒤늦게 붙인 슬롯. makeCreature가 다른 모든 것(파츠·제약·색·비율) 뒤에 뽑는다 —
 // 그래야 앞선 rng 소비가 그대로라 기존 시드의 판이 유지된다(새 슬롯 값만 더해진다).
 // 새 슬롯은 여기 끝에 붙인다. 순서를 바꾸면 이 슬롯들의 값이 바뀐다.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength"];
 
 // 아키타입 bias가 없는 슬롯의 기본 가중치.
 //
@@ -75,7 +78,8 @@ export const DEFAULT_BIAS = {
   face2: [["none", 5], ["blush", 2], ["freckles", 2], ["tears", 1.5]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2], ["hook", 1.5], ["kink", 1], ["ring", 1.5]],
-  tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["ringed", 1]],
+  tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["ringed", 1], ["block", 1], ["wedge", 1], ["ball", 1]],
+  tailLength: [["long", 3], ["medium", 2], ["short", 1.5]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],

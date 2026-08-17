@@ -62,7 +62,7 @@ export function buildCreature(spec, noise, birth = 0) {
   if (!tail.sketch.empty) {
     tailGroup = new THREE.Group();
     tailGroup.position.set(tail.pivot[0], tail.pivot[1], 0);
-    tailGroup.add(sketchMesh(tail.sketch, 1, 2));
+    tailGroup.add(sketchMesh(tail.sketch, 1, 0.8));   // 꼬리는 몸통·머리 **뒤** — 몸에 걸치는 부분(고리·말림)은 가려진다
     bodyGroup.add(tailGroup);
   }
 

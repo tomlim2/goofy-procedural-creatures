@@ -285,7 +285,9 @@ export function tailSketch(spec) {
   const ink0 = spec.palette.ink;
   const cx = box.bodyCx;
   const pivot = [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1];
-  const spine = tailSpine(spec.parts.tail, p.tailLift);
+  // 기장 — 골격을 통째로 줄인다 (long 1 · medium 0.7 · short 0.45). 스킨 두께는 그대로
+  const lenK = spec.parts.tailLength === "short" ? 0.45 : spec.parts.tailLength === "medium" ? 0.7 : 1;
+  const spine = tailSpine(spec.parts.tail, p.tailLift).map(([x, y]) => [x * lenK, y * lenK]);
   const skin = spec.parts.tailSkin || "line";
   const stub = spec.parts.tail === "stubtail";
   const fur = spec.palette.skin;   // 털색 = 머리색 (개·고양이는 몸도 같은 계열)
@@ -319,6 +321,34 @@ export function tailSketch(spec) {
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
     sketch.fill(ball, darken(fur, 0.82));
     sketch.outline(ball, { color: ink0, width: 0.01 });
+  } else if (skin === "block") {
+    // 네모 — 폭이 일정하고 끝이 각진 띠
+    const body = tubePath(spine, () => (stub ? 0.024 : 0.019));
+    sketch.fill(body, fur);
+    sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
+  } else if (skin === "wedge") {
+    // 세모 — 뿌리 넓고 끝이 뾰족한 쐐기
+    const body = tubePath(spine, (t) => (stub ? 0.03 : 0.028) * (1 - t) + 0.001);
+    sketch.fill(body, fur);
+    sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
+  } else if (skin === "ball") {
+    // 동그라미 — 척추를 따라 구슬을 꿴 꼬리. 스텁이면 폼폼 하나(토끼)
+    if (stub) {
+      const tip = spine[spine.length - 1];
+      const ball = blobPath(tip[0] * 0.6, tip[1] * 0.6 + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
+      sketch.fill(ball, fur);
+      sketch.outline(ball, { color: ink0, width: 0.011, passes: 2 });
+    } else {
+      const n = 4;
+      for (let i = 0; i < n; i += 1) {
+        const t = 0.18 + (i / (n - 1)) * 0.82;
+        const a = alongSpine(spine, t);
+        const r = 0.024 - i * 0.004;
+        const ball = blobPath(a.x, a.y, r, r, { lumps: 3, amount: 0.12, noise: null });
+        sketch.fill(ball, fur);
+        sketch.outline(ball, { color: ink0, width: 0.01, passes: 2 });
+      }
+    }
   } else {
     // ringed — 굵은 꼬리에 고리 무늬 (너구리·얼룩 고양이). 몸통 + 어두운 띠 셋
     const wAt = (t) => (stub ? 0.024 : 0.019) * (1 - t * 0.55) + 0.004;
