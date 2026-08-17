@@ -29,7 +29,7 @@ export const BIND_STATE = Object.freeze({
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
-  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0,
+  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0, tailArch: 0, tailPose: null,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
   mode: "idle", sleep: 0, walk: 0, walkX: 0, facing: 1,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
@@ -82,6 +82,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   // 세움(고양이) — 기분 좋은(^^) 동안 꼬리가 띡 선다. k 0~1은 선형으로 오르내리고(0.4초 위 / 0.6초 아래) ramp로 S자. 모양은 하나 — 관절 전부 정확히 수직.
   // lastT는 dt용 (프레임 기반이라 결정적)
   const raise = { k: 0, lastT: -1 };
+  // idle 꼬리 자세(고양이 아치, table tailIdlePose) — 관절 세계각 목록. 끝 두 마디는 개체 tailLift로 더/덜 말린다. rng 없음, 시계마다 한 번 만든다
+  const IP = M.tailIdlePose || null;
+  const tailPose = IP ? IP.angles.map((a, i) => a + (i >= IP.angles.length - 2 ? (rig && rig.tailLift ? rig.tailLift : 0) * IP.liftBend : 0)) : null;
 
   // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
   // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
@@ -312,6 +315,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         tailAngle *= 1 - tailRaise;
         tailTip *= 1 - tailRaise;
       }
+      // idle 자세 — 고양이는 깨어 있는 동안 꼬리가 **아치**(tailPose)로 서 있다. 세움이 오면 그만큼 빠지고(합이 1) 잠들면 골격 그대로 접힌다
+      const tailArch = tailPose && quad ? IP.weight * awake * (1 - tailRaise) : 0;
       const j = R.stepJelly(jelly, t);
 
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
@@ -378,7 +383,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
-        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise,
+        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailArch, tailPose,
         arms, legOffset, legOsc,
         mode: modeName, sleep: sleepK, walk: walkK, walkX: trip.x, facing,
         // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용

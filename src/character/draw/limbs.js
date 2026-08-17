@@ -202,12 +202,13 @@ export function limbSketches(spec) {
 export const BIND_ARM = [1.57, 0];
 
 // 리그 서술 — 모션이 이 개체 위에서 돌 때 필요한 정적 치수. 전부 스펙에서 나온다.
-//   arm    두발의 팔(IK): 어깨 위치·위팔·아래팔 길이·몸 앵커. 앵커는 몸 좌표(발바닥 원점, y 위), 오른팔 기준 — 왼팔은 x 반전. 네발은 null
-//   legTop 몸통 밑단 높이 — 네발이 엎드려 잘 때 몸이 내려앉는 거리
+//   arm      두발의 팔(IK): 어깨 위치·위팔·아래팔 길이·몸 앵커. 앵커는 몸 좌표(발바닥 원점, y 위), 오른팔 기준 — 왼팔은 x 반전. 네발은 null
+//   legTop   몸통 밑단 높이 — 네발이 엎드려 잘 때 몸이 내려앉는 거리
+//   tailLift 꼬리 개체 지터(−1~1) — 고양이 idle 아치의 말림 정도를 개체마다 다르게 (motion/table.js tailIdlePose)
 export function motionRig(spec) {
   const box = layout(spec);
   // arm은 팔이 있는 두발만. 팔 없는 두발(도깨비 arms none)은 arm null이지만 quad도 false — 팔 행위 층만 쉰다
-  return { arm: box.quad || spec.parts.arms === "none" ? null : armRigOf(spec, box), legTop: box.legTop, quad: box.quad };
+  return { arm: box.quad || spec.parts.arms === "none" ? null : armRigOf(spec, box), legTop: box.legTop, quad: box.quad, tailLift: spec.proportions.tailLift };
 }
 
 function armRigOf(spec, box) {

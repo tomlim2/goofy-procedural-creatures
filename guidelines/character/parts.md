@@ -212,6 +212,8 @@ float 1.5 · boots 1, cat stub 3 · stick 3 · float 1.5 · boots 1.
 갤러리: `gallery.html?slot=legs&fix=legLength:short`.
 
 ### tail — 골격 (7) × tailSkin — 스킨 (9) × tailLength — 기장 (3) — 네발 전용
+골격은 **쉼 자세**(BIND·잠)와 마디 길이·스킨의 자리다. 고양이는 깨어 있는 idle에서 골격이 뭐든 관절을 **아치**로 85% 섞고(모션 `tailIdlePose`),
+^^ 땐 수직으로 세운다 — 골격의 성격은 나머지 15%·잠·BIND에서 보인다 ([../motion/catalog.md](../motion/catalog.md) § 꼬리).
 꼬리는 **골격·스킨·기장** 세 슬롯이다. 골격(`tail`)은 척추의 모양(점 목록), 스킨(`tailSkin`)은 그 위에 무엇을 입히나, 기장(`tailLength`)은
 골격을 통째로 줄이는 배율(long 1 · medium 0.7 · short 0.45 — 스킨 두께는 그대로)이다. 어느 골격에든 어느 스킨이든 입힌다 — 스텁 골격에
 깃털 스킨이면 폼폼이다 (`limbs.js` `tailSpine`·`tubePath`).

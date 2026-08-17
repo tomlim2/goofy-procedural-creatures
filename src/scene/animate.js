@@ -65,15 +65,23 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       const order = (item.orderBase || 0) + (front ? 2.08 : 0.8);
       item.tailGroup.traverse((node) => { if (node.isMesh) node.renderOrder = order; });
     }
-    // 세움 목표 — 마디 방향(세계각) **전부 정확히 위(π/2)**: 어떤 골격이든(말림·갈고리·꺾임) 딱 수직으로 선다. 굽는 변형은 없다 — 굽으면 선 게 아니라 휜 것이다
+    // 관절 목표각 두 벌 — 마디 방향(세계각). 세움(tailRaise): **전부 정확히 위(π/2)** — 어떤 골격이든 딱 수직, 굽는 변형 없음.
+    // idle 자세(tailArch, 고양이 아치): state.tailPose[i]. 둘 다 골격의 쉼 자세(restAngle)에서 그 세계각까지의 누적 회전을 관절 몫으로 나눠 무게만큼 섞는다
+    // (합이 1을 안 넘으니 나머지는 골격 그대로). 그 위에 뿌리 tailAngle·끝 tailTip
     const UP = Math.PI * 0.5;
-    let cum = 0;   // 지금까지의 누적 목표 회전(쉼 기준)
+    const arch = state.tailArch || 0;
+    const pose = state.tailPose;
+    let cumUp = 0, cumArch = 0;   // 지금까지의 누적 목표 회전(쉼 기준)
     for (let i = 0; i < n; i += 1) {
       const b = bones[i];
-      const want = UP - b.restAngle;   // 이 마디가 수직에 닿으려면 필요한 누적 회전
-      const own = want - cum;                        // 부모까지의 회전을 뺀 이 관절의 몫
-      cum = want;
-      let rot = own * raise;
+      const wantUp = UP - b.restAngle;   // 이 마디가 수직에 닿으려면 필요한 누적 회전
+      let rot = (wantUp - cumUp) * raise;   // 부모까지의 회전을 뺀 이 관절의 몫
+      cumUp = wantUp;
+      if (arch > 0 && pose) {
+        const wantArch = pose[Math.min(i, pose.length - 1)] - b.restAngle;
+        rot += (wantArch - cumArch) * arch;
+        cumArch = wantArch;
+      }
       if (i === 0) rot += state.tailAngle;
       if (i === n - 1) rot += state.tailTip || 0;
       b.group.rotation.z = rot;
