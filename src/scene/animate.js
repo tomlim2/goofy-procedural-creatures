@@ -50,8 +50,13 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.earGroup.position.x = turnX * item.headRx * 0.26 * EAR_PARALLAX[0];
   item.earGroup.position.y = turnY * item.headRy * 0.16 * EAR_PARALLAX[1];
 
-  // 꼬리
-  if (item.tailGroup) item.tailGroup.rotation.z = state.tailAngle;
+  // 꼬리 — 뿌리 각 + 끝 마디 상대각 + 부풀림(놀람, 균일 배율)
+  if (item.tailGroup) {
+    item.tailGroup.rotation.z = state.tailAngle;
+    const puff = 1 + 0.3 * (state.tailPuff || 0);
+    item.tailGroup.scale.set(puff, puff, 1);
+    if (item.tailTipGroup) item.tailTipGroup.rotation.z = state.tailTip || 0;
+  }
 
   // 팔다리 — 목표 각도로 이징. 관절은 튀지 않고 따라간다.
   // 팔은 clock이 행위를 IK로 풀어 준 [어깨, 팔꿈치] 세계각. 진동(osc)은 이징을 안 거치고 그대로 얹는다

@@ -51,7 +51,7 @@ for (const spec of grid) {
     eyes: d.eyes.map((e) => [e.side, +e.x.toFixed(4), +e.y.toFixed(4), +e.r.toFixed(4)]),
     neckY: +d.neckY.toFixed(5),
     limbs: draw.limbSketches(spec).map((l) => [l.kind, l.side, l.pivot.map((v) => +v.toFixed(5)), sketchHash(l.sketch), l.backSketch ? sketchHash(l.backSketch) : null]),
-    tail: (() => { const t = draw.tailSketch(spec); return [t.pivot.map((v) => +v.toFixed(5)), sketchHash(t.sketch)]; })(),
+    tail: (() => { const t = draw.tailSketch(spec); return [t.pivot.map((v) => +v.toFixed(5)), sketchHash(t.sketch), sketchHash(t.tipSketch)]; })(),
     brow: kinds.brow.map((k) => sketchHash(draw.facePartSketch(spec, "brow", k))),
     mouth: kinds.mouth.map((k) => sketchHash(draw.facePartSketch(spec, "mouth", k)))
   };

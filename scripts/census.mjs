@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
-const { makeGrid, SLOTS, SPECIES, limbSketches, tailSketch } = await import(join(root, "src/character/index.js"));
+const { makeGrid, SLOTS, SPECIES, limbSketches, tailSketch, eyeGeometry, layout } = await import(join(root, "src/character/index.js"));
 
 const args = process.argv.slice(2);
 const onlySlot = args.includes("--slot") ? args[args.indexOf("--slot") + 1] : null;
@@ -42,10 +42,19 @@ for (const sp of SPECIES) {
       const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
       if (lum >= 90) violations.push(`${where}: 머리가 어둡지 않다 ${c.palette.skin}`);
     }
+    // 공통 가드레일 — 두 눈은 반지름 합의 70% 넘게 붙지 않는다 (eyeGeometry가 보장. 깨지면 여기서 잡힌다)
+    {
+      const eyes = eyeGeometry(c, layout(c));
+      if (eyes.length === 2) {
+        const d = Math.hypot(eyes[1].x - eyes[0].x, eyes[1].y - eyes[0].y);
+        if (d < (eyes[0].r + eyes[1].r) * 0.7 - 1e-6) violations.push(`${where}: 눈 너무 겹침 (거리 ${d.toFixed(3)} < 반지름 합의 70% ${((eyes[0].r + eyes[1].r) * 0.7).toFixed(3)})`);
+      }
+    }
     if (id.arms !== undefined || id.tail !== undefined || id.skeleton) {
       const limbs = limbSketches(c);
       const hasArms = limbs.some((l) => l.kind === "arm");
-      const hasTail = !tailSketch(c).sketch.empty;
+      const tail = tailSketch(c);
+      const hasTail = !(tail.sketch.empty && tail.tipSketch.empty);   // 두 마디 중 하나라도
       const legs = limbs.filter((l) => l.kind === "leg").length;
       if (id.arms === true && !hasArms) violations.push(`${where}: 팔이 없다`);
       if (id.arms === false && hasArms) violations.push(`${where}: 팔이 있다`);

@@ -48,7 +48,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyes;
   const ink0 = spec.faceInk || spec.palette.ink;
 
-  for (const eye of eyes) {
+  // 작은 눈부터 그린다 — 겹치면 큰 눈이 앞(hollow처럼 채움+윤곽을 한 스케치에 그리는 눈에서 교차선이 안 생긴다)
+  for (const eye of [...eyes].sort((a, b) => a.r - b.r)) {
     if (patched(spec, eye)) continue;
 
     if (kind === "dot") {
@@ -98,10 +99,12 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       fills.fill(blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0);
       ink.stroke([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0, width: 0.011 });
     } else if (kind === "hollow") {
-      // 빈 눈 — 보통 눈(ring)에서 동공만 뺀 것. 어느 종족이든 흰자 + 윤곽, 동공 없음 (도깨비도 검은 눈구멍이 아니라 흰 눈)
+      // 빈 눈 — 보통 눈(ring)에서 동공만 뺀 것. 어느 종족이든 흰자 + 윤곽, 동공 없음 (도깨비도 검은 눈구멍이 아니라 흰 눈).
+      // 채움과 윤곽을 **같은 스케치(fills)** 에 눈마다 이어 그린다 — 두 눈이 겹치면 나중 눈(큰 눈)이 앞 눈의 윤곽을 덮는다 (교차선 없음).
+      // 그러려면 작은 눈부터: 큰 눈이 뒤에 그려져 앞이 된다
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null });
       fills.fill(path, "#f6f2e9");
-      ink.outline(path, { color: spec.palette.ink, width: 0.011, passes: 2 });
+      fills.outline(path, { color: spec.palette.ink, width: 0.011, passes: 2 });
     } else if (kind === "half") {
       // 반쯤 감은 눈 — 원 전체에 선을 긋지 않는다(원+선은 "선 그어진 동그라미"로 뭉개져 읽힌다).
       // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양

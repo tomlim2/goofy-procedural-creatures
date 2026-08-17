@@ -247,8 +247,8 @@ function spineT(spine) {
   const total = acc[acc.length - 1] || 1;
   return acc.map((a) => a / total);
 }
-// 척추를 따라 좌우로 두께 widthAt(t)만큼 부풀린 폐곡선 — 채운 꼬리 몸통. 끝은 뾰족하게 닫는다
-function tubePath(spine, widthAt) {
+// 척추를 따라 좌우로 두께 widthAt(t)만큼 부풀린 양쪽 가장자리. t는 tMap으로 전체 꼬리 기준(0~1)에 맞춘다
+function tubeSides(spine, widthAt, tMap = (t) => t) {
   const ts = spineT(spine);
   const left = [], right = [];
   for (let i = 0; i < spine.length; i += 1) {
@@ -256,11 +256,11 @@ function tubePath(spine, widthAt) {
     const [nx0, ny0] = spine[Math.max(0, i - 1)], [nx1, ny1] = spine[Math.min(spine.length - 1, i + 1)];
     let dx = nx1 - nx0, dy = ny1 - ny0;
     const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
-    const w = widthAt(ts[i]);
+    const w = widthAt(tMap(ts[i]));
     left.push([x - dy * w, y + dx * w]);
     right.push([x + dy * w, y - dx * w]);
   }
-  return [...left, ...right.reverse()];
+  return { left, right };
 }
 // 꺾은선 위 길이 비율 t(0~1) 지점과 그 자리의 진행 방향
 function alongSpine(spine, t) {
@@ -273,13 +273,33 @@ function alongSpine(spine, t) {
   const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
   return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, dx, dy };
 }
+// 척추를 t = split에서 둘로 가른다 → [뿌리 조각(원점 그대로), 끝 조각(가른 점 원점)]. 각 조각의 t 범위도 준다
+function splitSpine(spine, split) {
+  const ts = spineT(spine);
+  const cut = alongSpine(spine, split);
+  const base = [], tip = [];
+  for (let i = 0; i < spine.length; i += 1) {
+    if (ts[i] < split) base.push(spine[i]);
+    else tip.push(spine[i]);
+  }
+  base.push([cut.x, cut.y]);
+  const tipRel = [[0, 0], ...tip.map(([x, y]) => [x - cut.x, y - cut.y])];
+  return [
+    { spine: base, t0: 0, t1: split, origin: [0, 0] },
+    { spine: tipRel, t0: split, t1: 1, origin: [cut.x, cut.y] }
+  ];
+}
 
+// 꼬리는 **두 마디**다 — 뿌리(피벗 = 꼬리 뿌리)와 끝(척추 55% 지점 피벗). scene이 둘을 따로 돌린다(스위시 팔로스루·끝 톡톡·세움 떨림).
+// 스킨은 두 마디에 이어서 입힌다 — 두께 함수는 전체 꼬리 기준 t로 계산해 이음새에서 굵기가 이어진다.
+export const TAIL_SPLIT = 0.55;
 export function tailSketch(spec) {
   const rng = makeRng((spec.proportions.wobbleSeed + 404) >>> 0);
   const noise = makeNoise(rng);
   const sketch = new Sketch(noise, spec.proportions.wobble);
+  const tipSketch = new Sketch(noise, spec.proportions.wobble);
   const box = layout(spec);
-  if (!box.quad) return { sketch, pivot: [0, 0] };
+  if (!box.quad) return { sketch, tipSketch, pivot: [0, 0], tipPivot: [0, 0] };
 
   const p = spec.proportions;
   const ink0 = spec.palette.ink;
@@ -291,87 +311,99 @@ export function tailSketch(spec) {
   const skin = spec.parts.tailSkin || "line";
   const stub = spec.parts.tail === "stubtail";
   const fur = spec.palette.skin;   // 털색 = 머리색 (개·고양이는 몸도 같은 계열)
+  const parts = splitSpine(spine, TAIL_SPLIT);
+  const sketches = [sketch, tipSketch];
+
+  // 두께 함수(전체 t 기준) — 스킨별
+  const widthOf = {
+    thick: (t) => (stub ? 0.024 : 0.02) * (1 - t * 0.7) + 0.004,
+    plume: (t) => (stub ? 0.03 : 0.016 + 0.024 * Math.sin(Math.PI * Math.min(1, t * 1.15))),
+    block: () => (stub ? 0.024 : 0.019),
+    wedge: (t) => (stub ? 0.03 : 0.028) * (1 - t) + 0.001,
+    ringed: (t) => (stub ? 0.024 : 0.019) * (1 - t * 0.55) + 0.004
+  };
+  // 채운 몸통을 두 조각에 이어 그린다 — 채움은 조각마다, 윤곽은 양옆 선만(이음새에 가로선이 안 생기게), 끝은 뾰족하게 닫힌다
+  const tube = (widthAt) => {
+    parts.forEach((part, i) => {
+      const tMap = (t) => part.t0 + t * (part.t1 - part.t0);
+      const { left, right } = tubeSides(part.spine, widthAt, tMap);
+      const sk = sketches[i];
+      sk.fill([...left, ...right.slice().reverse()], fur);
+      sk.stroke(left, { color: ink0, width: 0.011, passes: 2 });
+      sk.stroke(right, { color: ink0, width: 0.011, passes: 2 });
+      if (i === parts.length - 1) sk.stroke([left[left.length - 1], right[right.length - 1]], { color: ink0, width: 0.011 });   // 끝 마감
+    });
+  };
+  // 전체 t 지점의 자리와 그 조각 — 털 획·구슬·띠·뭉치를 놓을 때
+  const at = (t) => {
+    const part = t < TAIL_SPLIT ? parts[0] : parts[1];
+    const local = (t - part.t0) / (part.t1 - part.t0);
+    return { ...alongSpine(part.spine, Math.max(0, Math.min(1, local))), sk: sketches[parts.indexOf(part)] };
+  };
 
   if (skin === "line") {
-    // 가는 선 — 손그림 꼬리 한 획 (스텁은 굵게)
-    sketch.stroke(spine, { color: ink0, width: stub ? 0.02 : 0.011, jitter: 0.003 });
-  } else if (skin === "thick") {
-    // 굵은 꼬리 — 뿌리 굵고 끝으로 가늘어지는 채운 몸통 + 윤곽
-    const body = tubePath(spine, (t) => (stub ? 0.024 : 0.02) * (1 - t * 0.7) + 0.004);
-    sketch.fill(body, fur);
-    sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
+    // 가는 선 — 손그림 꼬리 한 획 (스텁은 굵게). 두 조각을 이어 긋는다
+    for (const [i, part] of parts.entries()) sketches[i].stroke(part.spine, { color: ink0, width: stub ? 0.02 : 0.011, jitter: 0.003 });
+  } else if (skin === "thick" || skin === "block" || skin === "wedge") {
+    tube(widthOf[skin]);
   } else if (skin === "plume") {
-    // 북슬한 깃털 꼬리 — 가운데가 부푼 채운 몸통 + 윤곽 + 털 획 (스텁이면 폼폼)
-    const body = tubePath(spine, (t) => stub ? 0.03 : 0.016 + 0.024 * Math.sin(Math.PI * Math.min(1, t * 1.15)));
-    sketch.fill(body, fur);
-    sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
+    // 북슬한 깃털 꼬리 — 가운데가 부푼 채운 몸통 + 털 획 (스텁이면 폼폼)
+    tube(widthOf.plume);
     const n = stub ? 3 : 6;
     for (let i = 0; i < n; i += 1) {
       const t = stub ? 0.3 + i * 0.25 : 0.25 + i * 0.13;
-      const a = alongSpine(spine, Math.min(1, t));
+      const a = at(Math.min(0.98, t));
       const side = i % 2 ? 1 : -1;
       const nx = -a.dy * side, ny = a.dx * side;
       const w = stub ? 0.03 : 0.028;
-      sketch.stroke([[a.x + nx * w * 0.7, a.y + ny * w * 0.7], [a.x + nx * (w + 0.02) + a.dx * 0.01, a.y + ny * (w + 0.02) + a.dy * 0.01]], { color: ink0, width: 0.007, jitter: 0.004 });
+      a.sk.stroke([[a.x + nx * w * 0.7, a.y + ny * w * 0.7], [a.x + nx * (w + 0.02) + a.dx * 0.01, a.y + ny * (w + 0.02) + a.dy * 0.01]], { color: ink0, width: 0.007, jitter: 0.004 });
     }
   } else if (skin === "tuft") {
     // 끝 뭉치 — 가는 선 + 끝에 채운 뭉치(사자 꼬리)
-    sketch.stroke(spine, { color: ink0, width: 0.011, jitter: 0.003 });
-    const tip = spine[spine.length - 1];
+    for (const [i, part] of parts.entries()) sketches[i].stroke(part.spine, { color: ink0, width: 0.011, jitter: 0.003 });
+    const tipPart = parts[parts.length - 1];
+    const tip = tipPart.spine[tipPart.spine.length - 1];
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
-    sketch.fill(ball, darken(fur, 0.82));
-    sketch.outline(ball, { color: ink0, width: 0.01 });
-  } else if (skin === "block") {
-    // 네모 — 폭이 일정하고 끝이 각진 띠
-    const body = tubePath(spine, () => (stub ? 0.024 : 0.019));
-    sketch.fill(body, fur);
-    sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
-  } else if (skin === "wedge") {
-    // 세모 — 뿌리 넓고 끝이 뾰족한 쐐기
-    const body = tubePath(spine, (t) => (stub ? 0.03 : 0.028) * (1 - t) + 0.001);
-    sketch.fill(body, fur);
-    sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
+    tipSketch.fill(ball, darken(fur, 0.82));
+    tipSketch.outline(ball, { color: ink0, width: 0.01 });
   } else if (skin === "puff") {
-    // 몽실 — 토끼 꼬리. 골격 길이와 상관없이 엉덩이 가까이(척추 0.3 지점) 북슬한 뭉치 하나 + 둘레 털 획
-    const a = alongSpine(spine, 0.3);
+    // 몽실 — 토끼 꼬리. 골격 길이와 상관없이 엉덩이 가까이(척추 0.3 지점) 북슬한 뭉치 하나 + 둘레 털 획 (뿌리 조각)
+    const a = at(0.3);
     const r = 0.04;
     const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
-    sketch.fill(pom, fur);
-    sketch.outline(pom, { color: ink0, width: 0.011, passes: 2 });
+    a.sk.fill(pom, fur);
+    a.sk.outline(pom, { color: ink0, width: 0.011, passes: 2 });
     for (let i = 0; i < 6; i += 1) {
       const ang = -1.0 + i * 0.66;   // 위·바깥 둘레
       const x0 = a.x + Math.cos(ang) * r * 0.9, y0 = a.y + 0.004 + Math.sin(ang) * r * 0.85;
-      sketch.stroke([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, width: 0.007, jitter: 0.004 });
+      a.sk.stroke([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, width: 0.007, jitter: 0.004 });
     }
   } else if (skin === "ball") {
     // 동그라미 — 척추를 따라 구슬을 꿴 꼬리. 스텁이면 폼폼 하나(토끼)
     if (stub) {
-      const tip = spine[spine.length - 1];
-      const ball = blobPath(tip[0] * 0.6, tip[1] * 0.6 + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
-      sketch.fill(ball, fur);
-      sketch.outline(ball, { color: ink0, width: 0.011, passes: 2 });
+      const a = at(0.6);
+      const ball = blobPath(a.x, a.y + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
+      a.sk.fill(ball, fur);
+      a.sk.outline(ball, { color: ink0, width: 0.011, passes: 2 });
     } else {
       const n = 4;
       for (let i = 0; i < n; i += 1) {
-        const t = 0.18 + (i / (n - 1)) * 0.82;
-        const a = alongSpine(spine, t);
+        const t = 0.18 + (i / (n - 1)) * 0.8;
+        const a = at(t);
         const r = 0.024 - i * 0.004;
         const ball = blobPath(a.x, a.y, r, r, { lumps: 3, amount: 0.12, noise: null });
-        sketch.fill(ball, fur);
-        sketch.outline(ball, { color: ink0, width: 0.01, passes: 2 });
+        a.sk.fill(ball, fur);
+        a.sk.outline(ball, { color: ink0, width: 0.01, passes: 2 });
       }
     }
   } else {
-    // ringed — 굵은 꼬리에 고리 무늬 (너구리·얼룩 고양이). 몸통 + 어두운 띠 셋
-    const wAt = (t) => (stub ? 0.024 : 0.019) * (1 - t * 0.55) + 0.004;
-    const body = tubePath(spine, wAt);
-    sketch.fill(body, fur);
+    // ringed — 굵은 꼬리에 고리 무늬 (비활성 자산). 몸통 + 어두운 띠 셋
+    tube(widthOf.ringed);
     for (const t of stub ? [0.5] : [0.3, 0.55, 0.8]) {
-      const a = alongSpine(spine, t);
-      const w = wAt(t) * 1.15;
-      sketch.stroke([[a.x - a.dy * -w, a.y + a.dx * -w], [a.x - a.dy * w, a.y + a.dx * w]], { color: darken(fur, 0.55), width: 0.014 });
+      const a = at(t);
+      const w = widthOf.ringed(t) * 1.15;
+      a.sk.stroke([[a.x + a.dy * w, a.y - a.dx * w], [a.x - a.dy * w, a.y + a.dx * w]], { color: darken(fur, 0.55), width: 0.014 });
     }
-    sketch.outline(body, { color: ink0, width: 0.011, passes: 2 });
   }
-  return { sketch, pivot };
+  return { sketch, tipSketch, pivot, tipPivot: parts[1].origin };
 }

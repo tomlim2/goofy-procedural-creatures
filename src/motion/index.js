@@ -14,7 +14,7 @@ import * as E from "./events.js";
 import * as S from "./states.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, bindArm, solveArms } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
-import { ramp, smoothstep } from "./ease.js";
+import { ramp, smoothstep, envelope, damp } from "./ease.js";
 
 export { MOTION } from "./table.js";
 export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
@@ -29,7 +29,7 @@ export const BIND_STATE = Object.freeze({
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
-  happy: false, winkSide: 0, tailAngle: 0,
+  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
   mode: "idle", sleep: 0, walk: 0, walkX: 0, facing: 1,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
@@ -71,6 +71,12 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const quadAction = S.initQuadAction(rng, M);   // 27
   const mode = S.initMode(rng, M);               // 28 (기본 상태 idle/sleep — 상태가 하나뿐인 종족은 rng 안 씀)
   const zzzPhase = rng.float(0, 6);              // 29 (잠 중 z 이모지 위상 — 매 프레임 rng 없이 6초마다)
+  // 꼬리 끝 마디(고양이 위주) — 팔로스루 상태·채찍질·세움. 예약이 아니라 이벤트에 딸려 시작하므로 rng는 시작할 때만
+  const TT = M.tailTip || null;
+  const tailFollow = { x: 0, v: 0 };
+  let tailPrevBase = null;
+  const lash = { start: -1 };
+  const raise = { until: -1, start: -1 };
 
   // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
   // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
@@ -260,10 +266,39 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       }
       for (let i = 0; i < 4; i += 1) legOffset[i] += R.legJitter(t, i);
 
-      // 꼬리 · 젤리 — 꼬리 기본은 idle 각(tailIdle), 그 위에 스위시·플릭
+      // 꼬리 · 젤리 — 꼬리 기본은 idle 각(tailIdle), 그 위에 스위시·플릭. 끝 마디(tailTip)는 뿌리 기준 상대각
       let tailAngle = (M.tailIdle || 0) + R.stepTailSwish(tailSwish, t);
-      tailAngle += E.stepTailFlick(tailFlick, t, rng, M);
+      let tailTip = 0;
+      const flick = E.stepTailFlick(tailFlick, t, rng, M);
+      // 고양이는 플릭이 **끝만 톡톡**(twitch — 뿌리는 가만), 개는 통째로 플릭
+      if (TT && TT.twitch) tailTip += flick * (TT.twitch.amp / 0.35);
+      else tailAngle += flick;
       if (walkK > 0 && W && quad && W.tail) tailAngle += Math.sin(ph) * W.tail * walkK;   // 걷기 — 개만 꼬리가 걸음에 맞춰 살랑 (table walk.tail)
+      // 놀람에 딸린 꼬리 — 채찍질(plain 변형 시작 때 lash 확률) · 세움(♥ 변형 시작 때) · 부풀림(시작 순간)
+      let tailPuff = 0;
+      if (TT && quad && startleBefore < 0 && surprise.start >= 0 && !asleep) {
+        if (surprise.variant === "heart" && TT.raise) { raise.start = t; raise.until = t + rng.float(TT.raise.hold[0], TT.raise.hold[1]); }
+        else if (surprise.variant === "plain" && TT.lash > 0 && rng.chance(TT.lash)) lash.start = t;
+      }
+      if (TT && TT.puff && surprise.start >= 0) {
+        const kp = (t - surprise.start) / 1.2;
+        if (kp < 1) tailPuff = envelope(kp, 0.1, 0.5) * TT.puff;
+      }
+      if (lash.start >= 0) {
+        // 채찍질 — 뿌리+끝 크게 3번, 1초. 끝은 같은 방향으로 조금 덜
+        const k = (t - lash.start) / 1.0;
+        if (k >= 1) lash.start = -1;
+        else { const w = Math.sin(k * Math.PI * 6) * envelope(k, 0.12, 0.4); tailAngle += w * 0.6; tailTip += w * 0.4; }
+      }
+      if (raise.until >= 0) {
+        // 세움 — 뿌리를 위로 들고(ramp 0.4초) 유지, 끝은 잔떨림(quiver). 유지가 끝나면 0.6초에 내린다
+        const kIn = ramp(Math.min(1, (t - raise.start) / 0.4));
+        const kOut = t > raise.until ? 1 - ramp(Math.min(1, (t - raise.until) / 0.6)) : 1;
+        const kr = kIn * kOut;
+        if (t > raise.until + 0.6) raise.until = -1;
+        tailAngle += TT.raise.angle * kr;
+        tailTip += Math.sin(t * Math.PI * 2 * TT.raise.quiver[1]) * TT.raise.quiver[0] * kr;
+      }
       const j = R.stepJelly(jelly, t);
 
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
@@ -291,6 +326,14 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         const fold = [1.35, 1.25, -1.3, -1.2];
         for (let i = 0; i < 4; i += 1) legOffset[i] = legOffset[i] * awake + fold[i] * sleepK;
         tailAngle = tailAngle * awake - 0.55 * sleepK;
+        tailTip = tailTip * awake - 0.6 * sleepK;   // 끝을 더 접어 몸에 붙인다
+      }
+      // 팔로스루 — 끝 마디는 뿌리 각속도의 반대로 조금 늦게 따라온다 (임계감쇠). 프레임 기반이라 결정적
+      if (TT && TT.follow) {
+        const vel = tailPrevBase === null ? 0 : tailAngle - tailPrevBase;
+        tailPrevBase = tailAngle;
+        damp(tailFollow, Math.max(-0.5, Math.min(0.5, -vel * TT.follow * 60)), 0.25);
+        tailTip += tailFollow.x;
       }
       const sleepHead = sleepK * 0.32 * (seed % 2 ? 1 : -1);      // 머리를 한쪽으로 기울여 얹는다
       const sleepBob = -0.05 * sleepK;
@@ -321,7 +364,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
-        happy: isHappy, winkSide, tailAngle,
+        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff,
         arms, legOffset, legOsc,
         mode: modeName, sleep: sleepK, walk: walkK, walkX: trip.x, facing,
         // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용

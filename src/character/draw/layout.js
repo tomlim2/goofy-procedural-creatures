@@ -125,9 +125,25 @@ export function eyeGeometry(spec, box) {
   const lineEye = LINE_EYES.includes(spec.parts.eyes);
   const sizeSkew = lineEye ? 0 : p.eyeSizeSkew;
   const heightSkew = lineEye ? 0 : p.eyeHeightSkew;
+  let rL = base * (1 - sizeSkew), rR = base * (1 + sizeSkew);
+  // 가드레일 — 두 눈은 **조금만 겹친다**(중심 거리 ≥ 반지름 합의 70%). 그보다 붙으면 간격을 벌리고, 벌릴 자리가 없으면(머리 폭) 두 눈을
+  // 같이 줄인다. 겹치는 부분은 큰 눈이 앞에서 작은 눈을 가린다(scene/rig.js 눈 순서 블록) — 교차하는 윤곽선이 안 남는다
+  let g = gap;
+  const OVERLAP = 0.7;
+  const need = (rL + rR) * OVERLAP + 0.004;
+  if (2 * g < need) g = need / 2;
+  const room = box.headRx * 0.94;
+  const rMax = Math.max(rL, rR);
+  if (g + rMax > room) {
+    const k = Math.max(0.5, (room - 0.006) / (g + rMax));
+    rL *= k; rR *= k; g *= k;
+    // 줄인 뒤에도 너무 붙으면 한 번 더 간격만
+    const need2 = (rL + rR) * OVERLAP + 0.004;
+    if (2 * g < need2) g = need2 / 2;
+  }
   return [
-    { side: -1, x: -gap, y: y + box.headRy * heightSkew, r: base * (1 - sizeSkew) },
-    { side: 1, x: gap, y: y - box.headRy * heightSkew, r: base * (1 + sizeSkew) }
+    { side: -1, x: -g, y: y + box.headRy * heightSkew, r: rL },
+    { side: 1, x: g, y: y - box.headRy * heightSkew, r: rR }
   ];
 }
 // 선으로만 그리는 눈 — 좌우 대칭으로 둔다 (eyeGeometry)

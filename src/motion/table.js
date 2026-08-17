@@ -57,6 +57,8 @@ export const MOTION = {
     jelly: null, shiver: [40, 80],
     wink: null, happyHold: [6, 16],
     tailSwish: null, tailFlick: [3, 9],
+    // 꼬리 끝 마디 — 개는 팔로스루만(흔들 때 끝이 늦게 따라온다). 나머지 고양이 전용은 null
+    tailTip: { follow: 0.05, twitch: null, lash: 0, raise: null, puff: 0 },
     surprise: [10, 26], yaw: 0.7,
     // 개는 자주, 위(주인 쪽)로도 잘 본다
     look: [4, 12], lookHold: [1, 3], lookAmp: [1, 1],
@@ -81,7 +83,11 @@ export const MOTION = {
     tilt: [5, 12], tiltAmp: 0.14,
     jelly: null, shiver: [40, 90],
     wink: [8, 20], happyHold: null,
-    tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [4, 11],
+    // 고양이 꼬리 — 개와 반대: 빠른 움직임은 짜증·흥분, 기쁨은 **세우는 것**. 느린 스위시(리듬) 위에 끝 마디 모션이 얹힌다
+    //   follow 팔로스루(끝이 뿌리 속도에 늦게 따라옴) · twitch 끝만 톡톡(tailFlick 간격을 끝 마디에 씀) · lash 놀람(plain) 시작 때 채찍질 확률 ·
+    //   raise ♥ 놀람·♥ 이모지 때 세움 [유지 s] + 끝 떨림 quiver [amp, hz] · puff 놀람 순간 부풀림 배율
+    tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [8, 20],
+    tailTip: { follow: 0.06, twitch: { amp: 0.35, hz: 6, dur: 0.5 }, lash: 0.4, raise: { hold: [3, 5], angle: 0.9, quiver: [0.08, 12] }, puff: 1 },
     surprise: [9, 24], yaw: 0.8,
     // 고양이는 드물게, 오래 응시
     look: [8, 20], lookHold: [2, 5], lookAmp: [0.9, 0.9],

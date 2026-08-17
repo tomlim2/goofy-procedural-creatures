@@ -224,6 +224,9 @@ kink 1.5 · stubtail 1 (kink는 고양이만, ring은 개만). 스킨: pup thick
 tuft 1 · block 0.5 · ball 0.5 · puff 0.3 (ringed·wedge는 비활성). 기장: pup long 2 · medium 2 · short 2 / cat long 3 · medium 2 · short 1.
 tailSkin·tailLength는 늦은 슬롯(`LATE_SLOTS`)이다. 두발은 뽑히지만 그리지 않는다.
 꼬리는 몸통·머리 **뒤**에 그린다(renderOrder 0.8) — 등 위로 말리거나 몸에 걸치는 부분은 가려진다.
+꼬리는 **두 마디**로 굽는다 — 뿌리 조각과 끝 조각(척추 55% 지점, `TAIL_SPLIT`)을 따로 스케치해 scene이 따로 돌린다(스위시 팔로스루·끝 톡톡·세움 떨림,
+[../motion/catalog.md](../motion/catalog.md) § 꼬리). 스킨의 두께 함수는 전체 꼬리 t 기준이라 이음새에서 굵기가 이어지고, 윤곽은 양옆 선만
+그려 이음새에 가로선이 안 생긴다.
 
 ### arms — 형태 (5) — 두발 전용
 | 값 | 그리기 |

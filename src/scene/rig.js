@@ -28,16 +28,17 @@ export function buildCreature(spec, noise, birth = 0) {
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
   const LAYERS = [
-    { key: "body", group: bodyGroup, dy: 0, fillOrder: 1, inkOrder: 1.5, fillOpacity: 0.92 },
+    // 채색은 전부 **불투명** — 이웃과 겹칠 때 앞 개체가 뒤 개체를 윤곽·색·형태까지 완전히 가려야 한다 (반투명이면 뒤 윤곽이 비친다)
+    { key: "body", group: bodyGroup, dy: 0, fillOrder: 1, inkOrder: 1.5, fillOpacity: 1 },
     { key: "crownBack", group: earGroup, dy: -neckY, fillOrder: 1.6, inkOrder: 1.7, fillOpacity: 1 },   // 옆귀 — 머리 채색 뒤
     { key: "head", group: headGroup, dy: -neckY, fillOrder: 1.8, inkOrder: 2, fillOpacity: 1 },
     { key: "crown", group: crownGroup, dy: -neckY, fillOrder: 2.05, inkOrder: 2.06, fillOpacity: 1 },   // 뿔·머리카락 — 머리 잉크 위
     { key: "front", group: earGroup, dy: -neckY, fillOrder: 2.1, inkOrder: 2.12, fillOpacity: 1 },   // 머리 앞: 개·고양이 귀
     { key: "hat", group: crownGroup, dy: -neckY, fillOrder: 2.14, inkOrder: 2.16, fillOpacity: 1 },   // 모자 — 귀 위, 얼굴 아래
-    { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 0.92 },
-    { key: "staticEyes", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 0.92 },   // 정지 눈 — 놀람 변형 때 끈다
+    { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 1 },
+    { key: "staticEyes", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 1 },   // 정지 눈 — 놀람 변형 때 끈다
     // 얼굴 맨 앞: 코·안경 — 눈 리그(3~6)보다 위. 놀라 커진 흰자·눈꺼풀이 못 덮는다
-    { key: "faceFront", group: faceGroup, dy: -faceCy, fillOrder: 6.4, inkOrder: 6.5, fillOpacity: 0.92 }
+    { key: "faceFront", group: faceGroup, dy: -faceCy, fillOrder: 6.4, inkOrder: 6.5, fillOpacity: 1 }
   ];
   const frames = { body: [], crownBack: [], head: [], crown: [], front: [], hat: [], face: [], staticEyes: [], faceFront: [] };
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
@@ -58,11 +59,18 @@ export function buildCreature(spec, noise, birth = 0) {
 
   // 꼬리 — 피벗에 걸어 살랑거린다 (네발)
   let tailGroup = null;
+  // 꼬리 — 뿌리 마디(tailGroup, 꼬리 뿌리 피벗) + 끝 마디(tailTipGroup, 척추 55% 지점 피벗). 둘 다 몸통·머리 **뒤**(0.8) —
+  // 몸에 걸치는 부분(고리·말림)은 가려진다. state.tailAngle이 뿌리, state.tailTip이 끝(뿌리 기준 상대각)
+  let tailTipGroup = null;
   const tail = tailSketch(spec);
-  if (!tail.sketch.empty) {
+  if (!tail.sketch.empty || !tail.tipSketch.empty) {
     tailGroup = new THREE.Group();
     tailGroup.position.set(tail.pivot[0], tail.pivot[1], 0);
-    tailGroup.add(sketchMesh(tail.sketch, 1, 0.8));   // 꼬리는 몸통·머리 **뒤** — 몸에 걸치는 부분(고리·말림)은 가려진다
+    if (!tail.sketch.empty) tailGroup.add(sketchMesh(tail.sketch, 1, 0.8));
+    tailTipGroup = new THREE.Group();
+    tailTipGroup.position.set(tail.tipPivot[0], tail.tipPivot[1], 0);
+    if (!tail.tipSketch.empty) tailTipGroup.add(sketchMesh(tail.tipSketch, 1, 0.8));
+    tailGroup.add(tailTipGroup);
     bodyGroup.add(tailGroup);
   }
 
@@ -123,23 +131,27 @@ export function buildCreature(spec, noise, birth = 0) {
   const eyeRigs = [];
   const eyeKind = spec.parts.eyes;
   const shape = eyeShape(spec);
+  // 눈마다 순서 블록 — 큰 눈이 앞. 두 눈이 겹치면 앞눈의 흰자가 뒷눈의 테·동공을 가린다 (교차선이 안 생긴다).
+  // 뒷눈 3.0~3.35, 앞눈 3.5~3.85 (흰자·테·동공/눈꺼풀·^^/감은 선). 정지 눈 덮개(3.5/3.6)는 정지 눈에만 있어 안 부딪힌다
+  const eyeOrder = [...firstDrawn.eyes].sort((a, b) => a.r - b.r);
   for (const eye of firstDrawn.eyes) {
     const rig = new THREE.Group();
     rig.position.set(eye.x, eye.y - faceCy, 0);
     const rx = eye.r * shape.sx, ry = eye.r * shape.sy;
+    const o = 3 + eyeOrder.indexOf(eye) * 0.5;   // 이 눈의 블록 시작
     const bead = eyeKind === "bead";
     const sparkle = eyeKind === "sparkle";   // ◕ — 흰자 안을 거의 채우는 큰 동공 + 하이라이트
 
     if (!bead) {
       const white = new Sketch(noise, 0.4);
       white.fill(blobPath(0, 0, rx, ry, { lumps: 3, amount: 0.08, noise: null }), "#f6f2e9");
-      rig.add(sketchMesh(white, 1, 3));
+      rig.add(sketchMesh(white, 1, o));
 
       const rim = new Sketch(noise, 0.6);
       rim.outline(blobPath(0, 0, rx, ry, { lumps: 4, amount: 0.1, noise: null }), {
         color: spec.palette.ink, width: 0.011, passes: 2
       });
-      rig.add(sketchMesh(rim, 1, 4));
+      rig.add(sketchMesh(rim, 1, o + 0.1));
     }
 
     const pupilSketch = new Sketch(noise, 0.4);
@@ -156,13 +168,13 @@ export function buildCreature(spec, noise, birth = 0) {
     } else {
       pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
     }
-    const pupil = sketchMesh(pupilSketch, 0.95, 5);
+    const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
     rig.add(pupil);
 
     // 눈꺼풀 — 흰자(구슬)보다 살짝 큰 살색 덮개. 위 가장자리에 걸어 두고 scale.y로 내린다
     const lidSketch = new Sketch(noise, 0.4);
     lidSketch.fill(blobPath(0, -ry * 1.15, rx * 1.25, ry * 1.15, { lumps: 3, amount: 0.1, noise: null }), spec.palette.skin);
-    const lid = sketchMesh(lidSketch, 1, 5);
+    const lid = sketchMesh(lidSketch, 1, o + 0.3);
     lid.position.set(0, ry * 1.15, 0);
     lid.scale.y = 0;
     rig.add(lid);
@@ -173,7 +185,7 @@ export function buildCreature(spec, noise, birth = 0) {
     smileSketch.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), {
       color: spec.faceInk || spec.palette.ink, width: 0.013
     });
-    const smile = sketchMesh(smileSketch, 1, 6);
+    const smile = sketchMesh(smileSketch, 1, o + 0.35);
     smile.visible = false;
     rig.add(smile);
 
@@ -183,7 +195,7 @@ export function buildCreature(spec, noise, birth = 0) {
     shutSketch.stroke(arcPath(0, eye.r * 0.1, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), {
       color: spec.faceInk || spec.palette.ink, width: 0.012
     });
-    const shut = sketchMesh(shutSketch, 1, 6);
+    const shut = sketchMesh(shutSketch, 1, o + 0.35);
     shut.visible = false;
     rig.add(shut);
 
@@ -252,6 +264,7 @@ export function buildCreature(spec, noise, birth = 0) {
     crownGroup,
     faceGroup,
     tailGroup,
+    tailTipGroup,
     limbs,
     frames,
     eyeRigs,
