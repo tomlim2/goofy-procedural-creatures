@@ -44,6 +44,7 @@ for (const spec of grid) {
     crown: sketchHash(d.crown.ink) + sketchHash(d.crown.fills),
     face: sketchHash(d.face.ink) + sketchHash(d.face.fills),
     front: sketchHash(d.front.ink) + sketchHash(d.front.fills),
+    hat: sketchHash(d.hat.ink) + sketchHash(d.hat.fills),
     faceFront: sketchHash(d.faceFront.ink) + sketchHash(d.faceFront.fills),
     variant1: sketchHash(d1.head.ink),
     eyes: d.eyes.map((e) => [e.side, +e.x.toFixed(4), +e.y.toFixed(4), +e.r.toFixed(4)]),

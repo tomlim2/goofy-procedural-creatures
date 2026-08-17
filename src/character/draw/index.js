@@ -25,8 +25,9 @@ export function drawCreature(spec, variant = 0) {
   const bodyFills = new Sketch(noise, wobble);
   const headInk = new Sketch(noise, wobble);
   const headFills = new Sketch(noise, wobble);
-  // 머리에 붙는 것들 — 얼굴 돌림 때 윤곽은 그대로 두고 이것들만 살짝 따라 밀린다(시차). 세 층:
-  //   crownBack(옆귀 — 머리 채색 뒤) · crown(뿔·머리카락 — 머리 잉크 위) · front(개·고양이 귀·모자 — 그 위)
+  // 머리에 붙는 것들 — 얼굴 돌림 때 윤곽은 그대로 두고 이것들만 살짝 밀린다(시차). 네 층, 두 그룹:
+  //   귀(crownBack 옆귀 — 머리 채색 뒤 · front 개/고양이 귀 — 머리 잉크 위)는 얼굴과 **반대로**,
+  //   crown(뿔·머리카락 — 머리 잉크 위) · hat(모자 — 귀 위)은 얼굴과 같은 방향으로 덜
   const crownBackInk = new Sketch(noise, wobble);
   const crownBackFills = new Sketch(noise, wobble);
   const crownInk = new Sketch(noise, wobble);
@@ -35,6 +36,8 @@ export function drawCreature(spec, variant = 0) {
   const faceFills = new Sketch(noise, wobble);
   const frontInk = new Sketch(noise, wobble);
   const frontFills = new Sketch(noise, wobble);
+  const hatInk = new Sketch(noise, wobble);
+  const hatFills = new Sketch(noise, wobble);
   const faceFrontInk = new Sketch(noise, wobble);
   const faceFrontFills = new Sketch(noise, wobble);
   const box = layout(spec);
@@ -58,7 +61,7 @@ export function drawCreature(spec, variant = 0) {
   drawWhiskers(faceInk, spec, box);   // 고양이 수염 — 얼굴 층이라 윤곽 위로 그려져 밖으로 뚫고 나올 수 있다
   drawEyewear(faceFrontInk, faceFrontFills, spec, box, eyes);
   drawHair(crownInk, spec, box, noise);
-  drawHeadgear(frontInk, frontFills, spec, box);   // 모자는 귀 다음 — 귀 밑동을 덮는다
+  drawHeadgear(hatInk, hatFills, spec, box);   // 모자는 귀보다 위 층 — 귀 밑동을 덮는다
 
   // 동공이 움직이는 눈만 골라 넘긴다. 외눈도 살아 있다.
   const live = ["ring", "wide", "cyclops"].includes(spec.parts.eyes)
@@ -72,6 +75,7 @@ export function drawCreature(spec, variant = 0) {
     crown: { ink: crownInk, fills: crownFills },
     face: { ink: faceInk, fills: faceFills },
     front: { ink: frontInk, fills: frontFills },
+    hat: { ink: hatInk, fills: hatFills },
     faceFront: { ink: faceFrontInk, fills: faceFrontFills },
     eyes: live,
     box,

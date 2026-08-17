@@ -12,10 +12,12 @@ export function buildCreature(spec, noise, birth = 0) {
   const group = new THREE.Group();
   const bodyGroup = new THREE.Group();
   const headGroup = new THREE.Group();
-  const crownGroup = new THREE.Group();   // 머리에 붙는 것(옆귀·뿔·머리카락·개/고양이 귀·모자) — 얼굴 돌림 때 시차로 밀린다
+  const earGroup = new THREE.Group();     // 귀(옆귀·개/고양이 귀) — 얼굴 돌림 때 얼굴과 **반대로** 밀린다
+  const crownGroup = new THREE.Group();   // 뿔·머리카락·모자 — 얼굴 돌림 때 얼굴과 같은 방향으로 덜 밀린다
   const faceGroup = new THREE.Group();
   group.add(bodyGroup);
   group.add(headGroup);
+  headGroup.add(earGroup);
   headGroup.add(crownGroup);
   headGroup.add(faceGroup);
 
@@ -27,15 +29,16 @@ export function buildCreature(spec, noise, birth = 0) {
   const faceCy = firstDrawn.faceCy;
   const LAYERS = [
     { key: "body", group: bodyGroup, dy: 0, fillOrder: 1, inkOrder: 1.5, fillOpacity: 0.92 },
-    { key: "crownBack", group: crownGroup, dy: -neckY, fillOrder: 1.6, inkOrder: 1.7, fillOpacity: 1 },   // 옆귀 — 머리 채색 뒤
+    { key: "crownBack", group: earGroup, dy: -neckY, fillOrder: 1.6, inkOrder: 1.7, fillOpacity: 1 },   // 옆귀 — 머리 채색 뒤
     { key: "head", group: headGroup, dy: -neckY, fillOrder: 1.8, inkOrder: 2, fillOpacity: 1 },
     { key: "crown", group: crownGroup, dy: -neckY, fillOrder: 2.05, inkOrder: 2.06, fillOpacity: 1 },   // 뿔·머리카락 — 머리 잉크 위
-    { key: "front", group: crownGroup, dy: -neckY, fillOrder: 2.1, inkOrder: 2.2, fillOpacity: 1 },   // 머리 앞: 개·고양이 귀, 모자
+    { key: "front", group: earGroup, dy: -neckY, fillOrder: 2.1, inkOrder: 2.12, fillOpacity: 1 },   // 머리 앞: 개·고양이 귀
+    { key: "hat", group: crownGroup, dy: -neckY, fillOrder: 2.14, inkOrder: 2.16, fillOpacity: 1 },   // 모자 — 귀 위, 얼굴 아래
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, inkOrder: 2.4, fillOpacity: 0.92 },
     // 얼굴 맨 앞: 코·안경 — 눈 리그(3~6)보다 위. 놀라 커진 흰자·눈꺼풀이 못 덮는다
     { key: "faceFront", group: faceGroup, dy: -faceCy, fillOrder: 6.4, inkOrder: 6.5, fillOpacity: 0.92 }
   ];
-  const frames = { body: [], crownBack: [], head: [], crown: [], front: [], face: [], faceFront: [] };
+  const frames = { body: [], crownBack: [], head: [], crown: [], front: [], hat: [], face: [], faceFront: [] };
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const drawn = k === 0 ? firstDrawn : drawCreature(spec, k);
     for (const layer of LAYERS) {
@@ -196,6 +199,7 @@ export function buildCreature(spec, noise, birth = 0) {
     group,
     bodyGroup,
     headGroup,
+    earGroup,
     crownGroup,
     faceGroup,
     tailGroup,

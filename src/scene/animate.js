@@ -9,8 +9,10 @@ import { BOIL_FRAMES } from "./rig.js";
 import { damp } from "../motion/ease.js";
 
 const EMOJI_TARGET = new THREE.Vector3();
-// 얼굴 돌림 때 머리 부속물이 이목구비 이동량의 몇 배 따라가나 [x, y]. 1이면 얼굴과 같이, 0이면 윤곽과 같이
+// 얼굴 돌림 때 머리 부속물이 이목구비 이동량의 몇 배 움직이나 [x, y]. 1이면 얼굴과 같이, 0이면 윤곽과 같이, 음수면 반대로.
+// 뿔·머리카락·모자는 얼굴을 따라 덜, 귀는 **반대로** — 머리가 돌면 귀는 얼굴 반대편으로 돌아 나간다
 const CROWN_PARALLAX = [0.45, 0.3];
+const EAR_PARALLAX = [-0.4, -0.15];
 
 // snap: 관절을 이징 없이 목표각으로 즉시 (바인드 뷰). boil: 보일 3벌 순환 여부 (선 질감).
 // 둘은 다른 축이다 — 바인드 포즈에서도 선은 끓을 수 있고, 모션 중에도 선을 고정할 수 있다.
@@ -41,10 +43,11 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.faceGroup.position.x = turnX * item.headRx * 0.26;
   item.faceGroup.position.y = item.faceCy - item.neckY + turnY * item.headRy * 0.16;
   item.faceGroup.scale.set(1 - Math.abs(turnX) * 0.12, 1 - Math.abs(turnY) * 0.08, 1);
-  // 머리에 붙는 것(옆귀·뿔·머리카락·개/고양이 귀·모자)은 같은 방향으로 **덜** 밀린다 — 시차. 크기는 그대로(위치만).
-  // 가까운 쪽 귀가 얼굴 쪽으로 들어오고 먼 쪽 귀가 가장자리로 빠지며, 머리카락·모자가 얼굴을 따라 조금 옮겨 앉는다
+  // 머리에 붙는 것은 위치만 밀린다(크기 그대로) — 시차. 뿔·머리카락·모자는 얼굴과 같은 방향으로 덜, 귀는 반대 방향으로
   item.crownGroup.position.x = turnX * item.headRx * 0.26 * CROWN_PARALLAX[0];
   item.crownGroup.position.y = turnY * item.headRy * 0.16 * CROWN_PARALLAX[1];
+  item.earGroup.position.x = turnX * item.headRx * 0.26 * EAR_PARALLAX[0];
+  item.earGroup.position.y = turnY * item.headRy * 0.16 * EAR_PARALLAX[1];
 
   // 꼬리
   if (item.tailGroup) item.tailGroup.rotation.z = state.tailAngle;
