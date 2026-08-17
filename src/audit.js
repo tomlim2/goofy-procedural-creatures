@@ -105,7 +105,8 @@ function audit() {
       const ink = new Sketch(noise, spec.proportions.wobble);
       const fills = new Sketch(noise, spec.proportions.wobble);
       fn(ink, fills);
-      const meshes = [sketchMesh(fills, 0.92, fillOrder, -item.faceCy), sketchMesh(ink, 0.92, inkOrder, -item.faceCy)];
+      const base = item.orderBase || 0;   // 개체 블록 오프셋 (scene/index.js stack) — 임시 메시도 같은 블록에
+      const meshes = [sketchMesh(fills, 0.92, fillOrder + base, -item.faceCy), sketchMesh(ink, 0.92, inkOrder + base, -item.faceCy)];
       for (const m of meshes) { m.visible = false; item.faceGroup.add(m); }
       temp.push({ label, meshes, hideKey });
     };

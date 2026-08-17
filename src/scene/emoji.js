@@ -4,6 +4,9 @@
 import { Sketch, arcPath, blobPath } from "../stroke.js";
 import { sketchMesh } from "./material.js";
 
+// 이모지는 모든 개체 위 — 개체 블록(index × 10 + 층)보다 큰 값
+export const EMOJI_ORDER = 100000;
+
 // 이모지 글리프. 드물어서 그때그때 굽는다.
 export function buildEmoji(kind, noise) {
   const sketch = new Sketch(noise, 0.6);
@@ -48,5 +51,5 @@ export function buildEmoji(kind, noise) {
     sketch.fill([[0.004, 0.016], [0.018, 0.014], [0.013, -0.01], [0.001, -0.008]], "#2b2724");
     sketch.fill(blobPath(0.007, -0.03, 0.011, 0.011, { lumps: 3, amount: 0.15, noise: null }), "#2b2724");
   }
-  return sketchMesh(sketch, 0.95, 7);
+  return sketchMesh(sketch, 0.95, EMOJI_ORDER);
 }

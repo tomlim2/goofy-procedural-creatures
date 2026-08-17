@@ -98,6 +98,16 @@ export function createScene(canvas) {
     return [-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 1) + 0.16];
   }
 
+  // 개체마다 렌더 순서 블록을 준다 — 개체 안의 층(0.5~6.6)은 그대로 두고 index × ORDER_STRIDE를 더한다.
+  // 그래야 이웃과 겹칠 때(왕머리·걷기) 앞 개체가 **통째로** 뒤 개체 위에 그려진다 — 층끼리 섞여 뒤 개체의 윤곽이 앞 개체 얼굴을 뚫고 비치지 않는다.
+  // 앞뒤는 index 순서(아랫줄이 앞, 같은 줄에선 오른쪽이 앞). 이모지는 모든 개체 위(scene/emoji.js EMOJI_ORDER)
+  const ORDER_STRIDE = 10;
+  function stack(item, index) {
+    const base = (index + 1) * ORDER_STRIDE;
+    item.group.traverse((node) => { if (node.isMesh) node.renderOrder += base; });
+    item.orderBase = base;
+  }
+
   function build(specs, cols) {
     clear();
     columns = cols;
@@ -123,6 +133,7 @@ export function createScene(canvas) {
       item.baseX = x;
       item.baseY = y;
       item.group.position.set(x, y, 0);
+      stack(item, index);
       settle(item);
       scene.add(item.group);
       scene.add(item.emojiRoot);
@@ -163,6 +174,7 @@ export function createScene(canvas) {
     item.baseX = x;
     item.baseY = y;
     item.group.position.set(x, y, 0);
+    stack(item, index);
     settle(item);
     scene.add(item.group);
     scene.add(item.emojiRoot);
