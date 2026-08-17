@@ -71,9 +71,9 @@ export const MOTION = {
     legStance: [-0.03, 0, 0.06, 0.03], tailIdle: 0,
     // idle 꼬리 자세 — **아치**. 골격(curl·flag·longtail·kink…)이 뭐든 깨어 있는 idle에선 관절을 이 세계각(뿌리→끝, 0 = 뒤(머리 반대), π/2 = 위)으로
     // 섞는다(weight — 1이면 골격이 안 보이고, 0.85면 골격의 성격이 15% 남아 개체마다 조금 다르다). 뿌리는 살짝 머리 쪽으로 기울어 오르고 끝은
-    // **머리 반대편(뒤)** 으로 넘어가 **45°로 내려온다** — 등 뒤 허공에 걸린 ∩ 아치. 끝 두 마디는 개체 tailLift(−1~1)로 ±liftBend(±7°) — 살짝만 다르게.
-    // 잠·세움 땐 이 자세가 빠진다 (motion/index.js tailArch)
-    tailIdlePose: { angles: [1.85, 1.35, 0.3, -Math.PI / 4], weight: 0.85, liftBend: 0.12 },
+    // **머리 반대편(뒤)** 으로 넘어가 끝이 **−75°로 내려온다**(거의 수직 낙하) — 등 뒤 허공에 걸린 ∩ 아치. 끝 두 마디는 개체 tailLift(−1~1)로
+    // ±liftBend(±7°) — 살짝만 다르게. 잠·세움 땐 이 자세가 빠진다 (motion/index.js tailArch)
+    tailIdlePose: { angles: [1.85, 1.3, 0.05, -75 * Math.PI / 180], weight: 0.85, liftBend: 0.12 },
     // 고양이는 더 자주, 더 오래 잔다
     modes: [["idle", 2], ["sleep", 1], ["walk", 1]], modeHold: { idle: [40, 120], sleep: [30, 90], walk: [6, 14] },
     walk: { hz: 2.2, leg: 0.28, bob: 0.006, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.05, tail: 0 },   // 느긋한 걸음 — 꼬리는 걷기에 안 흔든다 (고양이는 개처럼 꼬리치지 않는다)
