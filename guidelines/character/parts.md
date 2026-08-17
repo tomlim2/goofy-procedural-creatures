@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 134파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 19슬롯 133파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` `face.js` `body.js` `limbs.js`).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
 뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
@@ -29,7 +29,7 @@
 
 머리는 그 위에 노이즈 혹(headLumps)이 얹히고, 연필 스크리블 채움이 덮인다.
 
-### eyes — 눈 종류 (21)
+### eyes — 눈 종류 (20)
 | 값 | 그리기 | 살아 있나 (동공·깜빡임) |
 | --- | --- | --- |
 | ring | 흰자 + 윤곽 + 동공 | ● 눈 리그 |
@@ -47,7 +47,6 @@
 | droop | ´･ω･` 처진 눈꼬리 — 점 눈 + 바깥으로 내려가는 눈꺼풀 획 (시무룩) | ✗ (angry → flat) |
 | star | ☆_☆ 별눈 — 흰 채움 + 윤곽 | ✗ (angry → flat) |
 | heart | ♥_♥ 하트눈 — 붉은 채움(#c9666a) + 윤곽 | ✗ (angry → flat) |
-| triangle | ◣_◢ 세모 눈 — 코 쪽으로 낮아지는 빗변, 흰 채움 + 동공 (사나움) | ✗ |
 | sleepy | 아래로 감은 호 | ✗ |
 | half | 반감김 — 눈꺼풀 선 **아래쪽 호**만 + 눈꺼풀 선 + 선 밑 동공 (원 전체에 선을 그으면 "선 그어진 동그라미"로 뭉개진다) | ✗ |
 | spiral | 소용돌이 | ✗ |
@@ -55,8 +54,8 @@
 | slit | 아몬드 윤곽(반높이 0.7r) + **채운** 세로 방추 동공 (얇은 획이면 작을 때 안 읽힌다) | ✗ |
 
 정적인 눈은 얼굴 잉크(faceGroup)에 굽는다 — 얼굴 돌림을 같이 따라간다. 살아 있는 눈(`RIG_EYES`)만 별도 눈 리그(흰자·윤곽·동공·눈꺼풀·^^·감은 선)로 세운다.
-새 열둘(bead·oval·line·happy·hollow, 카오모지의 squeeze·side·sparkle·droop·star·heart·triangle)은 아직 종족을 안 가른다 — 모든 종족·아키타입
-bias에 같은 무게(1.5, hollow·squeeze·side·droop·triangle 1, star·heart 0.7)로 들어 있다.
+새 열하나(bead·oval·line·happy·hollow, 카오모지의 squeeze·side·sparkle·droop·star·heart)는 아직 종족을 안 가른다 — 모든 종족·아키타입
+bias에 같은 무게(1.5, hollow·squeeze·side·droop 1, star·heart 0.7)로 들어 있다. (세모 눈 ◣_◢은 눈이 가까우면 하나로 붙어 빠졌다)
 안대에 가린 눈은 `patched(spec, eye)`로 건너뛴다 — 안대가 있을 때만 (patchSide만 보면 안대가 뒤늦게 빠졌을 때 눈이 같이 사라진다).
 
 ### brow — 눈썹 (4)

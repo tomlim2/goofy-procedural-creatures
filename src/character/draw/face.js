@@ -107,13 +107,6 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const path = heartPath(eye.x, eye.y, eye.r * 0.95, eye.r * 0.8);
       fills.fill(path, "#c9666a");
       ink.outline(path, { color: ink0, width: 0.01, step: 0.006 });
-    } else if (kind === "triangle") {
-      // ◣_◢ — 세모 눈. 코 쪽으로 낮아지는 빗변(사나움) + 흰 채움 + 동공
-      const outer = eye.side;
-      const path = [[eye.x - outer * eye.r * 0.85, eye.y - eye.r * 0.65], [eye.x + outer * eye.r * 0.85, eye.y - eye.r * 0.65], [eye.x - outer * eye.r * 0.85, eye.y + eye.r * 0.65]];
-      fills.fill(path, "#f6f2e9");
-      ink.outline(path, { color: ink0, width: 0.011 });
-      fills.fill(blobPath(eye.x - outer * eye.r * 0.15, eye.y - eye.r * 0.28, eye.r * 0.28, eye.r * 0.28, { lumps: 3, amount: 0.12, noise: null }), ink0);
     } else if (kind === "hollow") {
       // 빈 눈 — 보통 눈(ring)에서 동공만 뺀 것. 어느 종족이든 흰자 + 윤곽, 동공 없음 (도깨비도 검은 눈구멍이 아니라 흰 눈)
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null });
