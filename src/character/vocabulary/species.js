@@ -12,14 +12,15 @@ export const SPECIES = [
     // 결정적으로 덮어쓴다 — 아키타입 성향(scholar의 dot 눈 등)은 살아 있다.
     forbid: {
       arms: { none: "stick" },   // 사람은 팔이 있다 (팔 없음은 도깨비의 것)
-      ears: { long: "flap", roundBig: "roundMid", foldBig: "foldMid" },   // 사람 귀 경계
+      // 사람 귀는 사람 귀뿐 — 작은 동그란 귀(round)나 없음. 동물 귀(뾰족·늘어짐·접힘·긴 귀)는 사람에게 안 준다
+      ears: { roundMid: "round", roundBig: "round", pointy: "round", pointyMid: "round", pointyBig: "round", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       eyes: { cyclops: "wide" },
       armLength: { long: "medium" }
     },
     // 정체성 — census가 검사한다. 위반 개체가 나오면 버그다.
     identity: {
-      ears: ["none", "round", "roundMid", "pointy", "pointyMid", "pointyBig", "flap", "fold", "foldMid"],   // 늘어진 긴 귀·왕귀는 사람 것이 아니다
+      ears: ["none", "round"],   // 사람 귀는 없거나 작은 동그란 귀 — 개·고양이 귀는 사람 것이 아니다
       skeleton: "biped",
       horns: ["none"],
       eyes: { not: ["cyclops"] },
