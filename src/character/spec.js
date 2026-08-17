@@ -194,6 +194,12 @@ export function makeCreature(seed, speciesName = "human") {
       if (gap < (eyes[0].r + eyes[1].r) * scale * 1.02) parts.eyewear = "none";
     }
   }
+  // 짝눈(좌우 크기·높이가 눈에 띄게 다른 눈)에는 안대를 안 씌운다 — 한쪽을 가리면 남은 눈이 혼자 크거나 높아서 실수처럼 보인다.
+  // 비율이 정해진 뒤에 결정적으로 뺀다 (rng 없음). patchSide도 같이 지운다 (눈·눈썹이 그쪽을 건너뛰지 않게)
+  if (parts.eyewear === "patch" && (Math.abs(proportions.eyeSizeSkew) > 0.09 || Math.abs(proportions.eyeHeightSkew) > 0.03)) {
+    parts.eyewear = "none";
+    parts.patchSide = 99;
+  }
 
   return {
     seed,

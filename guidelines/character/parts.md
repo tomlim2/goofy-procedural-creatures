@@ -51,6 +51,8 @@ clock이 토글한다. 대체 표: none→flat, flat→worry, angry→flat, worr
 ### eyewear (5)
 none / glasses(양쪽 원 + 다리, 알 반지름 = 눈 × 1.45) / goggles(큰 원 + 머리까지 끈, × 1.75) / patch(한쪽 안대 + 사선 끈) / monocle(한쪽 큰 원 + 줄).
 안경·고글은 **두 알이 겹치면 뺀다**(눈이 가까운 개체 — 눈에 맞춰 억지로 줄이지 않는다, `makeCreature`가 비율 확정 뒤 none으로).
+안대는 **짝눈이면 뺀다** — 좌우 눈 크기(`eyeSizeSkew` > 0.09)나 높이(`eyeHeightSkew` > 0.03)가 눈에 띄게 다른 개체에 한쪽을 가리면 남은
+눈이 혼자 크거나 높아 실수처럼 보인다 (비율 확정 뒤 none, patchSide도 지운다).
 
 ### hair (14)
 | 값 | 방식 |
