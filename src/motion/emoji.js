@@ -8,7 +8,7 @@
 //      쏘고 나면 이모지는 자기 애니메이션 길이만큼 혼자 논다.
 // 채널은 하나. 새 트리거가 오면 이전 것을 끊고 새로 시작한다.
 
-import { ramp, bump } from "./ease.js";
+import { ramp, bump, smoothstep } from "./ease.js";
 
 // 이모지 종류. dur는 애니메이션 길이(초), anim은 곡선.
 export const EMOJI = {
@@ -16,7 +16,8 @@ export const EMOJI = {
   bang:  { dur: 1.3, anim: "pop",    label: "! 놀람" },
   quest: { dur: 2.2, anim: "wobble", label: "? 갸웃" },
   dots:  { dur: 2.6, anim: "mumble", label: "… 중얼" },
-  zzz:   { dur: 2.8, anim: "float",  label: "z 잠" }
+  zzz:   { dur: 2.8, anim: "float",  label: "z 잠" },
+  sweat: { dur: 1.8, anim: "drip",   label: "; 땀" }
 };
 
 // 이모지 채널 상태
@@ -54,6 +55,10 @@ export function stepEmoji(ch, t) {
     rot = Math.sin(k * Math.PI * 4) * 0.22;
     dy = Math.sin(k * Math.PI * 2) * 0.01;
     scale = 0.9 + 0.1 * fade;
+  } else if (def.anim === "drip") {
+    // 땀 — 관자놀이 옆에 맺혀 천천히 흘러내린다
+    dy = -smoothstep(0, 1, k) * 0.05;
+    scale = 0.8 + 0.2 * fade;
   } else {
     // 중얼 — 낮게 떠서 잔잔히 흔들림
     dy = Math.sin(k * Math.PI * 5) * 0.006;

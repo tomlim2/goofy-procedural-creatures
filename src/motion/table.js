@@ -33,7 +33,7 @@ export const MOTION = {
     surprise: [8, 22], yaw: 0.5,
     // 둘러보기 — 얼굴을 한 방향으로 돌리고 머문다. [간격], [유지], 진폭 [x, y]
     look: [6, 16], lookHold: [1.5, 4], lookAmp: [1, 0.8],
-    emojis: ["heart", "bang", "quest"]
+    emojis: ["heart", "bang", "quest", "sweat"]
   },
   pup: {
     armActions: null, armActionGap: null,
@@ -60,7 +60,7 @@ export const MOTION = {
     surprise: [10, 26], yaw: 0.7,
     // 개는 자주, 위(주인 쪽)로도 잘 본다
     look: [4, 12], lookHold: [1, 3], lookAmp: [1, 1],
-    emojis: ["heart", "bang", "quest"]
+    emojis: ["heart", "bang", "quest", "sweat"]
   },
   cat: {
     armActions: null, armActionGap: null,
@@ -110,6 +110,6 @@ export const MOTION = {
     tailSwish: null, tailFlick: null,
     surprise: [6, 14], yaw: 0.6,
     look: [5, 14], lookHold: [1, 3], lookAmp: [1, 0.7],
-    emojis: ["dots", "dots", "bang", "quest", "heart"]
+    emojis: ["dots", "dots", "bang", "quest", "heart", "sweat"]
   }
 };

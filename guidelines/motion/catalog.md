@@ -228,7 +228,7 @@ ACTION 카드의 SCRATCH/WAG는 네발에게만 먹는다. 제자리 점프는 �
 
 ## 이모지 애니메이션
 
-머리 위 ♥ ! ? … 글리프. **모션이 아니라 따로 트리거되는 층**이다 (`motion/emoji.js`) — 모션이 이모지를 쥐고 있지 않고,
+머리 위 ♥ ! ? … ; 글리프. **모션이 아니라 따로 트리거되는 층**이다 (`motion/emoji.js`) — 모션이 이모지를 쥐고 있지 않고,
 쏘고 나면 이모지는 자기 길이만큼 혼자 논다. 채널은 하나(새 트리거가 이전 것을 끊는다). scene은 `state.emoji`의 프레임
 (dy·scale·rot·opacity)을 그대로 입히고 모양만 굽는다(`scene/emoji.js`). 이모지는 머리에 붙이지 않는다 — 씬 루트에서
 머리 위 지점을 이징으로 따라가 갸웃·점프 때 한 박자 늦게 끌려온다 ([../rig.md](../rig.md)).
@@ -240,12 +240,13 @@ ACTION 카드의 SCRATCH/WAG는 네발에게만 먹는다. 제자리 점프는 �
 | quest ? | 2.2초 | wobble — 좌우로 갸웃갸웃 |
 | dots … | 2.6초 | mumble — 낮게 떠서 잔잔히 |
 | zzz z | 2.8초 | float — 떠오른다 (잠) |
+| sweat ; | 1.8초 | drip — 관자놀이 옆(정수리가 아니라 머리 옆 위)에 맺혀 천천히 흘러내린다. 옅은 파랑 물방울 |
 
 **트리거** — 두 곳에서 온다.
 
 | 트리거 | 무엇을 | 언제 |
 | --- | --- | --- |
-| idle 예약 (`events.stepEmojiSchedule`) | 종족 목록에서 하나 — human/pup heart·bang·quest, cat heart·quest·bang, imp **dots×2**·bang·quest·heart | 14~40초마다 |
+| idle 예약 (`events.stepEmojiSchedule`) | 종족 목록에서 하나 — human/pup heart·bang·quest·sweat, cat heart·quest·bang, imp **dots×2**·bang·quest·heart·sweat | 14~40초마다 |
 | 행위 `emoji` 필드 (`ACTIONS`·`QUAD_ACTIONS`) | flap 파닥임 → ♥, think 생각 → ?, wag 꼬리 흔들기 → ♥ | 행위가 **시작하는 순간** 한 번 |
 | 이벤트 | 놀람(동공 수축) → ! | 놀람이 시작할 때 30% (자는 중엔 안 놀란다) |
 | 기본 상태 | sleep → z | 자는 동안 6초마다 (개체별 위상, rng 없음) |

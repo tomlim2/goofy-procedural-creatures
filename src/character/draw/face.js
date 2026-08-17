@@ -13,7 +13,27 @@ export function patched(spec, eye) { return spec.parts.eyewear === "patch" && sp
 export const EYE_SHAPE = { oval: { sx: 0.82, sy: 1.22 } };
 export function eyeShape(spec) { return EYE_SHAPE[spec.parts.eyes] || { sx: 1, sy: 1 }; }
 // 살아 있는 눈(리그로 세우는 눈) — 나머지는 얼굴 잉크에 정적으로 굽는다
-export const RIG_EYES = ["ring", "wide", "cyclops", "bead", "oval"];
+export const RIG_EYES = ["ring", "wide", "cyclops", "bead", "oval", "sparkle"];
+
+// 별(☆) 꼭짓점 목록 — 바깥 r, 안쪽 r·inner, 위가 뾰족
+function starPath(cx, cy, r, inner = 0.45) {
+  const pts = [];
+  for (let i = 0; i < 10; i += 1) {
+    const a = Math.PI / 2 + (i / 10) * Math.PI * 2;
+    const rr = i % 2 === 0 ? r : r * inner;
+    pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+  }
+  return pts;
+}
+// 하트(♥) 폐곡선 — 폭 w, 높이 h
+function heartPath(cx, cy, w, h) {
+  const pts = [];
+  for (let i = 0; i <= 28; i += 1) {
+    const a = (i / 28) * Math.PI * 2;
+    pts.push([cx + w * Math.pow(Math.sin(a), 3), cy + h * (Math.cos(a) - 0.35 * Math.cos(2 * a) - 0.18 * Math.cos(3 * a) - 0.06 * Math.cos(4 * a)) + h * 0.2]);
+  }
+  return pts;
+}
 
 // 코·입·볼 자리를 잡을 때 보는 눈 밑선 — 흰자 위에 얹히면 같은 색(도깨비 밝은 잉크)이거나 덮여서 사라진다.
 // (놀람은 눈을 키우지 않고 동공만 줄이므로 흰자 크기는 그대로다)
@@ -60,6 +80,40 @@ export function drawEyes(ink, fills, spec, box, eyes) {
     } else if (kind === "happy") {
       // 늘 웃는 눈 ^^ — 위로 볼록한 아치 (행복 상태의 미소 아치와 같은 모양, 여기선 항상)
       ink.stroke(arcPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0, width: 0.013 });
+    } else if (kind === "squeeze") {
+      // >_< — 꼭 감은 눈. 코 쪽으로 향한 꺾쇠 (왼눈 >, 오른눈 <)
+      const inward = -eye.side;
+      ink.stroke([[eye.x - inward * eye.r * 0.7, eye.y + eye.r * 0.7], [eye.x + inward * eye.r * 0.45, eye.y], [eye.x - inward * eye.r * 0.7, eye.y - eye.r * 0.7]],
+        { color: ink0, width: 0.013, jitter: 0.004 });
+    } else if (kind === "side") {
+      // ¬_¬ — 곁눈질. 반감김(아래쪽 호 + 눈꺼풀 선)인데 동공이 한쪽으로 몰린다 (어느 쪽인지는 개체별)
+      const dir = spec.proportions.wobbleSeed % 2 ? 1 : -1;
+      const lidY = eye.r * 0.3;
+      const a0 = Math.asin(lidY / eye.r);
+      ink.stroke(arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18), { color: ink0, width: 0.011 });
+      ink.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: ink0, width: 0.013 });
+      fills.fill(blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink0);
+    } else if (kind === "droop") {
+      // ´･ω･` — 처진 눈꼬리. 점 눈 위에 바깥으로 내려가는 눈꺼풀 획 (시무룩)
+      fills.fill(blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0);
+      ink.stroke([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0, width: 0.011 });
+    } else if (kind === "star") {
+      // ☆_☆ — 별눈. 흰 채움 + 윤곽
+      const path = starPath(eye.x, eye.y, eye.r * 1.05);
+      fills.fill(path, "#f6f2e9");
+      ink.outline(path, { color: ink0, width: 0.01, step: 0.006 });
+    } else if (kind === "heart") {
+      // ♥_♥ — 하트눈. 붉은 채움 + 윤곽
+      const path = heartPath(eye.x, eye.y, eye.r * 0.95, eye.r * 0.8);
+      fills.fill(path, "#c9666a");
+      ink.outline(path, { color: ink0, width: 0.01, step: 0.006 });
+    } else if (kind === "triangle") {
+      // ◣_◢ — 세모 눈. 코 쪽으로 낮아지는 빗변(사나움) + 흰 채움 + 동공
+      const outer = eye.side;
+      const path = [[eye.x - outer * eye.r * 0.85, eye.y - eye.r * 0.65], [eye.x + outer * eye.r * 0.85, eye.y - eye.r * 0.65], [eye.x - outer * eye.r * 0.85, eye.y + eye.r * 0.65]];
+      fills.fill(path, "#f6f2e9");
+      ink.outline(path, { color: ink0, width: 0.011 });
+      fills.fill(blobPath(eye.x - outer * eye.r * 0.15, eye.y - eye.r * 0.28, eye.r * 0.28, eye.r * 0.28, { lumps: 3, amount: 0.12, noise: null }), ink0);
     } else if (kind === "hollow") {
       // 빈 눈 — 보통 눈(ring)에서 동공만 뺀 것. 어느 종족이든 흰자 + 윤곽, 동공 없음 (도깨비도 검은 눈구멍이 아니라 흰 눈)
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.08, noise: null });

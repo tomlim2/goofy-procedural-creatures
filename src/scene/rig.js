@@ -127,6 +127,7 @@ export function buildCreature(spec, noise, birth = 0) {
     rig.position.set(eye.x, eye.y - faceCy, 0);
     const rx = eye.r * shape.sx, ry = eye.r * shape.sy;
     const bead = eyeKind === "bead";
+    const sparkle = eyeKind === "sparkle";   // ◕ — 흰자 안을 거의 채우는 큰 동공 + 하이라이트
 
     if (!bead) {
       const white = new Sketch(noise, 0.4);
@@ -148,6 +149,9 @@ export function buildCreature(spec, noise, birth = 0) {
       pupilSketch.fill(ball, spec.palette.ink);
       if (spec.faceInk) pupilSketch.outline(ball, { color: spec.faceInk, width: 0.01 });
       pupilSketch.fill(blobPath(-eye.r * 0.3, eye.r * 0.32, eye.r * 0.2, eye.r * 0.17, { lumps: 3, amount: 0.1, noise: null }), "#f6f2e9");
+    } else if (sparkle) {
+      pupilSketch.fill(blobPath(0, 0, eye.r * 0.7, eye.r * 0.7, { lumps: 3, amount: 0.08, noise: null }), spec.palette.ink);
+      pupilSketch.fill(blobPath(-eye.r * 0.26, eye.r * 0.26, eye.r * 0.2, eye.r * 0.17, { lumps: 3, amount: 0.1, noise: null }), "#f6f2e9");
     } else {
       pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
     }
@@ -184,7 +188,7 @@ export function buildCreature(spec, noise, birth = 0) {
 
     faceGroup.add(rig);
     // gazeScale: 시선에 동공이 움직이는 폭(눈 반지름 배). 구슬눈은 동공이 곧 눈이라 조금만
-    eyeRigs.push({ rig, pupil, lid, smile, shut, eye, gazeScale: bead ? 0.12 : 0.34 });
+    eyeRigs.push({ rig, pupil, lid, smile, shut, eye, gazeScale: bead ? 0.12 : sparkle ? 0.14 : 0.34 });
   }
 
   // 잠 눈꺼풀 — 정지 눈(dot·cross·slit…)은 얼굴 잉크에 구워져 있어 감을 수 없다. 잘 때 그 위에 덮는 살색 덮개 + 감은 선.

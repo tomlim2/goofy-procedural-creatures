@@ -136,7 +136,9 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       item.emojiRoot.add(item.emojiMesh);
     }
     item.headGroup.updateWorldMatrix(true, false);
-    EMOJI_TARGET.set(0.02, item.headTop - item.neckY + 0.15, 0);
+    // 종류별 자리: 대개 정수리 위, 땀은 관자놀이 옆
+    if (emoji.kind === "sweat") EMOJI_TARGET.set(item.headRx * 0.95, item.headTop - item.neckY - item.headRy * 0.35, 0);
+    else EMOJI_TARGET.set(0.02, item.headTop - item.neckY + 0.15, 0);
     item.headGroup.localToWorld(EMOJI_TARGET);
     if (!item.emojiPos) item.emojiPos = EMOJI_TARGET.clone();
     else item.emojiPos.lerp(EMOJI_TARGET, snap ? 1 : 0.1);
