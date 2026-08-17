@@ -23,7 +23,7 @@ export const ARCHETYPES = [
       eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1]],
       hair: [["bob", 3], ["helmet", 2], ["bangs", 2], ["longbob", 1.5], ["long", 1.5], ["verylong", 1], ["ponytail", 1], ["wisp", 2], ["curly", 2], ["cloud", 1], ["sweep", 2], ["none", 2]],
       headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet 비활성
-      mouth: [["line", 3], ["dot", 2], ["smile", 2], ["three", 1.5], ["frown", 1]],
+      mouth: [["line", 3], ["dot", 2], ["smile", 2], ["three", 1.5], ["frown", 1], ["bracket", 1]],
       nose: [["long", 3], ["hook", 3], ["dot", 1]],
       horns: [["none", 6], ["nub", 1]]
     }

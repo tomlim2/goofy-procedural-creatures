@@ -1,4 +1,4 @@
-// 입 — 18종. 문서: guidelines/character/parts.md § mouth
+// 입 — 20종. 문서: guidelines/character/parts.md § mouth
 // 종류마다 그리기 함수 하나 — MOUTH 표. 새 입은 여기 함수를 하나 붙이고 slots.js SLOTS.mouth에 이름을 넣는다.
 // 함수는 m(문맥)을 받는다: { ink, fills, spec, box, y(입 중심), w(반폭), openH(벌린 높이), ink0(입 잉크), tooth(이빨색), pink(혀색) }
 // 자리·폭·잉크는 mouthPlacement가 정한다 — 종족(개는 주둥이 위)·mouthPos·mouthSize·개체 지터를 여기서 한 번에 푼다.
@@ -149,6 +149,16 @@ export const MOUTH = {
   },
   // 야옹 — 작은 세로 타원 채움 (고양이 벌린 입)
   meow: (m) => m.fills.fill(blobPath(m.x, m.y - 0.004, 0.013, Math.max(0.016, Math.min(0.024, m.openH * 0.55)), { lumps: 3, amount: 0.12, noise: null }), m.ink0),
+  // 괄호 입 )-( — 짧은 일자 입 양끝에 안으로 볼록한 볼 주름 괄호. 어드벤처 타임 식 "흠…"(입 다물고 볼이 눌린 얼굴)
+  bracket: (m) => {
+    const hw = m.w * 0.55, bh = Math.max(0.012, Math.min(0.02, m.openH * 0.45));
+    m.ink.stroke([[m.x - hw, m.y], [m.x + hw, m.y + 0.002]], { color: m.ink0, width: 0.011 });
+    for (const s of [-1, 1]) {
+      // ) 와 ( — 볼록한 쪽이 입 쪽을 향한다
+      const cx = m.x + s * (hw + 0.012);
+      m.ink.stroke(arcPath(cx, m.y, 0.009, bh, s > 0 ? Math.PI * 0.5 : -Math.PI * 0.5, s > 0 ? Math.PI * 1.5 : Math.PI * 0.5, 8), { color: m.ink0, width: 0.01 });
+    }
+  },
   // 혀 빼꼼 blep — ω 밑으로 혀 끝만 (고양이)
   blep: (m) => {
     MOUTH.omega(m);

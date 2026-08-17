@@ -29,10 +29,10 @@ export const SLOTS = {
   nose: ["hook", "dot", "wedge", "long", "none"],
   // 볼·눈가 디테일. 레퍼런스의 눈물 자국과 볼터치.
   face2: ["none", "tears", "blush", "freckles"],
-  // 입 19종 (draw/mouth.js MOUTH 표). 레퍼런스: 사람은 아주 작은 입(점·선·처짐·3)이 기본이고 눈에 띄는 건 이빨 격자(grimace)·씨익(grin)·해칭(scribble),
+  // 입 20종 (draw/mouth.js MOUTH 표). 레퍼런스: 사람은 아주 작은 입(점·선·처짐·3)이 기본이고 눈에 띄는 건 이빨 격자(grimace)·씨익(grin)·해칭(scribble),
   // 개는 w(omega)·o(open)·혀(tongue), 고양이는 ω·3·야옹(meow)·혀 빼꼼(blep)·하악(fangs), 도깨비는 넓은 격자·해칭·가시 이빨(teeth)·지그재그·송곳니·네모 벌림(shout)
   mouth: ["dot", "line", "teeth", "open", "wave", "smile", "pout", "omega", "zigzag",
-    "frown", "three", "grimace", "grin", "scribble", "tongue", "fangs", "shout", "meow", "blep"],
+    "frown", "three", "grimace", "grin", "scribble", "tongue", "fangs", "shout", "meow", "blep", "bracket"],
   body: ["bean", "box", "dress", "tube"],
   marks: ["none", "stripes", "dots", "patch", "hatch", "spots"],
   // 다리 유형(형태만). 레퍼런스: 전부 끝에 동그란 발이 있고 몸 밑에서 나온다.
@@ -98,7 +98,7 @@ export const DEFAULT_BIAS = {
   tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["block", 1], ["ball", 1], ["puff", 1]],   // ringed·wedge 비활성
   tailLength: [["long", 3], ["medium", 2], ["short", 1.5]],
   // 입 — 사람 기준(종족 bias가 없을 때). 작은 입이 기본, 격자·씨익·해칭은 양념. 가시 이빨·지그재그·야옹·혀 빼꼼은 종족 것이라 0
-  mouth: [["line", 3], ["dot", 2], ["smile", 2], ["frown", 1.5], ["three", 1.5], ["pout", 1], ["open", 1], ["wave", 1], ["grimace", 1], ["grin", 1], ["scribble", 0.3]],
+  mouth: [["line", 3], ["dot", 2], ["smile", 2], ["frown", 1.5], ["three", 1.5], ["pout", 1], ["open", 1], ["wave", 1], ["grimace", 1], ["grin", 1], ["bracket", 1], ["scribble", 0.3]],
   mouthPos: [["mid", 2], ["high", 1.5], ["low", 1.5]],
   mouthSize: [["normal", 3], ["small", 2], ["wide", 1]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
