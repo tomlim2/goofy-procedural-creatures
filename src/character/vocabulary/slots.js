@@ -30,7 +30,8 @@ export const SLOTS = {
   // 볼·눈가 디테일. 레퍼런스의 눈물 자국과 볼터치.
   face2: ["none", "tears", "blush", "freckles"],
   // 입 20종 (draw/mouth.js MOUTH 표). 레퍼런스: 사람은 아주 작은 입(점·선·처짐·3)이 기본이고 눈에 띄는 건 이빨 격자(grimace)·씨익(grin)·해칭(scribble),
-  // 개는 w(omega)·o(open)·혀(tongue), 고양이는 ω·3·야옹(meow)·혀 빼꼼(blep)·하악(fangs), 도깨비는 넓은 격자·해칭·가시 이빨(teeth)·지그재그·송곳니·네모 벌림(shout)
+  // 개는 w(omega)·o(open)·혀(tongue), 고양이는 ω·3·야옹(meow)·혀 빼꼼(blep)·하악(fangs), 도깨비는 넓은 격자·해칭·가시 이빨(teeth)·지그재그·송곳니.
+  // shout(네모 벌림)은 **비활성** — 자산은 남기고 어떤 bias에도 안 넣는다 (어두운 얼굴에서 빈 밝은 막대로 읽힌다)
   mouth: ["dot", "line", "teeth", "open", "wave", "smile", "pout", "omega", "zigzag",
     "frown", "three", "grimace", "grin", "scribble", "tongue", "fangs", "shout", "meow", "blep", "bracket"],
   body: ["bean", "box", "dress", "tube"],

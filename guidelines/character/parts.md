@@ -164,7 +164,7 @@ none / tears(눈 아래 두 줄 — **사람에겐 없다**, forbid → none; �
 | frown | ⌢ 처진 작은 호 | 사람 |
 | bracket | **)-(** — 짧은 일자 입 양끝에 안으로 볼록한 볼 주름 괄호. 어드벤처 타임 식 "흠…"(입 다물고 볼이 눌린 얼굴) | 사람(스콜라) |
 | open | 벌린 입 — 윗입술은 곧고 아래만 둥근 **그릇 꼴** 채움 + 윗입술 선 (타원 덩어리는 동굴처럼 읽혀 안 쓴다) | 사람·개(짖음)·도깨비 |
-| shout | □ 네모 벌림 — 모서리 각진 채움 + 윗입술 선 | 도깨비 |
+| shout | □ 네모 벌림 — 모서리 각진 채움 + 윗입술 선. **비활성** — 어두운 얼굴에서 빈 밝은 막대로 읽혀 실수 같다(어떤 bias에도 없다, 갤러리에만) | — |
 | pout | 놀란 작은 o (윤곽) | 사람 |
 | meow | 야옹 — 작은 세로 타원 채움 | 고양이 |
 | omega | ω — 두 호가 아래로 볼록. 개는 코 밑 w | 고양이·개 |
@@ -181,7 +181,7 @@ none / tears(눈 아래 두 줄 — **사람에겐 없다**, forbid → none; �
 **자리** `mouthPos`(늦은 슬롯) — 코 밑(`noseBottomY`)부터 턱 위(headCy − 0.86·ry)까지 사이의 **high**(0.22) · **mid**(0.5) · **low**(0.76). 코가 없으면 위 한계는
 눈 밑선/머리 중심 조금 아래. 개는 주둥이 규칙(코 밑 고정). 어느 자리든 (놀라 커진) 눈 아래에 있어야 한다. 두발은 개체(wobbleSeed)로 **±0.1rx 옆으로 비껴** 앉는다(레퍼런스,
 rng 없음). **크기** `mouthSize`(늦은 슬롯) — 폭 배율 small 0.7 · normal 1 · wide 1.4, 도깨비는 종족 배율 1.3이 더 곱해진다. 종족 편향: 사람 small↑, 도깨비 wide↑.
-흰 채움(격자·씨익·송곳니)은 종이빛 흰색, 혀는 볼터치 분홍 — 얼굴 잉크가 밝은 도깨비 얼굴에서도 읽힌다.
+흰 채움(격자·씨익·송곳니)은 종이빛 흰색이고 그 위의 테·세로 줄은 **팔레트 잉크(어두움)** — 도깨비의 밝은 얼굴 잉크로 그으면 흰 바탕에 묻혀 빈 흰 막대만 남는다. 혀는 볼터치 분홍.
 
 **상태 벌**(`faceStates.js`): 쉼 / 대체(`ALT_MOUTH` — dot↔line, line↔wave, smile→grin, omega↔three, grimace→line, tongue→open, fangs→line, shout→open, meow·blep→omega, teeth→open, zigzag·scribble→wave, frown·bracket→line, pout→dot) /
 **화남**(`ANGRY_MOUTH` — 사람·개 grimace, 고양이·도깨비 fangs) / **^^**(`HAPPY_MOUTH` — 개만 tongue, 나머지는 쉼 입 그대로). 같은 종류면 메시를 나눠 쓴다.

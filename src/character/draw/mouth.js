@@ -1,6 +1,6 @@
 // 입 — 20종. 문서: guidelines/character/parts.md § mouth
 // 종류마다 그리기 함수 하나 — MOUTH 표. 새 입은 여기 함수를 하나 붙이고 slots.js SLOTS.mouth에 이름을 넣는다.
-// 함수는 m(문맥)을 받는다: { ink, fills, spec, box, y(입 중심), w(반폭), openH(벌린 높이), ink0(입 잉크), tooth(이빨색), pink(혀색) }
+// 함수는 m(문맥)을 받는다: { ink, fills, spec, box, x·y(입 중심), w(반폭), openH(벌린 높이), ink0(입 잉크 — 얼굴 잉크), edge(흰 이빨 위의 테·줄 — 팔레트 잉크, 늘 어둡다) }
 // 자리·폭·잉크는 mouthPlacement가 정한다 — 종족(개는 주둥이 위)·mouthPos·mouthSize·개체 지터를 여기서 한 번에 푼다.
 // 상태 전환(쉼·대체·화남·^^)의 종류 표는 faceStates.js.
 
@@ -38,7 +38,8 @@ export function mouthPlacement(spec, box) {
     y = m.my - box.headRy * 0.12;
     w = Math.min(w, m.rx * 0.72);
   }
-  return { x, y, w, openH, ink0 };
+  // 흰 채움(이빨 격자·씨익·송곳니) 위의 테·줄은 **팔레트 잉크(어두움)** — 도깨비의 밝은 얼굴 잉크로 그으면 흰 바탕에 묻혀 빈 흰 막대만 남는다(실수처럼 보인다)
+  return { x, y, w, openH, ink0, edge: spec.palette.ink };
 }
 
 // 벌린 입 — 동그란 구멍이 아니라 **윗입술은 곧고 아래만 둥근 그릇**(D를 눕힌 꼴): 채움 + 윗입술 선. 타원 덩어리는 동굴처럼 읽힌다
@@ -57,10 +58,10 @@ function bowl(m, hw, depth) {
 function grid(m, hw, hh, bars) {
   const box = blobPath(m.x, m.y, hw, hh, { lumps: 3, amount: 0.04, noise: null, square: 2 });
   m.fills.fill(box, TOOTH);
-  m.ink.outline(box, { color: m.ink0, width: 0.011 });
+  m.ink.outline(box, { color: m.edge, width: 0.011 });
   for (let i = 1; i <= bars; i += 1) {
     const x = m.x - hw + (2 * hw * i) / (bars + 1);
-    m.ink.stroke([[x, m.y + hh * 0.9], [x + 0.001, m.y - hh * 0.9]], { color: m.ink0, width: 0.008 });
+    m.ink.stroke([[x, m.y + hh * 0.9], [x + 0.001, m.y - hh * 0.9]], { color: m.edge, width: 0.008 });
   }
 }
 // 혀 — 입 아래로 늘어진 분홍 덩어리 + 가운데 줄
@@ -76,7 +77,7 @@ function fangs(m, hw, drop) {
     const fx = m.x + s * hw * 0.55;
     const tri = [[fx - 0.008, m.y], [fx + 0.008, m.y], [fx + s * 0.002, m.y - drop]];
     m.fills.fill(tri, TOOTH);
-    m.ink.outline(tri, { color: m.ink0, width: 0.007 });
+    m.ink.outline(tri, { color: m.edge, width: 0.007 });
   }
 }
 
@@ -124,9 +125,9 @@ export const MOUTH = {
     const seg = [];
     for (let i = 0; i <= 12; i += 1) { const t = (i / 12) * Math.PI; seg.push([m.x - hw * Math.cos(t), top - depth * Math.sin(t)]); }
     m.fills.fill(seg, TOOTH);
-    m.ink.stroke(seg, { color: m.ink0, width: 0.011 });
-    m.ink.stroke([[m.x - hw, top], [m.x + hw, top + 0.002]], { color: m.ink0, width: 0.01 });
-    for (const k of [-0.33, 0.33]) m.ink.stroke([[m.x + hw * k, top], [m.x + hw * k + 0.001, top - depth * 0.7]], { color: m.ink0, width: 0.007 });
+    m.ink.stroke(seg, { color: m.edge, width: 0.011 });
+    m.ink.stroke([[m.x - hw, top], [m.x + hw, top + 0.002]], { color: m.edge, width: 0.01 });
+    for (const k of [-0.33, 0.33]) m.ink.stroke([[m.x + hw * k, top], [m.x + hw * k + 0.001, top - depth * 0.7]], { color: m.edge, width: 0.007 });
   },
   // 해칭 입 — 입 자리를 가로 빗금 뭉치로 덮는다 (레퍼런스 사람 2줄 4번째·도깨비). 이를 악문 것 같기도, 수염 같기도
   scribble: (m) => m.ink.hatch(m.x, m.y, m.w * 0.9, Math.max(0.012, Math.min(0.02, m.openH * 0.45)), 0.08, { color: m.ink0, lines: 5, width: 0.007 }),
@@ -140,7 +141,7 @@ export const MOUTH = {
     m.ink.stroke([[m.x - m.w, m.y + 0.002], [m.x + m.w, m.y - 0.002]], { color: m.ink0, width: 0.011 });
     fangs(m, m.w, Math.max(0.014, Math.min(0.026, m.openH * 0.6)));
   },
-  // 네모 벌림 □ — 소리치는 입. 윗입술 곧게, 모서리 각지게 채움
+  // 네모 벌림 □ — 소리치는 입. 윗입술 곧게, 모서리 각지게 채움. **비활성** — 어두운 얼굴에서 밝은 네모 덩어리로 읽혀 실수 같다(어떤 bias에도 없다, 갤러리에만)
   shout: (m) => {
     const hw = m.w * 0.72, top = m.y + m.openH * 0.35, bottom = m.y - m.openH * 1.05;
     const sq = blobPath(m.x, (top + bottom) / 2, hw, (top - bottom) / 2, { lumps: 3, amount: 0.05, noise: null, square: 2.2 });
