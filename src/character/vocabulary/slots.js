@@ -36,7 +36,8 @@ export const SLOTS = {
   // kink 꺾인 꼬리(고양이) · ring 등 위로 말린 고리(스피츠). 무엇을 입히나는 tailSkin
   tail: ["curl", "flag", "longtail", "stubtail", "hook", "kink", "ring"],
   // 꼬리 **스킨** — 골격 위에 입히는 것. line 가는 선 한 획 · thick 채운 굵은 꼬리 · plume 북슬한 깃털(털 획) · tuft 끝 뭉치(사자) · ringed 고리 무늬(너구리) ·
-  // block 네모(폭 일정, 끝이 각짐) · wedge 세모(뿌리 넓고 끝 뾰족) · ball 동그라미(척추를 따라 구슬, 스텁이면 폼폼 하나)
+  // block 네모(폭 일정, 끝이 각짐) · wedge 세모(뿌리 넓고 끝 뾰족) · ball 동그라미(척추를 따라 구슬, 스텁이면 폼폼 하나).
+  // ringed·wedge는 쥐꼬리처럼 보여 **비활성** — 자산(그리기·갤러리)은 남기고 어떤 bias에도 안 넣는다 (뽑히지 않는다)
   tailSkin: ["line", "thick", "plume", "tuft", "ringed", "block", "wedge", "ball"],
   // 꼬리 **기장** — 골격을 통째로 줄인다 (long 1 · medium 0.7 · short 0.45). 스킨 두께는 그대로
   tailLength: ["long", "medium", "short"],
@@ -78,7 +79,7 @@ export const DEFAULT_BIAS = {
   face2: [["none", 5], ["blush", 2], ["freckles", 2], ["tears", 1.5]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2], ["hook", 1.5], ["kink", 1], ["ring", 1.5]],
-  tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["ringed", 1], ["block", 1], ["wedge", 1], ["ball", 1]],
+  tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["block", 1], ["ball", 1]],   // ringed·wedge 비활성
   tailLength: [["long", 3], ["medium", 2], ["short", 1.5]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],

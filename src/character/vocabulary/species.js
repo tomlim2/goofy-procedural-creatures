@@ -64,7 +64,7 @@ export const SPECIES = [
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1]],
       marks: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1]],
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
-      tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["tuft", 1], ["ringed", 0.5], ["ball", 1], ["wedge", 1], ["block", 0.5]],   // 개는 굵거나 북슬(스피츠), 폼폼도
+      tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // 개는 굵거나 북슬(스피츠), 폼폼도. ringed·wedge 비활성
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
       face2: [["none", 5], ["blush", 1]]
     }
@@ -104,7 +104,7 @@ export const SPECIES = [
       mouth: [["omega", 4], ["line", 2], ["dot", 2], ["wave", 1], ["smile", 1]],
       marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1]],
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
-      tailSkin: [["line", 3], ["thick", 2], ["ringed", 1.5], ["plume", 1.5], ["tuft", 1], ["wedge", 1], ["block", 0.5], ["ball", 0.5]],   // 고양이는 가는 선·고리 무늬(얼룩)
+      tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5]],   // 고양이는 가는 선. ringed·wedge 비활성
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
       face2: [["none", 5], ["blush", 1], ["freckles", 1]]
     }
