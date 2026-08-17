@@ -107,7 +107,8 @@ export const SPECIES = [
       hair: [["none", 1]],
       headgear: [["none", 1]],
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
-      nose: [["dot", 5], ["none", 2]],
+      // 코 — 고양이는 슬롯을 고양이 코로 읽는다(face.js catNose): dot 작은 세모 · wedge 하트 · hook 세모+인중 · long 넓적+긴 인중 · none 없음
+      nose: [["dot", 3], ["wedge", 2], ["hook", 2], ["long", 1], ["none", 1.5]],
       eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["cross", 2], ["wide", 2], ["dot", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 2], ["sharp", 2]],
       // 입 — ω 압도적, 뒤집은 ω(smug), 오므린 3, 선·점, 야옹 o(meow), 혀 빼꼼(blep). 물결·웃음은 없다 (레퍼런스 4줄)
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],

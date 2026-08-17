@@ -352,7 +352,36 @@ export function noseY(spec, box, eyes) {
   return Math.min(box.headCy - box.headRy * spec.proportions.noseDrop, eyeFloor(spec, eyes, 0) - 0.008);
 }
 
+// 고양이 코 — 코 슬롯을 **고양이 것으로 읽는다**(개가 주둥이로 읽는 것과 같은 방식): dot 작은 세모 · wedge 하트 · hook 세모 + 인중(Y) ·
+// long 넓적한 세모 + 긴 인중 · none 없음. 선 하나로 그으면 입과 헷갈리니 **채운** 세모다. 분홍(볼터치·혀와 같은 색) + 얼굴 잉크 테 —
+// 밝은 얼굴에서도 검정 털에서도 읽힌다. 인중은 코 밑에서 입 쪽으로 내려가는 짧은 세로선
+function catNose(ink, fills, spec, box, eyes) {
+  const kind = spec.parts.nose;
+  const y = noseY(spec, box, eyes);
+  const ink0 = spec.faceInk || spec.palette.ink;
+  const w = Math.max(0.024, box.headRx * (kind === "long" ? 0.13 : 0.1));   // 반폭
+  const h = Math.max(0.017, box.headRy * (kind === "wedge" ? 0.085 : 0.072));
+  let path;
+  if (kind === "wedge") {
+    // 하트 코 — 위 두 봉우리 + 아래 뾰족
+    path = [];
+    for (let i = 0; i <= 20; i += 1) {
+      const a = (i / 20) * TAU;
+      path.push([w * 0.95 * Math.pow(Math.sin(a), 3), y + h * (Math.cos(a) - 0.35 * Math.cos(2 * a) - 0.18 * Math.cos(3 * a) - 0.06 * Math.cos(4 * a)) * 0.75 + h * 0.15]);
+    }
+  } else {
+    // 세모 코 — 위가 넓고 아래가 뾰족, 모서리는 살짝 둥글다
+    path = [[-w, y + h * 0.55], [-w * 0.55, y + h * 0.8], [w * 0.55, y + h * 0.8], [w, y + h * 0.55], [w * 0.4, y - h * 0.35], [0, y - h * 0.8], [-w * 0.4, y - h * 0.35]];
+  }
+  fills.fill(path, "#d9968a");
+  ink.outline(path, { color: ink0, width: 0.009 });
+  // 인중 — 코 밑에서 입 쪽으로. hook은 짧게, long은 길게 (Y자 얼굴)
+  const drop = kind === "hook" ? h * 1.1 : kind === "long" ? h * 2 : 0;
+  if (drop) ink.stroke([[0, y - h * 0.7], [0.001, y - h * 0.7 - drop]], { color: ink0, width: 0.009 });
+}
+
 export function drawNose(ink, fills, spec, box, eyes) {
+  if (spec.species === "cat" && spec.parts.nose !== "none") { catNose(ink, fills, spec, box, eyes); return; }
   if (spec.species === "pup") {
     const m = muzzleGeometry(spec, box);
     // 주둥이(코·입이 묶인 영역)는 **색만** — 윤곽선을 두르지 않는다. 선을 두르면 얼굴에 덧댄 판때기처럼 보인다 (색 얼룩으로 남아야 한다)
