@@ -1,7 +1,7 @@
 // 몸 — 몸통·무늬. 문서: guidelines/character/parts.md § 몸
 
 import { blobPath } from "../../stroke.js";
-import { shade, isDark } from "../../color.js";
+import { shade, isDark, luminance } from "../../color.js";
 
 export function drawBody(ink, fills, spec, box, noise) {
   if (box.quad) {
@@ -51,7 +51,8 @@ export function drawBody(ink, fills, spec, box, noise) {
 export function drawMarks(ink, spec, body) {
   const kind = spec.parts.marks;
   if (kind === "none") return;
-  const ink0 = spec.palette.ink;
+  // 몸 무늬는 **몸 색 위에** 그린다 — 어두운 몸(검정 털 개·고양이, 도깨비)에는 검정 무늬가 묻힌다. 얼굴 잉크와 같은 규칙(휘도 < 120 → 밝은 잉크)
+  const ink0 = luminance(spec.palette.cloth) < 120 ? "#e9e3d5" : spec.palette.ink;
   const { top, bottom, w, cx = 0 } = body;
 
   if (kind === "stripes") {

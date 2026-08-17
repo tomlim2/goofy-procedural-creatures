@@ -7,7 +7,7 @@
 //   3. 비율 지터  — 실루엣 다양성의 대부분은 연속값에서 나온다
 
 import { makeRng } from "../rng.js";
-import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS } from "./vocabulary/index.js";
+import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL } from "./vocabulary/index.js";
 import { shade, luminance } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
@@ -151,7 +151,8 @@ export function makeCreature(seed, speciesName = "human") {
   // 도깨비 머리색과 몸 색 추첨. rng 호출 수는 종족과 무관하게 고정한다 (판정은 아래).
   const darkHead = rng.pick(DARKS);
   const bodyRoll = rng.next();
-  rng.pick(DARKS);   // (호출 수 고정용 — 예전 "다른 어두운 색" 자리)
+  // 검정 계열 털 — 개·고양이만. 주머니에 null이 섞여 있어 이 한 번의 pick이 "검정 털이냐"와 "어느 검정이냐"를 같이 정한다 (약 1/3)
+  const darkFur = rng.pick(FUR_POOL);
 
   // 색 포인트. 호출 수를 고정하기 위해 무조건 두 번 뽑고 나서 판정한다.
   const popRoll = rng.next();
@@ -174,6 +175,8 @@ export function makeCreature(seed, speciesName = "human") {
     // 잉크는 머리보다 더 어둡게 — 윤곽이 머리에 묻히지 않도록
     palette.ink = "#1c1917";
   } else if (species.name === "pup" || species.name === "cat") {
+    // 검정 계열 털(약 1/3) — 색 포인트가 피부에 붙은 개체는 그대로 둔다 (포인트가 이기는 게 판에서 더 눈에 띈다)
+    if (darkFur && !(palette.pop && palette.pop.target === "skin")) palette.skin = darkFur;
     // 개·고양이: 몸은 머리(털)색 그대로 절반, 나머지는 같은 계열의 톤
     if (bodyRoll < 0.5) palette.cloth = palette.skin;
     else if (bodyRoll < 0.8) palette.cloth = shade(palette.skin, 0.9);   // 조금 어두운 톤

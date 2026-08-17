@@ -3,6 +3,7 @@
 
 import { blobPath, arcPath } from "../../stroke.js";
 import { TAU } from "./layout.js";
+import { shade, luminance } from "../../color.js";
 
 // 이 눈이 안대에 가려졌나 — 안대가 있을 때만 patchSide를 본다 (갤러리 fix나 뒤늦은 제약으로 안대가 빠져도 눈이 같이 사라지지 않게)
 export function patched(spec, eye) { return spec.parts.eyewear === "patch" && spec.parts.patchSide === eye.side; }
@@ -251,15 +252,20 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
   }
 }
 
-// 개 주둥이 치수. 코 슬롯이 주둥이의 형태를 정한다 — 같은 슬롯으로 종족별 변형을 얻는다.
-// 코(drawNose)와 입(drawMouth)이 같은 치수를 본다 — 입은 주둥이 위, 코 밑에 앉는다.
+// 개 주둥이 치수·색. 코 슬롯이 주둥이의 형태를 정한다 — 같은 슬롯으로 종족별 변형을 얻는다.
+// 코(drawNose)와 입(drawMouth·mouth.js)이 같은 치수를 본다 — 입은 주둥이 위, 코 밑에 앉는다.
+//   fill 주둥이 색 — 개체마다(wobbleSeed, rng 없음): 밝은 크림 45% · 털색보다 살짝 밝은 톤 30% · **검정 계열**(털색의 0.55배) 25%. 주둥이는 **색만**이고 윤곽선은 없다(색 얼룩)
+//   ink  주둥이 **위에 그리는 선**(입)의 색 — 주둥이 휘도로 갈린다(밝으면 검정, 어두우면 밝은 잉크). 코는 물건이라 늘 검정이되 어두운 주둥이에선 밝은 테를 두른다
 export function muzzleGeometry(spec, box) {
   const kind = spec.parts.nose;
   const mw = kind === "hook" ? 0.62 : kind === "long" ? 0.68 : kind === "wedge" ? 0.4 : 0.5;
   const mh = kind === "long" ? 0.28 : kind === "wedge" ? 0.3 : 0.36;
   const my = box.headCy - box.headRy * (kind === "long" ? 0.48 : 0.42);
   const nr = kind === "hook" ? 0.05 : kind === "dot" ? 0.032 : 0.04;
-  return { my, rx: box.headRx * mw, ry: box.headRy * mh, noseY: my + box.headRy * 0.16, noseR: nr };
+  const roll = spec.proportions.wobbleSeed % 100;
+  const fill = roll < 45 ? "#f0ebdf" : roll < 75 ? shade(spec.palette.skin, 1.12) : shade(spec.palette.skin, 0.55);
+  const dark = luminance(fill) < 120;
+  return { my, rx: box.headRx * mw, ry: box.headRy * mh, noseY: my + box.headRy * 0.16, noseR: nr, fill, dark, ink: dark ? "#e9e3d5" : spec.palette.ink };
 }
 
 // 코 기준점(사람·고양이·도깨비). 눈이 가운데까지 닿을 만큼 크면(왕눈·외눈) 코가 눈 속에 묻힌다 — (놀라 커진) 눈 아래로 내린다
@@ -270,11 +276,12 @@ export function noseY(spec, box, eyes) {
 export function drawNose(ink, fills, spec, box, eyes) {
   if (spec.species === "pup") {
     const m = muzzleGeometry(spec, box);
+    // 주둥이(코·입이 묶인 영역)는 **색만** — 윤곽선을 두르지 않는다. 선을 두르면 얼굴에 덧댄 판때기처럼 보인다 (색 얼룩으로 남아야 한다)
     const muzzle = blobPath(0, m.my, m.rx, m.ry, { lumps: 3, amount: 0.1, noise: null });
-    fills.fill(muzzle, "#f0ebdf");
-    ink.outline(muzzle, { color: spec.palette.ink, width: 0.01 });
+    fills.fill(muzzle, m.fill);
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
-    fills.fill(nose, spec.palette.ink);
+    fills.fill(nose, spec.palette.ink);   // 코는 물건 — 늘 검정
+    if (m.dark) ink.outline(nose, { color: m.ink, width: 0.008 });   // 어두운 주둥이 위에서는 밝은 테로 코를 잡는다 (안대와 같은 규칙)
     return;
   }
 
@@ -284,7 +291,9 @@ export function drawNose(ink, fills, spec, box, eyes) {
   const ink0 = spec.faceInk || spec.palette.ink;
 
   if (kind === "dot") {
-    ink.stroke([[-0.014, y], [0.014, y]], { color: ink0, width: 0.016 });
+    // 점 코 — **머리에 비례**한다. 고정 크기로 두면 왕머리·넓은 머리에서 콩알보다 작아져 얼굴 돌림 때 사라진다 (전수조사가 잡는다)
+    const half = Math.max(0.014, box.headRx * 0.055);
+    ink.stroke([[-half, y], [half, y]], { color: ink0, width: Math.max(0.016, box.headRy * 0.06) });
   } else if (kind === "hook") {
     ink.stroke([[0.004, y + 0.07], [0.01, y], [-0.035, y - 0.012]], { color: ink0, width: 0.01 });
   } else if (kind === "wedge") {

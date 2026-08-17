@@ -24,8 +24,8 @@ export function mouthPlacement(spec, box) {
   const chin = box.headCy - box.headRy * 0.86;
   const tPos = spec.parts.mouthPos === "high" ? 0.22 : spec.parts.mouthPos === "low" ? 0.76 : 0.5;
   let y = Math.min(top + (chin - top) * tPos, eyeFloor(spec, eyes, 0) - 0.03);
-  // 개 입은 밝은 주둥이 위에 앉으니 늘 검정 — 얼굴 잉크가 밝아도(짙은 털색) 그렇다
-  const ink0 = spec.species === "pup" ? spec.palette.ink : (spec.faceInk || spec.palette.ink);
+  // 개 입은 **주둥이 위**에 앉으니 잉크도 주둥이 휘도로 갈린다(밝은 주둥이면 검정, 검정 주둥이면 밝은 잉크) — 얼굴(머리색) 잉크와 별개다
+  const ink0 = spec.species === "pup" ? muzzleGeometry(spec, box).ink : (spec.faceInk || spec.palette.ink);
   let w = box.headRx * 0.38 * (MOUTH_SIZE[spec.parts.mouthSize] || 1) * (SPECIES_WIDTH[spec.species] || 1);
   // 벌린 입의 높이 — 머리에 비례하고, 코 밑에서 끝난다 (코를 삼키면 코가 사라진다)
   const noseBottom = spec.species === "pup" || spec.parts.nose === "none" ? Infinity : top;

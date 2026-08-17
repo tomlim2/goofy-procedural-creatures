@@ -33,6 +33,17 @@ export const DARKS = [
   "#2f3a33"  // 녹흑
 ];
 
+// 검정 계열 털 — 개·고양이 전용. **적당히 검정**이다: 도깨비의 먹빛(DARKS, 휘도 34~69)보다 밝고 FILLS(휘도 190~220)보다 훨씬 어둡다(휘도 75~85).
+// 종이 위에서 "검은 고양이·검은 개"로 읽히되 먹덩어리가 되지는 않는다. 이 털에는 얼굴 잉크가 밝은 쪽으로 바뀐다(spec.js faceInk, 휘도 < 120).
+// FUR_POOL은 뽑기 주머니 — null이 섞여 있어 **한 번의 pick**으로 "검정 털이냐"와 "어느 검정이냐"를 같이 정한다 (rng 호출 수 고정, guidelines/determinism.md)
+export const FURS = [
+  "#4f4a44", // 먹갈
+  "#57534c", // 재빛 갈회
+  "#4b4d52", // 청먹
+  "#5a5450"  // 밝은 숯
+];
+export const FUR_POOL = [null, null, null, null, null, null, null, null, ...FURS];   // 4/12 ≈ 33%
+
 // (같은 계열의 톤을 만드는 shade는 src/color.js — 개·고양이·도깨비의 몸을 머리색과 "비슷한 색"으로 줄 때 spec.js가 쓴다)
 
 export const ACCENTS = [

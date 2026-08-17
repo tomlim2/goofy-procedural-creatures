@@ -18,39 +18,51 @@ const cap = (h, depth, steps, passes, spread, width = 0.01) => {
   h.crown.scribble(arc, { color: h.ink0, passes, width, spread });
 };
 
+// 늘어뜨린 머리(커튼) — 획마다 **머리 윤곽 위**에서 출발해 흘러내린다: 가운데 획은 정수리 근처, 옆 획은 귀 높이에서 시작하므로
+// 머리에 얹혀 흘러내리는 덩어리로 읽힌다. 획들을 같은 높이에서 일제히 시작하면(가로로 곧은 위 끝, 폭 일정) **병풍**이 된다.
+//   hem 끝단 y · grow 아래로 가며 바깥으로 벌어지는 배율(머리 반폭 기준) · inner 이 안쪽(rx 배)에서 출발하는 획은 건너뛴다(가슴을 비울 때) · count 한쪽 획 수
+function curtain(h, hem, { grow = 1.14, inner = 0, count = 15, width = 0.009 }) {
+  const { back, ink0, rx, ry, cy, noise, spec } = h;
+  const shape = headShape(spec);
+  const n = 2 + shape.square;
+  // 머리 윤곽(초타원) 위의 점. a: 0 = 오른쪽 옆, π/2 = 정수리
+  const outline = (a) => {
+    const c = Math.cos(a), s = Math.sin(a);
+    const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
+    const uy = Math.sign(s) * Math.pow(Math.abs(s), 2 / n);
+    return [ux * rx * (1 - shape.taper * uy), cy + uy * ry];
+  };
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < count; i += 1) {
+      const t = i / (count - 1);                       // 0 = 정수리 쪽 · 1 = 옆(귀 높이)
+      const base = Math.PI * 0.5 * (1 - t * 0.97);     // 정수리(π/2) → 옆(≈0.015π)
+      const a = side > 0 ? base : Math.PI - base;
+      const [ox, oy] = outline(a);
+      if (Math.abs(ox) < inner * rx) continue;         // 가슴 앞은 비운다 (아주 긴 머리)
+      const top = oy - ry * 0.02;                      // 윤곽 살짝 안쪽에서 시작 — 머리에 박힌다
+      const jag = Math.abs(noise(i * 7.3 + side * 2.1 + spec.seed * 0.002)) * (cy - hem) * 0.12;
+      const bottom = hem + jag;
+      // 아래로 갈수록 바깥으로 — 옆 획일수록 더(끝이 x·grow). 가운데 획은 거의 곧게 내려간다
+      const endX = ox * grow;
+      const midX = ox + (endX - ox) * 0.4;
+      back.stroke([[ox, top], [midX, (top + bottom) * 0.5], [endX, bottom]], { color: ink0, width, jitter: 0.004 });
+    }
+    // 바깥 윤곽 — 머리 옆(귀 높이)에서 끝단까지. 머리에서 살짝 떨어져 흐른다
+    const [ex, ey] = outline(side > 0 ? 0.06 : Math.PI - 0.06);
+    back.stroke([[ex, ey], [ex * (grow * 0.98), (ey + hem) * 0.5], [ex * grow, hem]], { color: ink0, width: width + 0.002, jitter: 0.006 });
+  }
+}
+
 // 뒷머리가 있는 머리(긴 머리·트윈테일·포니테일) — 정수리 캡(crown) + 뒤로 떨어지는 머리(back)
 function longHair(h) {
-  const { back, ink0, rx, ry, cy, noise, spec, shoulder } = h;
-  cap(h, 0.52, 22, 12, ry * 0.24);
-  // 긴 생머리 — 머리 뒤에서 어깨까지 세로 획 커튼. 폭은 머리보다 조금 넓다
-  const step = 0.013;
-  for (let x = -rx * 1.15; x <= rx * 1.15; x += step) {
-    const top = cy + ry * 0.7;
-    const bottom = shoulder + Math.abs(noise(x * 33 + spec.seed * 0.002)) * 0.05;
-    const flare = x * 0.1;
-    back.stroke([[x, top], [x + flare * 0.5, (top + bottom) / 2], [x + flare, bottom]], { color: ink0, width: 0.009, jitter: 0.004 });
-  }
-  // 바깥 윤곽 두 줄
-  for (const side of [-1, 1]) back.stroke([[side * rx * 1.15, cy + ry * 0.7], [side * rx * 1.25, cy], [side * rx * 1.28, shoulder]], { color: ink0, width: 0.011, jitter: 0.006 });
+  cap(h, 0.52, 22, 12, h.ry * 0.24);
+  // 긴 생머리 — 머리 윤곽에서 어깨까지. 어깨 언저리에서만 살짝 벌어진다
+  curtain(h, h.shoulder, { grow: 1.14, count: 15 });
 }
-// 아주 긴 생머리 — 몸통 중간까지. 얼굴 양옆에서 어깨 위로 넘어와 가슴 옆까지 내려오는 두 커튼(가운데 가슴은 비운다 — 판 전체를 덮으면 망토가 된다)
+// 아주 긴 생머리 — 몸통 중간까지. 얼굴 양옆에서 어깨 위로 넘어와 가슴 옆까지 흐른다 (가운데 가슴은 비운다 — 판 전체를 덮으면 망토가 된다)
 function veryLong(h) {
-  const { back, ink0, rx, ry, cy, noise, spec, box } = h;
-  cap(h, 0.52, 22, 12, ry * 0.24);
-  const chest = (box.bodyTop + box.legTop) / 2;   // 몸통 중간
-  const step = 0.013;
-  for (const side of [-1, 1]) {
-    for (let u = rx * 0.42; u <= rx * 1.15; u += step) {
-      const x = side * u;
-      const top = cy + ry * 0.55;
-      const bottom = chest + Math.abs(noise(u * 33 + spec.seed * 0.002)) * 0.05;
-      const flare = x * 0.08;
-      back.stroke([[x, top], [x + flare * 0.5, (top + bottom) / 2], [x + flare, bottom]], { color: ink0, width: 0.009, jitter: 0.004 });
-    }
-    // 바깥·안쪽 윤곽
-    back.stroke([[side * rx * 1.15, cy + ry * 0.6], [side * rx * 1.26, cy - ry * 0.4], [side * rx * 1.3, chest]], { color: ink0, width: 0.011, jitter: 0.006 });
-    back.stroke([[side * rx * 0.42, cy - ry * 0.9], [side * rx * 0.44, chest + 0.01]], { color: ink0, width: 0.01, jitter: 0.005 });
-  }
+  cap(h, 0.52, 22, 12, h.ry * 0.24);
+  curtain(h, (h.box.bodyTop + h.box.legTop) / 2, { grow: 1.2, inner: 0.5, count: 17 });
 }
 // 트윈테일 — 머리 양옆 위쪽에 묶고 뒤로 늘어지는 두 갈래. ball이면 끝에 동그란 뭉치
 const twintailsOf = (ball) => (h) => {
