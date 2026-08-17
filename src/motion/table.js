@@ -44,7 +44,8 @@ export const MOTION = {
     // 기본 상태 — 서 있기(idle)와 엎드려 잠(sleep)을 오간다. [상태, 가중치]는 시작·전환 때 뽑는 비율, 유지는 modeHold
     modes: [["idle", 3], ["sleep", 1], ["walk", 1.5]], modeHold: { idle: [40, 120], sleep: [25, 60], walk: [6, 16] },
     walk: { hz: 2.6, leg: 0.32, bob: 0.008, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.07, tail: 0.12 },   // 종종걸음 — 대각선 다리 쌍이 번갈아, 꼬리도 걸음에 살랑
-    quadActions: [["wag", 2.5], ["scratch", 1]], quadActionGap: [8, 22],
+    quadActions: [["wag", 3.5], ["scratch", 1]], quadActionGap: [6, 16],   // 개는 자주 흔든다
+    wagOnHappy: { amp: 0.35, hz: 4 },   // ^^ 웃을 때마다 꼬리를 흔든다 (행복 유지·깜빡임 ^^)
     // 레퍼런스의 개 다리는 4초 내내 바닥 고정. 몸이 흔들려 다리가 따라 보일 뿐이다.
     legTap: [14, 32], legStep: [30, 70],
     sway: [0.004, 0.01], swayPeriod: [3, 6],

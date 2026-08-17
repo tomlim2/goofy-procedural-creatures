@@ -116,4 +116,4 @@
 9. 몸 색 (`makeCreature`): imp 머리 DARKS 중 1, 몸은 머리색/밝은 톤/어두운 톤 (50/30/20). 개·고양이 몸은 머리색/어두운 톤/밝은 톤 (50/30/20). 색 포인트 뒤에 정한다
 10. 치수 슬롯(`LATE_SLOTS`)을 뽑은 뒤 종족 forbid를 **한 번 더** — 그 슬롯에도 제한이 걸리게
 11. 안경·고글 두 알이 겹치면(눈 간격 < 알 반지름 합) eyewear → none — 비율이 정해진 뒤 `eyeGeometry`로 판정
-12. 안대는 짝눈(|eyeSizeSkew| > 0.09 또는 |eyeHeightSkew| > 0.03)이면 none — 비율이 정해진 뒤, rng 없음
+12. 안대는 짝눈(|eyeSizeSkew| > 0.09 또는 |eyeHeightSkew| > 0.03)이면 none, 안대(1.5r)가 다른 눈에 걸치면 none — 비율이 정해진 뒤, rng 없음

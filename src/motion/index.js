@@ -76,6 +76,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const tailFollow = { x: 0, v: 0 };
   let tailPrevBase = null;
   const lash = { start: -1 };
+  const happyWag = { x: 0, v: 0 };   // 웃을 때 꼬리 흔들기 봉투(임계감쇠로 켜고 끈다)
   const raise = { until: -1, start: -1, style: "hook" };   // style: hook(끝을 안으로 굽혀 세움) | straight(빳빳이 세움)
   const startRaise = (t) => {
     raise.start = t;
@@ -201,6 +202,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       let isHappy = bl.happy;
       lid = S.stepSquint(squint, t, rng, lid);
       if (S.stepHappy(happy, t, rng, M)) { lid = 1; isHappy = true; }
+      // ♥ 이모지가 떠 있는 동안은 웃는다(^^) — 어디서 쏜 ♥이든 (idle 예약·파닥임·꼬리 흔들기·♥ 놀람). 개는 이게 꼬리 흔들기로 이어진다
+      if (emoji.kind === "heart" && !asleep) { lid = 1; isHappy = true; }
       const winkSide = sleepK > 0.5 ? 0 : S.stepWink(wink, t, rng, M);
       if (sleepK > 0.5) S.stepWink(wink, t, rng, M);   // (rng 소비 고정 — 결과만 버린다)
       const startleBefore = surprise.start;
@@ -279,6 +282,11 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (TT && TT.twitch) tailTip += flick * (TT.twitch.amp / 0.35);
       else tailAngle += flick;
       if (walkK > 0 && W && quad && W.tail) tailAngle += Math.sin(ph) * W.tail * walkK;   // 걷기 — 개만 꼬리가 걸음에 맞춰 살랑 (table walk.tail)
+      // 웃을 때(^^)마다 꼬리 흔들기 — 개 (table wagOnHappy). 봉투는 임계감쇠라 켜고 꺼질 때 튀지 않는다
+      if (M.wagOnHappy && quad) {
+        damp(happyWag, isHappy && !asleep ? 1 : 0, 0.3);
+        if (happyWag.x > 0.01) tailAngle += Math.sin(t * Math.PI * 2 * M.wagOnHappy.hz) * M.wagOnHappy.amp * happyWag.x;
+      }
       // 놀람에 딸린 꼬리 — 채찍질(plain 변형 시작 때 lash 확률) · 세움(♥ 변형 시작 때) · 부풀림(시작 순간)
       let tailPuff = 0;
       if (TT && quad && startleBefore < 0 && surprise.start >= 0 && !asleep) {

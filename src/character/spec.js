@@ -203,6 +203,17 @@ export function makeCreature(seed, speciesName = "human") {
     parts.eyewear = "none";
     parts.patchSide = 99;
   }
+  // 안대는 **눈이 겹치는 개체에도 안 씌운다** — 안대(눈 1.5배)가 다른 눈 위에 걸치면 실수처럼 보인다
+  if (parts.eyewear === "patch") {
+    const draft = { seed, species: species.name, parts, proportions, palette };
+    const eyes = eyeGeometry(draft, layout(draft));
+    if (eyes.length === 2) {
+      const patched = eyes.find((e) => e.side === parts.patchSide) || eyes[0];
+      const other = eyes.find((e) => e !== patched);
+      const d = Math.hypot(other.x - patched.x, other.y - patched.y);
+      if (d < patched.r * 1.5 + other.r + 0.004) { parts.eyewear = "none"; parts.patchSide = 99; }
+    }
+  }
 
   return {
     seed,
