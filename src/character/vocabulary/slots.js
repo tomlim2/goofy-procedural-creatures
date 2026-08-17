@@ -19,6 +19,7 @@ export const SLOTS = {
   // 뒷머리 층이 생겨서 되는 것: long 긴 생머리(어깨까지) · twintails 트윈테일 · ponytail 포니테일 · apple 사과머리(정수리 꼭지)
   hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep", "pigtails", "curly", "bangs", "longbob", "bun", "helmet", "cloud", "hedgehog",
     "long", "twintails", "ponytail", "apple"],
+  // bonnet(프릴 보닛)은 **비활성** — 자산은 남기고 어떤 bias에도 안 넣는다 (뽑히지 않는다)
   headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
   // round·pointy·fold는 크기 셋 — 기본(작음) · Mid(중간, 1.4배) · Big(큼, 1.8배). 모양은 같고 크기만 다르다.
@@ -74,7 +75,7 @@ export const DEFAULT_BIAS = {
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["bead", 1.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
     ["sparkle", 1.5], ["squeeze", 1], ["side", 1], ["droop", 1]],
   hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1], ["helmet", 2], ["cloud", 1.5], ["hedgehog", 1.5], ["long", 1.5], ["twintails", 1], ["ponytail", 1.5], ["apple", 1]],
-  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["bonnet", 1.5], ["helmet", 1], ["pot", 1]],
+  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1]],   // bonnet 비활성
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1]],
