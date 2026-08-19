@@ -4,6 +4,7 @@ import { blobPath, arcPath } from "../../stroke.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
+import { calicoColors } from "./body.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -138,9 +139,13 @@ export function drawCatEars(ink, fills, spec, box) {
   const innerFill = (seed >> 7) % 2 ? "#d9968a" : shade(skin, isDark(skin) ? 1.5 : 0.62);
   // 안쪽 선은 **털 위에 그리는 자국**이라 얼굴 잉크를 쓴다 — 검은 털에 검은 선은 묻혀 안 보인다 (윤곽선은 배경과 맞닿아 검정 그대로)
   const innerInk = spec.faceInk || ink0;
+  const cal = calicoColors(spec);   // 삼색이면 side 쪽 귀가 검다 (머리 얼룩과 같은 쪽 — body.js drawHeadMarks)
   const boxy = headShape(spec).square >= 1.4;   // square·block — 모서리보다 조금 안쪽에
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {
+    const earDark = !!cal && cal.side === side;
+    const earFill = earDark ? cal.dark : skin;
+    const earInnerInk = earDark ? "#e9e3d5" : innerInk;   // 검은 귀 위 자국은 밝은 잉크 (얼굴 잉크 규칙)
     // 윤곽(실제 머리 모양) 위 뿌리와 그 자리의 바깥 법선 n·접선 t (바깥 양수)
     const anchor = headAnchor(spec, box, theta, side);
     const bx = anchor.x, by = anchor.y, nx = anchor.nx, ny = anchor.ny;
@@ -161,17 +166,17 @@ export function drawCatEars(ink, fills, spec, box) {
     const path = [
       baseAt(-def.w, 0.02), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w, 0.02)
     ];
-    fills.fill(path, skin);
+    fills.fill(path, earFill);
     ink.stroke([
       baseAt(-def.w * 1.02, 0.024), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w * 1.02, 0.024)
     ], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
     // 안쪽 귀 — **밑변이 귀 밑동에 붙는다**(밑동보다 위에 띄우면 귀 한복판에 뜬 얼룩이 된다). 폭은 귀의 0.62배, 끝은 높이의 0.7배
     const innerTip = [bx + ax * def.h * 0.7, by + ay * def.h * 0.7];
     const innerBase = [baseAt(-def.w * 0.62, 0.012), innerTip, baseAt(def.w * 0.62, 0.012)];
-    if (inner === "line") ink.stroke(innerBase, { color: innerInk, width: 0.008 });
+    if (inner === "line") ink.stroke(innerBase, { color: earInnerInk, width: 0.008 });
     else if (inner === "dark") fills.fill(innerBase, innerFill);
     // 홈 — 밑동 가운데에서 귀 절반 높이까지 한 줄 (접힘 자국처럼 읽힌다)
-    else if (inner === "notch") ink.stroke([baseAt(0, 0.012), [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: innerInk, width: 0.008 });
+    else if (inner === "notch") ink.stroke([baseAt(0, 0.012), [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: earInnerInk, width: 0.008 });
   }
 }
 
@@ -187,6 +192,7 @@ export function drawPupEars(ink, fills, spec, box) {
   //   옆구리(눈 양옆보다 조금 옆, θ≈88°) — flap 로브(레퍼런스 비글) · long 바셋. 늘어지되 끝이 얼굴 쪽으로 모인다
   // θ는 타원(headRx·headRy) 위 극각(정수리에서 잰 각). 채운 로브 + 두 번 덧그은 윤곽. none은 없음.
   const earFill = shade(spec.palette.skin, 0.8);
+  const cal = calicoColors(spec);   // 얼룩이(calico)면 side 쪽 귀가 검다 (머리 얼룩과 같은 쪽)
   const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
   // 안쪽 귀 — 개체마다(wobbleSeed, rng 없음): 같은 계열 톤 45% · 분홍(코·볼터치와 같은 색) 30% · 없음 25%.
   // 늘어진 귀(flap·long)와 접힌 쪽 덮개에는 안 그린다 — 그쪽은 귀 **바깥면**이 보이는 자세다
@@ -287,7 +293,7 @@ export function drawPupEars(ink, fills, spec, box) {
       const cy = by - Math.cos(tilt) * (len * 0.5 - 0.005);
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
-    fills.fill(path, earFill);
+    fills.fill(path, cal && cal.side === side ? cal.dark : earFill);
     // 안쪽 귀 — 귀 모양을 **밑동(얼굴과 만나는 자리)을 기준으로** 줄인 것. 밑변이 밑동에 그대로 붙고 위로 갈수록 좁아진다
     // (가운데를 기준으로 줄이면 귀 한복판에 뜬 얼룩이 된다 — 레퍼런스의 안쪽 귀는 밑동에서 시작한다). 윤곽선은 없다 — 채운 얼룩이라 작아도 읽힌다.
     // 늘어진 귀(flap·long)만 건너뛴다 — 그 자세는 귀 **바깥면**이 보인다. 접힌 귀는 **밑동(선 부분)이 안쪽 면**이라 여기에도 그린다

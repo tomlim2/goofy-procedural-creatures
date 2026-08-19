@@ -33,8 +33,8 @@
 | 종족 | 골격 | 색 | 전용/편향 파츠 | 지배 모션 |
 | --- | --- | --- | --- | --- |
 | **human** | 두발 | 팔레트 그대로 | forbid: 뿔 전부→none, cyclops→wide, 긴 팔(long)→medium, 초장다리(verylong)→long, 귀는 none·round만(뾰족·늘어짐·접힘→round/none — 동물 귀는 사람 것이 아니다), 눈물 자국(tears)→none. 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 행위(인사·팔짱·생각…) |
-| **pup** | 네발 | 머리(털)색(약 1/3은 검정 계열 FURS), 몸은 같거나 비슷한 톤 | 늘어진 귀(flap/long), 주둥이+검은 코(코 슬롯이 형태 결정), 입은 주둥이 위 코 밑 — w(omega)·o(open)·혀(tongue, ^^ 때도)·선·점·웃음, 꼬리 골격 flag/stubtail/ring × 스킨 thick/plume, 얼룩, 다리 stub 위주(stick·float·boots) | 머리 롤 상시·킁킁 딥, ^^ 행복 눈 유지, 꼬리 플릭 |
-| **cat** | 네발 | 머리(털)색(약 1/3은 검정 계열 FURS), 몸은 같거나 비슷한 톤 | 정수리 세모귀(pointy/fold), 수염(개체별 길이 — 긴 건 윤곽 밖으로), ω·3·야옹·혀 빼꼼 입(화나면 송곳니 하악), 세로동공(slit), 꼬리 골격 curl/longtail/hook/kink × 스킨 line/ringed, 다리 stub·stick(float·boots) | 꼬리 스위시 상시, 윙크, 갸웃 크게, 기지개 |
+| **pup** | 네발 | 머리(털)색(약 1/3은 검정 계열 FURS), 몸은 같거나 비슷한 톤. marks calico(≈12%)면 밝은 바탕 + 검정 얼룩(얼룩이, 머리·한쪽 귀까지) | 늘어진 귀(flap/long), 주둥이+검은 코(코 슬롯이 형태 결정), 입은 주둥이 위 코 밑 — w(omega)·o(open)·혀(tongue, ^^ 때도)·선·점·웃음, 꼬리 골격 flag/stubtail/ring × 스킨 thick/plume, 얼룩, 다리 stub 위주(stick·float·boots) | 머리 롤 상시·킁킁 딥, ^^ 행복 눈 유지, 꼬리 플릭 |
+| **cat** | 네발 | 머리(털)색(약 1/3은 검정 계열 FURS), 몸은 같거나 비슷한 톤. marks calico(≈19%)면 밝은 바탕 + 탄 + 검정 삼색 얼룩(머리·한쪽 귀까지) | 정수리 세모귀(pointy/fold), 수염(개체별 길이 — 긴 건 윤곽 밖으로), ω·3·야옹·혀 빼꼼 입(화나면 송곳니 하악), 세로동공(slit), 꼬리 골격 curl/longtail/hook/kink × 스킨 line/ringed, 다리 stub·stick(float·boots) | 꼬리 스위시 상시, 윙크, 갸웃 크게, 기지개 |
 | **imp** | 두발 | 머리 DARKS 9색(먹·회갈·회청·자흑·녹흑…) 중 하나, 몸은 머리색 50% / 밝은 톤 30% / 어두운 톤 20% (같은 계열), 얼굴은 종이색, 잉크는 #1c1917 | 긴 뿔(1.8배: curved/straight/antenna/ram/crown), 외눈(cyclops), **넓은 입**(×1.3 — 이빨 격자·해칭·지그재그·큰 송곳니·이빨 띠로 벌린 입), 스텁 팔 — 또는 **팔 없음**(arms none, ≈23%), **바닥을 쓰는 긴 팔(long)은 도깨비만** (bias 3:2, 40%), **초장다리(legLength verylong — long의 두 배)도 도깨비만**(bias 1.5, ≈20%; 사람·개·고양이는 forbid→long) | 젤리 워블 상시, 부르르·놀람 잦게, 만세·파닥임 잦게, "..." 중얼 |
 
 네발 골격은 몸이 가로로 눕고 머리가 몸 앞(왼쪽)에 얹힌다. 키가 낮아 사람 줄과 나란히 서면
@@ -89,6 +89,7 @@
 | accent | ACCENTS 4색 중 1 | 모자·밴드 색 |
 | fillOffset | ±0.035 | 채색이 선 밖으로 어긋난다 (인쇄 어긋남) |
 | **pop** | POPS 5색, 14% 확률, 대상 hair/headgear/skin | 채도 있는 색 포인트. **한 판에 3개 상한** (`makeGrid`가 초과분을 끈다). 피부에 붙어 휘도 < 120이면 얼굴 잉크가 밝은 색으로 바뀐다(`faceInk`) |
+| **CALICO_MID** | 1색 (#a3866a, 휘도 139) | 삼색 얼룩(marks calico)의 가운데 톤 — 진짜 삼색의 주황 자리. 팔레트 안의 따뜻한 탄이라 pop 상한을 안 먹는다. 검정 얼룩은 FURS, 바탕은 스킨(calico면 검정 털을 안 입힌다 — 밝은 바탕) ([parts.md](parts.md) § marks) |
 
 **어두운 색 위에는 밝은 잉크.** 휘도 < 120이면 그 면 위의 선은 밝은 잉크(#e9e3d5)로 간다 — 얼굴은 머리색으로 판정하고(`faceInk`), 몸 무늬는 몸 색으로 판정한다(`drawMarks`).
 검정 털 개·고양이와 도깨비가 같은 규칙을 탄다. 물건(안대·모자·안경알)과 흰 채움 위의 선(이빨)은 예외 — 제 색·어두운 잉크다 ([rules.md](rules.md)).

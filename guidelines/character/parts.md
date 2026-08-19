@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 179파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 180파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
 `headgear.js` 모자·뿔 · `face.js` 눈·눈썹·안경·코·주둥이·볼·수염 · `mouth.js` 입 · `faceStates.js` 눈썹·입의 상태 벌 · `body.js` 몸·무늬 · `limbs.js` 팔다리·꼬리).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
@@ -274,8 +274,25 @@ bean(찌그러진 타원) / box / dress(아래가 넓은 사다리꼴) / tube(�
 `layout()` `BUILD`(두발)·`QUAD_BUILD`(네발). `LATE_SLOTS`. 기본 가중치 medium 4 · narrow 1.5 · wide 1.5 · skinny 1 · small 1.
 갤러리: `gallery.html?slot=build&fix=legLength:long`.
 
-### marks (6)
-none / stripes(가로 3줄) / dots(4점) / patch(왼쪽 해칭) / hatch(전체 사선) / spots(달마시안 얼룩 3개).
+### marks (7)
+none / stripes(가로 3줄) / dots(4점) / patch(왼쪽 해칭) / hatch(전체 사선) / spots(달마시안 얼룩 3개) / **calico**(삼색 얼룩 — 아래).
+선 다섯은 몸에만 잉크로 그린다(`drawMarks`, 몸 색 휘도 < 120이면 밝은 잉크). 사람 몸에선 옷 무늬로, 개·고양이 몸에선 털 무늬로 읽힌다 — 같은 슬롯이다.
+
+**calico — 삼색 얼룩(개·고양이만, 채움).** 선이 아니라 **색 얼룩**이고 몸·머리·귀에 다 있다. 색은 전부 팔레트 안(`calicoColors`, wobbleSeed, rng 없음):
+바탕은 스킨 그대로(spec.js가 calico면 검정 털을 안 입혀 **밝은 바탕**을 보장), 검정 얼룩은 FURS 중 하나, 가운데 톤은 `CALICO_MID`(따뜻한 탄, 휘도 139 —
+진짜 삼색의 주황 자리. 채도 있는 포인트가 아니라 판당 상한을 안 먹는다). 고양이는 셋(바탕+탄+검정), 개는 둘(바탕+검정 = 얼룩이).
+
+| 자리 | 고양이 | 개 |
+| --- | --- | --- |
+| 몸 | 엉덩이(꼬리 쪽 끝)를 감싸는 검정 + 배 앞쪽 탄 | 엉덩이 검정 크게 |
+| 머리 | side 쪽 **정수리에서 그쪽으로 기운 모자꼴** 검정 + 반대쪽 볼에 작은 탄 | 모자꼴 검정 |
+| 귀 | side 쪽 귀 검정(안쪽 자국은 밝은 잉크) | 같음 |
+
+얼룩은 **윤곽을 따라 앉는다**(`outlinePatch` — 윤곽 점 목록의 한 구간을 바깥 변으로 쓰고 안쪽을 중심 쪽으로 당겨 닫는다): 바깥 변이 윤곽과 정확히
+같아 삐져나오지 않고, 안쪽 가장자리에만 가는 선을 긋는다. 채우기가 중심 부채꼴이라 한 얼룩은 130° 이하. 몸 앞쪽 위는 큰 머리에 가려지니 얼룩은
+뒤끝과 배 앞에 둔다. **검정 얼룩은 눈·눈썹 위에 못 온다** — 선 눈·눈썹은 검정 잉크라 검정 위에서 사라진다. 옆으로 내려오는 자리(100°~185°)는
+600마리 중 158마리에서 눈에 걸쳤고, 정수리 자리(왼 75°~150° / 오른 30°~105°, 깊이 0.4)는 0마리 — 그래서 모자꼴이다. 탄은 잉크와 대조가 남아 볼에 둬도 된다.
+사람·도깨비 bias에는 없다(사람 몸에 색 얼룩은 옷 얼룩이 된다) — 갤러리에서는 안 그린다(`calicoColors`가 null).
 
 ### legs (6)
 | 값 | 두발 | 네발 (고양이·개) |

@@ -41,7 +41,8 @@ export const SLOTS = {
   mouth: ["dot", "line", "open", "wave", "smile", "pout", "omega", "zigzag",
     "frown", "three", "grimace", "grin", "scribble", "tongue", "fangs", "shout", "meow", "blep", "bracket", "smug"],
   body: ["bean", "box", "dress", "tube"],
-  marks: ["none", "stripes", "dots", "patch", "hatch", "spots"],
+  // 무늬 — 선 다섯(stripes·dots·patch 해칭·hatch·spots 테두리) + 채움 하나(calico 삼색 얼룩 — 몸·머리·귀에 색 얼룩, 개·고양이만)
+  marks: ["none", "stripes", "dots", "patch", "hatch", "spots", "calico"],
   // 다리 유형(형태만). 레퍼런스: 전부 끝에 동그란 발이 있고 몸 밑에서 나온다.
   // float는 레이맨식 — 다리 없이 발만 떠 있다. 벌린 정도(스탠스)는 여기 없다 —
   // 몸통 체격(build)이 정한다. 네발은 stub·stick·boots·float만 그리고 나머지는 stick으로 본다.

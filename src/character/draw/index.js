@@ -8,7 +8,7 @@ import { drawHead, drawEars, drawPupEars, drawCatEars } from "./head.js";
 import { drawHair } from "./hair.js";
 import { drawHeadgear, drawHorns } from "./headgear.js";
 import { drawEyes, drawFace2, drawEyewear, drawNose, drawWhiskers, RIG_EYES, patched } from "./face.js";
-import { drawBody, drawMarks } from "./body.js";
+import { drawBody, drawMarks, drawHeadMarks } from "./body.js";
 
 export { facePartKinds, facePartSketch } from "./faceStates.js";
 export { limbSketches, motionRig, BIND_ARM, tailSketch } from "./limbs.js";
@@ -41,10 +41,11 @@ export function drawCreature(spec, variant = 0) {
   const eyes = eyeGeometry(spec, box);
 
   const body = drawBody(L.body.ink, L.body.fills, spec, box, noise);
-  drawMarks(L.body.ink, spec, body);
+  drawMarks(L.body.ink, L.body.fills, spec, body, noise);   // 선 무늬는 ink, 삼색 얼룩은 fills(채움) + ink(안쪽 가장자리)
 
   drawEars(L.crownBack.ink, L.crownBack.fills, spec, box);   // 옆귀 — 머리 채색 뒤(뿌리가 머리에 가린다)
-  drawHead(L.head.ink, L.head.fills, spec, box, noise);
+  const headPath = drawHead(L.head.ink, L.head.fills, spec, box, noise);
+  drawHeadMarks(L.head.ink, L.head.fills, spec, headPath, noise);   // 삼색 얼룩 — 머리 채색 위·윤곽 아래(같은 층의 채움)
   // 머리 앞 층 — 개 귀·고양이 귀. 머리 잉크 위에 채움이 얹혀야 윤곽선이 귀를 뚫고 비치지 않는다
   drawPupEars(L.front.ink, L.front.fills, spec, box);
   drawCatEars(L.front.ink, L.front.fills, spec, box);

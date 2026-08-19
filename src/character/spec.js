@@ -175,8 +175,9 @@ export function makeCreature(seed, speciesName = "human") {
     // 잉크는 머리보다 더 어둡게 — 윤곽이 머리에 묻히지 않도록
     palette.ink = "#1c1917";
   } else if (species.name === "pup" || species.name === "cat") {
-    // 검정 계열 털(약 1/3) — 색 포인트가 피부에 붙은 개체는 그대로 둔다 (포인트가 이기는 게 판에서 더 눈에 띈다)
-    if (darkFur && !(palette.pop && palette.pop.target === "skin")) palette.skin = darkFur;
+    // 검정 계열 털(약 1/3) — 색 포인트가 피부에 붙은 개체는 그대로 둔다 (포인트가 이기는 게 판에서 더 눈에 띈다).
+    // 삼색 얼룩(marks calico)은 **밝은 바탕**이어야 얼룩이 읽히니 검정 털을 안 입힌다 (판정만 — rng 호출은 그대로)
+    if (darkFur && !(palette.pop && palette.pop.target === "skin") && parts.marks !== "calico") palette.skin = darkFur;
     // 개·고양이: 몸은 머리(털)색 그대로 절반, 나머지는 같은 계열의 톤
     if (bodyRoll < 0.5) palette.cloth = palette.skin;
     else if (bodyRoll < 0.8) palette.cloth = shade(palette.skin, 0.9);   // 조금 어두운 톤

@@ -66,7 +66,7 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
-      marks: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1]],
+      marks: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1], ["calico", 1.5]],   // calico = 얼룩이(흰 바탕 + 검정 얼룩)
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
       tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // 개는 굵거나 북슬(스피츠), 토끼 같은 몽실 꼬리도. ringed·wedge 비활성
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
@@ -113,7 +113,7 @@ export const SPECIES = [
       // 입 — ω 압도적, 뒤집은 ω(smug), 오므린 3, 선·점, 야옹 o(meow), 혀 빼꼼(blep). 물결·웃음은 없다 (레퍼런스 4줄)
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
-      marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1]],
+      marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1], ["calico", 2]],   // calico = 삼색 (바탕 + 탄 + 검정 얼룩, 머리·한쪽 귀까지)
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
       tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // 고양이는 가는 선. ringed·wedge 비활성
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],

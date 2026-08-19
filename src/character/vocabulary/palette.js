@@ -44,6 +44,10 @@ export const FURS = [
 ];
 export const FUR_POOL = [null, null, null, null, null, null, null, null, ...FURS];   // 4/12 ≈ 33%
 
+// 삼색(calico 무늬)의 가운데 톤 — 진짜 삼색의 주황 자리. 판이 모노톤이라 채도 있는 색 대신 **따뜻한 탄**(휘도 139): 바탕(FILLS 187~217·몸 톤 ≥170)과
+// 검정 털(FURS 75~85) 사이에 앉아 셋이 갈린다. 색 포인트(POPS)가 아니라 판당 상한을 안 먹는다
+export const CALICO_MID = "#a3866a";
+
 // (같은 계열의 톤을 만드는 shade는 src/color.js — 개·고양이·도깨비의 몸을 머리색과 "비슷한 색"으로 줄 때 spec.js가 쓴다)
 
 export const ACCENTS = [
