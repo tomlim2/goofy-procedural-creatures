@@ -17,7 +17,7 @@ node serve.mjs
 ```
 
 `http://127.0.0.1:7300`. native ES module을 쓰므로 `file://` 직접 실행은 지원하지 않는다.
-three.js는 importmap으로 unpkg에서 받는다.
+three.js는 importmap으로 unpkg에서 받는다. 검사 스크립트(§ 스크립트)는 node에서 `three`를 import하므로 `npm install` 한 번이 필요하다.
 
 `/gallery.html?slot=legs&species=human` — **파츠 갤러리**. 슬롯 하나의 모든 값을 같은 개체(종족·시드 고정)에
 나란히 그린다. FIX 드롭다운(`&fix=legLength:short`)으로 다른 슬롯 하나를 고정할 수 있고, `&values=bangs,bun`으로 그 슬롯의
