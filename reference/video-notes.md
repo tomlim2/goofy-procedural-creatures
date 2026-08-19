@@ -126,7 +126,7 @@ Being a drawing-only change, it does not break seeds.
 
 | # | Item | Status |
 | --- | --- | --- |
-| 1 | Fixed lanes | **adopted** — human, human, cat, dog, imp (LANE_TABLE) |
+| 1 | Fixed lanes | **adopted** — human · cat · dog · imp cycling down the rows and wrapping (`LANES`). The observed board was five rows of human, human, cat, dog, imp; v0.2.0 replaced the per-row-count table with one cycling list so no species goes missing at any row count |
 | 2 | Individual regeneration | **adopted** — 6~14 s per slot, species kept |
 | 3 | Scribble fill | **adopted** — a single zigzag stroke fill, stroke direction visible |
 | 4 | Color accents | **adopted** — capped at 3 per board |
