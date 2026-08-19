@@ -228,27 +228,12 @@ export function makeCreature(seed, speciesName = "human") {
 //
 // 시드를 그냥 base+0, base+1... 로 주면 아키타입이 뭉쳐서 한 줄이 통째로
 // 비슷해 보이는 일이 생긴다. 미리 만들어 보고 이웃과 겹치면 다시 뽑는다.
-// 고정 레인. 위에서부터 사람·사람·고양이·개·도깨비 (레퍼런스 영상 순서).
-// 행 수별로 명시한다 — 리샘플링하면 4행에서 고양이가 빠지는 식으로 종족이 사라진다.
-export const LANES = ["human", "human", "cat", "pup", "imp"];
-
-const LANE_TABLE = {
-  4: ["human", "cat", "pup", "imp"],
-  5: ["human", "human", "cat", "pup", "imp"],
-  6: ["human", "human", "cat", "pup", "pup", "imp"],
-  7: ["human", "human", "human", "cat", "pup", "imp", "imp"],
-  8: ["human", "human", "human", "cat", "cat", "pup", "imp", "imp"]
-};
+// 고정 레인. 위에서부터 사람·고양이·개·도깨비, 그 아래는 같은 순서로 계속 돈다.
+// 행 수별 표를 두지 않는다 — 몇 줄이든 네 종족이 같은 간격으로 돌아 어느 판에서도 종족이 빠지지 않는다.
+export const LANES = ["human", "cat", "pup", "imp"];
 
 export function laneSpecies(rows) {
-  if (LANE_TABLE[rows]) return LANE_TABLE[rows];
-  // 표에 없는 행 수는 5줄 기준을 비율대로 늘인다
-  const out = [];
-  for (let r = 0; r < rows; r += 1) {
-    const k = Math.min(LANES.length - 1, Math.floor(((r + 0.5) / rows) * LANES.length));
-    out.push(LANES[k]);
-  }
-  return out;
+  return Array.from({ length: rows }, (_, r) => LANES[r % LANES.length]);
 }
 
 // only에 종족명을 주면 전 줄을 그 종족으로 채운다 — 프리뷰용. 한 종족을 54마리
@@ -257,8 +242,7 @@ export function makeGrid(baseSeed, count, columns, only = null) {
   const creatures = [];
   const rows = Math.ceil(count / columns);
 
-  // 줄 종족은 고정 레인이다 (레퍼런스 영상과 동일): 위에서부터 사람·사람·고양이·개·도깨비.
-  // 행 수가 5가 아니면 LANE_TABLE이 정한다.
+  // 줄 종족은 고정 레인이다: 위에서부터 사람·고양이·개·도깨비가 줄마다 순서대로 돈다.
   const rowSpecies = only ? Array(rows).fill(only) : laneSpecies(rows);
 
   for (let i = 0; i < count; i += 1) {

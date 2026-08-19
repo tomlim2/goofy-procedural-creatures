@@ -9,7 +9,7 @@
 
 | 층 | 결정 단위 | 결정 시점 | 역할 |
 | --- | --- | --- | --- |
-| **종족** | 줄(row) | 고정 레인 (`LANE_TABLE`) | 골격 — 두발/네발, 색, 전용 파츠, 지배 모션 |
+| **종족** | 줄(row) | 고정 레인 (`LANES` 반복) | 골격 — 두발/네발, 색, 전용 파츠, 지배 모션 |
 | **아키타입** | 개체 | `makeCreature` 첫 추첨 | 성향 — 파츠 가중치 편향 |
 | **비율 지터** | 개체 | `makeProportions` | 실루엣 — 머리 크기·비대칭·손떨림 |
 | **치수 슬롯** | 개체 | `LATE_SLOTS` (맨 끝) | 형태와 독립인 길이·체격 — armLength·legLength·build. 스케일이 아니라 기장·폭만 바뀐다 |
@@ -18,17 +18,15 @@
 
 ## 종족 (SPECIES)
 
-`src/character/vocabulary/species.js`. 종족은 **고정 레인**이다 — 위에서부터 사람·사람·고양이·개·도깨비
-(레퍼런스 영상 순서). `spec.js` `LANE_TABLE`이 행 수별 순서를 명시한다:
+`src/character/vocabulary/species.js`. 종족은 **고정 레인**이다 — `spec.js` `LANES`가 순서고,
+줄마다 그 순서대로 돌며 끝나면 처음으로 돌아간다:
 
-| 행 | 레인 |
-| --- | --- |
-| 4 | human · cat · pup · imp |
-| 5 | human · human · cat · pup · imp |
-| 6 | human · human · cat · pup · pup · imp |
-| 8 | human · human · human · cat · cat · pup · imp · imp |
+```
+human · cat · pup · imp · human · cat · pup · imp · …
+```
 
-표에 없는 행 수는 5줄 기준을 비율대로 늘인다. 종족은 레인으로만 정해진다 — 종족 가중치는 없다 (예전 `weight` 필드는 아무 데서도 안 읽어 지웠다).
+행 수별 표는 없다. 몇 줄이든 네 종족이 같은 간격으로 돌아 어느 판에서도 종족이 빠지지 않는다
+(5줄이면 마지막 줄이 사람으로 한 바퀴 더 돈다). 종족은 레인으로만 정해진다 — 종족 가중치는 없다 (예전 `weight` 필드는 아무 데서도 안 읽어 지웠다).
 
 | 종족 | 골격 | 색 | 전용/편향 파츠 | 지배 모션 |
 | --- | --- | --- | --- | --- |
