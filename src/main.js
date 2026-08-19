@@ -67,6 +67,7 @@ addOption(actionSel, "idle", "IDLE — 행위 없음");
 for (const [name, def] of Object.entries(ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label}`);
 // 기본 상태 — SLEEP은 네발을 엎드려 재운다 (사람·도깨비는 잠 자세가 없어 idle), WALK는 걷기 (전 종족, 팔 행위는 예약대로)
 addOption(actionSel, "sleep", "SLEEP — 잠 (네발)");
+addOption(actionSel, "sit", "SIT — 앉기 (네발)");
 addOption(actionSel, "walk", "WALK — 걷기 (집↔밖 왕복)");
 // 몸 행위 — 두발·네발 공통 (강제하면 쉬었다 반복)
 for (const [name, def] of Object.entries(BODY_ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label} (몸)`);

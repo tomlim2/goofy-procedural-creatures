@@ -80,7 +80,42 @@ export const QUAD_ACTIONS = {
 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-const FLOOR_MARGIN = 0.035;   // 손 점 반지름(0.022)보다 조금 크게
+const FLOOR_MARGIN = 0.035;
+
+// 앉은 자세 — 네발 기본 상태 sit의 내용 (motion/index.js가 sitK로 idle과 섞는다). 리그 치수(motionRig().body)에서 푼다 —
+// 다리 기장·몸 길이가 달라도 같은 뜻으로 앉는다.
+//   몸을 **앞다리 뿌리를 축으로** 뒤가 내려가게 기울여(tilt, 시계 방향 = 음수) 엉덩이 기준점이 바닥에 닿게 하고,
+//   앞다리는 세계각 0(수직)으로 세우고, 뒷다리는 앞으로 접어 발이 바닥에 닿는 각(φ)으로 둔다. 머리는 축 바로 위라 그 자리다.
+//   tilt   몸 기울기 rad. legs [4] 다리 피벗 **로컬** 각(피벗은 몸 그룹의 자식이라 세계각 − tilt)
+export function sitPose(body) {
+  const { hipY, bodyH, bodyW, bodyCx, frontHipX, hindHipX, legTop } = body;
+  // 엉덩이 기준점 — 몸 뒤쪽 아래(x = 중심 + 0.75폭, y = 밑단 + 0.2높이). 앞다리 뿌리 기준 상대 좌표. 바닥에서 0.01 위에 닿게
+  const dx = bodyCx + bodyW * 0.75 - frontHipX;
+  const dy = legTop + bodyH * 0.2 - hipY;
+  // hipY − dx·sinθ + dy·cosθ = 0.01 을 θ에 대해 — 몇 번 되풀이하면 잡힌다
+  let theta = Math.asin(clamp(hipY / dx, 0, 0.85));
+  for (let i = 0; i < 4; i += 1) theta = Math.asin(clamp((hipY - 0.01 + dy * Math.cos(theta)) / dx, 0, 0.85));
+  theta = clamp(theta, 0.1, 0.75);
+  // 뒷다리 — 기울인 뒤 뿌리 높이(hipH)에서 다리(길이 hipY)를 앞으로 눕혀 발이 바닥에 닿는 각 φ. 발 x = 뿌리 x − hipY·sinφ
+  const dxh = hindHipX - frontHipX;
+  const solve = (th) => {
+    const phi = Math.acos(clamp((hipY - dxh * Math.sin(th)) / hipY, 0.12, 1));
+    return { phi, footX: frontHipX + dxh * Math.cos(th) - hipY * Math.sin(phi) };
+  };
+  // 뒷발은 앞발을 지나치면 안 된다 — 다리가 한 마디라(무릎이 없다) 몸이 짧고 다리가 길면 뒷발이 앞발 앞으로 나간다. 그러면 기울기를
+  // 줄여(엉덩이가 조금 뜬다) 뒷발이 앞 쌍 사이(앞다리 뿌리 x)까지만 오게 한다. 기울기가 작을수록 뒷발은 뒤로 가므로 이분법
+  const minFootX = frontHipX + 0.005;
+  let r = solve(theta);
+  if (r.footX < minFootX) {
+    let lo = 0.08, hi = theta;
+    for (let i = 0; i < 24; i += 1) { const mid = (lo + hi) / 2; if (solve(mid).footX < minFootX) hi = mid; else lo = mid; }
+    theta = lo; r = solve(theta);
+  }
+  // 그래도 엉덩이가 바닥에서 0.045 넘게 뜨면(긴 다리 + 짧은 몸 — 600마리 중 9%) 이 체형은 앉지 못한다 → null. 시계는 sit 상태 동안 그냥 서 있는다
+  const rumpY = hipY - dx * Math.sin(theta) + dy * Math.cos(theta);
+  if (rumpY > 0.045) return null;
+  return { tilt: -theta, legs: [theta, theta, theta - r.phi, theta - r.phi] };
+}   // 손 점 반지름(0.022)보다 조금 크게
 
 // 어깨각을 (−135°, 225°]로 감는다 — 바인드(90°)를 가운데 두고. 각이 −180°/180° 경계를
 // 넘나들면 리그의 이징이 먼 길로 돌아 팔이 한 바퀴 휘돈다 (위-안쪽 목표인 경례는 감지 않으면 −226°다).

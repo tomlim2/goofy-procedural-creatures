@@ -12,7 +12,7 @@ import { MOTION } from "./table.js";
 import * as R from "./rhythm.js";
 import * as E from "./events.js";
 import * as S from "./states.js";
-import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, bindArm, solveArms } from "./actions.js";
+import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, sitPose, bindArm, solveArms } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
 import { ramp, smoothstep, damp } from "./ease.js";
 
@@ -31,12 +31,12 @@ export const BIND_STATE = Object.freeze({
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
   happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0, tailArch: 0, tailPose: null,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
-  mode: "idle", sleep: 0, walk: 0, walkX: 0, facing: 1,
+  mode: "idle", sleep: 0, walk: 0, sit: 0, bodyTilt: 0, walkX: 0, facing: 1,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
 });
 
-// rig: character/draw/limbs.js motionRig(spec) — { arm(두발 팔 IK 치수 | null), legTop, quad }.
-// 행위를 IK로 풀고, 네발이 엎드려 잘 때 몸이 내려앉는 거리를 안다.
+// rig: character/draw/limbs.js motionRig(spec) — { arm(두발 팔 IK 치수 | null), legTop, quad, body(네발 몸통·다리 뿌리 치수 | null) }.
+// 행위를 IK로 풀고, 네발이 엎드려 잘 때 몸이 내려앉는 거리를 알고, 앉을 때 몸 기울기·다리 각을 이 개체에 맞게 푼다.
 export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const rng = makeRng(seed ^ 0x5bf03635);
   const M = MOTION[species] || MOTION.human;
@@ -69,7 +69,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const jelly = R.initJelly(rng, M);             // 25
   const look = S.initLook(rng, M);               // 26
   const quadAction = S.initQuadAction(rng, M);   // 27
-  const mode = S.initMode(rng, M);               // 28 (기본 상태 idle/sleep — 상태가 하나뿐인 종족은 rng 안 씀)
+  const mode = S.initMode(rng, M);               // 28 (기본 상태 idle/sleep/walk/sit — 상태가 하나뿐인 종족은 rng 안 씀)
   const zzzPhase = rng.float(0, 6);              // 29 (잠 중 z 이모지 위상 — 매 프레임 rng 없이 6초마다)
   const angry = S.initAngry(rng, M);             // 30 (화남 — 표에 angry가 없는 종족은 rng 안 씀)
   // 꼬리 끝 마디(고양이 위주) — 팔로스루 상태·채찍질·세움. 예약이 아니라 이벤트에 딸려 시작하므로 rng는 시작할 때만
@@ -89,7 +89,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
   // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
   let forced = null;
-  let forcedMode = null;   // "sleep" | "walk" | "idle" | null — ACTION 카드가 기본 상태도 정할 수 있다
+  let forcedMode = null;   // "sleep" | "walk" | "sit" | "idle" | null — ACTION 카드가 기본 상태도 정할 수 있다
   let forcedSide = 1;
   let forcedStart = -1;
   const arm = rig ? rig.arm : null;
@@ -98,6 +98,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const canSleep = quad;   // 잠 자세는 네발만 정의돼 있다
   // 잠 정도 0~1. 상태가 바뀌면 여기로 이징한다 — 엎드리고 일어나는 게 튀지 않게. 태어날 때 자는 개체는 1로 시작
   let sleepK = mode.mode === "sleep" && canSleep ? 1 : 0;
+  // 앉기 — 네발만. 자세는 리그 치수에서 한 번 푼다(actions.js sitPose). sitK 0~1로 idle과 섞는다 (앉고 일어나는 게 튀지 않게)
+  const sit = quad && rig && rig.body ? sitPose(rig.body) : null;
+  let sitK = mode.mode === "sit" && sit ? 1 : 0;
   // 걷기 정도 0~1 (걷기 상태로 이징). 걸음 위상은 개체별로 어긋나게 — rng 없이 시드로
   const W = M.walk || null;
   let walkK = mode.mode === "walk" && W ? 1 : 0;
@@ -146,6 +149,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (!action) { forced = null; forcedMode = null; }
       else if (action === "sleep") { forced = "idle"; forcedMode = "sleep"; }
       else if (action === "walk") { forced = null; forcedMode = "walk"; }   // 걷는 중에도 팔 행위는 예약대로 (걸으며 인사)
+      else if (action === "sit") { forced = null; forcedMode = "sit"; }     // 앉아서도 네발 행위(긁기·꼬리 흔들기)는 예약대로
       else if (action === "idle") { forced = "idle"; forcedMode = "idle"; }
       else if (ACTIONS[action] || QUAD_ACTIONS[action] || BODY_ACTIONS[action]) { forced = action; forcedMode = "idle"; }
       else { forced = null; forcedMode = null; }
@@ -181,6 +185,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       sleepK += ((asleep ? 1 : 0) - sleepK) * 0.03;
       if (sleepK < 0.001) sleepK = 0;
       const awake = 1 - sleepK;
+      // 앉기 — 잠보다 빠르게 앉고 일어난다(0.05/프레임, 1초쯤). 깨어 있는 상태라 얼굴·둘러보기·네발 행위는 그대로
+      const sitting = modeName === "sit" && !!sit;
+      sitK += ((sitting ? 1 : 0) - sitK) * 0.05;
+      if (sitK < 0.001) sitK = 0;
       // 걷기 — 제자리 걸음. walkK로 들어가고 나온다(0.5초쯤). 걸음 위상 ph는 t 기반이라 끊기지 않는다
       const walking = modeName === "walk" && !!W;
       walkK += ((walking ? 1 : 0) - walkK) * 0.06;
@@ -238,7 +246,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         const start = start0 + Math.floor((t - start0) / period) * period;
         return { action: forced, start, until: start + def.hops * def.dur };
       });
-      if (asleep || walkK > 0.5) bact = null;   // 자는 중·걷는 중엔 몸 행위 없음 (예약은 위에서 이미 돌렸다)
+      if (asleep || walkK > 0.5 || sitK > 0.5) bact = null;   // 자는 중·걷는 중·앉은 중엔 몸 행위 없음 (예약은 위에서 이미 돌렸다)
       const hp = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, squashX: 0, squashY: 0 };
       // 걷기 — 걸음마다 몸이 살짝 들썩인다
       if (walkK > 0 && W) hp.hopY += W.bob * stepBump * walkK;
@@ -309,8 +317,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         tailAngle *= 1 - tailRaise;
         tailTip *= 1 - tailRaise;
       }
-      // idle 자세 — 고양이는 깨어 있는 동안 꼬리가 **아치**(tailPose)로 서 있다. 세움이 오면 그만큼 빠지고(합이 1) 잠들면 골격 그대로 접힌다
-      const tailArch = tailPose && quad ? IP.weight * awake * (1 - tailRaise) : 0;
+      // idle 자세 — 고양이는 깨어 있는 동안 꼬리가 **아치**(tailPose)로 서 있다. 세움이 오면 그만큼 빠지고(합이 1) 잠들면 골격 그대로 접히고,
+      // 앉으면 대부분 빠져(×0.2) 골격 그대로 몸을 따라 기울어 바닥에 눕는다
+      const tailArch = tailPose && quad ? IP.weight * awake * (1 - tailRaise) * (1 - 0.8 * sitK) : 0;
       const j = R.stepJelly(jelly, t);
 
       // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
@@ -332,6 +341,13 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         if (def.tail) tailAngle += def.tail.osc.amp * w;
       }
 
+      // 앉은 자세 — 몸을 앞다리 뿌리를 축으로 기울여(bodyTilt — scene이 몸 그룹을 돌린다) 엉덩이를 바닥에, 앞다리는 수직, 뒷다리는 앞으로 접어
+      // 발이 바닥에(actions.js sitPose). sitK로 섞어 앉고 일어나는 게 부드럽다. 행위 중인 다리(뒷발 긁기)는 행위가 이긴다 — 앉아서 긁는다.
+      // 꼬리는 몸과 같이 기울고 조금 더 내려 바닥에 눕는다
+      if (sitK > 0 && sit) {
+        for (let i = 0; i < 4; i += 1) if (!(qact && qact.index === i)) legOffset[i] = legOffset[i] * (1 - sitK) + sit.legs[i] * sitK;
+        tailAngle -= 0.3 * sitK;
+      }
       // 잠 자세 — 다리를 몸 밑으로 접고(앞다리는 뒤로, 뒷다리는 앞으로) 꼬리를 내리고 머리를 앞발에 얹는다.
       // sleepK로 섞어 엎드리고 일어나는 게 부드럽다
       if (sleepK > 0) {
@@ -379,7 +395,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailArch, tailPose,
         arms, legOffset, legOsc,
-        mode: modeName, sleep: sleepK, walk: walkK, walkX: trip.x, facing,
+        mode: modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing,
         // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용
         action: act ? act.action : qact ? qact.action : null,
         actionSide: act ? act.side : qact ? qact.index : 0,

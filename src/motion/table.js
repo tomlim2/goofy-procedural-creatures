@@ -41,8 +41,8 @@ export const MOTION = {
     // 네발 idle 자세 — 바인드(다리 수직·꼬리 그린 그대로)와 다르다. 앞다리는 살짝 앞, 뒷다리는 뒤로 딛고
     // 꼬리는 올린다. 그 위에 리듬(호흡·롤·꼬리)과 행위가 얹힌다.
     legStance: [-0.05, -0.02, 0.09, 0.06], tailIdle: 0.25,
-    // 기본 상태 — 서 있기(idle)와 엎드려 잠(sleep)을 오간다. [상태, 가중치]는 시작·전환 때 뽑는 비율, 유지는 modeHold
-    modes: [["idle", 3], ["sleep", 1], ["walk", 1.5]], modeHold: { idle: [40, 120], sleep: [25, 60], walk: [6, 16] },
+    // 기본 상태 — 서 있기(idle)·엎드려 잠(sleep)·걷기(walk)·앉기(sit)를 오간다. [상태, 가중치]는 시작·전환 때 뽑는 비율, 유지는 modeHold
+    modes: [["idle", 3], ["sleep", 1], ["walk", 1.5], ["sit", 1.5]], modeHold: { idle: [40, 120], sleep: [25, 60], walk: [6, 16], sit: [15, 45] },
     walk: { hz: 2.6, leg: 0.32, bob: 0.008, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.07, tail: 0.12 },   // 종종걸음 — 대각선 다리 쌍이 번갈아, 꼬리도 걸음에 살랑
     quadActions: [["wag", 3.5], ["scratch", 1]], quadActionGap: [6, 16],   // 개는 자주 흔든다
     wagOnHappy: { amp: 0.35, hz: 4 },   // ^^ 웃을 때마다 꼬리를 흔든다 (행복 유지·깜빡임 ^^)
@@ -74,8 +74,8 @@ export const MOTION = {
     // **머리 반대편(뒤)** 으로 넘어가 끝이 **−75°로 내려온다**(거의 수직 낙하) — 등 뒤 허공에 걸린 ∩ 아치. 끝 두 마디는 개체 tailLift(−1~1)로
     // ±liftBend(±7°) — 살짝만 다르게. 잠·세움 땐 이 자세가 빠진다 (motion/index.js tailArch)
     tailIdlePose: { angles: [1.85, 1.3, 0.05, -75 * Math.PI / 180], weight: 0.85, liftBend: 0.12 },
-    // 고양이는 더 자주, 더 오래 잔다
-    modes: [["idle", 2], ["sleep", 1], ["walk", 1]], modeHold: { idle: [40, 120], sleep: [30, 90], walk: [6, 14] },
+    // 고양이는 더 자주, 더 오래 자고 앉는다
+    modes: [["idle", 2], ["sleep", 1], ["walk", 1], ["sit", 1.5]], modeHold: { idle: [40, 120], sleep: [30, 90], walk: [6, 14], sit: [20, 60] },
     walk: { hz: 2.2, leg: 0.28, bob: 0.006, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.05, tail: 0 },   // 느긋한 걸음 — 꼬리는 걷기에 안 흔든다 (고양이는 개처럼 꼬리치지 않는다)
     // 고양이는 개처럼 꼬리를 흔들지 않는다 — 꼬리는 상시 스위시·플릭뿐. 행위는 뒷발 긁기만
     quadActions: [["scratch", 1]], quadActionGap: [10, 28],

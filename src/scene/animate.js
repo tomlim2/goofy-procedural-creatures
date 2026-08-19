@@ -31,6 +31,19 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     1
   );
 
+  // 몸통 기울기 — 네발 앉기(bodyTilt, 음수 = 뒤가 내려감). 앞다리 뿌리(item.bodyPivot)를 축으로 돈다: 회전만 주면 원점(발바닥 가운데)이 축이 되어
+  // 앞발이 뜨므로, 축이 제자리에 남도록 위치를 같이 옮긴다. 머리 그룹은 몸 그룹의 자식이 아니라 그대로다 — 축이 머리 바로 밑이라 머리는 안 움직인다
+  const tilt = state.bodyTilt || 0;
+  if (item.bodyPivot && tilt !== 0) {
+    const [px, py] = item.bodyPivot;
+    const c = Math.cos(tilt), s = Math.sin(tilt);
+    item.bodyGroup.rotation.z = tilt;
+    item.bodyGroup.position.set(px - (px * c - py * s), py - (px * s + py * c), 0);
+  } else {
+    item.bodyGroup.rotation.z = 0;
+    item.bodyGroup.position.set(0, 0, 0);
+  }
+
   // 머리 — 갸웃·롤·딥·끄덕
   item.headGroup.rotation.z = state.headAngle;
   item.headGroup.position.y = item.neckY + state.headBob;

@@ -67,6 +67,7 @@ export function buildCreature(spec, noise, birth = 0) {
   // 렌더 순서(guidelines/rig.md가 단일 소스): 몸 1.5 → 뒷머리 1.55 → 옆귀 1.7 → 머리 2(채색이 몸 잉크를 덮는다) → 뿔 2.06 → 두피 위 머리카락 2.06 →
   // 개/고양이 귀 2.12 → 모자 2.16 → 얼굴·정지 눈 2.3/2.4 → 얼굴 맨 앞(코·안경) 6.5 → 앞머리 6.55
   const firstDrawn = drawCreature(spec, 0);
+  const mrig = motionRig(spec);
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
   // 머리 층은 group 대신 depth — 아래에서 층마다 깊이 그룹을 만든다 (몸은 bodyGroup, 윤곽은 headGroup, 이목구비는 faceGroup)
@@ -302,8 +303,10 @@ export function buildCreature(spec, noise, birth = 0) {
     eyeRigs,
     staticLids,
     faceStates,
-    // 시계는 팔 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 푼다
-    clock: makeClock(spec.seed, birth, spec.species, motionRig(spec)),
+    // 시계는 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 풀고, 네발 앉기를 몸통·다리 뿌리 치수에 맞게 푼다
+    clock: makeClock(spec.seed, birth, spec.species, mrig),
+    // 몸 그룹의 회전 축 — 네발 앉기(state.bodyTilt)에서 몸이 앞다리 뿌리를 축으로 기운다 (animate). 두발은 null
+    bodyPivot: mrig.body ? [mrig.body.frontHipX, mrig.body.hipY] : null,
     spec,
     neckY,
     faceCy,

@@ -54,16 +54,12 @@ export function limbSketches(spec) {
   const legKind = spec.parts.legs;
 
   if (box.quad) {
-    // 네 다리 — 앞다리 둘·뒷다리 둘이 각각 붙어 있다(옆에서 본 짐승). 뿌리는 몸 윤곽 안쪽(bodyH 25% 위).
+    // 네 다리 — 앞다리 둘·뒷다리 둘이 각각 붙어 있다(옆에서 본 짐승). 뿌리는 몸 윤곽 안쪽(bodyH 25% 위, quadHips).
     // 형태: stub(기본 — 굵은 스텁 + 발끝 + 발가락) · stick(가는 다리 + 둥근 발) · boots(양말) ·
     // float(레이맨식 — 다리 없이 발만 떠 있다). bent·tiptoe는 네발에서 stick으로 그린다.
     // 기장은 layout이 legLength로 정한다(short = 닥스훈트). 몸 길이는 build(box.bodyW).
-    const cx = box.bodyCx;
-    const hipY = box.legTop + box.bodyH * 0.25;
+    const { hipY, front, back, gap } = quadHips(box);
     const kind = ["stub", "stick", "boots", "float"].includes(legKind) ? legKind : "stick";
-    const gap = Math.max(0.03, box.bodyW * 0.16);          // 한 쌍 안의 두 다리 간격
-    const front = cx - box.bodyW * 0.6;
-    const back = cx + box.bodyW * 0.6;
     [front - gap / 2, front + gap / 2, back - gap / 2, back + gap / 2].forEach((x, i) => {
       const s = make();
       const len = hipY;
@@ -201,14 +197,32 @@ export function limbSketches(spec) {
 // 바깥(더 왼쪽)으로 들려면 시계방향 = 음수, 오른팔은 반시계 = 양수. 그래서 outward = side다.
 export const BIND_ARM = [1.57, 0];
 
+// 네발 다리 뿌리 — 네 다리는 뿌리 높이 hipY(몸 밑단 + bodyH 25%)에, 앞 쌍은 front·뒷 쌍은 back을 중심으로 gap만큼 벌려 붙는다.
+// 그리기(limbSketches)와 리그 서술(motionRig — 앉기 자세를 푸는 데 쓴다)이 같은 값을 본다
+export function quadHips(box) {
+  return {
+    hipY: box.legTop + box.bodyH * 0.25,
+    front: box.bodyCx - box.bodyW * 0.6,
+    back: box.bodyCx + box.bodyW * 0.6,
+    gap: Math.max(0.03, box.bodyW * 0.16)          // 한 쌍 안의 두 다리 간격
+  };
+}
+
 // 리그 서술 — 모션이 이 개체 위에서 돌 때 필요한 정적 치수. 전부 스펙에서 나온다.
 //   arm      두발의 팔(IK): 어깨 위치·위팔·아래팔 길이·몸 앵커. 앵커는 몸 좌표(발바닥 원점, y 위), 오른팔 기준 — 왼팔은 x 반전. 네발은 null
 //   legTop   몸통 밑단 높이 — 네발이 엎드려 잘 때 몸이 내려앉는 거리
+//   body     네발의 몸통·다리 뿌리 치수 { frontHipX, hindHipX, hipY, legTop, bodyH, bodyW, bodyCx } — 앉기 자세(motion/actions.js sitPose)를
+//            이 개체에 맞게 푼다(몸을 앞다리 뿌리를 축으로 기울여 엉덩이를 바닥에, 뒷다리를 접어 발이 바닥에). 두발은 null
 //   tailLift 꼬리 개체 지터(−1~1) — 고양이 idle 아치의 말림 정도를 개체마다 다르게 (motion/table.js tailIdlePose)
 export function motionRig(spec) {
   const box = layout(spec);
+  const hips = box.quad ? quadHips(box) : null;
   // arm은 팔이 있는 두발만. 팔 없는 두발(도깨비 arms none)은 arm null이지만 quad도 false — 팔 행위 층만 쉰다
-  return { arm: box.quad || spec.parts.arms === "none" ? null : armRigOf(spec, box), legTop: box.legTop, quad: box.quad, tailLift: spec.proportions.tailLift };
+  return {
+    arm: box.quad || spec.parts.arms === "none" ? null : armRigOf(spec, box),
+    legTop: box.legTop, quad: box.quad, tailLift: spec.proportions.tailLift,
+    body: hips ? { frontHipX: hips.front, hindHipX: hips.back, hipY: hips.hipY, legTop: box.legTop, bodyH: box.bodyH, bodyW: box.bodyW, bodyCx: box.bodyCx } : null
+  };
 }
 
 function armRigOf(spec, box) {

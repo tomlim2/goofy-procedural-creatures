@@ -9,7 +9,8 @@
 
 ```
 group                        ← 원점 = 발바닥. 스웨이·부르르·점프·호흡·젤리
-├── bodyGroup
+├── bodyGroup                ← 네발 앉기(state.bodyTilt): **앞다리 뿌리**(item.bodyPivot = motionRig().body의 frontHipX·hipY)를 축으로 돈다 —
+│   │                           회전 + 축이 제자리에 남는 위치 보정(animate). 다리 피벗·꼬리는 자식이라 같이 기울고, headGroup은 형제라 안 움직인다(축이 머리 바로 밑)
 │   ├── bodyFrame ×3         ← 보일 변형. 몸 채색+잉크 한 메시(1.5)
 │   ├── tailGroup            ← 꼬리 뿌리에 피벗 (네발). 0.8 — 몸통·머리 뒤
 │   │   └── bone[0] ⊃ bone[1] ⊃ bone[2] ⊃ bone[3]  ← 네 마디 체인 (관절 = 척추 4등분점). bone[0]에 tailAngle, bone[3]에 tailTip, tailRaise는 관절마다 목표각(세움)
