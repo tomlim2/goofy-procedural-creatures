@@ -1,6 +1,6 @@
 # MENAGERIE
 
-시드 하나에서 자라나는 손그림 크리처 그리드. 위에서부터 사람·사람·고양이·개·도깨비 다섯 줄이
+시드 하나에서 자라나는 손그림 크리처 그리드. 위에서부터 사람·고양이·개·도깨비가 줄마다 순서대로 도는 판이
 저마다의 시계로 숨쉬고, 깜빡이고, 두리번거리고, 놀라고, 손 흔들어 인사하고, 팔짱을 꼈다 풀고, 제자리에서 폴짝이고, 머리 위에 ♥ ! ? 를 띄운다.
 선은 낮은 주기로 계속 끓는다(보일). 형태는 NEW SEED를 눌러야만 바뀐다.
 
@@ -31,6 +31,10 @@ git tag v0.1.0 && git push origin v0.1.0
 
 `serve.mjs`는 로컬 전용이다(모듈 캐시 무효화). Pages에서는 브라우저가 정적 파일을 직접 받는다.
 
+`/debug.html` — **디버그 화면**. 메인은 SEED·SPECIES·GRID뿐이고, 포즈·잉크·행위·재생성을 만지려면 여기다.
+그림은 같고 조작 카드만 다르다(같은 `src/main.js`). 메인에서 링크로 가지 않는다 — 주소를 직접 친다.
+돌아올 때는 헤더의 **MENAGERIE**를 누른다.
+
 `/gallery.html?slot=legs&species=human` — **파츠 갤러리**. 슬롯 하나의 모든 값을 같은 개체(종족·시드 고정)에
 나란히 그린다. FIX 드롭다운(`&fix=legLength:short`)으로 다른 슬롯 하나를 고정할 수 있고, `&values=bangs,bun`으로 그 슬롯의
 몇 값만 크게 놓고 볼 수 있다. 파츠 하나의 형태를 판단할 때. census가 숫자라면 이건 그림이다.
@@ -38,6 +42,8 @@ git tag v0.1.0 && git push origin v0.1.0
 `/audit.html?seed=…` — **얼굴 파츠 전수조사**. 판 하나(35마리)를 얼굴 상태 22가지(놀람·잠·깜빡임·^^·윙크·화남·눈썹/입 전환·
 8방향 돌림·☆♥ 변형·조합)로 그려, 눈·코·입·눈썹·안경·볼·잠 눈꺼풀을 하나씩 껐다 켰다 하며 픽셀 차이를 센다. 머리 폭의 4% 미만이면
 "안 보임"으로 적는다. 얼굴을 고쳤으면 돌린다 — 0건이어야 한다.
+
+메인 화면(`/`)에는 **SEED · SPECIES · GRID · EXPORT**만 있다. 나머지는 디버그 화면(`/debug.html`) 것이다.
 
 | 조작 | |
 | --- | --- |
@@ -47,7 +53,19 @@ git tag v0.1.0 && git push origin v0.1.0
 | ACTION AUTO / IDLE / SLEEP / SIT / WALK / 행위 | 행위 하나를 강제(그 층만, 다른 층은 idle) — 팔(인사·만세·팔짱·경례…, 두발), 몸(제자리 점프, 전원), 네발(긁기·꼬리 흔들기). SLEEP은 네발을 엎드려 재우고, SIT은 네발을 앉히고(네발 행위는 예약대로 — 앉아서 긁고 꼬리 흔든다), WALK는 전원 걷기 — 집↔밖 왕복(팔 행위는 예약대로). AUTO는 층끼리 겹치고 개·고양이는 이따금 자고 앉고 모두 이따금 걷는다. IDLE은 모든 층 idle·깨어 있음 |
 | REGEN STILL / LIVE / `S` | 기본 STILL. LIVE를 켜면 개체가 각자의 시계(6~14초)로 교체된다 (레퍼런스 동작) |
 | SPECIES ALL / HUMAN / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
-| GRID 5×4 / 7×5 / 9×6 | |
+| EXPORT PNG | 지금 화면을 PNG로 받는다. 캔버스 픽셀 그대로(화면 해상도)에 서명만 얹는다 — 왼쪽 밑 시드, 오른쪽 밑 MENAGERIE. 파일 이름은 `menagerie-<시드>.png` |
+| GRID 1×1 / 5×4 / 7×5 / 9×6 | 1×1은 한 마리만 세운다(뷰를 두 배로 잡아 화면의 절반 크기) — 파츠 하나를 화면에서 볼 때. 종이 그레인은 그리드와 무관하게 9×6 기준으로 고정이다 |
+
+조작한 상태는 **주소에 실린다**. 화면을 만들고 주소를 복사하면 그대로 남고, 그 주소로 들어오면 같은 화면이 선다.
+기본값인 항목은 안 붙는다 — 손 안 댄 화면의 주소에는 시드 해시만 남는다.
+
+```
+/?grid=1x1&species=cat&pose=bind&ink=still&action=wave#01dkuwa
+```
+
+`grid` `pose` `ink` `live` `species` `action` — 위 표의 조작 그대로고, 값은 버튼의 `data-*`(ACTION은 목록의 값)다.
+목록에 없는 값, **그 화면에 카드가 없는 값**은 무시된다 — 메인에서 `pose=bind`는 떨어져 나간다(디버그 화면에서 쓴다).
+시드만 해시인 건 예전 그대로다. 헤더의 **MENAGERIE**를 누르면 메인으로 돌아온다(디버그·갤러리·전수조사 화면에서도 같다).
 
 ## 구조
 
@@ -62,7 +80,9 @@ git tag v0.1.0 && git push origin v0.1.0
 | **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지 — 기본 상태 idle/sleep/walk 포함) `actions.js`(idle과 행위 — 팔·몸·네발 층) `emoji.js`(이모지 애니메이션 — 트리거 층) `ease.js`(곡선 모양 — 봉투·추종, 전부 ease in/out) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js`(공유 재질·메시) `emoji.js`(글리프 모양) `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
-| `src/main.js` · `src/ui.js` | 진입점. UI 배선 (`ui.js` — 세그먼트 버튼·옵션·rAF 루프 유틸, gallery·audit과 공유) | |
+| `src/export.js` | 화면 → PNG. WebGL 캔버스를 2D 캔버스에 올리고 서명(시드·이름)을 얹어 내려받는다. 씬을 모른다 — 다 그려진 캔버스를 받는다 | |
+| `src/main.js` · `src/control.js` · `src/ui.js` | 진입점. `control.js`는 화면 컨트롤 표 — 값·주소(쿼리)·그 값으로 하는 일이 한 곳이다(버튼에는 기능이 없다). `ui.js`는 그 밑의 DOM 유틸(세그먼트 버튼·목록 배선·옵션·rAF 루프, gallery·audit과 공유) | |
+| `debug.html` | 디버그 화면 — `index.html`과 같은 `src/main.js`, 조작 카드만 전부 둔다 (없는 카드는 컨트롤러가 건너뛴다) | |
 | `src/gallery.js` · `gallery.html` | 파츠 갤러리 — 슬롯값별로 같은 개체를 나란히 | |
 | `src/audit.js` · `audit.html` | 얼굴 파츠 전수조사 — 상태별로 파츠가 보이는지 픽셀로 센다 | [character/rules](guidelines/character/rules.md) |
 | `guidelines/` | 두 축의 카탈로그와 규칙, 성능·시드·그리기 규칙. **고치기 전에 읽는다** | [README](guidelines/README.md) |

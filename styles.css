@@ -38,10 +38,10 @@ html, body {
   pointer-events: none;
 }
 
-.mark { font-weight: 700; letter-spacing: 0.18em; }
+.mark { font-weight: 700; letter-spacing: 0.18em; text-decoration: none; }
 .sub { opacity: 0.5; }
 /* 헤더는 클릭을 캔버스로 흘려보내지만(pointer-events: none) 링크는 눌려야 한다 */
-.bar a { pointer-events: auto; }
+.bar a { pointer-events: auto; color: inherit; }
 .status { margin-left: auto; opacity: 0.6; }
 
 .deck {

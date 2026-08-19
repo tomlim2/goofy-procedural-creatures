@@ -24,6 +24,20 @@ export function bindSeg(container, attr, onChange) {
   };
 }
 
+// <select> 하나를 배선한다. bindSeg와 **같은 모양**({ value, set })을 돌려준다 — 컨트롤러가 버튼 묶음과 목록을 구별 없이 다룬다.
+// set은 목록에 있는 값만 받는다 (주소에서 들어온 값이 옵션에 없으면 아무것도 안 한다 — bindSeg의 set과 같은 태도).
+export function bindSelect(select, onChange) {
+  select.addEventListener("change", () => onChange(select.value));
+  return {
+    value: () => select.value,
+    set: (value) => {
+      if (![...select.options].some((option) => option.value === value)) return;
+      select.value = value;
+      onChange(value);
+    }
+  };
+}
+
 // <select>에 옵션 하나를 붙인다
 export function addOption(select, value, label) {
   const option = document.createElement("option");

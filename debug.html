@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MENAGERIE — goofy procedural creatures</title>
-<meta name="description" content="시드 하나에서 자라나는 손그림 크리처 그리드. 저마다의 시계로 숨쉬고 깜빡이고 두리번거린다.">
+<title>MENAGERIE — 디버그</title>
+<meta name="description" content="메인 화면 + 포즈·잉크·행위·재생성 조작. 형태와 모션을 판단할 때.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -21,7 +21,7 @@
 
 <header class="bar">
   <a class="mark" href="./index.html">MENAGERIE</a>
-  <span class="sub">GOOFY PROCEDURAL CREATURES</span>
+  <span class="sub">DEBUG · <a href="./index.html">← GRID</a></span>
   <span class="status" id="status">BOOT</span>
 </header>
 
@@ -32,9 +32,36 @@
     <button id="reseed" class="wide">NEW SEED</button>
   </section>
 
+  <section class="card">
+    <h2>POSE</h2>
+    <div class="row seg" id="poseSeg" role="group" aria-label="포즈">
+      <button data-pose="motion" class="on">MOTION</button>
+      <button data-pose="bind">BIND</button>
+    </div>
+  </section>
 
+  <section class="card">
+    <h2>INK</h2>
+    <div class="row seg" id="inkSeg" role="group" aria-label="잉크">
+      <button data-ink="boil" class="on">BOIL</button>
+      <button data-ink="still">STILL</button>
+    </div>
+  </section>
 
+  <section class="card">
+    <h2>ACTION</h2>
+    <select id="actionSel" class="wide" aria-label="팔 행위 강제">
+      <option value="">AUTO</option>
+    </select>
+  </section>
 
+  <section class="card">
+    <h2>REGEN</h2>
+    <div class="row seg" id="liveSeg" role="group" aria-label="재생성 전환">
+      <button data-live="off" class="on">STILL</button>
+      <button data-live="on">LIVE</button>
+    </div>
+  </section>
 
   <section class="card">
     <h2>SPECIES</h2>
@@ -62,6 +89,7 @@
     <button id="exportPng" class="wide">PNG</button>
   </section>
 
+  <p class="hint">R 시드 · B 포즈 · I 잉크 · S 재생성 · ACTION은 행위 강제 · 조작이 주소에 실린다 · <a href="./gallery.html">PARTS GALLERY →</a></p>
 </aside>
 
 <noscript><p class="noscript">이 페이지는 WebGL과 자바스크립트가 필요합니다.</p></noscript>

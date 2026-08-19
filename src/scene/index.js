@@ -15,6 +15,13 @@ import { BIND_STATE } from "../motion/index.js";
 export const CELL_W = 1.0;
 export const CELL_H = 1.35;
 
+// 종이 그레인의 기준 판. 그리드가 뭐든 이 크기의 화면에서 보이는 그레인으로 그린다 (9×6이 제일 보기 좋다).
+const PAPER_GRID = [9, 6];
+
+// 판을 감싸는 여백. 1×1은 한 마리뿐이라 판을 꽉 채우면 화면을 다 먹는다 — 뷰를 두 배로 잡아 절반 크기로 세운다
+const PAD = 1.08;
+const SOLO_PAD = PAD * 2;
+
 export function createScene(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));   // (resize가 다시 잡는다 — 모니터를 옮기면 픽셀 비가 바뀐다)
@@ -68,17 +75,22 @@ export function createScene(canvas) {
     }
   }
 
+  // 격자 크기와 캔버스 비율로 카메라가 담는 세계 크기를 푼다. 판을 1.08배로 감싸고 남는 쪽을 비율에 맞춰 늘인다.
+  function viewSize(cols, rowCount, aspect) {
+    const width = cols * CELL_W;
+    const height = rowCount * CELL_H;
+    const pad = cols * rowCount === 1 ? SOLO_PAD : PAD;
+    let viewW = width * pad;
+    let viewH = height * pad;
+    if (aspect > width / height) viewW = viewH * aspect;
+    else viewH = viewW / aspect;
+    return [viewW, viewH];
+  }
+
   function layout() {
-    const width = columns * CELL_W;
-    const height = rows * CELL_H;
     const aspect = canvas.clientWidth / canvas.clientHeight;
     laidOut = [canvas.clientWidth, canvas.clientHeight];
-    const gridAspect = width / height;
-
-    let viewW = width * 1.08;
-    let viewH = height * 1.08;
-    if (aspect > gridAspect) viewW = viewH * aspect;
-    else viewH = viewW / aspect;
+    const [viewW, viewH] = viewSize(columns, rows, aspect);
 
     camera.left = -viewW / 2;
     camera.right = viewW / 2;
@@ -88,7 +100,11 @@ export function createScene(canvas) {
 
     if (paper) {
       paper.scale.set(viewW, viewH, 1);
-      paper.material.map.repeat.set(viewW / 3, viewH / 3);
+      // 종이 그레인은 그리드를 안 따라간다 — 9×6 판(PAPER_GRID)에서 보이는 크기로 고정한다.
+      // 지금 뷰에서 뽑으면 뷰가 좁을수록 타일이 화면에 비해 커진다: 1×1에서는 3단위 타일 하나가
+      // 화면보다 커져 그레인이 아니라 뭉갠 얼룩이 된다.
+      const [grainW, grainH] = viewSize(PAPER_GRID[0], PAPER_GRID[1], aspect);
+      paper.material.map.repeat.set(grainW / 3, grainH / 3);
     }
   }
 
@@ -231,6 +247,12 @@ export function createScene(canvas) {
     for (const item of creatures) applyForced(item);
   }
 
+  // 지금 상태를 한 프레임 그린다. PNG 내보내기가 캔버스를 읽기 **직전에** 부른다 —
+  // WebGL 그리기 버퍼는 프레임이 끝나면 비워지므로 같은 태스크에서 다시 그려야 읽힌다 (src/export.js)
+  function draw() {
+    renderer.render(scene, camera);
+  }
+
   // 디버그 — 한 개체에 임의 상태(BIND_STATE 위에 덮어쓴 필드)를 즉시 입히고 한 프레임 그린다.
   // 얼굴 상태별로 파츠가 보이는지 픽셀로 전수조사할 때 쓴다 (guidelines/character/rules.md § 얼굴 파츠는 어느 상태에서도 보여야 한다).
   function probe(item, overrides = {}) {
@@ -238,5 +260,5 @@ export function createScene(canvas) {
     renderer.render(scene, camera);
   }
 
-  return { build, update, resize, setRegen, setBind, setBoil, setAction, probe, renderer, scene, camera, creatures: () => creatures };
+  return { build, update, resize, setRegen, setBind, setBoil, setAction, draw, probe, renderer, scene, camera, creatures: () => creatures };
 }
