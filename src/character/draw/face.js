@@ -344,9 +344,45 @@ export function muzzleGeometry(spec, box) {
   return { my, rx: box.headRx * mw, ry: box.headRy * mh, noseY: my + box.headRy * 0.16, noseR: nr, fill, dark, ink: dark ? "#e9e3d5" : spec.palette.ink };
 }
 
+// 사람·도깨비 코(hook·wedge·long)의 배율 — 머리 높이 기준, 중간 머리(headRy 0.31)에서 1. 고정 좌표로 두면 왕머리에서 콩알이 되어
+// hook·wedge·long이 같은 코로 읽히고, 작은 머리에서는 얼굴 반을 차지한다. 선 굵기는 배율을 타지 않는다 (치수 슬롯 규칙과 같다)
+const NOSE_REF_RY = 0.31;
+function noseScale(box) { return box.headRy / NOSE_REF_RY; }
+
 // 코 기준점(사람·고양이·도깨비). 눈이 가운데까지 닿을 만큼 크면(왕눈·외눈) 코가 눈 속에 묻힌다 — (놀라 커진) 눈 아래로 내린다
 export function noseY(spec, box, eyes) {
   return Math.min(box.headCy - box.headRy * spec.proportions.noseDrop, eyeFloor(spec, eyes, 0) - 0.008);
+}
+
+// 면으로 그리는 코 둘 — 그리기(drawNose)와 입 자리(noseBottomY)가 같은 좌표를 본다. 둘 다 머리에 비례하고,
+// 코 기준점(noseY)은 x=0만 보므로 폭이 있는 코는 콧방울이 눈(흰자)에 닿는지 제 폭에서 다시 본다 — 닿으면 그만큼 내린다
+// (faceFront 층은 눈 리그보다 위라, 면이 눈에 걸치면 흰자를 가린다)
+function bulbShape(spec, box, eyes) {
+  const rx = Math.max(0.016, box.headRx * 0.085), ry = Math.max(0.014, box.headRy * 0.07);
+  const floor = Math.min(eyeFloor(spec, eyes, -rx * 0.8), eyeFloor(spec, eyes, rx * 0.8)) - 0.006;
+  const cy = Math.min(noseY(spec, box, eyes) + ry * 0.5, floor - ry);
+  return { rx, ry, cy, bottom: cy - ry };
+}
+function broadShape(spec, box, eyes) {
+  const w = Math.max(0.03, box.headRx * 0.14), h = Math.max(0.014, box.headRy * 0.06);
+  const floor = Math.min(eyeFloor(spec, eyes, -w * 0.8), eyeFloor(spec, eyes, w * 0.8)) - 0.006;
+  const y = Math.min(noseY(spec, box, eyes), floor - h);
+  return { w, h, y, bottom: y - h };
+}
+// 네모 코 — 모서리 둥근 네모(superellipse). 주먹코와 같은 자리·같은 채움, 실루엣만 각지다
+function boxShape(spec, box, eyes) {
+  const rx = Math.max(0.017, box.headRx * 0.09), ry = Math.max(0.017, box.headRy * 0.09);
+  const floor = Math.min(eyeFloor(spec, eyes, -rx * 0.8), eyeFloor(spec, eyes, rx * 0.8)) - 0.006;
+  const cy = Math.min(noseY(spec, box, eyes) + ry * 0.5, floor - ry);
+  return { rx, ry, cy, bottom: cy - ry };
+}
+// 콧구멍 둘 — 수박씨 두 알(위가 뾰족한 물방울, 바깥으로 기울임). gap은 두 알의 중심 간격의 반, rx·ry는 알 하나의 반폭·반높이
+function nostrilsShape(spec, box, eyes) {
+  const gap = Math.max(0.015, box.headRx * 0.065);
+  const rx = Math.max(0.006, box.headRy * 0.026), ry = Math.max(0.011, box.headRy * 0.052);
+  const floor = Math.min(eyeFloor(spec, eyes, -(gap + rx)), eyeFloor(spec, eyes, gap + rx)) - 0.006;
+  const cy = Math.min(noseY(spec, box, eyes) + ry * 0.3, floor - ry);
+  return { gap, rx, ry, cy, bottom: cy - ry * 1.05 };
 }
 
 // 고양이 코 — 코 슬롯을 **고양이 것으로 읽는다**(개가 주둥이로 읽는 것과 같은 방식): dot 작은 세모 · wedge 하트 · hook 세모 + 인중(Y) ·
@@ -394,18 +430,51 @@ export function drawNose(ink, fills, spec, box, eyes) {
   if (kind === "none") return;
   const y = noseY(spec, box, eyes);
   const ink0 = spec.faceInk || spec.palette.ink;
+  const k = noseScale(box);   // hook·wedge·long의 좌표는 전부 이 배율 — 모양은 그대로, 크기만 머리를 따른다
 
   if (kind === "dot") {
     // 점 코 — **머리에 비례**한다. 고정 크기로 두면 왕머리·넓은 머리에서 콩알보다 작아져 얼굴 돌림 때 사라진다 (전수조사가 잡는다)
     const half = Math.max(0.014, box.headRx * 0.055);
     ink.stroke([[-half, y], [half, y]], { color: ink0, width: Math.max(0.016, box.headRy * 0.06) });
   } else if (kind === "hook") {
-    ink.stroke([[0.004, y + 0.07], [0.01, y], [-0.035, y - 0.012]], { color: ink0, width: 0.01 });
+    // 갈고리 — 미간에서 내려와 왼쪽으로 꺾인다 (레퍼런스의 코 한 획)
+    ink.stroke([[0.004 * k, y + 0.07 * k], [0.01 * k, y], [-0.035 * k, y - 0.012 * k]], { color: ink0, width: 0.01 });
   } else if (kind === "wedge") {
-    ink.stroke([[-0.03, y - 0.02], [0.006, y + 0.055], [0.032, y - 0.02]], { color: ink0, width: 0.01 });
+    // 쐐기 — 위로 뾰족한 ∧
+    ink.stroke([[-0.03 * k, y - 0.02 * k], [0.006 * k, y + 0.055 * k], [0.032 * k, y - 0.02 * k]], { color: ink0, width: 0.01 });
+  } else if (kind === "bulb") {
+    // 주먹코 — 동그란 **면**. 살색보다 조금 짙게 채우고 얼굴 잉크로 테를 두른다 (먹빛 얼굴에서는 테만 남아 밝은 고리로 읽힌다).
+    // 선 코 넷과 실루엣이 다른 게 이 코의 이유다 — 그리드 거리에서 "덩어리 코"로 갈린다
+    const b = bulbShape(spec, box, eyes);
+    const path = blobPath(0.003 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.1, noise: fills.noise, phase: 2.3 });
+    fills.fill(path, shade(spec.palette.skin, 0.86));
+    ink.outline(path, { color: ink0, width: 0.01 });
+  } else if (kind === "broad") {
+    // 넓적코 — 넓고 낮은 **채운 세모**(∇, 모서리 둥글게). 고양이 세모 코의 점 배열과 같은 꼴이되 폭이 넓고 살색 계열
+    const { w, h, y: ny } = broadShape(spec, box, eyes);
+    const path = [[-w, ny + h * 0.7], [-w * 0.2, ny + h], [w * 0.2, ny + h], [w, ny + h * 0.7], [w * 0.3, ny - h * 0.6], [0, ny - h], [-w * 0.3, ny - h * 0.6]];
+    fills.fill(path, shade(spec.palette.skin, 0.86));
+    ink.outline(path, { color: ink0, width: 0.01 });
+  } else if (kind === "box") {
+    // 네모 코 — **모서리 둥근 네모** 면. 지수는 머리 square(1.5)보다 높게(2.5) — 코만큼 작으면 1.5는 그냥 동그라미로 뭉개져 bulb와 안 갈린다
+    const b = boxShape(spec, box, eyes);
+    const path = blobPath(0.002 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.04, noise: fills.noise, phase: 6.7, square: 2.5 });
+    fills.fill(path, shade(spec.palette.skin, 0.86));
+    ink.outline(path, { color: ink0, width: 0.01 });
+  } else if (kind === "nostrils") {
+    // 콧구멍 둘만 — 코 윤곽 없이 **수박씨 두 알**. 위가 뾰족한 물방울(taper +)을 바깥 위로 기울여 놓는다(왼쪽 ＼ 오른쪽 ／).
+    // 점 코(dot)의 이웃이지만 두 알·기울기·씨 모양으로 갈린다. 크기는 머리에 비례 — 고정 크기면 큰 머리에서 점으로 사라진다
+    const s = nostrilsShape(spec, box, eyes);
+    const tilt = 0.5;   // rad — 바깥으로 기울이는 각
+    for (const side of [-1, 1]) {
+      const cx = side * s.gap;
+      const seed = blobPath(0, 0, s.rx, s.ry, { lumps: 3, amount: 0.08, noise: null, taper: 0.55 });   // 원점 기준으로 만들어 돌린 뒤 옮긴다
+      const a = -side * tilt, cos = Math.cos(a), sin = Math.sin(a);
+      fills.fill(seed.map(([x, y]) => [cx + x * cos - y * sin, s.cy + x * sin + y * cos]), ink0);
+    }
   } else {
     // long — 이마에서 내려오는 긴 코
-    ink.stroke([[0.006, y + 0.14], [0.014, y - 0.03], [-0.03, y - 0.045]], { color: ink0, width: 0.01 });
+    ink.stroke([[0.006 * k, y + 0.14 * k], [0.014 * k, y - 0.03 * k], [-0.03 * k, y - 0.045 * k]], { color: ink0, width: 0.01 });
   }
 }
 
@@ -414,7 +483,15 @@ export function noseBottomY(spec, box, eyes) {
   const kind = spec.parts.nose;
   if (spec.species === "pup") return muzzleGeometry(spec, box).noseY - muzzleGeometry(spec, box).noseR;
   if (kind === "none") return Math.min(eyeFloor(spec, eyes, 0) - 0.01, box.headCy - box.headRy * 0.04);
-  return noseY(spec, box, eyes) - (kind === "long" ? 0.045 : kind === "wedge" ? 0.02 : kind === "hook" ? 0.012 : 0.008);
+  if (spec.species !== "cat") {   // 면 코 — 제 좌표에서 밑선을 준다 (고양이는 이 값들도 catNose 세모로 읽으므로 아래 상수로)
+    if (kind === "bulb") return bulbShape(spec, box, eyes).bottom;
+    if (kind === "broad") return broadShape(spec, box, eyes).bottom;
+    if (kind === "nostrils") return nostrilsShape(spec, box, eyes).bottom;
+    if (kind === "box") return boxShape(spec, box, eyes).bottom;
+  }
+  // 고양이 코(catNose)는 제 치수로 그리므로 배율을 안 탄다 — 여기 상수는 고양이에서 예전 값 그대로
+  const k = spec.species === "cat" ? 1 : noseScale(box);
+  return noseY(spec, box, eyes) - (kind === "long" ? 0.045 * k : kind === "wedge" ? 0.02 * k : kind === "hook" ? 0.012 * k : 0.008);
 }
 
 // 사나운 눈(화남) — 눈을 **바꿔 그린다**: 안쪽(코 쪽)이 내려간 굵은 빗금 눈꺼풀 + 그 밑에서 노려보는 점 (＼ ／ 위에 점). 외눈은 수평 눈꺼풀.

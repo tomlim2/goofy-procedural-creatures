@@ -48,7 +48,7 @@
 
 | 아키타입 | 가중치 | 성향 | 편향 슬롯 |
 | --- | --- | --- | --- |
-| **beast** | 3 | 뿔·귀·이빨 | horns(curved/straight), ears(pointy/flap), mouth(grimace/grin), nose(wedge/hook), hair(spikes/hedgehog/mop), head(round/wide) |
+| **beast** | 3 | 뿔·귀·이빨 | horns(curved/straight), ears(pointy/flap), mouth(grimace/grin), nose(wedge/hook/broad), hair(spikes/hedgehog/mop), head(round/wide) |
 | **scholar** | 2 | 안경·단발·베레 | eyewear(glasses/monocle), eyes(dot/half/sleepy), hair(bob/helmet/bangs/longbob/wisp/curly/cloud/sweep), headgear(beret), mouth(line), nose(long/hook), horns(none) |
 | **trooper** | 3 | 헬멧·안대·줄무늬·부츠 | headgear(helmet/cap/band/pot), eyewear(patch/goggles), head(square/block), hair(scribble/spikes/hedgehog), marks(stripes/patch/hatch), arms(sleeve/stick), legs(boots) |
 | **sprite** | 3 | 더듬이·왕눈·긴 팔다리 | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), build(narrow/skinny), legs(stick/tiptoe), arms(stick/mitten), hair(none/wisp/tuft/pigtails), nose(none/dot) |

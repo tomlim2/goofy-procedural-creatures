@@ -10,7 +10,7 @@ export const ARCHETYPES = [
       horns: [["curved", 4], ["straight", 3], ["nub", 2], ["none", 1]],
       ears: [["pointy", 2], ["pointyMid", 1], ["flap", 2], ["round", 2], ["none", 1]],
       mouth: [["grimace", 3], ["grin", 2], ["wave", 2], ["open", 2], ["line", 1]],
-      nose: [["wedge", 3], ["hook", 2], ["dot", 2], ["none", 1]],
+      nose: [["wedge", 3], ["hook", 2], ["dot", 2], ["broad", 1.5], ["none", 1]],
       hair: [["spikes", 3], ["hedgehog", 2], ["mop", 2], ["mohawk", 2], ["tuft", 2], ["none", 2]],
       head: [["round", 3], ["wide", 2], ["square", 2], ["pear", 1]]
     }

@@ -30,7 +30,9 @@ export const SLOTS = {
   // 고양이 정수리 귀, 개 귀, 사람·도깨비 옆귀 다 같은 배율을 쓴다
   // fold는 **한쪽만 접히고 반대쪽은 선다**(접히는 쪽은 개체별) · perk는 양쪽 다 선 귀
   ears: ["none", "round", "roundMid", "roundBig", "pointy", "pointyMid", "pointyBig", "flap", "long", "fold", "foldMid", "foldBig", "perk", "perkMid", "perkBig"],
-  nose: ["hook", "dot", "wedge", "long", "none"],
+  // 코 — 선 넷(hook 갈고리·dot 점·wedge ∧·long 긴 코) + 콧구멍 둘(nostrils 수박씨 두 알) + 면 셋(bulb 동그란 주먹코·broad 넓적한 세모·box 네모).
+  // 사람·도깨비는 그대로 그리고, 고양이는 catNose로, 개는 주둥이 형태로 읽는다 (draw/face.js)
+  nose: ["hook", "dot", "wedge", "long", "none", "bulb", "broad", "nostrils", "box"],
   // 볼·눈가 디테일. 레퍼런스의 눈물 자국과 볼터치.
   face2: ["none", "tears", "blush", "freckles"],
   // 입 20종 (draw/mouth.js MOUTH 표). 레퍼런스: 사람은 아주 작은 입(점·선·처짐·3)이 기본이고 눈에 띄는 건 이빨 격자(grimace)·씨익(grin)·해칭(scribble),
@@ -96,7 +98,7 @@ export const DEFAULT_BIAS = {
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3], ["perk", 0.7], ["perkMid", 0.3]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1]],
   marks: [["none", 4], ["stripes", 2], ["hatch", 2], ["dots", 2], ["patch", 1], ["spots", 1]],
-  nose: [["hook", 3], ["dot", 2], ["wedge", 2], ["none", 2], ["long", 1]],
+  nose: [["hook", 3], ["dot", 2], ["wedge", 2], ["none", 4], ["long", 1], ["bulb", 2], ["broad", 1], ["nostrils", 1.5], ["box", 1.5]],
   face2: [["none", 5], ["blush", 2], ["freckles", 2], ["tears", 1.5]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2], ["hook", 1.5], ["kink", 1], ["ring", 1.5]],

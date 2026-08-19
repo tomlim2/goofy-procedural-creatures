@@ -2,7 +2,7 @@
 
 > 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 175파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
+`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 179파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
 `headgear.js` 모자·뿔 · `face.js` 눈·눈썹·안경·코·주둥이·볼·수염 · `mouth.js` 입 · `faceStates.js` 눈썹·입의 상태 벌 · `body.js` 몸·무늬 · `limbs.js` 팔다리·꼬리).
 
 **규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
@@ -177,8 +177,26 @@ perk **선 귀** — 같은 법선 좌표로 곧게 선 세모. 밑동은 넉넉
 귀 자리는 타원이 아니라 **실제 머리 윤곽**(초타원 + 위아래 폭 비, `headAnchor`) 위에서 잡는다 — 네모 머리에서 타원 위 점은 윤곽 안쪽에 묻힌다.
 θ는 정수리에서 잰 매개변수 각이고 네모 머리의 꼭짓점은 θ = 45°다. 법선도 그 윤곽의 것이다.
 
-### nose (5)
-hook(갈고리 한 획) / dot(**머리에 비례** — 고정 크기면 넓은 머리에서 콩알보다 작아져 얼굴 돌림 때 사라진다) / wedge(V) / long(이마에서 내려옴) / none.
+### nose (9)
+선 넷 + 콧구멍 둘 + 면 셋 + none. **전부 머리에 비례한다** — 고정 좌표면 왕머리에서 콩알이 되어 hook·wedge·long이 같은 코로 읽히고 얼굴 돌림 때 사라진다
+(`noseScale` = headRy / 0.31, 선 굵기는 배율을 안 탄다 — 치수 슬롯 규칙과 같다).
+
+| 값 | 사람·도깨비 | 비고 |
+| --- | --- | --- |
+| hook | 갈고리 한 획 — 미간에서 내려와 왼쪽으로 꺾인다 | 레퍼런스의 코 |
+| dot | 점 (짧은 굵은 가로획, headRx 비례) | |
+| wedge | ∧ 한 획 | |
+| long | 이마에서 내려오는 긴 코 | |
+| bulb | **주먹코** — 동그란 면. 살색 ×0.86 채움 + 얼굴 잉크 테 (먹빛 얼굴은 밝은 고리만 남는다) | 선 코 넷과 실루엣이 다른 게 이유 — 덩어리 코 |
+| broad | **넓적코** — 넓고 낮은 채운 세모 ∇ (고양이 세모 코와 같은 점 배열, 폭이 넓고 살색 계열) | |
+| box | **네모 코** — 모서리 둥근 네모 면(superellipse 지수 증가분 2.5 — 머리 square의 1.5는 코만큼 작으면 동그라미로 뭉개져 bulb와 안 갈린다). bulb와 같은 자리·채움·테 | |
+| nostrils | **콧구멍 둘만** — 코 윤곽 없이 **수박씨 두 알**(위가 뾰족한 물방울, `blobPath` taper 0.55)을 바깥 위로 0.5rad 기울여(＼ ／) 얼굴 잉크로 채운다 | dot의 이웃 — 두 알·기울기·씨 모양으로 갈린다. 알 반높이 0.052ry, 간격 ±0.065rx |
+| none | 없음 | |
+
+폭이 있는 코(bulb·broad·box·nostrils)는 코 기준점(`noseY`, x=0만 본다)만으로는 콧방울이 눈(흰자)에 걸칠 수 있다 — `bulbShape`·`broadShape`·`boxShape`·`nostrilsShape`가
+제 폭(±0.8rx)에서 눈 밑선(`eyeFloor`)을 다시 보고 닿으면 그만큼 내린다. faceFront 층은 눈 리그보다 위라 면이 눈에 걸치면 흰자를 가린다.
+입 자리(`noseBottomY`)도 같은 함수의 `bottom`을 쓴다 — 그리기와 입 자리가 다른 좌표를 보면 큰 머리에서 입이 코를 문다.
+분포: bulb·broad·box·nostrils는 사람만(DEFAULT_BIAS, beast는 broad 편향). 고양이·개·도깨비 종족 bias에는 없다 — 갤러리에서는 고양이 세모 코·개 기본 주둥이로 그려진다.
 **종족마다 같은 슬롯을 다르게 읽는다** — pup은 주둥이 형태(폭·높이·코 크기), cat은 고양이 코(`catNose`):
 
 | 값 | cat |
