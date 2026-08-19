@@ -1,33 +1,37 @@
-# guidelines — menagerie 작업 규칙
+# guidelines — menagerie working rules
 
-이 랩은 **캐릭터**(무엇인가 — 시드가 결정하는 정적인 것)와 **모션**(어떻게 움직이나 — 시계가
-결정하는 동적인 것) 두 축으로 나뉜다. 코드도 문서도 그 축을 따른다. 파츠별 애니메이션이 아니다.
+This lab splits into two axes: **character** (what it is — everything static that the seed decides) and
+**motion** (how it moves — everything dynamic that the clock decides). The code and the documents both
+follow that split. It is not per-part animation.
 
-이 레포의 규칙은 여기가 전부다 (anju 모노레포 `web/menagerie/`에서 독립했다 — 진입점은 루트 [`CLAUDE.md`](../CLAUDE.md)).
+The rules for this repo are all here (it was split out of the anju monorepo's `web/menagerie/` — the entry
+point is the root [`CLAUDE.md`](../CLAUDE.md)).
 
-| 축 | 코드 | 카탈로그 (무엇이 있나) | 규칙 (어떻게 고치나) |
+| Axis | Code | Catalog (what exists) | Rules (how to change it) |
 | --- | --- | --- | --- |
-| **캐릭터** | `src/character/` | [character/types.md](character/types.md) 종족·아키타입·비율·팔레트·제약<br>[character/parts.md](character/parts.md) 23슬롯 180파츠 | [character/rules.md](character/rules.md) 파츠 추가 절차, 형태/모션 분리, 분포 기준 |
-| **모션** | `src/motion/` | [motion/catalog.md](motion/catalog.md) 상태 객체·종족별 파라미터·전 모션 | [motion/rules.md](motion/rules.md) 리듬/이벤트/상태 분류, rng 순서, 발화 측정 |
-| 공통 | `src/scene/` `src/stroke.js` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) three.js 계층·원점 | [determinism.md](determinism.md) 시드 계약<br>[drawing.md](drawing.md) 선·색·레이어<br>[performance.md](performance.md) draw call·재질·측정 |
+| **Character** | `src/character/` | [character/types.md](character/types.md) species, archetypes, proportions, palette, constraints<br>[character/parts.md](character/parts.md) 23 slots, 180 parts | [character/rules.md](character/rules.md) the procedure for adding a part, separating form from motion, distribution standards |
+| **Motion** | `src/motion/` | [motion/catalog.md](motion/catalog.md) the state object, per-species parameters, every motion | [motion/rules.md](motion/rules.md) classifying rhythm/events/states, rng order, measuring firing |
+| Shared | `src/scene/` `src/stroke.js` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) the seed contract<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
 
-## 무엇으로 판단하나
+## What to judge by
 
-눈으로 좋아 보이는 것과 맞는 것은 다르다. 판단마다 도구가 있다.
+Looking good to the eye and being right are different things. There is a tool for each judgement.
 
-| 판단 | 도구 | 어디 |
+| Judgement | Tool | Where |
 | --- | --- | --- |
-| 파츠 하나의 **형태** | 파츠 갤러리 — 같은 개체에 슬롯값 전부(또는 `values=`로 고른 몇 개)를 나란히 | `/gallery.html?slot=…&species=…&fix=…&values=…` ([../README.md](../README.md) § 실행) |
-| 파츠 **분포**·종족 정체성 | `node scripts/census.mjs [--slot X \| --check]` | [character/rules.md](character/rules.md) § 분포는 census로 본다 |
-| 얼굴 파츠가 **어느 상태에서도 보이나** | 얼굴 파츠 전수조사 — 판 전체 × 얼굴 상태 22가지, 파츠별 픽셀 차이 | `/audit.html?seed=…` ([character/rules.md](character/rules.md) § 얼굴 파츠는 어느 상태에서도 보여야 한다) |
-| **행위** 하나가 어떻게 보이나 | 화면 ACTION 카드 (두발 전원 강제, IDLE) | [motion/catalog.md](motion/catalog.md) § 바인드 포즈와 팔 행위 |
-| 모션 **빈도** | 60초 시뮬로 발화를 센다 | [motion/rules.md](motion/rules.md) § 발화 빈도를 센다 |
-| 형태 판단 시 모션 잡음 | POSE BIND(T포즈 고정) · INK STILL(보일 정지) | [rig.md](rig.md) § 포즈와 잉크 |
-| 리팩토링 전후 **불변** | `node scripts/snapshot.mjs before/after` (스펙·판 하나의 지오메트리·모션 궤적) · `node scripts/drawdiff.mjs` (그리기 — 슬롯값 전부를 HEAD와) | [determinism.md](determinism.md) |
-| **성능** (프레임 비용) | 콘솔에서 `renderer.info.render.calls`와 프레임 시간을 잰다 | [performance.md](performance.md) § 어떻게 재나 |
+| One part's **form** | The parts gallery — every value of a slot (or a few chosen with `values=`) on the same individual, side by side | `/gallery.html?slot=…&species=…&fix=…&values=…` ([../README.md](../README.md) § Running) |
+| Part **distribution** and species identity | `node scripts/census.mjs [--slot X \| --check]` | [character/rules.md](character/rules.md) § distribution is read with census |
+| Whether a face part **is visible in every state** | The face part audit — the whole board × 22 face states, the pixel difference per part | `/audit.html?seed=…` ([character/rules.md](character/rules.md) § a face part has to be visible in every state) |
+| How one **action** looks | The on-screen ACTION card (forcing it on every biped, IDLE) | [motion/catalog.md](motion/catalog.md) § the bind pose and arm actions |
+| Motion **frequency** | Counting firings in a 60 s simulation | [motion/rules.md](motion/rules.md) § count the firing frequency |
+| Motion noise while judging form | POSE BIND (pinned to the T-pose) · INK STILL (the boil stopped) | [rig.md](rig.md) § pose and ink |
+| **Invariance** before and after a refactor | `node scripts/snapshot.mjs before/after` (specs, one board's geometry, motion trajectories) · `node scripts/drawdiff.mjs` (drawing — every slot value against HEAD) | [determinism.md](determinism.md) |
+| **Performance** (frame cost) | Read `renderer.info.render.calls` and the frame time from the console | [performance.md](performance.md) § how it is measured |
 
-## 한 줄 요약
+## In one line each
 
-- 시드가 같으면 결과가 같아야 한다. 이게 깨지면 이 랩은 아무 의미가 없다
-- 캐릭터는 슬롯(형태)만, 모션은 리듬/이벤트/상태만. 뒷짐은 형태가 아니라 자세(모션)다
-- 눈으로 좋아 보이는 것과 분포·빈도가 맞는 것은 다르다. 고쳤으면 센다
+- The same seed has to give the same result. If that breaks, this lab means nothing
+- Character is slots (form) only; motion is rhythm/events/states only. Hands behind the back is not a form
+  but a pose (motion)
+- Looking good to the eye and having the right distribution and frequency are different things. If you
+  changed it, count it

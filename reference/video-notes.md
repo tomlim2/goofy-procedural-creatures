@@ -1,147 +1,154 @@
-# 영상 레퍼런스 관찰 노트
+# Observation notes on the video reference
 
-원본 영상(32초, 812×720, 사용자 제공 — 출처 미상)을 4초 간격 9프레임으로 뜯어 관찰한 것.
-스크린샷 두 장으로는 안 보이던 구조가 영상에서 드러났다.
+Taken from the original video (32 s, 812×720, supplied by the user — source unknown), pulled apart into
+9 frames at 4-second intervals. Structure that the two screenshots did not show came out in the video.
 
-## 구조
+## Structure
 
-1. **줄 = 고정 레인.** 32초 내내 5줄의 종족이 고정돼 있다 — 아이 / 아이 / 개 / 고양이 / 도깨비.
-   종족이 줄에 붙어 있고, 개체만 바뀐다.
-2. **개체가 시간에 따라 재생성된다.** 루프 동안 같은 레인 안에서 다른 개체로 계속 교체된다.
-   "자기 시계"가 호흡·깜빡임만이 아니라 재생성에도 적용돼 있다.
+1. **A row = a fixed lane.** The species of the five rows stay fixed for the whole 32 s — kid / kid / dog /
+   cat / imp. The species belongs to the row and only the individual changes.
+2. **Individuals regenerate over time.** Through the loop they keep being replaced by different individuals
+   within the same lane. The "own clock" applies not only to breathing and blinking but to regeneration too.
 
-## 그리기
+## Drawing
 
-3. **채색이 플랫이 아니다.** 면 내부가 연필 스크리블/해칭으로 칠해져 획 방향이 보인다.
-   현재 구현(플랫 채색 + 오프셋)과 가장 큰 격차.
-4. **색 포인트.** 거의 모노톤인데 한 판에 1~3개만 채도 있는 색이 섞인다 —
-   파란 모자, 초록 베레, 주황 머리, 빨간 머리, 노란 스크리블.
-5. 종이 그레인이 더 거칠고 세로 접힌 자국이 보인다.
+3. **The fill is not flat.** The inside of an area is filled with a pencil scribble or hatching, so the
+   stroke direction shows. The biggest gap against the current implementation (flat fill + offset).
+4. **Color accents.** It is nearly monotone, yet only 1~3 saturated colors are mixed into one board —
+   a blue hat, a green beret, orange hair, red hair, a yellow scribble.
+5. The paper grain is coarser and a vertical fold mark is visible.
 
-## 파츠 (레인별)
+## Parts (per lane)
 
-6. **개**: 머리 옆에서 늘어지는 긴 귀(스크리블 채움), 밝은 주둥이 blob + 검은 코 점,
-   짧은 꼬리, 줄무늬 몸.
-7. **고양이**: 세모 코, 얼룩(patch) 반점, X 눈, 위로 선 꼬리. 귀는 정수리 양쪽 모서리의 작은 세모 — 윤곽선이 귀 안으로
-   이어지는 실루엣의 혹이고, 채색된 머리는 귀도 같은 색. 좁고 긴 것·넓고 낮은 것이 섞이고 왕귀는 드물다. 일부는 안쪽 작은 세모(이중선),
-   먹으로 채운 안쪽 귀, 귀 끝 술. 동그란 귀·접힌 귀·늘어진 귀는 없고, 귀 없는 둥근 머리가 몇 마리 (35마리 실측).
-8. **도깨비**: 뿔이 현재보다 훨씬 크고 다양하다(긴 악마뿔, 공 달린 더듬이).
-   몸은 먹빛만이 아니라 **밝은 줄무늬 몸도 섞여 있다**. 가로로 긴 이빨 줄.
-9. **아이**: 눈물 자국(눈에서 세로 줄), 볼터치·주근깨, 베레모·니트모자.
+6. **Dog**: long ears hanging from the side of the head (scribble-filled), a light muzzle blob plus a black
+   nose dot, a short tail, a striped body.
+7. **Cat**: a triangular nose, patch markings, X eyes, a tail held up. The ears are small triangles at the
+   two corners of the crown — bumps in the silhouette that the outline continues into, and on a colored head
+   the ear is the same color. Narrow-and-tall and wide-and-low ones are mixed, and huge ears are rare. Some
+   have a small inner triangle (a double line), an ink-filled inner ear, or a tuft at the tip. There are no
+   round, folded or hanging ears, and a few have round heads with no ears at all (measured across 35).
+8. **Imp**: the horns are far bigger and more varied than the current ones (long devil horns, antennae with
+   balls). The body is not only ink-black — **light striped bodies are mixed in too**. A horizontal row of teeth.
+9. **Kid**: tear marks (vertical lines from the eye), blush and freckles, berets and knit caps.
 
-## 리깅 (프레임 대조로 확인)
+## Rigging (confirmed by comparing frames)
 
-한 개체를 0.5초/24fps 12장, 2초/8fps 16장으로 타일링해 인접 프레임을 대조했다.
-팔다리 골격 리그가 아니라 **얼굴 파츠 리그 + 라인 보일**이다.
+One individual was tiled as 12 frames at 0.5 s/24 fps and 16 frames at 2 s/8 fps, and adjacent frames compared.
+It is not a limb skeleton rig but **a face part rig plus a line boil**.
 
-10. **라인 보일.** 인접 프레임에서 윤곽선·해칭이 미세하게 다시 그려진다. 손떨림 지터를
-    낮은 주기로 재추첨하는 전통 애니메이션 보일. 이게 "살아 있는 그림" 느낌의 핵심이다.
-11. **눈 개방도 리깅.** 눈 흰자가 작은 상태에서 왕방울로 커졌다 돌아온다(놀람).
-    깜빡임과 별개의 축이다.
-12. **눈꺼풀 상태 유지.** 순간 깜빡임만이 아니라 반쯤 감긴 상태, 찡그림이 몇 초씩 유지된다.
-13. **눈썹 상태 전환.** 화남 ↔ 중립 ↔ 올라감이 시간에 따라 바뀐다.
-14. **입 상태 전환.** 선 ↔ 벌림 ↔ 물결이 바뀐다.
-15. **눈 종류 전환.** 개 레인에서 X눈 ↔ 점눈이 바뀌는 개체 확인.
-16. 호흡은 미세한 상하 바운스. 팔다리는 보일 외에 거의 정적이다.
+10. **Line boil.** In adjacent frames the outlines and hatching are redrawn slightly differently. The
+    traditional animation boil, re-drawing the hand-shake jitter on a low period. This is the core of the
+    "living drawing" feeling.
+11. **Eye-openness rigging.** The eye white grows from small to saucer-wide and comes back (a startle).
+    A separate axis from blinking.
+12. **Held lid states.** Not only momentary blinks — a half-closed state or a squint is held for seconds.
+13. **Brow state switching.** Angry ↔ neutral ↔ raised changes over time.
+14. **Mouth state switching.** Line ↔ open ↔ wave changes.
+15. **Eye kind switching.** An individual in the dog lane was seen alternating X eyes ↔ dot eyes.
+16. Breathing is a fine up-and-down bounce. Apart from the boil the limbs are almost static.
 
-## 몸통 리깅 (전신 크롭 + 32초 단일 슬롯 추적)
+## Torso rigging (a full-body crop plus tracking one slot for 32 s)
 
-한 슬롯을 32초 내내 1fps로 추적하고, 전신 크롭을 3초/10fps로 대조했다.
+One slot was tracked at 1 fps for the whole 32 s, and a full-body crop compared at 3 s/10 fps.
 
-17. **몸통에는 뼈대 리그가 사실상 없다.** 다리는 바닥에 고정이고 걷기·점프가 없다.
-    팔도 포즈 전환이라 할 만한 움직임이 없다. 몸의 생동감은 전부
-    미세한 호흡 바운스 + 라인 보일에서 나온다.
-18. **재생성 주기 실측: 슬롯당 5~13초.** 32초 동안 한 슬롯에서 4개체가 지나갔다
-    (노란머리 → 니트헬멧 → 줄무늬 스웨터 → 노란 베레). 슬롯마다 타이밍이 어긋나 있어
-    판 전체가 한 번에 바뀌는 게 아니라 개체가 각자의 시계로 교체된다.
-19. **이모트.** 머리 위에 ♥ 같은 기호가 몇 초간 떠서 까딱거리다 사라진다.
-    (다른 프레임에서 ! ? 류도 관찰)
-20. **고양이 꼬리는 각도가 미세하게 바뀐다.** 흔들기(wag)라기보다 보일에 가까운 수준.
-21. 색 포인트 재확인: 노란 머리, 채도 높은 노란 베레, 갈색 조끼 — 재생성될 때마다
-    한 판에 소수만 유지된다.
+17. **The torso has essentially no skeleton rig.** The legs are planted to the floor and there is no walking
+    or jumping. The arms have no movement worth calling a pose change either. All of the body's liveliness
+    comes from the fine breathing bounce plus the line boil.
+18. **Measured regeneration period: 5~13 s per slot.** Over 32 s, four individuals passed through one slot
+    (yellow hair → knit helmet → striped sweater → yellow beret). The timing is offset per slot, so the whole
+    board does not change at once — individuals are replaced on their own clocks.
+19. **Emotes.** A mark like ♥ floats above the head for a few seconds, bobbing, then disappears.
+    (! and ? types were observed in other frames)
+20. **A cat's tail changes angle slightly.** Closer to the boil than to a wag.
+21. Color accents confirmed again: yellow hair, a highly saturated yellow beret, a brown vest — only a few
+    are kept on one board through each regeneration.
 
-## 종족별 idle 모션 (2차 정밀 관찰)
+## Per-species idle motion (a second, closer pass)
 
-종족별 2개체 × 4초/8fps 타일 7벌 + 1초/24fps 버스트로 재관찰한 것.
+Re-observed from 7 sets of 4 s/8 fps tiles (2 individuals per species) plus 1 s/24 fps bursts.
 
-26. **모션의 질.** 동공·머리 이동은 프레임 단위로 부드럽게 미끄러진다(이징, 스텝 아님).
-    보일만 약 8~12fps로 끊겨 끓는다. "움직임은 매끄럽고 선만 끓는다"가 레퍼런스의 질감이다.
-27. **얼굴 요(yaw).** 모든 종족에서 이목구비 전체가 머리 안에서 좌우로 이동한다.
-    동공만 움직이는 게 아니라 눈·입이 통째로 밀려 머리를 돌린 착시를 만든다.
-28. **스마일 깜빡임.** 깜빡임의 일부가 ^^ 행복 아치로 닫힌다. 개는 이 상태를 몇 초씩 유지한다.
-29. **아이 — 팔 포즈 전환.** 막대 팔이 내림/벌림/들어올림 사이를 오간다. 좌우 락킹과
-    미세 바운스, 앞뒤 흔들림이 함께 돈다.
-30. **개 — 머리 롤이 지배 모션.** 머리가 ±10~15°씩 계속 좌우로 구르고 귀가 따라 출렁인다.
-    킁킁대듯 아래로 딥하는 동작도 잦다. 꼬리는 간헐적으로 플릭.
-31. **고양이 — 꼬리가 상시 살아 있다.** 컬이 느리게 감겼다 풀리기를 반복하고 이따금 빠르게
-    튕긴다. 윙크(한쪽만 감기), 몸 앞뒤 락킹, 가로 기지개도 관찰.
-32. **도깨비 — 덩어리가 젤리처럼 출렁인다.** 실루엣 자체가 다른 종족보다 크게 흔들리고,
-    눈 상태(흰자 개방도·종류)가 유난히 잦게 순환한다. 입가에 "..." 중얼 마크.
+26. **The quality of the motion.** The pupils and head slide smoothly frame to frame (easing, not stepping).
+    Only the boil breaks up and boils, at roughly 8~12 fps. "The movement is smooth and only the lines boil"
+    is the reference's texture.
+27. **Face yaw.** In every species the whole set of features moves side to side within the head. It is not
+    just the pupils — the eyes and mouth shift as one, faking a turned head.
+28. **Smile blinks.** Some blinks close into a happy ^^ arch. Dogs hold that state for seconds.
+29. **Kid — arm pose switching.** The stick arms move between down, open and raised. Side-to-side rocking,
+    a fine bounce and a front-to-back sway all run together.
+30. **Dog — the head roll is the dominant motion.** The head keeps rolling ±10~15° side to side and the ears
+    slosh after it. Dipping downward as if sniffing is frequent too. The tail flicks intermittently.
+31. **Cat — the tail is alive at all times.** Its curl slowly winds and unwinds over and over, and now and
+    then snaps quickly. A wink (one eye closing), front-to-back rocking of the body and a sideways stretch
+    were also observed.
+32. **Imp — the mass sloshes like jelly.** The silhouette itself wobbles more than the other species', and
+    the eye state (white openness, kind) cycles unusually often. A "..." muttering mark beside the mouth.
 
-## 팔다리 (클로즈업 3차 관찰)
+## Limbs (a third, close-up pass)
 
-아이 2개체·개·도깨비의 팔다리를 2배 확대, 4초/12fps(48프레임)로 대조.
+The limbs of 2 kids, a dog and an imp at 2× zoom, compared at 4 s/12 fps (48 frames).
 
-33. **팔은 벌린 채 미세하게만 흔들린다.** 아이 A(팔 벌림)는 48프레임 동안 각도 변화가
-    거의 없고 보일 지터뿐이다. 아이 B(뒷짐)는 완전 정지. 팔 들기·손 흔들기 같은 큰
-    관절 이벤트는 4개체 × 4초 어디에도 없다.
-34. **다리는 바닥에 못 박혀 있다.** 개 다리 4벌 모두 각도 변화 0. 몸(등)이 미세하게
-    흔들려서 다리가 따라 움직여 보일 뿐이다. 발이 뜨는 프레임은 없다.
-35. **도깨비 팔은 짧은 스텁.** 젤리 워블에 딸려 떨릴 뿐 독립 동작이 없다.
-36. 결론: 레퍼런스의 팔다리 생동감은 **관절 지터(보일) + 몸에 종속된 미세 움직임**이다.
-    큰 관절 이벤트를 넣으면 레퍼런스보다 과하고 인형극처럼 보인다.
-37. **팔 유형이 여럿이다** (관절부 4배 확대). 뒷짐(몸 뒤로 사라짐) / 소매 + 동그란 손 /
-    짧은 스텁 + 주먹 / 늘어진 막대 / 벌림. 한 줄 안에 유형이 섞여 있다.
-38. **다리 끝에는 항상 동그란 발.** 발이 없는 막대 다리는 없다. 부츠형도 있다.
-39. **지체는 몸 윤곽 안쪽에서 나온다.** 어깨·엉덩이가 윤곽선 위가 아니라 안쪽이라
-    소매·다리 뿌리가 몸을 덮는다. 이래야 관절이 "박혀" 보인다.
-40. **개 다리는 몸통 밑에 붙은 굵은 스텁 + 발가락 표시.**
+33. **The arms stay open and only shake finely.** Kid A (arms open) barely changes angle across 48 frames —
+    nothing but boil jitter. Kid B (hands behind the back) is completely still. Big joint events like raising
+    an arm or waving appear nowhere across 4 individuals × 4 s.
+34. **The legs are nailed to the floor.** All 4 of the dog's legs change angle by 0. The body (the back)
+    wobbles finely and the legs only look like they follow. There is no frame where a foot leaves the ground.
+35. **The imp's arms are short stubs.** They tremble as part of the jelly wobble, with no independent motion.
+36. Conclusion: the reference's limb liveliness is **joint jitter (the boil) plus fine movement subordinate
+    to the body**. Add big joint events and it is more than the reference and looks like a puppet show.
+37. **There are several arm types** (joints at 4× zoom). Behind the back (disappearing behind the body) /
+    a sleeve plus a round hand / a short stub plus a fist / a hanging stick / open. The types are mixed
+    within one row.
+38. **A leg always ends in a round foot.** There is no stick leg without a foot. Boot types exist too.
+39. **A limb comes out from inside the body outline.** The shoulder and hip are inside the outline rather
+    than on it, so the sleeve and leg root cover the body. That is what makes a joint look "embedded".
+40. **A dog's legs are thick stubs attached under the torso, plus toe marks.**
 
-## 형태 다양성
+## Variety of form
 
-같은 프레임들에서 실루엣만 다시 관찰한 것.
+The same frames observed again for the silhouette alone.
 
-22. **머리 윤곽 종류가 실제로 다르다.** 원형만이 아니라 모서리 둥근 사각, 세로 직사각,
-    아래가 넓은 서양배형, 옆으로 퍼진 타원, 평평한 정수리가 섞여 있다. 윤곽 자체가
-    파츠만큼 다양성을 만든다.
-23. **이웃 간 크기 대비가 크다.** 옆자리끼리 머리 크기가 1.5~2배씩 차이 난다.
-    작은 개체와 왕머리 개체가 붙어 있어야 판이 살아 보인다.
-24. **종횡비 극단이 허용된다.** 세로로 길쭉한 개체와 옆으로 퍼진 개체가 한 줄에 공존한다.
-25. 모자·귀·뿔이 실루엣을 크게 바꾼다 — 베레는 폭을, 항아리는 높이를, 개 귀는 아래로,
-    도깨비 뿔은 위로 확장한다.
+22. **The head outline kinds really do differ.** Not only circles — rounded squares, tall rectangles,
+    bottom-heavy pears, sideways-spread ellipses and flat crowns are mixed in. The outline itself creates as
+    much variety as the parts do.
+23. **The size contrast between neighbours is large.** Head sizes differ by 1.5~2× between adjacent seats.
+    A small individual has to sit next to a huge-headed one for the board to look alive.
+24. **Extremes of aspect ratio are allowed.** A tall thin individual and a sideways-spread one coexist in
+    one row.
+25. Hats, ears and horns change the silhouette a lot — a beret expands the width, a pot the height, dog ears
+    downward, imp horns upward.
 
-**구현 발견:** 현재 코드는 `SLOTS.head`(round/square/tall/pear/wide)를 뽑기만 하고
-`draw.js`가 전혀 사용하지 않는다 — 죽은 슬롯이다. 모든 머리가 같은 타원 blob이고
-비율 지터만 다르다. 윤곽 생성기(superellipse 블렌드 + taper + lump)로 살려야 한다.
-그리기 전용 변경이라 시드는 깨지지 않는다.
+**Implementation finding:** the current code draws `SLOTS.head` (round/square/tall/pear/wide) and `draw.js`
+never uses it at all — a dead slot. Every head is the same elliptical blob, differing only by proportion
+jitter. It needs bringing to life with an outline generator (a superellipse blend plus taper plus lumps).
+Being a drawing-only change, it does not break seeds.
 
-## 반영 여부
+## Whether it was adopted
 
-| # | 항목 | 상태 |
+| # | Item | Status |
 | --- | --- | --- |
-| 1 | 고정 레인 | **반영** — 사람·사람·고양이·개·도깨비 (LANE_TABLE) |
-| 2 | 개체 재생성 | **반영** — 슬롯당 6~14초, 종족 유지 |
-| 3 | 스크리블 채색 | **반영** — 지그재그 한 획 채움, 획 방향 보임 |
-| 4 | 색 포인트 | **반영** — 판당 3개 상한 |
-| 6 | 개 귀·주둥이 | **반영** — 늘어진 귀 로브 + 주둥이·코 |
-| 8 | 도깨비 뿔·몸 | **반영** — 뿔 1.8배, 밝은 줄무늬 몸 절반 |
-| 9 | 눈물·볼터치·베레 | **반영** — face2 슬롯 + beret |
-| 10 | 라인 보일 | **반영** — 3벌 순환, 개체별 1.5~1.9초에 한 번 (레퍼런스보다 훨씬 느리게 — 빠르면 떨려 보인다) |
-| 11 | 눈 개방도 | **반영** — 눈 리그 scale, 놀람 이벤트 |
-| 12~14 | 눈꺼풀·눈썹·입 상태 | **반영** — 상태 2벌 굽고 clock이 토글 |
-| 18 | 개체 재생성 (5~13초) | **반영** |
-| 19 | 이모트 (♥ ! ?) | **반영** — 이모지 애니메이션 층(종류별 곡선), idle 예약 + 모션 트리거(파닥임·생각·놀람·꼬리) |
-| 22 | 머리 윤곽 종류 | **반영** — superellipse+taper 5종 |
-| 23 | 이웃 크기 대비 | **반영** — spread 0.34 |
-| 26 | 모션의 질 (이징+보일) | **반영** — 이징 전환, 보일 8~10fps |
-| 27 | 얼굴 요 | **반영** — 이목구비 전부(눈·코·입·눈썹·안경·볼·수염·주둥이)를 faceGroup에 두고 x·y로 밀고 살짝 눌러 돌린다. 시선 추종 + 둘러보기 상태 |
-| 28 | 스마일 깜빡임 | **반영** — ^^ 아치, 개는 유지 상태 |
-| 29 | 아이 팔 포즈·락킹 | **반영** — 팔 상태 2벌 토글 |
-| 30 | 개 머리 롤·딥 | **반영** — 머리/몸 분리, 목 축 회전 |
-| 31 | 고양이 꼬리·윙크·기지개 | **반영** — 꼬리 피벗 메시 |
-| 32 | 도깨비 젤리·중얼 | **반영** — 스케일 역위상 + dots 이모지 |
-| 33~36 | 팔다리 = 지터 + 종속 | **반영** — 관절 피벗은 두되 상시 진폭을 보일 수준(~0.01rad)으로, 큰 이벤트는 0.5rad 이하·18~90초 간격으로 |
-| 37~40 | 팔다리 유형·발·윤곽 안쪽 뿌리 | **반영** — arms 4종×길이 2·legs 5종×기장 2, 동그란 발/부츠, 다리 뿌리는 윤곽 안, 개 스텁+발가락. 팔 뿌리는 몸통 좌우 윤곽 위(옆구리) — 안쪽이면 가슴 한가운데서 돋는 것처럼 보여서 |
+| 1 | Fixed lanes | **adopted** — human, human, cat, dog, imp (LANE_TABLE) |
+| 2 | Individual regeneration | **adopted** — 6~14 s per slot, species kept |
+| 3 | Scribble fill | **adopted** — a single zigzag stroke fill, stroke direction visible |
+| 4 | Color accents | **adopted** — capped at 3 per board |
+| 6 | Dog ears and muzzle | **adopted** — a hanging ear lobe plus muzzle and nose |
+| 8 | Imp horns and body | **adopted** — horns 1.8×, light striped bodies half the time |
+| 9 | Tears, blush, beret | **adopted** — the face2 slot plus beret |
+| 10 | Line boil | **adopted** — 3 sets cycling, once every 1.5~1.9 s per individual (much slower than the reference — faster and it looks like trembling) |
+| 11 | Eye openness | **adopted** — eye rig scale, the startle event |
+| 12~14 | Lid, brow and mouth states | **adopted** — two state sets baked, toggled by the clock |
+| 18 | Individual regeneration (5~13 s) | **adopted** |
+| 19 | Emotes (♥ ! ?) | **adopted** — an emoji animation layer (a curve per kind), the idle schedule plus motion triggers (flap, think, startle, tail) |
+| 22 | Head outline kinds | **adopted** — 5 kinds of superellipse + taper |
+| 23 | Size contrast between neighbours | **adopted** — spread 0.34 |
+| 26 | The quality of the motion (easing + boil) | **adopted** — eased transitions, boil at 8~10 fps |
+| 27 | Face yaw | **adopted** — every feature (eyes, nose, mouth, brows, eyewear, cheeks, whiskers, muzzle) goes in faceGroup and is shifted on x·y and squashed slightly to turn. Gaze following plus the look state |
+| 28 | Smile blinks | **adopted** — the ^^ arch, held as a state on dogs |
+| 29 | Kid arm poses and rocking | **adopted** — two arm state sets toggled |
+| 30 | Dog head roll and dip | **adopted** — head and body separated, rotation about the neck axis |
+| 31 | Cat tail, wink, stretch | **adopted** — tail pivot meshes |
+| 32 | Imp jelly and muttering | **adopted** — anti-phase scale plus the dots emoji |
+| 33~36 | Limbs = jitter + subordinate | **adopted** — joint pivots are kept but the standing amplitude is at boil level (~0.01 rad), with big events under 0.5 rad at 18~90 s intervals |
+| 37~40 | Limb types, feet, roots inside the outline | **adopted** — arms 4 kinds × 2 lengths, legs 5 kinds × 2 lengths, round feet/boots, leg roots inside the outline, dog stubs plus toes. Arm roots are on the torso's left/right outline (the side) — further in and it looks like it sprouts from the middle of the chest |
 
-영상 파일 자체는 타인의 저작물이라 레포에 넣지 않는다. `.gitignore`가 이 폴더의
-이미지·영상을 제외한다.
+The video file itself is someone else's work and is not put in the repo. `.gitignore` excludes images and
+video in this folder.

@@ -1,121 +1,126 @@
-# 캐릭터 유형
+# Character types
 
-> 기준: `src/character/spec.js`, `src/character/vocabulary/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
+> Basis: `src/character/spec.js`, `src/character/vocabulary/`. When the code changes, fix this document in the same commit.
 
-한 개체는 **종족 × 아키타입 × 비율 지터**로 정해진다. 종족이 골격이고, 아키타입이 성향이고,
-지터가 실루엣이다. 세 층이 겹쳐야 서른 마리가 서로 달라 보인다.
+One individual is settled by **species × archetype × proportion jitter**. The species is the skeleton, the
+archetype the disposition, and the jitter the silhouette. All three layers have to stack for thirty-five
+creatures to look different from each other.
 
-## 층위
+## The layers
 
-| 층 | 결정 단위 | 결정 시점 | 역할 |
+| Layer | Decided per | Decided when | Role |
 | --- | --- | --- | --- |
-| **종족** | 줄(row) | 고정 레인 (`LANES` 반복) | 골격 — 두발/네발, 색, 전용 파츠, 지배 모션 |
-| **아키타입** | 개체 | `makeCreature` 첫 추첨 | 성향 — 파츠 가중치 편향 |
-| **비율 지터** | 개체 | `makeProportions` | 실루엣 — 머리 크기·비대칭·손떨림 |
-| **치수 슬롯** | 개체 | `LATE_SLOTS` (맨 끝) | 형태와 독립인 길이·체격 — armLength·legLength·build. 스케일이 아니라 기장·폭만 바뀐다 |
+| **Species** | Row | Fixed lanes (`LANES` cycling) | The skeleton — biped/quad, color, exclusive parts, the dominant motion |
+| **Archetype** | Individual | The first draw in `makeCreature` | The disposition — biasing the part weights |
+| **Proportion jitter** | Individual | `makeProportions` | The silhouette — head size, asymmetry, hand shake |
+| **Dimension slots** | Individual | `LATE_SLOTS` (at the very end) | Length and build, independent of form — armLength, legLength, build. Not scale: only length and width change |
 
-파츠 선택 우선순위: **종족 bias > 아키타입 bias > DEFAULT_BIAS > 균등**. 종족 `forbid`는 뽑힌 뒤 결정적으로 덮어쓴다.
+Part selection priority: **species bias > archetype bias > DEFAULT_BIAS > even**. A species `forbid` overwrites deterministically after the draw.
 
-## 종족 (SPECIES)
+## Species (SPECIES)
 
-`src/character/vocabulary/species.js`. 종족은 **고정 레인**이다 — `spec.js` `LANES`가 순서고,
-줄마다 그 순서대로 돌며 끝나면 처음으로 돌아간다:
+`src/character/vocabulary/species.js`. Species are **fixed lanes** — `LANES` in `spec.js` is the order, and it
+cycles down the rows, wrapping at the end:
 
 ```
 human · cat · pup · imp · human · cat · pup · imp · …
 ```
 
-행 수별 표는 없다. 몇 줄이든 네 종족이 같은 간격으로 돌아 어느 판에서도 종족이 빠지지 않는다
-(5줄이면 마지막 줄이 사람으로 한 바퀴 더 돈다). 종족은 레인으로만 정해진다 — 종족 가중치는 없다 (예전 `weight` 필드는 아무 데서도 안 읽어 지웠다).
+There is no table per row count. However many rows, the four species come round at even spacing and none goes
+missing on any board (with 5 rows the last row comes round to human again). Species are decided by the lane and
+nothing else — there are no species weights (the old `weight` field was read nowhere and was deleted).
 
-| 종족 | 골격 | 색 | 전용/편향 파츠 | 지배 모션 |
+| Species | Skeleton | Color | Exclusive / biased parts | Dominant motion |
 | --- | --- | --- | --- | --- |
-| **human** | 두발 | 팔레트 그대로 | forbid: 뿔 전부→none, cyclops→wide, 긴 팔(long)→medium, 초장다리(verylong)→long, 귀는 none·round만(뾰족·늘어짐·접힘→round/none — 동물 귀는 사람 것이 아니다), 눈물 자국(tears)→none. 나머지는 아키타입이 결정 | 좌우·앞뒤 락킹, 팔 행위(인사·팔짱·생각…) |
-| **pup** | 네발 | 머리(털)색(약 1/3은 검정 계열 FURS), 몸은 같거나 비슷한 톤. marks calico(≈12%)면 밝은 바탕 + 검정 얼룩(얼룩이, 머리·한쪽 귀까지) | 늘어진 귀(flap/long), 주둥이+검은 코(코 슬롯이 형태 결정), 입은 주둥이 위 코 밑 — w(omega)·o(open)·혀(tongue, ^^ 때도)·선·점·웃음, 꼬리 골격 flag/stubtail/ring × 스킨 thick/plume, 얼룩, 다리 stub 위주(stick·float·boots) | 머리 롤 상시·킁킁 딥, ^^ 행복 눈 유지, 꼬리 플릭 |
-| **cat** | 네발 | 머리(털)색(약 1/3은 검정 계열 FURS), 몸은 같거나 비슷한 톤. marks calico(≈19%)면 밝은 바탕 + 탄 + 검정 삼색 얼룩(머리·한쪽 귀까지) | 정수리 세모귀(pointy/fold), 수염(개체별 길이 — 긴 건 윤곽 밖으로), ω·3·야옹·혀 빼꼼 입(화나면 송곳니 하악), 세로동공(slit), 꼬리 골격 curl/longtail/hook/kink × 스킨 line/ringed, 다리 stub·stick(float·boots) | 꼬리 스위시 상시, 윙크, 갸웃 크게, 기지개 |
-| **imp** | 두발 | 머리 DARKS 9색(먹·회갈·회청·자흑·녹흑…) 중 하나, 몸은 머리색 50% / 밝은 톤 30% / 어두운 톤 20% (같은 계열), 얼굴은 종이색, 잉크는 #1c1917 | 긴 뿔(1.8배: curved/straight/antenna/ram/crown), 외눈(cyclops), **넓은 입**(×1.3 — 이빨 격자·해칭·지그재그·큰 송곳니·이빨 띠로 벌린 입), 스텁 팔 — 또는 **팔 없음**(arms none, ≈23%), **바닥을 쓰는 긴 팔(long)은 도깨비만** (bias 3:2, 40%), **초장다리(legLength verylong — long의 두 배)도 도깨비만**(bias 1.5, ≈20%; 사람·개·고양이는 forbid→long) | 젤리 워블 상시, 부르르·놀람 잦게, 만세·파닥임 잦게, "..." 중얼 |
+| **human** | biped | The palette as-is | forbid: all horns→none, cyclops→wide, long arms (long)→medium, stilts (verylong)→long, ears none·round only (pointy, floppy, folded→round/none — animal ears are not human), tear marks (tears)→none. The rest is decided by the archetype | Side-to-side and front-to-back rocking, arm actions (waving, arms crossed, thinking…) |
+| **pup** | quad | The head (fur) color (about 1/3 the black-ish FURS), the body the same or a close tone. With marks calico (≈12%), a light base plus black patches (piebald, reaching the head and one ear) | Hanging ears (flap/long), a muzzle plus a black nose (the nose slot decides the form), the mouth above the muzzle and below the nose — w (omega), o (open), the tongue (on ^^ too), line, dot, smile; the tail skeleton flag/stubtail/ring × the skin thick/plume, patches, legs mostly stub (stick, float, boots) | The head roll at all times, sniffing dips, a held ^^ happy eye, tail flicks |
+| **cat** | quad | The head (fur) color (about 1/3 the black-ish FURS), the body the same or a close tone. With marks calico (≈19%), a light base plus tan plus black tricolor patches (reaching the head and one ear) | Triangular crown ears (pointy/fold), whiskers (length per individual — the long ones poke outside the outline), the ω, 3, meow and blep mouths (fangs and a hiss when angry), a vertical pupil (slit), the tail skeleton curl/longtail/hook/kink × the skin line/ringed, legs stub·stick (float, boots) | The tail swish at all times, winks, big head tilts, stretches |
+| **imp** | biped | The head one of the 9 DARKS (ink, brown-grey, grey-blue, purple-black, green-black…), the body 50% the head color / 30% a light tone / 20% a dark tone (the same family), the face paper-colored, the ink #1c1917 | Long horns (1.8×: curved/straight/antenna/ram/crown), a cyclops eye, **a wide mouth** (×1.3 — the tooth grid, hatching, zigzag, big fangs, an open mouth with tooth strips), stub arms — or **armless** (arms none, ≈23%), **long arms that sweep the floor (long) are imps only** (bias 3:2, 40%), and **stilts (legLength verylong — twice long) are imps only** (bias 1.5, ≈20%; humans, dogs and cats forbid it→long) | The jelly wobble at all times, frequent shivers and startles, frequent arms-up and flapping, "..." muttering |
 
-네발 골격은 몸이 가로로 눕고 머리가 몸 앞(왼쪽)에 얹힌다. 키가 낮아 사람 줄과 나란히 서면
-레퍼런스처럼 층이 낮아진다. 팔이 없고 다리 4개(앞쌍·뒷쌍) + 꼬리다. 치수 슬롯도 따른다 — `legLength`(short = 닥스훈트),
-`build`(네발에서는 몸 길이·두께: wide = 긴 몸, skinny = 얇은 몸, small = 작은 몸).
+The quad skeleton lies the body horizontally with the head on the front (left) of it. Being short, standing next
+to a row of humans it drops the tier, as in the reference. It has no arms, 4 legs (a front and a hind pair) and a
+tail. It follows the dimension slots too — `legLength` (short = a dachshund) and
+`build` (on a quad it is body length and thickness: wide = a long body, skinny = a thin body, small = a small body).
 
-## 아키타입 (ARCHETYPES)
+## Archetypes (ARCHETYPES)
 
-`src/character/vocabulary/archetypes.js`. 성향이지 캐릭터가 아니다 — bias에 넣는 슬롯은
-그 성향을 규정하는 것만. 그리드에서는 좌·상 이웃과 겹치면 최대 8회 다시 뽑는다.
+`src/character/vocabulary/archetypes.js`. A disposition, not a character — the only slots that go into a bias are
+the ones that define that disposition. On the grid, a collision with the left or upper neighbour is re-drawn up to 8 times.
 
-| 아키타입 | 가중치 | 성향 | 편향 슬롯 |
+| Archetype | Weight | Disposition | Biased slots |
 | --- | --- | --- | --- |
-| **beast** | 3 | 뿔·귀·이빨 | horns(curved/straight), ears(pointy/flap), mouth(grimace/grin), nose(wedge/hook/broad), hair(spikes/hedgehog/mop), head(round/wide) |
-| **scholar** | 2 | 안경·단발·베레 | eyewear(glasses/monocle), eyes(dot/half/sleepy), hair(bob/helmet/bangs/longbob/wisp/curly/cloud/sweep), headgear(beret), mouth(line), nose(long/hook), horns(none) |
-| **trooper** | 3 | 헬멧·안대·줄무늬·부츠 | headgear(helmet/cap/band/pot), eyewear(patch/goggles), head(square/block), hair(scribble/spikes/hedgehog), marks(stripes/patch/hatch), arms(sleeve/stick), legs(boots) |
-| **sprite** | 3 | 더듬이·왕눈·긴 팔다리 | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), build(narrow/skinny), legs(stick/tiptoe), arms(stick/mitten), hair(none/wisp/tuft/pigtails), nose(none/dot) |
-| **blob** | 2 | 넓적·대머리·뭉툭한 팔다리 | head(wide/round/pear), hair(none/tuft/mop), eyes(dot/ring/half), body(bean/dress), build(wide), legs(stub), arms(stubby), horns(none/nub) |
-| **wanderer** | 2 | 밴드·졸린 눈·해칭 | headgear(band/pot/cap), hair(scribble/mop/curly/bun), eyes(half/sleepy/cross), marks(hatch/stripes/patch), mouth(wave/line), body(dress/bean) |
+| **beast** | 3 | Horns, ears, teeth | horns(curved/straight), ears(pointy/flap), mouth(grimace/grin), nose(wedge/hook/broad), hair(spikes/hedgehog/mop), head(round/wide) |
+| **scholar** | 2 | Glasses, a bob, a beret | eyewear(glasses/monocle), eyes(dot/half/sleepy), hair(bob/helmet/bangs/longbob/wisp/curly/cloud/sweep), headgear(beret), mouth(line), nose(long/hook), horns(none) |
+| **trooper** | 3 | A helmet, an eyepatch, stripes, boots | headgear(helmet/cap/band/pot), eyewear(patch/goggles), head(square/block), hair(scribble/spikes/hedgehog), marks(stripes/patch/hatch), arms(sleeve/stick), legs(boots) |
+| **sprite** | 3 | Antennae, big eyes, long limbs | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), build(narrow/skinny), legs(stick/tiptoe), arms(stick/mitten), hair(none/wisp/tuft/pigtails), nose(none/dot) |
+| **blob** | 2 | Wide, bald, blunt limbs | head(wide/round/pear), hair(none/tuft/mop), eyes(dot/ring/half), body(bean/dress), build(wide), legs(stub), arms(stubby), horns(none/nub) |
+| **wanderer** | 2 | A band, sleepy eyes, hatching | headgear(band/pot/cap), hair(scribble/mop/curly/bun), eyes(half/sleepy/cross), marks(hatch/stripes/patch), mouth(wave/line), body(dress/bean) |
 
-## 비율 지터 (proportions)
+## Proportion jitter (proportions)
 
-`src/character/spec.js` `makeProportions`. `rng.around(mean, spread)`는 평균 근처로 몰리되 범위를
-안 벗어난다. 실루엣 다양성의 대부분이 여기서 나온다.
+`makeProportions` in `src/character/spec.js`. `rng.around(mean, spread)` clusters near the mean without leaving
+the range. Most of the silhouette variety comes from here.
 
-| 값 | 평균 (spread) | 뜻 |
+| Value | Mean (spread) | Meaning |
 | --- | --- | --- |
-| headScale | 1.04 (0.34) — blob 1.14, sprite 0.96 | 머리 크기. 이웃 간 대비가 커야 판이 산다 |
-| headWide | 1 (0.18) — blob 1.16 | 머리 가로 비 |
-| headLumps / headLump | 4~7 / 0.07 (0.045) | 윤곽을 찌그러뜨리는 혹의 수·크기. **사람은 ×0.5** — 두상이 매끄럽되 손그림 떨림은 남는다 (울퉁불퉁은 도깨비·동물). 사람 윤곽선 지터 0.006(다른 종족 0.008) |
+| headScale | 1.04 (0.34) — blob 1.14, sprite 0.96 | Head size. The contrast between neighbours has to be large for the board to live |
+| headWide | 1 (0.18) — blob 1.16 | The head's width ratio |
+| headLumps / headLump | 4~7 / 0.07 (0.045) | The number and size of the lumps crumpling the outline. **Humans get ×0.5** — a smooth skull that keeps the hand-drawn wobble (bumpy belongs to imps and animals). Human outline jitter is 0.006 (0.008 on other species) |
 | eyeSize | 0.17 (0.07) — sprite 0.24 | |
 | eyeGap / eyeHeight | 0.42 (0.12) / 0.03 (0.09) | |
-| eyeSizeSkew / eyeHeightSkew | 0 (0.22) / 0 (0.05) | **좌우 비대칭**. 손그림처럼 보이는 가장 값싼 장치 |
-| noseDrop / mouthDrop | 0.1 (0.06) / 0.3 (0.07) | 머리 중심 대비 코 높이 / (mouthDrop은 뽑기만 한다 — 입 자리는 `mouthPos` 슬롯이 코 밑~턱 사이에서 정한다) |
-| bodyScale / bodyWide | 0.52 (0.12) / 1 (0.2) | 몸 높이·폭. 둘 다에 `build` 슬롯 배율(폭 0.5~1.4, 높이 0.7~1.15)이 곱해진다 |
-| legLength / armSpread | 0.3 (0.12) / 1 (0.25) | 다리 기장(×0.55, `legLength` short면 ×0.3 더) · 팔 길이(×0.242, `armLength` long이면 ×1.64 더) |
-| bodyLen / tailLift | 1 (0.2) / 0 (1) | 네발용. 두발도 뽑는다 (rng 호출 수 고정) |
-| wobble | 1 (0.55) | 개체별 손떨림 배율. 반듯한 놈과 엉망인 놈이 섞여야 한다 |
-| wobbleSeed | 0~100000 | 그리기용 rng 시드. 생성 rng와 분리 |
+| eyeSizeSkew / eyeHeightSkew | 0 (0.22) / 0 (0.05) | **Left-right asymmetry**. The cheapest device there is for looking hand-drawn |
+| noseDrop / mouthDrop | 0.1 (0.06) / 0.3 (0.07) | The nose height against the head's centre / (mouthDrop is drawn and nothing more — the mouth's position is set by the `mouthPos` slot, between under the nose and the chin) |
+| bodyScale / bodyWide | 0.52 (0.12) / 1 (0.2) | Body height and width. The `build` slot's multipliers (width 0.5~1.4, height 0.7~1.15) are applied to both |
+| legLength / armSpread | 0.3 (0.12) / 1 (0.25) | Leg length (×0.55, and a further ×0.3 when `legLength` is short) · arm length (×0.242, and a further ×1.64 when `armLength` is long) |
+| bodyLen / tailLift | 1 (0.2) / 0 (1) | For quads. Bipeds draw them too (to fix the rng call count) |
+| wobble | 1 (0.55) | The per-individual hand-shake multiplier. Neat ones and messy ones have to be mixed |
+| wobbleSeed | 0~100000 | The rng seed for drawing. Kept separate from the generation rng |
 
-## 팔레트
+## The palette
 
-| | 값 | 규칙 |
+| | Value | Rule |
 | --- | --- | --- |
-| skin | FILLS 7색 중 1 | 살구·회백·탄·분홍·청회·모래·갈회. 머리(털·피부)색 |
-| **FURS** | 4색, 개·고양이의 **약 1/3** | 검정 계열 털 — 먹갈 · 재빛 갈회 · 청먹 · 밝은 숯 (휘도 75~85: 도깨비 먹빛보다 밝고 FILLS보다 훨씬 어둡다, **적당히 검정**). `FUR_POOL`(null 8 + 색 4)에서 **한 번의 pick**으로 "검정이냐·어느 검정이냐"를 같이 정한다 (rng 호출 수 고정). 색 포인트가 피부에 붙은 개체는 포인트가 이긴다 |
-| cloth | 사람: FILLS 중 skin과 다른 1 | 옷은 피부와 달라야 몸이 읽힌다 |
-| | 개·고양이: 머리색 그대로 50% / 조금 어두운 톤(×0.9) 30% / 조금 밝은 톤(×1.06) 20% | 털이라 몸이 머리와 같거나 비슷해야 한 몸으로 읽힌다 |
-| | 도깨비: 머리색 그대로 50% / 밝은 톤(×1.35) 30% / 어두운 톤(×0.75) 20% | 덩어리라 같음. 색 포인트가 머리에 붙은 뒤 정하므로 몸이 따라간다 |
-| ink | INKS 4색 중 1 | 전부 어두운 갈흑. imp는 #1c1917 고정(머리보다 더 어둡게) |
-| **DARKS** | 9색 | imp 머리 전용 어두운 팔레트. 먹 · 갈흑 · 회갈 · 밝은 회갈 · 회청 · 청회 · 회 · 자흑 · 녹흑. 몸은 여기서 톤만 바꾼다(`shade`) |
-| accent | ACCENTS 4색 중 1 | 모자·밴드 색 |
-| fillOffset | ±0.035 | 채색이 선 밖으로 어긋난다 (인쇄 어긋남) |
-| **pop** | POPS 5색, 14% 확률, 대상 hair/headgear/skin | 채도 있는 색 포인트. **한 판에 3개 상한** (`makeGrid`가 초과분을 끈다). 피부에 붙어 휘도 < 120이면 얼굴 잉크가 밝은 색으로 바뀐다(`faceInk`) |
-| **CALICO_MID** | 1색 (#a3866a, 휘도 139) | 삼색 얼룩(marks calico)의 가운데 톤 — 진짜 삼색의 주황 자리. 팔레트 안의 따뜻한 탄이라 pop 상한을 안 먹는다. 검정 얼룩은 FURS, 바탕은 스킨(calico면 검정 털을 안 입힌다 — 밝은 바탕) ([parts.md](parts.md) § marks) |
+| skin | 1 of the 7 FILLS | Apricot, grey-white, tan, pink, blue-grey, sand, brown-grey. The head (fur, skin) color |
+| **FURS** | 4 colors, **about 1/3** of dogs and cats | Black-ish fur — ink-brown · ashy brown-grey · blue-ink · light charcoal (luminance 75~85: lighter than the imps' ink-black and far darker than FILLS, **moderately** black). **One pick** from `FUR_POOL` (8 nulls + 4 colors) settles both "is it black" and "which black" (fixing the rng call count). On an individual with a color accent on the skin, the accent wins |
+| cloth | Humans: 1 of the FILLS, different from skin | Clothes have to differ from the skin for the body to read |
+| | Dogs and cats: 50% exactly the head color / 30% a slightly darker tone (×0.9) / 20% a slightly lighter tone (×1.06) | Being fur, the body has to be the same or close to the head to read as one body |
+| | Imps: 50% exactly the head color / 30% a light tone (×1.35) / 20% a dark tone (×0.75) | Being a mass, the same. Settled after a color accent has landed on the head, so the body follows |
+| ink | 1 of the 4 INKS | All dark brown-black. Imps are pinned to #1c1917 (darker than the head) |
+| **DARKS** | 9 colors | The dark palette for imp heads only. Ink · brown-black · brown-grey · light brown-grey · grey-blue · blue-grey · grey · purple-black · green-black. The body only shifts tone from here (`shade`) |
+| accent | 1 of the 4 ACCENTS | Hat and band colors |
+| fillOffset | ±0.035 | The fill goes off outside the lines (misregistered printing) |
+| **pop** | 5 POPS, at 14% probability, targeting hair/headgear/skin | A saturated color accent. **Capped at 3 per board** (`makeGrid` switches off the excess). Landing on the skin with luminance < 120, the face ink switches to the light color (`faceInk`) |
+| **CALICO_MID** | 1 color (#a3866a, luminance 139) | The middle tone of a calico (marks calico) — where a real calico's orange goes. Being a warm tan inside the palette, it does not count against the pop cap. The black patches come from FURS and the base from the skin (a calico withholds black fur — a light base) ([parts.md](parts.md) § marks) |
 
-**어두운 색 위에는 밝은 잉크.** 휘도 < 120이면 그 면 위의 선은 밝은 잉크(#e9e3d5)로 간다 — 얼굴은 머리색으로 판정하고(`faceInk`), 몸 무늬는 몸 색으로 판정한다(`drawMarks`).
-검정 털 개·고양이와 도깨비가 같은 규칙을 탄다. 물건(안대·모자·안경알)과 흰 채움 위의 선(이빨)은 예외 — 제 색·어두운 잉크다 ([rules.md](rules.md)).
+**Light ink on a dark surface.** At luminance < 120, the lines on that surface go to light ink (#e9e3d5) — the
+face is decided by the head color (`faceInk`) and body markings by the body color (`drawMarks`).
+Black-furred dogs and cats and imps all ride the same rule. Objects (an eyepatch, a hat, a lens) and lines over a
+white fill (teeth) are the exception — they keep their own color or the dark ink ([rules.md](rules.md)).
 
-## 정체성 (identity)
+## Identity
 
-`species.js` `identity`. census가 검사하는 종족 불변식.
+`identity` in `species.js`. The species invariants census checks.
 
-| 종족 | skeleton | horns | eyes | arms | tail | ears | 기타 |
+| Species | skeleton | horns | eyes | arms | tail | ears | Other |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| human | biped | none | not cyclops | ● | ✗ | none·round만 (동물 귀 없음) | armLength medium만 |
-| pup | quad | none | not cyclops | ✗ | ● | flap·long·pointy(·Mid)·round(·Mid)·fold(·Mid) | hair·brow none (털이지 머리카락이 아니다) |
-| cat | quad | none | not cyclops | ✗ | ● | pointy · pointyMid · pointyBig (세모귀만) | hair·brow none |
-| imp | biped | (자유) | (자유) | ●/✗ (none 가능) | ✗ | none·pointy | 머리 어두움(휘도<90) |
+| human | biped | none | not cyclops | ● | ✗ | none·round only (no animal ears) | armLength medium only |
+| pup | quad | none | not cyclops | ✗ | ● | flap·long·pointy(·Mid)·round(·Mid)·fold(·Mid) | hair·brow none (it is fur, not hair) |
+| cat | quad | none | not cyclops | ✗ | ● | pointy · pointyMid · pointyBig (triangular ears only) | hair·brow none |
+| imp | biped | (free) | (free) | ●/✗ (none allowed) | ✗ | none·pointy | The head is dark (luminance<90) |
 
-## 제약 (applyConstraints)
+## Constraints (applyConstraints)
 
-같이 나오면 그림이 깨지는 조합. **다시 뽑지 않고 결정적으로 덮어쓴다.** 순서대로:
+Combinations that break the drawing when they appear together. **Never re-drawn; overwritten deterministically.** In order:
 
-1. **종족 forbid** (species.js) — 맨 먼저. human 뿔→none·cyclops→wide·long 팔→medium·귀 경계, pup 뿔·머리카락·눈썹→none·cyclops→dot·귀 경계, cat 뿔·머리카락·눈썹→none·cyclops→slit·귀 경계(늘어진 귀→정수리 귀), imp 귀 경계(none·작은 pointy만)
-2. 헬멧·항아리 → 머리카락 없음. 모자·밴드 → 짧은 머리만 (bob·wisp·sweep·tuft·scribble·curly·bangs·longbob·helmet, 밴드는 cloud·hedgehog도)
-3. 모히칸·똥머리 → 모자 없음. 왕관 뿔 → 모자 없음, 머리카락 none/tuft만
-4. 더듬이 → 75% 확률로 귀 없음
-5. 안대 → 어느 쪽인지 여기서 정함 (patchSide ±1, 없으면 99 — 외눈의 side 0과 충돌 방지)
-6. 감은 눈 + 화난 눈썹 → 눈썹 flat
-7. 외눈 → 안경류 없음
-8. 안경·고글 → 60% 확률로 눈썹 없음
-9. 몸 색 (`makeCreature`): imp 머리 DARKS 중 1, 몸은 머리색/밝은 톤/어두운 톤 (50/30/20). 개·고양이 몸은 머리색/어두운 톤/밝은 톤 (50/30/20). 색 포인트 뒤에 정한다
-10. 치수 슬롯(`LATE_SLOTS`)을 뽑은 뒤 종족 forbid를 **한 번 더** — 그 슬롯에도 제한이 걸리게
-11. 안경·고글 두 알이 겹치면(눈 간격 < 알 반지름 합) eyewear → none — 비율이 정해진 뒤 `eyeGeometry`로 판정
-12. 안대는 짝눈(|eyeSizeSkew| > 0.09 또는 |eyeHeightSkew| > 0.03)이면 none, 안대(1.5r)가 다른 눈에 걸치면 none — 비율이 정해진 뒤, rng 없음
+1. **Species forbid** (species.js) — first of all. human horns→none, cyclops→wide, long arms→medium, ear boundaries; pup horns, hair and brows→none, cyclops→dot, ear boundaries; cat horns, hair and brows→none, cyclops→slit, ear boundaries (hanging ears→crown ears); imp ear boundaries (none and small pointy only)
+2. Helmet and pot → no hair. Hat and band → short hair only (bob, wisp, sweep, tuft, scribble, curly, bangs, longbob, helmet; a band also allows cloud and hedgehog)
+3. Mohawk and bun → no hat. Crown horns → no hat, hair none/tuft only
+4. Antennae → no ears, at 75% probability
+5. Eyepatch → which side is settled here (patchSide ±1, 99 when there is none — avoiding a clash with a cyclops's side 0)
+6. Closed eyes + angry brows → brows flat
+7. Cyclops → no eyewear
+8. Glasses and goggles → no brows, at 60% probability
+9. Body color (`makeCreature`): an imp's head is 1 of the DARKS and the body the head color / a light tone / a dark tone (50/30/20). A dog's or cat's body is the head color / a dark tone / a light tone (50/30/20). Settled after the color accent
+10. After drawing the dimension slots (`LATE_SLOTS`), the species forbid runs **once more** — so those slots are restricted too
+11. If a pair of glasses' or goggles' lenses overlap (the eye gap < the sum of the lens radii), eyewear → none — decided with `eyeGeometry` after the proportions are settled
+12. An eyepatch goes to none on mismatched eyes (|eyeSizeSkew| > 0.09 or |eyeHeightSkew| > 0.03), and to none if the patch (1.5r) laps onto the other eye — after the proportions are settled, with no rng

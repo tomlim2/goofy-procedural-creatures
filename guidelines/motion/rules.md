@@ -1,112 +1,112 @@
-# 모션 규칙
+# Motion rules
 
-`src/motion/`을 고칠 때 지키는 것. 무엇이 있는지는 [catalog.md](catalog.md).
+What to keep to when changing `src/motion/`. What exists is in [catalog.md](catalog.md).
 
-## 바인드 포즈와 행위
+## The bind pose and actions
 
-**캐릭터에는 자세가 없다.** 모션이 없을 때 캐릭터는 바인드 포즈(T포즈)다 — BIND 뷰에서만 보인다.
-모션의 기본은 **idle**(팔 살짝 벌린 A포즈 + 호흡·지터·시선·깜빡임)이고, 그 위에 **행위**가 겹친다 —
-만세, 손 흔들어 인사, 팔짱, 팔을 파닥이며 좋아하기. 행위는 idle에서 시작해 idle로 돌아온다.
-"이 개체는 뒷짐진 채 쉰다" 같은 개체별 쉼 자세는 없다 — 그건 캐릭터에 모션을 섞은 것이다.
+**A character has no posture.** With no motion, a character is in the bind pose (the T-pose) — visible only in the BIND view.
+Motion's base is **idle** (an A-pose with the arms slightly open, plus breathing, jitter, gaze and blinking), and **actions** stack on top —
+arms up, waving hello, arms crossed, flapping the arms in delight. An action starts from idle and returns to idle.
+There is no per-individual rest pose like "this one rests with its hands behind its back" — that is mixing motion into character.
 
-## 기본 상태(mode)가 바닥이다 — idle · sleep · walk · sit, 앞으로 run
+## The base state (mode) is the floor — idle · sleep · walk · sit, and run to come
 
-개체는 늘 어떤 기본 상태에 있고(`states.js` `stepMode`, `table.js` `modes`·`modeHold`), 그게 리그의 바닥 자세와 무엇이 쉬는지를 정한다.
-지금은 idle · sleep(네발) · walk(자리를 옮기는 걸음) · sit(네발, 앉기). 달리기처럼 "개체가 지금 뭘 하고 있는 상태인가"는 여기에 상태로 붙인다 — 행위(짧게 했다 돌아오는 것)가 아니다.
-자세가 있는 상태(sleep·sit)의 **내용**(다리 각·몸 기울기)은 리그 치수에서 푼다 — 상수 표가 아니라 `actions.js sitPose(rig.body)`처럼 개체의 다리 기장·몸 길이를 받아
-계산한다. 그래야 닥스훈트도 긴 다리도 같은 뜻으로 앉는다. 못 앉는 체형이면(null) 그 상태 동안 서 있는다 — 억지로 앉히지 않는다.
-상태 전환은 이징(sleepK·walkK 같은 0~1 값)으로 섞어 튀지 않게 하고, **idle을 거쳐서만** 오간다.
+An individual is always in some base state (`stepMode` in `states.js`; `modes` and `modeHold` in `table.js`), and that decides the rig's floor pose and what rests.
+Right now it is idle · sleep (quads) · walk (a walk that moves it) · sit (quads, sitting). Anything of the form "what is this individual doing right now", like running, is attached here as a state — not as an action (something done briefly and returned from).
+The **content** of a state that has a pose (sleep, sit) — the leg angles, the body tilt — is solved from the rig dimensions: not a table of constants but computed from the individual's leg length and body length, as in
+`sitPose(rig.body)` in `actions.js`. That is what lets a dachshund and a long-legged build sit with the same meaning. A build that cannot sit (null) stands through that state — it is never forced.
+State transitions are blended with easing (0~1 values like sleepK and walkK) so nothing snaps, and they only ever pass **through idle**.
 
-## 행위는 층이다 — 팔·몸·네발이 각자 예약되고 겹친다
+## Actions are layers — arm, body and quad schedule separately and overlap
 
-행위는 세 층으로 나뉜다: 팔 층(`ACTIONS`, 두발) · 몸 층(`BODY_ACTIONS` — 제자리 점프, 공통) · 다리·꼬리 층(`QUAD_ACTIONS`, 네발).
-층마다 예약이 따로 돌고(`stepArmAction`·`stepBodyAction`·`stepQuadAction`) 결과가 idle 위에 같이 얹힌다 —
-점프하면서 인사할 수 있어야 한다. 새 행위를 만들 때 "어느 층인가"를 먼저 정한다. 온몸이 하는 것(점프·절·회전)은
-몸 층, 팔만 하는 것은 팔 층. 한 층에 넣고 다른 층을 굳히지 않는다.
+Actions split into three layers: the arm layer (`ACTIONS`, bipeds) · the body layer (`BODY_ACTIONS` — hopping in place, shared) · the leg and tail layer (`QUAD_ACTIONS`, quads).
+Each layer schedules separately (`stepArmAction`, `stepBodyAction`, `stepQuadAction`) and the results are laid over idle together —
+it has to be able to wave while jumping. When making a new action, first settle which layer it is on. Something the whole body does (a jump, a bow, a spin) goes on the
+body layer; something only the arms do goes on the arm layer. Never put it on one layer and freeze another.
 
-## 행위는 idle 위에 겹친다 — 정한 부위만 바꾼다
+## An action stacks over idle — it changes only what it decides
 
-행위(`actions.js` `ACTIONS`)는 자세와 **어느 팔**(one/both)만 적는다. 정하지 않은 부위(다른 팔·몸·얼굴)는
-idle이 그대로 계속된다. "손 흔들기는 손 움직임만" — 인사는 한 팔만 정하고 다른 팔은 idle로 내려가 있다.
-다른 부위까지 같이 굳히는 행위를 만들지 않는다. 한 팔 행위가 성립하는 조건은 **기본이 idle**이라는 것
-하나다 — 기본이 T포즈면 나머지 팔이 수평으로 굳어 마네킹이 한 팔만 까딱이는 그림이 된다.
+An action (`ACTIONS` in `actions.js`) writes down only the pose and **which arms** (one/both). Whatever it does not decide (the other arm, the body, the face) keeps
+idling. "Waving is the hand's movement alone" — a wave decides one arm and the other stays down at idle.
+Never make an action that freezes other parts along with it. The one condition that makes a one-arm action work is that **the base is idle** —
+with a T-pose as the base, the other arm freezes horizontal and you get a mannequin twitching one arm.
 
-## 팔 자세는 손 목표로 적는다
+## An arm pose is written as a hand target
 
-관절각 표를 손으로 맞추지 않는다. `ARM_POSES`에 **손이 어디로 가는가**(reach 배수 좌표 또는 리그 앵커
-hip·chin·brow·chestFar)와 팔꿈치가 튀어나오는 쪽만 적고, `solveArm`이 개체의 리그(`armRig(spec)`)에
-두 마디 IK로 푼다. 팔 길이·몸 크기가 달라도 같은 행위가 같은 뜻으로 보이는 건 이것 때문이다.
-새 자세를 넣으면 FK로 손 위치를 되돌려 앵커에 닿는지·바닥 위인지 숫자로 확인한다 (catalog § 새 모션을 넣을 때).
+Never hand-tune a table of joint angles. `ARM_POSES` records only **where the hand goes** (coordinates as a multiple of reach, or the rig anchors
+hip, chin, brow, chestFar) and the side the elbow sticks out, and `solveArm` solves it onto that individual's rig (`armRig(spec)`)
+with two-bone IK. That is why the same action means the same thing at different arm lengths and body sizes.
+When adding a new pose, run the hand position back through FK and check by number that it reaches the anchor and stays above the floor (catalog § adding a new motion).
 
-## 세 종류로 나눈다
+## Split into three kinds
 
-모션은 파츠별이 아니라 **움직임의 성격**으로 나눈다. 얼굴 모션·팔 모션이 아니라 리듬·이벤트·상태다.
+Motion is split by **the character of the movement**, not by part. Not face motion and arm motion but rhythm, events and states.
 
-| 종류 | 파일 | 성격 | rng | 형태 |
+| Kind | File | Character | rng | Shape |
 | --- | --- | --- | --- | --- |
-| **리듬** | `rhythm.js` | 멈추지 않는 진동. 사인파와 이징 | init만 (위상·주기) | 결정적 함수 |
-| **이벤트** | `events.js` | 예약 시각에 시작, 짧게 진행, 끝. 다음 예약 | init + step | `{ next, start }`, 진행 곡선 k |
-| **상태** | `states.js` | 들어가면 몇 초 머물다 돌아옴. on/off | init + step | `{ next, until }` |
+| **Rhythm** | `rhythm.js` | Oscillation that never stops. Sine waves and easing | init only (phase, period) | A deterministic function |
+| **Events** | `events.js` | Starts at a scheduled time, runs briefly, ends. Then the next slot | init + step | `{ next, start }`, a progress curve k |
+| **States** | `states.js` | You enter, stay a few seconds and come back. on/off | init + step | `{ next, until }` |
 
-새 모션은 먼저 "이게 리듬인가 이벤트인가 상태인가"를 정한다. 그러면 파일도 형태도 정해진다.
+For a new motion, first settle "is this a rhythm, an event or a state?". That settles both the file and the shape.
 
-- 호흡·스웨이·꼬리 스위시·관절 지터 → 리듬
-- 깜빡임·놀람 → 이벤트 (제자리 점프는 몸 행위, 이모지는 별도 층 — 아래)
-- 윙크·^^·눈썹·입·갸웃·둘러보기·행위 예약·기본 상태(idle/sleep/walk) → 상태 (행위의 내용은 `actions.js`, 언제 하는지는 `states.js`).
-  없앤 상태(반감김)는 `initSquint`만 남겨 rng 순서를 지킨다 — step은 지웠다
+- Breathing, sway, the tail swish, joint jitter → rhythm
+- Blinking, the startle → events (hopping in place is a body action, and the emoji is its own layer — below)
+- Wink, ^^, brows, mouth, head tilt, look, action scheduling, the base state (idle/sleep/walk) → states (an action's content is `actions.js`; when it happens is `states.js`).
+  A removed state (half-lidded) keeps only `initSquint`, to hold the rng order — its step was deleted
 
-## 이징 — 모든 곡선은 부드럽게 들어가고 나온다
+## Easing — every curve eases in and out
 
-시작·끝에서 속도가 0이어야 한다. "툭" 시작하는 곡선은 이 랩에 없다 (`ease.js`).
+Velocity has to be 0 at the start and the end. There is no curve in this lab that starts with a pop (`ease.js`).
 
-| 쓰임 | 쓰는 것 | 쓰지 않는 것 |
+| Use | Use this | Not this |
 | --- | --- | --- |
-| 한 번 부풀었다 돌아오는 봉투 (딥·기지개·깜빡임·눌림) | `bump(k)` — raised cosine | `sin(πk)` (시작 기울기 π) |
-| n번 (끄덕 2번·발 까딱 3번) | `bumps(k, n)` — sin² | `\|sin(nπk)\|` (바닥에서 꺾임) |
-| 들어감·유지·나감 (놀람 눈·부르르·꼬리 플릭) | `envelope(k, attack, release)` — smoothstep 양끝 | `sin(πk)^0.6`, `(1 - k)` 감쇠 |
-| 페이드 (진동 봉투 0.35초, 이모지 등장·퇴장) | `ramp(x)` | 선형 `min(1, x)` |
-| 목표 추종 (시선 w 0.2 · 얼굴 돌림 w 0.1 · 관절 w 0.18) | `damp({x, v}, target, w)` — 임계감쇠 2차, 넘침 없음 | 지수 lerp `x += (t - x) * 0.06` (첫 프레임이 가장 빠르다) |
+| An envelope swelling once and returning (the dip, the stretch, a blink, a squash) | `bump(k)` — a raised cosine | `sin(πk)` (a starting slope of π) |
+| n times (a nod ×2, a paw flick ×3) | `bumps(k, n)` — sin² | `\|sin(nπk)\|` (a kink at the bottom) |
+| Attack, hold, release (the startle eye, the shiver, a tail flick) | `envelope(k, attack, release)` — smoothstepped at both ends | `sin(πk)^0.6`, a `(1 - k)` decay |
+| A fade (the 0.35 s oscillation envelope, an emoji entering and leaving) | `ramp(x)` | a linear `min(1, x)` |
+| Following a target (the gaze w 0.2 · the face turn w 0.1 · joints w 0.18) | `damp({x, v}, target, w)` — critically damped second order, no overshoot | an exponential lerp `x += (t - x) * 0.06` (the first frame is the fastest) |
 
-예외는 물리가 그런 것뿐 — 점프의 공중 궤적(발이 땅을 차는 순간은 원래 툭 튄다)과 진동 자체(사인파). 놀람은 0.1초 만에 동공이
-줄고(그래도 S자) 3.8초 유지, 0.1초 만에 풀린다.
+The only exceptions are where the physics really is like that — a jump's airborne trajectory (the moment the feet kick off the ground is meant to pop) and oscillation itself (a sine wave). The startle shrinks the pupil in 0.1 s
+(as an S-curve even so), holds 3.8 s and releases in 0.1 s.
 
-## 표정에 딸린 것은 표정과 같은 시계를 탄다
+## Whatever is tied to an expression rides that expression's clock
 
-^^(행복)에 딸린 것 — 개는 꼬리 흔들기(`wagOnHappy`), 고양이는 꼬리 세움(`raise`) — 은 따로 예약하지 않고 `isHappy` 동안 켜진다.
-그래야 ♥ 이모지·♥ 놀람·깜빡임 ^^ 어느 길로 웃든 꼬리가 같이 반응하고, 표정이 3초 이상 가니 꼬리도 3초 이상 간다.
-화남에 딸린 것(고양이 꼬리 곤두섬)도 화남 봉투(`angry`) 그대로, 놀람에 딸린 것(동공 수축·☆♥ 변형)도 놀람 봉투(`startle`) 그대로다 — 시계를 둘 두면 어긋난다.
+What is tied to a ^^ (happiness) — a dog's wag (`wagOnHappy`) and a cat's tail raise (`raise`) — is not scheduled separately but switched on for the duration of `isHappy`.
+That way the tail responds whichever route the smile came by (the ♥ emoji, a ♥ startle, a ^^ blink), and since the expression lasts 3 s or more, so does the tail.
+What is tied to anger (a cat's tail bristling) follows the anger envelope (`angry`) as it is, and what is tied to the startle (the pupil shrinking, the ☆♥ variants) follows the startle envelope (`startle`) as it is — keep two clocks and they drift apart.
 
-## 이모지는 모션이 아니다 — 트리거되는 층이다
+## The emoji is not a motion — it is a triggered layer
 
-♥ ! ? … 는 `motion/emoji.js`의 채널이 돈다. 모션(행위·이벤트)은 이모지를 직접 그리거나 쥐지 않고 **트리거만** 한다 —
-행위에 `emoji: "heart"`를 적으면 시작할 때 한 번 쏜다. 이모지의 모양·길이·곡선은 `EMOJI` 표에서만 정한다.
-새 이모지를 넣으려면 `EMOJI`에 종류·길이·곡선을, `scene/emoji.js`에 모양을 넣고, 어느 모션이 쏠지는 그 모션에 적는다.
+♥ ! ? … are run by the channel in `motion/emoji.js`. A motion (an action, an event) neither draws nor holds the emoji; it only **triggers** it —
+write `emoji: "heart"` on an action and it fires once at the start. An emoji's shape, length and curve are decided in the `EMOJI` table and nowhere else.
+To add a new emoji, put the kind, length and curve in `EMOJI` and the shape in `scene/emoji.js`, and write which motion fires it on that motion.
 
-## 종족 차이는 table.js에만
+## Species differences live only in table.js
 
-종족별로 다른 것은 **파라미터**뿐이다. `MOTION[species]`에 간격·진폭·주기를 넣고, 없는 종족은 `null`.
-`rhythm/events/states`에 `if (species === "cat")` 같은 분기를 넣지 않는다.
+The only thing that differs per species is the **parameters**. Put the intervals, amplitudes and periods in `MOTION[species]`, with `null` for species without it.
+Never put a branch like `if (species === "cat")` in `rhythm/events/states`.
 
-## rng 순서가 곧 시드
+## The rng order is the seed
 
-`index.js`의 init 29단계와 update 순서는 고정이다. 새 모션은 **각 블록의 끝에** 붙인다.
-중간에 끼우면 그 뒤 모든 예약이 바뀌어 기존 시드의 모션이 전부 달라진다.
+The 29 init steps and the update order in `index.js` are fixed. A new motion goes **at the end of its block**.
+Insert it in the middle and every schedule after it changes, so every existing seed's motion becomes different.
 
-리듬의 step은 rng를 쓰지 않는다. 이벤트·상태의 step만 rng를 쓴다(다음 예약).
+A rhythm's step uses no rng. Only events' and states' steps use it (for the next slot).
 
-## 출생 상대 시간
+## Birth-relative time
 
-모든 예약은 `birth` 기준이다. 절대 시간으로 잡으면 재생성으로 태어난 개체의 예약이 전부
-과거가 되어 매 프레임 재생성되는 폭주가 난다.
+Every schedule is relative to `birth`. Set them in absolute time and an individual born from a regen finds every schedule
+already in the past, and it runs away, regenerating every frame.
 
-## 크기는 실측에서
+## Sizes come from measurement
 
-레퍼런스 대조 결과(reference/video-notes.md 33~36): 팔다리는 관절 지터 + 몸 따라가기가 기본이고
-큰 관절 이벤트는 드물고 작다. 새 모션의 진폭·간격을 정할 때 눈이 아니라 프레임 대조로 정한다.
+From comparing against the reference (reference/video-notes.md 33~36): limbs are joint jitter + following the body by default and
+big joint events are rare and small. Settle a new motion's amplitude and interval by comparing frames, not by eye.
 
-## 발화 빈도를 센다
+## Count the firing frequency
 
-고쳤으면 60초 시뮬로 몇 프레임 발화하는지 센다. 눈으로만 판단하지 않는다.
+If you changed it, count how many frames it fires over a 60 s simulation. Never judge by eye alone.
 
 ```bash
 node --input-type=module -e "
@@ -118,8 +118,8 @@ Promise.all([import('./src/motion/index.js'), import('./src/character/index.js')
 });"
 ```
 
-## 리팩토링은 스냅샷으로
+## Refactor with the snapshot
 
-`node scripts/snapshot.mjs before` → 고침 → `node scripts/snapshot.mjs after`. diff 0이어야 한다.
-스냅샷의 모션 궤적은 4종족 × 60초라 드문 가지(놀람 변형·꼬리 세움·걷기 왕복)는 안 지날 수 있다 — `motion/index.js update()`의 순서를
-옮기는 리팩토링은 rng 호출이 조건 안으로 들어가지 않는지 눈으로도 확인한다. (그리기 쪽은 `scripts/drawdiff.mjs`가 슬롯값 전부를 맞댄다)
+`node scripts/snapshot.mjs before` → change it → `node scripts/snapshot.mjs after`. It has to be diff 0.
+The snapshot's motion trajectories are 4 species × 60 s, so rare branches (startle variants, the tail raise, a walk out and back) may go unvisited — for a refactor that
+moves the order in `motion/index.js update()`, check by eye as well that no rng call has moved inside a condition. (On the drawing side, `scripts/drawdiff.mjs` compares every slot value.)

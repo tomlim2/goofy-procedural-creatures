@@ -1,313 +1,312 @@
-# 모션 카탈로그
+# Motion catalog
 
-> 기준: `src/motion/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
+> Basis: `src/motion/`. When the code changes, fix this document in the same commit.
 
-`src/motion/`. `table.js`가 종족별 파라미터, `rhythm.js`(상시 진동) `events.js`(간헐) `states.js`(유지·행위 예약)가
-모션 본체, `actions.js`가 idle과 행위의 내용(팔·몸·네발 세 층), `emoji.js`가 이모지 층, `index.js`가 고정 rng 순서로
-조립한다. 규칙은 [rules.md](rules.md).
-개체마다 시계가 하나씩 있고, 모든 예약은 **출생 시각 기준 상대 시간**이다.
-매 프레임 `update(t)`가 상태 객체를 돌려주고 `scene/animate.js`가 그것을 리그에 적용한다.
+`src/motion/`. `table.js` holds the per-species parameters; `rhythm.js` (standing oscillation), `events.js` (intermittent) and `states.js` (held states, action scheduling) are
+the body of the motion; `actions.js` holds the content of idle and the actions (three layers: arm, body, quad); `emoji.js` is the emoji layer; and `index.js` assembles it all
+in a fixed rng order. The rules are in [rules.md](rules.md).
+Each individual has one clock, and every schedule is **relative to the birth time**.
+Every frame, `update(t)` returns a state object and `scene/animate.js` applies it to the rig.
 
-**원칙** (레퍼런스 실측, video-notes 26~36):
-- 움직임은 이징으로 **매끄럽게**, 선(보일)만 1.5~2초에 한 번씩 다시 그려진다
-- 몸통에는 뼈대 리그가 없다. 생동감은 얼굴 리그 + 보일 + 몸에 종속된 미세 움직임이다
-- 팔다리는 관절 지터 + 몸 따라가기가 기본. 큰 관절 이벤트는 **드물고 작게**
-- 종족마다 지배 모션이 다르다 (`MOTION` 테이블)
+**Principles** (measured off the reference, video-notes 26~36):
+- Movement is **smooth**, with easing; only the lines (the boil) are redrawn, once every 1.5~2 s
+- The torso has no skeleton rig. The liveliness is the face rig + the boil + fine movement subordinate to the body
+- Limbs are joint jitter + following the body by default. Big joint events are **rare and small**
+- Each species has a different dominant motion (the `MOTION` table)
 
-## 종류별 위치
+## Where each kind lives
 
-| 종류 | 파일 | 모션 |
+| Kind | File | Motions |
 | --- | --- | --- |
-| 리듬 | `rhythm.js` | 호흡 · 스웨이 · 락킹 · 머리 롤 · 젤리 · 꼬리 스위시 · 시선 추종 · 얼굴 돌림 추종 · 팔 진자 · 관절 지터 |
-| 이징 | `ease.js` | 모든 곡선의 모양 — `bump` `bumps` `envelope` `ramp`(봉투) · `damp`(임계감쇠 추종). 시작·끝 속도 0 ([rules.md](rules.md) § 이징) |
-| 이벤트 | `events.js` | 깜빡임 · 시선 다트 · 놀람 · 끄덕 · 킁킁 딥 · 기지개 · 부르르 · 발 까딱 · 제자리 스텝 · 꼬리 플릭 · 이모지 예약 · 재생성 |
-| 이모지 | `emoji.js` | 머리 위 ♥ ! ? … — 모션이 아니라 **따로 트리거되는 애니메이션 층**. 종류별 곡선(떠오름·팝·갸웃·중얼), 채널 하나. 모션의 `emoji` 트리거와 idle 예약이 쏜다 |
-| 상태 | `states.js` | **기본 상태(mode)** idle·sleep·walk·sit · ^^ 행복 눈 · 윙크 · 갸웃 · 눈썹 상태 · 입 상태 · 둘러보기(얼굴 돌림 유지) · 행위 예약(팔·몸·네발 층 각각 — 언제 어떤 행위를) |
-| 행위 | `actions.js` | **idle**(기본 — 두발 A포즈, 네발 선 자세)과 행위의 **내용**, 세 층: 팔 `ACTIONS`(손 목표·팔꿈치 방향·진동, 어느 팔, IK) · 몸 `BODY_ACTIONS`(제자리 점프 — 공통) · 네발 `QUAD_ACTIONS`(다리 하나·꼬리 — 각도·진동). 층은 겹친다. 앉은 자세 `sitPose(rig.body)`(기본 상태 sit의 내용 — 리그 치수에서 푼다) |
+| Rhythm | `rhythm.js` | Breathing · sway · rocking · head roll · jelly · tail swish · gaze following · face-turn following · arm pendulum · joint jitter |
+| Easing | `ease.js` | The shape of every curve — `bump`, `bumps`, `envelope`, `ramp` (envelopes) · `damp` (critically damped follow). Velocity 0 at the start and end ([rules.md](rules.md) § easing) |
+| Events | `events.js` | Blink · gaze dart · startle · nod · sniff dip · stretch · shiver · paw flick · step in place · tail flick · emoji schedule · regen |
+| Emoji | `emoji.js` | ♥ ! ? … above the head — not a motion but **a separately triggered animation layer**. A curve per kind (float, pop, wobble, mumble), one channel. Motions' `emoji` triggers and the idle schedule fire into it |
+| States | `states.js` | **The base state (mode)** idle, sleep, walk, sit · the ^^ happy eye · wink · head tilt · brow state · mouth state · look (a held face turn) · action scheduling (arm, body and quad layers each — when and which action) |
+| Actions | `actions.js` | **idle** (the base — a biped A-pose, a quad's standing stance) and the **content** of the actions, in three layers: arm `ACTIONS` (hand target, elbow direction, oscillation, which arm, IK) · body `BODY_ACTIONS` (hopping in place — shared) · quad `QUAD_ACTIONS` (one leg or the tail — angle, oscillation). The layers overlap. The sitting pose `sitPose(rig.body)` (the content of the sit base state — solved from the rig dimensions) |
 
-## 상태 객체
+## The state object
 
-`clock.update(t)`가 돌려주는 값과 scene의 적용처.
+What `clock.update(t)` returns, and where the scene applies it.
 
-| 상태 | 타입 | 적용 |
+| State | Type | Applied to |
 | --- | --- | --- |
 | breathe | −1~1 | group.scale (x 0.006, y 0.011) |
-| sway | rad | group.rotation.z — 발 축 좌우 기울기 |
-| rock | 배율 | group.scale.y — 앞뒤 락킹 착시 |
-| hopY | 단위 | group.position.y |
-| squashX / squashY | 배율 | group.scale — 점프 스쿼시&스트레치 |
-| stretchX | 배율 | group.scale.x — 기지개 |
-| jellyX / jellyY | 배율 | group.scale 역위상 — 젤리 워블 |
-| shiverX | 단위 | group.position.x — 부르르 |
-| headAngle | rad | headGroup.rotation.z (갸웃 + 롤) |
-| headBob | 단위 | headGroup.position.y (끄덕 + 딥) |
-| faceTurn | [x, y] −1~1 | faceGroup.position x/y + scale 눌림 — 이목구비 전체가 밀려 머리를 돌린 착시 (x 0.26·headRx, y 0.16·headRy) |
+| sway | rad | group.rotation.z — side-to-side lean about the feet |
+| rock | multiplier | group.scale.y — the illusion of front-to-back rocking |
+| hopY | units | group.position.y |
+| squashX / squashY | multiplier | group.scale — the jump's squash and stretch |
+| stretchX | multiplier | group.scale.x — the stretch |
+| jellyX / jellyY | multiplier | group.scale in anti-phase — the jelly wobble |
+| shiverX | units | group.position.x — the shiver |
+| headAngle | rad | headGroup.rotation.z (the tilt plus the roll) |
+| headBob | units | headGroup.position.y (the nod plus the dip) |
+| faceTurn | [x, y] −1~1 | faceGroup.position x/y plus a scale squash — the features shift as one, faking a turned head (x 0.26·headRx, y 0.16·headRy) |
 | gaze | [x, y] | pupil.position |
 | lid | 0~1 | lid.scale.y |
-| startle | 0~1 | eyeRig.pupil.scale = 1 − 0.5·startle — 놀람. 눈은 그대로, **동공만** 줄어든다 |
-| eyeFx | { kind: "star"·"heart", k } 또는 null | 놀람의 변형 — 눈(정지 눈 프레임·눈 리그)을 끄고 그 자리에 ☆/♥ 글리프 (rig.eyeFx), k로 팝인/아웃 |
-| happy | bool | 눈 닫고 ^^ 아치 |
-| winkSide | −1/0/1 | 한쪽만 lid 1 |
-| browAlt / mouthAlt | bool | 눈썹·입 상태 벌 토글 |
-| arms | {−1, 1} → {shoulder, elbow, behind, oscShoulder, oscElbow} | 팔 관절 세계각(rotation.z). idle 또는 행위를 IK로 푼 값 + 진자·점프·지터. osc는 이징 없이 얹는 진동(인사·파닥임) |
-| legOffset | [4] rad | 다리 피벗 회전 (이징). 네발은 idle 선 자세(legStance)가 기본, 그 위에 까딱·스텝·행위 |
-| legOsc | [4] rad | 다리에 이징 없이 얹는 진동 (앞발 흔들기·긁기) |
-| action / actionSide | 팔 층(두발)·다리·꼬리 층(네발)의 행위 이름 또는 null / 활동 팔 side 또는 다리 index | 디버그·통계용. scene은 arms·legOffset만 본다 |
-| bodyAction | 몸 층의 행위 이름 또는 null | 제자리 점프 중이면 "jump". hopY·squash가 그 곡선이다 |
-| mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" / 0~1 / 0~1 / 0~1 | 기본 상태와 잠·걷기·앉기 정도(이징). 전부 legOffset·hopY·sway·arms 등에 이미 섞여 있다. scene은 잠 눈꺼풀(정지 눈 덮개)만 sleep으로 켠다 |
-| bodyTilt | rad | bodyGroup.rotation.z — 네발 앉기의 몸 기울기(음수 = 뒤가 내려감), **앞다리 뿌리**(item.bodyPivot)를 축으로. sitPose(rig.body).tilt × sit |
-| walkX / facing | 셀 단위 / ±1 | group.position.x(집 기준 옮긴 자리) / group.scale.x(네발이 걷는 방향으로 뒤집힘, 두발은 늘 1) |
-| tailAngle / tailTip / tailPuff / tailRaise | rad / rad / 0~1 / 0~1 | 뿌리 마디 회전 / 끝 마디 회전(뿌리 기준) / 마디 굵기 스케일(1 + 0.6·puff, 척추에 수직) / 관절마다 쉼→**정확히 수직** 목표각 섞기 (scene/animate.js) |
-| tailArch / tailPose | 0~1 / [rad × 마디] 또는 null | idle 자세 섞기(고양이 아치) — 관절마다 쉼→tailPose 세계각으로. 세움과 합이 1을 안 넘는다 (나머지가 골격) |
-| emoji | {kind, k, dy, scale, rot, opacity} 또는 null | 머리 위 글리프 — 이모지 채널의 프레임. scene은 그대로 입힌다 |
-| regen | bool | LIVE일 때 개체 교체 |
+| startle | 0~1 | eyeRig.pupil.scale = 1 − 0.5·startle — the startle. The eye is unchanged; **only the pupil** shrinks |
+| eyeFx | { kind: "star"·"heart", k } or null | The startle variant — the eyes (the static eye frame, the eye rig) are switched off and a ☆/♥ glyph is drawn in their place (rig.eyeFx), popping in and out by k |
+| happy | bool | The eyes close into a ^^ arch |
+| winkSide | −1/0/1 | lid 1 on one side only |
+| browAlt / mouthAlt | bool | Toggles the brow and mouth state sets |
+| arms | {−1, 1} → {shoulder, elbow, behind, oscShoulder, oscElbow} | The arm joints' world angles (rotation.z). idle or an action solved by IK, plus the pendulum, jump and jitter. osc is oscillation laid on without easing (waving, flapping) |
+| legOffset | [4] rad | Leg pivot rotation (eased). On a quad the idle standing stance (legStance) is the base, with flicks, steps and actions on top |
+| legOsc | [4] rad | Oscillation laid on the legs without easing (a paw shake, scratching) |
+| action / actionSide | The action name of the arm layer (biped) or the leg and tail layer (quad), or null / the active arm's side or the leg index | For debugging and statistics. The scene only looks at arms and legOffset |
+| bodyAction | The body layer's action name, or null | "jump" while hopping in place. hopY and squash are its curve |
+| mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" / 0~1 / 0~1 / 0~1 | The base state and how far asleep, walking or sitting it is (eased). All of it is already blended into legOffset, hopY, sway, arms and so on. The scene only uses sleep, to turn on the sleep lid (the static eye cover) |
+| bodyTilt | rad | bodyGroup.rotation.z — the body tilt of a quad sit (negative = the back goes down), about **the front legs' root** (item.bodyPivot). sitPose(rig.body).tilt × sit |
+| walkX / facing | cells / ±1 | group.position.x (the distance moved from home) / group.scale.x (a quad flipping to face its walking direction; a biped is always 1) |
+| tailAngle / tailTip / tailPuff / tailRaise | rad / rad / 0~1 / 0~1 | The root bone's rotation / the tip bone's rotation (relative to the root) / the bone thickness scale (1 + 0.6·puff, perpendicular to the spine) / blending each joint from rest toward **exactly vertical** (scene/animate.js) |
+| tailArch / tailPose | 0~1 / [rad × bones] or null | Blending the idle pose (the cat arch) — each joint from rest to the tailPose world angle. Together with the raise it never passes 1 (the remainder is the skeleton) |
+| emoji | {kind, k, dy, scale, rot, opacity} or null | The glyph above the head — a frame from the emoji channel. The scene applies it as-is |
+| regen | bool | Replaces the individual when LIVE |
 
-## 얼굴
+## The face
 
-| 모션 | 주기 / 지속 | 종족 차이 | 비고 |
+| Motion | Period / duration | Species differences | Note |
 | --- | --- | --- | --- |
-| 깜빡임 | 1.8~6.5초, 0.13초 | 공통 | 22%는 연속 두 번. 22%는 ^^로 닫히는데 그 ^^는 **3.2초 유지**된다(잠깐 웃다 마는 얼굴은 없다). **덮지 않고 바꿔 그린다** — 뜬 눈 ↔ 감은 선(눈꺼풀 > 0.5) 두 컷, 반쯤 감긴 중간은 없다 |
-| 시선 이동 | 1.4~5초 | 공통 | 목표까지 임계감쇠 추종 (w 0.2 ≈ 0.4초) |
-| **얼굴 돌림** (좌우·위아래) | 시선 추종, 임계감쇠 w 0.1 (≈ 0.8초). 머리에 붙는 층은 **깊이**만큼 밀린다(fake 3D, [../rig.md](../rig.md) § fake 3D 깊이): 모자·뿔 45%, 앞머리·두피 위 머리카락 12%, 뒷머리 −12%(반대), 귀 −40%(반대) — x·y 같은 배율, 위치만, 크기 그대로 | yaw 배율 human 0.5 / pup 0.7 / cat 0.8 / imp 0.6 (위아래는 ×0.6) | 이목구비 전체(눈·코·입·눈썹·안경·볼·수염·주둥이)가 머리 안에서 밀리고 살짝 눌린다. 동공이 먼저 가고 얼굴이 뒤따른다 |
-| **둘러보기** (얼굴 돌림 유지) | 간격 human 6~16 / pup 4~12 / cat 8~20 / imp 5~14초, 유지 1~5초 | 진폭 [x, y] human [1, 0.8] / pup [1, 1] / cat [0.9, 0.9] / imp [1, 0.7] | 8방향 중 하나로 끝까지 돌리고 머문다. 시선도 그쪽 |
-| 놀람 (동공 수축) | 간격 표 참조, 4.0초 | human 8~22 / pup 10~26 / cat 9~24 / **imp 6~14** (4초 유지라 시작 간격 최소 6초 — 사이가 붙지 않게) | 눈 크기는 그대로, **동공만 0.5배**로 (살아 있는 눈). **0.1초 만에 줄고 3.8초 유지, 0.1초 만에 풀림** (`envelope`). **변형** — 시작할 때 plain 60% / star 25% / heart 15%: star·heart면 눈이 ☆_☆·♥_♥로 **바뀐다**(눈을 끄고 글리프로 대체, `state.eyeFx`), heart는 ♥ 이모지도 같이 |
-| ^^ 행복 유지 | 6~16초, **3~6초** | **pup만** | 살아 있는 눈은 눈꺼풀+미소 아치, 정지 눈은 덮개+미소 아치 — 어느 눈이든 ^^가 된다. **♥ 이모지가 뜨면 ^^ 3.2초**(전 종족, 어디서 쏜 ♥이든) — 개는 이어서 꼬리를 흔든다 |
-| 윙크 | 8~20초, **3~5초** | **cat만** | 그쪽 눈만 ^^ (정지 눈도 — 그 눈의 층만 끄고 아치로 바꾼다, 반대쪽 눈은 그대로). 표정은 무조건 3초 이상 |
-| **화남** | 25~60초, **3~5초** | **cat만** (표 `angry`·`angryHold`, 다른 종족은 null) | 눈을 **사나운 눈**(안쪽이 내려간 빗금 눈꺼풀 ＼ ／ + 노려보는 점, `angryEyeSketch`)으로 바꿔 그리고(정지 눈·리그 눈 다), 입은 종족별 화남 입(사람·개 이빨 격자 grimace, 고양이·도깨비 송곳니 fangs — `faceStates.js ANGRY_MOUTH`), 눈썹 있는 종족은 angry 눈썹 — 얼굴 상태 3번째 벌. 봉투는 놀람 눈과 같은 법칙 **0.1초 확 / 유지 / 0.1초 풀림**(`state.angry` 0~1). ^^·윙크·☆♥ 변형보다 우선, 잠보다 아래. **고양이 꼬리 털이 이때 곤두선다**(§ 꼬리 곤두섬) |
-| 눈썹 전환 | 6~16초, 1.5~4초 | 공통 | ALT_BROW 표 (flat↔worry, angry→flat). **눈썹 none이면 대체도 none** — 없는 파트는 안 그린다 (`draw/faceStates.js`) |
-| 입 전환 | 4~12초, 0.8~2.2초 | 공통 | ALT_MOUTH 표 — 같은 기분의 이웃으로 살짝(선↔물결, 점↔3, 웃음→씨익, 격자→선…; [../character/parts.md](../character/parts.md) § mouth). 입 벌은 넷: 쉼·대체·**화남**(사람·개 격자, 고양이·도깨비 송곳니)·**^^**(개만 혀 헥헥). 우선순위 화남 > ^^ > 대체 > 쉼 |
+| Blink | 1.8~6.5 s, 0.13 s | shared | 22% are two in a row. 22% close into a ^^, and that ^^ is **held for 3.2 s** (there is no face that stops smiling halfway). **Redrawn, not covered** — two cuts, the open eye ↔ the shut line (lid > 0.5), with no half-closed middle |
+| Gaze movement | 1.4~5 s | shared | Critically damped follow to the target (w 0.2 ≈ 0.4 s) |
+| **Face turn** (side to side, up and down) | Follows the gaze, critically damped w 0.1 (≈ 0.8 s). Layers attached to the head shift by their **depth** (fake 3D, [../rig.md](../rig.md) § fake 3D depth): hat and horns 45%, bangs and hair on the scalp 12%, back hair −12% (opposite), ears −40% (opposite) — the same multiplier on x·y, position only, size unchanged | yaw multiplier human 0.5 / pup 0.7 / cat 0.8 / imp 0.6 (up and down are ×0.6) | Every feature (eyes, nose, mouth, brows, eyewear, cheeks, whiskers, muzzle) shifts within the head and squashes slightly. The pupils go first and the face comes after |
+| **Look** (a held face turn) | Interval human 6~16 / pup 4~12 / cat 8~20 / imp 5~14 s, held 1~5 s | Amplitude [x, y] human [1, 0.8] / pup [1, 1] / cat [0.9, 0.9] / imp [1, 0.7] | It turns all the way one of eight ways and stays. The gaze goes that way too |
+| Startle (the pupil shrinking) | Interval per the table, 4.0 s | human 8~22 / pup 10~26 / cat 9~24 / **imp 6~14** (with a 4 s hold, the minimum start interval is 6 s — so they do not run together) | The eye size is unchanged and **only the pupil goes to 0.5×** (on a live eye). **It shrinks in 0.1 s, holds 3.8 s and releases in 0.1 s** (`envelope`). **Variants** — drawn at the start, plain 60% / star 25% / heart 15%: with star or heart the eyes **turn into** ☆_☆ or ♥_♥ (the eyes are switched off and the glyph substituted, `state.eyeFx`), and heart fires the ♥ emoji with it |
+| ^^ happy hold | 6~16 s, **3~6 s** | **pup only** | A live eye gets the lid plus a smile arch and a static eye a cover plus a smile arch — either way it becomes a ^^. **A ♥ emoji makes it ^^ for 3.2 s** (every species, whatever fired the ♥) — and a dog follows it with a wag |
+| Wink | 8~20 s, **3~5 s** | **cat only** | Only that eye becomes ^^ (static eyes too — only that eye's layer is switched off and turned into an arch, the other eye stays). An expression is always 3 s or more |
+| **Anger** | 25~60 s, **3~5 s** | **cat only** (`angry` and `angryHold` in the table; null on other species) | The eyes are redrawn as **fierce eyes** (an inward-down slanted lid ＼ ／ plus a glaring dot, `angryEyeSketch`) — static and rig eyes alike — the mouth becomes the per-species angry mouth (the tooth grid grimace on humans and dogs, fangs on cats and imps — `faceStates.js ANGRY_MOUTH`), and a species with brows gets the angry brow — the third face state set. The envelope follows the same law as the startle eye: **0.1 s hard up / hold / 0.1 s release** (`state.angry` 0~1). It beats ^^, a wink and the ☆♥ variants, and sits below sleep. **This is when a cat's tail fur bristles** (§ the tail, bristle) |
+| Brow switch | 6~16 s, 1.5~4 s | shared | The ALT_BROW table (flat↔worry, angry→flat). **If the brow is none, the alt is none too** — a part that does not exist is not drawn (`draw/faceStates.js`) |
+| Mouth switch | 4~12 s, 0.8~2.2 s | shared | The ALT_MOUTH table — a slight shift to a neighbour in the same mood (line↔wave, dot↔3, smile→grin, grid→line…; [../character/parts.md](../character/parts.md) § mouth). There are four mouth sets: rest, alt, **angry** (the grid on humans and dogs, fangs on cats and imps) and **^^** (the panting tongue on dogs only). Priority angry > ^^ > alt > rest |
 
-## 몸통
+## The torso
 
-| 모션 | 파라미터 | human | pup | cat | imp |
+| Motion | Parameter | human | pup | cat | imp |
 | --- | --- | --- | --- | --- | --- |
-| 호흡 | 주기 2.6~5.4초 | ● | ● | ● | ● |
-| 스웨이 (좌우) | 진폭 rad, 주기 | 0.012~0.032, 2.6~4.6s | 0.004~0.01 | 0.002~0.007 | **0.015~0.04, 2~3.8s** |
-| 락킹 (앞뒤) | scale.y 진폭 | 0.006 | 0.003 | 0.004 | 0.004 |
-| 갸웃 | 간격, 진폭 | 7~18s, 0.1 | 9~20s, 0.08 | **5~12s, 0.14** | 8~18s, 0.09 |
-| 끄덕 | 9~24초, 0.7초 | ● | ● | ● | ● |
-| **머리 롤** | 진폭, 주기 | — | **0.07~0.14, 2.4~4.8s 상시** | — | — |
-| **킁킁 딥** | 간격 | — | **4~10s** | — | — |
-| **제자리 점프** (몸 행위 — 아래) | 간격 | 10~25s | 12~30s | 25~60s | **8~20s** |
-| **기지개** | 간격 | — | — | **10~26s** | — |
-| 부르르 | 간격 | 26~60s | 40~80s | 40~90s | **12~30s** |
-| **젤리 워블** | 진폭, 주파수 | — | — | — | **0.008~0.018, 1.1~1.9Hz 상시** |
+| Breathing | period 2.6~5.4 s | ● | ● | ● | ● |
+| Sway (side to side) | amplitude rad, period | 0.012~0.032, 2.6~4.6s | 0.004~0.01 | 0.002~0.007 | **0.015~0.04, 2~3.8s** |
+| Rocking (front to back) | scale.y amplitude | 0.006 | 0.003 | 0.004 | 0.004 |
+| Head tilt | interval, amplitude | 7~18s, 0.1 | 9~20s, 0.08 | **5~12s, 0.14** | 8~18s, 0.09 |
+| Nod | 9~24 s, 0.7 s | ● | ● | ● | ● |
+| **Head roll** | amplitude, period | — | **0.07~0.14, 2.4~4.8s, always on** | — | — |
+| **Sniff dip** | interval | — | **4~10s** | — | — |
+| **Hopping in place** (a body action — below) | interval | 10~25s | 12~30s | 25~60s | **8~20s** |
+| **Stretch** | interval | — | — | **10~26s** | — |
+| Shiver | interval | 26~60s | 40~80s | 40~90s | **12~30s** |
+| **Jelly wobble** | amplitude, frequency | — | — | — | **0.008~0.018, 1.1~1.9Hz, always on** |
 
-## 팔다리
+## Limbs
 
-레퍼런스 실측(video-notes 33~36): 팔은 벌린 채 미세하게만 흔들리고, 다리는 바닥에 못 박혀 있다.
-큰 이벤트는 4개체 × 4초 어디에도 없다. 그래서 상시 진폭은 보일 수준, 이벤트는 드물고 작다.
+Measured off the reference (video-notes 33~36): the arms stay open and only shake finely, and the legs are nailed to the floor.
+Big events appear nowhere across 4 individuals × 4 s. So the standing amplitude is at boil level and events are rare and small.
 
-| 모션 | human | imp | pup / cat |
+| Motion | human | imp | pup / cat |
 | --- | --- | --- | --- |
-| 팔 진자 (스웨이 반대 위상) | 0.045 | 0.06 | — |
-| 팔 관절 지터 | 7.3Hz 0.012 + 11.7Hz 0.008 | 같음 | — |
-| **idle** (A포즈, 아래) | 상시 — 행위 사이 | 같음 | — (팔 없음) |
-| **팔 행위** (아래 표) | 12~36초마다 1.5~7초 | 10~30초마다 | — |
-| 발 까딱 (0.09rad, 0.9초) | 12~30s | 14~34s | pup 14~32s / cat 16~36s |
-| 제자리 스텝 (0.07rad, 대각선 번갈아, 2.4초) | — | — | pup 30~70s / cat 40~90s |
-| 다리 관절 지터 | 6.1Hz 0.006 | 같음 | 같음 |
-| 점프 시 | 팔 위로 (hopY×4), 다리 접힘 | 같음 | 다리 접힘 |
+| Arm pendulum (anti-phase to the sway) | 0.045 | 0.06 | — |
+| Arm joint jitter | 7.3Hz 0.012 + 11.7Hz 0.008 | the same | — |
+| **idle** (the A-pose, below) | always on — between actions | the same | — (no arms) |
+| **Arm actions** (the table below) | 1.5~7 s every 12~36 s | every 10~30 s | — |
+| Paw flick (0.09 rad, 0.9 s) | 12~30s | 14~34s | pup 14~32s / cat 16~36s |
+| Step in place (0.07 rad, diagonals alternating, 2.4 s) | — | — | pup 30~70s / cat 40~90s |
+| Leg joint jitter | 6.1Hz 0.006 | the same | the same |
+| On a jump | arms up (hopY×4), legs folding | the same | legs folding |
 
-### 바인드 포즈와 팔 행위
+### The bind pose and arm actions
 
-**T포즈는 자세가 아니라 바인드 포즈다** — 캐릭터가 아무 모션도 받지 않을 때의 상태. 어깨 수평(1.57 outward),
-팔꿈치 0. 캐릭터에는 "자세"라는 개념이 없다. `character/draw/limbs.js` `BIND_ARM`, `motion/actions.js` `bindArm(side)`.
-`motion/index.js` `BIND_STATE`가 바인드의 상태 객체(전부 0·기본·T포즈)이고, 화면의 POSE BIND가 이걸
-리그에 넣어 정지 그림을 만든다.
+**The T-pose is not a posture but the bind pose** — the state when the character has received no motion at all. Shoulders horizontal (1.57 outward),
+elbows 0. A character has no concept of "posture". `BIND_ARM` in `character/draw/limbs.js`, `bindArm(side)` in `motion/actions.js`.
+`BIND_STATE` in `motion/index.js` is bind's state object (everything 0, default, T-pose), and the screen's POSE BIND feeds it to
+the rig to make a still drawing.
 
-**기본 모션은 idle이다.** 팔을 30° 벌리고 팔꿈치를 살짝 굽힌 A포즈(`ARM_POSES.idle`) + 상시 리듬(호흡·스웨이·
-팔 진자·관절 지터·시선·깜빡임). 레퍼런스의 "벌린 채 미세하게 흔들리는 팔"이 이것이다. 바인드(T)는 idle이
-아니다 — 모션이 없을 때의 리그 상태이고 BIND 뷰에서만 보인다. 태어난 개체는 시계의 현재 상태에 즉시 앉는다
-(`scene` `settle`) — T에서 idle로 휘돌며 내려오는 게 보이면 안 된다.
+**The base motion is idle.** An A-pose with the arms 30° open and the elbows slightly bent (`ARM_POSES.idle`) plus the standing rhythm (breathing, sway,
+arm pendulum, joint jitter, gaze, blinking). This is the reference's "arms open and shaking finely". Bind (T) is not idle —
+it is the rig's state when there is no motion and it is only visible in the BIND view. A newborn individual is seated in the clock's current state immediately
+(`settle` in `scene`) — the arms must never be seen swinging down from T to idle.
 
-**행위는 idle 위에 겹친다.** 행위가 정한 부위만 바뀌고 나머지(다른 팔·몸·얼굴)는 idle이 계속된다.
-그래서 인사(wave)는 **한 팔만** 정한다 — "손 흔들기는 손 움직임만". 다른 팔은 idle로 내려가 있다.
-만세·팔짱은 두 팔을 정한다. 한 팔 행위는 시작할 때 활동 팔의 좌우를 뽑는다(`actionSide`).
-언제 어떤 행위를 하는지는 `states.js` `stepArmAction`(종족별 목록·가중치는 `table.js` `armActions`, 간격은
-`armActionGap`), 행위의 **내용**은 `actions.js` `ACTIONS`·`ARM_POSES`다. 행위가 끝나면 idle로 돌아온다.
+**Actions stack on top of idle.** Only the parts the action decides change and the rest (the other arm, the body, the face) keeps idling.
+Which is why a wave decides **one arm only** — "waving is the hand's movement alone". The other arm stays down at idle.
+Arms-up and arms-crossed decide both. A one-arm action draws which arm is active at the start (`actionSide`).
+When and which action happens is `stepArmAction` in `states.js` (the per-species list and weights are `armActions` in `table.js`, and the interval
+`armActionGap`); the **content** of an action is `ACTIONS` and `ARM_POSES` in `actions.js`. When an action ends it returns to idle.
 
-| 행위 | 팔 | 자세 | 유지(초) | 뜻 | human | imp |
+| Action | Arms | Pose | Hold (s) | Meaning | human | imp |
 | --- | --- | --- | --- | --- | --- | --- |
-| **idle** | — | 30° 벌림, 팔꿈치 살짝, 바닥 위로 클램프 | 상시 | 기본 | ● | ● |
-| **wave** | 한 팔 | 손 위로, 팔꿈치 ±0.5rad 3Hz | 1.5~3 | **손 흔들어 인사** | 2 | 1.5 |
-| hi | 한 팔 | 한 손 곧게 위로 | 2~4 | 저요 | 1 | 1 |
-| point | 한 팔 | 옆으로 곧게 (수평 +17°) | 2~4 | 가리키기 | 1 | 1 |
-| think | 한 팔 | 손이 턱(앵커 chin) | 3~6 | 생각 | 1.5 | 0.5 |
-| salute | 한 팔 | 손이 눈썹 옆(앵커 brow) | 2~4 | 경례 | 0.7 | 0.5 |
-| raise | 두 팔 | 위로 (V) | 2~4 | 만세 | 1.5 | 2.5 |
-| cross | 두 팔 | 손이 반대쪽 가슴(앵커 chestFar) | 3~7 | 팔짱 | 2 | — |
-| hips | 두 팔 | 손이 허리(앵커 hip), 팔꿈치 바깥 | 3~7 | 허리에 손 | 2 | 1.5 |
-| behind | 두 팔 | 몸 뒤 (back 스케치) | 3~7 | 뒷짐 | 1.5 | 1 |
-| flap | 두 팔 | 어깨 ±0.28·팔꿈치 ±0.12rad 5Hz | 1.5~3 | 파닥임(좋아함) + ♥ | 1 | 2 |
+| **idle** | — | 30° open, elbows slightly bent, clamped above the floor | always | the base | ● | ● |
+| **wave** | one | The hand up, the elbow ±0.5 rad at 3Hz | 1.5~3 | **waving hello** | 2 | 1.5 |
+| hi | one | One hand straight up | 2~4 | me! | 1 | 1 |
+| point | one | Straight out to the side (horizontal +17°) | 2~4 | pointing | 1 | 1 |
+| think | one | The hand at the chin (the chin anchor) | 3~6 | thinking | 1.5 | 0.5 |
+| salute | one | The hand beside the brow (the brow anchor) | 2~4 | a salute | 0.7 | 0.5 |
+| raise | both | Up (a V) | 2~4 | arms up | 1.5 | 2.5 |
+| cross | both | The hands at the far side of the chest (the chestFar anchor) | 3~7 | arms crossed | 2 | — |
+| hips | both | The hands at the waist (the hip anchor), elbows out | 3~7 | hands on hips | 2 | 1.5 |
+| behind | both | Behind the body (the back sketch) | 3~7 | hands behind the back | 1.5 | 1 |
+| flap | both | Shoulder ±0.28, elbow ±0.12 rad at 5Hz | 1.5~3 | flapping (fond) + ♥ | 1 | 2 |
 
-발화는 human 2.4회/분, imp 2.8회/분, 좌우 반반(60초×40개체 측정). 네발(cat·pup)은 팔이 없다 — 아래 § 네발 idle과 행위.
-팔을 늘어뜨리는 행위는 따로 없다 — 그게 idle이다.
+Firing measures at 2.4/min on humans and 2.8/min on imps, split evenly left and right (measured over 60 s × 40 individuals). Quads (cat, pup) have no arms — see § quad idle and actions below.
+There is no action for letting the arms hang — that is idle.
 
-**팔 자세는 손 목표로 적는다 (IK).** 관절각 표가 아니다. `ARM_POSES[이름]`은 손 목표(`hand`) — reach 배수
-`[x 바깥, y 위]`거나 리그 앵커 이름 — 와 팔꿈치가 튀어나오는 쪽(`bend` out/down)을 적고,
-`solveArm(rig, side, pose)`가 두 마디 IK(코사인 법칙)로 [어깨, 팔꿈치] 세계각을 푼다.
-그래서 팔 길이(medium/long)·몸 크기가 달라도 "허리에 손"은 허리에, "턱에 손"은 턱에 간다.
-못 닿으면 그쪽으로 곧게 뻗고(짧은 팔의 경례), `floor`가 켜진 자세는 손이 바닥 아래로 못 간다
-(긴 팔의 idle — 팔꿈치가 바깥으로 접힌다). 어깨각은 (−135°, 225°]로 감아 리그의 이징이 먼 길로 돌지 않게 한다.
+**An arm pose is written as a hand target (IK).** Not as a table of joint angles. `ARM_POSES[name]` holds a hand target (`hand`) — either a multiple of reach,
+`[x outward, y up]`, or a rig anchor name — plus the side the elbow sticks out (`bend` out/down), and
+`solveArm(rig, side, pose)` solves the [shoulder, elbow] world angles with two-bone IK (the law of cosines).
+So whatever the arm length (medium/long) or body size, "hands on hips" lands on the hips and "a hand on the chin" lands on the chin.
+When it cannot reach, it stretches straight that way (a short arm's salute), and a pose with `floor` on cannot put the hand below the floor
+(a long arm's idle — the elbow folds outward). The shoulder angle is wound into (−135°, 225°] so the rig's easing does not take the long way round.
 
-리그 서술은 캐릭터가 준다: `character/draw/limbs.js` `armRig(spec)` → `{ x, y, upper, lower, anchors }`
-(어깨 위치, 위팔·아래팔 길이, 앵커 ground·hip·chestFar·chin·brow — 몸 좌표, 오른팔 기준). scene이
-`makeClock(seed, birth, species, armRig(spec))`로 넘긴다. 전부 스펙에서 나오는 정적 치수다.
+The rig description comes from character: `armRig(spec)` in `character/draw/limbs.js` → `{ x, y, upper, lower, anchors }`
+(shoulder position, upper and lower arm lengths, and the anchors ground, hip, chestFar, chin and brow — in body coordinates, for the right arm). The scene passes it in with
+`makeClock(seed, birth, species, armRig(spec))`. All of it is static dimensions coming from the spec.
 
-행위 위에 얹는 것: 팔 진자(스웨이 역위상)·점프 시 팔 위로·관절 지터는 어깨각에, 그 절반이 팔꿈치에 더해진다.
-인사·파닥임의 진동(`osc`)은 이징을 거치지 않고 리그 회전에 그대로 얹는다 — 이징을 거치면 3~5Hz가 뭉개진다.
-행위에 들어가고 나갈 때 0.35초 봉투로 페이드해 끝나는 순간 팔이 튀지 않게 한다.
-front/back(뒷짐) 전환은 어깨각이 목표 0.35rad 이내로 돌아온 뒤에만 한다.
+Laid on top of an action: the arm pendulum (anti-phase to the sway), arms-up on a jump and joint jitter are added to the shoulder angle, and half of that to the elbow.
+The oscillation of a wave or a flap (`osc`) is laid straight onto the rig rotation without easing — through easing, 3~5Hz gets smeared out.
+Going into and out of an action, a 0.35 s envelope fades it so the arm does not snap the moment it ends.
+The front/back (hands behind the back) switch only happens once the shoulder angle is back within 0.35 rad of the target.
 
-**행위 하나만 보려면** 화면 ACTION 카드에서 고른다. 그 층을 가진 종족 전원이 그 행위를 계속하고(팔 행위는 두발, 몸 행위는
-전원, 네발 행위는 네발) 다른 층은 idle이 된다. 한 팔 행위의 활동 팔은 시드 홀짝으로 좌우 섞임. IDLE은 모든 층 idle.
-`clock.force(action, side)`, `scene.setAction(name)`. AUTO로 돌리면 예약대로(idle + 이따금 행위, 층끼리 겹침).
+**To look at one action**, pick it from the screen's ACTION card. Every species with that layer keeps doing it (arm actions on bipeds, body actions on
+everyone, quad actions on quads) and the other layers go idle. The active arm of a one-arm action is split left and right on the parity of the seed. IDLE is every layer idle.
+`clock.force(action, side)`, `scene.setAction(name)`. Set to AUTO and it follows the schedule (idle plus the occasional action, layers overlapping).
 
-### 몸 행위 — 층은 겹친다
+### Body actions — the layers overlap
 
-행위는 **부위별 층**이다. 팔 층(`ACTIONS`, 두발)·몸 층(`BODY_ACTIONS`, 공통)·다리·꼬리 층(`QUAD_ACTIONS`, 네발)이
-각자 예약되고 idle 위에 겹친다 — 그래서 **점프하면서 인사**할 수 있고, 개가 뛰면서 꼬리를 흔든다.
-ACTION 카드로 하나를 강제하면 그 층만 계속하고 다른 층은 idle이 된다(판단용). 몸 행위는 강제하면 쉬었다 반복한다.
+Actions are **layers by body part**. The arm layer (`ACTIONS`, bipeds), the body layer (`BODY_ACTIONS`, shared) and the leg and tail layer (`QUAD_ACTIONS`, quads)
+schedule separately and stack over idle — which is why it can **wave while jumping**, and a dog can wag while running.
+Force one with the ACTION card and only that layer keeps going while the others go idle (for judging). A forced body action repeats with a rest between.
 
-| 몸 행위 | 무엇 | human | pup | cat | imp |
+| Body action | What | human | pup | cat | imp |
 | --- | --- | --- | --- | --- | --- |
-| **jump** | idle하다가 살짝(진폭 ×0.5) 잽싸게(0.42초) **3연속** 제자리 점프 — 웅크림→공중→착지, 팔은 딸려 오르고 다리는 접힌다 | 10~25s | 12~30s | 25~60s | 8~20s |
+| **jump** | From idle, **three in a row** light (amplitude ×0.5), quick (0.42 s) hops in place — crouch → airborne → landing, the arms dragged up and the legs folding | 10~25s | 12~30s | 25~60s | 8~20s |
 
-`actions.js` `jumpCurve(tau, def)`. 곡선은 `hopY`·`squashX/Y`로 나가고 팔에는 `hopY×4`가 어깨에 더해진다.
+`jumpCurve(tau, def)` in `actions.js`. The curve goes out as `hopY` and `squashX/Y`, and `hopY×4` is added to the shoulder for the arms.
 
-### 기본 상태(mode) — idle · sleep · walk · sit
+### The base state (mode) — idle · sleep · walk · sit
 
-개체는 늘 어떤 **기본 상태**에 있다. idle(서 있음) · sleep(엎드려 잠, 네발) · walk(걷기 — 자리를 옮긴다, 전 종족) · sit(앉기, 네발). 달리기 같은 상태가 생기면 여기에 붙는다.
-행위 층은 이 위에 겹친다 — sleep 중엔 행위·둘러보기·놀람·윙크가 쉬고, walk 중엔 몸 행위(점프)·네발 행위가 쉬되 팔 행위는 그대로다(걸으며 인사),
-sit 중엔 몸 행위(점프)만 쉬고 네발 행위(뒷발 긁기·꼬리 흔들기)·얼굴·둘러보기는 그대로다(앉아서 긁는다).
-`states.js` `initMode/stepMode`, `table.js` `modes`(비율)·`modeHold`(유지)·`walk`(걸음 파라미터). **전환은 idle을 거친다** — idle에서
-다른 상태 하나로(가중치), 다른 상태에서는 idle로. 잠에서 바로 걷지 않는다.
+An individual is always in some **base state**. idle (standing) · sleep (lying asleep, quads) · walk (walking — it moves, every species) · sit (sitting, quads). A state like running would join here.
+The action layers stack on top — while asleep, actions, looking, startle and winking all rest; while walking, body actions (jumping) and quad actions rest while arm actions carry on (waving as it walks);
+and while sitting only body actions (jumping) rest, with quad actions (scratching with a hind paw, wagging), the face and looking carrying on (it scratches while sitting).
+`initMode`/`stepMode` in `states.js`; `modes` (the ratios), `modeHold` (the hold) and `walk` (the step parameters) in `table.js`. **Transitions pass through idle** — from idle
+into one other state (weighted), and from another state back to idle. It never goes straight from sleep to walking.
 
-| 종족 | 상태 비율 (idle에서 넘어갈 때) | 유지 | walk (hz 걸음 / leg 다리 rad / bob 들썩 / sway 기움 / arm 팔 / trip 거리(셀) / speed 셀·초) |
+| Species | State ratio (crossing over from idle) | Hold | walk (hz step / leg leg rad / bob lift / sway lean / arm arms / trip distance (cells) / speed cells·s) |
 | --- | --- | --- | --- |
-| human | walk만 (idle 4 : walk 1로 시작) | idle 30~90초, walk = 거리/속도(2~4초) | 1.8 / 0.30 / 0.010 / 0.05 / 0.14 / 0.10~0.18 / 0.045 |
-| imp | walk만 (idle 4 : walk 1) | idle 25~80초 | 2.3 / 0.36 / 0.012 / 0.06 / 0.16 / 0.10~0.18 / 0.06 — 통통 튀는 걸음 |
-| pup | sleep 1 : walk 1.5 : sit 1.5 (idle 3) | idle 40~120초, sleep 25~60초, sit 15~45초 | 2.6 / 0.32 / 0.008 / 0 / 0 / 0.10~0.16 / 0.07 — 종종걸음 |
-| cat | sleep 1 : walk 1 : sit 1.5 (idle 2) | idle 40~120초, sleep 30~90초, sit 20~60초 | 2.2 / 0.28 / 0.006 / 0 / 0 / 0.10~0.16 / 0.05 |
+| human | walk only (starting at idle 4 : walk 1) | idle 30~90 s, walk = distance/speed (2~4 s) | 1.8 / 0.30 / 0.010 / 0.05 / 0.14 / 0.10~0.18 / 0.045 |
+| imp | walk only (idle 4 : walk 1) | idle 25~80 s | 2.3 / 0.36 / 0.012 / 0.06 / 0.16 / 0.10~0.18 / 0.06 — a bouncy walk |
+| pup | sleep 1 : walk 1.5 : sit 1.5 (idle 3) | idle 40~120 s, sleep 25~60 s, sit 15~45 s | 2.6 / 0.32 / 0.008 / 0 / 0 / 0.10~0.16 / 0.07 — a trot |
+| cat | sleep 1 : walk 1 : sit 1.5 (idle 2) | idle 40~120 s, sleep 30~90 s, sit 20~60 s | 2.2 / 0.28 / 0.006 / 0 / 0 / 0.10~0.16 / 0.05 |
 
-**걷기는 자리를 옮긴다 — 나갔다가 돌아온다.** 집(셀 가운데)에서 왼쪽이나 오른쪽으로(rng) trip만큼 걸어가 멈추고, 거기서 평소처럼
-idle(네발은 자기도)한다. 다음 걷기는 **무조건 온 방향으로** 집에 돌아온다. 한 구간의 길이 = 거리/속도이고 시작·끝은 smoothstep이라
-미끄러지듯 서지 않는다. 상태 객체 `walkX`(집 기준 x, 셀 단위)와 `facing`(±1)을 scene이 group.position.x·scale.x에 넣는다 —
-**네발은 걷는 방향을 본다**(오른쪽이면 거울 -1, 0을 지나며 종이처럼 얇아졌다 뒤집힌다; 집에 돌아와 서면 다시 왼쪽), 두발은 안 뒤집고
-걷는 쪽을 **바라본다**(둘러보기 목표를 그쪽으로). 강제 WALK는 집↔밖을 쉬지 않고 왕복한다.
+**Walking moves it — out and back.** From home (the middle of the cell) it walks trip to the left or right (rng), stops and idles there as usual (a quad may even sleep).
+The next walk **always** brings it home the way it came. One trip's length = distance/speed, and the start and end are smoothstepped so it does not skid to a halt.
+The scene puts the state object's `walkX` (x from home, in cells) and `facing` (±1) into group.position.x and scale.x —
+**a quad faces its walking direction** (mirrored −1 going right, thinning to paper through 0 and flipping; standing back home it faces left again), while a biped does not flip but
+**looks** the way it walks (the look target goes that way). A forced WALK paces home↔out without a rest.
 
-`walkK`(0.06/프레임 이징)로 걸음을 섞는다. 걸음 위상 ph = t·2π·hz + 개체 위상(시드) — 다리는 네발이면 대각선 쌍(0·3 / 1·2)이
-sin(ph)·leg로 번갈아 앞뒤로, 두발이면 두 다리가 번갈아 벌렸다 모은다(정면 걸음). 걸음마다(주기의 두 배) 몸이 bob만큼 들썩이고 머리도
-그 절반, 두발은 sway만큼 좌우로 기울고 팔이 다리와 엇갈려 arm만큼 흔들린다, 네발은 꼬리가 걸음에 맞춰 살랑(0.12).
+`walkK` (eased at 0.06/frame) blends the walking in. The step phase ph = t·2π·hz + a per-individual phase (from the seed) — on a quad the diagonal pairs (0·3 / 1·2)
+alternate front and back by sin(ph)·leg, and on a biped the two legs alternately open and close (a walk seen head-on). Each step (twice the period) the body lifts by bob and the head by
+half that; a biped leans side to side by sway and swings its arms counter to its legs by arm; and a quad's tail sways with the step (0.12).
 
-**잠 자세**(네발만 정의): `sleepK`(0.03/프레임 이징)로 idle과 섞는다 — 다리를 몸 밑으로 접고(앞다리 +1.35/+1.25, 뒷다리
-−1.3/−1.2 rad), 몸이 밑단(`rig.legTop`)까지 내려앉아 납작해지고(squash), 꼬리를 내리고(−0.55), 머리를 한쪽으로 기울여(0.32,
-시드 홀짝) 살짝 숙이고(−0.05), 눈을 감고(lid 1 — 정지 눈은 scene의 잠 눈꺼풀 덮개+아치, 살아 있는 눈은 눈꺼풀 위에 감은 눈 선), 시선·얼굴 돌림은 가운데·아래로.
-호흡은 느리고(×0.65) 깊게(×1.6). 6초마다 z 이모지. 잠들고 깨는 건 이징이라 튀지 않는다. ACTION 카드 SLEEP으로 강제.
+**The sleeping pose** (defined for quads only): blended with idle by `sleepK` (eased at 0.03/frame) — the legs fold under the body (front legs +1.35/+1.25, hind legs
+−1.3/−1.2 rad), the body settles to the hem (`rig.legTop`) and flattens (squash), the tail lowers (−0.55), the head tilts to one side (0.32,
+on the parity of the seed) and dips slightly (−0.05), the eyes close (lid 1 — a static eye gets the scene's sleep lid cover plus an arch; a live eye gets the shut line over the lid), and the gaze and face turn go centre and down.
+Breathing is slow (×0.65) and deep (×1.6). A z emoji every 6 s. Falling asleep and waking are eased, so nothing snaps. Force it with the ACTION card's SLEEP.
 
-**앉은 자세**(네발만, `actions.js sitPose(rig.body)` — 리그 치수 `motionRig().body`에서 개체마다 푼다): `sitK`(0.05/프레임 이징, 1초쯤)로 idle과 섞는다 —
-몸을 **앞다리 뿌리를 축으로** 뒤가 내려가게 기울여(`bodyTilt`, scene이 bodyGroup을 그 축으로 돌린다) 엉덩이 기준점(몸 뒤쪽 아래)이 바닥에 닿게 하고,
-앞다리는 세계각 0(수직)으로 세우고, 뒷다리는 앞으로 접어 발이 바닥에 닿는 각으로 둔다. 머리는 축 바로 위라 그 자리(깨어 있음 — 얼굴·둘러보기 그대로).
-꼬리는 몸과 같이 기울고 조금 더 내려(−0.3) 바닥에 눕고, 고양이 아치는 80% 빠진다. 다리가 한 마디라(무릎 없음) 몸이 짧고 다리가 길면 뒷발이 앞발을 지나치므로
-기울기를 줄여 뒷발이 앞 쌍 사이까지만 오게 하고, 그래도 엉덩이가 0.045 넘게 뜨는 체형(긴 다리 + 짧은 몸, 600마리 중 9%)은 **앉지 못한다** — sit 상태 동안 서 있는다.
-앉은 채 뒷발 긁기·꼬리 흔들기는 그대로(행위 중인 다리는 행위가 이긴다), 점프는 쉰다. 실측 cat 12.9% · pup 11.1%(180초×40마리, sit > 0.5). ACTION 카드 SIT으로 강제.
+**The sitting pose** (quads only, `sitPose(rig.body)` in `actions.js` — solved per individual from the rig dimensions `motionRig().body`): blended with idle by `sitK` (eased at 0.05/frame, about a second) —
+the body tilts about **the front legs' root** so the back goes down (`bodyTilt`; the scene rotates bodyGroup about that axis), bringing the hip reference point (low at the back of the body) to the floor;
+the front legs stand at world angle 0 (vertical) and the hind legs fold forward to the angle that puts the feet on the floor. The head is directly above the axis and stays put (it is awake — the face and looking carry on).
+The tail tilts with the body and drops a little further (−0.3) to lie on the floor, and the cat arch drops out by 80%. A leg is one bone (no knee), so with a short body and long legs the hind foot passes the front one; the tilt
+is then reduced so the hind foot comes no further than between the front pair, and a build whose hips still sit more than 0.045 off the floor (long legs plus a short body, 9% of 600) **cannot sit** — it stands through the sit state.
+Scratching with a hind paw and wagging carry on while seated (a leg mid-action wins), while jumping rests. Measured at cat 12.9% and pup 11.1% (180 s × 40 creatures, sit > 0.5). Force it with the ACTION card's SIT.
 
-### 네발 idle과 행위
+### Quad idle and actions
 
-네발도 **바인드 ≠ idle**이다. 바인드는 다리 수직·꼬리 그린 그대로(BIND 뷰). idle은 **선 자세** — 앞다리는 살짝
-앞으로, 뒷다리는 뒤로 딛고(`table.js` `legStance` pup [−0.05, −0.02, 0.09, 0.06] / cat [−0.03, 0, 0.06, 0.03] rad),
-꼬리는 개는 올리고(`tailIdle` 0.25 — 골격 모양 그대로 뿌리만 든다), **고양이는 아치**다 — 골격(curl·flag·longtail·kink…)이 뭐든 깨어 있는 idle에선
-관절을 아치 세계각(`tailIdlePose` [1.85, 1.3, 0.05, −75°] rad, 뿌리→끝: 살짝 머리 쪽으로 기울어 오르다 끝이 **머리 반대편(뒤)** 으로 넘어가 **−75°로 내려오는**
-∩ 아치 — 등 뒤 허공에 걸린다)으로 85% 섞는다(`tailArch`). 끝 두 마디는 개체 `tailLift`로 ±0.12(±7°) — 살짝만 다르다. 세움(^^)이 오면 그만큼 빠지고
-잠들면 골격 그대로 접힌다.
-그 위에 리듬(호흡·롤·꼬리 스위시)과 이벤트(까딱·스텝·플릭)가 얹힌다.
+For quads too, **bind ≠ idle**. Bind is the legs vertical and the tail exactly as drawn (the BIND view). idle is **the standing stance** — the front legs plant slightly
+forward and the hind legs back (`legStance` in `table.js`: pup [−0.05, −0.02, 0.09, 0.06] / cat [−0.03, 0, 0.06, 0.03] rad),
+and the tail lifts on a dog (`tailIdle` 0.25 — the skeleton shape as drawn, only the root raised) while **a cat arches** — whatever the skeleton (curl, flag, longtail, kink…), in an awake idle
+the joints blend 85% toward the arch world angles (`tailIdlePose` [1.85, 1.3, 0.05, −75°] rad, root→tip: rising with a slight lean toward the head, then the tip going over to **the far side from the head (back)** and coming
+**down to −75°** — an ∩ arch hanging in the air behind its back) (`tailArch`). The top two bones vary by the individual's `tailLift` by ±0.12 (±7°) — only slightly. A raise (^^) takes it out by that much, and
+sleep folds it back to the skeleton.
+Rhythm (breathing, roll, the tail swish) and events (flicks, steps) are laid on top.
 
-행위는 idle 위에 겹치고 정하지 않은 다리·꼬리는 idle 그대로. 리그가 피벗 회전뿐이라 IK 없이 각도다 (`QUAD_ACTIONS`).
+Actions stack over idle and any leg or tail not decided stays at idle. The rig is pivot rotation only, so these are angles with no IK (`QUAD_ACTIONS`).
 
-| 행위 | 무엇 | 유지(초) | 뜻 | pup | cat |
+| Action | What | Hold (s) | Meaning | pup | cat |
 | --- | --- | --- | --- | --- | --- |
-| scratch | 뒷다리 하나를 −0.9rad(앞·위로) + ±0.15rad 6Hz | 1~2.2 | 뒷발로 긁기 | 1 | 1 |
-| wag | 꼬리 ±0.35rad 4Hz | 1.5~3 | 꼬리 흔들기 (개만 — 고양이는 개처럼 흔들지 않는다. ACTION 카드로 강제해도 고양이는 idle, 걷기 꼬리 살랑도 개만 `walk.tail`) | 2.5 | — |
+| scratch | One hind leg to −0.9 rad (forward and up) plus ±0.15 rad at 6Hz | 1~2.2 | scratching with a hind paw | 1 | 1 |
+| wag | The tail ±0.35 rad at 4Hz | 1.5~3 | wagging the tail (dogs only — a cat does not wag like a dog. Forced from the ACTION card a cat still idles, and the walking tail sway is dogs-only too, `walk.tail`) | 2.5 | — |
 
-간격 pup 8~22초 / cat 10~28초. 어느 다리인지는 시작할 때 쌍 안에서 뽑는다(`actionSide` = 다리 index).
-진동은 `legOsc`(다리)·`tailAngle`(꼬리)에 이징 없이, 0.35초 봉투로. 앞발 들고 인사하는 행위는 없다 — 사람 같아 보인다.
-ACTION 카드의 SCRATCH/WAG는 네발에게만 먹는다. 제자리 점프는 몸 층(위)이라 네발도 한다.
+Interval pup 8~22 s / cat 10~28 s. Which leg is drawn within the pair at the start (`actionSide` = the leg index).
+The oscillation goes onto `legOsc` (legs) and `tailAngle` (the tail) without easing, faded by a 0.35 s envelope. There is no raise-a-front-paw-and-wave action — it looks human.
+The ACTION card's SCRATCH/WAG only bite on quads. Hopping in place is on the body layer (above), so quads do it too.
 
-## 꼬리 (네발) — 네 마디 체인
+## The tail (quads) — a four-bone chain
 
-꼬리는 척추를 4등분한 **네 마디 체인**(`limbs.js TAIL_BONES`)이다 — 관절마다 그룹이 겹겹이(bone[i]는 bone[i-1]의 자식). 뿌리 마디에
-`tailAngle`(스위시·wag·걷기·잠), 끝 마디에 `tailTip`(톡톡·떨림·팔로스루), 그리고 **세움 `tailRaise`(0~1)** 은 관절마다 쉼 자세(척추 방향)에서
-수직으로 섞는다 — 골격이 말렸든 뒤로 뻗었든 상관없이 **띡 곧게 선다** (관절 전부 π/2, 굽는 변형 없음).
-`table.js` `tailTip`이 끝 마디·세움 파라미터. 개와 고양이는 **반대**로 읽는다 — 개는 빠른 흔들기가 기쁨이고, 고양이는 빠른 움직임이 짜증·흥분,
-기쁨은 **세우는 것**이다 (리서치: 세움/물음표 = 반가움, 끝 떨림 = 아주 반가움, 느린 스위시 = 집중·약한 짜증, 끝 톡톡 = 관심, 채찍질 = 화남,
-부풀림 = 놀람, 몸에 감기 = 편안, 걸을 땐 거의 고정).
+The tail is **a four-bone chain** splitting the spine into 4 (`TAIL_BONES` in `limbs.js`) — a group per joint, nested (bone[i] is a child of bone[i-1]). The root bone takes
+`tailAngle` (swish, wag, walking, sleep), the tip bone `tailTip` (tapping, tremble, follow-through), and **the raise `tailRaise` (0~1)** blends each joint from the rest pose (the spine direction)
+toward vertical — whether the skeleton curls or reaches back, it **shoots straight up** (every joint at π/2, with no bent variant).
+`tailTip` in `table.js` holds the tip bone and raise parameters. Dogs and cats read it **oppositely** — for a dog fast wagging is joy, while for a cat fast movement is irritation or excitement and
+joy is **holding it up** (research: raised/a question mark = greeting, a trembling tip = a very glad greeting, a slow swish = focus or mild irritation, tip tapping = interest, lashing = anger,
+puffed = a startle, wrapped round the body = at ease, and nearly fixed while walking).
 
-| 모션 | 종류 | pup | cat |
+| Motion | Kind | pup | cat |
 | --- | --- | --- | --- |
-| 스위시 (뿌리) | 리듬 | — | **진폭 0.16~0.3, 주기 2.4~5초** — 느리게 |
-| 팔로스루 (끝) | 리듬 | 뿌리 각속도 × 0.05, 임계감쇠 — 흔들 때 끝이 늦게 따라온다 | × 0.06 |
-| 플릭 / **끝 톡톡** | 이벤트 | 통째로 0.35rad × 3, 0.5초, 3~9초마다 | **끝만** 0.35rad 6Hz × 3, 0.5초, 8~20초마다 (뿌리는 가만) |
-| 걷기 살랑 (뿌리) | 상태 | ±0.12 걸음에 맞춰 (`walk.tail`) | 없음 (고정) |
-| 흔들기 wag | 행위 | ±0.35 4Hz (`QUAD_ACTIONS`), 6~16초마다 (wag 3.5 : scratch 1) · **^^ 웃을 때마다도 흔든다**(`wagOnHappy`, 임계감쇠 봉투) | 없음 (강제해도 idle) |
-| 채찍질 | — | — | **없다** — 고양이가 꼬리를 치는 모션은 금지 (코드도 없다. 개의 흔들기는 wag) |
-| **idle 자세** arch | 상태 | 골격 그대로 (뿌리 +0.25) | **아치** — 관절 세계각 [1.85, 1.3, 0.05, −75°] × 85% (`tailIdlePose`, 끝이 머리 반대편으로 넘어가 −75°로 내려오는 ∩), 끝 두 마디 개체 tailLift ±0.12. 깨어 있고 안 서 있을 때 |
-| **세움** raise | 기분 좋음(^^)에 딸림 | — | **^^ 웃는 동안**(깜빡임 ^^ 22%·♥ 이모지·♥ 놀람 — 3초 이상) `tailRaise` 0→1(0.4초), 웃는 동안 유지, 0.6초에 내림. 관절 목표각으로 골격과 무관하게 **관절 전부 정확히 수직(π/2)** — 굽는 변형은 없다(굽으면 선 게 아니라 휜 것으로 읽힌다). 서 있는 동안 스위시·톡톡·팔로스루는 (1 − tailRaise)로 죽인다 — **빳빳하다**. 선 꼬리는 몸·머리 위에 그린다(2.08 — 큰 머리에 가려 안 보이지 않게, [../rig.md](../rig.md)) |
-| **곤두섬** puff | **화남**에 딸림 | — | 털은 무섭거나 화날 때 선다 — 화내는 동안 꼬리 **굵기**만 1 → 1.6배 (`tailPuff`, 길이 그대로). 봉투는 화남(`state.angry`) 그대로: 0.1초에 곤두서고 화내는 3~5초 유지, 0.1초에 가라앉음. 놀람에는 안 선다 |
-| 잠 | 상태 | 뿌리 −0.55 | 뿌리 −0.55 + 끝 −0.6 (몸에 감는다) |
+| Swish (the root) | rhythm | — | **amplitude 0.16~0.3, period 2.4~5 s** — slow |
+| Follow-through (the tip) | rhythm | the root's angular velocity × 0.05, critically damped — the tip lags behind on a wag | × 0.06 |
+| Flick / **tip tapping** | event | The whole thing 0.35 rad × 3, 0.5 s, every 3~9 s | **the tip alone** 0.35 rad at 6Hz × 3, 0.5 s, every 8~20 s (the root stays put) |
+| Walking sway (the root) | state | ±0.12 with the step (`walk.tail`) | none (fixed) |
+| wag | action | ±0.35 at 4Hz (`QUAD_ACTIONS`), every 6~16 s (wag 3.5 : scratch 1) · **it also wags whenever it smiles ^^** (`wagOnHappy`, a critically damped envelope) | none (it idles even when forced) |
+| Lashing | — | — | **there is none** — a cat lashing its tail is forbidden as a motion (there is no code for it. A dog's wag is wag) |
+| **idle pose** arch | state | The skeleton as-is (the root +0.25) | **the arch** — joint world angles [1.85, 1.3, 0.05, −75°] × 85% (`tailIdlePose`, an ∩ whose tip goes over to the far side from the head and comes down to −75°), the top two bones ±0.12 by the individual's tailLift. While awake and not raised |
+| **raise** | tied to a good mood (^^) | — | **while smiling ^^** (a ^^ blink 22%, the ♥ emoji, a ♥ startle — 3 s or more) `tailRaise` goes 0→1 (0.4 s), holds for the whole smile and drops in 0.6 s. As a target angle per joint, independent of the skeleton, **every joint is exactly vertical (π/2)** — with no bent variant (bent reads as curved rather than raised). While raised, the swish, tapping and follow-through are killed by (1 − tailRaise) — it is **stiff**. A raised tail is drawn above the body and head (2.08 — so a big head does not hide it, [../rig.md](../rig.md)) |
+| **bristle** puff | tied to **anger** | — | Fur stands up when scared or angry — while angry, only the tail's **thickness** goes 1 → 1.6× (`tailPuff`, the length unchanged). The envelope follows anger (`state.angry`) as it is: bristling in 0.1 s, held for the 3~5 s of anger, subsiding in 0.1 s. It does not bristle on a startle |
+| Sleep | state | The root −0.55 | The root −0.55 plus the tip −0.6 (wrapped round the body) |
 
-## 이모지 애니메이션
+## Emoji animation
 
-머리 위 ♥ ! ? … ; 글리프. **모션이 아니라 따로 트리거되는 층**이다 (`motion/emoji.js`) — 모션이 이모지를 쥐고 있지 않고,
-쏘고 나면 이모지는 자기 길이만큼 혼자 논다. 채널은 하나(새 트리거가 이전 것을 끊는다). scene은 `state.emoji`의 프레임
-(dy·scale·rot·opacity)을 그대로 입히고 모양만 굽는다(`scene/emoji.js`). 이모지는 머리에 붙이지 않는다 — 씬 루트에서
-머리 위 지점을 이징으로 따라가 갸웃·점프 때 한 박자 늦게 끌려온다 ([../rig.md](../rig.md)).
+The ♥ ! ? … ; glyphs above the head. **Not a motion but a separately triggered layer** (`motion/emoji.js`) — a motion does not hold the emoji;
+once fired it plays out its own length on its own. There is one channel (a new trigger cuts the previous one off). The scene applies `state.emoji`'s frame
+(dy, scale, rot, opacity) as-is and only bakes the shapes (`scene/emoji.js`). The emoji is not attached to the head — it eases toward
+the point above the head from the scene root, so it is dragged a beat behind on a tilt or a jump ([../rig.md](../rig.md)).
 
-| 이모지 | 길이 | 곡선 |
+| Emoji | Length | Curve |
 | --- | --- | --- |
-| heart ♥ | 2.2초 | float — 떠오르며 심장박동처럼 커졌다 작아진다 |
-| bang ! | 1.3초 | pop — 크게 튀어나왔다 제자리, 살짝 떨림 |
-| quest ? | 2.2초 | wobble — 좌우로 갸웃갸웃 |
-| dots … | 2.6초 | mumble — 낮게 떠서 잔잔히 |
-| zzz z | 2.8초 | float — 떠오른다 (잠) |
-| sweat ; | 1.8초 | drip — 관자놀이 옆(정수리가 아니라 머리 옆 위)에 맺혀 천천히 흘러내린다. 옅은 파랑 물방울 |
+| heart ♥ | 2.2 s | float — floats up, growing and shrinking like a heartbeat |
+| bang ! | 1.3 s | pop — pops out big, back in place, with a slight tremble |
+| quest ? | 2.2 s | wobble — tilting side to side |
+| dots … | 2.6 s | mumble — floats low and gently |
+| zzz z | 2.8 s | float — floats up (sleep) |
+| sweat ; | 1.8 s | drip — beads beside the temple (high on the side of the head, not on the crown) and runs slowly down. A pale blue drop |
 
-**트리거** — 두 곳에서 온다.
+**Triggers** — they arrive from two places.
 
-| 트리거 | 무엇을 | 언제 |
+| Trigger | What | When |
 | --- | --- | --- |
-| idle 예약 (`events.stepEmojiSchedule`) | 종족 목록에서 하나 — human/pup heart·bang·quest·sweat, cat heart·quest·bang, imp **dots×2**·bang·quest·heart·sweat | 14~40초마다 |
-| 행위 `emoji` 필드 (`ACTIONS`·`QUAD_ACTIONS`) | flap 파닥임 → ♥, think 생각 → ?, wag 꼬리 흔들기 → ♥ | 행위가 **시작하는 순간** 한 번 |
-| 이벤트 | 놀람(동공 수축) → ! | 놀람이 시작할 때 30% (자는 중엔 안 놀란다) |
-| 기본 상태 | sleep → z | 자는 동안 6초마다 (개체별 위상, rng 없음) |
+| The idle schedule (`events.stepEmojiSchedule`) | One from the species list — human/pup heart, bang, quest, sweat; cat heart, quest, bang; imp **dots×2**, bang, quest, heart, sweat | Every 14~40 s |
+| An action's `emoji` field (`ACTIONS`, `QUAD_ACTIONS`) | flap → ♥, think → ?, wag → ♥ | Once, **the moment the action starts** |
+| Events | Startle (the pupil shrinking) → ! | 30% of the time a startle starts (it does not get startled while asleep) |
+| The base state | sleep → z | Every 6 s while asleep (a per-individual phase, no rng) |
 
-새 모션에 이모지를 붙이려면 그 행위에 `emoji: "kind"`를 적는다 — 그게 이모지 트리거다. 발화 실측 human 3.6 · imp 4.4 · pup 5.6 · cat 4.2 회/분.
+To attach an emoji to a new motion, write `emoji: "kind"` on that action — that is the emoji trigger. Firing measures at human 3.6 · imp 4.4 · pup 5.6 · cat 4.2 per minute.
 
-## 재생성
+## Regen
 
-슬롯당 6~14초. **기본 꺼짐(STILL)** — 형태는 NEW SEED로만 바뀐다. LIVE를 켜면 개체가
-각자의 시계로 교체되고 종족은 슬롯에 남는다. 새 개체의 시계는 그 시각을 출생 시각으로 받는다
-(안 그러면 예약이 전부 과거가 되어 매 프레임 재생성되는 폭주가 난다).
+6~14 s per slot. **Off by default (STILL)** — form changes only through NEW SEED. Turn LIVE on and individuals are
+replaced on their own clocks while the species stays with the slot. A new individual's clock takes that moment as its birth time
+(otherwise every schedule is in the past and it runs away, regenerating every frame).
 
-## 보일은 모션이 아니다
+## The boil is not a motion
 
-선이 끓는 것(보일)은 손그림 **재질**이지 캐릭터의 행위가 아니다. 바인드 포즈에서도 선은 끓는다.
-[../drawing.md](../drawing.md) § 보일. 화면의 INK BOIL/STILL이 이 축이고, POSE MOTION/BIND와 별개다.
+The lines boiling is a hand-drawn **material**, not something the character does. The lines boil even in the bind pose.
+[../drawing.md](../drawing.md) § the boil. The screen's INK BOIL/STILL is this axis, separate from POSE MOTION/BIND.
 
-## 새 모션을 넣을 때
+## Adding a new motion
 
-1. `motion/table.js`에 종족별 파라미터를 넣는다. 없는 종족은 `null`
-2. 종류를 정한다 — 리듬(`rhythm.js`) / 이벤트(`events.js`) / 상태(`states.js`) — 그 파일에 `initXxx`·`stepXxx` 추가 → `motion/index.js`에서 **기존 순서 뒤에** 호출 (앞에 끼우면 시드가 깨진다)
-3. `scene/animate.js` `applyState`에서 리그에 적용
-4. 60초 시뮬로 발화 빈도를 센다 (아래 명령). 눈으로만 판단하지 않는다
+1. Put the per-species parameters in `motion/table.js`. `null` for species without it
+2. Settle the kind — rhythm (`rhythm.js`) / event (`events.js`) / state (`states.js`) — add `initXxx` and `stepXxx` in that file → call it in `motion/index.js` **after the existing order** (insert it before and seeds break)
+3. Apply it to the rig in `applyState` in `scene/animate.js`
+4. Count the firing frequency with a 60 s simulation (the command below). Never judge by eye alone
 
-**새 행위**는 더 짧다 — 먼저 어느 **층**인지 정한다(팔 `ACTIONS` / 몸 `BODY_ACTIONS` / 네발 `QUAD_ACTIONS`, [rules.md](rules.md)).
-- 팔: `ARM_POSES`에 자세(손 목표·bend), `ACTIONS`에 행위(자세·arms one/both·hold·label), `table.js` `armActions`에 종족별
-  가중치. 손 위치는 계산으로 확인한다 — `solveArm` 결과를 FK로 되돌려 손이 앵커에 닿는지·바닥 위인지 본 뒤 ACTION 카드로 강제해 본다
-- 몸: `BODY_ACTIONS`에 곡선(지금은 jump — 필요하면 `jumpCurve`처럼 곡선 함수를 하나 더), `table.js` `bodyActions`
-- 네발: `QUAD_ACTIONS`에 어느 다리·각도·진동 또는 꼬리 진동, `table.js` `quadActions`
-- 이모지를 동반하면 그 행위에 `emoji: "kind"` 한 줄 (§ 이모지 애니메이션)
-rng 순서는 안 바뀐다 (예약 층은 이미 있다).
+**A new action** is shorter — first settle which **layer** it belongs to (arm `ACTIONS` / body `BODY_ACTIONS` / quad `QUAD_ACTIONS`, [rules.md](rules.md)).
+- Arm: the pose (hand target, bend) in `ARM_POSES`, the action (pose, arms one/both, hold, label) in `ACTIONS`, and the per-species weights in `armActions` in `table.js`. Check the hand position by calculation — run `solveArm`'s result back through FK to see whether the hand reaches the anchor and stays above the floor, then force it from the ACTION card
+- Body: the curve in `BODY_ACTIONS` (currently jump — add another curve function like `jumpCurve` if needed), and `bodyActions` in `table.js`
+- Quad: which leg, the angle and oscillation, or a tail oscillation, in `QUAD_ACTIONS`, and `quadActions` in `table.js`
+- If it comes with an emoji, one line of `emoji: "kind"` on that action (§ emoji animation)
+The rng order does not change (the scheduling layer already exists).
 
 ```bash
 node --input-type=module -e "

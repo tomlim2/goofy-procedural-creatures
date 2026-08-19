@@ -1,153 +1,155 @@
-# 캐릭터 규칙
+# Character rules
 
-`src/character/`를 고칠 때 지키는 것. 무엇이 있는지는 [types.md](types.md)·[parts.md](parts.md).
+What to keep to when changing `src/character/`. What exists is in [types.md](types.md) and [parts.md](parts.md).
 
-순서: **원칙**(형태/모션 분리, 종족 제한 위치) → **절차**(파츠·슬롯·아키타입 추가, 그리기) → **검증**(가중치·census).
+Order: **principles** (separating form from motion, where species restrictions live) → **procedure** (adding a part, a slot, an archetype; drawing) → **verification** (weights, census).
 
-## 형태와 모션을 섞지 않는다
+## Never mix form and motion
 
-슬롯은 **형태(what it looks like)** 만 담는다. **자세·동작(what it does)** 은 `motion/`의
-상태다. 한 슬롯에 둘을 섞으면 "뒷짐진 개체는 영원히 뒷짐"이 된다.
+A slot holds **form (what it looks like)** only. **Pose and action (what it does)** are states in `motion/`.
+Mix the two into one slot and you get "an individual with its hands behind its back has them there forever".
 
-| | 어디에 | 예 |
+| | Where | Example |
 | --- | --- | --- |
-| 형태 | `SLOTS.arms`, `SLOTS.legs`, `SLOTS.armLength` | stick / sleeve / stubby / mitten, boots / tiptoe, medium / long |
-| 바인드 포즈 | 코드 상수 (`draw/limbs.js` `BIND_ARM` = T포즈) | 모션이 없을 때. 캐릭터에 "자세"는 없다 |
-| 리그 서술 | `draw/limbs.js` `armRig(spec)` | 어깨 위치·팔 길이·몸 앵커(허리·턱·눈썹…). 캐릭터가 모션에 주는 정적 치수 — 행위를 이 개체에 IK로 풀 때 쓴다 |
-| idle · 행위 | `motion/actions.js` (내용), `motion/table.js` armActions (종족별 빈도) | idle(A포즈)이 기본, 그 위에 만세 · 손 흔들어 인사 · 팔짱 · 허리손 · 턱에 손 · 경례 · 뒷짐 · 파닥임… 행위가 정한 팔만 바뀐다 |
+| Form | `SLOTS.arms`, `SLOTS.legs`, `SLOTS.armLength` | stick / sleeve / stubby / mitten, boots / tiptoe, medium / long |
+| The bind pose | A code constant (`BIND_ARM` = the T-pose in `draw/limbs.js`) | When there is no motion. A character has no "posture" |
+| The rig description | `armRig(spec)` in `draw/limbs.js` | Shoulder position, arm lengths, body anchors (waist, chin, brow…). The static dimensions character gives motion — used to solve an action onto this individual by IK |
+| idle · actions | `motion/actions.js` (the content), `motion/table.js` armActions (per-species frequency) | idle (the A-pose) is the base, with arms up, waving hello, arms crossed, hands on hips, a hand on the chin, a salute, hands behind the back, flapping… on top. Only the arms the action decides change |
 
-같은 원리가 눈에도 적용돼 있다: 눈 **종류**(ring/dot/slit)는 슬롯이고, 깜빡임·놀람(동공 수축)·
-윙크·^^는 clock 상태다. 새 파츠를 넣을 때 "이게 생김새인가 행동인가"를 먼저 묻는다.
+The same principle applies to the eyes: the eye **kind** (ring/dot/slit) is a slot, while blinking, startle
+(the pupil shrinking), winking and ^^ are clock states. When adding a new part, first ask "is this an
+appearance or a behaviour?".
 
-## 치수 슬롯은 스케일이 아니다
+## A dimension slot is not a scale
 
-`armLength` `legLength` `build`는 형태와 독립인 **길이·체격** 슬롯이다. 값이 바뀌어도 발·손·선 굵기·부츠 높이는
-그대로고 **기장·폭만** 바뀐다 — 짧은 다리는 몸이 바닥 가까이 내려앉는 것이지 다리 그림을 축소한 게 아니다.
-파생되는 것은 파생시킨다: 다리 스탠스(벌림)와 어깨 위치는 `build`가 정한다 — 넓은 몸이 넓은 스탠스를 받친다.
-"벌린 다리"를 다리 형태로 만들지 않는다.
+`armLength`, `legLength` and `build` are **length and build** slots, independent of form. Change the value and
+the feet, hands, line thickness and boot height stay as they are; **only the length and width** change — short
+legs mean the body settles near the floor, not that the leg drawing was shrunk.
+Derive what is derivable: the leg stance (how far they open) and the shoulder position are set by `build` — a
+wide body carries a wide stance. Never make "open legs" a leg form.
 
-## 종족 제한은 species.js에
+## Species restrictions live in species.js
 
-"사람에게는 X가 없다" 같은 종족 제한은 **`species.js` 한 곳**에 둔다. 두 가지 필드가 있다.
+Species restrictions like "humans do not have X" go in **the single place, `species.js`**. There are two fields.
 
-| 필드 | 뜻 | 효과 |
+| Field | Meaning | Effect |
 | --- | --- | --- |
-| `forbid[slot] = { 값: 대체값 }` | 이 슬롯의 이 값이 나오면 대체값으로 | `applyConstraints`가 **맨 먼저** 읽어 결정적으로 덮어쓴다. 아키타입 성향(scholar의 dot 눈 등)은 산다 |
-| `bias[slot]` | 이 슬롯의 가중치 | 아키타입 bias보다 우선 — **슬롯 전체를 종족이 지배**한다. 개 귀·고양이 꼬리처럼 종족이 규정하는 슬롯에만 |
-| `identity` | 종족이 지켜야 할 것 (골격·뿔·눈·팔·꼬리·머리색) | `scripts/census.mjs`가 검사한다. 위반은 버그다 |
+| `forbid[slot] = { value: replacement }` | If this value comes up for this slot, swap it | `applyConstraints` reads it **first of all** and overwrites deterministically. The archetype's disposition (a scholar's dot eyes and so on) survives |
+| `bias[slot]` | The weights for this slot | Takes precedence over the archetype bias — **the species dominates the whole slot**. Only for slots the species defines, like dog ears or a cat tail |
+| `identity` | What the species has to hold to (skeleton, horns, eyes, arms, tail, head color) | `scripts/census.mjs` checks it. A violation is a bug |
 
-값 하나만 막을 때는 forbid, 슬롯 전체를 종족이 가져갈 때만 bias. spec.js·draw/에 종족 이름을
-하드코딩하지 않는다 (draw/의 종족 분기는 "그리기 방식"이 다를 때만 — 개 주둥이, 고양이 정수리 귀).
+Use forbid to block a single value; use bias only when the species takes the whole slot. Never hardcode a
+species name in spec.js or draw/ (a species branch in draw/ is only for when the **way of drawing** differs — a
+dog's muzzle, a cat's crown ears).
 
-## 세 파일을 순서대로 고친다
+## Change three files, in order
 
-파츠 하나를 추가하려면 세 곳을 손대야 한다. 순서를 지킨다.
+Adding one part means touching three places. Keep to the order.
 
-1. **`src/character/vocabulary/slots.js`** — `SLOTS`에 이름을 넣는다. 이름은 `draw/`의 분기 키와 정확히 같아야 한다
-2. **`src/character/vocabulary/`** — 필요하면 `slots.js` `DEFAULT_BIAS`, `archetypes.js`·`species.js` `bias`에 가중치를 넣는다
-3. **`src/character/draw/`** — 파츠가 속한 파일에 분기를 추가한다: 윤곽·귀 `head.js` · 머리카락 `hair.js`(`HAIR` 표에 함수 하나) ·
-   모자·뿔 `headgear.js` · 눈·안경·코·볼 `face.js` · 입 `mouth.js`(`MOUTH` 표에 함수 하나 — 자리·폭은 `mouthPlacement`가 준다) · 몸 `body.js` · 팔다리·꼬리 `limbs.js`.
-   입은 `faceStates.js`의 대체·화남·^^ 표에도 자리를 잡아 준다
+1. **`src/character/vocabulary/slots.js`** — put the name in `SLOTS`. The name has to match the branch key in `draw/` exactly
+2. **`src/character/vocabulary/`** — if needed, put weights in `DEFAULT_BIAS` in `slots.js` and in `bias` in `archetypes.js` / `species.js`
+3. **`src/character/draw/`** — add the branch in the file the part belongs to: outline and ears `head.js` · hair `hair.js` (one function in the `HAIR` table) ·
+   hats and horns `headgear.js` · eyes, eyewear, nose and cheeks `face.js` · the mouth `mouth.js` (one function in the `MOUTH` table — position and width come from `mouthPlacement`) · the body `body.js` · limbs and tail `limbs.js`.
+   A mouth also needs a place in the alt, angry and ^^ tables in `faceStates.js`
 
-`spec.js`는 대개 손대지 않는다. 새 조합이 다른 파츠와 충돌할 때만 `applyConstraints`에 넣는다.
+`spec.js` is usually left alone. Only put something in `applyConstraints` when a new combination clashes with another part.
 
-## 슬롯을 새로 만드는 건 다른 이야기다
+## Making a new slot is a different matter
 
-기존 슬롯에 선택지를 추가하는 것과 슬롯 자체를 새로 만드는 것은 무게가 다르다.
-새 슬롯은 `slots.js` `SLOTS` **끝**에 넣고 `LATE_SLOTS`에도 붙인다 — `makeCreature`가 맨 끝에 뽑아
-기존 판(파츠·색·비율)이 유지된다. `SLOTS` 중간에 끼우면 **기존 시드를 전부 깬다.**
-[../determinism.md](../determinism.md)를 먼저 읽는다.
+Adding an option to an existing slot and creating a slot itself carry different weight.
+A new slot goes at **the end** of `SLOTS` in `slots.js` and is appended to `LATE_SLOTS` too — `makeCreature`
+draws it at the very end, so existing boards (parts, colors, proportions) are preserved.
+Insert it into the middle of `SLOTS` and **every existing seed breaks.**
+Read [../determinism.md](../determinism.md) first.
 
-## 새 아키타입
+## A new archetype
 
-여섯 개로 충분하지 않다고 느끼면 추가해도 된다. 다만 아키타입은 **성향**이지 캐릭터가 아니다.
+If six do not feel like enough, adding one is fine. But an archetype is a **disposition**, not a character.
 
-- `bias`에 넣는 슬롯은 그 성향을 실제로 규정하는 것만. 전부 다 적으면 아키타입이 아니라 프리셋이 된다
-- `weight`는 2~3에서 시작한다. 한 아키타입이 그리드의 3분의 1을 넘게 차지하면 판이 단조로워진다
+- The only slots that go into `bias` are the ones that really define that disposition. Write them all down and it stops being an archetype and becomes a preset
+- Start `weight` at 2~3. Let one archetype take more than a third of the grid and the board goes monotone
 
-## 그리기 함수가 지켜야 할 것
+## What a drawing function has to keep to
 
-- **셀 밖으로 나가지 않는다.** 로컬 좌표에서 y는 0(바닥)부터 약 1.05(정수리), x는 ±0.45 안. `layout()`이 두발 머리 꼭대기를
-  `MAX_HEAD_TOP`(1.05)에서 잘라 준다 — 왕머리 + 긴 다리 + 큰 몸이 겹쳐도 윗줄을 침범하지 않는다. 그 위의 머리카락·모자가 셀 상한 1.19까지
-- **바닥에 닿는 것은 바닥까지 그린다.** 다리를 짧게 그리면서 발을 y=0에 두면 발만 공중에 뜬다.
-  다리 길이는 `hipY`에서 받는다 — `stub`처럼 굵고 짧은 다리도 마찬가지다
-- **머리카락은 부피가 있되 눈은 못 덮는다.** 앞(|x| < 0.8·rx)으로 내려오는 것(앞머리·두건형·모자)은 `browLine(spec, box)` — 눈(안경·고글 테
-  포함) 위쪽 끝 — 에서 멈추고, 옆은 귀 아래(cy − 0.45·ry)까지 내려와 귀를 덮어도 된다. 헤어 캡의 호는 depth 0.62(귀 높이)까지 —
-  옆 끝의 퍼짐은 눈(x ±0.4·rx)에 못 미친다. 눈썹 선을 따로 계산하지 않는다
-- **파츠끼리 알아서 피하게 만들지 않는다.** 겹침은 `applyConstraints`에서 조합 단계에 막는다
+- **Never leave the cell.** In local coordinates y runs from 0 (the floor) to about 1.05 (the crown) and x stays within ±0.45. `layout()` clips a biped's head top at
+  `MAX_HEAD_TOP` (1.05) — so a huge head plus long legs plus a big body never invades the row above. Hair and a hat go above that, up to the cell ceiling of 1.19
+- **Draw whatever touches the floor all the way to the floor.** Draw the legs short while leaving the feet at y=0 and only the feet float.
+  Leg length comes from `hipY` — the same goes for a thick, short leg like `stub`
+- **Hair has volume but cannot cover the eyes.** Whatever comes down the front (|x| < 0.8·rx — bangs, the hood type, a hat) stops at `browLine(spec, box)` — the top edge of the eyes
+  (including eyewear and goggle rims) — while the sides may come down below the ear (cy − 0.45·ry) and cover it. A hair cap's arc goes to depth 0.62 (ear height) —
+  the spread at the side ends does not reach the eyes (x ±0.4·rx). Never compute the brow line separately
+- **Never make parts avoid each other on their own.** Overlaps are blocked at the combination stage, in `applyConstraints`
 
-## 얼굴 파츠는 어느 상태에서도 보여야 한다
+## A face part has to be visible in every state
 
-얼굴은 움직인다 — 놀라면 동공이 반으로 줄고, 잠들면 눈꺼풀이 덮이고, 입·눈썹은 대체 벌로 바뀌고, 8방향으로 돌아간다. 파츠가 "그려져
-있다"와 "보인다"는 다르다. 사라지는 방식은 셋이다: **폭 0**(짧은 획이 끝 가늘어짐에 먹힘), **같은 색 위**(밝은 얼굴 잉크가 흰자 위,
-검정 코가 검정 동공 위, 검정 눈썹이 검정 모자 위), **덮임**(커진 흰자·주둥이·벌린 입이 위에 얹힘). 규칙:
+The face moves — a startle halves the pupil, sleep covers it with a lid, the mouth and brows switch to their alt
+sets, and it turns in 8 directions. "Drawn" and "visible" are different. There are three ways to disappear:
+**width 0** (a short stroke eaten by the end taper), **on the same color** (light face ink over a white, a black
+nose over a black pupil, black brows over a black hat), and **covered** (a widened white, the muzzle or an open
+mouth laid on top). The rules:
 
-- `Sketch.stroke`는 표본이 둘뿐인 짧은 획에 가운데 표본을 넣는다 — 점 입·점 코·주근깨·세로 동공이 콩알로 남는다 (`stroke.js`)
-- 코·입·볼은 **눈(흰자) 밑선 아래**에 앉는다 (`eyeFloor` — 왕눈·외눈처럼 눈이 그 x에 닿을 때만). 놀람은 눈을 키우지 않고
-  동공만 줄이므로 흰자 크기는 늘 그대로다
-- 개 입은 얼굴 비율이 아니라 **주둥이 위, 코 밑**(`muzzleGeometry`) — 코 덩어리에 겹치면 안 보인다
-- 벌린 입(open) 높이는 머리에 비례하고 **코 밑에서 끝난다**. 눈썹은 눈 위 1.9배(외눈 1.35배)이되 **머리 안**(headCy + 0.84·ry)에
-- 눈 리그 안의 잉크(^^ 아치·잠 눈꺼풀 아치)는 `faceInk` — 도깨비의 먹빛 머리에 검정을 그리면 없는 것과 같다
-- **두 눈은 조금만 겹치고, 겹치면 큰 눈이 앞이다.** `eyeGeometry`가 중심 거리를 반지름 합의 70% 이상으로 벌리고(자리가 없으면 두 눈을
-  같이 줄임), 겹치는 부분은 눈마다 렌더 순서 블록(뒷눈 3.0~3.35 · 앞눈 3.5~3.85, `scene/rig.js`)으로 큰 눈이 작은 눈의 테·동공을 가린다 —
-  교차하는 윤곽선이 안 남는다. 정지 눈은 눈마다 층이 따로지만 **두 층의 렌더 순서가 같다**(둘 다 채색 2.3 · 잉크 2.4) — 잉크는 언제나 채색 뒤라
-  뒷눈 윤곽이 앞눈 흰자 위로 올라온다. 그래서 흰자가 있는 정지 눈(hollow·lidded 한 벌·half·side·slit)은 **윤곽·눈꺼풀 선까지 채색 스케치(`fills`)에**
-  그린다 — 그래야 앞눈 흰자가 뒷눈 윤곽을 덮는다. `census --check`가 70% 넘는 겹침을 잡는다
-- **획 하나가 규정하는 눈은 좌우 대칭.** sleepy·line·happy·squeeze·droop·cross·half·side는 `eyeGeometry`가 크기·높이 어긋남(`eyeSizeSkew`·
-  `eyeHeightSkew`)을 0으로 둔다 — 눈꺼풀 선·아치 한 획이 눈을 규정하는데 한쪽만 작거나 높으면 "작은 눈"이 아니라 실수로 읽힌다. 짝눈은 윤곽이
-  눈을 규정하는 눈(ring·wide·oval·hollow·lidded 한 벌·slit)에만 (`layout.js LINE_EYES`)
-- **얼굴 잉크는 머리색 휘도로 정한다.** 머리색 휘도 < 120(도깨비 먹빛, **검정 계열 털**의 개·고양이, 색 포인트가 피부에 붙은 파랑·초록·붉은 갈색)이면
-  이목구비를 검정 대신 밝은 잉크(`faceInk` #e9e3d5)로 그린다 — 짙은 색 위 검정 선은 대조가 없어 눈·입이 안 읽힌다. 개 입은 밝은 주둥이 위라 늘 검정.
-  **몸 무늬도 같은 규칙**이되 판정은 몸 색으로 한다(`drawMarks` — 검정 털 몸·도깨비 몸의 줄무늬·점이 묻히지 않게)
-- **표시는 얼굴 잉크, 물건은 제 색.** 도깨비의 밝은 `faceInk`는 선·점(눈·입·눈썹·수염 같은 표시)에만 쓴다. 안대·모자·안경알처럼
-  물건인 것은 종족과 무관하게 제 색(안대는 검정)이고, 먹빛 머리에서는 밝은 테로 윤곽만 잡는다 — 밝은 잉크로 채우면 흰 덩어리가 돼
-  실수처럼 보인다 (안대가 그랬다)
-- **감긴 눈도 눈이다 — 덮지 말고 바꿔 그린다.** 눈을 감을 때(깜빡임·잠·^^·윙크·화남) 뜬 눈을 **끄고** 감은 눈 선(`shut`)이나 미소 아치(`smile`)·사나운 눈(`angry`)을
-  그 자리에 그린다. 살색 덮개로 가리지 않는다(덮개는 안대·상처처럼 읽힌다). 반쯤 감긴 중간 단계는 없다 — 뜨거나 감거나. 정지 눈도 같다
-  (`staticLids`, 정지 눈 층을 끈다). 조사도 "동공 안 보여도 됨"이 아니라 "그 자리에 감은 눈 선(또는 미소 아치)이 보여야 함"으로 센다
-- **바꿔 그리는 건 그 눈만 — 정지 눈은 눈마다 한 층이다.** 윙크는 한쪽만 바뀐다. 정지 눈 두 개가 한 메시면 윙크한 눈을 아치로 바꾸려고
-  프레임을 끄는 순간 반대쪽 눈이 빈 얼굴이 된다(고양이 윙크에서 한쪽 눈이 사라지던 버그). 그래서 `drawCreature`가 정지 눈을 `staticEyeBack`(작은 눈)·
-  `staticEyeFront`(큰 눈) 두 층에 따로 굽고, `animate`는 잠·^^·윙크(그쪽)에 **그 눈의 층**만 끈다. 조사도 눈마다 따로 센다 — 윙크 중 반대쪽 정지 눈은
-  보여야 한다 (`eyes0`·`eyes1`)
-- 고쳤으면 `/audit.html`로 센다. 판 하나에서 0건이어야 한다. 남는 것은 "검정 눈썹이 위로 돌면서 검정 머리카락 위에 얹히는" 류의
-  낮은 대비뿐이다 — 그건 가림이 아니라 겹침이니 넘어간다
+- `Sketch.stroke` puts a middle sample into a short stroke that only had two — a dot mouth, dot nose, freckle or vertical pupil stays as a bean (`stroke.js`)
+- The nose, mouth and cheeks sit **below the eye's (white's) lower edge** (`eyeFloor` — only when the eye actually reaches that x, as with a big eye or a cyclops). A startle does not grow the eye, only shrinks the pupil, so the white's size is always unchanged
+- A dog's mouth follows not the face proportion but **above the muzzle, below the nose** (`muzzleGeometry`) — overlapping the nose mass makes it invisible
+- An open mouth's height is proportional to the head and **ends below the nose**. Brows go 1.9× the eye above it (1.35× on a cyclops) but **inside the head** (headCy + 0.84·ry)
+- The ink inside the eye rig (the ^^ arch, the sleep lid arch) is `faceInk` — draw black on an imp's ink-black head and it may as well not be there
+- **Two eyes overlap only slightly, and where they do the larger is in front.** `eyeGeometry` opens the centre distance to at least 70% of the sum of the radii (shrinking both eyes if there is no room), and where they overlap a per-eye render order block (back eye 3.0~3.35, front eye 3.5~3.85, `scene/rig.js`) has the larger eye cover the smaller one's rim and pupil —
+  no crossing outlines are left. Static eyes have a layer per eye, but **the two layers share the same render order** (both fills 2.3, ink 2.4) — ink always comes after fills, so
+  the back eye's outline rises above the front eye's white. Which is why static eyes with a white (hollow, the lidded set, half, side, slit) draw **their outline and lid line into the fills sketch (`fills`)** —
+  that is what lets the front eye's white cover the back eye's outline. `census --check` catches an overlap beyond 70%
+- **An eye that one stroke defines is left-right symmetric.** For sleepy, line, happy, squeeze, droop, cross, half and side, `eyeGeometry` sets the size and height skews (`eyeSizeSkew`, `eyeHeightSkew`) to 0 — one lid line or arch defines the eye, and if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". Mismatched eyes are only for eyes an outline defines (ring, wide, oval, hollow, the lidded set, slit) (`layout.js LINE_EYES`)
+- **Face ink is decided by the head color's luminance.** At head luminance < 120 (an imp's ink-black, a dog or cat with **black-ish fur**, or a blue, green or red-brown color accent landed on the skin) the features are drawn in light ink (`faceInk` #e9e3d5) instead of black — a black line on a deep color has no contrast and the eyes and mouth do not read. A dog's mouth is on a light muzzle, so it stays black.
+  **Body markings follow the same rule** but are decided by the body color (`drawMarks` — so stripes and spots on a black-furred or imp body are not lost)
+- **A mark takes face ink; an object keeps its own color.** An imp's light `faceInk` is only for lines and dots (marks like the eyes, mouth, brows and whiskers). Things that are objects — an eyepatch, a hat, a lens — keep their own color regardless of species (a patch is black), and on an ink-black head a light rim holds the outline only. Fill it with light ink and it becomes a white mass and reads as a mistake (which is what the eyepatch did)
+- **A closed eye is still an eye — redraw it, do not cover it.** When an eye closes (blink, sleep, ^^, wink, anger) the open eye is **switched off** and the shut line (`shut`), smile arch (`smile`) or fierce eye (`angry`) is drawn in its place.
+  Never hide it with a skin-colored cover (a cover reads as a patch or a wound). There is no half-closed intermediate stage — open or shut. Static eyes are the same
+  (`staticLids`; the static eye layer is switched off). The audit counts it not as "the pupil may be invisible" but as "a shut line (or smile arch) has to be visible in its place"
+- **Only that eye is redrawn — static eyes are one layer per eye.** A wink changes one side only. With two static eyes in one mesh, the moment you switch the frame off to turn the winking eye into an arch, the other eye leaves a blank face (the bug where a cat's other eye vanished on a wink). So `drawCreature` bakes static eyes into two separate layers, `staticEyeBack` (the smaller eye) and
+  `staticEyeFront` (the larger), and `animate` switches off **only that eye's layer** for sleep, ^^ and a wink (that side). The audit counts per eye too — the other static eye has to be
+  visible through a wink (`eyes0`, `eyes1`)
+- If you changed it, count it with `/audit.html`. It has to be 0 on one board. What is left is only low contrast of the "black brows turning up over black hair" kind — that is an overlap, not a covering, so let it go
 
-## 가중치는 눈이 아니라 숫자로 맞춘다
+## Weights are settled by numbers, not by eye
 
-선택지 개수가 곧 확률이 되는 함정이 있다. 슬롯에 항목을 늘리면 `none`이 나올 확률이
-자동으로 줄어든다 — 균등 추첨이면 `eyewear`(5개 중 none 1)는 **80%가 안경류**가 된다.
+There is a trap where the number of options becomes the probability. Add items to a slot and the probability of
+`none` automatically drops — on an even draw, `eyewear` (1 none out of 5) ends up **80% wearing something**.
 
-그래서 아키타입이 관여하지 않는 슬롯에도 `DEFAULT_BIAS`로 가중치를 준다.
-파츠를 고쳤으면 반드시 분포를 센다 — `node scripts/census.mjs --slot <슬롯>` (아래 § 분포는 census로 본다).
+So slots the archetype does not touch get weights through `DEFAULT_BIAS` too.
+If you changed a part, always count the distribution — `node scripts/census.mjs --slot <slot>` (below, § distribution is read with census).
 
-기준선:
+The baseline:
 
-- `none`이 있는 슬롯에서 `none`은 **25~45%**. 이보다 낮으면 화면이 지저분하고, 높으면 밋밋하다
-- 어떤 선택지도 200마리 중 **5회 미만이면 안 된다**. 그건 있으나 마나다
-- 200마리에서 파츠 조합이 겹치는 쌍이 나오면 슬롯이 부족하다는 신호다
+- In a slot that has `none`, `none` is **25~45%**. Lower and the screen is messy; higher and it is bland
+- No option should come up **fewer than 5 times in 200 creatures**. That may as well not exist
+- If a pair of creatures in 200 share the same part combination, that is a sign there are not enough slots
 
-## 분포는 census로 본다
+## Distribution is read with census
 
 ```bash
-node scripts/census.mjs              # 종족 × 슬롯 분포표 + 정체성 위반
-node scripts/census.mjs --slot hair  # 한 슬롯만
-node scripts/census.mjs --check      # 위반만 (exit 1)
+node scripts/census.mjs              # the species × slot distribution table plus identity violations
+node scripts/census.mjs --slot hair  # one slot only
+node scripts/census.mjs --check      # violations only (exit 1)
 ```
 
-죽은 값(어느 종족에서도 0%)이 보이면 bias 조정 대상이다. 흔한 원인: 아키타입 **전부**가 그 슬롯에
-bias를 가지면 `DEFAULT_BIAS`는 그 슬롯에서 쓰이지 않는다 — 어느 아키타입 bias에도 없는 값은 0%가 된다.
-그래서 hair는 아키타입마다 mohawk·scribble·curly를 나눠 갖는다.
+A dead value (0% on every species) is a candidate for a bias adjustment. The common cause: if **every**
+archetype has a bias on that slot, `DEFAULT_BIAS` is never used for it — and any value in no archetype's bias
+comes out at 0%. Which is why hair shares mohawk, scribble and curly out across the archetypes.
 
-브라우저의 SPECIES 카드로 한 종족만 9×6에 놓고 볼 수 있다. 한 줄 7마리로는 색·파츠 분포를 판단할 수 없다.
+The browser's SPECIES card lets you put one species alone on a 9×6. Seven creatures in one row cannot tell you a
+color or part distribution.
 
-## 형태는 gallery로 본다
+## Form is read with the gallery
 
-`gallery.html?slot=<슬롯>&species=<종족>&seed=<시드>` — 슬롯 하나의 모든 값을 **같은 개체**에 나란히
-그린다(종족·시드 고정, 슬롯값만 바꿈). 새 파츠를 그렸으면 여기서 이웃 값들과 나란히 놓고 본다.
-종족 forbid로 실제 판에는 안 나오는 값도 그린다 — 카탈로그지 추첨이 아니다. BIND가 기본(형태 판단), B로 모션.
+`gallery.html?slot=<slot>&species=<species>&seed=<seed>` — draws every value of one slot on **the same
+individual**, side by side (species and seed fixed, only the slot value changing). When you have drawn a new
+part, look at it here next to its neighbouring values.
+It also draws values a species forbids, which never appear on a real board — this is a catalog, not a draw. BIND
+is the default (judging form); B for motion.
 
-## 그리기 코드를 옮겼으면 drawdiff로 본다
+## If you moved drawing code, read it with drawdiff
 
-`node scripts/drawdiff.mjs [ref]` — 작업 트리의 그리기(층 11개 × 보일 2벌·팔다리·꼬리 마디·눈썹/입 상태)를 git 시점(기본 HEAD)과
-**슬롯값 전부 × 종족 × 시드**로 스케치 단위 해시 비교한다. 파일을 나누거나 분기를 표로 바꾸는 리팩토링은 이게 0건이어야 끝이다 —
-gallery는 눈이고 이건 숫자다. 형태를 **바꾸는** 커밋에서는 차이가 나는 게 맞다 (어느 슬롯값이 바뀌었는지 목록으로 확인한다).
+`node scripts/drawdiff.mjs [ref]` — hashes the working tree's drawing (11 layers × 2 boil sets, limbs, tail
+bones, brow/mouth states) sketch by sketch against a git ref (HEAD by default), over
+**every slot value × species × seed**. A refactor that splits files or turns branches into a table is not done
+until this is 0 — the gallery is the eye and this is the number. In a commit that **changes** form, a difference
+is correct (check the list to see which slot values changed).

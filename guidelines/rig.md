@@ -1,160 +1,160 @@
-# 리그 구조
+# Rig structure
 
-> 기준: `src/scene/rig.js`, `src/scene/animate.js`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
+> Basis: `src/scene/rig.js`, `src/scene/animate.js`. When the code changes, fix this document in the same commit.
 
-`src/scene/rig.js` `buildCreature`가 조립하고 `src/scene/animate.js` `applyState`가 매 프레임 상태를 입힌다. 개체 하나가 어떤 three.js 계층으로 조립되는지.
-메시·재질 수와 그 이유(draw call)는 [performance.md](performance.md).
+`buildCreature` in `src/scene/rig.js` assembles it and `applyState` in `src/scene/animate.js` applies the state every frame. This is the three.js hierarchy one individual is assembled into.
+Mesh and material counts, and the reason for them (draw calls), are in [performance.md](performance.md).
 
-## 계층
+## The hierarchy
 
 ```
-group                        ← 원점 = 발바닥. 스웨이·부르르·점프·호흡·젤리
-├── bodyGroup                ← 네발 앉기(state.bodyTilt): **앞다리 뿌리**(item.bodyPivot = motionRig().body의 frontHipX·hipY)를 축으로 돈다 —
-│   │                           회전 + 축이 제자리에 남는 위치 보정(animate). 다리 피벗·꼬리는 자식이라 같이 기울고, headGroup은 형제라 안 움직인다(축이 머리 바로 밑)
-│   ├── bodyFrame ×3         ← 보일 변형. 몸 채색+잉크 한 메시(1.5)
-│   ├── tailGroup            ← 꼬리 뿌리에 피벗 (네발). 0.8 — 몸통·머리 뒤
-│   │   └── bone[0] ⊃ bone[1] ⊃ bone[2] ⊃ bone[3]  ← 네 마디 체인 (관절 = 척추 4등분점). bone[0]에 tailAngle, bone[3]에 tailTip, tailRaise는 관절마다 목표각(세움)
-│   │       └── along(θ) ⊃ thick ⊃ back(−θ) ⊃ 마디 메시  ← 곤두섬(tailPuff): thick.scale.y — 쉼 자세 척추 방향 θ에 **수직으로만** 굵어진다 (길이·관절 자리 그대로)
-│   └── limb pivot ×N        ← 어깨·엉덩이 피벗
-│       ├── front             ← 위팔 (또는 다리). renderOrder 2.5
-│       │   └── elbow         ← 팔꿈치 피벗 + 아래팔 (팔만). 어깨각·팔꿈치각 따로
-│       └── back              ← 뒷짐 (팔만, 0.5)
-└── headGroup                ← 원점 = 목(neckY = bodyTop). 갸웃·롤·끄덕·딥. 윤곽만 여기 직접
-    ├── headFrame ×3         ← 보일 변형. 머리 윤곽 채색+잉크 한 메시(2, 채색 불투명)
-    ├── 깊이 그룹 ×7 (item.parallax)  ← 머리에 붙는 층마다 그룹 하나 — 얼굴 돌림 때 position = **깊이(DEPTH) × 이목구비 이동량** (x·y 같은 배율, 크기 그대로). § fake 3D 깊이
-    │   ├── hairBackFrame ×3     ← 깊이 −0.12 · 뒷머리(긴 머리·트윈테일·포니테일·큰 덩어리의 바깥). 머리·귀 뒤, 몸 위 (1.55) — 머리 뒤라 반대로
-    │   ├── crownBackFrame ×3    ← 깊이 −0.4 · 옆귀(사람·도깨비). 머리 채색 뒤 (1.7) — 뿌리가 머리에 가린다
-    │   ├── hornsFrame ×3        ← 깊이 0.45 · 뿔. 머리 잉크 위 (2.06)
-    │   ├── hairCrownFrame ×3    ← 깊이 0.12 · 두피 위 머리카락(정수리 캡·가시·똥머리). 뿔과 같은 자리, 뿔 위 (2.06)
-    │   ├── frontFrame ×3        ← 깊이 −0.4 · 개 귀·고양이 귀. 머리 잉크 위 (2.12) — 윤곽·머리카락 밑동을 덮되 눈은 못 덮는다
-    │   ├── hatFrame ×3          ← 깊이 0.45 · 모자. 귀 위·얼굴 아래 (2.16) — 귀 밑동·머리카락을 덮는다
-    │   └── hairFrontFrame ×3    ← 깊이 0.12 · 앞머리 띠·옆머리 커튼·두건형 앞. 얼굴 위(6.55), 눈썹·입(6.6) 아래
-    └── faceGroup            ← 원점 = 머리 중심(headCy). 얼굴 돌림으로 x/y 이동 + 눌림. 이목구비 전부
-        ├── faceFrame ×3         ← 보일 변형. 볼·수염 — 채색(2.3)·잉크(2.4) **두 메시** (정지 눈과 엇갈려야 해서)
-        ├── staticEyeBackFrame ×3 · staticEyeFrontFrame ×3  ← 보일 변형. 정지 눈(dot·half·slit…) **눈마다 한 층**(작은 눈 Back · 큰 눈 Front). 채색(2.3)·잉크(2.4) 두 메시.
-        │                            **두 층은 렌더 순서가 같다** — 앞뒤는 층이 아니라 스케치가 가른다: 흰자가 있는 눈은 윤곽·눈꺼풀 선까지 채색(2.3)에 그려야
-        │                            앞눈 흰자가 뒷눈 윤곽을 덮는다. 잉크(2.4)에 두면 뒷눈 윤곽이 앞눈 흰자 위로 올라와 교차선이 남는다
-        │                            잠·^^·윙크(그쪽)·놀람 변형(☆·♥) 때 **그 눈의** 층을 끈다 — 윙크는 한쪽만 바뀌고 반대쪽 눈은 남는다
-        ├── faceFrontFrame ×3    ← 보일 변형. 코·주둥이·안경 한 메시(6.5) — 눈 리그 위
-        ├── eyeFx ×(눈 수)      ← 놀람 변형: ☆·♥ 글리프(6.32). 덮개는 없다 — 그동안 정지 눈 프레임과 눈 리그를 **끄고** 이걸로 대체한다. state.eyeFx일 때만
-        ├── faceStates.brow ×3   ← 쉼 / 대체 / 화남(angry 눈썹 — 없는 종족은 none)
-        ├── faceStates.mouth ×4  ← 쉼 / 대체 / 화남(사람·개 이빨 격자, 고양이·도깨비 송곳니) / ^^(개는 혀). 같은 종류면 메시를 나눠 쓴다
-        ├── staticLid ×(정지 눈 수) ← 정지 눈(dot·cross·slit…)의 감은 눈 선·미소 아치·사나운 눈(3.6). 잠(sleep > 0.5)이면 감은 선, 화나면 사나운 눈, ^^·윙크(그쪽)면 미소 아치 — 그때 그 눈의 정지 눈 층(lid.frames)을 끄고 대신 선다 (덮개 없음)
-        └── eyeRig ×(0~2)        ← 살아 있는 눈만
-            ├── open{흰자+테 한 메시 · pupil} · smile · shut · angry — 눈 블록 o(뒷눈 3 · 앞눈 3.5)부터 +0 · +0.2 / +0.35 / +0.35 / +0.35. 감을 때 open을 **끄고** shut(감은 선, 눈꺼풀 > 0.5)·smile(^^·윙크)·angry(화남 — 사나운 눈)가 대신 선다 — 살색 덮개는 없다
-emojiRoot (씬 루트, group 옆)  ← 이모지. 머리에 붙이지 않고 머리 위 지점(세계 좌표)을 이징(0.1)으로 따라간다 —
-                                  갸웃·점프 때 한 박자 늦게 끌려오고 끌리는 쪽으로 눕는다. 이모지 중에만 메시가 있다
+group                        ← origin = the soles. Sway, shiver, jump, breathing, jelly
+├── bodyGroup                ← a quad sitting (state.bodyTilt): turns about **the front legs' root** (item.bodyPivot = frontHipX·hipY from motionRig().body) —
+│   │                           rotation plus a position correction that leaves the axis in place (animate). Leg pivots and the tail are children and tilt with it; headGroup is a sibling and does not move (the axis is right below the head)
+│   ├── bodyFrame ×3         ← boil variants. Body fills+ink, one mesh (1.5)
+│   ├── tailGroup            ← a pivot at the tail root (quad). 0.8 — behind the torso and head
+│   │   └── bone[0] ⊃ bone[1] ⊃ bone[2] ⊃ bone[3]  ← a four-bone chain (joints = the quarter points of the spine). tailAngle on bone[0], tailTip on bone[3], tailRaise a target angle per joint (the raise)
+│   │       └── along(θ) ⊃ thick ⊃ back(−θ) ⊃ the bone's mesh  ← bristle (tailPuff): thick.scale.y — it thickens **only perpendicular** to the rest-pose spine direction θ (length and joint positions unchanged)
+│   └── limb pivot ×N        ← shoulder and hip pivots
+│       ├── front             ← the upper arm (or the leg). renderOrder 2.5
+│       │   └── elbow         ← the elbow pivot plus the forearm (arms only). Shoulder and elbow angles separately
+│       └── back              ← hands behind the back (arms only, 0.5)
+└── headGroup                ← origin = the neck (neckY = bodyTop). Tilt, roll, nod, dip. Only the outline sits here directly
+    ├── headFrame ×3         ← boil variants. Head outline fills+ink, one mesh (2, the fill opaque)
+    ├── depth groups ×7 (item.parallax)  ← one group per layer attached to the head — on a face turn, position = **depth (DEPTH) × the features' shift** (the same multiplier on x·y, size unchanged). § fake 3D depth
+    │   ├── hairBackFrame ×3     ← depth −0.12 · back hair (the outside of long hair, twintails, a ponytail, big masses). Behind the head and ears, above the body (1.55) — behind the head, so the other way
+    │   ├── crownBackFrame ×3    ← depth −0.4 · side ears (humans, imps). Behind the head fill (1.7) — the root is hidden by the head
+    │   ├── hornsFrame ×3        ← depth 0.45 · horns. Above the head ink (2.06)
+    │   ├── hairCrownFrame ×3    ← depth 0.12 · hair on the scalp (the crown cap, spikes, a bun). The same depth as the horns, above them (2.06)
+    │   ├── frontFrame ×3        ← depth −0.4 · dog and cat ears. Above the head ink (2.12) — it covers the outline and the hair's root but cannot cover the eyes
+    │   └── hatFrame ×3          ← depth 0.45 · hat. Above the ears, below the face (2.16) — it covers the ears' roots and the hair
+    │   └── hairFrontFrame ×3    ← depth 0.12 · the bangs band, side curtains, the front of the hood type. Over the face (6.55), below the brows and mouth (6.6)
+    └── faceGroup            ← origin = the centre of the head (headCy). x/y shift plus squash from the face turn. Every feature
+        ├── faceFrame ×3         ← boil variants. Cheeks, whiskers — fills (2.3) and ink (2.4) as **two meshes** (they have to interleave with the static eyes)
+        ├── staticEyeBackFrame ×3 · staticEyeFrontFrame ×3  ← boil variants. Static eyes (dot, half, slit…), **one layer per eye** (the smaller eye Back, the larger Front). Fills (2.3) and ink (2.4), two meshes.
+        │                            **The two layers have the same render order** — front-to-back is decided by the sketch, not the layer: on an eye with a white, the outline and lid line have to be drawn into the fills (2.3)
+        │                            for the front eye's white to cover the back eye's outline. Put them in the ink (2.4) and the back eye's outline rises above the front eye's white, leaving a crossing line
+        │                            For sleep, ^^, a wink (that side) and startle variants (☆·♥), **that eye's** layer is switched off — a wink changes one side only and the other eye stays
+        ├── faceFrontFrame ×3    ← boil variants. Nose, muzzle and eyewear, one mesh (6.5) — above the eye rig
+        ├── eyeFx ×(eye count)  ← startle variants: the ☆·♥ glyphs (6.32). There is no cover — meanwhile the static eye frame and the eye rig are **switched off** and this stands in. Only when state.eyeFx
+        ├── faceStates.brow ×3   ← rest / alt / angry (the angry brow — none on species that have none)
+        ├── faceStates.mouth ×4  ← rest / alt / angry (the tooth grid on humans and dogs, fangs on cats and imps) / ^^ (the tongue on dogs). The same kind shares a mesh
+        ├── staticLid ×(static eye count) ← a static eye's (dot, cross, slit…) shut line, smile arch and fierce eye (3.6). Asleep (sleep > 0.5) the shut line, angry the fierce eye, ^^ or a wink (that side) the smile arch — that eye's static layer (lid.frames) is switched off then and this stands instead (no cover)
+        └── eyeRig ×(0~2)        ← live eyes only
+            ├── open{white+rim as one mesh · pupil} · smile · shut · angry — from the eye block o (back eye 3, front eye 3.5): +0 · +0.2 / +0.35 / +0.35 / +0.35. On closing, open is **switched off** and shut (the shut line, lid > 0.5), smile (^^, a wink) or angry (anger — the fierce eye) stands instead — there is no skin-colored cover
+emojiRoot (the scene root, beside group)  ← the emoji. Not attached to the head; it eases (0.1) toward the point above the head (in world coordinates) —
+                                  so it is dragged a beat behind on a tilt or a jump and leans into the drag. It only has a mesh while an emoji is up
 ```
 
-괄호 숫자는 renderOrder. `depthTest: false`라 이 숫자가 곧 앞뒤다. **이 표가 단일 소스다** — 새 메시를 넣을 때 여기를 갱신한다.
-이 값은 개체 **안**의 층이다. 씬은 개체마다 `index × 10`을 더한 블록을 준다(`scene/index.js stack`) — 이웃과 겹칠 때(왕머리·걷기)
-앞 개체(아랫줄, 같은 줄에선 오른쪽)가 통째로 위에 그려지고 층끼리 섞이지 않는다. 채색은 **전부 불투명**(몸·머리·얼굴·앞귀·모자)이라
-앞 개체가 뒤 개체를 윤곽·색·형태까지 완전히 가린다. 이모지는 100000(모든 개체 위), 종이 0·바닥선 1은 그대로.
+The numbers in parentheses are renderOrder. With `depthTest: false` these numbers *are* front-to-back. **This table is the single source** — update it here when adding a new mesh.
+These values are the layers **within** an individual. The scene gives each individual a block of `index × 10` on top (`scene/index.js stack`) — so when neighbours overlap (a huge head, walking),
+the individual in front (a lower row; within a row, the one to the right) is drawn above as a whole and layers never interleave. Every fill is **opaque** (body, head, face, front ears, hat), so
+the front individual hides the one behind completely, outline, color and shape. The emoji is 100000 (above every individual); paper 0 and the floor line 1 are unchanged.
 
-층 하나는 메시 하나다 — 채색 스케치와 잉크 스케치를 한 지오메트리로 잇는다(채색이 밑). 같은 renderOrder 안에서 정점 순서가 곧 앞뒤라
-따로 번호가 필요 없다. 얼굴·정지 눈만 채색(2.3)·잉크(2.4) 두 메시다 — 두 층의 채색·잉크가 서로 엇갈려야 한다(정지 눈 채움은 수염 밑, 정지 눈 잉크는
-그 위). 재질은 불투명도별로 공유한다 ([performance.md](performance.md)).
+One layer is one mesh — the fills sketch and the ink sketch are joined into one geometry (fills underneath). Within the same renderOrder, vertex order *is* front-to-back, so no separate
+number is needed. Only the face and static eyes are two meshes, fills (2.3) and ink (2.4) — the two layers' fills and ink have to interleave (a static eye's fill below the whiskers, its ink
+above). Materials are shared per opacity level ([performance.md](performance.md)).
 
-| renderOrder | 무엇 |
+| renderOrder | What |
 | --- | --- |
-| 0 | 종이 |
-| 0.5 | 뒷짐 팔 (몸 뒤) |
-| 0.8 | 꼬리 (쉴 때) — 몸통·머리 뒤. 몸에 걸치는 부분(등 위 고리·말림)은 가려진다. **선 동안(tailRaise > 0.5)은 2.08** — 윤곽·두피 위 머리카락 위, 귀·얼굴 아래 (animate가 renderOrder를 바꾼다). 고양이 넷 중 하나는 꼬리 뿌리가 큰 머리 실루엣 안이라 뒤에 두면 세워도 안 보인다 |
-| 1 | 바닥선 |
-| 1.5 | 몸 (채색+잉크) |
-| 1.55 | 뒷머리 — 머리·귀 뒤, 몸 위 (깊이 −0.12). 실루엣 밖으로 나온 부분만 보인다 |
-| 1.7 | 옆귀 (사람·도깨비) — 머리 채색 뒤라 뿌리가 머리에 가린다 (깊이 −0.4) |
-| 2 | 머리 (채색+윤곽 잉크) — 채색이 **몸 잉크 위, 불투명**. 머리가 몸통을 덮는 자리에 몸통 윤곽선이 비치지 않게 |
-| 2.06 | 뿔 (깊이 0.45) · 두피 위 머리카락 (깊이 0.12, 뿔 위) — 윤곽 위 |
-| 2.12 | 개 귀·고양이 귀 — 채색 불투명 (윤곽·머리카락 밑동을 덮는다 — 귀가 실루엣의 혹으로 붙는다) (깊이 −0.4) |
-| 2.16 | 모자 — 귀 위, 얼굴 아래 (깊이 0.45) |
-| 2.3 | 얼굴 채색 (볼) · 정지 눈 채색 (동공·흰자, 눈마다 한 층 — 작은 눈 먼저) — 모자 위 (눈이 모자에 가리지 않는다) |
-| 2.4 | 얼굴 잉크 (수염·주근깨·눈물) · 정지 눈 잉크 (눈마다 한 층) |
-| 2.5 | 팔다리 위팔·아래팔 (몸 잉크 위 — 소매가 윤곽을 덮는다) |
-| 3.0~3.35 | 뒷눈(작은 눈) 리그 — 흰자+테 3 · 동공 3.2 · ^^/감은 선 3.35 (감을 땐 흰자·테·동공을 끄고 선만) |
-| 3.5~3.85 | 앞눈(큰 눈) 리그 — 같은 순서로 +0.5. 두 눈이 겹치면 앞눈 흰자가 뒷눈 테·동공을 가린다 (교차선 없음) |
-| 3.6 | 정지 눈의 감은 눈 선·미소 아치 — 그때 정지 눈 프레임은 꺼진다 (덮개 없음) |
-| 6.32 | 놀람 변형 ☆·♥ 글리프 — 그동안 눈(정지 프레임·리그)은 꺼진다. 코·안경 아래 |
-| 6.5 | 얼굴 맨 앞 (주둥이 채색 + 코·안경 잉크) — 눈꺼풀·눈 덮개가 코·안경테를 덮지 못하게 |
-| 6.55 | 앞머리 — 코·안경 위, 눈썹·입 아래 (깊이 0.12) |
-| 6.6 | 눈썹·입 — 눈 리그 위 (감긴 눈꺼풀이 눈썹을, 커진 외눈 흰자가 입을 안 지운다) |
-| 100000 | 이모지 (♥ ! ? … ;) — 모든 개체 블록 위 (`EMOJI_ORDER`) |
+| 0 | Paper |
+| 0.5 | Arms behind the back (behind the body) |
+| 0.8 | The tail (at rest) — behind the torso and head. The part lying over the body (a loop or curl over the back) is hidden. **While raised (tailRaise > 0.5) it is 2.08** — above the outline and the hair on the scalp, below the ears and face (animate changes the renderOrder). One cat in four has its tail root inside the big head silhouette, so left behind it is invisible even when raised |
+| 1 | The floor line |
+| 1.5 | Body (fills+ink) |
+| 1.55 | Back hair — behind the head and ears, above the body (depth −0.12). Only what comes outside the silhouette shows |
+| 1.7 | Side ears (humans, imps) — behind the head fill, so the root is hidden by the head (depth −0.4) |
+| 2 | Head (fills + outline ink) — the fill sits **above the body ink and is opaque**. So the body outline does not show through where the head covers the torso |
+| 2.06 | Horns (depth 0.45) · hair on the scalp (depth 0.12, above the horns) — above the outline |
+| 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth −0.4) |
+| 2.16 | Hat — above the ears, below the face (depth 0.45) |
+| 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) — above the hat (so the eyes are not hidden by it) |
+| 2.4 | Face ink (whiskers, freckles, tears) · static eye ink (one layer per eye) |
+| 2.5 | Limbs, upper arm and forearm (above the body ink — the sleeve covers the outline) |
+| 3.0~3.35 | The back (smaller) eye's rig — white+rim 3 · pupil 3.2 · ^^/shut line 3.35 (on closing, the white, rim and pupil are switched off and only the line remains) |
+| 3.5~3.85 | The front (larger) eye's rig — the same order, +0.5. When two eyes overlap the front eye's white covers the back eye's rim and pupil (no crossing line) |
+| 3.6 | A static eye's shut line and smile arch — the static eye frame is switched off then (no cover) |
+| 6.32 | The startle variant ☆·♥ glyphs — meanwhile the eyes (the static frame, the rig) are switched off. Below the nose and eyewear |
+| 6.5 | The frontmost face (muzzle fills plus nose and eyewear ink) — so a lid or an eye cover cannot cover the nose or a rim |
+| 6.55 | Bangs — above the nose and eyewear, below the brows and mouth (depth 0.12) |
+| 6.6 | Brows and mouth — above the eye rig (so a closed lid does not erase the brows and a widened cyclops white does not erase the mouth) |
+| 100000 | The emoji (♥ ! ? … ;) — above every individual's block (`EMOJI_ORDER`) |
 
-## 원점 규칙
+## Origin rules
 
-- **group** — 발바닥. scale로 호흡하면 발이 바닥에 붙은 채 늘어난다
-- **headGroup** — 목. 머리 지오메트리를 `-neckY`만큼 미리 내려서 굽는다. rotation.z가 턱 언저리를 축으로 돈다
-- **faceGroup** — 머리 중심(headCy). 얼굴 지오메트리(얼굴 프레임·눈썹·입·눈 리그)를 `-faceCy`만큼 내려서 굽고 그룹을 `faceCy - neckY`에 둔다. 돌림의 이동·눌림이 이 점을 축으로 한다
-- **깊이 그룹** (`item.parallax`) — headGroup과 같은 원점(목). 얼굴 돌림 때 position만 = 깊이 × 이목구비 이동량 (§ fake 3D 깊이). scale은 건드리지 않는다 — 부속물은 자리만 옮기지 크기가 변하지 않는다
-- **limb pivot** — 어깨(bodyTop 아래 22%, 몸통 좌우 윤곽 위 — 형태별 반폭 box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / 엉덩이(밑단 위 0.02) / 네발 뿌리(bodyH 25% 위). 지체는 피벗 원점에서 늘어진 상태로 굽는다. 팔은 `bindArm(side)`(T포즈)로 세우고 clock의 `state.arms`가 관절각을 준다
-- **elbow** — 위팔 끝. 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽는다. 위팔:아래팔 = 0.48:0.52. 같은 치수를 `armRig(spec)`이 clock에 넘겨 행위를 IK로 푼다
-- **tailGroup** — 꼬리 뿌리(몸 뒤끝). 안에 **네 마디 체인**(`tailSketch().bones` — 관절 원점·쉼 자세 방향). 스킨은 마디들에 이어 굽는다. 마디 메시는 along(θ)·thick·back(−θ) 세 그룹 안 — 곤두섬은 thick.scale.y(척추에 수직)만
-- **eyeRig** — 눈 중심. pupil.scale이 놀람(1 → 0.5), pupil.position이 시선, lid.scale.y가 눈꺼풀. 리그 자체는 안 커진다
+- **group** — the soles. Breathe with scale and it stretches with the feet still on the floor
+- **headGroup** — the neck. The head geometry is baked pre-lowered by `-neckY`. rotation.z turns about the chin area
+- **faceGroup** — the centre of the head (headCy). The face geometry (face frames, brows, mouth, eye rig) is baked lowered by `-faceCy` and the group is placed at `faceCy - neckY`. The turn's shift and squash are about this point
+- **depth groups** (`item.parallax`) — the same origin as headGroup (the neck). On a face turn, position only = depth × the features' shift (§ fake 3D depth). scale is never touched — an attachment moves position and does not change size
+- **limb pivot** — the shoulder (22% below bodyTop, on the torso's left/right outline — half-width per form: box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / the hip (0.02 above the hem) / a quad's root (25% of bodyH up). A limb is baked hanging from the pivot's origin. Arms are stood up with `bindArm(side)` (the T-pose) and the clock's `state.arms` supplies the joint angles
+- **elbow** — the end of the upper arm. The forearm is baked hanging from the elbow's origin. Upper:lower arm = 0.48:0.52. `armRig(spec)` passes the same dimensions to the clock so it can solve actions by IK
+- **tailGroup** — the tail root (the back end of the body). Inside it, **a four-bone chain** (`tailSketch().bones` — joint origins and rest-pose directions). The skin is baked continuously across the bones. A bone's mesh sits inside three groups, along(θ)·thick·back(−θ) — bristle is thick.scale.y only (perpendicular to the spine)
+- **eyeRig** — the eye's centre. pupil.scale is the startle (1 → 0.5), pupil.position the gaze, lid.scale.y the lid. The rig itself never grows
 
-## fake 3D 깊이 — 얼굴 돌림의 시차
+## fake 3D depth — the parallax of a face turn
 
-얼굴 돌림은 머리 윤곽을 그대로 두고 이목구비를 미는 착시다. 머리에 붙는 나머지 층(귀·뿔·머리카락·모자)은 **앞에 있느냐 뒤에 있느냐**로
-이동량이 갈린다 — 층마다 숫자 하나, `rig.js DEPTH`: 이동량 = 깊이 × 이목구비 이동량 (x·y 같은 배율, 크기는 안 바뀐다).
-뜻(머리카락·귀)으로 그룹을 묶어 한 덩어리로 밀지 않는다 — 같은 머리카락이라도 앞머리(얼굴 앞)와 뒷머리(머리 뒤)는 깊이가 달라 다르게 밀린다.
-같은 값을 나눠 갖는 건 태그일 뿐이고(귀 둘, 앞머리·두피 위) 움직임은 숫자가 정한다. 그룹은 층마다 하나(`item.parallax`, `animate.js`).
+A face turn is the illusion of shifting the features while the head outline stays put. For the remaining layers attached to the head (ears, horns, hair, hat), the shift is decided by
+**whether they are in front or behind** — one number per layer, `rig.js DEPTH`: the shift = depth × the features' shift (the same multiplier on x·y; size does not change).
+Layers are never grouped by meaning (hair, ears) and shifted as one mass — bangs (in front of the face) and back hair (behind the head) are both hair, yet their depths differ and they shift differently.
+Sharing a value is just a tag (the two ears; bangs and the scalp) and the movement is decided by the number. There is one group per layer (`item.parallax`, `animate.js`).
 
-| 깊이 | 층 | 뜻 |
+| Depth | Layer | Meaning |
 | --- | --- | --- |
-| 1 | 이목구비 (faceGroup) | 얼굴 앞면 — 기준 |
-| 0.45 | 모자 · 뿔 | 머리 위 앞쪽 |
-| 0.12 | 앞머리 · 두피 위 머리카락 | 이마·정수리 — 머리에 붙은 것이라 조금만 |
-| 0 | 머리 윤곽 (headGroup 직접) | 두개골 축 — 안 밀린다 |
-| −0.12 | 뒷머리 | 머리 **뒤** — 앞머리와 같은 크기만큼 반대로 |
-| −0.4 | 귀 (옆귀 · 개/고양이 귀) | 머리 옆·뒤 — 머리가 돌면 얼굴 반대편으로 돌아 나간다 |
+| 1 | The features (faceGroup) | The front of the face — the reference |
+| 0.45 | Hat · horns | Above the head, toward the front |
+| 0.12 | Bangs · hair on the scalp | The forehead and crown — attached to the head, so only a little |
+| 0 | The head outline (headGroup directly) | The skull axis — no shift |
+| −0.12 | Back hair | **Behind** the head — the other way, by as much as the bangs |
+| −0.4 | Ears (side ears · dog/cat ears) | Beside and behind the head — as the head turns they swing out to the far side from the face |
 
-새 층을 머리에 붙일 때는 이 표에 깊이를 하나 정해 `LAYERS`에 `depth`로 적는다 — 기존 그룹에 끼워 넣지 않는다.
+When attaching a new layer to the head, settle on one depth in this table and write it as `depth` in `LAYERS` — never slot it into an existing group.
 
-## 무엇을 굽고 무엇을 변형하나
+## What is baked and what is transformed
 
-| 한 번 굽는 것 (개체당) | 매 프레임 바꾸는 것 |
+| Baked once (per individual) | Changed every frame |
 | --- | --- |
-| 층 13개(몸·뒷머리·옆귀·머리·뿔·두피 위 머리카락·개/고양이 귀·모자·얼굴·정지 눈 ×2(눈마다)·얼굴 앞·앞머리) × 보일 3벌 — 층당 메시 하나(얼굴·정지 눈은 채색·잉크 둘) | visible 토글 (정지 눈은 눈마다 — 잠·^^·윙크·놀람 변형에 그 눈만 끈다) |
-| 팔다리 지체 (front, back) | pivot.rotation.z, elbow.rotation.z (이징된 목표각 + 이징 없는 진동), front/back visible |
-| 꼬리 | 관절 rotation.z · 마디 thick.scale.y(곤두섬 — 굵기만) |
-| 눈썹·입 쉼/대체 | visible |
-| 눈 리그 | pupil.scale(놀람 — 동공 1 → 0.5배), pupil.position(시선), visible (open 뜬 눈 / shut 감은 선 / smile ^^) |
-| — | group·headGroup·깊이 그룹·faceGroup의 position/rotation/scale — group.position.x에는 걷기로 옮긴 자리(walkX), group.scale.x에는 네발이 걷는 방향(facing ±1)이 들어간다 |
+| 13 layers (body, back hair, side ears, head, horns, hair on the scalp, dog/cat ears, hat, face, static eyes ×2 (one per eye), the front of the face, bangs) × 3 boil sets — one mesh per layer (two for the face and static eyes: fills and ink) | Toggling visible (static eyes per eye — for sleep, ^^, a wink and startle variants only that eye is switched off) |
+| Limb pieces (front, back) | pivot.rotation.z, elbow.rotation.z (the eased target angle plus un-eased oscillation), front/back visible |
+| The tail | Joint rotation.z · a bone's thick.scale.y (bristle — thickness only) |
+| Brow and mouth rest/alt | visible |
+| The eye rig | pupil.scale (startle — the pupil 1 → 0.5×), pupil.position (gaze), visible (open the open eye / shut the shut line / smile ^^) |
+| — | The position/rotation/scale of group, headGroup, the depth groups and faceGroup — group.position.x carries the distance walked (walkX) and group.scale.x carries a quad's walking direction (facing ±1) |
 
-**매 프레임 지오메트리를 다시 만들지 않는다.** 예외는 이모지(트리거당 1회)와 재생성(개체 교체)뿐이다.
+**Never rebuild geometry per frame.** The only exceptions are the emoji (once per trigger) and regen (replacing an individual).
 
-## 지터 위상 (variant)
+## Jitter phase (variant)
 
-`drawCreature(spec, variant)`는 `wobbleSeed ^ (variant × 0x9e3779b9)`로 rng를 판다.
-변형 3벌은 구도가 같고 떨림만 다르다. 눈썹·입·팔다리·꼬리는 변형이 없다(정적 지터로 충분).
+`drawCreature(spec, variant)` seeds its rng from `wobbleSeed ^ (variant × 0x9e3779b9)`.
+The 3 variants share the composition and differ only in wobble. Brows, mouth, limbs and the tail have no variants (static jitter is enough).
 
-## 포즈와 잉크 — 두 축
+## Pose and ink — two axes
 
 `applyState(item, state, t, noise, { snap, boil })`.
 
-| 축 | 토글 | 값 | 뜻 |
+| Axis | Toggle | Value | Meaning |
 | --- | --- | --- | --- |
-| **포즈** (리그) | POSE MOTION/BIND, `B` | `scene.setBind` | BIND면 clock 대신 `BIND_STATE`(두발 T포즈, 네발 다리 수직·꼬리 그린 그대로), 관절 이징 즉시(snap). 시계는 계속 흘린다 |
-| **잉크** (선) | INK BOIL/STILL, `I` | `scene.setBoil` | STILL이면 보일 0번 프레임 고정 |
-| 행위 강제 (디버그) | ACTION 카드 | `scene.setAction` | 두발 전원이 그 행위를 계속. IDLE은 행위 없음. `clock.force`. AUTO면 예약대로 |
+| **Pose** (the rig) | POSE MOTION/BIND, `B` | `scene.setBind` | With BIND, `BIND_STATE` instead of the clock (a biped T-pose; a quad's legs vertical and tail exactly as drawn), joint easing immediate (snap). The clock keeps running |
+| **Ink** (the lines) | INK BOIL/STILL, `I` | `scene.setBoil` | With STILL, boil frame 0 is pinned |
+| Forcing an action (debug) | The ACTION card | `scene.setAction` | Every biped keeps doing that action. IDLE is no action. `clock.force`. AUTO follows the schedule |
 
-바인드 포즈는 리그의 상태이고 보일은 손그림 재질이다. 다른 축이라 따로 켠다 —
-"바인드인데 선은 끓는" 상태도, "모션 중인데 선은 고정" 상태도 볼 수 있다.
+The bind pose is a state of the rig and the boil is a hand-drawn material. Being different axes, they switch separately —
+you can have "bind, but the lines boiling" and "mid-motion, but the lines pinned".
 
-## 태어날 때
+## At birth
 
-`buildCreature`는 팔을 바인드(T)로 세운다. scene의 `settle`이 곧바로 시계의 현재 상태를 이징 없이(snap)
-입혀 idle에 앉힌다 — 안 그러면 첫 프레임에 T에서 idle로 팔이 휘돌며 내려오는 게 보인다.
+`buildCreature` stands the arms up in bind (T). The scene's `settle` immediately applies the clock's current state with no easing (snap)
+and seats it at idle — otherwise the first frame shows the arms swinging down from T to idle.
 
-## 재생성 시
+## On regen
 
-`regenerate(index)`가 기존 개체를 걷어내고(`discard` — 지오메트리만 버린다, 재질은 공유) 새 개체를 같은 슬롯에 세운다(`place` —
-강제 행위·자리·렌더 순서 블록·`settle`·씬 추가; `build`도 같은 함수를 쓴다). 새 시계는 `clockNow`를 출생 시각으로 받는다. 종족은 유지된다.
+`regenerate(index)` lifts the existing individual out (`discard` — geometry only is thrown away; materials are shared) and stands a new one up in the same slot (`place` —
+the forced action, position, render order block, `settle` and adding to the scene; `build` uses the same function). The new clock receives `clockNow` as its birth time. The species is kept.
 
-## 자주 깨지는 지점
+## Where it commonly breaks
 
-- 머리 지오메트리를 `-neckY` 안 내리고 headGroup.position.y만 올리면 **두 번 올라간다**. 얼굴도 같다 — 얼굴 메시는 `-faceCy`, faceGroup은 `faceCy - neckY`. `-neckY`로 내리면 돌림 축이 목으로 내려가 눌림이 어긋난다
-- 팔 front/back을 회전 중에 바꾸면 튄다 → 기준각 0.35rad 이내에서만
-- 시계 위상 지터를 `t`에 그대로 붙이면 재생성 후 튄다 → 출생 상대 시간
-- 뒷면 컬링을 켜두면 시계방향 경로의 채색이 사라진다 → `DoubleSide` (+ `forceSinglePass` — 아니면 두 번 그린다)
-- 정점 색을 sRGB로 넣으면 회색이 된다 → `srgbToLinear` (`color.js hexToRgb`)
-- 공유 재질(`inkMaterial`)을 dispose하거나 `opacity`를 프레임마다 바꾸면 그 불투명도를 쓰는 모든 메시가 같이 깨진다 → `disposeGroup`으로 지우고, 페이드가 필요한 메시는 `sketchMesh(…, { own: true })` ([performance.md](performance.md))
+- Raise headGroup.position.y without lowering the head geometry by `-neckY` and it **goes up twice**. Same for the face — the face mesh takes `-faceCy` and faceGroup takes `faceCy - neckY`. Lower it by `-neckY` instead and the turn's axis drops to the neck and the squash goes wrong
+- Switch the arm's front/back mid-rotation and it snaps → only within 0.35 rad of the reference angle
+- Attach the clock's phase jitter straight onto `t` and it snaps after a regen → use birth-relative time
+- Leave back-face culling on and the fills of clockwise paths disappear → `DoubleSide` (plus `forceSinglePass` — otherwise it draws twice)
+- Feed vertex colors as sRGB and they come out grey → `srgbToLinear` (`color.js hexToRgb`)
+- Dispose a shared material (`inkMaterial`) or change its `opacity` per frame and every mesh using that opacity breaks with it → remove with `disposeGroup`, and give a mesh that needs a fade its own via `sketchMesh(…, { own: true })` ([performance.md](performance.md))

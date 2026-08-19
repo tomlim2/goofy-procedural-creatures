@@ -1,54 +1,55 @@
-# reference — 참고 자료
+# reference — source material
 
-menagerie를 만들 때 본 것들. 무엇을 가져왔고 무엇을 일부러 안 가져왔는지 함께 적는다.
+What was looked at while making menagerie, along with what was taken from it and what was deliberately left alone.
 
 ## 1. Weird Faces — Matthias Dörfelt (mokafolio)
 
-- 출처: <https://www.mokafolio.de/works/Weird-Faces>
-- 2012–2013. 종이에 아카이벌 디지털 프린트 연작
-- 구현: **Paper.js** (HTML5 Canvas 위의 벡터 스크립팅 프레임워크)
-- 소스 코드는 공개돼 있지 않다. `github.com/mokafolio`에 Weird Faces 저장소는 없고
-  `Paper2`(C++ 포팅), `PaperJSWorkshopAustin` 정도만 있다
+- Source: <https://www.mokafolio.de/works/Weird-Faces>
+- 2012–2013. A series of archival digital prints on paper
+- Built with **Paper.js** (a vector scripting framework over HTML5 Canvas)
+- The source code is not public. There is no Weird Faces repository on `github.com/mokafolio` — only
+  `Paper2` (a C++ port) and `PaperJSWorkshopAustin`
 
-작가가 밝힌 것 중 구조에 해당하는 두 가지:
+Two structural points the artist has described (paraphrased from the page above, not quoted):
+the faces look hand-drawn but are expressed entirely in algorithmic rules; and each facial feature has
+presets that are combined at random, with the presets themselves algorithmic, so a single preset carries
+endless variation.
 
-> 손으로 그린 것처럼 보이지만, 전적으로 알고리즘 규칙으로 표현된다
+**What was taken** — the structure of combining per-feature presets, and the principle of getting a
+hand-drawn texture from rules alone, with no texture or brush images. The slot structure in
+`src/character/vocabulary/slots.js` corresponds to this.
 
-> 얼굴 부위별로 프리셋을 두고 임의로 섞어 최종 얼굴을 구성한다. 프리셋 자체가
-> 알고리즘으로 표현돼서 프리셋 하나가 무한한 변주를 가진다
+**What was not taken** — the artist's facial vocabulary and drawing style. The part kinds and the six
+archetypes were put together separately for this lab. Having a torso, limbs and color is a decision here too.
 
-**가져온 것** — 부위별 프리셋을 섞는 구조, 그리고 텍스처·브러시 이미지 없이 규칙만으로
-손그림 질감을 낸다는 원칙. `src/vocabulary/slots.js`의 슬롯 구조가 여기 대응한다.
+**Observed directly** (features read off the images, not the artist's own description):
+- The head outline is not a geometric figure. It is lumpy and squashed on one side → `blobPath`
+- Hair is not filled as an area but drawn densely back and forth with a pen → `Sketch.scribble`
+- Left-right asymmetry is strong. Eye size and height are openly different → `eyeSizeSkew`, `eyeHeightSkew`
+- The nose is a single hooked stroke → the `nose` slot
 
-**가져오지 않은 것** — 작가의 얼굴 어휘와 그림체. 파츠 종류와 아키타입 6종은 이 랩에서
-따로 구성했다. 몸통·팔다리·색이 있는 것도 이쪽 결정이다.
+## 2. A procedural creature grid (source unknown)
 
-**직접 관찰한 것** (이미지에서 읽은 특징이며 작가 설명은 아니다):
-- 머리 외곽선이 도형이 아니다. 울퉁불퉁하고 한쪽이 눌려 있다 → `blobPath`
-- 머리카락을 면으로 칠하지 않고 펜으로 빽빽하게 왕복해 긋는다 → `Sketch.scribble`
-- 좌우 비대칭이 세다. 눈 크기와 높이가 대놓고 다르다 → `eyeSizeSkew`, `eyeHeightSkew`
-- 코가 갈고리 한 획이다 → `nose` 슬롯
+Notes from observing the original video frame by frame are in [video-notes.md](video-notes.md).
 
-## 2. 절차적 크리처 그리드 (출처 미상)
+- A screenshot of a social post, supplied by the user. The original post URL was never confirmed
+- The post's text: the creatures breathe, blink and glance around on their own clocks, and each one is
+  a seed plus three.js code
+- A 7×5 lattice, a hand-drawn floor line per cell, a paper-textured background, pencil tones and pale fills
 
-영상 원본을 프레임 단위로 관찰한 노트는 [video-notes.md](video-notes.md)에 있다.
+**What was taken** — the lattice layout and the floor line, the big head + small torso + stick limb
+skeleton, and the idea that **each individual moves on its own clock**. `src/motion/` corresponds to this.
+Thirty-five creatures blinking at once look like a machine.
 
-- 사용자가 제공한 소셜 게시물 스크린샷. 원 게시물 URL은 확인하지 못했다
-- 게시물 문구: 크리처들이 각자의 시계로 숨쉬고 깜빡이고 두리번거리며, 하나하나가
-  시드와 three.js 코드라는 내용
-- 7×5 격자, 셀마다 손으로 그은 바닥선, 종이 질감 배경, 연필 톤과 옅은 채색
+**What was not taken** — the character design. The only thing in common is the use of three.js; the
+internals are unknowable.
 
-**가져온 것** — 격자 배치와 바닥선, 큰 머리 + 작은 몸통 + 막대 팔다리 골격,
-그리고 **개체마다 다른 시계로 움직인다**는 발상. `src/motion/`이 여기 대응한다.
-35마리가 동시에 깜빡이면 기계처럼 보인다.
+## Image files
 
-**가져오지 않은 것** — 캐릭터 디자인. three.js를 쓴다는 점만 같고 내부 구현은 알 수 없다.
+The original images are not kept in this folder. Both are someone else's work, so keeping them here would
+amount to copying and redistributing them in the repo — better to keep them locally only and put them in
+`.gitignore`.
 
-## 이미지 파일
-
-원본 이미지는 이 폴더에 두지 않았다. 둘 다 타인의 저작물이라 레포에 복사해 재배포하는
-형태가 되므로, 필요하면 로컬에서만 두고 `.gitignore`에 넣는 편이 낫다.
-
-로컬 참고용으로 두려면 이 폴더에 `weird-faces.png`, `creature-grid.png` 같은 이름으로
-그냥 넣으면 된다. 레포 루트 `.gitignore`가 이 폴더의 이미지를 이미 제외하고 있으므로
-커밋되지 않는다.
+To keep them for local reference, just drop them in this folder under names like `weird-faces.png` and
+`creature-grid.png`. The repo root's `.gitignore` already excludes images in this folder, so they will not
+be committed.

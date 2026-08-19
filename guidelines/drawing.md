@@ -1,82 +1,100 @@
-# 그리기 규칙
+# Drawing rules
 
-## 색은 선형 공간으로 넣는다
+## Colors go in as linear
 
-three.js는 정점 색을 **선형(linear) 공간**으로 보고 출력할 때 sRGB로 변환한다.
-sRGB 헥스를 그대로 넣으면 어두운 색이 밝아진다. 잉크 `#2b2724`(0.169)를 그대로 주면
-화면에서 **0.449 중간 회색**이 된다. 획을 아무리 두껍게 해도 회색인 채로 남는다.
+three.js reads vertex colors as **linear** space and converts to sRGB on output.
+Feed it an sRGB hex as-is and dark colors brighten. Give it the ink `#2b2724` (0.169) directly and it becomes
+**0.449, a mid grey**, on screen. However thick you make the stroke, it stays grey.
 
-`color.js`의 `hexToRgb`가 `srgbToLinear`를 거치도록 돼 있고 `stroke.js`는 이것만 쓴다. **이 경로를 우회하지 않는다.**
-헥스 색을 다루는 유틸(`hexToRgb`·`luminance`·`isDark`·`shade`)은 전부 `src/color.js` 하나다 — 캐릭터(팔레트·얼굴 잉크 판정)와 그리기(정점 색·톤)가 같은 함수를 쓴다.
+`hexToRgb` in `color.js` is wired to go through `srgbToLinear`, and `stroke.js` uses nothing else.
+**Never bypass this path.** The utilities that handle hex colors (`hexToRgb`, `luminance`, `isDark`, `shade`)
+all live in the single file `src/color.js` — character (the palette, face-ink decisions) and drawing (vertex
+colors, tones) use the same functions.
 
-캔버스로 구운 텍스처도 같다. `CanvasTexture`에는 `colorSpace = THREE.SRGBColorSpace`를 명시한다.
+The same goes for textures baked onto a canvas. State `colorSpace = THREE.SRGBColorSpace` on a
+`CanvasTexture`.
 
-## 선은 Line이 아니라 리본이다
+## A line is a ribbon, not a Line
 
-WebGL의 `linewidth`는 대부분의 환경에서 1로 고정된다. `THREE.Line`으로는 굵기를 줄 수 없다.
-모든 획은 `Sketch.stroke()`를 거쳐 삼각형 리본이 된다.
+WebGL's `linewidth` is fixed at 1 in most environments. `THREE.Line` gives you no control over thickness.
+Every stroke goes through `Sketch.stroke()` and becomes a triangle ribbon.
 
-손그림처럼 보이려면 네 가지가 같이 있어야 한다. 하나라도 빠지면 벡터 클립아트가 된다.
+Four things have to be present together to look hand-drawn. Leave out any one and it becomes vector clip art.
 
-1. **재샘플링** — 일정 간격으로 점을 다시 찍는다. 안 하면 긴 구간에서만 노이즈가 먹는다
-2. **법선 방향 노이즈** — 저주파(전체가 휘는 것)와 고주파(잔떨림)를 겹친다
-3. **끝 가늘어짐** — 시작과 끝이 눌린다. 표본이 둘뿐인 짧은 획(재샘플 간격 0.03보다 짧은 점·주근깨)은 가운데 표본을 하나 넣어
-   폭이 0이 되지 않게 한다 — 안 그러면 점 입·점 코가 사라진다
-4. **필압 변조** — 중간 굵기가 일정하지 않다
+1. **Re-sampling** — the points are re-placed at an even spacing. Without it the noise only bites on long
+   segments
+2. **Noise along the normal** — low frequency (the whole thing bending) overlaid with high frequency (fine
+   tremor)
+3. **End taper** — the start and end are pinched. A short stroke with only two samples (dots and freckles
+   shorter than the 0.03 re-sample spacing) gets one sample in the middle so its width never reaches 0 —
+   otherwise a dot mouth or dot nose disappears
+4. **Pressure modulation** — the thickness in the middle is not constant
 
-굵기를 전체적으로 바꿀 일이 생기면 개별 `width` 값이 아니라 `Sketch`의 `inkScale`을 조정한다.
+When the thickness needs changing globally, adjust `Sketch`'s `inkScale` rather than the individual `width`
+values.
 
-## 레이어 순서
+## Layer order
 
-`depthTest: false`로 그리므로 순서는 `renderOrder`가 전부 결정한다. 표는 [rig.md](rig.md) § 계층에
-한 번만 둔다 — 새 메시를 넣을 때 거기를 갱신한다. 채색이 잉크보다 뒤에 오면 선이 묻힌다.
+Everything is drawn with `depthTest: false`, so order is decided entirely by `renderOrder`. The table lives in
+[rig.md](rig.md) § the hierarchy, once only — update it there when adding a new mesh. Put the fills after the
+ink and the lines are buried.
 
-한 층의 채색과 잉크는 **한 메시**다 — `buildGeometry([fills, ink])`가 채색 스케치 다음 잉크 스케치를 한 지오메트리로 잇는다. 같은 메시 안에서는
-정점 순서가 곧 앞뒤라(depthTest 없음) 채색이 밑, 잉크가 위로 그려진다. 층을 둘로 나눠야 하는 건 다른 층의 무엇이 그 사이에 끼어야 할 때뿐이다
-(얼굴·정지 눈 — [rig.md](rig.md)). 메시 하나가 draw call 하나다 ([performance.md](performance.md)).
+A layer's fills and ink are **one mesh** — `buildGeometry([fills, ink])` joins the fills sketch and then the
+ink sketch into one geometry. Within one mesh, vertex order is front-to-back (there is no depthTest), so the
+fills draw below and the ink above. The only reason to split a layer in two is when something from another
+layer has to come between them (the face and the static eyes — [rig.md](rig.md)). One mesh is one draw call
+([performance.md](performance.md)).
 
-## 생성은 한 번, 애니메이션은 변형만
+## Generate once; animation only transforms
 
-매 프레임 획을 다시 만들지 않는다. 35마리 × 수십 획을 매 프레임 재생성하면 죽는다.
+Never rebuild strokes every frame. Regenerating 35 creatures × dozens of strokes per frame kills it.
 
-- 정적인 선 → 크리처당 보일 변형 3벌(층 13개 — 몸·뒷머리·옆귀·머리·뿔·두피 위 머리카락·개/고양이 귀·모자·얼굴·정지 눈 ×2(눈마다)·얼굴 앞·앞머리, 층마다 채색+잉크 한 메시)을
-  미리 굽고 visible 토글로 순환한다. 변형은 `character/draw/index.js` `drawCreature(spec, variant)`의 지터 위상만 다르다. 재질은 불투명도별로 공유한다
-- 움직이는 것 → 분리된 리그만 변형한다. 계층:
-  `group(발) ─ bodyGroup(보일 3벌·꼬리 피벗·팔다리 피벗) ─ headGroup(목 축, 보일 3벌) ─ faceGroup(돌림, 보일 3벌) ─ 눈 리그·눈썹·입`
-  머리는 목(bodyTop)을 축으로 돌고, 꼬리·팔·다리는 각자의 피벗(뿌리·어깨·엉덩이)에
-  걸려 `rotation.z`로 흔들린다. 지체는 늘어진 기준 상태로 한 번 굽고 각도만 바꾼다.
-  눈썹·입은 상태 벌을 미리 굽고 visible 토글로 전환한다
-- 관절 목표각은 clock이 주고 scene이 이징(0.12/프레임)으로 따라간다. 관절이 튀면 그림이 깨진다. 인사·파닥임의 진동만 이징 없이 얹는다
-- 호흡 → 그룹 전체의 `scale`. 그룹 원점이 발바닥이므로 발이 바닥에 붙은 채로 늘어난다
-- 재생성 → 슬롯 단위로 개체를 통째로 새로 굽는다. 이벤트당 한 번이라 허용된다
+- Static lines → 3 boil variants per creature (13 layers — body, back hair, side ears, head, horns, hair on
+  the scalp, dog/cat ears, hat, face, static eyes ×2 (one per eye), the front of the face, bangs; one mesh of
+  fills + ink per layer) are baked up front and cycled by toggling visible. The variants differ only in the
+  jitter phase of `drawCreature(spec, variant)` in `character/draw/index.js`. Materials are shared per opacity
+  level
+- Moving things → only the separated rig transforms. The hierarchy:
+  `group (feet) ─ bodyGroup (3 boil sets, the tail pivot, limb pivots) ─ headGroup (the neck axis, 3 boil sets) ─ faceGroup (the turn, 3 boil sets) ─ the eye rig, brows, mouth`
+  The head turns about the neck (bodyTop), and the tail, arms and legs hang off their own pivots (root,
+  shoulder, hip) and swing with `rotation.z`. A limb is baked once in its hanging reference state and only its
+  angle changes. Brows and the mouth have their state sets baked up front and switch by toggling visible
+- Joint target angles come from the clock and the scene follows them with easing (0.12/frame). A snapping
+  joint breaks the drawing. Only the oscillation of a wave or a flap is laid on without easing
+- Breathing → the `scale` of the whole group. The group's origin is at the soles, so it stretches with the
+  feet still on the floor
+- Regen → the whole individual is re-baked, per slot. Once per event, so it is allowed
 
-새로 움직이는 요소를 넣고 싶으면 "지오메트리를 다시 만들어야 하나"를 먼저 묻는다.
-답이 예라면 대개 설계가 틀린 것이다.
+If you want to add a new moving element, first ask "does this require rebuilding geometry?".
+If the answer is yes, the design is usually wrong.
 
-## 보일
+## The boil
 
-같은 그림을 지터 위상만 다르게 3벌 굽고(`drawCreature(spec, variant)`) 개체별 약 0.53~0.67fps(1.5~1.9초에 한 번)로 visible을
-순환한다. 스크리블 채움도 변형마다 다시 그려져 함께 끓는다.
+The same drawing is baked in 3 sets differing only in jitter phase (`drawCreature(spec, variant)`) and visible
+is cycled at roughly 0.53~0.67 fps per individual (once every 1.5~1.9 s). Scribble fills are redrawn per
+variant too and boil along with it.
 
-**보일은 재질이지 모션이 아니다.** 캐릭터가 바인드 포즈로 정지해 있어도 선은 끓는다 — 종이 위 연필선이
-그런 것이지 캐릭터가 뭘 하고 있는 게 아니다. 그래서 화면 토글도 POSE(리그)와 INK(선)로 나뉜다.
-모션 판단을 할 때는 INK STILL로 보일 잡음을 끄고 관절만 본다.
+**The boil is a material, not a motion.** The lines boil even while the character is frozen in the bind pose —
+that is what a pencil line on paper does; it is not the character doing something. Which is why the on-screen
+toggles are split into POSE (the rig) and INK (the lines). When judging motion, turn the boil noise off with
+INK STILL and watch the joints alone.
 
-## 개체마다 손이 다르다
+## Every individual has a different hand
 
-`proportions.wobble`이 개체별 손떨림 배율이다. 어떤 놈은 반듯하게, 어떤 놈은 엉망으로
-그려져야 한 판이 사람 손처럼 보인다. 이 값을 무시하고 상수로 그리면 전부 같은 필체가 된다.
+`proportions.wobble` is the per-individual hand-shake multiplier. Some have to come out neat and some a mess
+for one board to look like a human hand made it. Ignore this value and draw with a constant and everything
+ends up in the same handwriting.
 
-## 모듈 캐시
+## The module cache
 
-`serve.mjs`는 상대 경로 import에 `?v=` 를 붙인다. `Cache-Control: no-store`만으로는
-브라우저의 ES module map이 비워지지 않아 **파일을 고쳐도 이전 코드가 실행된다.**
+`serve.mjs` appends `?v=` to relative import specifiers. `Cache-Control: no-store` alone does not clear the
+browser's ES module map, so **an edited file still runs the previous code.**
 
-고친 게 반영 안 되면 이걸 먼저 의심한다. 확인 방법:
+If a change is not showing up, suspect this first. How to check:
 
 ```js
-// 콘솔에서
-document.querySelector('script[type=module]').getAttribute('src')  // ?v=... 가 붙어 있어야 한다
+// in the console
+document.querySelector('script[type=module]').getAttribute('src')  // ?v=... has to be there
 ```
 
-서버를 재시작하면 `BUILD`가 새로 찍히므로 모든 모듈 URL이 바뀐다.
+Restart the server and `BUILD` is stamped anew, so every module URL changes.

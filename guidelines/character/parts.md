@@ -1,387 +1,387 @@
-# 파츠 카탈로그
+# Parts catalog
 
-> 기준: `src/character/vocabulary/slots.js`, `src/character/draw/`. 코드가 바뀌면 이 문서도 같은 커밋에서 고친다.
+> Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-`src/character/vocabulary/slots.js` `SLOTS`의 전체 목록. 23슬롯 180파츠. 그리기는 `src/character/draw/` (섹션 = 파일: `head.js` 윤곽·귀 · `hair.js` 머리카락 ·
-`headgear.js` 모자·뿔 · `face.js` 눈·눈썹·안경·코·주둥이·볼·수염 · `mouth.js` 입 · `faceStates.js` 눈썹·입의 상태 벌 · `body.js` 몸·무늬 · `limbs.js` 팔다리·꼬리).
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 23 slots, 180 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+`hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
-**규칙**: 슬롯은 **형태(생김새)** 만 담는다. 자세·동작은 `motion/` 상태다 ([rules.md](rules.md) 참조).
-뽑는 순서는 `SLOTS`의 선언 순서이고 이게 곧 시드다 — 순서 변경은 **기존 시드를 깬다**. 새 슬롯은 `LATE_SLOTS`에
-붙여 맨 끝에 뽑으면 기존 판이 유지된다 ([../determinism.md](../determinism.md)). 아래 목록은 부위별로 묶은 것이라
-선언 순서와 다르다.
+**The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
+The draw order is the declaration order of `SLOTS` and that *is* the seed — reordering **breaks existing seeds**. Append a new slot to `LATE_SLOTS`
+so it is drawn at the very end and existing boards are preserved ([../determinism.md](../determinism.md)). The list below is grouped by body part, so it
+differs from the declaration order.
 
-**머리와 얼굴은 다른 리그다.** 머리(윤곽·머리카락·모자·뿔·귀)는 `headGroup`에, 얼굴(눈·눈썹·안경·코·볼·입·수염·주둥이)은
-`faceGroup`에 굽는다 — 얼굴 돌림(모션)이 이목구비만 통째로 민다 ([../rig.md](../rig.md)). 정지 눈은 **눈마다 한 층**이다 — 윙크가 한쪽만
-아치로 바꿀 때 그 눈만 끈다 ([rules.md](rules.md) § 얼굴 파츠는 어느 상태에서도 보여야 한다).
+**The head and the face are different rigs.** The head (outline, hair, hat, horns, ears) is baked into `headGroup` and the face (eyes, brows, eyewear, nose, cheeks, mouth, whiskers, muzzle) into
+`faceGroup` — a face turn (motion) shifts the features alone, as one ([../rig.md](../rig.md)). Static eyes are **one layer per eye** — so a wink can turn one side
+into an arch by switching off only that eye ([rules.md](rules.md) § a face part has to be visible in every state).
 
-## 머리
+## Head
 
-### head — 윤곽 (7)
-`blobPath`의 superellipse(각짐)·taper(위아래 폭 비)·크기 배율로 만든다. `HEAD_SHAPES` 표.
+### head — the outline (7)
+Built from `blobPath`'s superellipse (angularity), taper (the top/bottom width ratio) and size multipliers. The `HEAD_SHAPES` table.
 
-| 값 | square | taper | rx / ry | 인상 |
+| Value | square | taper | rx / ry | Impression |
 | --- | --- | --- | --- | --- |
-| round | 0 | 0 | 1 / 1 | 원 |
-| square | 1.5 | 0 | 1 / 0.96 | 모서리 둥근 사각 |
-| tall | 0.9 | −0.05 | 0.86 / 1.22 | 세로 직사각 |
-| pear | 0.25 | +0.3 | 1 / 1.06 | 아래가 넓은 서양배 |
-| wide | 0.7 | +0.1 | 1.28 / 0.9 | 옆으로 퍼짐 |
-| egg | 0.2 | +0.28 | 0.94 / 1.14 | 세로 달걀 |
-| block | 2.2 | 0 | 1.06 / 0.98 | 거의 사각 |
+| round | 0 | 0 | 1 / 1 | A circle |
+| square | 1.5 | 0 | 1 / 0.96 | A rounded square |
+| tall | 0.9 | −0.05 | 0.86 / 1.22 | A tall rectangle |
+| pear | 0.25 | +0.3 | 1 / 1.06 | A bottom-heavy pear |
+| wide | 0.7 | +0.1 | 1.28 / 0.9 | Spread sideways |
+| egg | 0.2 | +0.28 | 0.94 / 1.14 | A tall egg |
+| block | 2.2 | 0 | 1.06 / 0.98 | Almost square |
 
-머리는 그 위에 노이즈 혹(headLumps)이 얹히고, 연필 스크리블 채움이 덮인다.
+Noise lumps (headLumps) are laid on top of the head, and a pencil scribble fill covers it.
 
-### eyes — 눈 종류 (20)
-| 값 | 그리기 | 살아 있나 (동공·깜빡임) |
+### eyes — eye kinds (20)
+| Value | Drawing | Alive (pupil, blink) |
 | --- | --- | --- |
-| ring | 흰자 + 윤곽 + 동공 | ● 눈 리그 |
-| wide | ring보다 1.3배 크게 (`eyeGeometry`) | ● |
-| cyclops | 중앙 외눈 하나, 1.75배 | ● (side 0) |
-| oval | 세로 타원 왕눈 — 흰자 0.82r × 1.22r (`EYE_SHAPE`), 눈꺼풀도 그 높이 | ● |
-| dot | 검은 점 | ✗ 정적 |
-| line | 일자눈 ㅡ ㅡ — 무표정 대시 | ✗ |
-| happy | 늘 웃는 ^^ — 행복 상태의 미소 아치와 같은 모양, 항상 | ✗ (angry 눈썹 → flat) |
-| hollow | 빈 눈 — ring에서 **동공만 뺀 것**(흰자 + 윤곽). 어느 종족이든 같다, 도깨비도 흰 눈 | ✗ |
-| squeeze | >_< 꼭 감은 눈 — 코 쪽을 향한 꺾쇠 | ✗ (angry 눈썹 → flat) |
-| side | ¬_¬ 곁눈질 — 반감김(아래 호 + 눈꺼풀 선, 호 안이 **흰자**)에 동공이 한쪽으로 몰림 (개체별 방향) | ✗ |
-| droop | ´･ω･` 처진 눈꼬리 — 점 눈 + 바깥으로 내려가는 눈꺼풀 획 (시무룩) | ✗ (angry → flat) |
+| ring | White + outline + pupil | ● the eye rig |
+| wide | 1.3× bigger than ring (`eyeGeometry`) | ● |
+| cyclops | One central eye, 1.75× | ● (side 0) |
+| oval | A tall elliptical big eye — the white 0.82r × 1.22r (`EYE_SHAPE`), the lid at that height too | ● |
+| dot | A black dot | ✗ static |
+| line | A flat two-dash eye — an expressionless dash | ✗ |
+| happy | An always-smiling ^^ — the same shape as the happy state's smile arch, always on | ✗ (angry brow → flat) |
+| hollow | An empty eye — ring with **only the pupil taken out** (white + outline). The same on every species; an imp gets a white eye too | ✗ |
+| squeeze | >_< screwed shut — a bracket pointing toward the nose | ✗ (angry brow → flat) |
+| side | ¬_¬ a sideways glance — half-lidded (a lower arc plus a lid line, with **the white** inside the arc) and the pupil pushed to one side (the direction is per individual) | ✗ |
+| droop | ´･ω･` drooping outer corners — a dot eye plus a lid stroke falling outward (glum) | ✗ (angry → flat) |
 
-☆_☆ 별눈·♥_♥ 하트눈은 눈 **종류가 아니다** — 놀람의 변형이다(감탄·반함). 놀람 이벤트가 star/heart 변형이면 4초 동안 눈을 끄고 그 자리에
-글리프를 그린다 — 덮는 게 아니라 **대체** ([../motion/catalog.md](../motion/catalog.md) § 놀람, `scene/rig.js eyeFx`). 그래서 정지 눈은
-얼굴 프레임과 따로 굽는다(`staticEyes` 프레임).
-| sleepy | 아래로 감은 호 | ✗ |
-| half | 반감김 — 눈꺼풀 선 **아래쪽 호**만 + 호 안의 **흰자** + 눈꺼풀 선 + 선 밑 동공 (원 전체에 선을 그으면 "선 그어진 동그라미"로 뭉개진다) | ✗ |
-| spiral | 소용돌이 — **한 획으로 안으로 감기는** 정갈한 나선 | ✗ |
-| scrawl | 크레파스로 마구 그린 동그라미 — 한 바퀴를 조금 넘겨 그린 고리 **여섯**을 겹친다. 고리마다 중심·크기(0.45~1.05배)·기울기가 달라 획이 서로를 지나치고 끝이 안 맞물린다 (미미큐식 낙서 눈). 나선과 달리 동심원이 아니다 | ✗ |
-| lidded | 무거운 눈꺼풀 — 윤곽 + 눈을 가로지르는 **굵고 처진 눈꺼풀 선**(가운데가 처진다), 선 **아래는 흰자**·**위는 살**, 선 밑에서 내다보는 동공. 반감김(half)이 획 하나라면 이건 눈꺼풀이 두꺼운 눈이다 | ✗ |
-| sharp | lidded를 **코 쪽으로 0.34rad 기울인 것** — 눈꼬리가 올라가고 코 쪽이 내려가 사나운 인상 | ✗ |
-| soft | lidded를 **반대로 0.34rad 기울인 것** — 눈꼬리가 처져 순한 인상 (sharp의 거울상) | ✗ |
+☆_☆ star eyes and ♥_♥ heart eyes are **not eye kinds** — they are startle variants (awe, smitten). When a startle event is the star or heart variant, the eyes are switched off for 4 seconds and the
+glyph is drawn in their place — a **substitution**, not a covering ([../motion/catalog.md](../motion/catalog.md) § the face, `scene/rig.js eyeFx`). Which is why static eyes are baked
+separately from the face frame (the `staticEyes` frame).
+| sleepy | An arc closed downward | ✗ |
+| half | Half-lidded — only the **lower arc** of the lid line + **the white** inside the arc + the lid line + the pupil below the line (a line across the whole circle smears into "a circle with a line through it") | ✗ |
+| spiral | A spiral — a neat spiral **winding inward in one stroke** | ✗ |
+| scrawl | A circle scribbled with a crayon — **six** loops, each drawn a bit past one turn, overlaid. Each loop has its own centre, size (0.45~1.05×) and tilt, so the strokes pass over each other and the ends never meet (a Mimikyu-ish scribbled eye). Unlike the spiral, it is not concentric | ✗ |
+| lidded | A heavy lid — the outline plus a **thick, sagging lid line** across the eye (sagging in the middle); **below the line is the white, above it is skin**, with the pupil peeking out below the line. If half-lidded (half) is one stroke, this is an eye with a thick lid | ✗ |
+| sharp | lidded **tilted 0.34 rad toward the nose** — the outer corner lifts and the nose side drops, for a fierce impression | ✗ |
+| soft | lidded **tilted 0.34 rad the other way** — the outer corner droops, for a gentle impression (the mirror of sharp) | ✗ |
 | cross | X | ✗ |
-| slit | 아몬드 윤곽(반높이 0.7r) + 아몬드 안의 **흰자** + **채운** 세로 방추 동공 (얇은 획이면 작을 때 안 읽힌다) | ✗ |
+| slit | An almond outline (half-height 0.7r) + **the white** inside the almond + a **filled** vertical spindle pupil (a thin stroke does not read when small) | ✗ |
 
-흰자가 있는 정적 눈(hollow·lidded·sharp·soft·half·side·slit)의 선·동공은 **어두운 팔레트 잉크**다 — 흰자 위라 밝은 얼굴 잉크로 그리면 묻힌다 (도깨비도 같다).
-**동공이 있는 눈은 흰자 위에 얹는다.** 살색 위에 동공만 찍으면 얼룩으로 읽히고, 검은 털·도깨비에서는 눈 윤곽이 머리와 한 덩어리가 된다.
-half·side는 눈꺼풀 선 **아래 호가 감싸는 자리**만, slit은 아몬드 안을 채운다 — 눈꺼풀(선 위)은 눈알이 아니라 살이라 채우지 않는다.
-흰자가 있으면 **윤곽·눈꺼풀 선도 채색 스케치(`fills`)에** 그린다 — 정지 눈 두 층은 렌더 순서가 같아 잉크에 두면 뒷눈 윤곽이 앞눈 흰자 위로 올라온다
-([rules.md](rules.md) § 두 눈은 조금만 겹치고).
+The lines and pupil of a static eye with a white (hollow, lidded, sharp, soft, half, side, slit) use **the dark palette ink** — being on a white, light face ink would be lost (imps included).
+**An eye with a pupil is laid on a white.** Stamp a pupil alone on skin tone and it reads as a patch, and on black fur or an imp the eye outline merges with the head.
+half and side fill only **what the lower arc encloses** below the lid line; slit fills inside the almond — the lid (above the line) is skin, not eyeball, and is not filled.
+When there is a white, **the outline and lid line are drawn into the fills sketch (`fills`) too** — the two static eye layers share a render order, so putting them in the ink raises the back eye's outline above the front eye's white
+([rules.md](rules.md) § a face part has to be visible in every state).
 
-**무거운 눈꺼풀 한 벌 — lidded · sharp · soft.** 셋은 **같은 눈을 기울기만 달리** 쓴다: 흰자·눈꺼풀 선·동공을 눈 중심을 축으로
-0(lidded) / +0.34rad 코 쪽(sharp) / −0.34rad 반대(soft)만큼 통째로 돌린다(`TILTED_LID`). 모양을 따로 만들면 같은 눈으로 안 읽힌다 —
-인상만 바뀌어야 한다. 눈꺼풀 선 **아래는 흰자, 위는 살**(`palette.skin`)이고 잉크는 **윤곽·눈꺼풀 선·동공**에만 들어간다:
-위까지 흰자로 두면 눈 위에 **흰 초승달이 하나 더 얹힌 것**처럼 읽히고, 눈꺼풀을 먹으로 채우면 검은 머리(도깨비·검은 털)에서
-머리와 한 덩어리가 되어 **흰 초승달만 남아** 눈으로 안 읽힌다. 살 부분은 눈꺼풀 선에 윤곽 점 배열의 윗부분(±`asin(0.16)` 바깥)을 이어 닫는다. 눈꺼풀 선 굵기는 눈 크기에 비례한다(≤ 0.2r) — 고정 굵기면 작은 눈(고양이)에서 흰자를 다 덮는다.
-정적인 눈은 얼굴 잉크(faceGroup)에 굽는다 — 얼굴 돌림을 같이 따라간다. 살아 있는 눈(`RIG_EYES`)만 별도 눈 리그(흰자·윤곽·동공·눈꺼풀·^^·감은 선)로 세운다.
-새 일곱(oval·line·happy·hollow, 카오모지의 squeeze·side·droop)은 아직 종족을 안 가른다 — 모든 종족·아키타입
-bias에 같은 무게(1.5, hollow·squeeze·side·droop 1)로 들어 있다. (세모 눈 ◣_◢은 눈이 가까우면 하나로 붙어 빠졌고, ☆·♥은 놀람 변형으로 옮겼고,
-하이라이트 있는 눈망울 눈 둘 — 단추눈 bead·◕ sparkle — 은 뺐다)
-`LINE_EYES`(sleepy·line·happy·squeeze·droop·cross·half·side)는 좌우 대칭이다 — 눈을 규정하는 게 획 하나(눈꺼풀 선·아치)라
-한쪽만 작거나 높으면 "작은 눈"이 아니라 실수로 읽힌다. half·side는 흰자가 생긴 뒤에도 이 목록에 남는다 ([rules.md](rules.md)). 안대에 가린 눈은 `patched(spec, eye)`로 건너뛴다 — 안대가 있을 때만 (patchSide만 보면 안대가 뒤늦게 빠졌을 때 눈이 같이 사라진다).
+**The heavy-lidded set — lidded · sharp · soft.** The three use **the same eye at different tilts**: the white, lid line and pupil are rotated as one about the eye's centre by
+0 (lidded) / +0.34 rad toward the nose (sharp) / −0.34 rad the other way (soft) (`TILTED_LID`). Built as separate shapes they would not read as the same eye —
+only the impression should change. **Below the lid line is the white, above it is skin** (`palette.skin`), and the ink goes **only into the outline, lid line and pupil**:
+leave the top as white too and it reads as **one more white crescent** laid over the eye; fill the lid with ink and on a black head (an imp, black fur)
+it merges with the head, **leaving only the white crescent**, which does not read as an eye. The skin part is closed by joining the upper portion of the outline's point array (outside ±`asin(0.16)`) to the lid line. The lid line's thickness is proportional to the eye size (≤ 0.2r) — at a fixed thickness it covers the whole white on a small eye (a cat).
+Static eyes are baked in face ink (faceGroup) — so they follow the face turn. Only live eyes (`RIG_EYES`) are stood up as a separate eye rig (white, outline, pupil, lid, ^^, shut line).
+The seven newer ones (oval, line, happy, hollow, and the kaomoji squeeze, side, droop) do not yet split by species — they sit in every species and archetype
+bias at the same weight (1.5; hollow, squeeze, side and droop 1). (The triangle eye ◣_◢ was dropped because close-set eyes merged into one; ☆ and ♥ moved to startle variants; and the two
+highlighted eyeball eyes — bead and ◕ sparkle — were dropped.)
+`LINE_EYES` (sleepy, line, happy, squeeze, droop, cross, half, side) are left-right symmetric — one stroke (a lid line or an arch) defines the eye, so
+if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". half and side stay on this list even after gaining a white ([rules.md](rules.md)). An eye hidden by a patch is skipped with `patched(spec, eye)` — only when there is a patch (look at patchSide alone and the eye disappears along with a patch dropped late).
 
-### brow — 눈썹 (4)
-none / flat / angry(안쪽 내림) / worry(안쪽 올림). **상태 전환 대상** — 쉼/대체 두 벌을 굽고
-clock이 토글한다. 대체 표: none→flat, flat→worry, angry→flat, worry→flat.
+### brow — brows (4)
+none / flat / angry (inner end down) / worry (inner end up). **Subject to state switching** — rest and alt are both baked and
+the clock toggles them. The alt table: none→flat, flat→worry, angry→flat, worry→flat.
 
 ### eyewear (5)
-none / glasses(양쪽 원 + 다리, 알 반지름 = 눈 × 1.45) / goggles(큰 원 + 머리까지 끈, × 1.75) / patch(한쪽 안대 + 사선 끈) / monocle(한쪽 큰 원 + 줄).
-안경·고글은 **두 알이 겹치면 뺀다**(눈이 가까운 개체 — 눈에 맞춰 억지로 줄이지 않는다, `makeCreature`가 비율 확정 뒤 none으로).
-안대는 늘 **검은** 채움이다(물건) — 도깨비 먹빛 머리에서는 밝은 테를 두르고 끈만 밝은 잉크. **눈이 겹치면 뺀다**(안대 반지름 1.5r이 다른 눈에
-걸치면 — 비율 확정 뒤 판정). 안대는 **짝눈이면 뺀다** — 좌우 눈 크기(`eyeSizeSkew` > 0.09)나 높이(`eyeHeightSkew` > 0.03)가 눈에 띄게 다른 개체에 한쪽을 가리면 남은
-눈이 혼자 크거나 높아 실수처럼 보인다 (비율 확정 뒤 none, patchSide도 지운다).
+none / glasses (two circles plus arms, the lens radius = the eye × 1.45) / goggles (big circles plus a strap round the head, × 1.75) / patch (a patch over one eye plus a diagonal strap) / monocle (one big circle plus a cord).
+Glasses and goggles are **dropped when the two lenses overlap** (an individual whose eyes are close — they are never forced smaller to fit, `makeCreature` sets none once the proportions are settled).
+An eyepatch is always a **black** fill (an object) — on an imp's ink-black head it gets a light rim and only the strap is light ink. **Dropped when the eyes overlap** (when the patch radius of 1.5r
+laps onto the other eye — decided once the proportions are settled). An eyepatch is also **dropped on mismatched eyes** — cover one side of an individual whose eye size (`eyeSizeSkew` > 0.09) or height (`eyeHeightSkew` > 0.03) is noticeably different and the remaining
+eye looks oddly large or high on its own, which reads as a mistake (set to none after the proportions are settled; patchSide is cleared too).
 
 ### hair (24)
-`hair.js` — 종류마다 그리기 함수 하나(`HAIR` 표: 이름 → 함수). 새 머리는 함수를 하나 붙이고 `SLOTS.hair`에 이름을 넣는다.
-머리카락은 **세 층**에 나눠 그린다(`drawHair(layers)`): **뒷머리**(back — 머리·얼굴 뒤 1.55 → 실루엣 밖·어깨 위로 보이는 부분만) ·
-**두피 위**(crown 2.06 — 머리 잉크 위·얼굴 아래, 뿔과 같은 자리) · **앞머리**(front 6.55 — 얼굴 위에 그린다; 눈썹·입 6.6은 앞머리 위에 그려진다).
-얼굴 돌림(fake 3D)에는 층마다 **깊이**로 밀린다 — 앞머리·두피 위 +0.12(얼굴 쪽으로 조금), 뒷머리 −0.12(머리 뒤라 반대로) ([../rig.md](../rig.md) § fake 3D 깊이).
-그래서 긴 머리·트윈테일·포니테일(뒤)과 앞머리·옆머리 커튼(앞)이 된다.
+`hair.js` — one drawing function per kind (the `HAIR` table: name → function). New hair means adding one function and putting the name in `SLOTS.hair`.
+Hair is drawn across **three layers** (`drawHair(layers)`): **back hair** (back — behind the head and face, 1.55 → only what shows outside the silhouette and above the shoulders) ·
+**on the scalp** (crown 2.06 — above the head ink and below the face, at the same depth as the horns) · **bangs** (front 6.55 — drawn over the face; the brows and mouth at 6.6 are drawn above the bangs).
+On a face turn (fake 3D) each layer shifts by its **depth** — bangs and the scalp +0.12 (a little toward the face), back hair −0.12 (behind the head, so the other way) ([../rig.md](../rig.md) § fake 3D depth).
+That is what gives long hair, twintails and a ponytail (behind) and bangs and side curtains (in front).
 
-**늘어뜨린 머리는 머리에 붙어 흐른다**(`curtain` — long·verylong). 획마다 출발점이 머리 윤곽 위라 위 끝이 두상을 따라 둥글고, 아래로 가며 조금 벌어진다.
-획들을 같은 높이에서 일제히 시작하면(가로로 곧은 위 끝 + 일정한 폭) 머리카락이 아니라 **병풍**으로 읽힌다.
+**Hanging hair is attached to the head and flows** (`curtain` — long, verylong). Each stroke starts on the head outline, so the top edge is round, following the skull, and it spreads a little on the way down.
+Start every stroke at the same height (a straight horizontal top edge plus a constant width) and it reads not as hair but as **a folding screen**.
 
-| 값 | 방식 |
+| Value | How |
 | --- | --- |
 | none | |
-| bob / mop / scribble / sweep | 두피를 덮는 **스크리블**(crown) — 부피가 있다: 호가 귀 높이(depth 0.56~0.62, sweep 0.4)까지 내려오고 넓게 퍼진다 + 머리보다 조금 큰 호를 **뒤**(back)에 한 겹 더(sweep 제외). 눈까지 오지 않는다 |
-| helmet | 두건형(바가지) — 정수리에서 아래로 떨어지는 획을 촘촘히: 앞(\|x\| < 0.8rx)은 **눈썹 선**까지 앞머리(front), 옆은 귀 아래까지(crown), 바깥 경계는 뒤(back). 아래 경계는 가운데 눈썹 선 → 옆으로 부드럽게 귀 아래(계단·직선 끝단 없음 — 그러면 챙 달린 투구가 된다). 끝은 들쭉날쭉, 옆으로 살짝 벌어짐 |
-| cloud | 구름형 곱슬 — 스캘럽 윤곽 큰 덩어리(머리 ×1.2, back) + 안은 고리 스크리블(crown) + 가장자리 고리들(back). 밴드와 같이 나온다 |
-| long | 긴 생머리 — 뒷머리(back) 커튼: 획마다 **머리 윤곽 위**에서 출발해(가운데는 정수리, 옆은 귀 높이) 어깨까지 흐르고 아래로 갈수록 1.14배 벌어진다 + 바깥 윤곽. 정수리 캡(crown) |
-| verylong | 아주 긴 생머리 — 같은 커튼이 **몸통 중간**까지(1.2배, 몸 위에 그려진다). 가슴 가운데(0.5rx 안)에서 출발하는 획은 건너뛴다 — 판 전체를 덮으면 망토가 된다. 정수리 캡 |
-| twintails | 트윈테일 — 머리 양옆 위에 묶고(끈) 뒤로 늘어지는 두 갈래(back) + 정수리 캡 |
-| twintailsBall | 트윈테일 + 두 갈래 **끝에 동그란 뭉치**(스크리블 덩어리 + 윤곽 2회) |
-| ponytail | 포니테일 — 정수리 뒤 한쪽(개체별)에 묶어 위로 솟았다 뒤로 늘어짐(back) + 정수리 캡 |
-| apple | 사과머리 — 정수리 한가운데 작은 뭉치가 사과 꼭지처럼 솟는다(crown, 가닥 4) + 끈. 모자 없음 |
-| appleBig | 큰 사과머리 — 가닥 6, 1.7배 길고 굵게, 넓게 벌어진다 + 긴 끈. 모자 없음 |
-| hedgehog | 고슴도치 — 정수리 **전면**에 짧은 가시(윤곽 줄 15 + 안쪽 줄 10, 방사형) |
-| bangs | 앞머리 — 정수리 스크리블(crown) + 이마를 덮는 지그재그 띠(front, 얼굴 위). 끝단은 **눈썹 선**(`browLine`)에서 들쭉날쭉 |
-| longbob | bangs + 양옆으로 턱 선 근처까지 내려오는 굵은 세로 스크리블(front — 얼굴 양옆·귀를 덮는 커튼) |
-| bun | 똥머리 — 정수리를 얇게 덮고 그 위에 뭉치 하나 + 비녀 획. 모자를 못 쓴다 |
-| spikes / mohawk | 정수리에서 뻗는 짧은 획 (11개 / 7개 좁게) |
-| tuft / wisp | 몇 가닥 (4 / 7) |
-| pigtails | 양옆 뭉치 두 개(back — 귀 뒤) + 정수리 살짝(crown) |
-| curly | 정수리를 따라 작은 원 7개 |
+| bob / mop / scribble / sweep | A **scribble** covering the scalp (crown) — with volume: the arc comes down to ear height (depth 0.56~0.62; sweep 0.4) and spreads wide, plus one more arc slightly bigger than the head **behind** it (back; sweep excepted). It does not reach the eyes |
+| helmet | The hood (bowl) type — dense strokes falling from the crown: the front (\|x\| < 0.8rx) is bangs (front) down to **the brow line**, the sides go below the ear (crown), and the outer boundary is behind (back). The lower boundary runs from the brow line in the middle smoothly out to below the ear (no step, no straight hem — that would make it a helmet with a brim). The tips are ragged and spread slightly to the sides |
+| cloud | The curly cloud type — a big mass with a scalloped outline (head ×1.2, back) plus loop scribbles inside (crown) plus loops along the edge (back). It comes out with a band |
+| long | Long straight hair — a back-hair (back) curtain: each stroke starts **on the head outline** (the crown in the middle, ear height at the sides), flows to the shoulders and spreads to 1.14× on the way down, plus an outer outline. A crown cap (crown) |
+| verylong | Very long straight hair — the same curtain down to **mid-torso** (1.2×, drawn over the body). Strokes starting in the middle of the chest (within 0.5rx) are skipped — covering the whole board makes it a cape. A crown cap |
+| twintails | Twintails — two tails tied high on either side of the head (with a tie) hanging back (back) plus a crown cap |
+| twintailsBall | Twintails plus **a round bunch at the end** of each tail (a scribble mass plus an outline drawn twice) |
+| ponytail | A ponytail — tied on one side behind the crown (per individual), rising and hanging back (back) plus a crown cap |
+| apple | An apple top — a small bunch rising like an apple stem in the middle of the crown (crown, 4 strands) plus a tie. No hat |
+| appleBig | A big apple top — 6 strands, 1.7× long and thick, spreading wide, plus a long tie. No hat |
+| hedgehog | A hedgehog — short spikes over **the whole** crown (an outline row of 15 plus an inner row of 10, radial) |
+| bangs | Bangs — a crown scribble (crown) plus a zigzag band covering the forehead (front, over the face). The hem is ragged at **the brow line** (`browLine`) |
+| longbob | bangs plus thick vertical scribbles coming down both sides to near the jaw line (front — curtains covering both sides of the face and the ears) |
+| bun | A bun — thinly covering the crown with one bunch on top plus a hairpin stroke. It cannot wear a hat |
+| spikes / mohawk | Short strokes reaching out from the crown (11 / 7, narrow) |
+| tuft / wisp | A few strands (4 / 7) |
+| pigtails | Two bunches at the sides (back — behind the ears) plus a light crown (crown) |
+| curly | 7 small circles along the crown |
 
-사람만 머리카락이 있다(개·고양이는 forbid로 전부 none, 도깨비는 spikes/none). 앞머리·옆단발·두건형·긴 머리(long·verylong)·트윈테일(·Ball)·포니테일은 모자·밴드 밑으로
-나와도 되는 머리에 들고, 구름형·고슴도치는 밴드와만, 모히칸·똥머리·사과머리(apple·appleBig)는 모자 없음. 눈을 덮는 머리는 없다 — 앞은 눈썹 선이 하한, 옆은 귀까지
+Only humans have hair (dogs and cats are all none via forbid; imps get spikes/none). Bangs, the side bob, the hood type, long hair (long, verylong), twintails (and Ball) and the ponytail count as hair that may come out
+from under a hat or band; cloud and hedgehog go with a band only; and mohawk, bun and the apple tops (apple, appleBig) take no hat. No hair covers the eyes — the front stops at the brow line and the sides go to the ear
 ([rules.md](rules.md)).
 
 ### headgear (7)
-`headgear.js` `drawHeadgear`. none / helmet(눈썹 위~정수리 위 돔 + 테두리 + 능선) / cap(정수리 돔 + 한쪽 챙) / band(이마 띠) / pot(눈썹 위에서 정수리보다 높이 솟는 통) /
-beret(기운 원반 + 꼭지) / bonnet(양옆 눈높이에서 정수리 위로 넘어가는 두툼한 테 — **비활성**: 프릴 느낌이라 어떤 bias에도 없다, 자산·갤러리에만). 색은 accent 또는 pop.
+`drawHeadgear` in `headgear.js`. none / helmet (a dome from above the brows to over the crown plus a rim and a ridge) / cap (a crown dome plus a brim to one side) / band (a forehead band) / pot (a tub rising from above the brows to higher than the crown) /
+beret (a tilted disc plus a nub) / bonnet (a thick band crossing from eye level on both sides over the crown — **disabled**: it reads as frilly and is in no bias; assets and gallery only). The color is accent or pop.
 
-**전부 눈썹 선 위에 앉는다** — 눈(안경·고글·안대·모노클 테 포함) 위쪽 끝에서 재서 눈이 높이 달린 개체도 가리지 않고, 폭은 그 높이의 머리 윤곽
-반폭을 따라 머리 크기·모양에 맞는다. 모자는 머리 **앞**의 별도 층(채색 2.14·잉크 2.16 — 윤곽·머리카락·뿔·귀 밑동을 덮되 눈·안경은 못 덮는다,
+**They all sit above the brow line** — measured from the top edge of the eyes (including eyewear, goggle, patch and monocle rims), so they never cover an individual whose eyes are set high; and their width follows the head outline's
+half-width at that height, fitting the head's size and shape. A hat is a separate layer **in front of** the head (fills 2.14, ink 2.16 — it covers the outline, hair, horns and the ears' roots but cannot cover the eyes or eyewear,
 [../rig.md](../rig.md)).
 
 ### horns (7)
-`headgear.js` `drawHorns`. none / curved / straight / antenna(끝에 공) / nub(작은 혹) / ram(나선) / crown(정수리 스파이크 열).
-imp는 1.8배.
+`drawHorns` in `headgear.js`. none / curved / straight / antenna (a ball at the tip) / nub (a small bump) / ram (a spiral) / crown (a row of spikes across the crown).
+Imps get 1.8×.
 
 ### ears (15)
-none / round · roundMid · roundBig / pointy · pointyMid · pointyBig / flap(아래로 늘어진 호) / long(긴 로브) / fold · foldMid · foldBig / perk · perkMid · perkBig.
-round·pointy·fold·perk는 **크기 셋**(1 · 1.4 · 1.8배, 모양은 같다) — 값 이름의 Mid/Big를 떼면 모양이다(`earKind`, `EAR_SIZE`).
-**fold는 한쪽만 접힌다** — 반대쪽은 선 귀다(접히는 쪽은 개체별 `wobbleSeed`, rng 없음). 좌우가 다른 게 개답다. **perk**는 양쪽 다 선 귀.
+none / round · roundMid · roundBig / pointy · pointyMid · pointyBig / flap (an arc hanging down) / long (a long lobe) / fold · foldMid · foldBig / perk · perkMid · perkBig.
+round, pointy, fold and perk come in **three sizes** (1 · 1.4 · 1.8×, the same shape) — strip the Mid/Big off the value name and you have the shape (`earKind`, `EAR_SIZE`).
+**fold folds on one side only** — the other is a standing ear (which side folds is per individual, from `wobbleSeed`, with no rng). Differing left from right is what makes it doglike. **perk** stands on both sides.
 
-**종족별 경계** — 어느 종족이 어떤 귀를 갖나는 `species.js` `forbid.ears`(뽑힌 뒤 덮어씀)와 `identity.ears`(census 검사)로 긋는다.
+**The per-species boundary** — which species gets which ear is drawn by `forbid.ears` in `species.js` (overwritten after the draw) and `identity.ears` (checked by census).
 
-| 종족 | 귀 | 어디에 |
+| Species | Ears | Where |
 | --- | --- | --- |
-| human | none · round(작은 것만) | 옆(눈높이 조금 위). 동물 귀(뾰족·늘어짐·접힘·긴 귀·왕귀)는 사람 것이 아니다 — 전부 round/none으로 |
-| pup | flap · long · pointy(·Mid) · round(·Mid) · fold(·Mid) · perk(·Mid) | 머리 위·옆구리에 채운 귀 (§ 개 귀). none·왕귀 없음 |
-| cat | pointy(기본 — 옆선 살짝 오목, 끝 뭉툭) · pointyMid(좁고 긴 — 더 벌어짐 +0.15rad) · pointyBig(넓고 낮은 — 끝 둥글고 옆선 볼록) | **정수리 양쪽 모서리(~35°, 네모 머리는 조금 안쪽 30°)의 채운 세모 혹** — 밑변을 윤곽 안으로 넣어 머리와 한 덩어리, 머리와 같은 굵기·2회 윤곽, 밑변은 붙는 자리의 접선을 따라 앉히고 귀 축은 그 자리 법선과 수직의 중간 + 유형별 벌어짐(둥근 머리는 벌어지고 납작한 머리는 곧게, 좌우 살짝 다르게). 안쪽 귀는 **밑동에 붙는 세모**다 — 밑변이 귀 밑변 자리(안쪽 0.012), 폭은 귀의 0.62배, 끝은 높이의 0.7배. 개체별(이중선 45% · 채움 30% · 홈 한 획 15% · 없음 10%). round·fold·flap·long·none 없음(레퍼런스 70장 실측) |
-| imp | none · pointy(작은 것만) | 옆 |
+| human | none · round (the small one only) | At the side (slightly above eye level). Animal ears (pointy, hanging, folded, long, huge) are not human — all become round/none |
+| pup | flap · long · pointy(·Mid) · round(·Mid) · fold(·Mid) · perk(·Mid) | Filled ears on top of and beside the head (§ dog ears). No none and no huge ear |
+| cat | pointy (the default — sides slightly concave, a blunt tip) · pointyMid (narrow and tall — opening further, +0.15 rad) · pointyBig (wide and low — a round tip and convex sides) | **Filled triangular bumps at the two corners of the crown (~35°; 30°, slightly inside, on a square head)** — the base tucked inside the outline so they are one mass with the head, the outline the same weight and drawn twice, the base laid along the tangent at the attachment point and the ear's axis halfway between that point's normal and vertical plus a per-kind opening (a round head opens them out, a flat head stands them straight, with a slight left/right difference). The inner ear is **a triangle attached at the root** — its base at the ear's base position (0.012 inside), its width 0.62× the ear and its tip 0.7× the height. Per individual (double line 45% · fill 30% · one crease stroke 15% · none 10%). No round, fold, flap, long or none (measured across 70 reference images) |
+| imp | none · pointy (the small one only) | At the side |
 
-**cat**은 세모귀만이다 (레퍼런스 영상 35마리 실측: 정수리 모서리의 작은 세모, 윤곽선이 귀 안으로 이어지고 채색된 머리는 귀도 같은 색,
-일부 안쪽 세모·먹 채움·끝 술). 머리 **앞 층**(front)에 채운 도형으로 그려 머리 윤곽선이 귀 밑동을 뚫고 비치지 않는다.
+**cat** gets triangular ears only (measured across 35 creatures in the reference video: small triangles at the corners of the crown, the outline continuing into the ear and a colored head giving the ear the same color,
+some with an inner triangle, an ink fill or a tuft at the tip). They are drawn as filled shapes on the layer **in front of** the head (front), so the head outline does not show through the ear's root.
 bias pointy 3 · pointyMid 2 · pointyBig 1.5.
-**pup**은 같은 값을 개 귀로 그린다 — 뿌리는 **머리 윤곽 위 두 자리** — 위쪽 모서리(정수리보다 좀 밑, θ 50°: pointy·round·fold — **네모 머리(square·block)에서는
-꼭짓점 θ 45°**에서 시작한다)와 옆구리(눈 양옆보다 조금 옆, θ 88°: flap·long) — 이고 귀는 그 자리의 법선을 **반대 기울기로 탄다**(수직 기준 거울상 축 — 세모귀·동그란 귀는 위·안쪽으로 기울어 서고, 로브는 늘어지되
-0.25~0.35rad 안쪽으로 모인다; 세모귀만은 예외 — 꼭짓점을 박고 바깥·아래로 처진다). 귀 몸통은 머리 **밖** 종이 위에 놓인다 — 위쪽 귀는 윤곽에 뿌리를 박고 0.02 밖으로, 긴 귀(flap·long)는 0.09 밖으로
-떨어져 늘어진다 — 그리고 머리 **위에** 그린다(`drawPupEars`, 머리 다음). 채운 로브: flap 늘어진 로브(레퍼런스 비글) · long 턱 아래까지(바셋) · round 작은 동그란 귀(퍼그) ·
-pointy 세모귀 — **꼭짓점이 머리(모서리)에 박히고** 몸통이 바깥·아래로 처진다(밑변이 바깥 끝, 수평에서 0.6rad 아래) ·
-fold **접힌 귀**(버튼 이어) — **머리 법선 좌표**로 그린다: 밑변은 붙는 자리의 **접선**을 따라 윤곽 안에 박히고 귀는 **법선 방향**(머리 밖)으로 자란다.
-그 위에서 덮개가 접선 쪽으로 꺾여 **접힘선보다 아래로** 늘어진다 — **한쪽 귀만**이고 반대쪽은 perk와 같은 선 귀다 ·
-perk **선 귀** — 같은 법선 좌표로 곧게 선 세모. 밑동은 넉넉하고(귀가 머리에 앉는다) 끝은 **둥글게 뭉툭**하다 — 칼날처럼 뾰족하면 뿔, 넓적하고 낮으면 동그란 귀가 된다.
-**안쪽 귀** — 귀 모양을 **밑동(얼굴과 만나는 자리)을 기준으로** 0.72배 줄인 얼룩(윤곽선 없음): 밑변이 밑동에 붙고 위로 갈수록 좁아진다.
-가운데를 기준으로 줄이면 귀 한복판에 **뜬 얼룩**이 된다 — 안쪽 귀는 밑동에서 시작한다. 개체마다 같은 계열 톤 45% ·
-분홍(코·볼터치와 같은 색) 30% · 없음 25% (`wobbleSeed`, rng 없음).
-**고양이도 같은 규칙**이다 — 세모귀 안에 밑변이 밑동에 붙은 세모를 그린다(폭 0.62배 · 높이 0.7배): 이중선 45% · 채움 30%(분홍 또는 같은 계열 톤 —
-검은 털이면 밝은 쪽으로) · 홈 한 획 15%(밑동 가운데에서 절반 높이까지) · 없음 10%. 안쪽 **선**은 털 위의 자국이라 `spec.faceInk`를 쓴다 —
-검은 털에 검은 선은 묻힌다 (윤곽선은 배경과 맞닿으니 검정 그대로). 늘어진 귀(flap·long)에는 안 그린다 — 그 자세에서는 귀 **바깥면**이 보인다. 접힌 귀는 **선 밑동이 안쪽 면**이라 거기에 밑동부터 그리고,
-**덮개는 접혀 넘어온 뒷면(바깥면)** 이라 털색 톤(0.82배)이다 — 안쪽 색으로 칠하면 뒤집힌 그림이 된다. 덮개가 안쪽 얼룩 위를 덮어 밑동 쪽만 남는다.
-다른 귀처럼 안쪽으로 기운 축을 쓰면 밑동이 두피에서 떠 **머리에 얹은 상자**로 보이고,
-끝이 위로 굽으면 뿔, 옆으로만 뻗으면 깃발이 된다. 덮개는 귀 안쪽 면이라 조금 더 어둡고 접힘선은 **잉크 한 획** — 검은 털에서는 두 조각의 색이 같아
-선이 없으면 접힌 게 안 보인다. 밑동 윤곽은 **열린 선**이다(덮개가 가리는 윗변·윗바깥변은 안 긋는다) — 층 하나 안에서는 잉크가 채색보다 위라
-덮개 채색이 밑동 윤곽을 못 가린다([../rig.md](../rig.md)) · none 없음. 종족 bias flap 4 · long 3 · pointy 2 · round 1.5 · fold 1.
-**cat**의 pointy는 옆이 아니라 정수리에 선다.
+**pup** draws the same values as dog ears — the root is one of **two places on the head outline** — the upper corner (a bit below the crown, θ 50°: pointy, round, fold — **on a square head (square, block) it starts at
+the vertex, θ 45°**) and the side (slightly out from beside the eyes, θ 88°: flap, long) — and the ear rides that point's normal **at the opposite tilt** (an axis mirrored about the vertical — triangular and round ears stand tilted up and inward, and a lobe hangs while gathering
+0.25~0.35 rad inward; the triangular ear alone is the exception — its vertex is embedded and the body droops outward and down). The ear's body lies on the paper **outside** the head — an upper ear embeds its root in the outline and goes 0.02 outside, while a long ear (flap, long) hangs
+0.09 clear — and it is drawn **on top of** the head (`drawPupEars`, after the head). Filled lobes: flap a hanging lobe (the reference beagle) · long down past the chin (a basset) · round a small round ear (a pug) ·
+pointy the triangular ear — **its vertex embedded in the head (the corner)** with the body drooping outward and down (the base is the outer end, 0.6 rad below horizontal) ·
+fold **the folded ear** (a button ear) — drawn in **head-normal coordinates**: the base embeds inside the outline along the **tangent** at the attachment point and the ear grows **along the normal** (out of the head).
+Above that the flap bends toward the tangent and hangs **below the crease** — on **one ear only**, the other being a standing ear like perk ·
+perk **the standing ear** — a triangle standing straight in the same normal coordinates. The root is generous (the ear is seated on the head) and the tip is **round and blunt** — a razor point reads as a horn, and wide and low becomes the round ear.
+**The inner ear** — a patch made by scaling the ear shape 0.72 **about its root (where it meets the face)**, with no outline: its base attaches at the root and it narrows going up.
+Scale about the centre and it becomes a **patch hanging** mid-ear — the inner ear starts at the root. Per individual, a tone in the same family 45% ·
+pink (the same as the nose and blush) 30% · none 25% (`wobbleSeed`, no rng).
+**Cats follow the same rule** — a triangle whose base attaches at the root is drawn inside the triangular ear (0.62× the width, 0.7× the height): double line 45% · fill 30% (pink or a tone in the same family —
+toward the light side on black fur) · one crease stroke 15% (from the middle of the root to half the height) · none 10%. The inner **line** is a mark on fur and uses `spec.faceInk` —
+a black line on black fur is lost (the outline meets the background, so it stays black). It is not drawn on hanging ears (flap, long) — that pose shows the ear's **outer** face. On a folded ear **the standing root is the inner face**, so it is drawn there from the root up, and
+**the flap is the back (outer) face folded over**, so it takes a fur tone (0.82×) — paint it in the inner color and the drawing is inside out. The flap covers the inner patch, leaving only the root side.
+Use an inward-leaning axis like the other ears and the base lifts off the scalp and looks like **a box glued on the head**;
+curve the tip upward and it is a horn; reach out sideways only and it is a flag. The flap is the ear's inner face, so it is a shade darker, and the crease is **one ink stroke** — on black fur the two pieces are the same color and
+without the line the fold is invisible. The root outline is **an open path** (the top edge and the outer edge above it, which the flap covers, are never stroked) — within one layer the ink sits above the fills, so
+the flap's fill cannot hide the root outline ([../rig.md](../rig.md)) · no none. Species bias flap 4 · long 3 · pointy 2 · round 1.5 · fold 1.
+**cat**'s pointy stands on the crown, not at the side.
 
-귀 자리는 타원이 아니라 **실제 머리 윤곽**(초타원 + 위아래 폭 비, `headAnchor`) 위에서 잡는다 — 네모 머리에서 타원 위 점은 윤곽 안쪽에 묻힌다.
-θ는 정수리에서 잰 매개변수 각이고 네모 머리의 꼭짓점은 θ = 45°다. 법선도 그 윤곽의 것이다.
+Ear positions are taken on **the real head outline** (a superellipse plus the top/bottom width ratio, `headAnchor`) rather than an ellipse — on a square head a point on the ellipse is buried inside the outline.
+θ is the parameter angle measured from the crown, and a square head's vertex is at θ = 45°. The normal comes from that outline too.
 
 ### nose (9)
-선 넷 + 콧구멍 둘 + 면 셋 + none. **전부 머리에 비례한다** — 고정 좌표면 왕머리에서 콩알이 되어 hook·wedge·long이 같은 코로 읽히고 얼굴 돌림 때 사라진다
-(`noseScale` = headRy / 0.31, 선 굵기는 배율을 안 탄다 — 치수 슬롯 규칙과 같다).
+Four lines + two nostrils + three areas + none. **All of them are proportional to the head** — at fixed coordinates they become specks on a huge head, so hook, wedge and long all read as the same nose and they disappear on a face turn
+(`noseScale` = headRy / 0.31; stroke thickness does not take the multiplier — the same as the dimension-slot rule).
 
-| 값 | 사람·도깨비 | 비고 |
+| Value | Human, imp | Note |
 | --- | --- | --- |
-| hook | 갈고리 한 획 — 미간에서 내려와 왼쪽으로 꺾인다 | 레퍼런스의 코 |
-| dot | 점 (짧은 굵은 가로획, headRx 비례) | |
-| wedge | ∧ 한 획 | |
-| long | 이마에서 내려오는 긴 코 | |
-| bulb | **주먹코** — 동그란 면. 살색 ×0.86 채움 + 얼굴 잉크 테 (먹빛 얼굴은 밝은 고리만 남는다) | 선 코 넷과 실루엣이 다른 게 이유 — 덩어리 코 |
-| broad | **넓적코** — 넓고 낮은 채운 세모 ∇ (고양이 세모 코와 같은 점 배열, 폭이 넓고 살색 계열) | |
-| box | **네모 코** — 모서리 둥근 네모 면(superellipse 지수 증가분 2.5 — 머리 square의 1.5는 코만큼 작으면 동그라미로 뭉개져 bulb와 안 갈린다). bulb와 같은 자리·채움·테 | |
-| nostrils | **콧구멍 둘만** — 코 윤곽 없이 **수박씨 두 알**(위가 뾰족한 물방울, `blobPath` taper 0.55)을 바깥 위로 0.5rad 기울여(＼ ／) 얼굴 잉크로 채운다 | dot의 이웃 — 두 알·기울기·씨 모양으로 갈린다. 알 반높이 0.052ry, 간격 ±0.065rx |
-| none | 없음 | |
+| hook | A single hooked stroke — coming down from between the brows and bending left | The reference's nose |
+| dot | A dot (a short thick horizontal stroke, proportional to headRx) | |
+| wedge | A single ∧ | |
+| long | A long nose coming down from the forehead | |
+| bulb | **A button nose** — a round area. Skin tone ×0.86 fill plus a face-ink rim (on an ink-black face only a light ring is left) | Having a different silhouette from the four line noses is the reason — the mass nose |
+| broad | **A broad nose** — a wide, low filled triangle ∇ (the same point layout as the cat's triangular nose, wider and in skin tones) | |
+| box | **A square nose** — a rounded square area (superellipse exponent rise 2.5 — the head's square of 1.5 smears into a circle at nose size and does not separate from bulb). The same position, fill and rim as bulb | |
+| nostrils | **Two nostrils only** — no nose outline, just **two watermelon seeds** (teardrops pointed at the top, `blobPath` taper 0.55) tilted 0.5 rad up and outward (＼ ／) and filled in face ink | A neighbour of dot — separated by being two seeds, the tilt and the seed shape. Seed half-height 0.052ry, spacing ±0.065rx |
+| none | Nothing | |
 
-폭이 있는 코(bulb·broad·box·nostrils)는 코 기준점(`noseY`, x=0만 본다)만으로는 콧방울이 눈(흰자)에 걸칠 수 있다 — `bulbShape`·`broadShape`·`boxShape`·`nostrilsShape`가
-제 폭(±0.8rx)에서 눈 밑선(`eyeFloor`)을 다시 보고 닿으면 그만큼 내린다. faceFront 층은 눈 리그보다 위라 면이 눈에 걸치면 흰자를 가린다.
-입 자리(`noseBottomY`)도 같은 함수의 `bottom`을 쓴다 — 그리기와 입 자리가 다른 좌표를 보면 큰 머리에서 입이 코를 문다.
-분포: bulb·broad·box·nostrils는 사람만(DEFAULT_BIAS, beast는 broad 편향). 고양이·개·도깨비 종족 bias에는 없다 — 갤러리에서는 고양이 세모 코·개 기본 주둥이로 그려진다.
-**종족마다 같은 슬롯을 다르게 읽는다** — pup은 주둥이 형태(폭·높이·코 크기), cat은 고양이 코(`catNose`):
+A nose with width (bulb, broad, box, nostrils) can lap its wings onto an eye (a white) if it goes by the nose reference point alone (`noseY`, which only looks at x=0) — `bulbShape`, `broadShape`, `boxShape` and `nostrilsShape`
+re-check the eye's lower edge (`eyeFloor`) at their own width (±0.8rx) and drop by that much if it touches. The faceFront layer is above the eye rig, so an area lapping onto an eye hides the white.
+The mouth's position (`noseBottomY`) uses the same functions' `bottom` — have the drawing and the mouth position look at different coordinates and on a big head the mouth bites into the nose.
+Distribution: bulb, broad, box and nostrils are humans only (DEFAULT_BIAS; beast biases broad). They are in no cat, dog or imp species bias — in the gallery they are drawn as a cat's triangular nose or a dog's default muzzle.
+**Each species reads the same slot differently** — pup as a muzzle form (width, height, nose size) and cat as a cat nose (`catNose`):
 
-| 값 | cat |
+| Value | cat |
 | --- | --- |
-| dot | 작은 **채운 세모** (선 하나로 그으면 입과 헷갈린다) |
-| wedge | 하트 코 |
-| hook | 세모 + **인중**(코 밑에서 입 쪽으로 짧은 세로선) — Y자 얼굴 |
-| long | 넓적한 세모 + 긴 인중 |
-| none | 없음 |
+| dot | A small **filled triangle** (drawn as a single line it is mistaken for the mouth) |
+| wedge | A heart nose |
+| hook | A triangle plus **a philtrum** (a short vertical line from under the nose toward the mouth) — a Y-shaped face |
+| long | A wide triangle plus a long philtrum |
+| none | Nothing |
 
-고양이 코는 **분홍**(볼터치·혀와 같은 색) 채움 + 얼굴 잉크 테 — 밝은 얼굴에서도 검정 털에서도 읽힌다. 크기는 머리에 비례(반폭 0.1·0.13rx).
-**개 주둥이**(코·입이 묶인 영역)는 개체마다 색이 다르다: 밝은 크림 45% · 털색보다 살짝 밝은 톤 30% · **검정 계열**(털색 ×0.55) 25% (`muzzleGeometry.fill`, wobbleSeed, rng 없음).
-**색만 칠하고 윤곽선은 없다** — 선을 두르면 얼굴에 덧댄 판때기처럼 보인다. 주둥이 위의 입 잉크는 주둥이 휘도로 갈리고(밝으면 검정, 어두우면 밝은 잉크),
-코는 물건이라 늘 검정이되 어두운 주둥이 위에서는 밝은 테를 두른다 (안대와 같은 규칙, [rules.md](rules.md)).
+A cat nose is a **pink** fill (the same color as the blush and tongue) plus a face-ink rim — it reads on a light face and on black fur alike. Its size is proportional to the head (half-width 0.1·0.13rx).
+**A dog's muzzle** (the region the nose and mouth are grouped into) differs in color per individual: light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (the fur ×0.55) 25% (`muzzleGeometry.fill`, wobbleSeed, no rng).
+**It is color only, with no outline** — an outline makes it look like a board tacked onto the face. The mouth ink over the muzzle is split by the muzzle's luminance (black if light, light ink if dark), and
+the nose, being an object, is always black but gets a light rim over a dark muzzle (the same rule as the eyepatch, [rules.md](rules.md)).
 
-### face2 — 볼·눈가 (4)
-none / tears(눈 아래 두 줄 — **사람에겐 없다**, forbid → none; 도깨비 것) / blush(볼 분홍 타원) / freckles(볼마다 점 3개). 볼은 (놀라 커진) 눈 아래에 앉는다.
+### face2 — cheeks and the eye area (4)
+none / tears (two lines below the eye — **humans do not have them**, forbid → none; they belong to imps) / blush (a pink ellipse on the cheek) / freckles (3 dots per cheek). The cheeks sit below the (startle-widened) eye.
 
-고양이 **수염**은 슬롯이 아니라 종족 고정(`drawWhiskers`) — 양쪽 세 가닥, 살짝 처지는 부채꼴. 길이는 개체별(머리 반폭의 0.42~0.92배)이라
-반 넘는 고양이는 수염이 **머리 윤곽을 뚫고 밖으로** 나온다 (얼굴 층 2.4라 윤곽·귀 위에 얹히고 종이까지 뻗는다).
+Cat **whiskers** are not a slot but fixed per species (`drawWhiskers`) — three strands per side in a slightly drooping fan. The length is per individual (0.42~0.92× the head's half-width), so
+over half of all cats have whiskers **poking out through the head outline** (being on the face layer at 2.4, they sit above the outline and ears and reach onto the paper).
 
-### mouth (20) × mouthPos — 입 자리 (3) × mouthSize — 입 크기 (3)
-`mouth.js` — 종류마다 그리기 함수 하나(`MOUTH` 표). 레퍼런스: 사람은 **아주 작은 입**이 기본이고 눈에 띄는 건 **이빨 격자**·씨익·해칭, 개는 w·o·혀,
-고양이는 ω·3·야옹·혀 빼꼼, 도깨비는 **넓은** 격자·해칭·지그재그·큰 송곳니·이빨 띠로 벌린 입.
-**벌린 입은 입안이 어두운 잉크(팔레트 잉크) + 흰 이빨 띠**다 — 밝은 얼굴 잉크로 입안을 채우면 도깨비 얼굴에 빈 밝은 덩어리만 남는다(실수처럼 보인다).
-테는 얼굴 잉크(어두운 얼굴에서만 보인다), 이빨 위 줄은 팔레트 잉크.
+### mouth (20) × mouthPos — the mouth position (3) × mouthSize — the mouth size (3)
+`mouth.js` — one drawing function per kind (the `MOUTH` table). The reference: humans default to **a very small mouth** and what stands out is **the tooth grid**, the grin and the hatching; dogs get w, o and the tongue;
+cats get ω, 3, meow and blep; imps get the **wide** grid, hatching, zigzag, big fangs, and an open mouth with tooth strips.
+**An open mouth is a dark-ink cavity (the palette ink) plus a white tooth strip** — fill the cavity with light face ink and an imp's face is left with nothing but an empty bright blob (which reads as a mistake).
+The rim is face ink (visible only on a dark face) and the lines over the teeth are palette ink.
 
-| 값 | 모양 | 주로 |
+| Value | Shape | Mostly |
 | --- | --- | --- |
-| dot / line / smile / wave | 점(짧고 굵은 콩알) / 선 / 웃음 호 / 물결 | 사람·개(선·점·웃음)·고양이(선·점) |
-| frown | ⌢ 처진 작은 호 | 사람 |
-| bracket | **)-(** — 짧은 일자 입 양끝에 안으로 볼록한 볼 주름 괄호. 어드벤처 타임 식 "흠…"(입 다물고 볼이 눌린 얼굴) | 사람(스콜라) |
-| open | 벌린 입 — 윗입술은 곧고 아래만 둥근 **그릇 꼴**: 어두운 입안 + 윗니 띠(흰 띠에 세로 줄 넷) + 윗입술 선 (타원 덩어리는 동굴처럼 읽혀 안 쓴다) | 사람·개(짖음)·도깨비 |
-| shout | □ 네모 벌림 — 소리치는 입: 각진 큰 입안에 **위아래 이빨 띠**(레퍼런스 도깨비) + 윗입술 선 | 도깨비 |
-| pout | 놀란 작은 o (윤곽) | 사람 |
-| meow | 야옹 — 작은 세로 타원 채움 | 고양이 |
-| omega | ω — 두 호가 아래로 볼록. 개는 코 밑 w | 고양이·개 |
-| smug | 뾰로통한 입 — **한 획**(y = peak·cos πt)으로 가운데가 솟고 양끝이 뚝 떨어진다. 호를 둘로 나눠 그리면 봉우리 둘로 읽혀 다른 얼굴이 된다 (`sharp` 눈과 짝) | 고양이·사람·도깨비 |
-| three | 3 — ω를 반으로 줄이고 굵게(오므린 입, 카오모지 3) | 고양이·사람 |
-| blep | ω + 밑으로 분홍 혀 끝 | 고양이 |
-| tongue | 살짝 벌린 그릇(이빨 없이) + 아래로 늘어진 분홍 혀(가운데 줄) — 개는 **^^ 때 대체 입**(헥헥) | 개·도깨비 |
-| zigzag | 지그재그 | 도깨비 |
-| grimace | **이빨 격자** — 넓고 납작한 둥근 네모(흰 채움 + 윤곽) 안에 세로 줄 3~6 (폭 비례). 사람·개 **화남 입** | 도깨비·사람(트루퍼) |
-| grin | 씨익 — 넓은 웃음 호 안에 흰 이빨 + 세로 줄 둘 + 윗선 | 사람 |
-| scribble | 해칭 입 — 가로 빗금 다섯 뭉치 | 도깨비·사람 드물게 |
-| fangs | 선 + 양끝 아래로 **큰** 흰 송곳니 둘 — 도깨비·고양이 **화남 입**(하악). (가시 이빨 teeth는 이것과 겹쳐 뺐다) | 도깨비 |
+| dot / line / smile / wave | A dot (a short thick bean) / a line / a smiling arc / a wave | Humans, dogs (line, dot, smile), cats (line, dot) |
+| frown | ⌢ a small drooping arc | Humans |
+| bracket | **)-(** — a short flat mouth with inward-bulging cheek-crease brackets. The Adventure Time "hmm…" (a closed mouth with the cheeks pressed in) | Humans (scholar) |
+| open | An open mouth — **a bowl** with a straight upper lip and a rounded bottom: a dark cavity + an upper tooth strip (a white strip with four vertical lines) + the upper lip line (an elliptical blob reads as a cave and is not used) | Humans, dogs (barking), imps |
+| shout | □ a square opening — a shouting mouth: **upper and lower tooth strips** inside a big angular cavity (the reference imp) plus the upper lip line | Imps |
+| pout | A small startled o (outlined) | Humans |
+| meow | A meow — a small filled vertical ellipse | Cats |
+| omega | ω — two arcs bulging downward. On a dog, a w under the nose | Cats, dogs |
+| smug | A pouting mouth — **one stroke** (y = peak·cos πt) whose middle rises and whose ends drop away. Draw the arc as two and it reads as twin humps and makes a different face (it pairs with the `sharp` eye) | Cats, humans, imps |
+| three | 3 — half an ω, thicker (a pursed mouth, the kaomoji 3) | Cats, humans |
+| blep | ω plus a pink tongue tip below | Cats |
+| tongue | A slightly open bowl (no teeth) plus a pink tongue hanging below (with a centre line) — on a dog this is **the alt mouth for ^^** (panting) | Dogs, imps |
+| zigzag | A zigzag | Imps |
+| grimace | **The tooth grid** — 3~6 vertical lines (proportional to the width) inside a wide, flat rounded rectangle (white fill plus outline). The **angry mouth** for humans and dogs | Imps, humans (trooper) |
+| grin | A grin — white teeth inside a wide smiling arc plus two vertical lines plus the upper line | Humans |
+| scribble | A hatched mouth — five bundles of horizontal hatching | Imps, rarely humans |
+| fangs | A line plus two **big** white fangs below its ends — the **angry mouth** for imps and cats (a hiss). (The spiked-teeth kind overlapped this and was dropped) | Imps |
 
-**자리** `mouthPos`(늦은 슬롯) — 코 밑(`noseBottomY`)부터 턱 위(headCy − 0.86·ry)까지 사이의 **high**(0.22) · **mid**(0.5) · **low**(0.76). 코가 없으면 위 한계는
-눈 밑선/머리 중심 조금 아래. 개는 주둥이 규칙(코 밑 고정). 어느 자리든 (놀라 커진) 눈 아래에 있어야 한다. 두발은 개체(wobbleSeed)로 **±0.1rx 옆으로 비껴** 앉는다(레퍼런스,
-rng 없음). **크기** `mouthSize`(늦은 슬롯) — 폭 배율 small 0.7 · normal 1 · wide 1.4, 도깨비는 종족 배율 1.3이 더 곱해진다. 종족 편향: 사람 small↑, 도깨비 wide↑.
-흰 채움(격자·씨익·송곳니·이빨 띠)은 종이빛 흰색이고 그 위의 테·세로 줄은 **팔레트 잉크(어두움)** — 도깨비의 밝은 얼굴 잉크로 그으면 흰 바탕에 묻혀 빈 흰 막대만 남는다. 혀는 볼터치 분홍.
+**Position** `mouthPos` (a late slot) — **high** (0.22) · **mid** (0.5) · **low** (0.76) between the bottom of the nose (`noseBottomY`) and above the chin (headCy − 0.86·ry). With no nose, the upper limit is
+the eye's lower edge or slightly below the head's centre. Dogs follow the muzzle rule (pinned below the nose). Wherever it is, it has to be below the (startle-widened) eye. A biped sits **±0.1rx off to one side** per individual (wobbleSeed) (the reference,
+no rng). **Size** `mouthSize` (a late slot) — width multipliers small 0.7 · normal 1 · wide 1.4, with a further species multiplier of 1.3 on imps. Species bias: humans small↑, imps wide↑.
+A white fill (the grid, grin, fangs, tooth strips) is paper white and the rims and vertical lines over it are **the palette ink (dark)** — drawn in an imp's light face ink they are lost on the white and leave an empty white bar. The tongue is blush pink.
 
-**상태 벌**(`faceStates.js`): 쉼 / 대체(`ALT_MOUTH` — dot↔line, line↔wave, smile→grin, omega↔three, frown↔smug, grimace→line, tongue→open, fangs→line, shout→open, meow·blep→omega, zigzag·scribble→wave, bracket→line, pout→dot) /
-**화남**(`ANGRY_MOUTH` — 사람·개 grimace, 고양이·도깨비 fangs) / **^^**(`HAPPY_MOUTH` — 개만 tongue, 나머지는 쉼 입 그대로). 같은 종류면 메시를 나눠 쓴다.
+**State sets** (`faceStates.js`): rest / alt (`ALT_MOUTH` — dot↔line, line↔wave, smile→grin, omega↔three, frown↔smug, grimace→line, tongue→open, fangs→line, shout→open, meow·blep→omega, zigzag·scribble→wave, bracket→line, pout→dot) /
+**angry** (`ANGRY_MOUTH` — grimace on humans and dogs, fangs on cats and imps) / **^^** (`HAPPY_MOUTH` — tongue on dogs only; the rest keep their rest mouth). The same kind shares a mesh.
 
-## 몸
+## Body
 
 ### body (4)
-bean(찌그러진 타원) / box / dress(아래가 넓은 사다리꼴) / tube(좁은 통). 채색 + 스크리블 채움 + 외곽선.
-네발은 슬롯값과 무관하게 가로 blob.
+bean (a crumpled ellipse) / box / dress (a bottom-heavy trapezoid) / tube (a narrow tube). Fill + scribble fill + outline.
+A quad is a horizontal blob regardless of the slot value.
 
-### build — 체격 (5)
-두발에서는 몸통 **폭·높이**, 네발에서는 몸통 **길이·두께**다 (네발 몸은 가로로 누워 있어 실루엣의 너비가 곧 길이).
+### build — the build (5)
+On a biped it is the torso's **width and height**; on a quad the torso's **length and thickness** (a quad's body lies horizontally, so the silhouette's width *is* its length).
 
-| 값 | 두발: 몸 폭 | 두발: 몸 높이 | 두발: 다리 스탠스 (몸 반폭 대비) | 네발: 길이 / 두께 | |
+| Value | Biped: body width | Biped: body height | Biped: leg stance (against the body's half-width) | Quad: length / thickness | |
 | --- | --- | --- | --- | --- | --- |
-| **skinny** 홀쭉이 | 0.5 (dress 0.6) — 막대 몸통 | ×1.15 | 0.33 | 1 / 0.62 얇은 몸 | sprite |
-| narrow 마름 | 0.7 (dress 0.75) | ×1.08 | 0.4 — 다리를 모은다 | 0.7 / 1 짧은 몸 | sprite |
-| medium | 1 | ×1 | 0.5 | 1 / 1 | 기본 |
-| wide 넓적 | 1.4 (dress 1.15 — 밑단이 셀을 넘지 않게) | ×0.92 땅딸막 | 0.68 — 다리를 벌린다 | 1.45 / 1 긴 몸 (닥스훈트·먼치킨). 몸 중심을 머리 쪽으로 당겨 꼬리가 셀을 덜 넘게 | blob |
-| **small** 작은 몸통 | 0.75 (dress 0.8) | ×0.7 | 0.45 | 0.75 / 0.75 작은 몸 | |
+| **skinny** lanky | 0.5 (dress 0.6) — a stick torso | ×1.15 | 0.33 | 1 / 0.62 a thin body | sprite |
+| narrow slim | 0.7 (dress 0.75) | ×1.08 | 0.4 — the legs draw together | 0.7 / 1 a short body | sprite |
+| medium | 1 | ×1 | 0.5 | 1 / 1 | the default |
+| wide broad | 1.4 (dress 1.15 — so the hem does not pass the cell) | ×0.92 stocky | 0.68 — the legs open | 1.45 / 1 a long body (dachshund, munchkin). The body's centre is pulled toward the head so the tail overruns the cell less | blob |
+| **small** a small torso | 0.75 (dress 0.8) | ×0.7 | 0.45 | 0.75 / 0.75 a small body | |
 
-형태(body)와 독립이라 4×5 조합. **다리 스탠스(벌림)는 다리 슬롯이 아니라 여기서 정한다** — 넓은 몸이 넓은 스탠스를
-받치고, 좁은 몸은 다리를 모은다. 어깨 위치(몸통 윤곽 위)도 같이 따라온다. 네발은 앞뒤 다리 쌍이 몸 길이를 따라 벌어진다.
-`layout()` `BUILD`(두발)·`QUAD_BUILD`(네발). `LATE_SLOTS`. 기본 가중치 medium 4 · narrow 1.5 · wide 1.5 · skinny 1 · small 1.
-갤러리: `gallery.html?slot=build&fix=legLength:long`.
+Independent of form (body), so 4×5 combinations. **The leg stance (how far they open) is set here, not by the leg slot** — a wide body carries a wide stance
+and a narrow body draws the legs together. The shoulder position (on the torso outline) follows along too. On a quad the front and hind leg pairs open along the body's length.
+`BUILD` (biped) and `QUAD_BUILD` (quad) in `layout()`. `LATE_SLOTS`. Default weights medium 4 · narrow 1.5 · wide 1.5 · skinny 1 · small 1.
+Gallery: `gallery.html?slot=build&fix=legLength:long`.
 
 ### marks (7)
-none / stripes(가로 3줄) / dots(4점) / patch(왼쪽 해칭) / hatch(전체 사선) / spots(달마시안 얼룩 3개) / **calico**(삼색 얼룩 — 아래).
-선 다섯은 몸에만 잉크로 그린다(`drawMarks`, 몸 색 휘도 < 120이면 밝은 잉크). 사람 몸에선 옷 무늬로, 개·고양이 몸에선 털 무늬로 읽힌다 — 같은 슬롯이다.
+none / stripes (3 horizontal lines) / dots (4 dots) / patch (hatching on the left) / hatch (diagonals over the whole thing) / spots (3 dalmatian spots) / **calico** (the tricolor patch — below).
+The five line kinds are drawn in ink on the body only (`drawMarks`; light ink when the body color's luminance < 120). They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot.
 
-**calico — 삼색 얼룩(개·고양이만, 채움).** 선이 아니라 **색 얼룩**이고 몸·머리·귀에 다 있다. 색은 전부 팔레트 안(`calicoColors`, wobbleSeed, rng 없음):
-바탕은 스킨 그대로(spec.js가 calico면 검정 털을 안 입혀 **밝은 바탕**을 보장), 검정 얼룩은 FURS 중 하나, 가운데 톤은 `CALICO_MID`(따뜻한 탄, 휘도 139 —
-진짜 삼색의 주황 자리. 채도 있는 포인트가 아니라 판당 상한을 안 먹는다). 고양이는 셋(바탕+탄+검정), 개는 둘(바탕+검정 = 얼룩이).
+**calico — the tricolor patch (dogs and cats only, filled).** Not lines but **color patches**, and they are on the body, head and ear alike. Every color is inside the palette (`calicoColors`, wobbleSeed, no rng):
+the base is the skin as-is (when it is calico, spec.js withholds black fur to guarantee **a light base**), the black patch is one of FURS, and the middle tone is `CALICO_MID` (a warm tan, luminance 139 —
+where a real calico's orange goes. Not a saturated accent, so it does not count against the per-board cap). A cat gets three (base + tan + black) and a dog two (base + black = piebald).
 
-| 자리 | 고양이 | 개 |
+| Place | Cat | Dog |
 | --- | --- | --- |
-| 몸 | 엉덩이(꼬리 쪽 끝)를 감싸는 검정 + 배 앞쪽 탄 | 엉덩이 검정 크게 |
-| 머리 | side 쪽 **정수리에서 그쪽으로 기운 모자꼴** 검정 + 반대쪽 볼에 작은 탄 | 모자꼴 검정 |
-| 귀 | side 쪽 귀 검정(안쪽 자국은 밝은 잉크) | 같음 |
+| Body | Black wrapping the rump (the tail end) plus tan on the front of the belly | One big black at the rump |
+| Head | Black on the side, **a cap shape from the crown leaning that way**, plus a small tan on the opposite cheek | The black cap shape |
+| Ear | The ear on that side black (the inner mark in light ink) | The same |
 
-얼룩은 **윤곽을 따라 앉는다**(`outlinePatch` — 윤곽 점 목록의 한 구간을 바깥 변으로 쓰고 안쪽을 중심 쪽으로 당겨 닫는다): 바깥 변이 윤곽과 정확히
-같아 삐져나오지 않고, 안쪽 가장자리에만 가는 선을 긋는다. 채우기가 중심 부채꼴이라 한 얼룩은 130° 이하. 몸 앞쪽 위는 큰 머리에 가려지니 얼룩은
-뒤끝과 배 앞에 둔다. **검정 얼룩은 눈·눈썹 위에 못 온다** — 선 눈·눈썹은 검정 잉크라 검정 위에서 사라진다. 옆으로 내려오는 자리(100°~185°)는
-600마리 중 158마리에서 눈에 걸쳤고, 정수리 자리(왼 75°~150° / 오른 30°~105°, 깊이 0.4)는 0마리 — 그래서 모자꼴이다. 탄은 잉크와 대조가 남아 볼에 둬도 된다.
-사람·도깨비 bias에는 없다(사람 몸에 색 얼룩은 옷 얼룩이 된다) — 갤러리에서는 안 그린다(`calicoColors`가 null).
+A patch **sits along the outline** (`outlinePatch` — one stretch of the outline's point list is used as the outer edge and the inner side is pulled toward the centre and closed): the outer edge is exactly
+the outline, so nothing sticks out, and only the inner edge gets a thin line. The fill is a fan from the centre, so one patch is at most 130°. The front top of the body is hidden by the big head, so the patches go at
+the back end and the front of the belly. **A black patch must never reach the eyes or brows** — line eyes and brows are black ink and vanish on black. The placement coming down the side (100°~185°)
+caught the eyes on 158 of 600 creatures; the crown placement (left 75°~150° / right 30°~105°, depth 0.4) catches 0 — hence the cap shape. Tan keeps its contrast against ink, so the cheek is fine.
+It is in no human or imp bias (a color patch on a human body becomes a stain on clothes) — the gallery does not draw it either (`calicoColors` returns null).
 
 ### legs (6)
-| 값 | 두발 | 네발 (고양이·개) |
+| Value | Biped | Quad (cat, dog) |
 | --- | --- | --- |
-| stick | 가는 선 + 동그란 발 | 가는 다리 + 둥근 발 |
-| stub | 굵은 선 (0.019) + 동그란 발 | **기본** — 굵은 스텁 + 앞으로 나온 발끝 + 발가락 두 줄 (레퍼런스) |
-| bent | 무릎 꺾임 + 동그란 발 | stick으로 그린다 |
-| boots | 선 + 옷색 부츠 채움 | 양말 — 발목까지 작은 부츠 |
-| tiptoe | 가는 선 + 아래로 뾰족한 발 | stick으로 그린다 |
-| **float** | 레이맨식 — 다리 선 없이 큼직한 발만 떠 있다 (반지름 0.03) | 발만 떠 있다 (0.024) |
+| stick | A thin line plus a round foot | A thin leg plus a round foot |
+| stub | A thick line (0.019) plus a round foot | **The default** — a thick stub plus a toe tip poking forward plus two toe lines (the reference) |
+| bent | A bent knee plus a round foot | Drawn as stick |
+| boots | A line plus boots filled in the cloth color | Socks — small boots to the ankle |
+| tiptoe | A thin line plus a foot pointing downward | Drawn as stick |
+| **float** | Rayman style — no leg line, just big feet floating (radius 0.03) | Just the feet floating (0.024) |
 
-형태만이다. 벌린 정도(스탠스)는 `build`가, 기장은 `legLength`가 정한다 — 6×3×5 조합.
-float도 엉덩이 피벗에 걸려 있어 관절 지터·발 까딱이 발을 둥둥 흔든다.
+Form only. How far they open (the stance) is set by `build` and the length by `legLength` — 6×3×5 combinations.
+float hangs off the hip pivot too, so joint jitter and a foot flick make the feet bob about.
 
-두발은 엉덩이(밑단 위 0.02)에 피벗. **네발**은 앞다리 둘·뒷다리 둘이 각각 **붙어 있다**(옆에서 본 짐승 — 쌍 안 간격
-max(0.03, 몸 길이 16%)), 앞쌍은 몸 중심에서 −60%, 뒷쌍은 +60%. 뿌리는 bodyH 25% 위. 종족 bias: pup stub 4 · stick 2 ·
-float 1.5 · boots 1, cat stub 3 · stick 3 · float 1.5 · boots 1.
+A biped pivots at the hip (0.02 above the hem). **A quad** has its two front and two hind legs **each pair together** (a beast seen from the side — the spacing within a pair is
+max(0.03, 16% of the body length)), the front pair at −60% from the body's centre and the hind pair at +60%. The roots are 25% of bodyH up. Species bias: pup stub 4 · stick 2 ·
+float 1.5 · boots 1; cat stub 3 · stick 3 · float 1.5 · boots 1.
 
 ### legLength (4)
-| 값 | 기장 (두발) | 기장 (네발) | |
+| Value | Length (biped) | Length (quad) | |
 | --- | --- | --- | --- |
-| long | legLength 비율 × 0.55 (≈0.17) | × 0.4 (≈0.12) | 기준 |
-| medium | 그 65% | 65% | |
-| short | 그 30% (≈0.05) | 30% — 닥스훈트·먼치킨 | 몸이 바닥에 거의 내려앉는다. **스케일이 아니라 기장만** — 발·굵기·부츠 높이는 그대로 |
-| verylong | 그 **200%** (≈0.33) | — | 초장다리 — **도깨비만**(사람·개·고양이는 forbid → long, identity로 검사). 머리 꼭대기가 셀 상한을 넘으면 `layout()`이 머리를 줄인다 |
+| long | the legLength ratio × 0.55 (≈0.17) | × 0.4 (≈0.12) | the baseline |
+| medium | 65% of that | 65% | |
+| short | 30% of that (≈0.05) | 30% — a dachshund or munchkin | The body almost settles to the floor. **Length only, not scale** — the feet, thickness and boot height stay as they are |
+| verylong | **200%** of that (≈0.33) | — | Stilts — **imps only** (humans, dogs and cats forbid it → long, checked by identity). If the head top passes the cell ceiling, `layout()` shrinks the head |
 
-형태(legs)와 독립이라 모든 다리 유형에 기장이 있다. `layout()`이 `legTop`에서 곱하므로(`LEG_LENGTH`) 몸·머리·어깨가
-같이 내려온다. 네발도 따른다. `LATE_SLOTS`라 맨 끝에 뽑는다. 기본 가중치 long 3 · medium 2 · short 1, 도깨비 bias는 verylong 1.5 추가.
-갤러리: `gallery.html?slot=legs&fix=legLength:short`.
+Independent of form (legs), so every leg type has a length. `layout()` multiplies it into `legTop` (`LEG_LENGTH`), so the body, head and shoulders come down together.
+Quads follow it too. Being in `LATE_SLOTS`, it is drawn at the very end. Default weights long 3 · medium 2 · short 1, plus verylong 1.5 in the imp bias.
+Gallery: `gallery.html?slot=legs&fix=legLength:short`.
 
-### tail — 골격 (7) × tailSkin — 스킨 (9) × tailLength — 기장 (3) — 네발 전용
-골격은 **쉼 자세**(BIND·잠)와 마디 길이·스킨의 자리다. 고양이는 깨어 있는 idle에서 골격이 뭐든 관절을 **아치**로 85% 섞고(모션 `tailIdlePose`),
-^^ 땐 수직으로 세운다 — 골격의 성격은 나머지 15%·잠·BIND에서 보인다 ([../motion/catalog.md](../motion/catalog.md) § 꼬리).
-꼬리는 **골격·스킨·기장** 세 슬롯이다. 골격(`tail`)은 척추의 모양(점 목록), 스킨(`tailSkin`)은 그 위에 무엇을 입히나, 기장(`tailLength`)은
-골격을 통째로 줄이는 배율(long 1 · medium 0.7 · short 0.45 — 스킨 두께는 그대로)이다. 어느 골격에든 어느 스킨이든 입힌다 — 스텁 골격에
-깃털 스킨이면 폼폼이다 (`limbs.js` `tailSpine`·`tubePath`).
+### tail — the skeleton (7) × tailSkin — the skin (9) × tailLength — the length (3) — quads only
+The skeleton is the **rest pose** (BIND, sleep) and sets the bone lengths and where the skin goes. In an awake idle a cat blends its joints 85% toward an **arch** whatever the skeleton (the motion `tailIdlePose`),
+and stands it vertical on a ^^ — the skeleton's character shows in the remaining 15%, in sleep and in BIND ([../motion/catalog.md](../motion/catalog.md) § the tail).
+The tail is **three slots**: skeleton, skin and length. The skeleton (`tail`) is the spine's shape (a point list), the skin (`tailSkin`) is what goes on it, and the length (`tailLength`) is
+the multiplier shrinking the whole skeleton (long 1 · medium 0.7 · short 0.45 — the skin thickness is unchanged). Any skin goes on any skeleton — a plume skin on a stub skeleton
+is a pom (`tailSpine`, `tubePath` in `limbs.js`).
 
-| 골격 (tail) | 척추 |
+| Skeleton (tail) | Spine |
 | --- | --- |
-| curl | 위로 올라 앞으로 말림 |
-| flag | 위로 곧게 |
-| longtail | 뒤로 길게 뻗다 끝이 오름 |
-| stubtail | 뭉툭 (짧은 세 점) |
-| hook | 위로 섰다 끝이 갈고리로 꺾임 — 물음표 (고양이) |
-| kink | 마디마다 꺾임 (고양이) |
-| ring | 등 위로 한 바퀴 가까이 말린 고리 — 스피츠 (개) |
+| curl | Rising and curling forward |
+| flag | Straight up |
+| longtail | Reaching far back, the tip rising |
+| stubtail | Blunt (three short points) |
+| hook | Standing then hooking at the tip — a question mark (cats) |
+| kink | A bend at every joint (cats) |
+| ring | A ring curled nearly a full turn over the back — a spitz (dogs) |
 
-| 스킨 (tailSkin) | 입히기 |
+| Skin (tailSkin) | What goes on |
 | --- | --- |
-| line | 가는 선 한 획 (스텁은 굵게) — 레퍼런스의 기본 |
-| thick | 뿌리 굵고 끝으로 가늘어지는 채운 몸통(털색) + 윤곽 |
-| plume | 가운데가 부푼 채운 몸통 + 털 획 (북슬 — 스피츠·여우) |
-| tuft | 가는 선 + 끝에 채운 뭉치 (사자) |
-| ringed | 굵은 몸통에 어두운 띠 셋 (너구리) — **비활성**: 쥐꼬리처럼 보여 어떤 bias에도 없다(안 뽑힌다). 자산·갤러리에만 |
-| block | 네모 — 폭이 일정하고 끝이 각진 띠 |
-| wedge | 세모 — 뿌리 넓고 끝이 뾰족한 쐐기 — **비활성**(쥐꼬리). 자산·갤러리에만 |
-| ball | 동그라미 — 척추를 따라 구슬 넷(점점 작게), 스텁이면 폼폼 하나 |
-| puff | 몽실 — 골격과 상관없이 엉덩이 가까이 붙는 북슬한 토끼 꼬리(뭉치 + 둘레 털 획). 개 |
+| line | One thin stroke (thick on a stub) — the reference default |
+| thick | A filled body, thick at the root and thinning to the tip (fur color), plus an outline |
+| plume | A filled body swollen in the middle plus fur strokes (bushy — a spitz or fox) |
+| tuft | A thin line plus a filled tuft at the tip (a lion) |
+| ringed | Three dark bands on a thick body (a raccoon) — **disabled**: it reads as a rat tail and is in no bias (never drawn). Assets and gallery only |
+| block | A block — a strip of constant width with a squared tip |
+| wedge | A wedge — wide at the root, pointed at the tip — **disabled** (a rat tail). Assets and gallery only |
+| ball | Beads — four beads along the spine (getting smaller); on a stub, one pom |
+| puff | A pom — a bushy rabbit tail attached near the rump regardless of the skeleton (a tuft plus fur strokes around it). Dogs |
 
-꼬리 뿌리에 피벗. 종족 bias — 골격: pup flag 4 · stubtail 3 · longtail 2 · ring 2 · curl 1 · hook 0.5 / cat curl 4 · longtail 3 · hook 2.5 · flag 2 ·
-kink 1.5 · stubtail 1 (kink는 고양이만, ring은 개만). 스킨: pup thick 3 · line 2 · plume 2 · puff 2 · tuft 1 · ball 1 · block 0.5 / cat line 3 · thick 2 · plume 1.5 ·
-tuft 1 · block 0.5 · ball 0.5 · puff 0.3 (ringed·wedge는 비활성). 기장: pup long 2 · medium 2 · short 2 / cat long 3 · medium 2 · short 1.
-tailSkin·tailLength는 늦은 슬롯(`LATE_SLOTS`)이다. 두발은 뽑히지만 그리지 않는다.
-꼬리는 몸통·머리 **뒤**에 그린다(renderOrder 0.8) — 등 위로 말리거나 몸에 걸치는 부분은 가려진다.
-꼬리는 **네 마디 체인**으로 굽는다 — 척추를 4등분(`TAIL_BONES`)해 마디마다 관절 원점과 쉼 자세 방향을 두고 scene이 관절을 따로 돌린다(스위시·
-끝 톡톡·팔로스루, 그리고 세움은 관절마다 곧게 선 목표각으로 — 골격이 어떻든 띡 선다, [../motion/catalog.md](../motion/catalog.md) § 꼬리).
-스킨의 두께 함수는 전체 꼬리 t 기준이라 이음새에서 굵기가 이어지고, 윤곽은 양옆 선만 그려 이음새에 가로선이 안 생긴다.
+The pivot is at the tail root. Species bias — skeleton: pup flag 4 · stubtail 3 · longtail 2 · ring 2 · curl 1 · hook 0.5 / cat curl 4 · longtail 3 · hook 2.5 · flag 2 ·
+kink 1.5 · stubtail 1 (kink is cats only, ring dogs only). Skin: pup thick 3 · line 2 · plume 2 · puff 2 · tuft 1 · ball 1 · block 0.5 / cat line 3 · thick 2 · plume 1.5 ·
+tuft 1 · block 0.5 · ball 0.5 · puff 0.3 (ringed and wedge are disabled). Length: pup long 2 · medium 2 · short 2 / cat long 3 · medium 2 · short 1.
+tailSkin and tailLength are late slots (`LATE_SLOTS`). Bipeds draw them but never render them.
+The tail is drawn **behind** the torso and head (renderOrder 0.8) — the part curling over the back or lying on the body is hidden.
+The tail is baked as **a four-bone chain** — the spine is split into 4 (`TAIL_BONES`) with a joint origin and rest-pose direction per bone, and the scene rotates each joint separately (the swish,
+the tip tapping, follow-through, and the raise as a straight target angle per joint — it shoots up whatever the skeleton, [../motion/catalog.md](../motion/catalog.md) § the tail).
+The skin's thickness function is computed on the whole tail's t, so the thickness carries across the seams, and the outline strokes only the two side lines so no crossbar appears at a seam.
 
-### arms — 형태 (5) — 두발 전용
-| 값 | 그리기 |
+### arms — form (5) — bipeds only
+| Value | Drawing |
 | --- | --- |
-| stick | 가는 선 + 손 획 |
-| sleeve | 옷색 소매 채움 + 동그란 손. 긴 소매는 맨팔이 더 나온다 |
-| stubby | 짧고 굵은 선 (0.017) + 주먹 |
-| mitten | 선 + 동그란 손 |
-| none | **팔 없음** — 지체도 팔 리그도 없다. 도깨비만(bias 2/9 ≈ 23%, 사람은 forbid로 stick). 팔 행위 층이 쉰다(예약은 돌아 rng는 그대로), 몸 행위(점프)는 한다 |
+| stick | A thin line plus a hand stroke |
+| sleeve | A sleeve filled in the cloth color plus a round hand. A long sleeve shows more bare arm |
+| stubby | A short thick line (0.017) plus a fist |
+| mitten | A line plus a round hand |
+| none | **Armless** — no limb and no arm rig. Imps only (bias 2/9 ≈ 23%; humans get stick via forbid). The arm action layer rests (the schedule still runs, so rng is unchanged) while body actions (jumping) carry on |
 
-팔마다 **위팔·아래팔·back(뒷짐)** 세 벌을 굽는다. 위팔은 어깨 원점, 아래팔은 팔꿈치 원점에서 늘어진 상태로 굽고, 리그가 바인드 포즈(T)로 세운다. 어깨는 **몸통 좌우 윤곽 위** — 팔이 옆구리에서 나온다 (형태별 반폭 `SHOULDER_X`: box 0.98 · bean 0.85 · dress 0.76 · tube 0.63; 위에서 22% 높이). 소매는 위팔만 옷색이고 아래팔은 맨팔.
+Three pieces are baked per arm — **the upper arm, the forearm and back (hands behind the back)**. The upper arm is baked hanging from the shoulder's origin and the forearm from the elbow's, and the rig stands them up in the bind pose (T). The shoulder is **on the torso's left/right outline** — the arm comes out of the side (the half-width per form, `SHOULDER_X`: box 0.98 · bean 0.85 · dress 0.76 · tube 0.63; at 22% height from the top). On a sleeve only the upper arm takes the cloth color; the forearm is bare.
 
 ### armLength (2)
-| 값 | 배율 | |
+| Value | Multiplier | |
 | --- | --- | --- |
-| medium | 1 — 기준 (ARM_BASE 0.242 × armSpread) | 사람·도깨비 |
-| long | 1.64 — 바닥을 쓸 만큼 | **도깨비만** (사람은 forbid로 medium). idle에서 손이 바닥에 걸려 팔꿈치가 바깥으로 접힌다 (모션 IK의 floor 클램프) |
+| medium | 1 — the baseline (ARM_BASE 0.242 × armSpread) | Humans, imps |
+| long | 1.64 — enough to sweep the floor | **Imps only** (humans get medium via forbid). At idle the hand catches on the floor and the elbow folds outward (the floor clamp in the motion IK) |
 
-형태와 독립이라 4×2 조합. 단계는 둘뿐이다 — 기준(1)보다 짧으면 손이 몸통 근처라 팔로 안 보이고,
-1.64보다 길면 바닥을 뚫는다. 팔 길이는 **종족이 정한다** — 사람은 forbid로 항상 medium, 도깨비는
-species bias 3:2. 아키타입은 관여하지 않는다.
+Independent of form, so 4×2 combinations. There are only two steps — shorter than the baseline (1) and the hand is near the torso and does not read as an arm;
+longer than 1.64 and it goes through the floor. Arm length is **decided by the species** — humans are always medium via forbid, and imps have a
+species bias of 3:2. The archetype does not take part.
 
-## 렌더 순서
+## Render order
 
-`renderOrder` 표는 [../rig.md](../rig.md) § 계층에 있다.
+The `renderOrder` table is in [../rig.md](../rig.md) § the hierarchy.

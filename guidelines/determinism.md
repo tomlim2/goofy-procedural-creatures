@@ -1,72 +1,81 @@
-# 시드 계약
+# The seed contract
 
-**같은 시드는 항상 같은 판을 만든다.** 이 랩의 유일한 절대 규칙이다.
-좋은 결과를 시드로 기록해 두고 나중에 다시 부르는 것이 이 도구의 존재 이유다.
+**The same seed always makes the same board.** This is the one absolute rule of this lab.
+Recording a good result as a seed and calling it back later is the reason this tool exists.
 
-## 금지
+## Forbidden
 
-- 생성 경로 어디에서도 `Math.random()`을 부르지 않는다. 난수는 전부 `makeRng(seed)`에서 나온다
-- `Date.now()`, `performance.now()`를 생성 경로에서 읽지 않는다. 시간은 `motion/`에서만 쓴다
-- 객체 키 순회 순서에 의존하는 코드를 넣지 않는다. 슬롯 순회는 `SLOTS`의 선언 순서를 따른다
+- Never call `Math.random()` anywhere on the generation path. All randomness comes from `makeRng(seed)`
+- Never read `Date.now()` or `performance.now()` on the generation path. Time is used only in `motion/`
+- Never write code that depends on object key iteration order. Slot iteration follows the declaration order
+  of `SLOTS`
 
-## rng 호출 순서가 곧 시드다
+## The order of rng calls *is* the seed
 
-`makeRng`는 상태 기계다. 호출 횟수와 순서가 바뀌면 **그 뒤의 모든 값이 바뀐다.**
+`makeRng` is a state machine. Change the number or order of calls and **every value after it changes.**
 
 ```js
-// 이렇게 고치면 기존 시드의 결과가 전부 달라진다
+// Change it this way and every existing seed's result becomes different
 const parts = {};
 for (const slot of Object.keys(SLOTS)) parts[slot] = pickSlot(rng, archetype, slot);
 ```
 
-그래서 다음은 전부 **기존 시드를 깨는 변경**이다. 해도 되지만 알고 해야 한다.
+So all of the following **break existing seeds**. You may do them, but do them knowingly.
 
-- `SLOTS`의 순서를 바꾸거나 슬롯을 **중간에** 끼우는 것 (`character/vocabulary/slots.js`)
-- `makeCreature` 안에서 rng를 부르는 순서를 바꾸는 것
-- `applyConstraints`에서 `rng.chance()` 호출을 추가하거나 제거하는 것
+- Reordering `SLOTS`, or inserting a slot **in the middle** (`character/vocabulary/slots.js`)
+- Changing the order in which rng is called inside `makeCreature`
+- Adding or removing an `rng.chance()` call in `applyConstraints`
 
-반대로 다음은 **시드를 깨지 않는다.**
+Conversely, the following **do not break seeds.**
 
-- 가중치 숫자만 바꾸는 것 (`DEFAULT_BIAS`의 값 조정) — 결과는 달라지지만 호출 횟수는 같다
-- 새 슬롯을 `LATE_SLOTS` 끝에 붙이는 것 — `makeCreature`가 파츠·제약·색·비율을 다 뽑은 **뒤에** 뽑으므로
-  기존 판은 그대로이고 새 슬롯 값만 더해진다 (`legLength`·`build`·`tailSkin`·`tailLength`·`mouthPos`가 이 자리다). `LATE_SLOTS`의 순서는 추가 순서다
-- `character/draw/`만 고치는 것. 그리기는 스펙을 소비할 뿐 rng를 소비하지 않는다
-- `stroke.js`의 폭·떨림 상수를 바꾸는 것
+- Changing only the weight numbers (adjusting values in `DEFAULT_BIAS`) — the result differs but the call
+  count is the same
+- Appending a new slot to the end of `LATE_SLOTS` — it is drawn **after** `makeCreature` has drawn all the
+  parts, constraints, colors and proportions, so existing boards stay as they are and only the new slot's
+  value is added (`legLength`, `build`, `tailSkin`, `tailLength` and `mouthPos` sit here). The order of
+  `LATE_SLOTS` is the order they were added
+- Changing only `character/draw/`. Drawing consumes the spec; it does not consume rng
+- Changing the width and wobble constants in `stroke.js`
 
-시드를 깨는 변경을 했으면 커밋 메시지에 적는다.
+If you made a seed-breaking change, say so in the commit message.
 
-## 제약은 다시 뽑지 말고 덮어쓴다
+## Constraints overwrite; they never re-draw
 
-`applyConstraints`에서 조합이 안 맞을 때 **전체를 다시 뽑으면 안 된다.** 결정적으로 덮어쓴다.
+When a combination does not work in `applyConstraints`, **do not re-draw the whole thing.** Overwrite
+deterministically.
 
 ```js
-// 좋다 — 호출 횟수가 조건에 상관없이 예측 가능하다
+// Good — the call count is predictable regardless of the condition
 if (parts.headgear === "helmet") parts.hair = "none";
 
-// 나쁘다 — 조건에 따라 rng 소비량이 달라져 이후 값이 전부 흔들린다
+// Bad — rng consumption varies with the condition, so every later value shifts
 while (!valid(parts)) parts = rollAgain(rng);
 ```
 
-`rng.chance()`를 조건부로 부르는 것도 같은 문제를 만든다 — 조건이 참일 때만 부르면 그 뒤 값이
-갈린다. `applyConstraints`에 그런 곳이 몇 군데 있고(더듬이→귀, 안경→눈썹) 지금은 그 상태로
-고정돼 있다. 새로 추가할 때는 조건 밖에서 먼저 뽑아 두거나(호출 수 고정), 종족 제한이면
-`species.js` `forbid`를 쓴다(rng 없이 결정적 덮어쓰기).
+Calling `rng.chance()` conditionally creates the same problem — call it only when the condition is true and
+every value after it diverges. There are a few such places in `applyConstraints` (antennae→ears,
+eyewear→brows) and they are frozen as they are for now. When adding a new one, either draw it outside the
+condition first (fixing the call count) or, if it is a species restriction, use `forbid` in `species.js`
+(a deterministic overwrite with no rng).
 
-## 그리기용 난수는 따로 판다
+## Drawing randomness is drawn separately
 
-`character/draw/`는 `spec.proportions.wobbleSeed`로 자기 rng를 새로 만든다.
-생성용 rng를 그리기에서 이어 쓰지 않는다. 그래야 그리기를 고쳐도 조합이 안 바뀐다.
+`character/draw/` builds its own rng from `spec.proportions.wobbleSeed`. The generation rng is never carried
+on into drawing. That is what lets you change the drawing without changing the combinations.
 
-## 확인 방법
+## How to check
 
-`scripts/snapshot.mjs`가 스펙·지오메트리·모션 궤적을 한 번에 검증한다 ([../README.md](../README.md) § 스크립트).
-지오메트리 해시는 판 하나(35마리)의 층별 스케치라 모든 슬롯값을 지나지는 않는다 — 그리기 코드를 크게 옮겼으면(파일 분리·표로 바꾸기)
-`node scripts/drawdiff.mjs [ref]`로 이전 트리(git, 기본 HEAD)와 **슬롯값 전부 × 종족 × 시드**를 스케치 단위로 맞댄다. 0건이어야 한다.
+`scripts/snapshot.mjs` verifies specs, geometry and motion trajectories in one pass
+([../README.md](../README.md) § Scripts).
+The geometry hashes are the per-layer sketches of one board (35 creatures), so they do not visit every slot
+value — if you moved drawing code in a big way (splitting files, turning it into a table), use
+`node scripts/drawdiff.mjs [ref]` to compare **every slot value × species × seed** against the previous tree
+(git, HEAD by default), sketch by sketch. It has to come out at 0.
 
 ```bash
-node scripts/snapshot.mjs before   # 고치기 전
-node scripts/snapshot.mjs after    # 고친 뒤 — diff 0이면 동작 불변
+node scripts/snapshot.mjs before   # before the change
+node scripts/snapshot.mjs after    # after — diff 0 means behaviour is unchanged
 ```
 
-시드를 깨는 변경(슬롯 추가, rng 호출 순서 변경)을 의도적으로 했으면 `before`를 다시 찍어
-베이스라인을 갱신하고, 커밋 메시지에 "시드 재배열"이라고 적는다.
+If you deliberately made a seed-breaking change (adding a slot, reordering rng calls), take `before` again to
+refresh the baseline and write "seeds re-shuffled" in the commit message.

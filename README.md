@@ -1,143 +1,143 @@
 # MENAGERIE
 
-시드 하나에서 자라나는 손그림 크리처 그리드. 위에서부터 사람·고양이·개·도깨비가 줄마다 순서대로 도는 판이
-저마다의 시계로 숨쉬고, 깜빡이고, 두리번거리고, 놀라고, 손 흔들어 인사하고, 팔짱을 꼈다 풀고, 제자리에서 폴짝이고, 머리 위에 ♥ ! ? 를 띄운다.
-선은 낮은 주기로 계속 끓는다(보일). 형태는 NEW SEED를 눌러야만 바뀐다.
+A grid of hand-drawn creatures grown from a single seed. A board where human, cat, dog and imp cycle down the rows
+from the top, each breathing on its own clock, blinking, glancing around, getting startled, waving hello, folding and unfolding their arms, hopping in place, floating ♥ ! ? over their heads.
+The lines never stop boiling on a low period. Shapes change only when you press NEW SEED.
 
-**[tomlim2.github.io/goofy-procedural-creatures](https://tomlim2.github.io/goofy-procedural-creatures/)** — 지금 도는 판.
+**[tomlim2.github.io/goofy-procedural-creatures](https://tomlim2.github.io/goofy-procedural-creatures/)** — the board running right now.
 
-## 목표
+## The goal
 
-새로고침할 때마다 서른 마리 남짓한 크리처가 한 판씩 나온다. 목표는 한 마리를 잘 그리는 것이
-아니라 **한 판을 봤을 때 서로 다르게 보이는 것**이다. 텍스처나 브러시 이미지를 쓰지 않고
-규칙만으로 손그림 질감을 만든다.
+Every refresh brings out a board of thirty-odd creatures. The goal is not to draw one creature well but
+**for a whole board to look like different creatures**. The hand-drawn texture comes from rules alone,
+with no textures or brush images.
 
-## 실행
+## Running
 
 ```bash
 node serve.mjs
 ```
 
-`http://127.0.0.1:7300`. native ES module을 쓰므로 `file://` 직접 실행은 지원하지 않는다.
-three.js는 importmap으로 unpkg에서 받는다. 검사 스크립트(§ 스크립트)는 node에서 `three`를 import하므로 `npm install` 한 번이 필요하다.
+`http://127.0.0.1:7300`. It uses native ES modules, so opening it over `file://` is not supported.
+three.js comes from unpkg via an importmap. The check scripts (§ Scripts) import `three` in node, so they need `npm install` once.
 
-### 배포
+### Deploying
 
-빌드가 없다. `v`로 시작하는 태그를 밀면 `.github/workflows/pages.yml`이 레포 파일을 그대로 GitHub Pages에 올린다.
+There is no build. Push a tag starting with `v` and `.github/workflows/pages.yml` puts the repo files on GitHub Pages as they are.
 
 ```bash
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-`serve.mjs`는 로컬 전용이다(모듈 캐시 무효화). Pages에서는 브라우저가 정적 파일을 직접 받는다.
+`serve.mjs` is local-only (it invalidates the module cache). On Pages the browser gets the static files directly.
 
-`/debug.html` — **디버그 화면**. 메인은 SEED·SPECIES·GRID뿐이고, 포즈·잉크·행위·재생성을 만지려면 여기다.
-그림은 같고 조작 카드만 다르다(같은 `src/main.js`). 메인에서 링크로 가지 않는다 — 주소를 직접 친다.
-돌아올 때는 헤더의 **MENAGERIE**를 누른다.
+`/debug.html` — **the debug screen**. The main page has only SEED, SPECIES and GRID; to touch the pose, ink, actions or regen, come here.
+The drawing is the same and only the control cards differ (the same `src/main.js`). Nothing links here from the main page — you type the address.
+To go back, press **MENAGERIE** in the header.
 
-`/gallery.html?slot=legs&species=human` — **파츠 갤러리**. 슬롯 하나의 모든 값을 같은 개체(종족·시드 고정)에
-나란히 그린다. FIX 드롭다운(`&fix=legLength:short`)으로 다른 슬롯 하나를 고정할 수 있고, `&values=bangs,bun`으로 그 슬롯의
-몇 값만 크게 놓고 볼 수 있다. 파츠 하나의 형태를 판단할 때. census가 숫자라면 이건 그림이다.
+`/gallery.html?slot=legs&species=human` — **the parts gallery**. Draws every value of one slot side by side on the same individual
+(species and seed fixed). The FIX dropdown (`&fix=legLength:short`) pins one other slot, and `&values=bangs,bun` puts just a few of that slot's
+values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
-`/audit.html?seed=…` — **얼굴 파츠 전수조사**. 판 하나(35마리)를 얼굴 상태 22가지(놀람·잠·깜빡임·^^·윙크·화남·눈썹/입 전환·
-8방향 돌림·☆♥ 변형·조합)로 그려, 눈·코·입·눈썹·안경·볼·잠 눈꺼풀을 하나씩 껐다 켰다 하며 픽셀 차이를 센다. 머리 폭의 4% 미만이면
-"안 보임"으로 적는다. 얼굴을 고쳤으면 돌린다 — 0건이어야 한다.
+`/audit.html?seed=…` — **the face part audit**. Draws one board (35 creatures) in 22 face states (startle, sleep, blink, ^^, wink, anger, brow/mouth switches,
+8-way turns, the ☆♥ variants, and combinations), toggling the eyes, nose, mouth, brows, eyewear, cheeks and sleep lids one at a time and counting the pixel difference. Under 4% of the head width is written down as
+"not visible". Run it whenever you change the face — it has to be 0.
 
-메인 화면(`/`)에는 **SEED · SPECIES · GRID · EXPORT**만 있다. 나머지는 디버그 화면(`/debug.html`) 것이다.
+The main screen (`/`) has only **SEED · SPECIES · GRID · EXPORT**. The rest belongs to the debug screen (`/debug.html`).
 
-| 조작 | |
+| Control | |
 | --- | --- |
-| NEW SEED / `R` | 새 시드. 주소창 해시가 시드다 — `#0z0y9qe`처럼 붙여 두면 같은 판이 다시 나온다 |
-| POSE MOTION / BIND / `B` | BIND는 리그를 바인드 포즈(T)에 고정. 형태·파츠를 판단할 때 |
-| INK BOIL / STILL / `I` | STILL은 선의 끓음(보일)을 멈춤. 포즈와 별개 축 — 모션 판단 시 잡음 제거 |
-| ACTION AUTO / IDLE / SLEEP / SIT / WALK / 행위 | 행위 하나를 강제(그 층만, 다른 층은 idle) — 팔(인사·만세·팔짱·경례…, 두발), 몸(제자리 점프, 전원), 네발(긁기·꼬리 흔들기). SLEEP은 네발을 엎드려 재우고, SIT은 네발을 앉히고(네발 행위는 예약대로 — 앉아서 긁고 꼬리 흔든다), WALK는 전원 걷기 — 집↔밖 왕복(팔 행위는 예약대로). AUTO는 층끼리 겹치고 개·고양이는 이따금 자고 앉고 모두 이따금 걷는다. IDLE은 모든 층 idle·깨어 있음 |
-| REGEN STILL / LIVE / `S` | 기본 STILL. LIVE를 켜면 개체가 각자의 시계(6~14초)로 교체된다 (레퍼런스 동작) |
-| SPECIES ALL / HUMAN / CAT / PUP / IMP | ALL은 고정 레인. 나머지는 그 종족만 — 색·파츠 분포를 판단할 때 |
-| EXPORT PNG | 지금 화면을 PNG로 받는다. 캔버스 픽셀 그대로(화면 해상도)에 서명만 얹는다 — 왼쪽 밑 시드, 오른쪽 밑 MENAGERIE. 파일 이름은 `menagerie-<시드>.png` |
-| GRID 1×1 / 5×4 / 7×5 / 9×6 | 1×1은 한 마리만 세운다(뷰를 두 배로 잡아 화면의 절반 크기) — 파츠 하나를 화면에서 볼 때. 종이 그레인은 그리드와 무관하게 9×6 기준으로 고정이다 |
+| NEW SEED / `R` | A new seed. The address bar's hash is the seed — keep something like `#0z0y9qe` and that board comes back |
+| POSE MOTION / BIND / `B` | BIND pins the rig to the bind pose (T). For judging form and parts |
+| INK BOIL / STILL / `I` | STILL stops the lines boiling. A separate axis from pose — it removes the noise when judging motion |
+| ACTION AUTO / IDLE / SLEEP / SIT / WALK / an action | Forces one action (that layer only; the others idle) — arms (waving, arms up, arms crossed, a salute…, bipeds), body (hopping in place, everyone), quad (scratching, wagging). SLEEP lies quads down to sleep, SIT sits them (quad actions still follow their schedule — they scratch and wag while sitting), and WALK walks everyone — out from home and back (arm actions still follow their schedule). AUTO lets the layers overlap, with dogs and cats sleeping and sitting now and then and everyone walking now and then. IDLE is every layer idle and awake |
+| REGEN STILL / LIVE / `S` | STILL by default. Turn LIVE on and individuals are replaced on their own clocks (6~14 s), as in the reference |
+| SPECIES ALL / HUMAN / CAT / PUP / IMP | ALL is the fixed lanes. The rest are that species only — for judging color and part distribution |
+| EXPORT PNG | Downloads the current screen as a PNG. The canvas pixels as they are (at screen resolution) with only a signature laid on top — the seed bottom-left, MENAGERIE bottom-right. The file is named `menagerie-<seed>.png` |
+| GRID 1×1 / 5×4 / 7×5 / 9×6 | 1×1 stands a single creature (the view is doubled, so it is half the screen) — for looking at one part on screen. The paper grain is pinned to the 9×6 board regardless of the grid |
 
-조작한 상태는 **주소에 실린다**. 화면을 만들고 주소를 복사하면 그대로 남고, 그 주소로 들어오면 같은 화면이 선다.
-기본값인 항목은 안 붙는다 — 손 안 댄 화면의 주소에는 시드 해시만 남는다.
+The state you make **rides in the address**. Build a screen, copy the address, and it stays; enter by that address and the same screen stands up.
+Anything at its default is left off — the address of an untouched screen carries only the seed hash.
 
 ```
 /?grid=1x1&species=cat&pose=bind&ink=still&action=wave#01dkuwa
 ```
 
-`grid` `pose` `ink` `live` `species` `action` — 위 표의 조작 그대로고, 값은 버튼의 `data-*`(ACTION은 목록의 값)다.
-목록에 없는 값, **그 화면에 카드가 없는 값**은 무시된다 — 메인에서 `pose=bind`는 떨어져 나간다(디버그 화면에서 쓴다).
-시드만 해시인 건 예전 그대로다. 헤더의 **MENAGERIE**를 누르면 메인으로 돌아온다(디버그·갤러리·전수조사 화면에서도 같다).
+`grid` `pose` `ink` `live` `species` `action` — exactly the controls in the table above, and the values are the buttons' `data-*` (for ACTION, the list's values).
+A value not in the list, and **a value whose card is not on that screen**, is ignored — `pose=bind` falls off on the main page (it is used on the debug screen).
+The seed being in the hash is unchanged. Press **MENAGERIE** in the header to go back to the main page (the same on the debug, gallery and audit screens).
 
-## 구조
+## Structure
 
-**캐릭터**(무엇인가)와 **모션**(어떻게 움직이나) 두 축이다. 캐릭터는 시드가 정하는 정적인 전부이고
-모션은 시계가 정하는 동적인 전부다. 파츠별 애니메이션이 아니다. 둘을 잇는 게 scene의 리그다.
+Two axes: **character** (what it is) and **motion** (how it moves). Character is everything static that the seed decides and
+motion everything dynamic that the clock decides. It is not per-part animation. What joins the two is the scene's rig.
 
-| 위치 | 하는 일 | 문서 |
+| Where | What it does | Docs |
 | --- | --- | --- |
-| `src/rng.js` | 시드 PRNG(mulberry32), 가중치 추첨, 1D 값 노이즈 | [determinism](guidelines/determinism.md) |
-| `src/stroke.js` | 획 → 리본 지오메트리. 떨림, 필압, 스크리블, 스크리블 채움, 해칭. `buildGeometry`(스케치 여러 벌 → 지오메트리 하나) | [drawing](guidelines/drawing.md) |
-| `src/color.js` | 헥스 색 유틸 — 선형 변환(`hexToRgb`), 휘도(`luminance`·`isDark`), 톤(`shade`). 캐릭터·그리기가 같이 쓴다 | [drawing](guidelines/drawing.md) § 색 |
-| **`src/character/`** | 시드가 결정하는 정적인 것. `vocabulary/`(슬롯·종족·아키타입·팔레트) `spec.js`(시드→스펙) `draw/`(스펙→획: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
-| **`src/motion/`** | 시계가 결정하는 동적인 것. `table.js`(종족 파라미터) `rhythm.js`(상시) `events.js`(간헐) `states.js`(유지 — 기본 상태 idle/sleep/walk 포함) `actions.js`(idle과 행위 — 팔·몸·네발 층) `emoji.js`(이모지 애니메이션 — 트리거 층) `ease.js`(곡선 모양 — 봉투·추종, 전부 ease in/out) `index.js`(rng 순서 고정 조립) | [motion/](guidelines/motion/) |
-| `src/scene/` | three.js. `rig.js`(지오메트리 → 계층) `animate.js`(상태 → 리그) `paper.js` `material.js`(공유 재질·메시) `emoji.js`(글리프 모양) `index.js`(씬·루프·재생성) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
-| `src/export.js` | 화면 → PNG. WebGL 캔버스를 2D 캔버스에 올리고 서명(시드·이름)을 얹어 내려받는다. 씬을 모른다 — 다 그려진 캔버스를 받는다 | |
-| `src/main.js` · `src/control.js` · `src/ui.js` | 진입점. `control.js`는 화면 컨트롤 표 — 값·주소(쿼리)·그 값으로 하는 일이 한 곳이다(버튼에는 기능이 없다). `ui.js`는 그 밑의 DOM 유틸(세그먼트 버튼·목록 배선·옵션·rAF 루프, gallery·audit과 공유) | |
-| `debug.html` | 디버그 화면 — `index.html`과 같은 `src/main.js`, 조작 카드만 전부 둔다 (없는 카드는 컨트롤러가 건너뛴다) | |
-| `src/gallery.js` · `gallery.html` | 파츠 갤러리 — 슬롯값별로 같은 개체를 나란히 | |
-| `src/audit.js` · `audit.html` | 얼굴 파츠 전수조사 — 상태별로 파츠가 보이는지 픽셀로 센다 | [character/rules](guidelines/character/rules.md) |
-| `guidelines/` | 두 축의 카탈로그와 규칙, 성능·시드·그리기 규칙. **고치기 전에 읽는다** | [README](guidelines/README.md) |
-| `reference/` | 무엇을 보고 만들었고 무엇을 가져오고 안 가져왔는지 | [README](reference/README.md) |
-| `scripts/` | 아래 § 스크립트 | |
+| `src/rng.js` | The seeded PRNG (mulberry32), weighted draws, 1D value noise | [determinism](guidelines/determinism.md) |
+| `src/stroke.js` | Strokes → ribbon geometry. Wobble, pressure, scribbles, scribble fills, hatching. `buildGeometry` (several sketches → one geometry) | [drawing](guidelines/drawing.md) |
+| `src/color.js` | Hex color utilities — linear conversion (`hexToRgb`), luminance (`luminance`, `isDark`), tones (`shade`). Character and drawing share them | [drawing](guidelines/drawing.md) § colors |
+| **`src/character/`** | What the seed decides. `vocabulary/` (slots, species, archetypes, palette) `spec.js` (seed→spec) `draw/` (spec→strokes: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
+| **`src/motion/`** | What the clock decides. `table.js` (per-species parameters) `rhythm.js` (standing) `events.js` (intermittent) `states.js` (held — including the base states idle/sleep/walk) `actions.js` (idle and actions — arm, body and quad layers) `emoji.js` (emoji animation — the trigger layer) `ease.js` (curve shapes — envelopes and following, all eased in and out) `index.js` (assembly in a fixed rng order) | [motion/](guidelines/motion/) |
+| `src/scene/` | three.js. `rig.js` (geometry → hierarchy) `animate.js` (state → rig) `paper.js` `material.js` (shared materials and meshes) `emoji.js` (glyph shapes) `index.js` (the scene, the loop, regen) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
+| `src/export.js` | Screen → PNG. Puts the WebGL canvas onto a 2D canvas and lays a signature (seed, name) on top to download. It knows nothing about the scene — it takes a canvas already drawn | |
+| `src/main.js` · `src/control.js` · `src/ui.js` | The entry point. `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the rAF loop; shared with gallery and audit) | |
+| `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
+| `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
+| `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state | [character/rules](guidelines/character/rules.md) |
+| `guidelines/` | The catalog and rules for the two axes, plus the performance, seed and drawing rules. **Read before changing anything** | [README](guidelines/README.md) |
+| `reference/` | What it was made from, and what was and was not taken | [README](reference/README.md) |
+| `scripts/` | § Scripts below | |
 
-## 스크립트
+## Scripts
 
 ```bash
-node scripts/census.mjs                # 종족 × 슬롯 분포표 + 정체성 위반. 파츠·가중치를 고쳤으면 본다
-node scripts/census.mjs --slot hair    # 한 슬롯만
-node scripts/census.mjs --check        # 위반만 (exit 1)
+node scripts/census.mjs                # the species × slot distribution table plus identity violations. Look at it when you change parts or weights
+node scripts/census.mjs --slot hair    # one slot only
+node scripts/census.mjs --check        # violations only (exit 1)
 
-node scripts/snapshot.mjs before       # 리팩토링 전 — 스펙·지오메트리·60초 모션 궤적을 찍는다
-node scripts/snapshot.mjs after        # 리팩토링 후 — diff 0이면 동작 불변
+node scripts/snapshot.mjs before       # before a refactor — records specs, geometry and 60 s motion trajectories
+node scripts/snapshot.mjs after        # after — diff 0 means behaviour is unchanged
 
-node scripts/drawdiff.mjs [ref]        # 그리기 리팩토링 — 작업 트리를 git 시점(기본 HEAD)과 슬롯값 전부 × 종족 × 시드로 맞댄다. 0건이면 그리기 불변
+node scripts/drawdiff.mjs [ref]        # for drawing refactors — compares the working tree against a git ref (HEAD by default) over every slot value × species × seed. 0 means the drawing is unchanged
 ```
 
-## 다양성을 만드는 층
+## The layers that make variety
 
-균등 랜덤으로 슬롯을 뽑으면 서른 마리쯤에서 "아까 본 것"이 나온다. 네 층을 겹친다.
+Draw the slots by even random and around the thirtieth creature you get "the one I just saw". Four layers are stacked.
 
-1. **종족** — 줄 단위 고정 레인. 골격(두발/네발), 색, 전용 파츠, 지배 모션이 갈린다
-2. **아키타입** — `beast` `scholar` `trooper` `sprite` `blob` `wanderer` 여섯 성향을 개체마다 뽑고
-   그 안에서 고른다. 좌·상 이웃과 겹치면 다시 뽑는다
-3. **기본 가중치** — 아키타입이 관여하지 않는 슬롯에도 가중치를 준다. 없으면 선택지 수가 곧
-   확률이 되어 `eyewear`는 80%가 무언가를 쓴다
-4. **비율 지터** — 머리 크기·너비·혹, 눈 크기·간격·좌우 비대칭, 몸 폭, 팔 길이, 손떨림.
-   실루엣 다양성의 대부분이 여기서 나온다
+1. **Species** — fixed lanes, per row. It splits the skeleton (biped/quad), the color, the exclusive parts and the dominant motion
+2. **Archetype** — one of six dispositions, `beast` `scholar` `trooper` `sprite` `blob` `wanderer`, is drawn per individual and
+   the choice is made inside it. A collision with the left or upper neighbour is re-drawn
+3. **Default weights** — slots the archetype does not touch get weights too. Without them the number of options becomes
+   the probability, and 80% of `eyewear` ends up wearing something
+4. **Proportion jitter** — head size, width and lumps; eye size, spacing and left-right asymmetry; body width; arm length; hand shake.
+   Most of the silhouette variety comes from here
 
-23슬롯 180파츠. 슬롯은 형태만 담고, 자세·동작은 모션이다. 길이·체격(`armLength` `legLength` `build`)은 형태와
-독립인 치수 슬롯 — 스케일이 아니라 기장·폭만 바뀌고, 다리 스탠스는 몸통 폭이 정한다.
+23 slots, 180 parts. A slot holds form only; pose and action are motion. Length and build (`armLength`, `legLength`, `build`) are dimension
+slots independent of form — not a scale, only length and width change, and the leg stance is set by the torso's width.
 
-## 손그림 질감
+## The hand-drawn texture
 
-WebGL의 `linewidth`는 대부분 1로 고정되므로 `Line`으로는 굵기를 줄 수 없다. 모든 획을
-리본 메시로 만든다.
+WebGL's `linewidth` is fixed at 1 nearly everywhere, so `Line` gives no control over thickness. Every stroke
+becomes a ribbon mesh.
 
-- 획을 일정 간격으로 재샘플링한 뒤 법선 방향으로 민다. 저주파(전체가 휘는 것)와
-  고주파(잔떨림)를 겹친다
-- 끝으로 갈수록 얇아지고 중간에서 필압이 흔들린다
-- 외곽선은 2회 덧그어 겹친 자국을 남긴다
-- 머리는 원이 아니라 노이즈로 찌그러뜨린 폐곡선이다
-- 머리카락은 면을 칠하지 않고 왕복해 긋는 스크리블이다. 채색도 스크리블로 덮어 획 방향이 남는다
-- 채색은 선과 어긋나게 오프셋을 준다
-- 같은 그림을 지터 위상만 다르게 3벌 굽고 1.5~2초에 한 번씩 바꾼다(보일)
+- The stroke is re-sampled at an even spacing and pushed along the normal. Low frequency (the whole thing bending) and
+  high frequency (fine tremor) are overlaid
+- It thins toward the ends and the pressure wavers in the middle
+- Outlines are drawn twice, leaving the overlap visible
+- The head is not a circle but a closed curve crumpled with noise
+- Hair is not filled as an area but scribbled back and forth. Fills are covered with a scribble too, so the stroke direction shows
+- Fills are offset off the lines
+- The same drawing is baked in 3 sets differing only in jitter phase and swapped once every 1.5~2 s (the boil)
 
-## 알아둘 것
+## Things to know
 
-- **색공간** — three.js는 정점 색을 선형 공간으로 본다. sRGB 헥스를 그대로 넣으면 어두운
-  잉크가 중간 회색으로 밝아진다. `color.js`의 `srgbToLinear`(`hexToRgb`)가 이걸 보정한다
-- **성능** — 프레임 비용은 draw call 수다. 재질은 불투명도별로 공유하고(`scene/material.js`) 층 하나는 메시 하나(채색+잉크)다.
-  35마리에 draw call 550, 렌더 JS 0.8 ms/프레임. 재는 법과 규칙은 [guidelines/performance.md](guidelines/performance.md)
-- **모듈 캐시** — `serve.mjs`는 상대 경로 import에 `?v=` 를 붙인다. `Cache-Control: no-store`만으로는
-  브라우저의 ES module map이 비워지지 않아 파일을 고쳐도 이전 코드가 실행되는 일이 있다
-- **시드 재현** — 같은 시드는 같은 판이다. rng 호출 순서가 곧 시드라 슬롯 순서 변경은 기존 시드를 깬다.
-  새 슬롯은 `LATE_SLOTS`로 맨 끝에 뽑아 기존 판을 유지한다. 깨는 변경은 커밋에 "시드 재배열"이라고 적는다
+- **Color space** — three.js reads vertex colors as linear. Feed it an sRGB hex as-is and dark ink
+  brightens into mid grey. `srgbToLinear` (`hexToRgb`) in `color.js` corrects that
+- **Performance** — the frame cost is the number of draw calls. Materials are shared per opacity level (`scene/material.js`) and one layer is one mesh (fills + ink).
+  550 draw calls and 0.8 ms/frame of render JS for 35 creatures. How to measure it and the rules are in [guidelines/performance.md](guidelines/performance.md)
+- **The module cache** — `serve.mjs` appends `?v=` to relative imports. `Cache-Control: no-store` alone does not clear
+  the browser's ES module map, so an edited file sometimes still runs the previous code
+- **Seed reproduction** — the same seed is the same board. The order of rng calls *is* the seed, so reordering slots breaks existing seeds.
+  A new slot is drawn at the very end via `LATE_SLOTS`, preserving existing boards. Write "seeds re-shuffled" in the commit for a breaking change
