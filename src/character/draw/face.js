@@ -15,6 +15,8 @@ export function eyeShape(spec) { return EYE_SHAPE[spec.parts.eyes] || { sx: 1, s
 export const RIG_EYES = ["ring", "wide", "cyclops", "oval"];
 // 무거운 눈꺼풀 눈(lidded)을 기울이는 각 — sharp는 코 쪽으로, soft는 반대로 이만큼 돌린 같은 눈이다 (rad)
 const TILTED_LID = 0.34;
+// 흰자 — 종이빛 흰색 (scene/rig.js의 살아 있는 눈, mouth.js의 이빨과 같은 값)
+const SCLERA = "#f6f2e9";
 
 // 별(☆) 꼭짓점 목록 — 바깥 r, 안쪽 r·inner, 위가 뾰족. 놀람의 ☆_☆ 눈 덮개(scene/rig.js)가 쓴다
 export function starPath(cx, cy, r, inner = 0.45) {
@@ -48,6 +50,8 @@ export function eyeFloor(spec, eyes, x) {
 export function drawEyes(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyes;
   const ink0 = spec.faceInk || spec.palette.ink;
+  // 흰자를 깐 눈(slit·side·half·lidded 한 벌)의 잉크 — 밝은 얼굴 잉크로 그리면 흰자에 묻힌다
+  const dark = spec.palette.ink;
 
   // 작은 눈부터 그린다 — 겹치면 큰 눈이 앞(hollow처럼 채움+윤곽을 한 스케치에 그리는 눈에서 교차선이 안 생긴다)
   for (const eye of [...eyes].sort((a, b) => a.r - b.r)) {
@@ -97,11 +101,12 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       ink.stroke(spiral, { color: ink0, width: 0.009, jitter: 0.004 });
     } else if (kind === "slit") {
       // 아몬드 윤곽 + **채운** 세로 동공(방추). 얇은 획이면 눈이 작을 때 윤곽 두 선이 붙어 뭉개지고 동공은 안 읽힌다 —
-      // 아몬드를 조금 높이고(0.7r) 동공을 면으로 채워 멀리서도 고양이 눈으로 보이게
-      ink.outline(blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, { lumps: 3, amount: 0.1, noise: null }), {
-        color: ink0, width: 0.01
-      });
-      fills.fill(blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), ink0);
+      // 아몬드를 조금 높이고(0.7r) 동공을 면으로 채워 멀리서도 고양이 눈으로 보이게.
+      // 아몬드 안은 흰자다 — 살색이면 동공만 떠 있는 얼룩이 되고, 검은 털·도깨비에서는 아몬드가 머리와 한 덩어리가 된다
+      const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, { lumps: 3, amount: 0.1, noise: null });
+      fills.fill(path, SCLERA);
+      fills.outline(path, { color: dark, width: 0.01 });
+      fills.fill(blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), dark);
     } else if (kind === "line") {
       // 일자눈 ㅡ ㅡ — 무표정 대시. 살짝 바깥이 처진다
       ink.stroke([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0, width: 0.013 });
@@ -118,9 +123,13 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const dir = spec.proportions.wobbleSeed % 2 ? 1 : -1;
       const lidY = eye.r * 0.3;
       const a0 = Math.asin(lidY / eye.r);
-      ink.stroke(arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18), { color: ink0, width: 0.011 });
-      ink.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: ink0, width: 0.013 });
-      fills.fill(blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink0);
+      // 아래쪽 호가 감싸는 자리가 흰자 — 호는 눈꺼풀 선 양 끝에서 시작해 밑을 돌므로 채우면 그 선 아래만 하얘진다.
+      // 선 위(눈꺼풀)는 채우지 않는다 — 거기는 눈알이 아니라 살이다
+      const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
+      fills.fill(arc, SCLERA);
+      fills.stroke(arc, { color: dark, width: 0.011 });
+      fills.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark, width: 0.013 });
+      fills.fill(blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark);
     } else if (kind === "droop") {
       // ´･ω･` — 처진 눈꼬리. 점 눈 위에 바깥으로 내려가는 눈꺼풀 획 (시무룩)
       fills.fill(blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0);
@@ -130,16 +139,16 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // 채움과 윤곽을 **같은 스케치(fills)** 에 눈마다 이어 그린다 — 두 눈이 겹치면 나중 눈(큰 눈)이 앞 눈의 윤곽을 덮는다 (교차선 없음).
       // 그러려면 작은 눈부터: 큰 눈이 뒤에 그려져 앞이 된다
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // 살짝 찌그러진 원
-      fills.fill(path, "#f6f2e9");
-      fills.outline(path, { color: spec.palette.ink, width: 0.011, passes: 2 });   // 흰자 테는 검정 — 흰자 위라 늘 보인다
+      fills.fill(path, SCLERA);
+      fills.outline(path, { color: dark, width: 0.011, passes: 2 });   // 흰자 테는 검정 — 흰자 위라 늘 보인다
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
       // 무거운 눈꺼풀 한 벌 — **같은 눈을 기울기만 달리** 쓴다: lidded 평평 · sharp 코 쪽으로 기운 것(눈꼬리가 올라간 사나운 인상) ·
       // soft 반대로 기운 것(눈꼬리가 처진 순한 인상). 기울기는 눈 중심을 축으로 흰자·눈꺼풀 선·동공을 통째로 돌린 것이다 —
       // 모양을 따로 만들면 같은 눈으로 안 읽힌다.
-      // 안은 늘 **흰자**고 잉크는 윤곽·눈꺼풀 선·동공에만 들어간다 — 눈꺼풀을 먹으로 채우면 검은 머리(도깨비·검은 털)에서
+      // 눈꺼풀 선 **아래는 흰자, 위는 살**이다 — 눈꺼풀은 눈알이 아니라 눈을 덮은 살이니 얼굴과 같은 색으로 채운다.
+      // 위까지 흰자로 두면 눈 위에 흰 초승달이 하나 더 얹힌 것처럼 읽히고, 먹으로 채우면 검은 머리(도깨비·검은 털)에서
       // 머리와 한 덩어리가 되어 흰 초승달만 남아 눈으로 안 읽힌다. 흰자 위라 잉크는 늘 어두운 팔레트 잉크
-      // (밝은 얼굴 잉크로 그리면 흰자에 묻힌다). 반감김(half)이 획 하나라면 이건 흰자 + 굵고 처진 눈꺼풀 선이다
-      const dark = spec.palette.ink;
+      // (밝은 얼굴 잉크로 그리면 흰자에 묻힌다). 반감김(half)이 가는 눈꺼풀 선 하나라면 이건 굵고 처진 눈꺼풀에 눈이 눌린 것이다
       const out = eye.side === 0 ? 1 : eye.side;              // 외눈은 오른쪽 기준. 코 쪽 = −out
       const tilt = (kind === "sharp" ? out : kind === "soft" ? -out : 0) * TILTED_LID;
       const cos = Math.cos(tilt), sin = Math.sin(tilt);
@@ -148,9 +157,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         eye.y + (x - eye.x) * sin + (y - eye.y) * cos
       ]);
       const path = rot(blobPath(eye.x, eye.y, eye.r, eye.r * 1.05, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 }));
-      fills.fill(path, "#f6f2e9");
-      fills.outline(path, { color: dark, width: 0.011, passes: 2 });
-      // 눈꺼풀 선 — 흰자를 가로지르고 가운데가 처진다(눈두덩이 눈을 짓누른다). 굵게 두 번 그어 "무거운" 눈꺼풀이 된다
+      // 눈꺼풀 선 — 흰자를 가로지르고 가운데가 처진다(눈두덩이 눈을 짓누른다). 굵게 두 번 그어 "무거운" 눈꺼풀이 된다.
+      // 양 끝은 기울이기 전 타원의 ±a0 자리라, 윤곽 점 배열을 그 각으로 잘라 살 부분을 닫을 수 있다
       const rel = 0.16, a0 = Math.asin(rel);
       const lid = [];
       for (let i = 0; i <= 12; i += 1) {
@@ -158,21 +166,30 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         const x = eye.x + eye.r * (Math.cos(Math.PI - a0) * (1 - t) + Math.cos(a0) * t);
         lid.push([x, eye.y + eye.r * (rel * 1.05) - Math.sin(Math.PI * t) * eye.r * 0.16]);
       }
-      // 굵기는 눈 크기에 비례한다 — 고정 굵기면 작은 눈(고양이)에서 획이 흰자를 다 덮는다
-      ink.stroke(rot(lid), { color: dark, width: Math.max(0.011, Math.min(0.017, eye.r * 0.2)), passes: 2 });
-      // 동공 — 눈꺼풀 선 밑에서 내다본다 (개체별로 살짝 좌우)
+      const lidLine = rot(lid);
+      fills.fill(path, SCLERA);
+      // 눈꺼풀(선 위) — 눈꺼풀 선을 왼→오른으로 두고 윤곽의 윗부분(오른→위→왼)을 이어 닫는다
+      const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
+      fills.fill([...lidLine, ...brow], spec.palette.skin);
+      fills.outline(path, { color: dark, width: 0.011, passes: 2 });
+      // 동공 — 눈꺼풀 선 밑에서 내다본다 (개체별로 살짝 좌우). 선보다 **먼저** 그어야 선이 동공 위를 지난다
       const gaze = (spec.proportions.wobbleSeed % 5 - 2) * 0.06;
       fills.fill(rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark);
+      // 굵기는 눈 크기에 비례한다 — 고정 굵기면 작은 눈(고양이)에서 획이 흰자를 다 덮는다
+      fills.stroke(lidLine, { color: dark, width: Math.max(0.011, Math.min(0.017, eye.r * 0.2)), passes: 2 });
     } else if (kind === "half") {
       // 반쯤 감은 눈 — 원 전체에 선을 긋지 않는다(원+선은 "선 그어진 동그라미"로 뭉개져 읽힌다).
       // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양
       const lidY = eye.r * 0.3;
       const a0 = Math.asin(lidY / eye.r);   // 눈꺼풀 선이 원과 만나는 각
-      ink.stroke(arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18), { color: ink0, width: 0.011, jitter: 0.006 });
-      ink.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], {
-        color: ink0, width: 0.013
+      // 호가 감싸는 자리(선 아래)가 흰자. 선 위는 채우지 않는다 — 눈알이 아니라 살이다
+      const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
+      fills.fill(arc, SCLERA);
+      fills.stroke(arc, { color: dark, width: 0.011, jitter: 0.006 });
+      fills.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], {
+        color: dark, width: 0.013
       });
-      fills.fill(blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink0);
+      fills.fill(blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark);
     }
     // ring / wide / cyclops / oval(RIG_EYES)은 여기서 그리지 않는다. scene이 흰자·동공·감은 선을
     // 별도 메시로 세워 놀람(동공 수축)·시선·눈꺼풀을 움직인다.
