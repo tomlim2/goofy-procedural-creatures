@@ -1,9 +1,9 @@
-// 리팩토링 전후 동작 불변 검증.
+// Verifies behaviour is unchanged across a refactor.
 //   node scripts/snapshot.mjs before   → snapshots/before.json
-//   node scripts/snapshot.mjs after    → snapshots/after.json + before와 diff
+//   node scripts/snapshot.mjs after    -> snapshots/after.json + diff against before
 //
-// 스펙 200마리, 지오메트리 해시(머리·몸·팔다리·꼬리·눈썹·입), 4종족 60초 모션 궤적.
-// three.js 없이 돌리기 위해 stroke의 build()는 부르지 않고 positions/colors만 해시한다.
+// 200 creature specs, geometry hashes (head, body, limbs, tail, brows, mouth), and 60 s motion trajectories for the four species.
+// To run without three.js it never calls stroke's build() — it hashes positions/colors only.
 
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
@@ -24,13 +24,13 @@ const sketchHash = (s) => hash([round(s.positions), round(s.colors)]);
 
 const out = { specs: [], geometry: [], motion: {} };
 
-// 1. 스펙
+// 1. specs
 for (const seed of [12345, 555, 99, 31337]) {
   const g = makeGrid(seed, 50, 7);
   out.specs.push(hash(g));
 }
 
-// 2. 지오메트리
+// 2. geometry
 const grid = makeGrid(777, 35, 7);
 for (const spec of grid) {
   const d = draw.drawCreature(spec, 0);
@@ -41,12 +41,12 @@ for (const spec of grid) {
     body: sketchHash(d.body.ink) + sketchHash(d.body.fills),
     head: sketchHash(d.head.ink) + sketchHash(d.head.fills),
     crownBack: sketchHash(d.crownBack.ink) + sketchHash(d.crownBack.fills),
-    // 뿔(horns)과 두피 위 머리카락(hairCrown)은 같은 자리(2.06)의 두 층 — 이어 하나로 적는다
+    // Horns and the hair on the scalp (hairCrown) are two layers at the same depth (2.06) — concatenated and recorded as one
     crown: ["horns", "hairCrown"].map((k) => sketchHash(d[k].ink) + sketchHash(d[k].fills)).join(""),
     hairBack: sketchHash(d.hairBack.ink),
     hairFront: sketchHash(d.hairFront.ink),
     face: sketchHash(d.face.ink) + sketchHash(d.face.fills),
-    // 정지 눈은 눈마다 한 층(작은 눈 Back · 큰 눈 Front) — 둘을 이어 하나로 적는다
+    // Static eyes get one layer per eye (small eye Back, large eye Front) — the two are concatenated and recorded as one
     staticEyes: ["staticEyeBack", "staticEyeFront"].map((k) => sketchHash(d[k].ink) + sketchHash(d[k].fills)).join(""),
     front: sketchHash(d.front.ink) + sketchHash(d.front.fills),
     hat: sketchHash(d.hat.ink) + sketchHash(d.hat.fills),
@@ -62,9 +62,9 @@ for (const spec of grid) {
   out.geometry.push(entry);
 }
 
-// 3. 모션 궤적 — 4종족, 60초, 매 10프레임 샘플
+// 3. motion trajectories — four species, 60 s, sampled every 10 frames
 for (const species of ["human", "pup", "cat", "imp"]) {
-  // 리그 서술(motionRig)을 넘긴다 — 모션 IK가 손 목표를 각도로 풀고, 네발 잠에서 몸이 내려앉는 거리를 안다
+  // The rig description (motionRig) is passed in — motion IK solves hand targets into angles, and knows how far the body settles when a quad sleeps
   const rig = draw.motionRig ? draw.motionRig(draw.makeCreature(42, species)) : false;
   const clock = clocks.makeClock(42, 3, species, rig);
   const samples = [];
@@ -89,7 +89,7 @@ for (const species of ["human", "pup", "cat", "imp"]) {
 mkdirSync(join(root, "snapshots"), { recursive: true });
 const file = join(root, "snapshots", `${label}.json`);
 writeFileSync(file, JSON.stringify(out, null, 1));
-console.log(`저장: snapshots/${label}.json`);
+console.log(`saved: snapshots/${label}.json`);
 
 if (label === "after" && existsSync(join(root, "snapshots/before.json"))) {
   const before = JSON.parse(readFileSync(join(root, "snapshots/before.json"), "utf8"));
@@ -100,6 +100,6 @@ if (label === "after" && existsSync(join(root, "snapshots/before.json"))) {
     for (const k of Object.keys(b)) if (JSON.stringify(b[k]) !== JSON.stringify(a[k])) diffs.push(`geometry[${i}].${k}`);
   });
   for (const k of Object.keys(before.motion)) if (JSON.stringify(before.motion[k]) !== JSON.stringify(out.motion[k])) diffs.push(`motion.${k}`);
-  if (diffs.length) { console.log("차이:", diffs.length, "건"); console.log(diffs.slice(0, 20).join("\n")); process.exit(1); }
-  console.log("동작 불변 — diff 0");
+  if (diffs.length) { console.log("differences:", diffs.length); console.log(diffs.slice(0, 20).join("\n")); process.exit(1); }
+  console.log("behaviour unchanged — diff 0");
 }

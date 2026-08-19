@@ -1,11 +1,11 @@
-// 개체별 시계. rhythm(상시) · events(간헐) · states(유지) · actions(행위)를 조립한다.
+// The per-individual clock. Assembles rhythm (standing), events (intermittent), states (held) and actions.
 //
-// ⚠ rng 호출 순서가 곧 시드다. 아래 init 순서와 update 순서는 고정돼 있다. 새 모션은
-// 각 블록의 **끝에** 붙인다. 순서를 바꾸면 기존 시드의 모션이 전부 달라진다
+// ⚠ The order of rng calls *is* the seed. The init order and update order below are fixed. A new motion goes
+// **at the end** of its block. Reorder them and every existing seed's motion changes
 // (guidelines/determinism.md).
 //
-// 모든 예약은 출생 시각(birth) 기준 상대 시간이다.
-// 문서: guidelines/motion/catalog.md, guidelines/motion/rules.md
+// Every schedule is relative to the birth time (birth).
+// Docs: guidelines/motion/catalog.md, guidelines/motion/rules.md
 
 import { makeRng } from "../rng.js";
 import { MOTION } from "./table.js";
@@ -20,9 +20,9 @@ export { MOTION } from "./table.js";
 export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
 export { EMOJI } from "./emoji.js";
 
-// 바인드 상태 — 아무 모션도 받지 않은 캐릭터. 모든 값이 정지·기본이다: 두발은 팔 T포즈,
-// 네발은 다리 수직·꼬리 그린 그대로. scene이 BIND 뷰에서 clock 대신 이걸 리그에 넣는다.
-// (모션의 기본 상태는 이게 아니라 idle이다 — 두발 A포즈, 네발 선 자세(legStance·tailIdle). 바인드는 모션이 없을 때다.)
+// The bind state — a character that has received no motion at all. Every value is still and at default: a biped's arms in a T-pose,
+// a quad's legs vertical and its tail exactly as drawn. In the BIND view the scene feeds this to the rig instead of the clock.
+// (Motion's base state is not this but idle — a biped A-pose, a quad's standing stance (legStance, tailIdle). Bind is when there is no motion.)
 export const BIND_STATE = Object.freeze({
   breathe: 0, lid: 0, gaze: [0, 0], startle: 0, eyeFx: null, angry: 0, regen: false, emoji: null,
   browAlt: false, mouthAlt: false,
@@ -35,18 +35,18 @@ export const BIND_STATE = Object.freeze({
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
 });
 
-// rig: character/draw/limbs.js motionRig(spec) — { arm(두발 팔 IK 치수 | null), legTop, quad, body(네발 몸통·다리 뿌리 치수 | null) }.
-// 행위를 IK로 풀고, 네발이 엎드려 잘 때 몸이 내려앉는 거리를 알고, 앉을 때 몸 기울기·다리 각을 이 개체에 맞게 푼다.
+// rig: character/draw/limbs.js motionRig(spec) — { arm (a biped's arm IK dimensions | null), legTop, quad, body (a quad's torso and leg-root dimensions | null) }.
+// It solves actions by IK, knows how far the body settles when a quad lies down to sleep, and solves the body tilt and leg angles of a sit for this individual.
 export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const rng = makeRng(seed ^ 0x5bf03635);
   const M = MOTION[species] || MOTION.human;
 
-  // ── init: 고정 순서 ──
+  // -- init: fixed order --
   const breathe = R.initBreathe(rng);            // 1
   const blink = E.initBlink(rng);                // 2
   const glance = E.initGlance(rng);              // 3
   const surprise = E.initSurprise(rng, M);       // 4
-  S.initSquint(rng);                             // 5 (반감김 유지 — 없앴다. rng 소비만 유지해 이후 순서를 안 흔든다)
+  S.initSquint(rng);                             // 5 (the half-lidded hold — gone. Only the rng consumption is kept, so the later order does not shift)
   const regen = E.initRegen(rng);                // 6
   const mood = S.initMood(rng);                  // 7
   const emojiSchedule = E.initEmojiSchedule(rng); // 8
@@ -69,53 +69,53 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const jelly = R.initJelly(rng, M);             // 25
   const look = S.initLook(rng, M);               // 26
   const quadAction = S.initQuadAction(rng, M);   // 27
-  const mode = S.initMode(rng, M);               // 28 (기본 상태 idle/sleep/walk/sit — 상태가 하나뿐인 종족은 rng 안 씀)
-  const zzzPhase = rng.float(0, 6);              // 29 (잠 중 z 이모지 위상 — 매 프레임 rng 없이 6초마다)
-  const angry = S.initAngry(rng, M);             // 30 (화남 — 표에 angry가 없는 종족은 rng 안 씀)
-  // 꼬리 끝 마디(고양이 위주) — 팔로스루 상태·채찍질·세움. 예약이 아니라 이벤트에 딸려 시작하므로 rng는 시작할 때만
+  const mode = S.initMode(rng, M);               // 28 (the base state idle/sleep/walk/sit — a species with only one state uses no rng)
+  const zzzPhase = rng.float(0, 6);              // 29 (the phase of the z emoji during sleep — every 6 s, with no rng per frame)
+  const angry = S.initAngry(rng, M);             // 30 (anger — a species with no angry in the table uses no rng)
+  // The tail's tip bone (mostly cats) — follow-through state, lash and raise. It starts along with an event rather than on a schedule, so rng only at the start
   const TT = M.tailTip || null;
   const tailFollow = { x: 0, v: 0 };
   let tailPrevBase = null;
-  // 표정은 잠깐 하다 말지 않는다 — ^^는 시작하면 **3초 이상** 간다 (깜빡임 ^^ 22%·♥ 이모지가 이걸 켠다). rng 없이 시각만
+  // An expression does not flicker past — once a ^^ starts it runs for **3 s or more** (a ^^ blink 22% and the ♥ emoji switch it on). Times only, no rng
   let happyUntil = -1;
-  const happyWag = { x: 0, v: 0 };   // 웃을 때 꼬리 흔들기 봉투(임계감쇠로 켜고 끈다) — 개
-  // 세움(고양이) — 기분 좋은(^^) 동안 꼬리가 띡 선다. k 0~1은 선형으로 오르내리고(0.4초 위 / 0.6초 아래) ramp로 S자. 모양은 하나 — 관절 전부 정확히 수직.
-  // lastT는 dt용 (프레임 기반이라 결정적)
+  const happyWag = { x: 0, v: 0 };   // the envelope for wagging while smiling (switched on and off with critical damping) — dogs
+  // Raise (cats) — the tail shoots up while in a good mood (^^). k 0~1 rises and falls linearly (0.4 s up / 0.6 s down) and ramp makes it an S-curve. There is one shape — every joint exactly vertical.
+  // lastT is for dt (frame-based, so deterministic)
   const raise = { k: 0, lastT: -1 };
-  // idle 꼬리 자세(고양이 아치, table tailIdlePose) — 관절 세계각 목록. 끝 두 마디는 개체 tailLift로 더/덜 말린다. rng 없음, 시계마다 한 번 만든다
+  // The idle tail pose (the cat arch, table tailIdlePose) — the list of joint world angles. The top two bones curl more or less by the individual's tailLift. No rng; built once per clock
   const IP = M.tailIdlePose || null;
   const tailPose = IP ? IP.angles.map((a, i) => a + (i >= IP.angles.length - 2 ? (rig && rig.tailLift ? rig.tailLift : 0) * IP.liftBend : 0)) : null;
 
-  // 강제 행위 (화면 ACTION 카드). 그 층은 이걸 계속 하고 다른 층은 idle. null이면 예약대로,
-  // "idle"이면 모든 층 idle. 팔 행위(ACTIONS)는 두발, 네발 행위(QUAD_ACTIONS)는 네발, 몸 행위(BODY_ACTIONS)는 공통.
+  // A forced action (the on-screen ACTION card). That layer keeps doing it while the others idle. null follows the schedule,
+  // "idle" keeps every layer idle. Arm actions (ACTIONS) are bipeds, quad actions (QUAD_ACTIONS) quads, body actions (BODY_ACTIONS) shared.
   let forced = null;
-  let forcedMode = null;   // "sleep" | "walk" | "sit" | "idle" | null — ACTION 카드가 기본 상태도 정할 수 있다
+  let forcedMode = null;   // "sleep" | "walk" | "sit" | "idle" | null — the ACTION card can set the base state too
   let forcedSide = 1;
   let forcedStart = -1;
   const arm = rig ? rig.arm : null;
   const quad = !!(rig && rig.quad);
-  const armed = !!arm;   // 팔 리그가 있어야 팔 행위 층이 산다 (팔 없는 도깨비는 두발이어도 쉰다)
-  const canSleep = quad;   // 잠 자세는 네발만 정의돼 있다
-  // 잠 정도 0~1. 상태가 바뀌면 여기로 이징한다 — 엎드리고 일어나는 게 튀지 않게. 태어날 때 자는 개체는 1로 시작
+  const armed = !!arm;   // an arm rig is needed for the arm action layer to live (an armless imp rests even though it is a biped)
+  const canSleep = quad;   // the sleep pose is only defined for quads
+  // How asleep it is, 0~1. When the state changes it eases here — so lying down and getting up do not snap. An individual born asleep starts at 1
   let sleepK = mode.mode === "sleep" && canSleep ? 1 : 0;
-  // 앉기 — 네발만. 자세는 리그 치수에서 한 번 푼다(actions.js sitPose). sitK 0~1로 idle과 섞는다 (앉고 일어나는 게 튀지 않게)
+  // Sit — quads only. The pose is solved once from the rig dimensions (actions.js sitPose). sitK 0~1 blends it with idle (so sitting and rising do not snap)
   const sit = quad && rig && rig.body ? sitPose(rig.body) : null;
   let sitK = mode.mode === "sit" && sit ? 1 : 0;
-  // 걷기 정도 0~1 (걷기 상태로 이징). 걸음 위상은 개체별로 어긋나게 — rng 없이 시드로
+  // How much it is walking, 0~1 (easing into the walk state). The step phase is offset per individual — from the seed, with no rng
   const W = M.walk || null;
   let walkK = mode.mode === "walk" && W ? 1 : 0;
   const walkPhase = ((seed % 97) / 97) * Math.PI * 2;
-  // 걷기는 자리를 옮긴다 — 집(셀 가운데, x 0)에서 왼쪽이나 오른쪽으로 조금 걸어가 거기서 평소처럼 idle(자기도) 하다가,
-  // 다음 걷기는 **무조건 온 방향으로** 집에 돌아온다. leg = 한 번의 이동 { from, to, start, dur }. 속도는 종족(W.speed, 셀/초)
+  // Walking moves it — from home (the middle of the cell, x 0) it walks a little to the left or right, idles there as usual (and may sleep),
+  // and the next walk **always** brings it home the way it came. leg = one trip { from, to, start, dur }. The speed is the species' (W.speed, cells/second)
   const trip = { x: 0, from: 0, to: 0, start: -1, dur: 0, dir: 0 };
-  let facing = 1;                 // 네발만 뒤집는다: 오른쪽으로 걸을 땐 -1(거울). 0을 지나며 종이처럼 얇아졌다 뒤집힌다
+  let facing = 1;                 // only quads flip: -1 (mirrored) when walking right. It thins to paper through 0 and flips
   let lastMode = mode.mode;
   const startLeg = (t) => {
     const home = Math.abs(trip.x) < 1e-4;
-    if (home) {   // 집에서 출발 — 방향과 거리는 rng
+    if (home) {   // starting from home — the direction and distance come from rng
       trip.dir = rng.chance(0.5) ? 1 : -1;
       trip.to = trip.dir * rng.float(W.trip[0], W.trip[1]);
-    } else {      // 밖에서 출발 — 집으로만
+    } else {      // starting from outside — home only
       trip.dir = trip.x > 0 ? -1 : 1;
       trip.to = 0;
     }
@@ -124,19 +124,19 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
     trip.dur = Math.abs(trip.to - trip.from) / W.speed;
   };
   let zzzLast = -1;
-  // 이모지 채널 — 모션과 별개 층. 예약(idle 중 가끔)과 모션의 이모지 트리거가 여기로 쏜다
+  // The emoji channel — a layer separate from motion. The schedule (occasionally while idle) and motion's emoji triggers both fire into here
   const emoji = initEmoji();
-  const lastAction = { arm: null, quad: null };   // 행위 시작 감지용 (시작할 때 한 번만 트리거)
+  const lastAction = { arm: null, quad: null };   // for detecting an action's start (triggering once, at the start)
 
-  // 행위 층 하나를 정한다: 강제가 없으면 예약된 것, 강제가 이 층 것이면 그것(계속), 다른 층 것이거나 "idle"이면 null.
-  // makeForced(def, start)가 강제 행위의 { action, …, start, until }을 만든다.
+  // Settles one action layer: with no forcing, whatever is scheduled; if the forcing belongs to this layer, that (continuously); if it belongs to another layer or is "idle", null.
+  // makeForced(def, start) builds the forced action's { action, …, start, until }.
   const resolveLayer = (t, scheduled, defs, applies, makeForced) => {
     if (!forced) return scheduled;
     if (!(applies && defs[forced])) return null;
     if (forcedStart < 0) forcedStart = t;
     return makeForced(defs[forced], forcedStart);
   };
-  // 행위가 막 시작했고 이모지 트리거가 있으면 쏜다
+  // If an action has just started and has an emoji trigger, fire it
   const fireEmoji = (key, act, defs, t) => {
     const name = act ? act.action : null;
     if (name && name !== lastAction[key] && defs[name].emoji) triggerEmoji(emoji, defs[name].emoji, t);
@@ -144,12 +144,12 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   };
 
   return {
-    // 강제. null → 예약대로. "idle" → 모든 층 idle·깨어 있음. "sleep" → 잠(네발). 행위 이름 → 그 층만 그 행위, 깨어 있음
+    // Forcing. null → follow the schedule. "idle" → every layer idle and awake. "sleep" → asleep (quad). An action name → that layer does that action, awake
     force(action, side = 1) {
       if (!action) { forced = null; forcedMode = null; }
       else if (action === "sleep") { forced = "idle"; forcedMode = "sleep"; }
-      else if (action === "walk") { forced = null; forcedMode = "walk"; }   // 걷는 중에도 팔 행위는 예약대로 (걸으며 인사)
-      else if (action === "sit") { forced = null; forcedMode = "sit"; }     // 앉아서도 네발 행위(긁기·꼬리 흔들기)는 예약대로
+      else if (action === "walk") { forced = null; forcedMode = "walk"; }   // arm actions still follow the schedule while walking (waving as it walks)
+      else if (action === "sit") { forced = null; forcedMode = "sit"; }     // quad actions (scratching, wagging) still follow the schedule while sitting
       else if (action === "idle") { forced = "idle"; forcedMode = "idle"; }
       else if (ACTIONS[action] || QUAD_ACTIONS[action] || BODY_ACTIONS[action]) { forced = action; forcedMode = "idle"; }
       else { forced = null; forcedMode = null; }
@@ -159,16 +159,16 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
     update(globalT) {
       const t = globalT - birth;
 
-      // ── update: 고정 순서 ──
-      // 기본 상태 — idle(서 있음)/sleep(엎드려 잠). 예약은 강제 중에도 돌린다. sleepK로 자세를 섞는다
+      // -- update: fixed order --
+      // The base state — idle (standing) / sleep (lying asleep). The schedule runs even while forced. sleepK blends the pose
       let modeName = forcedMode || S.stepMode(mode, t, rng, M);
-      // 걷기 시작 — 이동 한 구간을 잡고, 걷기 유지는 도착까지로 맞춘다 (표의 walk 유지 대신 거리/속도)
+      // Starting a walk — one trip is taken and the walk hold is matched to the arrival (distance/speed instead of the table's walk hold)
       if (W && modeName === "walk" && (lastMode !== "walk" || trip.start < 0)) {
         startLeg(t);
         if (!forcedMode) mode.next = t + trip.dur + 0.2;
       }
       if (W && modeName === "walk" && trip.start >= 0 && t >= trip.start + trip.dur) {
-        // 도착. 강제 걷기면 바로 다음 구간(집↔밖 왕복), 아니면 상태 기계가 idle로 넘긴다
+        // Arrival. On a forced walk, straight into the next trip (out and back home); otherwise the state machine hands over to idle
         trip.x = trip.to; trip.start = -1;
         if (forcedMode === "walk") startLeg(t);
         else { modeName = "idle"; mode.mode = "idle"; mode.next = t + rng.float(M.modeHold.idle[0], M.modeHold.idle[1]); }
@@ -178,109 +178,109 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         trip.x = trip.from + (trip.to - trip.from) * p;
       }
       lastMode = modeName;
-      // 네발은 걷는 방향을 본다 — 오른쪽이면 거울(-1). 집에 돌아와 서면 다시 왼쪽(+1). 밖에서 idle 중엔 마지막 방향 그대로
+      // A quad faces its walking direction — mirrored (-1) when going right. Standing back home it faces left again (+1). Idling outside it keeps the last direction
       const facingTarget = !quad ? 1 : (modeName === "walk" && trip.start >= 0) ? (trip.dir > 0 ? -1 : 1) : (Math.abs(trip.x) < 1e-4 ? 1 : facing < 0 ? -1 : 1);
       facing += (facingTarget - facing) * 0.18;
       const asleep = modeName === "sleep" && canSleep;
       sleepK += ((asleep ? 1 : 0) - sleepK) * 0.03;
       if (sleepK < 0.001) sleepK = 0;
       const awake = 1 - sleepK;
-      // 앉기 — 잠보다 빠르게 앉고 일어난다(0.05/프레임, 1초쯤). 깨어 있는 상태라 얼굴·둘러보기·네발 행위는 그대로
+      // Sit — it sits and rises faster than it sleeps (0.05/frame, about a second). It is an awake state, so the face, looking and quad actions all carry on
       const sitting = modeName === "sit" && !!sit;
       sitK += ((sitting ? 1 : 0) - sitK) * 0.05;
       if (sitK < 0.001) sitK = 0;
-      // 걷기 — 제자리 걸음. walkK로 들어가고 나온다(0.5초쯤). 걸음 위상 ph는 t 기반이라 끊기지 않는다
+      // Walk — walking in place. walkK eases in and out (about 0.5 s). The step phase ph is t-based, so it never breaks
       const walking = modeName === "walk" && !!W;
       walkK += ((walking ? 1 : 0) - walkK) * 0.06;
       if (walkK < 0.001) walkK = 0;
       const ph = W ? t * Math.PI * 2 * W.hz + walkPhase : 0;
-      const stepBump = 0.5 - 0.5 * Math.cos(2 * ph);   // 걸음마다 한 번(주기의 두 배) 0→1→0
+      const stepBump = 0.5 - 0.5 * Math.cos(2 * ph);   // 0→1→0 once per step (twice the period)
 
-      // 얼굴
+      // Face
       const bl = E.stepBlink(blink, t, rng);
       E.stepGlanceTarget(glance, t, rng);
-      // 둘러보기 — 유지 중이면 시선 목표를 그쪽으로 잡고(동공이 먼저), 얼굴이 뒤따라 돈다
+      // Look — while held, the gaze target is set that way (the pupils first) and the face follows round
       let looking = S.stepLook(look, t, rng, M);
-      if (!quad && modeName === "walk" && trip.start >= 0) looking = [trip.dir * 0.9, 0];   // 두발은 걷는 쪽을 본다
+      if (!quad && modeName === "walk" && trip.start >= 0) looking = [trip.dir * 0.9, 0];   // a biped looks the way it walks
       if (looking && !asleep) glance.gazeTarget = looking;
       const gaze0 = R.stepGaze(glance);
       const faceTurn0 = R.stepFaceTurn(glance, M, asleep ? null : looking);
-      // 잠 — 눈 감고 시선 가운데, 얼굴은 살짝 아래로
+      // Sleep — eyes closed, gaze centred, the face tilted slightly down
       const gaze = [gaze0[0] * awake, gaze0[1] * awake];
       const faceTurn = [faceTurn0[0] * awake, faceTurn0[1] * awake - 0.35 * sleepK];
       let lid = bl.lid;
       let isHappy = bl.happy;
       if (S.stepHappy(happy, t, rng, M)) { lid = 1; isHappy = true; }
-      // ♥ 이모지가 뜨면 웃는다(^^) — 어디서 쏜 ♥이든 (idle 예약·파닥임·꼬리 흔들기·♥ 놀람). 개는 이게 꼬리 흔들기로 이어진다.
-      // 깜빡임 ^^ 도 잠깐이 아니라 3.2초 유지로 늘린다 — 웃다 마는 얼굴은 없다
-      if ((emoji.kind === "heart" || bl.happy) && sleepK === 0) happyUntil = Math.max(happyUntil, t + 3.2);   // 잠들기 시작했으면 새로 웃지 않는다
+      // A ♥ emoji makes it smile (^^) — whatever fired the ♥ (the idle schedule, a flap, a wag, a ♥ startle). On a dog this leads into a wag.
+      // A ^^ blink is stretched to a 3.2 s hold rather than a moment — there is no face that stops smiling halfway
+      if ((emoji.kind === "heart" || bl.happy) && sleepK === 0) happyUntil = Math.max(happyUntil, t + 3.2);   // once it has started falling asleep it does not smile anew
       if (t < happyUntil && !asleep) { lid = 1; isHappy = true; }
       const winkSide = sleepK > 0.5 ? 0 : S.stepWink(wink, t, rng, M);
-      if (sleepK > 0.5) S.stepWink(wink, t, rng, M);   // (rng 소비 고정 — 결과만 버린다)
+      if (sleepK > 0.5) S.stepWink(wink, t, rng, M);   // (fixed rng consumption — only the result is thrown away)
       const startleBefore = surprise.start;
       const startle0 = E.stepSurprise(surprise, t, rng, M);
-      // 놀람이 막 시작하면 — ♥ 변형은 ♥ 이모지를 같이, 나머지는 30%로 ! 를 쏜다 (이모지 트리거). 자는 중엔 놀라지 않는다
+      // When a startle has just begun — the ♥ variant fires the ♥ emoji with it, the rest fire a ! 30% of the time (an emoji trigger). It does not get startled while asleep
       if (startleBefore < 0 && surprise.start >= 0 && !asleep) {
         if (surprise.variant === "heart") triggerEmoji(emoji, "heart", t);
         else if (rng.chance(0.3)) triggerEmoji(emoji, "bang", t);
       }
       lid = Math.max(lid, sleepK);
-      const startle = startle0 * awake;   // 놀람 0~1 — 동공 수축량
-      // 화남 0~1 — 사나운 눈·이 드러낸 입(·화난 눈썹)으로 **바꿔 그린다**(scene). 웃음보다 우선. 자면 안 낸다. 예약은 강제 중에도 돌린다
+      const startle = startle0 * awake;   // startle 0~1 — how far the pupil shrinks
+      // Anger 0~1 — **redrawn** (scene) as fierce eyes and a bared-tooth mouth (plus angry brows). It beats a smile. Not while asleep. The schedule runs even while forced
       const angryK = S.stepAngry(angry, t, rng, M) * awake;
       if (angryK > 0.5) isHappy = false;
-      // 놀람의 눈 변형 — ☆_☆ / ♥_♥ 로 눈이 바뀐다 (scene이 눈을 끄고 글리프로 대체). k는 놀람 봉투 그대로. 화내는 중엔 안 바뀐다 (사나운 눈이 우선)
+      // Startle eye variants — the eyes turn into ☆_☆ / ♥_♥ (the scene switches the eyes off and substitutes the glyph). k is the startle envelope as it is. They do not change while angry (the fierce eye wins)
       const eyeFx = startle > 0 && surprise.variant && surprise.variant !== "plain" && angryK <= 0.5 ? { kind: surprise.variant, k: startle } : null;
       if (sleepK > 0.5) isHappy = false;
 
-      // 몸통
+      // Torso
       const sw = R.stepSway(sway, t, M);
       const tiltAngle = S.stepTilt(tilt, t, rng, M);
       const rollAngle = R.stepRoll(roll, t);
       let headBob = E.stepNod(nod, t, rng);
       headBob += E.stepDip(dip, t, rng, M);
-      // 몸 행위(제자리 점프) — 팔·네발 행위와 다른 층. 예약은 강제 중에도 돌린다(rng 소비 고정).
-      // 강제 점프는 쉬었다 반복 — 점프 길이 + 1.2초 주기
+      // Body actions (hopping in place) — a different layer from the arm and quad actions. The schedule runs even while forced (fixed rng consumption).
+      // A forced jump repeats with a rest between — the jump length plus a 1.2 s period
       let bact = resolveLayer(t, S.stepBodyAction(bodyAction, t, rng, M), BODY_ACTIONS, true, (def, start0) => {
         const period = def.hops * def.dur + 1.2;
         const start = start0 + Math.floor((t - start0) / period) * period;
         return { action: forced, start, until: start + def.hops * def.dur };
       });
-      if (asleep || walkK > 0.5 || sitK > 0.5) bact = null;   // 자는 중·걷는 중·앉은 중엔 몸 행위 없음 (예약은 위에서 이미 돌렸다)
+      if (asleep || walkK > 0.5 || sitK > 0.5) bact = null;   // no body actions while asleep, walking or sitting (the schedule already ran above)
       const hp = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, squashX: 0, squashY: 0 };
-      // 걷기 — 걸음마다 몸이 살짝 들썩인다
+      // Walk — the body lifts slightly with each step
       if (walkK > 0 && W) hp.hopY += W.bob * stepBump * walkK;
-      // 잠 — 몸이 밑단까지 내려앉고 납작해진다
+      // Sleep — the body settles to the hem and flattens
       if (sleepK > 0 && rig) { hp.hopY -= rig.legTop * sleepK; hp.squashY -= 0.06 * sleepK; hp.squashX += 0.06 * sleepK; }
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
 
-      // 팔 — 기본은 idle(A포즈), 행위가 있으면 그 행위가 정한 팔만 덮는다. 리그에 IK로 풀고,
-      // 그 위에 진자·점프·지터를 얹는다.
-      // 예약은 강제 중에도 계속 돌린다(rng 소비를 같게 — 강제를 풀어도 시계가 흐트러지지 않는다).
-      const scheduledArm = S.stepArmAction(armAction, t, rng, M);   // 예약은 팔이 없어도 돌린다 (rng 소비 고정)
+      // Arms — idle (the A-pose) by default; with an action, only the arms that action decides are overwritten. Solved onto the rig by IK,
+      // with the pendulum, jump and jitter laid on top.
+      // The schedule keeps running even while forced (keeping rng consumption identical — releasing the forcing does not disturb the clock).
+      const scheduledArm = S.stepArmAction(armAction, t, rng, M);   // the schedule runs even with no arms (fixed rng consumption)
       const act = armed ? resolveLayer(t, scheduledArm, ACTIONS, true,
         (def, start) => ({ action: forced, side: forcedSide, start, until: Infinity })) : null;
       const arms = solveArms(arm, act, t);
       const swing = R.stepArmSwing(armSwing, sway, t, M);
       for (const side of [-1, 1]) {
         const arm = arms[String(side)];
-        // 진자(스웨이 역위상) · 점프 시 팔 위로 · 관절 지터. 팔꿈치는 절반 (관절이 따로 끓는다)
+        // The pendulum (opposite phase to the sway) · arms up on a jump · joint jitter. The elbow gets half (the joint boils separately)
         let off = -side * swing;
         if (hp.hopY > 0 && !(walkK > 0.5)) off += side * hp.hopY * 4;
-        if (walkK > 0 && W) off += Math.sin(ph + (side > 0 ? Math.PI : 0)) * W.arm * walkK;   // 걷기 — 팔이 다리와 엇갈려 흔들린다
+        if (walkK > 0 && W) off += Math.sin(ph + (side > 0 ? Math.PI : 0)) * W.arm * walkK;   // walk — the arms swing counter to the legs
         off += R.armJitter(armSwing, t, side);
         arm.shoulder += off;
         arm.elbow += off * 0.5;
       }
 
-      // 다리 — 기본은 idle 자세(네발은 legStance로 선 자세, 두발은 수직). 그 위에 까딱·스텝·점프·지터.
+      // Legs — the idle stance by default (a quad's standing stance from legStance, a biped vertical). Flicks, steps, jumps and jitter go on top.
       const legOffset = M.legStance ? [...M.legStance] : [0, 0, 0, 0];
       const legOsc = [0, 0, 0, 0];
       E.stepLegTap(legTap, t, rng, M, legOffset);
       E.stepLegStep(legStep, t, rng, M, legOffset);
       if (hp.squashY < 0) { legOffset[0] += hp.squashY * 1.5; legOffset[1] -= hp.squashY * 1.5; }
-      // 걷기 — 네발은 대각선 쌍(0·3 / 1·2)이 번갈아 앞뒤로, 두발은 두 다리가 번갈아 벌렸다 모은다(정면 걸음)
+      // Walk — a quad alternates its diagonal pairs (0·3 / 1·2) front and back; a biped's two legs alternately open and close (a walk seen head-on)
       if (walkK > 0 && W) {
         const s = Math.sin(ph) * W.leg * walkK;
         if (quad) { legOffset[0] += s; legOffset[3] += s; legOffset[1] -= s; legOffset[2] -= s; }
@@ -288,26 +288,26 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       }
       for (let i = 0; i < 4; i += 1) legOffset[i] += R.legJitter(t, i);
 
-      // 꼬리 · 젤리 — 꼬리 기본은 idle 각(tailIdle), 그 위에 스위시·플릭. 끝 마디(tailTip)는 뿌리 기준 상대각
+      // Tail · jelly — the tail's default is the idle angle (tailIdle), with the swish and flick on top. The tip bone (tailTip) is a relative angle against the root
       let tailAngle = (M.tailIdle || 0) + R.stepTailSwish(tailSwish, t);
       let tailTip = 0;
       const flick = E.stepTailFlick(tailFlick, t, rng, M);
-      // 고양이는 플릭이 **끝만 톡톡**(twitch — 뿌리는 가만), 개는 통째로 플릭
+      // A cat's flick is **the tip alone tapping** (twitch — the root stays put); a dog flicks the whole tail
       if (TT && TT.twitch) tailTip += flick * (TT.twitch.amp / 0.35);
       else tailAngle += flick;
-      if (walkK > 0 && W && quad && W.tail) tailAngle += Math.sin(ph) * W.tail * walkK;   // 걷기 — 개만 꼬리가 걸음에 맞춰 살랑 (table walk.tail)
-      // 웃을 때(^^)마다 꼬리 흔들기 — 개 (table wagOnHappy). 봉투는 임계감쇠라 켜고 꺼질 때 튀지 않는다
+      if (walkK > 0 && W && quad && W.tail) tailAngle += Math.sin(ph) * W.tail * walkK;   // walk — only a dog's tail sways with the step (table walk.tail)
+      // Wagging whenever it smiles (^^) — dogs (table wagOnHappy). The envelope is critically damped, so it does not snap on or off
       if (M.wagOnHappy && quad) {
         damp(happyWag, isHappy && !asleep ? 1 : 0, 0.3);
         if (happyWag.x > 0.01) tailAngle += Math.sin(t * Math.PI * 2 * M.wagOnHappy.hz) * M.wagOnHappy.amp * happyWag.x;
       }
-      // 곤두섬 — 털은 무섭거나 **화날 때** 선다: 화남 봉투(angryK — 0.1초에 확, 유지, 0.1초에 풀림, 사람 눈이 깜짝 놀랄 때의 법칙) 그대로.
-      // 굵기만 부푼다 (scene이 마디마다 척추에 수직으로 스케일). 놀람에는 안 선다. (♥ 놀람의 세움은 ♥ 이모지 → ^^ 를 거쳐 아래 세움이 맡는다.
-      // 꼬리 채찍질은 없다 — 고양이가 꼬리를 치는 모션은 금지, 개는 wag)
+      // Bristle — fur stands up when scared or **angry**: the anger envelope (angryK — hard up in 0.1 s, hold, released in 0.1 s, the law of a human eye being startled) as it is.
+      // Only the thickness swells (the scene scales each bone perpendicular to the spine). It does not stand up on a startle. (The raise of a ♥ startle is handled by the raise below, via the ♥ emoji → ^^.
+      // There is no tail lash — a cat lashing its tail is forbidden as a motion; a dog wags)
       const tailPuff = TT && quad && TT.puff ? angryK * TT.puff : 0;
-      // 세움 — 고양이는 **기분 좋을 때마다**(^^ — 깜빡임 ^^·♥ 이모지·♥ 놀람) 꼬리가 띡 선다. 골격 모양과 상관없이 scene이 관절마다 쉼 자세 → **정확히 수직**으로
-      // 섞는다(tailRaise 0~1) — 굽는 변형은 없다(굽으면 선 게 아니라 휜 것으로 보인다). 0.4초에 서고 웃는 동안(3초 이상) 서 있다가 0.6초에 내린다.
-      // 서 있는 동안은 **빳빳하다** — 스위시·톡톡·팔로스루를 (1 − tailRaise)로 죽인다 (안 죽이면 선 채로 흔들려 "딱" 서 보이지 않는다). rng 없음
+      // Raise — a cat's tail shoots up **whenever it is in a good mood** (^^ — a ^^ blink, the ♥ emoji, a ♥ startle). Regardless of the skeleton shape, the scene blends each joint from its rest pose to
+      // **exactly vertical** (tailRaise 0~1) — with no bent variant (bent reads as curved rather than raised). Up in 0.4 s, held for the whole smile (3 s or more), down in 0.6 s.
+      // While raised it is **stiff** — the swish, tapping and follow-through are killed by (1 − tailRaise) (without that it wobbles while raised and does not read as standing up). No rng
       let tailRaise = 0;
       if (TT && TT.raise && quad) {
         const dt = raise.lastT < 0 ? 0 : Math.max(0, t - raise.lastT);
@@ -317,19 +317,19 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         tailAngle *= 1 - tailRaise;
         tailTip *= 1 - tailRaise;
       }
-      // idle 자세 — 고양이는 깨어 있는 동안 꼬리가 **아치**(tailPose)로 서 있다. 세움이 오면 그만큼 빠지고(합이 1) 잠들면 골격 그대로 접히고,
-      // 앉으면 대부분 빠져(×0.2) 골격 그대로 몸을 따라 기울어 바닥에 눕는다
+      // The idle pose — while awake, a cat's tail stands in an **arch** (tailPose). A raise takes it out by that much (the sum is 1), sleep folds it back to the skeleton,
+      // and sitting takes most of it out (×0.2) so it tilts with the body as the skeleton drew it and lies on the floor
       const tailArch = tailPose && quad ? IP.weight * awake * (1 - tailRaise) * (1 - 0.8 * sitK) : 0;
       const j = R.stepJelly(jelly, t);
 
-      // 네발 행위 — 다리 하나·꼬리를 idle 위에 덮는다. 진동은 이징 없이(legOsc·꼬리), 봉투로 페이드
-      // 강제 네발 행위는 그 종족 목록에 있는 것만 — 고양이는 꼬리 흔들기(wag)를 안 한다 (표에 없다), 강제해도 idle
+      // Quad actions — one leg or the tail overwritten over idle. Oscillation goes on without easing (legOsc, the tail), faded by an envelope
+      // A forced quad action only works if it is in that species' list — a cat does not wag (it is not in the table), so forcing it leaves it idle
       const quadApplies = quad && (!forced || (M.quadActions || []).some(([name]) => name === forced));
       let qact = resolveLayer(t, S.stepQuadAction(quadAction, t, rng, M), QUAD_ACTIONS, quadApplies, (def, start) => {
         const index = def.leg === "front" ? (forcedSide > 0 ? 1 : 0) : def.leg === "hind" ? (forcedSide > 0 ? 3 : 2) : -1;
         return { action: forced, index, start, until: Infinity };
       });
-      if (asleep || walkK > 0.5) qact = null;   // 자는 중·걷는 중엔 네발 행위 없음
+      if (asleep || walkK > 0.5) qact = null;   // no quad actions while asleep or walking
       if (qact) {
         const def = QUAD_ACTIONS[qact.action];
         const env = ramp(Math.max(0, Math.min(1, Math.min((t - qact.start) / 0.35, (qact.until - t) / 0.35))));
@@ -341,46 +341,46 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         if (def.tail) tailAngle += def.tail.osc.amp * w;
       }
 
-      // 앉은 자세 — 몸을 앞다리 뿌리를 축으로 기울여(bodyTilt — scene이 몸 그룹을 돌린다) 엉덩이를 바닥에, 앞다리는 수직, 뒷다리는 앞으로 접어
-      // 발이 바닥에(actions.js sitPose). sitK로 섞어 앉고 일어나는 게 부드럽다. 행위 중인 다리(뒷발 긁기)는 행위가 이긴다 — 앉아서 긁는다.
-      // 꼬리는 몸과 같이 기울고 조금 더 내려 바닥에 눕는다
+      // The sitting pose — the body tilts about the front legs' root (bodyTilt — the scene rotates the body group) to put the hips on the floor, the front legs vertical, the hind legs folded forward
+      // to put the feet on the floor (actions.js sitPose). sitK blends it so sitting and rising are smooth. A leg mid-action (scratching with a hind paw) wins — it scratches while sitting.
+      // The tail tilts with the body and drops a little further, to lie on the floor
       if (sitK > 0 && sit) {
         for (let i = 0; i < 4; i += 1) if (!(qact && qact.index === i)) legOffset[i] = legOffset[i] * (1 - sitK) + sit.legs[i] * sitK;
         tailAngle -= 0.3 * sitK;
       }
-      // 잠 자세 — 다리를 몸 밑으로 접고(앞다리는 뒤로, 뒷다리는 앞으로) 꼬리를 내리고 머리를 앞발에 얹는다.
-      // sleepK로 섞어 엎드리고 일어나는 게 부드럽다
+      // The sleeping pose — the legs fold under the body (front legs back, hind legs forward), the tail lowers and the head rests on the front paws.
+      // sleepK blends it so lying down and getting up are smooth
       if (sleepK > 0) {
         const fold = [1.35, 1.25, -1.3, -1.2];
         for (let i = 0; i < 4; i += 1) legOffset[i] = legOffset[i] * awake + fold[i] * sleepK;
         tailAngle = tailAngle * awake - 0.55 * sleepK;
-        tailTip = tailTip * awake - 0.6 * sleepK;   // 끝을 더 접어 몸에 붙인다
+        tailTip = tailTip * awake - 0.6 * sleepK;   // the tip folds further, against the body
       }
-      // 팔로스루 — 끝 마디는 뿌리 각속도의 반대로 조금 늦게 따라온다 (임계감쇠). 프레임 기반이라 결정적
+      // Follow-through — the tip bone lags slightly behind, counter to the root's angular velocity (critically damped). Frame-based, so deterministic
       if (TT && TT.follow) {
         const vel = tailPrevBase === null ? 0 : tailAngle - tailPrevBase;
         tailPrevBase = tailAngle;
         damp(tailFollow, Math.max(-0.5, Math.min(0.5, -vel * TT.follow * 60)), 0.25);
         tailTip += tailFollow.x;
       }
-      const sleepHead = sleepK * 0.32 * (seed % 2 ? 1 : -1);      // 머리를 한쪽으로 기울여 얹는다
+      const sleepHead = sleepK * 0.32 * (seed % 2 ? 1 : -1);      // the head tilts to one side as it rests
       const sleepBob = -0.05 * sleepK;
 
-      // 표정 상태 · 이벤트
+      // Expression states · events
       const md = S.stepMood(mood, t, rng);
       const regenNow = E.stepRegen(regen, t, rng);
-      // 호흡 — 자면 느리고 깊게
+      // Breathing — slow and deep when asleep
       const br = R.stepBreathe(breathe, t * (1 - 0.35 * sleepK)) * (1 + 0.6 * sleepK);
-      // 잠 중 z — 6초마다 (위상은 개체별). rng 없이
+      // The z during sleep — every 6 s (the phase is per individual). No rng
       if (sleepK > 0.5) {
         const tick = Math.floor((t - zzzPhase) / 6);
         if (tick !== zzzLast) { zzzLast = tick; triggerEmoji(emoji, "zzz", t); }
       } else zzzLast = -1;
 
-      // 이모지 — 예약된 것(idle 중 가끔) + 모션의 트리거(행위가 시작하는 순간 한 번). 채널이 애니메이션을 돈다
+      // Emoji — the scheduled one (occasionally while idle) plus motion's triggers (once, the moment an action starts). The channel runs the animation
       const scheduledEmoji = E.stepEmojiSchedule(emojiSchedule, t, rng, M);
       if (scheduledEmoji) triggerEmoji(emoji, scheduledEmoji, t);
-      // (♥ 이모지의 꼬리 세움은 따로 없다 — ♥ 이모지가 ^^ 를 켜고(happyUntil), 고양이는 ^^ 동안 꼬리를 세운다)
+      // (There is no separate tail raise for the ♥ emoji — the ♥ emoji switches ^^ on (happyUntil), and a cat raises its tail during a ^^)
       fireEmoji("arm", act, ACTIONS, t);
       fireEmoji("quad", qact, QUAD_ACTIONS, t);
       const em = stepEmoji(emoji, t);
@@ -396,7 +396,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailArch, tailPose,
         arms, legOffset, legOsc,
         mode: modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing,
-        // 지금 하는 행위 — 팔 층(두발) 또는 다리·꼬리 층(네발) + 어느 쪽(활동 팔 side / 다리 index), 그리고 몸 층. 디버그·통계용
+        // The action running right now — the arm layer (biped) or the leg and tail layers (quad) plus which side (the active arm's side / the leg index), and the body layer. For debugging and statistics
         action: act ? act.action : qact ? qact.action : null,
         actionSide: act ? act.side : qact ? qact.index : 0,
         bodyAction: bact ? bact.action : null

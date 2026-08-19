@@ -1,31 +1,31 @@
-// 머리카락 — 21종. 문서: guidelines/character/parts.md § hair
+// Hair — 21 kinds. Docs: guidelines/character/parts.md § hair
 //
-// 머리카락은 **세 층**에 나눠 그린다 — layers = { back, crown, front } (전부 잉크 스케치):
-//   back  뒷머리 — 머리·얼굴 **뒤**(1.55). 머리 실루엣 밖·어깨 위로 보이는 부분만 남는다 (긴 머리·트윈테일·포니테일·큰 덩어리)
-//   crown 두피 위 — 머리 잉크 위·얼굴 아래(2.06, 뿔과 같은 자리). 정수리 캡·가시·똥머리·사과머리
-//   front 앞머리 — 얼굴 **위**(6.55). 앞머리·옆머리 커튼. 눈썹(6.6)은 앞머리 위에 그려진다
-// 얼굴 돌림(fake 3D)에는 층마다 깊이(scene/rig.js DEPTH)로 밀린다 — 앞머리·두피 위 +0.12(얼굴 쪽으로 조금), 뒷머리 −0.12(머리 뒤라 반대로). 뿔·모자 0.45, 귀 −0.4
-// 종류마다 그리기 함수 하나 — HAIR 표. 새 머리는 여기 함수를 하나 붙이고 slots.js SLOTS.hair에 이름을 넣는다.
-// 함수는 h(문맥)를 받는다: { back, crown, front, spec, box, noise, ink0(머리색), rx, ry, cy(머리 반폭·반높이·중심), shoulder(뒷머리 하한) }
+// Hair is drawn across **three layers** — layers = { back, crown, front } (all ink sketches):
+//   back  back hair — **behind** the head and face (1.55). Only what shows outside the head silhouette and above the shoulders is left (long hair, twintails, ponytail, big masses)
+//   crown on the scalp — above the head ink, below the face (2.06, the same depth as the horns). Crown caps, spikes, buns, apple tops
+//   front bangs — **over** the face (6.55). Bangs and side curtains. The brows (6.6) are drawn above the bangs
+// On a face turn (fake 3D) each layer shifts by its depth (scene/rig.js DEPTH) — bangs and scalp +0.12 (a little toward the face), back hair −0.12 (behind the head, so the other way). Horns and hats 0.45, ears −0.4
+// One drawing function per kind — the HAIR table. New hair means adding a function here and putting the name in slots.js SLOTS.hair.
+// A function takes h (the context): { back, crown, front, spec, box, noise, ink0 (the hair color), rx, ry, cy (the head's half-width, half-height and centre), shoulder (the floor for back hair) }
 
 import { blobPath, arcPath } from "../../stroke.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
 
-// 정수리를 덮는 스크리블 캡 — 여러 종류가 같은 모양을 쓴다. depth는 옆으로 내려오는 정도(0.5 = 귀 높이)
+// A scribble cap covering the crown — several kinds share the same shape. depth is how far down the sides it comes (0.5 = ear height)
 const cap = (h, depth, steps, passes, spread, width = 0.01) => {
   const arc = arcPath(0, h.cy, h.rx * 0.98, h.ry * 0.98, Math.PI * (0.5 + depth), Math.PI * (0.5 - depth), steps);
   h.crown.scribble(arc, { color: h.ink0, passes, width, spread });
 };
 
-// 늘어뜨린 머리(커튼) — 획마다 **머리 윤곽 위**에서 출발해 흘러내린다: 가운데 획은 정수리 근처, 옆 획은 귀 높이에서 시작하므로
-// 머리에 얹혀 흘러내리는 덩어리로 읽힌다. 획들을 같은 높이에서 일제히 시작하면(가로로 곧은 위 끝, 폭 일정) **병풍**이 된다.
-//   hem 끝단 y · grow 아래로 가며 바깥으로 벌어지는 배율(머리 반폭 기준) · inner 이 안쪽(rx 배)에서 출발하는 획은 건너뛴다(가슴을 비울 때) · count 한쪽 획 수
+// Hanging hair (curtains) — each stroke starts **on the head outline** and flows down: the middle strokes start near the crown, the side strokes at ear height,
+// so it reads as a mass laid on the head and flowing down. Start every stroke at the same height (a straight horizontal top edge, constant width) and it becomes **a folding screen**.
+//   hem the hem's y · grow the multiplier for spreading outward on the way down (against the head half-width) · inner strokes starting inside this (× rx) are skipped (to leave the chest clear) · count strokes per side
 function curtain(h, hem, { grow = 1.14, inner = 0, count = 15, width = 0.009 }) {
   const { back, ink0, rx, ry, cy, noise, spec } = h;
   const shape = headShape(spec);
   const n = 2 + shape.square;
-  // 머리 윤곽(초타원) 위의 점. a: 0 = 오른쪽 옆, π/2 = 정수리
+  // A point on the head outline (a superellipse). a: 0 = the right side, π/2 = the crown
   const outline = (a) => {
     const c = Math.cos(a), s = Math.sin(a);
     const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
@@ -34,37 +34,37 @@ function curtain(h, hem, { grow = 1.14, inner = 0, count = 15, width = 0.009 }) 
   };
   for (const side of [-1, 1]) {
     for (let i = 0; i < count; i += 1) {
-      const t = i / (count - 1);                       // 0 = 정수리 쪽 · 1 = 옆(귀 높이)
-      const base = Math.PI * 0.5 * (1 - t * 0.97);     // 정수리(π/2) → 옆(≈0.015π)
+      const t = i / (count - 1);                       // 0 = toward the crown · 1 = the side (ear height)
+      const base = Math.PI * 0.5 * (1 - t * 0.97);     // crown (π/2) → side (≈0.015π)
       const a = side > 0 ? base : Math.PI - base;
       const [ox, oy] = outline(a);
-      if (Math.abs(ox) < inner * rx) continue;         // 가슴 앞은 비운다 (아주 긴 머리)
-      const top = oy - ry * 0.02;                      // 윤곽 살짝 안쪽에서 시작 — 머리에 박힌다
+      if (Math.abs(ox) < inner * rx) continue;         // the front of the chest is left clear (very long hair)
+      const top = oy - ry * 0.02;                      // starts slightly inside the outline — embedded in the head
       const jag = Math.abs(noise(i * 7.3 + side * 2.1 + spec.seed * 0.002)) * (cy - hem) * 0.12;
       const bottom = hem + jag;
-      // 아래로 갈수록 바깥으로 — 옆 획일수록 더(끝이 x·grow). 가운데 획은 거의 곧게 내려간다
+      // Outward on the way down — the further to the side the more (the tip is x·grow). The middle strokes fall almost straight
       const endX = ox * grow;
       const midX = ox + (endX - ox) * 0.4;
       back.stroke([[ox, top], [midX, (top + bottom) * 0.5], [endX, bottom]], { color: ink0, width, jitter: 0.004 });
     }
-    // 바깥 윤곽 — 머리 옆(귀 높이)에서 끝단까지. 머리에서 살짝 떨어져 흐른다
+    // The outer outline — from the side of the head (ear height) to the hem. It flows slightly away from the head
     const [ex, ey] = outline(side > 0 ? 0.06 : Math.PI - 0.06);
     back.stroke([[ex, ey], [ex * (grow * 0.98), (ey + hem) * 0.5], [ex * grow, hem]], { color: ink0, width: width + 0.002, jitter: 0.006 });
   }
 }
 
-// 뒷머리가 있는 머리(긴 머리·트윈테일·포니테일) — 정수리 캡(crown) + 뒤로 떨어지는 머리(back)
+// Hair with a back layer (long hair, twintails, ponytail) — a crown cap (crown) plus hair falling behind (back)
 function longHair(h) {
   cap(h, 0.52, 22, 12, h.ry * 0.24);
-  // 긴 생머리 — 머리 윤곽에서 어깨까지. 어깨 언저리에서만 살짝 벌어진다
+  // Long straight hair — from the head outline to the shoulders. It only spreads slightly around the shoulders
   curtain(h, h.shoulder, { grow: 1.14, count: 15 });
 }
-// 아주 긴 생머리 — 몸통 중간까지. 얼굴 양옆에서 어깨 위로 넘어와 가슴 옆까지 흐른다 (가운데 가슴은 비운다 — 판 전체를 덮으면 망토가 된다)
+// Very long straight hair — down to mid-torso. It comes over the shoulders on both sides of the face and flows down beside the chest (the middle of the chest is left clear — covering the whole board makes it a cape)
 function veryLong(h) {
   cap(h, 0.52, 22, 12, h.ry * 0.24);
   curtain(h, (h.box.bodyTop + h.box.legTop) / 2, { grow: 1.2, inner: 0.5, count: 17 });
 }
-// 트윈테일 — 머리 양옆 위쪽에 묶고 뒤로 늘어지는 두 갈래. ball이면 끝에 동그란 뭉치
+// Twintails — two bunches tied high on either side of the head, hanging back. With ball, a round bunch at the ends
 const twintailsOf = (ball) => (h) => {
   const { back, ink0, rx, ry, cy } = h;
   cap(h, 0.52, 22, 12, ry * 0.24);
@@ -72,9 +72,9 @@ const twintailsOf = (ball) => (h) => {
     const tx = side * rx * 0.95, ty = cy + ry * 0.35;
     const tail = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - 0.3]];
     back.scribble(tail, { color: ink0, passes: 12, width: 0.009, spread: 0.028 });
-    back.stroke([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: ink0, width: 0.012 });   // 끈
+    back.stroke([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: ink0, width: 0.012 });   // the tie
     if (ball) {
-      // 끝 뭉치 — 갈래 끝에 동그란 스크리블 덩어리 + 윤곽
+      // The end bunch — a round scribble mass at the end of the tail plus an outline
       const bx = tx + side * 0.05, by = ty - 0.34;
       back.scribble(arcPath(bx, by, 0.05, 0.055, Math.PI * 0.5, Math.PI * 2.5, 12), { color: ink0, passes: 9, width: 0.009, spread: 0.032 });
       back.outline(blobPath(bx, by, 0.057, 0.06, { lumps: 4, amount: 0.15, noise: null }), { color: ink0, width: 0.01, passes: 2 });
@@ -84,28 +84,28 @@ const twintailsOf = (ball) => (h) => {
 function ponytail(h) {
   const { back, ink0, rx, ry, cy, spec } = h;
   cap(h, 0.52, 22, 12, ry * 0.24);
-  // 포니테일 — 정수리 뒤에 하나로 묶어 위로 솟았다 뒤로 늘어진다 (묶은 쪽은 개체별)
+  // Ponytail — tied as one behind the crown, rising up and hanging back (which side it is tied on is per individual)
   const s = spec.seed % 2 ? 1 : -1;
   const px0 = s * rx * 0.25, py0 = cy + ry * 0.92;
   const tail = [[px0, py0], [px0 + s * 0.06, py0 + 0.06], [px0 + s * 0.13, py0 + 0.02], [px0 + s * 0.15, py0 - 0.14], [px0 + s * 0.11, py0 - 0.3]];
   back.scribble(tail, { color: ink0, passes: 12, width: 0.009, spread: 0.026 });
-  back.stroke([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: ink0, width: 0.012 });   // 끈
+  back.stroke([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: ink0, width: 0.012 });   // the tie
 }
 
-// 사과머리 — 정수리 한가운데 뭉치가 사과 꼭지처럼 솟는다. 머리는 매끈, 끈 하나. size 1 작은 것(가닥 넷) · 1.7 큰 것(가닥 여섯, 길고 굵게)
+// Apple top — a bunch right in the middle of the crown rising like an apple stem. The hair is smooth, with one tie. size 1 the small one (four strands) · 1.7 the big one (six strands, long and thick)
 const appleOf = (size) => (h) => {
   const { crown, ink0, ry, cy } = h;
   const bx = 0.005, by = cy + ry * 1.0;
-  const count = size > 1 ? 6 : 4, spread = size > 1 ? 0.15 : 0.1;   // 가닥 수·벌어짐(π 배)
+  const count = size > 1 ? 6 : 4, spread = size > 1 ? 0.15 : 0.1;   // strand count and spread (× π)
   for (let i = 0; i < count; i += 1) {
     const a = Math.PI * (0.5 + spread * (i - (count - 1) / 2));
     crown.stroke([[bx, by], [bx + Math.cos(a) * 0.05 * size, by + Math.sin(a) * 0.055 * size + 0.01]], { color: ink0, width: 0.01 * Math.sqrt(size) });
   }
-  crown.stroke([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: ink0, width: 0.012 });   // 끈
+  crown.stroke([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: ink0, width: 0.012 });   // the tie
 };
 
-// 가시머리. hedgehog는 정수리 **전면**(윤곽 줄 + 안쪽 줄)에 짧은 가시가 방사형으로 — 고슴도치 등처럼 덩어리로 읽힌다.
-// rings: [반지름 배율, 개수, 펼침(π 배), 기본 길이, 길이 변동]
+// Spiky hair. hedgehog puts short spikes radially over **the whole** crown (an outline row plus an inner row) — it reads as a mass, like a hedgehog's back.
+// rings: [radius multiplier, count, spread (× π), base length, length variation]
 const spiky = (rings, width) => (h) => {
   const { crown, ink0, rx, ry, cy, noise, spec } = h;
   for (const [rad, count, span, len0, lenVar] of rings) {
@@ -120,17 +120,17 @@ const spiky = (rings, width) => (h) => {
   }
 };
 
-// 부피형 — 머리보다 살짝 큰 덩어리가 정수리부터 앞은 **눈썹 선**, 옆은 귀 아래까지 감싼다 (레퍼런스의 두건형·구름형).
-// 면을 칠하지 않는다: helmet은 세로 획을 촘촘히(직모), cloud는 스캘럽 윤곽 + 고리 스크리블(곱슬). 눈은 못 덮는다 — 아래 경계가 눈썹 선
+// Volume types — a mass slightly bigger than the head wraps from the crown down to **the brow line** at the front and below the ears at the sides (the reference's hood and cloud types).
+// Not filled as an area: helmet uses dense vertical strokes (straight hair), cloud a scalloped outline plus loop scribbles (curls). It cannot cover the eyes — the lower boundary is the brow line
 const voluminous = (kind) => (h) => {
   const { back, crown, front, ink0, rx, ry, cy, noise, spec, box } = h;
   const brow = browLine(spec, box);
   const shape = headShape(spec);
   const grow = kind === "cloud" ? 1.2 : 1.06;
-  const sideBottom = cy - ry * 0.45;   // 옆머리 하한 (귀 아래)
-  // 바깥 경계 — 머리 윤곽 모양을 따라 키운 폐곡선의 윗부분(양옆은 sideBottom, 앞쪽 x 안은 brow까지)
+  const sideBottom = cy - ry * 0.45;   // the floor for side hair (below the ear)
+  // The outer boundary — the upper part of a closed curve grown along the head outline shape (sideBottom at the sides, down to brow within the front x)
   const outer = blobPath(0, cy, rx * grow, ry * grow, { lumps: kind === "cloud" ? 9 : 3, amount: kind === "cloud" ? 0.13 : 0.04, noise: null, square: shape.square, taper: shape.taper });
-  // 아래 경계 — 가운데는 눈썹 선, 옆으로 갈수록 **부드럽게** 귀 아래로 (계단이 지면 네모 상자처럼 읽힌다)
+  // The lower boundary — the brow line in the middle, easing **smoothly** to below the ear toward the sides (a step there reads as a square box)
   const bottomAt = (x) => {
     const u = Math.abs(x) / rx;
     const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
@@ -138,12 +138,12 @@ const voluminous = (kind) => (h) => {
   };
   const upper = outer.filter(([x, y]) => y >= bottomAt(x));
   upper.sort((a, b) => Math.atan2(a[1] - cy, a[0]) - Math.atan2(b[1] - cy, b[0]));
-  // 바깥 윤곽 — 머리보다 큰 덩어리의 위쪽 호. **뒷머리 층**(머리 뒤) — 머리 실루엣 밖으로 나온 부분만 보인다
+  // The outer outline — the upper arc of a mass bigger than the head. **The back hair layer** (behind the head) — only what comes outside the head silhouette shows
   if (kind === "cloud") back.stroke(upper, { color: ink0, width: 0.011, jitter: 0.008 });
   else back.stroke(upper, { color: ink0, width: 0.01, jitter: 0.007 });
   if (kind === "helmet") {
-    // 머릿결 — 정수리에서 아래로 떨어지는 획을 촘촘히. 위 경계에서 아래 경계(가운데 눈썹 선 → 옆 귀 아래)까지,
-    // 끝은 저마다 들쭉날쭉(끝단에 직선을 긋지 않는다 — 그러면 챙 달린 투구가 된다), 옆으로 갈수록 살짝 바깥으로 벌어진다
+    // The hair's grain — dense strokes falling from the crown. From the upper boundary to the lower one (the brow line in the middle → below the ear at the sides),
+    // with ragged tips (no straight line drawn along the hem — that would make it a helmet with a brim), spreading slightly outward toward the sides
     const step = 0.012;
     const topAt = (x) => {
       const u = Math.min(0.999, Math.abs(x) / (rx * grow));
@@ -154,13 +154,13 @@ const voluminous = (kind) => (h) => {
       const jag = (noise(x * 40 + spec.seed * 0.003) * 0.9 + 0.3) * ry * 0.09;   // −0.05ry ~ +0.11ry
       const bottom = bottomAt(x) + jag;
       if (top - bottom < 0.02) continue;
-      const fan = x * 0.08;   // 아래로 갈수록 바깥으로
-      // 앞(|x| < 0.8rx)은 이마를 덮는 앞머리 → 얼굴 위 층, 옆은 두피 위 층
+      const fan = x * 0.08;   // outward on the way down
+      // The front (|x| < 0.8rx) is the bangs covering the forehead → the over-the-face layer; the sides are the scalp layer
       const target = Math.abs(x) < rx * 0.8 ? front : crown;
       target.stroke([[x, top], [x + fan * 0.5, (top + bottom) / 2], [x + fan + noise(x * 17) * 0.004, bottom]], { color: ink0, width: 0.009, jitter: 0.003 });
     }
   } else {
-    // 구름형 — 안을 고리 스크리블로 채우고(곱슬), 스캘럽 가장자리에 작은 고리들
+    // The cloud type — the inside filled with loop scribbles (curls) and small loops along the scalloped edge
     const arc = arcPath(0, cy, rx * 1.02, ry * 1.0, Math.PI * 1.04, -Math.PI * 0.04, 24);
     crown.scribble(arc, { color: ink0, passes: 20, width: 0.009, spread: ry * 0.36 });
     for (let i = 0; i < 11; i += 1) {
@@ -175,7 +175,7 @@ const voluminous = (kind) => (h) => {
   }
 };
 
-// 양갈래 — 머리 옆에 묶인 뭉치 두 개 (머리 뒤·귀 뒤) + 정수리 살짝
+// Two bunches — two bunches tied at the sides of the head (behind the head, behind the ears) plus a light crown
 function pigtails(h) {
   const { back, ink0, rx, ry, cy } = h;
   for (const side of [-1, 1]) {
@@ -184,11 +184,11 @@ function pigtails(h) {
     back.scribble(arcPath(bx, by, 0.045, 0.06, Math.PI * 0.5, Math.PI * 2.5, 12), { color: ink0, passes: 7, width: 0.008, spread: 0.03 });
     back.stroke([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: ink0, width: 0.012 });
   }
-  // 정수리 살짝 — 캡보다 작은 호(0.9)
+  // A light crown — an arc smaller than the cap (0.9)
   h.crown.scribble(arcPath(0, cy, rx * 0.9, ry * 0.9, Math.PI * 0.72, Math.PI * 0.28, 10), { color: ink0, passes: 5, width: 0.008, spread: ry * 0.12 });
 }
 
-// 곱슬 — 정수리를 따라 작은 원 뭉치
+// Curly — small circular bunches along the crown
 function curly(h) {
   const { crown, ink0, rx, ry, cy, noise } = h;
   for (let i = 0; i < 7; i += 1) {
@@ -201,7 +201,7 @@ function curly(h) {
   }
 }
 
-// 몇 가닥 — wisp 일곱, tuft 넷
+// A few strands — wisp seven, tuft four
 const strands = (count) => (h) => {
   const { crown, ink0, rx, ry, cy, noise } = h;
   for (let i = 0; i < count; i += 1) {
@@ -213,13 +213,13 @@ const strands = (count) => (h) => {
   }
 };
 
-// 앞머리 — 정수리 스크리블 + 이마를 덮는 촘촘한 세로 획(끝이 들쭉날쭉한 바가지 앞머리). 눈썹 선까지만 —
-// 끝단은 눈썹 선(안경·고글 테 위까지만, 모자 챙과 같은 계산). longbob은 옆으로 턱 선까지 내려오는 단발
+// Bangs — a crown scribble plus dense vertical strokes covering the forehead (a bowl cut with a ragged fringe). Only down to the brow line —
+// the hem is the brow line (only above eyewear and goggle rims, the same calculation as a hat brim). longbob is a bob coming down the sides to the jaw line
 const fringe = (kind) => (h) => {
   const { front, ink0, rx, ry, cy, noise, spec, box } = h;
   const fringeBottom = browLine(spec, box);
   cap(h, 0.42, 20, 11, ry * 0.2);
-  // 이마 띠 — 위아래로 오가는 지그재그를 스크리블로 겹쳐 빽빽한 앞머리 덩어리. 아래 꼭짓점이 들쭉날쭉한 끝단
+  // A forehead band — a zigzag running up and down, overlaid as a scribble into a dense mass of bangs. The lower vertices are the ragged hem
   const teeth = 8;
   const zig = [];
   for (let i = 0; i <= teeth * 2; i += 1) {
@@ -229,9 +229,9 @@ const fringe = (kind) => (h) => {
     const bottom = fringeBottom + Math.abs(noise(i * 2.7 + spec.seed * 0.002)) * ry * 0.09;
     zig.push([x, i % 2 === 0 ? top : bottom]);
   }
-  front.scribble(zig, { color: ink0, passes: 6, width: 0.01, spread: 0.014 });   // 앞머리 — 얼굴 위
+  front.scribble(zig, { color: ink0, passes: 6, width: 0.01, spread: 0.014 });   // bangs — over the face
   if (kind === "longbob") {
-    // 옆으로 턱 선까지 내려오는 단발 — 얼굴 양옆을 감싸는 굵은 세로 스크리블 (앞머리 층 — 볼·귀 위)
+    // A bob coming down the sides to the jaw line — thick vertical scribbles wrapping both sides of the face (the bangs layer — over the cheeks and ears)
     for (const side of [-1, 1]) {
       const x = side * rx * 0.9;
       const col = [[x - side * 0.03, cy + ry * 0.62], [x + side * 0.02, cy + ry * 0.1], [x + side * 0.03, cy - ry * 0.7]];
@@ -240,7 +240,7 @@ const fringe = (kind) => (h) => {
   }
 };
 
-// 똥머리 — 정수리를 얇게 덮고 위에 뭉치 하나 + 비녀 획
+// Bun — thinly covers the crown with one bunch on top plus a hairpin stroke
 function bun(h) {
   const { crown, ink0, ry, cy } = h;
   cap(h, 0.32, 16, 7, ry * 0.14, 0.009);
@@ -250,20 +250,20 @@ function bun(h) {
   crown.stroke([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: ink0, width: 0.008 });
 }
 
-// bob / mop / scribble / sweep — 두피를 덮는 스크리블. 레퍼런스처럼 **부피**가 있어야 한다: 호를 머리 옆면(귀 높이, depth 0.6)까지
-// 내리고 스크리블을 넓게 편다. 옆으로 내려간 끝은 귀를 덮지 눈까지 오지 않고(눈은 x ±0.4rx 안), 정수리 쪽 퍼짐은 눈썹 선 위다.
-// depth 옆으로 내려오는 정도 · passes 왕복 수 · spread 퍼짐(ry 배) · width 획 굵기 · backCap 머리 뒤에 한 겹 더(실루엣 밖 부피)
+// bob / mop / scribble / sweep — a scribble covering the scalp. It has to have **volume**, like the reference: the arc comes down to the side of the head
+// (ear height, depth 0.6) and the scribble spreads wide. The end coming down the side covers the ear without reaching the eyes (the eyes are within x ±0.4rx), and the spread toward the crown is above the brow line.
+// depth how far down the sides it comes · passes the number of back-and-forths · spread the spread (× ry) · width the stroke thickness · backCap one more layer behind the head (volume outside the silhouette)
 const mopCap = ({ depth, passes, spread, width = 0.01, backCap = true }) => (h) => {
   const { back, ink0, rx, ry, cy } = h;
   cap(h, depth, 22, passes, ry * spread, width);
-  // 뒷머리 — 머리보다 조금 큰 호를 머리 **뒤**에 한 겹 더 (실루엣 밖으로 삐져나오는 부피). sweep은 없음
+  // Back hair — one more arc, slightly bigger than the head, **behind** it (volume poking outside the silhouette). sweep has none
   if (backCap) {
     const arc = arcPath(0, cy, rx * 1.1, ry * 1.08, Math.PI * (0.5 + depth + 0.05), Math.PI * (0.5 - depth - 0.05), 22);
     back.scribble(arc, { color: ink0, passes: 8, width: 0.009, spread: ry * 0.16 });
   }
 };
 
-// 종류 → 그리기 함수. slots.js SLOTS.hair의 이름과 1:1 (none은 없음)
+// Kind → drawing function. 1:1 with the names in slots.js SLOTS.hair (none has none)
 export const HAIR = {
   bob: mopCap({ depth: 0.56, passes: 14, spread: 0.26 }),
   mop: mopCap({ depth: 0.62, passes: 20, spread: 0.3 }),
@@ -293,13 +293,13 @@ export const HAIR = {
 export function drawHair(layers, spec, box, noise) {
   const kind = spec.parts.hair;
   const draw = HAIR[kind];
-  if (!draw) return;   // none (또는 모르는 값)
+  if (!draw) return;   // none (or an unknown value)
   const pop = spec.palette.pop;
   draw({
     ...layers,
     spec, box, noise,
     ink0: pop && pop.target === "hair" ? pop.color : spec.palette.ink,
     rx: box.headRx, ry: box.headRy, cy: box.headCy,
-    shoulder: box.bodyTop - 0.02   // 뒷머리가 내려오는 하한 (어깨)
+    shoulder: box.bodyTop - 0.02   // the floor back hair comes down to (the shoulder)
   });
 }

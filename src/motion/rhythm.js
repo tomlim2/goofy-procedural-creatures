@@ -1,9 +1,9 @@
-// 상시 리듬 — 멈추지 않고 계속 도는 진동. 사인파와 이징뿐, 이벤트 예약이 없다.
-//   호흡 · 스웨이(좌우) · 락킹(앞뒤) · 머리 롤(개) · 젤리 워블(도깨비) · 꼬리 스위시(고양이)
-//   시선 이징 · 얼굴 돌림 · 팔 진자 · 관절 지터
-// 문서: guidelines/motion/catalog.md
+// Standing rhythm — oscillation that never stops. Sine waves and easing only, no scheduled events.
+//   breathing · sway (side to side) · rocking (front to back) · head roll (dog) · jelly wobble (imp) · tail swish (cat)
+//   gaze easing · face turn · arm pendulum · joint jitter
+// Docs: guidelines/motion/catalog.md
 //
-// init은 rng를 소비한다(위상·주기). step은 rng를 안 쓴다 — 리듬은 결정적이다.
+// init consumes rng (phase, period). step uses none — rhythm is deterministic.
 
 import { damp } from "./ease.js";
 
@@ -50,24 +50,24 @@ export function stepSway(s, t, M) {
 export function stepRoll(roll, t) {
   return roll ? Math.sin((t / roll.period) * Math.PI * 2 + roll.phase) * roll.amp : 0;
 }
-// 시선은 목표를 향해 이징. 목표 갱신(rng)은 events가 한다.
-// 시선 — 임계감쇠 추종(w 0.2 ≈ 0.4초에 95%). 지수 lerp보다 시작이 부드럽다
+// Gaze eases toward a target. Updating that target (rng) is events' job.
+// Gaze — critically damped follow (w 0.2 ≈ 95% in 0.4 s). A softer start than an exponential lerp
 export function stepGaze(g) {
   return [damp(g.gaze[0], g.gazeTarget[0], 0.2), damp(g.gaze[1], g.gazeTarget[1], 0.2)];
 }
-// 얼굴 돌림 [x, y] (−1~1). 시선을 느리게 따라간다 — 동공이 먼저 가고 얼굴이 뒤따른다.
-// 둘러보기(look) 중에는 그 방향으로 끝까지 돈다. 위아래는 좌우보다 작게(M.yaw × 0.6).
-// 얼굴 돌림 — 임계감쇠 추종(w 0.1 ≈ 0.8초에 95%). 시선보다 느리다
+// Face turn [x, y] (−1~1). Follows the gaze slowly — the pupils go first and the face comes after.
+// During a look it turns all the way that way. Up and down less than side to side (M.yaw × 0.6).
+// Face turn — critically damped follow (w 0.1 ≈ 95% in 0.8 s). Slower than the gaze
 export function stepFaceTurn(g, M, look) {
   const tx = look ? look[0] : g.gaze[0].x * M.yaw;
   const ty = look ? look[1] : g.gaze[1].x * M.yaw * 0.6;
   return [damp(g.faceTurn[0], tx, 0.1), damp(g.faceTurn[1], ty, 0.1)];
 }
-// 팔 진자 — 스웨이 반대 위상
+// Arm pendulum — opposite phase to the sway
 export function stepArmSwing(a, sway, t, M) {
   return Math.sin((t / sway.swayPeriod) * Math.PI * 2 + sway.swayPhase + Math.PI + a.phase * 0.3) * (M.armSwing || 0);
 }
-// 관절 지터 — 팔도 선처럼 미세하게 끓는다. 레퍼런스 팔의 실체.
+// Joint jitter — arms boil finely, like the lines do. What the reference's arms actually are.
 export function armJitter(a, t, side) {
   return Math.sin(t * 7.3 + side * 2.1 + a.phase) * 0.012 + Math.sin(t * 11.7 + side * 0.7) * 0.008;
 }

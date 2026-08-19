@@ -1,4 +1,4 @@
-// 개체 리그 조립. 계층·원점·renderOrder는 guidelines/rig.md, 메시·재질 수는 guidelines/performance.md.
+// Assembling an individual's rig. Hierarchy, origins and renderOrder are in guidelines/rig.md; mesh and material counts in guidelines/performance.md.
 
 import * as THREE from "three";
 import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath, angryEyeSketch, STATIC_EYE_KEYS } from "../character/index.js";
@@ -8,23 +8,23 @@ import { sketchMesh } from "./material.js";
 
 export const BOIL_FRAMES = 3;
 
-// fake 3D 깊이(z) — 얼굴 돌림 때 층이 이목구비 이동량의 몇 배 밀리나. 1 = 이목구비(얼굴 앞면), 0 = 머리 윤곽(두개골 축, 안 밀림), 음수 = 뒤(반대로).
-// 층마다 **숫자 하나**로 정한다 — 앞에 있는지 뒤에 있는지가 이동량이다. 같은 뜻의 층이 같은 값을 갖는 건 태그일 뿐이고(귀 둘, 머리카락 앞·두피),
-// 뜻으로 묶어 같은 그룹에 넣지 않는다: 앞머리(얼굴 앞)와 뒷머리(머리 뒤)는 같은 머리카락이라도 깊이가 달라 다르게 밀린다.
-// scene/animate.js가 층마다 position = 깊이 × 이목구비 이동량 (x·y 같은 배율). 크기는 안 바뀐다. 문서: guidelines/rig.md § fake 3D 깊이
+// The fake 3D depth (z) — how many times the features' shift a layer moves on a face turn. 1 = the features (the front of the face), 0 = the head outline (the skull axis, no shift), negative = behind (the other way).
+// Set as **one number** per layer — how far forward or back it is *is* the shift. Layers meaning the same thing sharing a value is just a tag (the two ears; front hair and the scalp),
+// and they are never grouped together by meaning: bangs (in front of the face) and back hair (behind the head) are both hair, yet their depths differ and they shift differently.
+// scene/animate.js sets position = depth × the features' shift per layer (the same multiplier on x and y). Size does not change. Docs: guidelines/rig.md § fake 3D depth
 export const DEPTH = {
-  face: 1,          // 이목구비 (faceGroup)
-  hat: 0.45,        // 모자 — 머리 위 앞쪽
-  horns: 0.45,      // 뿔
-  hairFront: 0.12,  // 앞머리 — 이마 위(얼굴 앞)지만 머리에 붙은 것이라 조금만
-  hairCrown: 0.12,  // 두피 위 머리카락 — 앞머리와 이어지는 캡·가시
-  hairBack: -0.12,  // 뒷머리 — 머리 **뒤**라 반대로, 앞머리와 같은 크기만큼
-  ears: -0.4,       // 귀(옆귀·개/고양이 귀) — 머리 옆·뒤, 머리가 돌면 얼굴 반대편으로 돌아 나간다
-  head: 0           // 윤곽 (headGroup 직접)
+  face: 1,          // the features (faceGroup)
+  hat: 0.45,        // hat — above the head, toward the front
+  horns: 0.45,      // horns
+  hairFront: 0.12,  // bangs — over the forehead (in front of the face) but attached to the head, so only a little
+  hairCrown: 0.12,  // hair on the scalp — the cap and spikes continuous with the bangs
+  hairBack: -0.12,  // back hair — **behind** the head, so the other way, by as much as the bangs
+  ears: -0.4,       // ears (side ears, dog/cat ears) — beside and behind the head; as the head turns they swing out to the far side from the face
+  head: 0           // the outline (headGroup directly)
 };
 
-// 감은 눈 두 벌 — 감은 눈 선(shut: 아래로 볼록한 호)과 ^^ 미소 아치(smile: 위로 볼록). 살아 있는 눈(리그)과 정지 눈(staticLids)이 같은 모양을 쓴다 —
-// 감은 선만 살짝 다르다(정지 눈은 조금 위·얌전하게). 얼굴 잉크(faceInk)로 — 도깨비처럼 머리가 먹빛이면 검정 아치는 머리에 묻혀 안 보인다
+// Two sets of closed eyes — the shut line (shut: an arc bulging downward) and the ^^ smile arch (smile: bulging upward). Live eyes (the rig) and static eyes (staticLids) use the same shapes —
+// only the shut line differs slightly (a little higher and tidier on static eyes). In face ink (faceInk) — on an ink-black imp head, a black arch would be lost and invisible
 const LID_STYLE = {
   rig: { shutY: 0.1, shutWobble: 0.5, shutWidth: 0.012 },
   static: { shutY: 0.15, shutWobble: 0.4, shutWidth: 0.011 }
@@ -35,7 +35,7 @@ function lidSketches(eye, ink, noise, style) {
   shut.stroke(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink, width: s.shutWidth });
   const smile = new Sketch(noise, 0.5);
   smile.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink, width: 0.013 });
-  // 화남 — 사나운 눈(안쪽이 내려간 빗금 눈꺼풀 + 노려보는 점). 화내는 동안 뜬 눈을 끄고 이게 대신 선다 (character/draw/face.js angryEyeSketch)
+  // Anger — the fierce eye (an inward-down slanted lid plus a glaring dot). While angry, the open eye is switched off and this stands instead (character/draw/face.js angryEyeSketch)
   const angry = new Sketch(noise, 0.5);
   angryEyeSketch(angry, eye, ink);
   return { shut, smile, angry };
@@ -45,11 +45,11 @@ export function buildCreature(spec, noise, birth = 0) {
   const group = new THREE.Group();
   const bodyGroup = new THREE.Group();
   const headGroup = new THREE.Group();
-  const faceGroup = new THREE.Group();    // 이목구비 — 얼굴 돌림의 이동·눌림 (깊이 1)
+  const faceGroup = new THREE.Group();    // the features — the shift and squash of a face turn (depth 1)
   group.add(bodyGroup);
   group.add(headGroup);
   headGroup.add(faceGroup);
-  // 머리에 붙는 층(귀·뿔·머리카락·모자)은 층마다 제 그룹 — 깊이(DEPTH)만큼 밀린다. 그룹은 뜻이 아니라 깊이로 움직인다 (animate: item.parallax)
+  // Layers attached to the head (ears, horns, hair, hat) each get their own group — they shift by their depth (DEPTH). A group moves by depth, not by meaning (animate: item.parallax)
   const parallax = [];
   const depthGroup = (depth) => {
     const g = new THREE.Group();
@@ -58,33 +58,33 @@ export function buildCreature(spec, noise, birth = 0) {
     return g;
   };
 
-  // 보일 — 지터 위상만 다른 3벌. 층마다 프레임(그룹) 3개를 같은 인덱스로 토글한다 (animate가 frames를 돈다).
-  // 층 하나 = 메시 하나: 채색 스케치와 잉크 스케치를 한 지오메트리로 잇는다(채색이 밑, 잉크가 위 — draw call 절반). 채색은 전부 **불투명** —
-  // 이웃과 겹칠 때 앞 개체가 뒤 개체를 윤곽·색·형태까지 완전히 가려야 한다.
-  // 예외는 얼굴(face)·정지 눈(staticEyeBack/Front — 눈마다 한 층): 채색(2.3)과 잉크(2.4)를 따로 둔다 — 정지 눈의 채움(동공·흰자)이
-  // 얼굴 잉크(수염) **밑**에, 정지 눈의 잉크가 그 위에 와야 해서 두 층의 채색·잉크가 서로 엇갈린다.
-  // 정지 눈이 눈마다 한 층인 건 윙크 때문이다 — 한쪽 눈만 아치로 바꾸려면 그 눈의 층만 꺼야 한다 (animate).
-  // 렌더 순서(guidelines/rig.md가 단일 소스): 몸 1.5 → 뒷머리 1.55 → 옆귀 1.7 → 머리 2(채색이 몸 잉크를 덮는다) → 뿔 2.06 → 두피 위 머리카락 2.06 →
-  // 개/고양이 귀 2.12 → 모자 2.16 → 얼굴·정지 눈 2.3/2.4 → 얼굴 맨 앞(코·안경) 6.5 → 앞머리 6.55
+  // Boil — 3 sets differing only in jitter phase. Each layer toggles its three frames (groups) at the same index (animate cycles frames).
+  // One layer = one mesh: the fills sketch and the ink sketch are joined into one geometry (fills below, ink above — half the draw calls). Every fill is **opaque** —
+  // when neighbours overlap, the individual in front has to hide the one behind completely, outline, color and shape.
+  // The exceptions are the face and the static eyes (staticEyeBack/Front — one layer per eye): their fills (2.3) and ink (2.4) are kept apart — a static eye's fill (pupil, white) has to sit
+  // **below** the face ink (whiskers) while its ink sits above, so the two layers' fills and ink interleave.
+  // Static eyes being one layer per eye is because of the wink — turning one eye into an arch means switching off that eye's layer alone (animate).
+  // Render order (guidelines/rig.md is the single source): body 1.5 → back hair 1.55 → side ears 1.7 → head 2 (the fill covers the body ink) → horns 2.06 → hair on the scalp 2.06 →
+  // dog/cat ears 2.12 → hat 2.16 → face and static eyes 2.3/2.4 → frontmost face (nose, eyewear) 6.5 → bangs 6.55
   const firstDrawn = drawCreature(spec, 0);
   const mrig = motionRig(spec);
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
-  // 머리 층은 group 대신 depth — 아래에서 층마다 깊이 그룹을 만든다 (몸은 bodyGroup, 윤곽은 headGroup, 이목구비는 faceGroup)
+  // Head layers take depth instead of group — a depth group is made per layer below (the body is bodyGroup, the outline headGroup, the features faceGroup)
   const LAYERS = [
     { key: "body", group: bodyGroup, dy: 0, order: 1.5 },
-    { key: "hairBack", depth: DEPTH.hairBack, dy: -neckY, order: 1.55 },     // 뒷머리 — 머리·귀 뒤, 몸 위
-    { key: "crownBack", depth: DEPTH.ears, dy: -neckY, order: 1.7 },         // 옆귀 — 머리 채색 뒤
+    { key: "hairBack", depth: DEPTH.hairBack, dy: -neckY, order: 1.55 },     // back hair — behind the head and ears, above the body
+    { key: "crownBack", depth: DEPTH.ears, dy: -neckY, order: 1.7 },         // side ears — behind the head fill
     { key: "head", group: headGroup, dy: -neckY, order: 2 },
-    { key: "horns", depth: DEPTH.horns, dy: -neckY, order: 2.06 },           // 뿔 — 머리 잉크 위
-    { key: "hairCrown", depth: DEPTH.hairCrown, dy: -neckY, order: 2.06 },   // 두피 위 머리카락 — 뿔과 같은 자리·뿔 위
-    { key: "front", depth: DEPTH.ears, dy: -neckY, order: 2.12 },            // 머리 앞: 개·고양이 귀
-    { key: "hat", depth: DEPTH.hat, dy: -neckY, order: 2.16 },               // 모자 — 귀 위, 얼굴 아래
-    { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },        // 채색·잉크 따로 (위 설명)
-    // 정지 눈 — 눈마다 한 층(작은 눈 Back → 큰 눈 Front, 겹치면 큰 눈이 앞). 잠·^^·윙크(그쪽)·놀람 변형 때 그 눈의 층을 끈다
+    { key: "horns", depth: DEPTH.horns, dy: -neckY, order: 2.06 },           // horns — above the head ink
+    { key: "hairCrown", depth: DEPTH.hairCrown, dy: -neckY, order: 2.06 },   // hair on the scalp — the same depth as the horns, above them
+    { key: "front", depth: DEPTH.ears, dy: -neckY, order: 2.12 },            // in front of the head: dog and cat ears
+    { key: "hat", depth: DEPTH.hat, dy: -neckY, order: 2.16 },               // hat — above the ears, below the face
+    { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },        // fills and ink kept apart (see above)
+    // Static eyes — one layer per eye (the smaller eye Back → the larger Front; overlapping, the larger is in front). For sleep, ^^, a wink (that side) and startle variants, that eye's layer is switched off
     ...STATIC_EYE_KEYS.map((key) => ({ key, group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 })),
-    { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // 코·안경 — 눈 리그(3~)보다 위. 놀란 흰자·눈꺼풀이 못 덮는다
-    { key: "hairFront", depth: DEPTH.hairFront, dy: -neckY, order: 6.55 }    // 앞머리 — 코·안경 위, 눈썹·입(6.6) 아래
+    { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // nose and eyewear — above the eye rig (3~). A startled white or a lid cannot cover them
+    { key: "hairFront", depth: DEPTH.hairFront, dy: -neckY, order: 6.55 }    // bangs — above the nose and eyewear, below the brows and mouth (6.6)
   ];
   for (const layer of LAYERS) if (layer.group === undefined) layer.group = depthGroup(layer.depth);
   const frames = {};
@@ -106,14 +106,14 @@ export function buildCreature(spec, noise, birth = 0) {
     }
   }
   headGroup.position.y = neckY;
-  // 얼굴 그룹 원점 = 머리 중심. 돌림이 여기를 축으로 밀고 누른다. 자식은 -faceCy로 미리 내려 굽는다.
+  // The face group's origin = the centre of the head. A turn shifts and squashes about this point. Children are baked pre-lowered by -faceCy.
   faceGroup.position.y = faceCy - neckY;
 
-  // 꼬리 — 네 마디 체인 (limbs.js TAIL_BONES). tailGroup(뿌리 피벗) 안에 마디 그룹이 관절마다 겹겹이 들어간다: bone[i]는 bone[i-1]의 자식,
-  // 원점은 관절(쉼 자세 척추 위). 몸통·머리 **뒤**(0.8) — 몸에 걸치는 부분(고리·말림)은 가려진다.
-  // animate: bone[0]에 tailAngle(스위시·wag·걷기·잠), 끝 마디에 tailTip(톡톡·떨림·팔로스루), 세움(tailRaise)은 관절마다 쉼→곧게 목표각을 섞는다.
-  // 곤두섬(tailPuff)은 **굵기만** — 마디 메시를 R(θ)·S(1,p)·R(−θ) 세 그룹(along·thick·back)으로 감싸 쉼 자세 척추 방향(θ)에 수직으로만 스케일한다.
-  // 관절(g)의 회전·자식 마디는 그 밖에 있어 길이·자리는 그대로다
+  // Tail — a four-bone chain (limbs.js TAIL_BONES). Bone groups nest joint by joint inside tailGroup (the root pivot): bone[i] is a child of bone[i-1],
+  // with its origin at the joint (on the rest-pose spine). **Behind** the torso and head (0.8) — the part lying over the body (a loop or curl) is hidden.
+  // animate: tailAngle on bone[0] (swish, wag, walking, sleep), tailTip on the tip bone (tapping, tremble, follow-through), and raise (tailRaise) blends each joint's target angle from rest toward straight.
+  // Bristle (tailPuff) is **thickness only** — each bone's mesh is wrapped in three groups, R(θ)·S(1,p)·R(−θ) (along, thick, back), scaling only perpendicular to the rest-pose spine direction (θ).
+  // The joint's (g) rotation and its child bones sit outside that, so length and position are unchanged
   let tailGroup = null;
   const tailBones = [];
   const tail = tailSketch(spec);
@@ -145,11 +145,11 @@ export function buildCreature(spec, noise, birth = 0) {
     bodyGroup.add(tailGroup);
   }
 
-  // 팔다리 — 관절 피벗 그룹. rotation.z로 흔든다.
-  // 팔은 front(몸 잉크 위, 2.5)와 back(몸 뒤, 0.5) 두 메시를 갖고 자세에 따라
-  // 전환한다. 소매·손이 몸 윤곽을 덮어야 관절이 몸에 박혀 보인다.
-  // 팔은 두 관절이다: pivot(어깨) ─ front(위팔) ─ elbow(팔꿈치 피벗) ─ lower(아래팔).
-  // 어깨각과 팔꿈치각을 따로 줘야 팔이 접힌다.
+  // Limbs — joint pivot groups. Swung with rotation.z.
+  // An arm has two meshes, front (above the body ink, 2.5) and back (behind the body, 0.5), and switches
+  // between them by pose. The sleeve and hand have to cover the body outline for the joint to look embedded in the body.
+  // An arm has two joints: pivot (shoulder) ─ front (upper arm) ─ elbow (the elbow pivot) ─ lower (forearm).
+  // The shoulder angle and elbow angle have to be given separately for the arm to fold.
   const limbs = limbSketches(spec).map((limb) => {
     const pivot = new THREE.Group();
     pivot.position.set(limb.pivot[0], limb.pivot[1], 0);
@@ -173,7 +173,7 @@ export function buildCreature(spec, noise, birth = 0) {
     }
     bodyGroup.add(pivot);
 
-    // 바인드 포즈(T)로 세운다. 행위는 clock이 준다.
+    // Stood up in the bind pose (T). Actions come from the clock.
     const bind = limb.kind === "arm" ? bindArm(limb.side) : { shoulder: 0, elbow: 0 };
     pivot.rotation.z = bind.shoulder;
     if (elbow) elbow.rotation.z = bind.elbow;
@@ -184,15 +184,15 @@ export function buildCreature(spec, noise, birth = 0) {
     };
   });
 
-  // 눈썹·입 상태 벌(눈썹 쉼·대체·화남 / 입 쉼·대체·화남·^^ — faceStates.js) — faceGroup 안에서 얼굴 돌림을 따라간다.
-  // 벌마다 메시 하나, 같은 종류가 두 벌에 있으면 메시를 나눠 쓴다(animate가 켤 메시를 하나 고르고 나머지를 끈다)
+  // The brow and mouth state sets (brow rest/alt/angry / mouth rest/alt/angry/^^ — faceStates.js) — inside faceGroup, so they follow the face turn.
+  // One mesh per set; when the same kind appears in two sets they share a mesh (animate picks one mesh to turn on and turns the rest off)
   const kinds = facePartKinds(spec);
   const faceStates = {};
   for (const part of ["brow", "mouth"]) {
     const byKind = new Map();
     faceStates[part] = kinds[part].map((kind, index) => {
       if (!byKind.has(kind)) {
-        // 눈썹·입은 눈 리그(3~6)보다 위(6.6) — 감긴 눈꺼풀이 눈썹을, 놀라 커진 외눈 흰자가 입을 지우지 않는다
+        // Brows and the mouth are above the eye rig (3~6), at 6.6 — so a closed lid does not erase the brows and a startle-widened cyclops white does not erase the mouth
         const mesh = sketchMesh(facePartSketch(spec, part, kind), 1, 6.6, -faceCy);
         mesh.visible = index === 0;
         faceGroup.add(mesh);
@@ -203,21 +203,21 @@ export function buildCreature(spec, noise, birth = 0) {
   }
 
   const faceInk = spec.faceInk || spec.palette.ink;
-  // 눈 리그 — 흰자+테(한 메시)·동공·스마일·감은 선을 그룹으로 묶는다. 종류: ring/wide/cyclops(둥근 흰자) · oval(세로 타원 흰자)
+  // The eye rig — the white plus rim (one mesh), the pupil, the smile and the shut line grouped together. Kinds: ring/wide/cyclops (a round white) · oval (a tall elliptical white)
   const eyeRigs = [];
   const shape = eyeShape(spec);
-  // 눈마다 순서 블록 — 큰 눈이 앞. 두 눈이 겹치면 앞눈의 흰자가 뒷눈의 테·동공을 가린다 (교차선이 안 생긴다).
-  // 뒷눈 3.0~3.35, 앞눈 3.5~3.85 (흰자·테 / 동공 / ^^·감은 선). 정지 눈의 감은 선(3.6)은 정지 눈에만 있어 안 부딪힌다
+  // An order block per eye — the larger eye in front. When two eyes overlap, the front eye's white covers the back eye's rim and pupil (so no crossing line appears).
+  // Back eye 3.0~3.35, front eye 3.5~3.85 (white and rim / pupil / ^^ and shut line). A static eye's shut line (3.6) only exists on static eyes, so there is no collision
   const eyeOrder = [...firstDrawn.eyes].sort((a, b) => a.r - b.r);
   for (const eye of firstDrawn.eyes) {
     const rig = new THREE.Group();
     rig.position.set(eye.x, eye.y - faceCy, 0);
     const rx = eye.r * shape.sx, ry = eye.r * shape.sy;
-    const o = 3 + eyeOrder.indexOf(eye) * 0.5;   // 이 눈의 블록 시작
+    const o = 3 + eyeOrder.indexOf(eye) * 0.5;   // where this eye's block starts
 
-    // 뜬 눈(흰자·테·동공)은 open 그룹 — 감을 때 **덮지 않고 끈다**. 그 자리에 감은 선·^^ 글리프 중 하나가 대신 선다
+    // The open eye (white, rim, pupil) is the open group — closing **switches it off rather than covering it**. In its place either the shut line or the ^^ glyph stands
     const open = new THREE.Group();
-    // 완전한 원이 아니라 살짝 찌그러진 손그림 원 — 노이즈를 준다 (눈마다 위상 다르게). 흰자와 테는 한 메시(채움 밑, 테 위)
+    // Not a perfect circle but a slightly crumpled hand-drawn one — given noise (a different phase per eye). The white and rim are one mesh (fill below, rim above)
     const wob = { lumps: 3, amount: 0.06, noise, phase: eye.side * 3.7 + spec.seed * 0.001 };
     const white = new Sketch(noise, 0.4);
     white.fill(blobPath(0, 0, rx, ry, wob), "#f6f2e9");
@@ -231,7 +231,7 @@ export function buildCreature(spec, noise, birth = 0) {
     open.add(pupil);
     rig.add(open);
 
-    // ^^(smile) — 행복하게 감은 눈 · 감은 눈 선(shut) — 눈꺼풀이 다 내려왔을 때(깜빡임 꼭대기·잠). 뜬 눈을 끄고 이 아치가 대신 선다 — 감은 눈이 빈 얼굴이 되지 않게
+    // ^^ (smile) — happily closed eyes · the shut line (shut) — when the lid is all the way down (the peak of a blink, sleep). The open eye is switched off and this arch stands instead — so a closed eye does not become a blank face
     const lids = lidSketches(eye, faceInk, noise, "rig");
     const smile = sketchMesh(lids.smile, 1, o + 0.35);
     smile.visible = false;
@@ -244,15 +244,15 @@ export function buildCreature(spec, noise, birth = 0) {
     rig.add(angry);
 
     faceGroup.add(rig);
-    // gazeScale: 시선에 동공이 움직이는 폭(눈 반지름 배). 구슬눈은 동공이 곧 눈이라 조금만
+    // gazeScale: how far the pupil travels with the gaze (× the eye radius). On a bead eye the pupil *is* the eye, so only a little
     eyeRigs.push({ rig, open, pupil, smile, shut, angry, eye, gazeScale: 0.34 });
   }
 
-  // 안대에 가리지 않은 눈 전부 (정지 눈 포함) — 정지 눈의 감은 눈·놀람 변형 글리프를 눈 자리에 굽는다
+  // Every eye not hidden by a patch (static eyes included) — bakes the static eyes' closed-eye and startle-variant glyphs where the eye is
   const allEyes = eyeGeometry(spec, layout(spec)).filter((eye) => !patched(spec, eye));
 
-  // 정지 눈(dot·sleepy·cross·spiral·slit·half…)의 감은 눈 — 잠(감은 눈 선)·^^·윙크(미소 아치). 덮개는 없다: 그때는 **그 눈의** 정지 눈
-  // 층(frames)을 끄고(animate) 아치가 대신 선다 — 눈마다 층이 따로라 윙크한 쪽만 바뀌고 반대쪽 눈은 남는다. 살아 있는 눈의 open/shut/smile과 짝이다
+  // The closed eye of a static eye (dot, sleepy, cross, spiral, slit, half…) — sleep (the shut line), ^^ and a wink (the smile arch). There is no cover: **that eye's** static
+  // layer (frames) is switched off (animate) and the arch stands instead — layers being per eye, only the winking side changes and the other eye stays. It pairs with a live eye's open/shut/smile
   const staticLids = [];
   for (const { key, eye } of firstDrawn.staticEyes) {
     const lids = lidSketches(eye, faceInk, noise, "static");
@@ -267,8 +267,8 @@ export function buildCreature(spec, noise, birth = 0) {
     staticLids.push({ shut, smile, angry, eye, frames: frames[key] });
   }
 
-  // 놀람의 눈 변형 — ☆_☆ / ♥_♥. 덮지 않는다: 그동안 눈(정지 눈 프레임·눈 리그)을 **끄고** 그 자리에 글리프만 그린다 (6.32 — 코·안경 아래).
-  // 놀람이 star/heart 변형일 때만 보인다 (animate: state.eyeFx). 눈마다 둘 다 굽어 두고 종류에 맞는 것만 켠다
+  // Startle eye variants — ☆_☆ / ♥_♥. Not a cover: meanwhile the eyes (the static eye frame and the eye rig) are **switched off** and only the glyph is drawn in their place (6.32 — below the nose and eyewear).
+  // Visible only when the startle is the star or heart variant (animate: state.eyeFx). Both are baked per eye and only the matching kind is turned on
   const eyeFx = [];
   for (const eye of allEyes) {
     const starSketch = new Sketch(noise, 0.5);
@@ -295,7 +295,7 @@ export function buildCreature(spec, noise, birth = 0) {
     bodyGroup,
     headGroup,
     faceGroup,
-    parallax,   // [{ group, depth }] — 머리에 붙는 층들. animate가 깊이 × 이목구비 이동량으로 민다
+    parallax,   // [{ group, depth }] — the layers attached to the head. animate shifts them by depth × the features' shift
     tailGroup,
     tailBones,
     limbs,
@@ -303,9 +303,9 @@ export function buildCreature(spec, noise, birth = 0) {
     eyeRigs,
     staticLids,
     faceStates,
-    // 시계는 리그 서술을 받는다 — 행위(손 목표)를 이 개체의 어깨·팔 길이·몸 앵커에 IK로 풀고, 네발 앉기를 몸통·다리 뿌리 치수에 맞게 푼다
+    // The clock takes a rig description — it solves actions (hand targets) onto this individual's shoulders, arm lengths and body anchors by IK, and solves a quad sit against the torso and leg-root dimensions
     clock: makeClock(spec.seed, birth, spec.species, mrig),
-    // 몸 그룹의 회전 축 — 네발 앉기(state.bodyTilt)에서 몸이 앞다리 뿌리를 축으로 기운다 (animate). 두발은 null
+    // The body group's rotation axis — in a quad sit (state.bodyTilt) the body tilts about the front legs' root (animate). null on a biped
     bodyPivot: mrig.body ? [mrig.body.frontHipX, mrig.body.hipY] : null,
     spec,
     neckY,
@@ -313,13 +313,13 @@ export function buildCreature(spec, noise, birth = 0) {
     headRx: firstDrawn.box.headRx,
     headRy: firstDrawn.box.headRy,
     headTop: firstDrawn.headTop,
-    // 보일 주기. 개체별로 살짝 다르게 (약 0.53~0.67fps — 1.5~1.9초에 한 번). 빠르면 그림이 떨려 보인다
+    // The boil period. Slightly different per individual (about 0.53~0.67 fps — once every 1.5~1.9 s). Faster and the drawing looks like it is trembling
     boilFps: (8 + (spec.seed % 5) * 0.5) / 15,
     boilOffset: spec.seed % BOIL_FRAMES,
     baseX: 0,
     baseY: 0,
     generation: 0,
-    // 이모지는 머리에 붙이지 않는다 — 씬 루트의 emojiRoot에 두고 머리 위 지점을 이징으로 따라간다(끌려오는 느낌)
+    // The emoji is not attached to the head — it lives at the scene root's emojiRoot and eases toward the point above the head (the dragged feeling)
     emojiRoot: new THREE.Group(),
     emojiMesh: null,
     emojiKind: null,

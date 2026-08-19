@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MENAGERIE — goofy procedural creatures</title>
-<meta name="description" content="시드 하나에서 자라나는 손그림 크리처 그리드. 저마다의 시계로 숨쉬고 깜빡이고 두리번거린다.">
+<meta name="description" content="A hand-drawn creature grid grown from one seed. Each one breathes, blinks and glances around on its own clock.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -17,7 +17,7 @@
 </head>
 <body>
 
-<canvas id="stage" aria-label="절차적으로 그려진 크리처 그리드"></canvas>
+<canvas id="stage" aria-label="Procedurally drawn creature grid"></canvas>
 
 <header class="bar">
   <a class="mark" href="./index.html">MENAGERIE</a>
@@ -38,7 +38,7 @@
 
   <section class="card">
     <h2>SPECIES</h2>
-    <div class="row seg" id="speciesSeg" role="group" aria-label="종족 프리뷰">
+    <div class="row seg" id="speciesSeg" role="group" aria-label="Species preview">
       <button data-species="all" class="on">ALL</button>
       <button data-species="human">HUMAN</button>
       <button data-species="cat">CAT</button>
@@ -49,7 +49,7 @@
 
   <section class="card">
     <h2>GRID</h2>
-    <div class="row seg" id="countSeg" role="group" aria-label="그리드 크기">
+    <div class="row seg" id="countSeg" role="group" aria-label="Grid size">
       <button data-grid="1x1">1×1</button>
       <button data-grid="5x4">5×4</button>
       <button data-grid="7x5" class="on">7×5</button>
@@ -64,7 +64,7 @@
 
 </aside>
 
-<noscript><p class="noscript">이 페이지는 WebGL과 자바스크립트가 필요합니다.</p></noscript>
+<noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>
 
 <script type="module" src="./src/main.js"></script>
 </body>

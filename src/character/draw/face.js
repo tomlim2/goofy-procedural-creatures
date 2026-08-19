@@ -1,24 +1,24 @@
-// 얼굴 — 눈·눈썹·안경·코·주둥이·볼·수염. 입은 mouth.js, 눈썹·입의 상태 벌은 faceStates.js.
-// 문서: guidelines/character/parts.md § 머리 (eyes~nose), guidelines/motion/catalog.md § 얼굴
+// Face — eyes, brows, eyewear, nose, muzzle, cheeks, whiskers. The mouth is mouth.js; the brow and mouth state sets are faceStates.js.
+// Docs: guidelines/character/parts.md § head (eyes~nose), guidelines/motion/catalog.md § the face
 
 import { blobPath, arcPath } from "../../stroke.js";
 import { TAU } from "./layout.js";
 import { shade, luminance } from "../../color.js";
 
-// 이 눈이 안대에 가려졌나 — 안대가 있을 때만 patchSide를 본다 (갤러리 fix나 뒤늦은 제약으로 안대가 빠져도 눈이 같이 사라지지 않게)
+// Is this eye hidden by a patch — patchSide is only consulted when there is a patch (so the eye does not disappear along with a patch dropped by a gallery fix or a late constraint)
 export function patched(spec, eye) { return spec.parts.eyewear === "patch" && spec.parts.patchSide === eye.side; }
 
-// 살아 있는 눈의 흰자 모양 — 반지름 r에 곱하는 가로·세로 배율. oval만 세로로 길다 (scene/rig.js가 같은 값으로 리그를 굽는다)
+// The white's shape on a live eye — the horizontal and vertical multipliers on radius r. Only oval is tall (scene/rig.js bakes the rig with the same values)
 export const EYE_SHAPE = { oval: { sx: 0.82, sy: 1.22 } };
 export function eyeShape(spec) { return EYE_SHAPE[spec.parts.eyes] || { sx: 1, sy: 1 }; }
-// 살아 있는 눈(리그로 세우는 눈) — 나머지는 얼굴 잉크에 정적으로 굽는다
+// Live eyes (the ones stood up as a rig) — the rest are baked statically in face ink
 export const RIG_EYES = ["ring", "wide", "cyclops", "oval"];
-// 무거운 눈꺼풀 눈(lidded)을 기울이는 각 — sharp는 코 쪽으로, soft는 반대로 이만큼 돌린 같은 눈이다 (rad)
+// The angle the heavy-lidded eye (lidded) is tilted by — sharp is the same eye rotated this much toward the nose, soft the other way (rad)
 const TILTED_LID = 0.34;
-// 흰자 — 종이빛 흰색 (scene/rig.js의 살아 있는 눈, mouth.js의 이빨과 같은 값)
+// The white — paper white (the same value as scene/rig.js's live eyes and mouth.js's teeth)
 const SCLERA = "#f6f2e9";
 
-// 별(☆) 꼭짓점 목록 — 바깥 r, 안쪽 r·inner, 위가 뾰족. 놀람의 ☆_☆ 눈 덮개(scene/rig.js)가 쓴다
+// The star's (☆) vertex list — outer r, inner r·inner, point up. Used by the startle ☆_☆ eye cover (scene/rig.js)
 export function starPath(cx, cy, r, inner = 0.45) {
   const pts = [];
   for (let i = 0; i < 10; i += 1) {
@@ -28,7 +28,7 @@ export function starPath(cx, cy, r, inner = 0.45) {
   }
   return pts;
 }
-// 하트(♥) 폐곡선 — 폭 w, 높이 h. 놀람의 ♥_♥ 눈 덮개(scene/rig.js)가 쓴다
+// The heart's (♥) closed curve — width w, height h. Used by the startle ♥_♥ eye cover (scene/rig.js)
 export function heartPath(cx, cy, w, h) {
   const pts = [];
   for (let i = 0; i <= 28; i += 1) {
@@ -38,9 +38,9 @@ export function heartPath(cx, cy, w, h) {
   return pts;
 }
 
-// 코·입·볼 자리를 잡을 때 보는 눈 밑선 — 흰자 위에 얹히면 같은 색(도깨비 밝은 잉크)이거나 덮여서 사라진다.
-// (놀람은 눈을 키우지 않고 동공만 줄이므로 흰자 크기는 그대로다)
-// x 자리에서 눈(흰자)이 닿으면 그 밑선(y)을, 아니면 Infinity를 준다. 파츠는 min(원래 y, 밑선 - 여유)에 앉는다
+// The eye's lower edge, consulted when placing the nose, mouth and cheeks — laid over a white they are either the same color (an imp's light ink) or covered, and disappear.
+// (A startle does not grow the eye, only shrinks the pupil, so the white's size is unchanged)
+// Gives that lower edge (y) if an eye (its white) reaches this x, otherwise Infinity. A part sits at min(its own y, the edge − clearance)
 export function eyeFloor(spec, eyes, x) {
   const { sx, sy } = eyeShape(spec);
   const hit = eyes.filter((e) => e.r * sx * 1.05 > Math.abs(x - e.x));
@@ -50,10 +50,10 @@ export function eyeFloor(spec, eyes, x) {
 export function drawEyes(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyes;
   const ink0 = spec.faceInk || spec.palette.ink;
-  // 흰자를 깐 눈(slit·side·half·lidded 한 벌)의 잉크 — 밝은 얼굴 잉크로 그리면 흰자에 묻힌다
+  // The ink of eyes laid on a white (slit, side, half, the lidded set) — drawn in light face ink it is lost on the white
   const dark = spec.palette.ink;
 
-  // 작은 눈부터 그린다 — 겹치면 큰 눈이 앞(hollow처럼 채움+윤곽을 한 스케치에 그리는 눈에서 교차선이 안 생긴다)
+  // Drawn smallest first — when they overlap the larger eye is in front (so no crossing line appears on eyes like hollow, whose fill and outline share one sketch)
   for (const eye of [...eyes].sort((a, b) => a.r - b.r)) {
     if (patched(spec, eye)) continue;
 
@@ -65,23 +65,23 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       ink.stroke([[eye.x - eye.r, eye.y - eye.r], [eye.x + eye.r, eye.y + eye.r]], { color: ink0, width: 0.011 });
       ink.stroke([[eye.x + eye.r, eye.y - eye.r], [eye.x - eye.r, eye.y + eye.r]], { color: ink0, width: 0.011 });
     } else if (kind === "scrawl") {
-      // 크레파스로 마구 그린 동그라미 — 한 획으로 세 바퀴 반, 바퀴마다 반지름과 중심이 흔들려 선이 겹치고 삐져나온다.
-      // 정갈한 나선(spiral)과 다르다: 시작·끝이 안 맞물리고 획이 서로를 지나친다 (아이가 크레파스로 그린 눈)
-      // 한 바퀴를 조금 넘겨 그린 고리 넷을 겹친다 — 고리마다 중심·크기·기울기가 달라 획이 서로를 지나치고 끝이 안 맞물린다.
-      // (한 획으로 여러 바퀴 돌면 동심원이 되어 나선처럼 보인다 — 그건 spiral이다)
+      // A circle scribbled with a crayon — three and a half turns in one stroke, the radius and centre wavering each turn so the lines cross and overshoot.
+      // Unlike the neat spiral: the start and end do not meet and the strokes pass over each other (an eye a child drew with a crayon)
+      // Four loops, each drawn a bit past one turn, overlaid — each loop has its own centre, size and tilt, so the strokes pass over each other and the ends never meet.
+      // (Several turns in one stroke would be concentric and read as a spiral — that is spiral)
       const wob = ink.noise;
       const phase = eye.side * 5.5 + spec.proportions.wobbleSeed * 0.017;
       for (let k = 0; k < 6; k += 1) {
         const w1 = wob(phase + k * 3.7), w2 = wob(phase + 17 + k * 3.7), w3 = wob(phase + 41 + k * 3.7);
         const cx = eye.x + eye.r * 0.17 * w1;
         const cy = eye.y + eye.r * 0.15 * w2;
-        // 고리마다 크기가 층진다 — 큰 고리와 작은 고리가 섞여 덧그은 자국이 된다 (0.45~1.05배)
+        // The loops step in size — big and small loops mix into an overdrawn mark (0.45~1.05×)
         const grade = 0.45 + 0.6 * ((k * 0.37) % 1);
         const rx = eye.r * Math.min(1.05, grade + 0.12 * w3);
         const ry = eye.r * Math.min(1.05, grade + 0.12 * w1) * 0.92;
         const tilt = w2 * 0.9;
         const from = w3 * Math.PI;
-        const to = from + TAU + 0.8 + w1 * 0.6;   // 한 바퀴 + 여분 — 끝이 시작을 지나친다
+        const to = from + TAU + 0.8 + w1 * 0.6;   // one turn plus extra — the end passes the start
         const pts = [];
         for (let i = 0; i <= 24; i += 1) {
           const a = from + (to - from) * (i / 24);
@@ -100,56 +100,56 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       }
       ink.stroke(spiral, { color: ink0, width: 0.009, jitter: 0.004 });
     } else if (kind === "slit") {
-      // 아몬드 윤곽 + **채운** 세로 동공(방추). 얇은 획이면 눈이 작을 때 윤곽 두 선이 붙어 뭉개지고 동공은 안 읽힌다 —
-      // 아몬드를 조금 높이고(0.7r) 동공을 면으로 채워 멀리서도 고양이 눈으로 보이게.
-      // 아몬드 안은 흰자다 — 살색이면 동공만 떠 있는 얼룩이 되고, 검은 털·도깨비에서는 아몬드가 머리와 한 덩어리가 된다
+      // An almond outline plus a **filled** vertical pupil (a spindle). With a thin stroke, on a small eye the outline's two lines merge into a smear and the pupil does not read —
+      // the almond is raised a little (0.7r) and the pupil filled as an area, so it reads as a cat eye from a distance.
+      // Inside the almond is the white — in skin tone it becomes a patch with a pupil floating in it, and on black fur or an imp the almond merges with the head
       const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, { lumps: 3, amount: 0.1, noise: null });
       fills.fill(path, SCLERA);
       fills.outline(path, { color: dark, width: 0.01 });
       fills.fill(blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), dark);
     } else if (kind === "line") {
-      // 일자눈 ㅡ ㅡ — 무표정 대시. 살짝 바깥이 처진다
+      // A flat two-dash eye — an expressionless dash. It droops slightly on the outside
       ink.stroke([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0, width: 0.013 });
     } else if (kind === "happy") {
-      // 늘 웃는 눈 ^^ — 위로 볼록한 아치 (행복 상태의 미소 아치와 같은 모양, 여기선 항상)
+      // An always-smiling eye ^^ — an arch bulging upward (the same shape as the happy state's smile arch, always on here)
       ink.stroke(arcPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0, width: 0.013 });
     } else if (kind === "squeeze") {
-      // >_< — 꼭 감은 눈. 코 쪽으로 향한 꺾쇠 (왼눈 >, 오른눈 <)
+      // >_< — eyes screwed shut. A bracket pointing toward the nose (left eye >, right eye <)
       const inward = -eye.side;
       ink.stroke([[eye.x - inward * eye.r * 0.7, eye.y + eye.r * 0.7], [eye.x + inward * eye.r * 0.45, eye.y], [eye.x - inward * eye.r * 0.7, eye.y - eye.r * 0.7]],
         { color: ink0, width: 0.013, jitter: 0.004 });
     } else if (kind === "side") {
-      // ¬_¬ — 곁눈질. 반감김(아래쪽 호 + 눈꺼풀 선)인데 동공이 한쪽으로 몰린다 (어느 쪽인지는 개체별)
+      // ¬_¬ — a sideways glance. Half-lidded (a lower arc plus a lid line) but with the pupil pushed to one side (which side is per individual)
       const dir = spec.proportions.wobbleSeed % 2 ? 1 : -1;
       const lidY = eye.r * 0.3;
       const a0 = Math.asin(lidY / eye.r);
-      // 아래쪽 호가 감싸는 자리가 흰자 — 호는 눈꺼풀 선 양 끝에서 시작해 밑을 돌므로 채우면 그 선 아래만 하얘진다.
-      // 선 위(눈꺼풀)는 채우지 않는다 — 거기는 눈알이 아니라 살이다
+      // What the lower arc encloses is the white — the arc starts at both ends of the lid line and goes round the bottom, so filling it whitens only below that line.
+      // Above the line (the lid) is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
       fills.fill(arc, SCLERA);
       fills.stroke(arc, { color: dark, width: 0.011 });
       fills.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark, width: 0.013 });
       fills.fill(blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark);
     } else if (kind === "droop") {
-      // ´･ω･` — 처진 눈꼬리. 점 눈 위에 바깥으로 내려가는 눈꺼풀 획 (시무룩)
+      // ´･ω･` — drooping outer corners. A lid stroke falling outward over a dot eye (glum)
       fills.fill(blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0);
       ink.stroke([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0, width: 0.011 });
     } else if (kind === "hollow") {
-      // 빈 눈 — 보통 눈(ring)에서 동공만 뺀 것. 어느 종족이든 흰자 + 윤곽, 동공 없음 (도깨비도 검은 눈구멍이 아니라 흰 눈).
-      // 채움과 윤곽을 **같은 스케치(fills)** 에 눈마다 이어 그린다 — 두 눈이 겹치면 나중 눈(큰 눈)이 앞 눈의 윤곽을 덮는다 (교차선 없음).
-      // 그러려면 작은 눈부터: 큰 눈이 뒤에 그려져 앞이 된다
-      const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // 살짝 찌그러진 원
+      // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket).
+      // The fill and outline are drawn per eye into **the same sketch (fills)** — when two eyes overlap the later eye (the larger) covers the front eye's outline (no crossing line).
+      // For that, smallest first: the larger eye is drawn later and so ends up in front
+      const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // a slightly crumpled circle
       fills.fill(path, SCLERA);
-      fills.outline(path, { color: dark, width: 0.011, passes: 2 });   // 흰자 테는 검정 — 흰자 위라 늘 보인다
+      fills.outline(path, { color: dark, width: 0.011, passes: 2 });   // the white's rim is black — being on the white, it is always visible
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
-      // 무거운 눈꺼풀 한 벌 — **같은 눈을 기울기만 달리** 쓴다: lidded 평평 · sharp 코 쪽으로 기운 것(눈꼬리가 올라간 사나운 인상) ·
-      // soft 반대로 기운 것(눈꼬리가 처진 순한 인상). 기울기는 눈 중심을 축으로 흰자·눈꺼풀 선·동공을 통째로 돌린 것이다 —
-      // 모양을 따로 만들면 같은 눈으로 안 읽힌다.
-      // 눈꺼풀 선 **아래는 흰자, 위는 살**이다 — 눈꺼풀은 눈알이 아니라 눈을 덮은 살이니 얼굴과 같은 색으로 채운다.
-      // 위까지 흰자로 두면 눈 위에 흰 초승달이 하나 더 얹힌 것처럼 읽히고, 먹으로 채우면 검은 머리(도깨비·검은 털)에서
-      // 머리와 한 덩어리가 되어 흰 초승달만 남아 눈으로 안 읽힌다. 흰자 위라 잉크는 늘 어두운 팔레트 잉크
-      // (밝은 얼굴 잉크로 그리면 흰자에 묻힌다). 반감김(half)이 가는 눈꺼풀 선 하나라면 이건 굵고 처진 눈꺼풀에 눈이 눌린 것이다
-      const out = eye.side === 0 ? 1 : eye.side;              // 외눈은 오른쪽 기준. 코 쪽 = −out
+      // The heavy-lidded set — **the same eye at different tilts**: lidded flat · sharp tilted toward the nose (the fierce look of a lifted outer corner) ·
+      // soft tilted the other way (the gentle look of a drooping outer corner). The tilt rotates the white, the lid line and the pupil together about the eye's centre —
+      // built as separate shapes they would not read as the same eye.
+      // **Below the lid line is the white, above it is skin** — a lid is skin covering the eye, not eyeball, so it is filled in the face's color.
+      // Leave the top as white too and it reads as one more white crescent laid over the eye; fill it with ink and on a black head (an imp, black fur)
+      // it merges with the head, leaving only the white crescent, which does not read as an eye. Being on a white, the ink is always the dark palette ink
+      // (in light face ink it is lost on the white). If half-lidded (half) is one thin lid line, this is an eye pressed down by a thick, sagging lid
+      const out = eye.side === 0 ? 1 : eye.side;              // a cyclops uses the right as its reference. The nose side = −out
       const tilt = (kind === "sharp" ? out : kind === "soft" ? -out : 0) * TILTED_LID;
       const cos = Math.cos(tilt), sin = Math.sin(tilt);
       const rot = (pts) => pts.map(([x, y]) => [
@@ -157,8 +157,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         eye.y + (x - eye.x) * sin + (y - eye.y) * cos
       ]);
       const path = rot(blobPath(eye.x, eye.y, eye.r, eye.r * 1.05, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 }));
-      // 눈꺼풀 선 — 흰자를 가로지르고 가운데가 처진다(눈두덩이 눈을 짓누른다). 굵게 두 번 그어 "무거운" 눈꺼풀이 된다.
-      // 양 끝은 기울이기 전 타원의 ±a0 자리라, 윤곽 점 배열을 그 각으로 잘라 살 부분을 닫을 수 있다
+      // The lid line — it crosses the white and sags in the middle (the brow ridge presses down on the eye). Stroked thick, twice, to make a "heavy" lid.
+      // Its two ends are at ±a0 on the pre-tilt ellipse, so the outline's point array can be cut at that angle to close off the skin part
       const rel = 0.16, a0 = Math.asin(rel);
       const lid = [];
       for (let i = 0; i <= 12; i += 1) {
@@ -168,21 +168,21 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       }
       const lidLine = rot(lid);
       fills.fill(path, SCLERA);
-      // 눈꺼풀(선 위) — 눈꺼풀 선을 왼→오른으로 두고 윤곽의 윗부분(오른→위→왼)을 이어 닫는다
+      // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it
       const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
       fills.fill([...lidLine, ...brow], spec.palette.skin);
       fills.outline(path, { color: dark, width: 0.011, passes: 2 });
-      // 동공 — 눈꺼풀 선 밑에서 내다본다 (개체별로 살짝 좌우). 선보다 **먼저** 그어야 선이 동공 위를 지난다
+      // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil
       const gaze = (spec.proportions.wobbleSeed % 5 - 2) * 0.06;
       fills.fill(rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark);
-      // 굵기는 눈 크기에 비례한다 — 고정 굵기면 작은 눈(고양이)에서 획이 흰자를 다 덮는다
+      // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
       fills.stroke(lidLine, { color: dark, width: Math.max(0.011, Math.min(0.017, eye.r * 0.2)), passes: 2 });
     } else if (kind === "half") {
-      // 반쯤 감은 눈 — 원 전체에 선을 긋지 않는다(원+선은 "선 그어진 동그라미"로 뭉개져 읽힌다).
-      // 눈꺼풀 선 **아래쪽 호**만 그리고, 그 선 밑에 동공을 둔다 → 무거운 눈꺼풀이 눈을 덮은 모양
+      // A half-closed eye — no line is drawn across the whole circle (a circle plus a line smears into "a circle with a line through it").
+      // Only the **lower arc** of the lid line is drawn, with the pupil below that line → the shape of a heavy lid covering the eye
       const lidY = eye.r * 0.3;
-      const a0 = Math.asin(lidY / eye.r);   // 눈꺼풀 선이 원과 만나는 각
-      // 호가 감싸는 자리(선 아래)가 흰자. 선 위는 채우지 않는다 — 눈알이 아니라 살이다
+      const a0 = Math.asin(lidY / eye.r);   // the angle at which the lid line meets the circle
+      // What the arc encloses (below the line) is the white. Above the line is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
       fills.fill(arc, SCLERA);
       fills.stroke(arc, { color: dark, width: 0.011, jitter: 0.006 });
@@ -191,8 +191,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       });
       fills.fill(blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark);
     }
-    // ring / wide / cyclops / oval(RIG_EYES)은 여기서 그리지 않는다. scene이 흰자·동공·감은 선을
-    // 별도 메시로 세워 놀람(동공 수축)·시선·눈꺼풀을 움직인다.
+    // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
+    // as separate meshes to move the startle (pupil shrink), gaze and lids.
   }
 }
 
@@ -202,7 +202,7 @@ export function drawFace2(ink, fills, spec, box, eyes) {
   const ink0 = spec.faceInk || spec.palette.ink;
 
   if (kind === "tears") {
-    // 눈 아래로 흘러내리는 두 줄. 레퍼런스에서 자주 보이는 디테일.
+    // Two lines running down below the eye. A detail seen often in the reference.
     for (const eye of eyes) {
       if (patched(spec, eye)) continue;
       for (const off of [-0.35, 0.35]) {
@@ -219,12 +219,12 @@ export function drawFace2(ink, fills, spec, box, eyes) {
 
   for (const side of [-1, 1]) {
     const cx = side * box.headRx * 0.58;
-    // 볼은 눈 밑 — 왕눈이면 (놀라 커진) 눈 아래로 내려간다. 흰자에 통째로 덮이지 않게
+    // The cheeks are below the eyes — with a big eye they drop below the (startle-widened) eye. So they are not covered whole by the white
     const cheekY = Math.min(box.headCy - box.headRy * 0.28, eyeFloor(spec, eyes, cx) - 0.02);
     if (kind === "blush") {
       fills.fill(blobPath(cx, cheekY, 0.042, 0.026, { lumps: 3, amount: 0.15, noise: null }), "#d9968a");
     } else {
-      // freckles — 볼마다 점 세 개
+      // freckles — three dots per cheek
       for (let i = 0; i < 3; i += 1) {
         const fx = cx + (i - 1) * 0.022;
         const fy = cheekY + (i % 2 ? 0.012 : -0.008);
@@ -234,8 +234,8 @@ export function drawFace2(ink, fills, spec, box, eyes) {
   }
 }
 
-// 고양이 수염 — 양쪽 세 가닥. 길이는 개체별(머리 반폭의 0.42~0.92배): 반 넘는 개체는 수염이 **머리 윤곽을 뚫고 밖으로** 나온다.
-// 얼굴 층(2.4)에 그리므로 윤곽·귀·모자 위에 얹히고 종이 위까지 뻗는다. 얼굴 돌림을 따라 같이 밀린다
+// Cat whiskers — three strands per side. The length is per individual (0.42~0.92× the head's half-width): over half of them have whiskers **poking out through the head outline**.
+// Being drawn on the face layer (2.4) they sit above the outline, ears and hat, and reach out onto the paper. They shift along with a face turn
 export function drawWhiskers(ink, spec, box) {
   if (spec.species !== "cat") return;
   const roll = (spec.proportions.wobbleSeed % 97) / 97;
@@ -245,7 +245,7 @@ export function drawWhiskers(ink, spec, box) {
     for (let i = 0; i < 3; i += 1) {
       const y0 = wy + (i - 1) * 0.028;
       const x0 = side * box.headRx * 0.3;
-      // 살짝 처지는 부채꼴 — 긴 수염일수록 끝이 더 벌어진다
+      // A slightly drooping fan — the longer the whisker, the more its tip spreads
       ink.stroke([[x0, y0], [x0 + side * len * 0.55, y0 + (i - 1) * 0.008 * (len / 0.09)], [x0 + side * len, y0 + (i - 1) * 0.02 * (len / 0.09) - 0.004]],
         { color: spec.faceInk || spec.palette.ink, width: 0.006, jitter: 0.004 });
     }
@@ -259,9 +259,9 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
 
   for (const eye of eyes) {
     if (patched(spec, eye)) continue;
-    // 눈썹은 눈 위, 그러나 머리 안 — 외눈처럼 큰 눈은 1.9배 위가 머리 밖(종이 위)이라 사라진다
+    // Brows go above the eyes, but inside the head — on a big eye like a cyclops, 1.9× up is outside the head (on the paper) and it disappears
     const y = Math.min(eye.y + eye.r * (eye.side === 0 ? 1.35 : 1.9), box.headCy + box.headRy * 0.84);
-    const half = Math.max(eye.r * 1.15, 0.022);   // 눈이 작아도 눈썹은 눈썹만큼은 길다
+    const half = Math.max(eye.r * 1.15, 0.022);   // even on a small eye a brow is at least brow-length
     let left = y;
     let right = y;
     if (kind === "angry") {
@@ -277,7 +277,7 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
   }
 }
 
-// 안경알 반지름 = 눈 반지름 × 배율. spec.js가 두 알이 겹치는지 판정할 때도 같은 값을 쓴다.
+// The lens radius = the eye radius × a multiplier. spec.js uses the same value when deciding whether the two lenses overlap.
 export const LENS_SCALE = { glasses: 1.45, goggles: 1.75 };
 
 export function drawEyewear(ink, fills, spec, box, eyes) {
@@ -286,13 +286,13 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
   const ink0 = spec.faceInk || spec.palette.ink;
 
   if (kind === "patch") {
-    // 안대는 **물건**이라 늘 검다 — 도깨비의 밝은 얼굴 잉크로 채우면 흰 덩어리가 돼 실수처럼 보인다.
-    // 먹빛 머리에서는 밝은 테로 윤곽을 잡아 검은 안대가 읽히게 한다. 끈은 얼굴 잉크(밝은 머리 검정, 먹빛 머리 밝음)
+    // An eyepatch is **an object**, so it is always black — filled in an imp's light face ink it becomes a white mass and reads as a mistake.
+    // On an ink-black head a light rim holds its shape so the black patch reads. The strap is face ink (black on a light head, light on an ink-black one)
     const eye = eyes.find((e) => e.side === spec.parts.patchSide) || eyes[0];
-    const patch = blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.35, { lumps: 3, amount: 0.025, noise: fills.noise, phase: 1.3 });   // 거의 원 — 보일 때도 안 들썩이게 아주 조금만
+    const patch = blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.35, { lumps: 3, amount: 0.025, noise: fills.noise, phase: 1.3 });   // almost a circle — only a touch, so it does not jiggle as the boil runs
     fills.fill(patch, spec.palette.ink);
     if (spec.faceInk) ink.outline(patch, { color: spec.faceInk, width: 0.01, passes: 2, jitter: 0.003 });
-    // 끈은 머리를 가로지른다
+    // The strap crosses the head
     ink.stroke([[eye.x, eye.y + eye.r * 1.3], [-eye.side * box.headRx, box.headCy + box.headRy * 0.45]], {
       color: ink0, width: 0.009
     });
@@ -328,10 +328,10 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
   }
 }
 
-// 개 주둥이 치수·색. 코 슬롯이 주둥이의 형태를 정한다 — 같은 슬롯으로 종족별 변형을 얻는다.
-// 코(drawNose)와 입(drawMouth·mouth.js)이 같은 치수를 본다 — 입은 주둥이 위, 코 밑에 앉는다.
-//   fill 주둥이 색 — 개체마다(wobbleSeed, rng 없음): 밝은 크림 45% · 털색보다 살짝 밝은 톤 30% · **검정 계열**(털색의 0.55배) 25%. 주둥이는 **색만**이고 윤곽선은 없다(색 얼룩)
-//   ink  주둥이 **위에 그리는 선**(입)의 색 — 주둥이 휘도로 갈린다(밝으면 검정, 어두우면 밝은 잉크). 코는 물건이라 늘 검정이되 어두운 주둥이에선 밝은 테를 두른다
+// Dog muzzle dimensions and color. The nose slot decides the muzzle's form — the same slot gives a per-species variant.
+// The nose (drawNose) and the mouth (drawMouth, mouth.js) look at the same dimensions — the mouth sits above the muzzle and below the nose.
+//   fill the muzzle color — per individual (wobbleSeed, no rng): light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (0.55× the fur) 25%. A muzzle is **color only**, with no outline (a color patch)
+//   ink  the color of **the line drawn on** the muzzle (the mouth) — split by the muzzle's luminance (black if light, light ink if dark). The nose is an object and always black, but on a dark muzzle it gets a light rim
 export function muzzleGeometry(spec, box) {
   const kind = spec.parts.nose;
   const mw = kind === "hook" ? 0.62 : kind === "long" ? 0.68 : kind === "wedge" ? 0.4 : 0.5;
@@ -344,19 +344,19 @@ export function muzzleGeometry(spec, box) {
   return { my, rx: box.headRx * mw, ry: box.headRy * mh, noseY: my + box.headRy * 0.16, noseR: nr, fill, dark, ink: dark ? "#e9e3d5" : spec.palette.ink };
 }
 
-// 사람·도깨비 코(hook·wedge·long)의 배율 — 머리 높이 기준, 중간 머리(headRy 0.31)에서 1. 고정 좌표로 두면 왕머리에서 콩알이 되어
-// hook·wedge·long이 같은 코로 읽히고, 작은 머리에서는 얼굴 반을 차지한다. 선 굵기는 배율을 타지 않는다 (치수 슬롯 규칙과 같다)
+// The multiplier for human and imp noses (hook, wedge, long) — against the head height, 1 on a medium head (headRy 0.31). At fixed coordinates it becomes a speck on a huge head,
+// so hook, wedge and long all read as the same nose, and on a small head it takes up half the face. Stroke thickness does not follow the multiplier (the same as the dimension-slot rule)
 const NOSE_REF_RY = 0.31;
 function noseScale(box) { return box.headRy / NOSE_REF_RY; }
 
-// 코 기준점(사람·고양이·도깨비). 눈이 가운데까지 닿을 만큼 크면(왕눈·외눈) 코가 눈 속에 묻힌다 — (놀라 커진) 눈 아래로 내린다
+// The nose reference point (humans, cats, imps). If the eyes are big enough to reach the middle (a big eye, a cyclops) the nose is buried in them — it drops below the (startle-widened) eye
 export function noseY(spec, box, eyes) {
   return Math.min(box.headCy - box.headRy * spec.proportions.noseDrop, eyeFloor(spec, eyes, 0) - 0.008);
 }
 
-// 면으로 그리는 코 둘 — 그리기(drawNose)와 입 자리(noseBottomY)가 같은 좌표를 본다. 둘 다 머리에 비례하고,
-// 코 기준점(noseY)은 x=0만 보므로 폭이 있는 코는 콧방울이 눈(흰자)에 닿는지 제 폭에서 다시 본다 — 닿으면 그만큼 내린다
-// (faceFront 층은 눈 리그보다 위라, 면이 눈에 걸치면 흰자를 가린다)
+// The two area-drawn noses — the drawing (drawNose) and the mouth position (noseBottomY) look at the same coordinates. Both are proportional to the head, and
+// since the nose reference point (noseY) only looks at x=0, a nose with width re-checks at its own width whether its wings touch an eye (a white) — if so it drops by that much
+// (the faceFront layer is above the eye rig, so an area lapping onto an eye hides the white)
 function bulbShape(spec, box, eyes) {
   const rx = Math.max(0.016, box.headRx * 0.085), ry = Math.max(0.014, box.headRy * 0.07);
   const floor = Math.min(eyeFloor(spec, eyes, -rx * 0.8), eyeFloor(spec, eyes, rx * 0.8)) - 0.006;
@@ -369,14 +369,14 @@ function broadShape(spec, box, eyes) {
   const y = Math.min(noseY(spec, box, eyes), floor - h);
   return { w, h, y, bottom: y - h };
 }
-// 네모 코 — 모서리 둥근 네모(superellipse). 주먹코와 같은 자리·같은 채움, 실루엣만 각지다
+// A square nose — a rounded square (a superellipse). The same position and fill as the bulb; only the silhouette is angular
 function boxShape(spec, box, eyes) {
   const rx = Math.max(0.017, box.headRx * 0.09), ry = Math.max(0.017, box.headRy * 0.09);
   const floor = Math.min(eyeFloor(spec, eyes, -rx * 0.8), eyeFloor(spec, eyes, rx * 0.8)) - 0.006;
   const cy = Math.min(noseY(spec, box, eyes) + ry * 0.5, floor - ry);
   return { rx, ry, cy, bottom: cy - ry };
 }
-// 콧구멍 둘 — 수박씨 두 알(위가 뾰족한 물방울, 바깥으로 기울임). gap은 두 알의 중심 간격의 반, rx·ry는 알 하나의 반폭·반높이
+// Two nostrils — two watermelon seeds (teardrops pointed at the top, tilted outward). gap is half the distance between the two centres, rx/ry one seed's half-width and half-height
 function nostrilsShape(spec, box, eyes) {
   const gap = Math.max(0.015, box.headRx * 0.065);
   const rx = Math.max(0.006, box.headRy * 0.026), ry = Math.max(0.011, box.headRy * 0.052);
@@ -385,30 +385,30 @@ function nostrilsShape(spec, box, eyes) {
   return { gap, rx, ry, cy, bottom: cy - ry * 1.05 };
 }
 
-// 고양이 코 — 코 슬롯을 **고양이 것으로 읽는다**(개가 주둥이로 읽는 것과 같은 방식): dot 작은 세모 · wedge 하트 · hook 세모 + 인중(Y) ·
-// long 넓적한 세모 + 긴 인중 · none 없음. 선 하나로 그으면 입과 헷갈리니 **채운** 세모다. 분홍(볼터치·혀와 같은 색) + 얼굴 잉크 테 —
-// 밝은 얼굴에서도 검정 털에서도 읽힌다. 인중은 코 밑에서 입 쪽으로 내려가는 짧은 세로선
+// Cat noses — the nose slot is **read as a cat's** (the same way a dog reads it as a muzzle): dot a small triangle · wedge a heart · hook a triangle plus a philtrum (a Y) ·
+// long a wide triangle plus a long philtrum · none nothing. Drawn as a single line it would be mistaken for the mouth, so it is a **filled** triangle. Pink (the same as the blush and tongue) plus a face-ink rim —
+// it reads on a light face and on black fur alike. The philtrum is a short vertical line dropping from under the nose toward the mouth
 function catNose(ink, fills, spec, box, eyes) {
   const kind = spec.parts.nose;
   const y = noseY(spec, box, eyes);
   const ink0 = spec.faceInk || spec.palette.ink;
-  const w = Math.max(0.024, box.headRx * (kind === "long" ? 0.13 : 0.1));   // 반폭
+  const w = Math.max(0.024, box.headRx * (kind === "long" ? 0.13 : 0.1));   // half-width
   const h = Math.max(0.017, box.headRy * (kind === "wedge" ? 0.085 : 0.072));
   let path;
   if (kind === "wedge") {
-    // 하트 코 — 위 두 봉우리 + 아래 뾰족
+    // Heart nose — two peaks on top, a point below
     path = [];
     for (let i = 0; i <= 20; i += 1) {
       const a = (i / 20) * TAU;
       path.push([w * 0.95 * Math.pow(Math.sin(a), 3), y + h * (Math.cos(a) - 0.35 * Math.cos(2 * a) - 0.18 * Math.cos(3 * a) - 0.06 * Math.cos(4 * a)) * 0.75 + h * 0.15]);
     }
   } else {
-    // 세모 코 — 위가 넓고 아래가 뾰족, 모서리는 살짝 둥글다
+    // Triangular nose — wide at the top, pointed below, corners slightly rounded
     path = [[-w, y + h * 0.55], [-w * 0.55, y + h * 0.8], [w * 0.55, y + h * 0.8], [w, y + h * 0.55], [w * 0.4, y - h * 0.35], [0, y - h * 0.8], [-w * 0.4, y - h * 0.35]];
   }
   fills.fill(path, "#d9968a");
   ink.outline(path, { color: ink0, width: 0.009 });
-  // 인중 — 코 밑에서 입 쪽으로. hook은 짧게, long은 길게 (Y자 얼굴)
+  // The philtrum — from under the nose toward the mouth. Short on hook, long on long (a Y-shaped face)
   const drop = kind === "hook" ? h * 1.1 : kind === "long" ? h * 2 : 0;
   if (drop) ink.stroke([[0, y - h * 0.7], [0.001, y - h * 0.7 - drop]], { color: ink0, width: 0.009 });
 }
@@ -417,12 +417,12 @@ export function drawNose(ink, fills, spec, box, eyes) {
   if (spec.species === "cat" && spec.parts.nose !== "none") { catNose(ink, fills, spec, box, eyes); return; }
   if (spec.species === "pup") {
     const m = muzzleGeometry(spec, box);
-    // 주둥이(코·입이 묶인 영역)는 **색만** — 윤곽선을 두르지 않는다. 선을 두르면 얼굴에 덧댄 판때기처럼 보인다 (색 얼룩으로 남아야 한다)
+    // The muzzle (the region the nose and mouth are grouped into) is **color only** — no outline is drawn round it. An outline makes it look like a board tacked onto the face (it has to stay a color patch)
     const muzzle = blobPath(0, m.my, m.rx, m.ry, { lumps: 3, amount: 0.1, noise: null });
     fills.fill(muzzle, m.fill);
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
-    fills.fill(nose, spec.palette.ink);   // 코는 물건 — 늘 검정
-    if (m.dark) ink.outline(nose, { color: m.ink, width: 0.008 });   // 어두운 주둥이 위에서는 밝은 테로 코를 잡는다 (안대와 같은 규칙)
+    fills.fill(nose, spec.palette.ink);   // the nose is an object — always black
+    if (m.dark) ink.outline(nose, { color: m.ink, width: 0.008 });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)
     return;
   }
 
@@ -430,75 +430,75 @@ export function drawNose(ink, fills, spec, box, eyes) {
   if (kind === "none") return;
   const y = noseY(spec, box, eyes);
   const ink0 = spec.faceInk || spec.palette.ink;
-  const k = noseScale(box);   // hook·wedge·long의 좌표는 전부 이 배율 — 모양은 그대로, 크기만 머리를 따른다
+  const k = noseScale(box);   // every coordinate of hook, wedge and long takes this multiplier — the shape stays, only the size follows the head
 
   if (kind === "dot") {
-    // 점 코 — **머리에 비례**한다. 고정 크기로 두면 왕머리·넓은 머리에서 콩알보다 작아져 얼굴 돌림 때 사라진다 (전수조사가 잡는다)
+    // Dot nose — **proportional to the head**. At a fixed size it ends up smaller than a speck on a huge or wide head and disappears on a face turn (the audit catches it)
     const half = Math.max(0.014, box.headRx * 0.055);
     ink.stroke([[-half, y], [half, y]], { color: ink0, width: Math.max(0.016, box.headRy * 0.06) });
   } else if (kind === "hook") {
-    // 갈고리 — 미간에서 내려와 왼쪽으로 꺾인다 (레퍼런스의 코 한 획)
+    // Hook — comes down from between the brows and bends to the left (the reference's one-stroke nose)
     ink.stroke([[0.004 * k, y + 0.07 * k], [0.01 * k, y], [-0.035 * k, y - 0.012 * k]], { color: ink0, width: 0.01 });
   } else if (kind === "wedge") {
-    // 쐐기 — 위로 뾰족한 ∧
+    // Wedge — a ∧ pointing up
     ink.stroke([[-0.03 * k, y - 0.02 * k], [0.006 * k, y + 0.055 * k], [0.032 * k, y - 0.02 * k]], { color: ink0, width: 0.01 });
   } else if (kind === "bulb") {
-    // 주먹코 — 동그란 **면**. 살색보다 조금 짙게 채우고 얼굴 잉크로 테를 두른다 (먹빛 얼굴에서는 테만 남아 밝은 고리로 읽힌다).
-    // 선 코 넷과 실루엣이 다른 게 이 코의 이유다 — 그리드 거리에서 "덩어리 코"로 갈린다
+    // Bulb — a round **area**. Filled a little deeper than the skin tone with a face-ink rim (on an ink-black face only the rim is left and reads as a light ring).
+    // Having a different silhouette from the four line noses is this nose's whole reason — at grid distance it separates as "the mass nose"
     const b = bulbShape(spec, box, eyes);
     const path = blobPath(0.003 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.1, noise: fills.noise, phase: 2.3 });
     fills.fill(path, shade(spec.palette.skin, 0.86));
     ink.outline(path, { color: ink0, width: 0.01 });
   } else if (kind === "broad") {
-    // 넓적코 — 넓고 낮은 **채운 세모**(∇, 모서리 둥글게). 고양이 세모 코의 점 배열과 같은 꼴이되 폭이 넓고 살색 계열
+    // Broad nose — a wide, low **filled triangle** (a ∇ with rounded corners). The same point layout as the cat's triangular nose but wider and in skin tones
     const { w, h, y: ny } = broadShape(spec, box, eyes);
     const path = [[-w, ny + h * 0.7], [-w * 0.2, ny + h], [w * 0.2, ny + h], [w, ny + h * 0.7], [w * 0.3, ny - h * 0.6], [0, ny - h], [-w * 0.3, ny - h * 0.6]];
     fills.fill(path, shade(spec.palette.skin, 0.86));
     ink.outline(path, { color: ink0, width: 0.01 });
   } else if (kind === "box") {
-    // 네모 코 — **모서리 둥근 네모** 면. 지수는 머리 square(1.5)보다 높게(2.5) — 코만큼 작으면 1.5는 그냥 동그라미로 뭉개져 bulb와 안 갈린다
+    // Square nose — a **rounded square** area. The exponent goes higher (2.5) than the head's square (1.5) — at nose size, 1.5 just smears into a circle and does not separate from bulb
     const b = boxShape(spec, box, eyes);
     const path = blobPath(0.002 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.04, noise: fills.noise, phase: 6.7, square: 2.5 });
     fills.fill(path, shade(spec.palette.skin, 0.86));
     ink.outline(path, { color: ink0, width: 0.01 });
   } else if (kind === "nostrils") {
-    // 콧구멍 둘만 — 코 윤곽 없이 **수박씨 두 알**. 위가 뾰족한 물방울(taper +)을 바깥 위로 기울여 놓는다(왼쪽 ＼ 오른쪽 ／).
-    // 점 코(dot)의 이웃이지만 두 알·기울기·씨 모양으로 갈린다. 크기는 머리에 비례 — 고정 크기면 큰 머리에서 점으로 사라진다
+    // Nostrils only — **two watermelon seeds** with no nose outline. Teardrops pointed at the top (taper +) tilted up and outward (left ＼ right ／).
+    // A neighbour of the dot nose, separated by being two seeds, the tilt and the seed shape. The size is proportional to the head — at a fixed size it vanishes to a dot on a big head
     const s = nostrilsShape(spec, box, eyes);
-    const tilt = 0.5;   // rad — 바깥으로 기울이는 각
+    const tilt = 0.5;   // rad — the angle of the outward tilt
     for (const side of [-1, 1]) {
       const cx = side * s.gap;
-      const seed = blobPath(0, 0, s.rx, s.ry, { lumps: 3, amount: 0.08, noise: null, taper: 0.55 });   // 원점 기준으로 만들어 돌린 뒤 옮긴다
+      const seed = blobPath(0, 0, s.rx, s.ry, { lumps: 3, amount: 0.08, noise: null, taper: 0.55 });   // built about the origin, then rotated and moved
       const a = -side * tilt, cos = Math.cos(a), sin = Math.sin(a);
       fills.fill(seed.map(([x, y]) => [cx + x * cos - y * sin, s.cy + x * sin + y * cos]), ink0);
     }
   } else {
-    // long — 이마에서 내려오는 긴 코
+    // long — a long nose coming down from the forehead
     ink.stroke([[0.006 * k, y + 0.14 * k], [0.014 * k, y - 0.03 * k], [-0.03 * k, y - 0.045 * k]], { color: ink0, width: 0.01 });
   }
 }
 
-// 코의 아래 끝 — 입 자리의 위 한계. 코가 없으면 (놀라 커진) 눈 밑선이나 머리 중심 조금 아래
+// The nose's lower end — the upper limit for the mouth's position. With no nose, the (startle-widened) eye's lower edge or slightly below the head's centre
 export function noseBottomY(spec, box, eyes) {
   const kind = spec.parts.nose;
   if (spec.species === "pup") return muzzleGeometry(spec, box).noseY - muzzleGeometry(spec, box).noseR;
   if (kind === "none") return Math.min(eyeFloor(spec, eyes, 0) - 0.01, box.headCy - box.headRy * 0.04);
-  if (spec.species !== "cat") {   // 면 코 — 제 좌표에서 밑선을 준다 (고양이는 이 값들도 catNose 세모로 읽으므로 아래 상수로)
+  if (spec.species !== "cat") {   // area noses — they give the lower edge from their own coordinates (a cat reads even these values as a catNose triangle, so it uses the constants below)
     if (kind === "bulb") return bulbShape(spec, box, eyes).bottom;
     if (kind === "broad") return broadShape(spec, box, eyes).bottom;
     if (kind === "nostrils") return nostrilsShape(spec, box, eyes).bottom;
     if (kind === "box") return boxShape(spec, box, eyes).bottom;
   }
-  // 고양이 코(catNose)는 제 치수로 그리므로 배율을 안 탄다 — 여기 상수는 고양이에서 예전 값 그대로
+  // The cat nose (catNose) is drawn at its own dimensions and does not take the multiplier — the constants here are the old values, kept for cats
   const k = spec.species === "cat" ? 1 : noseScale(box);
   return noseY(spec, box, eyes) - (kind === "long" ? 0.045 * k : kind === "wedge" ? 0.02 * k : kind === "hook" ? 0.012 * k : 0.008);
 }
 
-// 사나운 눈(화남) — 눈을 **바꿔 그린다**: 안쪽(코 쪽)이 내려간 굵은 빗금 눈꺼풀 + 그 밑에서 노려보는 점 (＼ ／ 위에 점). 외눈은 수평 눈꺼풀.
-// 살아 있는 눈(리그)·정지 눈 둘 다 같은 모양 (scene/rig.js). 좌표는 눈 중심 원점
+// The fierce eye (anger) — the eye is **redrawn**: a thick slanted lid dropping on the inner (nose) side plus a glaring dot beneath it (a dot under ＼ ／). A cyclops gets a horizontal lid.
+// Live eyes (the rig) and static eyes both use the same shape (scene/rig.js). Coordinates are relative to the eye's centre
 export function angryEyeSketch(sketch, eye, ink) {
   const r = eye.r;
-  const inward = -eye.side;   // 코 쪽 (외눈 0)
+  const inward = -eye.side;   // the nose side (0 on a cyclops)
   const lid = inward === 0 ? [[-r * 0.95, r * 0.45], [r * 0.95, r * 0.45]] : [[-inward * r * 0.95, r * 0.55], [inward * r * 0.95, r * 0.05]];
   sketch.stroke(lid, { color: ink, width: 0.015, jitter: 0.004 });
   sketch.fill(blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink);

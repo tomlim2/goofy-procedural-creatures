@@ -1,36 +1,36 @@
-// 이모지 애니메이션 — 머리 위에 뜨는 ♥ ! ? … 글리프. 모션(행위·이벤트·리듬)이 아니라 **따로 트리거되는 층**이다.
-// 문서: guidelines/motion/catalog.md § 이모지 애니메이션
+// Emoji animation — the ♥ ! ? … glyphs that float above the head. Not motion (actions, events, rhythm) but **a separately triggered layer**.
+// Docs: guidelines/motion/catalog.md § emoji animation
 //
-// 트리거는 두 곳에서 온다:
-//   1. idle 중 가끔 (events.stepEmojiSchedule — 종족별 emojis 목록, 14~40초)
-//   2. 모션의 이모지 트리거 — 행위·이벤트에 `emoji: "heart"` 처럼 적어 두면 그 모션이 **시작할 때** 한 번 쏜다
-//      (파닥임 → ♥, 생각 → ?, 놀람 → !, 개 꼬리 흔들기 → ♥). 모션이 이모지를 "쥐고" 있지 않는다 —
-//      쏘고 나면 이모지는 자기 애니메이션 길이만큼 혼자 논다.
-// 채널은 하나. 새 트리거가 오면 이전 것을 끊고 새로 시작한다.
+// Triggers arrive from two places:
+//   1. Occasionally while idle (events.stepEmojiSchedule — the per-species emojis list, 14~40 s)
+//   2. A motion's emoji trigger — write `emoji: "heart"` on an action or event and that motion fires one **as it starts**
+//      (flap → ♥, think → ?, startle → !, dog tail wag → ♥). A motion does not "hold" the emoji —
+//      once fired, the emoji plays out its own animation length on its own.
+// There is one channel. A new trigger cuts the previous one off and starts over.
 
 import { ramp, bump, smoothstep } from "./ease.js";
 
-// 이모지 종류. dur는 애니메이션 길이(초), anim은 곡선.
+// Emoji kinds. dur is the animation length (seconds), anim is the curve.
 export const EMOJI = {
-  heart: { dur: 2.2, anim: "float",  label: "♥ 좋아함" },
-  bang:  { dur: 1.3, anim: "pop",    label: "! 놀람" },
-  quest: { dur: 2.2, anim: "wobble", label: "? 갸웃" },
-  dots:  { dur: 2.6, anim: "mumble", label: "… 중얼" },
-  zzz:   { dur: 2.8, anim: "float",  label: "z 잠" },
-  sweat: { dur: 1.8, anim: "drip",   label: "; 땀" }
+  heart: { dur: 2.2, anim: "float",  label: "♥ fond" },
+  bang:  { dur: 1.3, anim: "pop",    label: "! startled" },
+  quest: { dur: 2.2, anim: "wobble", label: "? puzzled" },
+  dots:  { dur: 2.6, anim: "mumble", label: "… muttering" },
+  zzz:   { dur: 2.8, anim: "float",  label: "z asleep" },
+  sweat: { dur: 1.8, anim: "drip",   label: "; sweat" }
 };
 
-// 이모지 채널 상태
+// Emoji channel state
 export function initEmoji() { return { kind: null, start: -1 }; }
 
-// 트리거. 같은 종류가 이미 뜨는 중이어도 다시 시작한다(강조).
+// Trigger. Restarts even if the same kind is already up (for emphasis).
 export function triggerEmoji(ch, kind, t) {
   if (!EMOJI[kind]) return;
   ch.kind = kind;
   ch.start = t;
 }
 
-// 프레임. 진행 k(0~1)와 종류별 곡선으로 위치·크기·투명도·기울기를 준다. 끝나면 null.
+// Frame. Gives position, size, opacity and tilt from progress k (0~1) and the per-kind curve. null when it is over.
 export function stepEmoji(ch, t) {
   if (!ch.kind) return null;
   const def = EMOJI[ch.kind];
@@ -41,26 +41,26 @@ export function stepEmoji(ch, t) {
   const fade = Math.min(fadeIn, fadeOut);
   let dy = 0, scale = 1, rot = 0, opacity = fade * 0.95;
   if (def.anim === "float") {
-    // 떠오르며 두근두근 — 위로 천천히, 크기가 심장박동처럼
+    // Floats up with a throb — slowly upward, size beating like a heart
     dy = k * 0.06 + Math.sin(k * Math.PI * 3) * 0.012;
     scale = 0.85 + 0.15 * fade + Math.max(0, Math.sin(k * Math.PI * 6)) * 0.12;
   } else if (def.anim === "pop") {
-    // 튀어나옴 — 처음 크게 튀었다가 제자리, 살짝 떨림
+    // Pops out — a big pop first, then back in place with a slight tremble
     const pop = k < 0.2 ? 1 + 0.5 * bump(k / 0.2) : 1;
     scale = pop * (0.9 + 0.1 * fade);
     dy = 0.02 * (1 - Math.min(1, k / 0.2));
     rot = Math.sin(k * Math.PI * 14) * 0.06 * (1 - k);
   } else if (def.anim === "wobble") {
-    // 갸웃갸웃 — 좌우로 기울며 살짝 까딱
+    // Tilts side to side with a small nod
     rot = Math.sin(k * Math.PI * 4) * 0.22;
     dy = Math.sin(k * Math.PI * 2) * 0.01;
     scale = 0.9 + 0.1 * fade;
   } else if (def.anim === "drip") {
-    // 땀 — 관자놀이 옆에 맺혀 천천히 흘러내린다
+    // Sweat — beads beside the temple and runs slowly down
     dy = -smoothstep(0, 1, k) * 0.05;
     scale = 0.8 + 0.2 * fade;
   } else {
-    // 중얼 — 낮게 떠서 잔잔히 흔들림
+    // Muttering — floats low with a gentle waver
     dy = Math.sin(k * Math.PI * 5) * 0.006;
     scale = 0.85 + 0.15 * fade;
     opacity = fade * 0.85;

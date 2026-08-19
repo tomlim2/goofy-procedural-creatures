@@ -1,4 +1,4 @@
-// 머리 — 윤곽·귀·윤곽 위 앵커·눈썹 선. 머리카락은 hair.js, 모자·뿔은 headgear.js. 문서: guidelines/character/parts.md § 머리
+// Head — the outline, ears, anchors on the outline, the brow line. Hair is hair.js; hats and horns are headgear.js. Docs: guidelines/character/parts.md § head
 
 import { blobPath, arcPath } from "../../stroke.js";
 import { headShape, eyeGeometry } from "./layout.js";
@@ -20,8 +20,8 @@ export function drawHead(ink, fills, spec, box, noise) {
 
   fills.fill(path, spec.palette.skin, spec.palette.fillOffset);
 
-  // 연필 스크리블. 플랫 채색 위를 같은 계열 어두운 톤의 지그재그 한 획으로
-  // 덮어 획 방향을 남긴다. 도깨비는 먹빛 위에 살짝 밝은 톤으로 긁는다.
+  // Pencil scribble. Covers the flat fill with a single zigzag stroke in a darker tone
+  // of the same family, leaving the stroke direction behind. On imps it scratches a slightly lighter tone over the ink-black.
   const scribbleAngle = Math.PI * (0.14 + noise(p.wobbleSeed * 0.03) * 0.22);
   if (isDark(spec.palette.skin)) {
     fills.scribbleFill(0.01, box.headCy, box.headRx * 0.82, box.headRy * 0.8, {
@@ -33,12 +33,12 @@ export function drawHead(ink, fills, spec, box, noise) {
     });
   }
 
-  // 윤곽선 지터도 사람은 절반 — 두상이 매끄럽게 (선의 떨림 자체는 남는다)
+  // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
   ink.outline(path, { color: spec.palette.ink, width: 0.014, jitter: spec.species === "human" ? 0.006 : 0.008, passes: 2 });
   return path;
 }
 
-// 귀 크기 배율. Mid·Big는 모양은 같고 길이·폭만 크다. earKind()가 값을 기본 모양으로 돌린다
+// Ear size multipliers. Mid and Big are the same shape, only longer and wider. earKind() turns the value back into the base shape
 const EAR_SIZE = { round: 1, roundMid: 1.4, roundBig: 1.8, pointy: 1, pointyMid: 1.4, pointyBig: 1.85, fold: 1, foldMid: 1.4, foldBig: 1.8, perk: 1, perkMid: 1.4, perkBig: 1.8 };
 const earKind = (value) => value.replace(/(Mid|Big)$/, "");
 
@@ -46,9 +46,9 @@ export function drawEars(ink, fills, spec, box) {
   const kind = earKind(spec.parts.ears);
   const size = EAR_SIZE[spec.parts.ears] || 1;
   if (kind === "none") return;
-  // 개 귀는 머리 뒤가 아니라 **머리 위에** 그린다 (drawPupEars, 머리 다음) — 안쪽으로 기운 귀가 얼굴에 가려지지 않게
+  // Dog ears are drawn **on top of the head**, not behind it (drawPupEars, after the head) — so an inward-leaning ear is not hidden by the face
   if (spec.species === "pup") return;
-  if (spec.species === "cat") return;   // 고양이 귀는 머리 앞 층 (drawCatEars) — 채운 세모 혹이라 머리 위에 얹혀야 한다
+  if (spec.species === "cat") return;   // cat ears are the layer in front of the head (drawCatEars) — being filled triangular bumps, they have to sit on top of the head
 
   const y = box.headCy - box.headRy * 0.05;
 
@@ -59,18 +59,18 @@ export function drawEars(ink, fills, spec, box) {
         color: spec.palette.ink, width: 0.011
       });
     } else if (kind === "pointy") {
-      // 옆으로 뾰족한 귀 — 크기 배율(pointyMid·pointyBig)로 길고 넓어진다
+      // A pointy ear to the side — the size multipliers (pointyMid, pointyBig) make it longer and wider
       ink.stroke([[x - 0.01, y + 0.05 * size], [x + side * 0.075 * size, y + 0.02], [x - 0.01, y - 0.05 * size]], {
         color: spec.palette.ink, width: 0.011
       });
     } else if (kind === "long") {
-      // 늘어진 긴 귀 — 개가 아니어도 달 수 있다
+      // A long hanging ear — it can go on something other than a dog
       const lobe = blobPath(x + side * 0.012, y - box.headRy * 0.32, 0.035, box.headRy * 0.45, {
         lumps: 3, amount: 0.12, noise: null
       });
       ink.outline(lobe, { color: spec.palette.ink, width: 0.01, passes: 2 });
     } else if (kind === "fold") {
-      // 접힌 귀 — 끝이 꺾인다 (크기 배율)
+      // A folded ear — the tip bends over (size multipliers)
       ink.stroke([
         [x - side * 0.01, y + 0.04 * size],
         [x + side * 0.055 * size, y + 0.055 * size],
@@ -78,7 +78,7 @@ export function drawEars(ink, fills, spec, box) {
         [x + side * 0.015 * size, y - 0.03 * size]
       ], { color: spec.palette.ink, width: 0.011 });
     } else {
-      // flap — 아래로 늘어진 귀
+      // flap — an ear hanging downward
       ink.stroke(arcPath(x, y, 0.05, 0.09, -Math.PI * 0.6, Math.PI * 0.6), {
         color: spec.palette.ink, width: 0.011
       });
@@ -86,31 +86,31 @@ export function drawEars(ink, fills, spec, box) {
   }
 }
 
-// 고양이 귀 — 머리 실루엣의 **혹**. 정수리 양쪽 모서리(정수리에서 ~35°)에 채운 세모를 세우고 밑변은 윤곽 안으로 넣어
-// 머리와 한 덩어리로 붙인다(레퍼런스: 윤곽선이 귀 안으로 이어지고 채색된 머리는 귀도 같은 색). 윤곽은 머리와 같은 굵기·2회.
-// 머리 앞 층(front)에 그려 채움이 머리 윤곽선을 덮는다. 세 비율 — pointy 기본 · pointyMid 좁고 긴 · pointyBig 넓고 큰.
-// 안쪽 귀는 개체마다: 60%는 안쪽 작은 세모(이중선), 15%는 어둡게 채움, 나머지 없음(술은 부엉이처럼 보여 뺐다).
-// 붙는 자리의 **법선**을 따른다: 밑변은 그 자리의 윤곽 접선을 따라 앉히고(안쪽으로 0.02), 귀 축은 법선과 수직의 중간
-// (법선 기울기의 절반 + 좌우 살짝 다르게) — 둥근 머리에선 자연히 벌어지고 납작한 머리에선 곧게 선다. 끝은 살짝 뭉툭.
-// 네모 머리(square·block)는 모서리에 앉으면 상자에 뿔이 되니 조금 안쪽(θ 0.52)에 세운다.
-// round·fold·flap·long은 고양이에게 없다(species forbid → pointy).
-//   pointy    기본 세모 — 옆선 살짝 오목(손그림 귀), 끝 뭉툭
-//   pointyMid 좁고 긴 세모 — 더 벌어진다(+0.15rad, 레퍼런스의 긴 귀는 30°쯤 벌어짐)
-//   pointyBig 넓고 낮은 귀 — 끝이 둥글고 옆선이 볼록(채색된 갈색·회색 고양이 귀)
-// 안쪽 귀는 개체마다: 이중선 50% · 먹 채움 15% · 홈 한 획 15% · 없음 20%.
+// Cat ears — **bumps** in the head silhouette. Filled triangles stand at the two corners of the crown (~35° from the crown) with the base tucked inside the outline
+// so they attach to the head as one mass (the reference: the outline continues into the ear and a colored head has the ear in the same color). The outline is the same weight as the head's, drawn twice.
+// Drawn on the layer in front of the head (front) so the fill covers the head outline. Three proportions — pointy the default · pointyMid narrow and tall · pointyBig wide and big.
+// The inner ear is per individual: 60% a small inner triangle (a double line), 15% a dark fill, the rest none (tufts read as an owl and were dropped).
+// It follows the **normal** at the attachment point: the base is laid along the outline's tangent there (inset by 0.02), and the ear's axis is halfway between the normal and vertical
+// (half the normal's tilt, plus a slight left/right difference) — on a round head it opens out naturally, on a flat head it stands straight. The tip is slightly blunt.
+// On a square head (square, block), sitting on the corner would make horns on a box, so it stands slightly inside it (θ 0.52).
+// round, fold, flap and long do not exist on cats (species forbid → pointy).
+//   pointy    the default triangle — sides slightly concave (a hand-drawn ear), a blunt tip
+//   pointyMid a narrow, tall triangle — it opens further (+0.15 rad; the reference's long ears open about 30°)
+//   pointyBig a wide, low ear — a round tip and convex sides (the colored brown and grey cats' ears)
+// The inner ear is per individual: double line 50% · ink fill 15% · one crease stroke 15% · none 20%.
 const CAT_EAR = {
   pointy: { w: 0.05, h: 0.1, theta: 0.6, lean: 0, tip: 0.006, bow: -0.12 },
   pointyMid: { w: 0.04, h: 0.14, theta: 0.55, lean: 0.15, tip: 0.005, bow: -0.1 },
   pointyBig: { w: 0.062, h: 0.11, theta: 0.6, lean: -0.02, tip: 0.016, bow: 0.12 }
 };
-// 머리 윤곽(초타원 + 위아래 폭 비 — drawHead가 그리는 그 모양) 위의 점과 바깥 단위 법선.
-// theta: 정수리에서 잰 매개변수 각(0 = 정수리, π/2 = 옆구리), side: ±1. 귀·뿔처럼 "윤곽에 붙는" 것은 타원이 아니라 이걸 쓴다 —
-// 네모 머리에서 타원 위 점은 윤곽 안쪽에 묻힌다. 네모 머리의 꼭짓점(모서리)은 θ = π/4다.
+// A point on the head outline (a superellipse plus the top/bottom width ratio — the exact shape drawHead draws) and the outward unit normal.
+// theta: the parameter angle measured from the crown (0 = the crown, π/2 = the side), side: ±1. Things that "attach to the outline", like ears and horns, use this rather than an ellipse —
+// on a square head a point on the ellipse is buried inside the outline. A square head's vertex (the corner) is at θ = π/4.
 export function headAnchor(spec, box, theta, side) {
   const shape = headShape(spec);
   const n = 2 + shape.square;
   const pt = (th) => {
-    const c = Math.sin(th), sn = Math.cos(th);   // blobPath의 각 = π/2 − θ
+    const c = Math.sin(th), sn = Math.cos(th);   // blobPath's angle = π/2 − θ
     const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
     const uy = Math.sign(sn) * Math.pow(Math.abs(sn), 2 / n);
     return [side * ux * box.headRx * (1 - shape.taper * uy), box.headCy + uy * box.headRy];
@@ -119,7 +119,7 @@ export function headAnchor(spec, box, theta, side) {
   const [x0, y0] = pt(theta - 0.01), [x1, y1] = pt(theta + 0.01);
   let tx = x1 - x0, ty = y1 - y0;
   const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
-  let nx = ty, ny = -tx;                                   // 접선을 90° 돌린 둘 중 머리 중심에서 멀어지는 쪽
+  let nx = ty, ny = -tx;                                   // of the two 90° rotations of the tangent, the one going away from the head centre
   if (nx * x + ny * (y - box.headCy) < 0) { nx = -nx; ny = -ny; }
   return { x, y, nx, ny };
 }
@@ -134,30 +134,30 @@ export function drawCatEars(ink, fills, spec, box) {
   const skin = spec.palette.skin;
   const seed = spec.proportions.wobbleSeed;
   const roll = seed % 100;
-  // 안쪽 귀 — 선(이중선) 45% · 채움 30% · 홈 15% · 없음 10%. 채움 색은 개체마다 분홍(코·볼터치와 같은 색) 또는 같은 계열 톤
+  // The inner ear — line (a double line) 45% · fill 30% · crease 15% · none 10%. The fill color is per individual, either pink (the same as the nose and blush) or a tone in the same family
   const inner = roll < 45 ? "line" : roll < 75 ? "dark" : roll < 90 ? "notch" : "none";
   const innerFill = (seed >> 7) % 2 ? "#d9968a" : shade(skin, isDark(skin) ? 1.5 : 0.62);
-  // 안쪽 선은 **털 위에 그리는 자국**이라 얼굴 잉크를 쓴다 — 검은 털에 검은 선은 묻혀 안 보인다 (윤곽선은 배경과 맞닿아 검정 그대로)
+  // The inner line is **a mark drawn on fur**, so it uses face ink — a black line on black fur is lost and invisible (the outline meets the background, so it stays black)
   const innerInk = spec.faceInk || ink0;
-  const cal = calicoColors(spec);   // 삼색이면 side 쪽 귀가 검다 (머리 얼룩과 같은 쪽 — body.js drawHeadMarks)
-  const boxy = headShape(spec).square >= 1.4;   // square·block — 모서리보다 조금 안쪽에
+  const cal = calicoColors(spec);   // on a calico, the ear on the side is black (the same side as the head patch — body.js drawHeadMarks)
+  const boxy = headShape(spec).square >= 1.4;   // square and block — slightly inside the corner
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {
     const earDark = !!cal && cal.side === side;
     const earFill = earDark ? cal.dark : skin;
-    const earInnerInk = earDark ? "#e9e3d5" : innerInk;   // 검은 귀 위 자국은 밝은 잉크 (얼굴 잉크 규칙)
-    // 윤곽(실제 머리 모양) 위 뿌리와 그 자리의 바깥 법선 n·접선 t (바깥 양수)
+    const earInnerInk = earDark ? "#e9e3d5" : innerInk;   // a mark on a black ear uses light ink (the face ink rule)
+    // The root on the outline (the real head shape) and, at that point, the outward normal n and tangent t (outward positive)
     const anchor = headAnchor(spec, box, theta, side);
     const bx = anchor.x, by = anchor.y, nx = anchor.nx, ny = anchor.ny;
     const tx = side * ny, ty = -side * nx;
-    // 귀 축 — 법선 기울기의 절반 + 유형별 벌어짐 + 개체별 좌우 차이. 둥근 머리는 벌어지고 납작한 머리는 곧게 선다
+    // The ear axis — half the normal's tilt plus the per-kind opening plus a per-individual left/right difference. A round head opens out, a flat head stands straight
     const normalTilt = Math.atan2(nx * side, ny);
     const lean = normalTilt * 0.5 + 0.02 + def.lean + ((seed >> (side > 0 ? 3 : 5)) % 3) * 0.02;
     const ax = side * Math.sin(lean), ay = Math.cos(lean);
-    // 밑변은 접선을 따라(윤곽에 붙게) 안쪽으로 inset. 끝은 축을 따라 h, 폭 tip. 옆선은 중간을 bow만큼 안(−)/밖(+)으로 휜다
+    // The base follows the tangent (to attach to the outline), inset inward. The tip is h along the axis, of width tip. The sides bow inward (−) or outward (+) by bow at their midpoint
     const baseAt = (v, inset) => [bx + tx * v - nx * inset, by + ty * v - ny * inset];
     const tipAt = (v) => [bx + ax * def.h + tx * v, by + ay * def.h + ty * v];
-    const sideAt = (v0, v1, k) => {   // 밑변 v0 → 끝 v1 사이 k(0~1) 지점, 옆선 휨 포함
+    const sideAt = (v0, v1, k) => {   // the point at k (0~1) between base v0 and tip v1, including the side bow
       const [x0, y0] = baseAt(v0, 0);
       const [x1, y1] = tipAt(v1);
       const bow = def.bow * def.w * Math.sin(Math.PI * k) * Math.sign(v0);
@@ -170,123 +170,123 @@ export function drawCatEars(ink, fills, spec, box) {
     ink.stroke([
       baseAt(-def.w * 1.02, 0.024), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w * 1.02, 0.024)
     ], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
-    // 안쪽 귀 — **밑변이 귀 밑동에 붙는다**(밑동보다 위에 띄우면 귀 한복판에 뜬 얼룩이 된다). 폭은 귀의 0.62배, 끝은 높이의 0.7배
+    // The inner ear — **its base attaches to the ear's root** (float it above the root and it becomes a patch hanging mid-ear). Width 0.62× the ear, tip 0.7× the height
     const innerTip = [bx + ax * def.h * 0.7, by + ay * def.h * 0.7];
     const innerBase = [baseAt(-def.w * 0.62, 0.012), innerTip, baseAt(def.w * 0.62, 0.012)];
     if (inner === "line") ink.stroke(innerBase, { color: earInnerInk, width: 0.008 });
     else if (inner === "dark") fills.fill(innerBase, innerFill);
-    // 홈 — 밑동 가운데에서 귀 절반 높이까지 한 줄 (접힘 자국처럼 읽힌다)
+    // The crease — one line from the middle of the root to half the ear's height (it reads as a fold mark)
     else if (inner === "notch") ink.stroke([baseAt(0, 0.012), [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: earInnerInk, width: 0.008 });
   }
 }
 
-// 개 귀 — 머리(채색·윤곽) **위에** 그린다. 안쪽으로 기운 귀라 머리 뒤에 그리면 얼굴에 묻힌다.
+// Dog ears — drawn **on top of** the head (fill and outline). Being inward-leaning ears, drawn behind the head they get buried in the face.
 export function drawPupEars(ink, fills, spec, box) {
-  if (spec.species !== "pup") return;   // 개만. (빠지면 모든 종족 머리에 개 귀가 얹혀 뿔처럼 보인다)
+  if (spec.species !== "pup") return;   // dogs only. (Leave it out and dog ears stack on every species' head and look like horns)
   const kind = earKind(spec.parts.ears);
   const size = EAR_SIZE[spec.parts.ears] || 1;
   if (kind === "none") return;
-  // 개 귀 — 종류마다 다르다. 뿌리는 **머리 윤곽 위** 두 자리 중 하나고, 귀는 그 자리의 법선을 **반대 기울기로** 탄다
-  // (법선을 수직에 대해 거울상으로 뒤집은 축 — 바깥으로 벌어지지 않고 안쪽으로 모인다):
-  //   위쪽 모서리(정수리보다 좀 밑, θ≈50°) — pointy 쫑긋 세모귀 · round 동그란 귀 · fold 접힌 귀. 위·안쪽으로 기울어 선다
-  //   옆구리(눈 양옆보다 조금 옆, θ≈88°) — flap 로브(레퍼런스 비글) · long 바셋. 늘어지되 끝이 얼굴 쪽으로 모인다
-  // θ는 타원(headRx·headRy) 위 극각(정수리에서 잰 각). 채운 로브 + 두 번 덧그은 윤곽. none은 없음.
+  // Dog ears — they differ per kind. The root is one of two places **on the head outline**, and the ear rides that point's normal **at the opposite tilt**
+  // (an axis mirrored about the vertical — it gathers inward rather than opening out):
+  //   the upper corner (a bit below the crown, θ≈50°) — pointy a perked triangular ear · round a round ear · fold a folded ear. They stand tilted up and inward
+  //   the side (slightly out from beside the eyes, θ≈88°) — flap a lobe (the reference beagle) · long a basset. They hang, with the tip gathering toward the face
+  // θ is the polar angle on the ellipse (headRx, headRy), measured from the crown. A filled lobe plus an outline drawn twice. none is nothing.
   const earFill = shade(spec.palette.skin, 0.8);
-  const cal = calicoColors(spec);   // 얼룩이(calico)면 side 쪽 귀가 검다 (머리 얼룩과 같은 쪽)
+  const cal = calicoColors(spec);   // on a piebald (calico), the ear on the side is black (the same side as the head patch)
   const earInk = { color: spec.palette.ink, width: 0.011, passes: 2 };
-  // 안쪽 귀 — 개체마다(wobbleSeed, rng 없음): 같은 계열 톤 45% · 분홍(코·볼터치와 같은 색) 30% · 없음 25%.
-  // 늘어진 귀(flap·long)와 접힌 쪽 덮개에는 안 그린다 — 그쪽은 귀 **바깥면**이 보이는 자세다
+  // The inner ear — per individual (wobbleSeed, no rng): a tone in the same family 45% · pink (the same as the nose and blush) 30% · none 25%.
+  // Not drawn on hanging ears (flap, long) or on a folded side's flap — those poses show the ear's **outer** face
   const innerRoll = spec.proportions.wobbleSeed % 100;
   const innerFill = innerRoll < 45 ? shade(earFill, isDark(earFill) ? 1.95 : 0.62) : innerRoll < 75 ? "#d9968a" : null;
   const upper = kind === "pointy" || kind === "round" || kind === "fold" || kind === "perk";
-  // 위쪽 자리는 둥근 머리에서 θ≈50°, 네모 머리(square·block)에서는 **꼭짓점**(θ = 45°)에서 시작한다 — 세모귀가 모서리에서 뻗는다
+  // The upper position starts at θ≈50° on a round head and at **the vertex** (θ = 45°) on a square head (square, block) — so the triangular ear reaches out from the corner
   const boxy = Math.min(1, headShape(spec).square / 1.5);
   const theta = upper ? 0.88 - boxy * (0.88 - Math.PI / 4) : 1.53;
   const rx = box.headRx, ry = box.headRy;
-  // 점 목록을 (cx, cy) 기준으로 angle만큼 돌린다 (반시계 양수)
+  // Rotates a point list about (cx, cy) by angle (counter-clockwise positive)
   const rotate = (pts, cx, cy, angle) => {
     const c = Math.cos(angle), s = Math.sin(angle);
     return pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]);
   };
   for (const side of [-1, 1]) {
-    // 윤곽 위 자리와 바깥 법선 n, 접선 t(정수리 쪽 +). 뿌리는 거기서 법선으로 OUT만큼 **밖에** 둔다 —
-    // 귀 몸통이 머리 밖 종이 위에 놓여야 보인다 (머리 위에 겹치면 채색이 비슷해 묻힌다).
-    // 세모귀·접힌 귀는 밑변을 윤곽까지(u = −OUT) 끌어와 머리에 박힌 채 밖으로 뻗고, 로브는 안쪽 가장자리가 윤곽에 닿는다.
-    const anchor = headAnchor(spec, box, theta, side);   // 실제 윤곽(네모 머리면 모서리) 위의 점과 법선
+    // The point on the outline and its outward normal n and tangent t (+ toward the crown). The root sits OUT along the normal, **outside** that point —
+    // the ear's body has to lie on the paper outside the head to be visible (overlapping the head, the similar fill loses it).
+    // Triangular and folded ears pull the base back to the outline (u = −OUT) and reach outward while embedded in the head; a lobe touches the outline with its inner edge.
+    const anchor = headAnchor(spec, box, theta, side);   // the point on the real outline (the corner on a square head) and its normal
     const nx = anchor.nx, ny = anchor.ny;
-    const OUT = upper ? 0.02 : 0.09;   // 위쪽 귀(pointy·round·fold)는 머리에 바짝, 긴 귀(flap·long)는 얼굴 옆에 확실히 떨어져 늘어진다
+    const OUT = upper ? 0.02 : 0.09;   // an upper ear (pointy, round, fold) hugs the head; a long ear (flap, long) hangs clearly clear of the face
     const bx = anchor.x + nx * OUT;
     const by = anchor.y + ny * OUT;
-    // 귀 축 = 법선의 반대 기울기 (수직 기준 거울상), 단 안쪽 기울기는 0.35rad까지만 — 더 기울면 끝이 정수리 안으로
-    // 들어가 머리에 묻힌다. 접선은 뿌리 자리의 것 그대로.
-    const normalTilt = Math.atan2(nx * side, ny);          // 수직에서 법선까지의 각 (바깥쪽 양수)
-    const lean = Math.min(normalTilt, 0.35);                // 귀 축의 안쪽 기울기
+    // The ear axis = the normal's opposite tilt (mirrored about the vertical), but the inward tilt is capped at 0.35 rad — tilt further and the tip goes
+    // inside the crown and is buried in the head. The tangent is the root point's, unchanged.
+    const normalTilt = Math.atan2(nx * side, ny);          // the angle from vertical to the normal (outward positive)
+    const lean = Math.min(normalTilt, 0.35);                // the ear axis's inward tilt
     const ax = -side * Math.sin(lean), ay = Math.cos(lean);
-    // 귀 국소 좌표: u는 귀 축(위·안쪽), v는 축에 수직(바깥쪽 양수). 축에 수직이어야 세모·접힌 귀가 납작해지지 않는다
+    // Ear-local coordinates: u is the ear axis (up and inward), v is perpendicular to it (outward positive). It has to be perpendicular to the axis or triangular and folded ears flatten
     const px = side * ay, py = -side * ax;
     const local = (u, v) => [bx + ax * u + px * v, by + ay * u + py * v];
     let path;
-    let flap = null;    // 접힌 귀의 덮개 — 밑동 위에 겹쳐 그린다
-    let crease = null;  // 접힘선 — 검은 털에서는 두 조각의 색이 같아 선이 없으면 접힌 게 안 보인다
-    // 밑동 윤곽을 **열린 선**으로 그릴 때 쓴다. 층 하나 안에서는 잉크가 채색보다 위라(guidelines/rig.md) 덮개 채색이 밑동 윤곽을 못 가린다 —
-    // 가려질 구간(덮개 밑)은 아예 긋지 않는다
+    let flap = null;    // a folded ear's flap — drawn over the root
+    let crease = null;  // the fold line — on black fur the two pieces are the same color, so without the line the fold is invisible
+    // Used when drawing the root outline as **an open path**. Within one layer the ink sits above the fills (guidelines/rig.md), so the flap's fill cannot hide the root outline —
+    // the stretch that would be hidden (under the flap) is simply never stroked
     let baseOutline = null;
     if (kind === "pointy") {
-      // 세모귀 — **꼭짓점이 머리에 붙는다**(밑변이 아니다). 제일 위 꼭짓점을 윤곽(네모 머리면 모서리)에 박고,
-      // 몸통은 거기서 바깥·아래로 처진다: 밑변이 바깥 끝. 크기 배율로 길고 넓게
+      // Triangular ear — **its vertex attaches to the head** (not its base). The topmost vertex is embedded in the outline (the corner on a square head)
+      // and the body droops outward and down from there: the base is the outer end. The size multipliers make it long and wide
       const len = ry * 0.55 * size;
-      const w = 0.045 * (0.8 + 0.2 * size);                  // 밑변 반폭
-      const drop = 0.6;                                       // 축이 수평에서 아래로 처진 각(rad)
-      const ex = side * Math.cos(drop), ey = -Math.sin(drop); // 귀 축: 바깥·아래
-      const qx = -ey * side, qy = ex * side;                  // 축에 수직 (위·바깥 양수)
-      const tipX = anchor.x - nx * 0.012, tipY = anchor.y - ny * 0.012;   // 꼭짓점은 윤곽 살짝 안쪽 — 박힌다
+      const w = 0.045 * (0.8 + 0.2 * size);                  // base half-width
+      const drop = 0.6;                                       // the angle the axis droops below horizontal (rad)
+      const ex = side * Math.cos(drop), ey = -Math.sin(drop); // the ear axis: outward and down
+      const qx = -ey * side, qy = ex * side;                  // perpendicular to the axis (up and outward positive)
+      const tipX = anchor.x - nx * 0.012, tipY = anchor.y - ny * 0.012;   // the vertex sits slightly inside the outline — embedded
       path = [
         [tipX, tipY],
         [tipX + ex * len + qx * w, tipY + ey * len + qy * w],
         [tipX + ex * len - qx * w * 0.9, tipY + ey * len - qy * w * 0.9]
       ];
     } else if (kind === "round") {
-      // 귀 축 방향으로 길쭉한 동그란 귀 — 안쪽이 윤곽에 살짝 걸친다 (크기 배율)
+      // A round ear elongated along the ear axis — its inner side just laps onto the outline (size multipliers)
       const [cx, cy] = local(-OUT + 0.055 * size, 0);
       path = rotate(blobPath(cx, cy, 0.036 * size, 0.046 * size, { lumps: 3, amount: 0.15, noise: null }), cx, cy, side * lean);
     } else if (kind === "fold" || kind === "perk") {
-      // 접힌 귀(fold) — **선 밑동 + 그 위에서 꺾여 늘어진 덮개** 두 조각. **한쪽만 접히고 반대쪽은 선 귀**다.
-      // 선 귀(perk) — 양쪽 다 곧게 선 세모. 끝이 위를 향해 굽으면 뿔로 읽힌다 — 덮개는 접힘선보다 **아래로** 내려와야 접힌 귀다. 크기 배율
+      // The folded ear (fold) — two pieces: **a standing base plus a flap that bends over it and hangs**. It **folds on one side only while the other stands**.
+      // The standing ear (perk) — a triangle standing straight on both sides. A tip curving upward reads as a horn — the flap has to come **below** the crease to be a folded ear. Size multipliers
       const k = size;
-      // 선 귀·접힌 귀는 **머리 법선 좌표**로 그린다 — 밑변이 붙는 자리의 접선을 그대로 따르고 귀는 법선 방향으로 자란다.
-      // (다른 귀처럼 안쪽으로 기운 축을 쓰면 밑동이 두피에서 떠 머리에 얹은 상자처럼 보인다)
-      //   nu 법선 방향(머리 밖으로 자라는 높이) · nv 접선 방향(밑변 — + 쪽으로 접힌다)
+      // The standing and folded ears are drawn in **head-normal coordinates** — the base follows the tangent at its attachment point exactly and the ear grows along the normal.
+      // (Use an inward-leaning axis like the other ears and the base lifts off the scalp, looking like a box glued on top of the head)
+      //   nu the normal direction (the height growing out of the head) · nv the tangent direction (the base — it folds toward +)
       const tX = side * ny, tY = -side * nx;
       const nAt = (nu, nv) => [anchor.x + nx * nu + tX * nv, anchor.y + ny * nu + tY * nv];
-      const halfW = 0.048 * k;         // 밑동 반폭 (접선 방향)
-      // 접힌 귀는 **한쪽만 접힌다** — 반대쪽은 선 귀다 (좌우가 다른 게 개답다). 접히는 쪽은 개체별(wobbleSeed, rng 없음)
+      const halfW = 0.048 * k;         // the root's half-width (along the tangent)
+      // A folded ear **folds on one side only** — the other is a standing ear (differing left from right is what makes it doglike). Which side folds is per individual (wobbleSeed, no rng)
       const foldSide = spec.proportions.wobbleSeed % 2 ? 1 : -1;
       if (kind === "perk" || side !== foldSide) {
-        // 선 귀 — 법선 방향으로 **곧게 선 세모**. 밑동은 넉넉하고(귀가 머리에 앉은 느낌) 끝은 **둥글게 뭉툭**하다
-        // (칼날처럼 뾰족하면 뿔, 넓적하고 낮으면 동그란 귀round가 된다)
-        const len = 0.155 * k, base = halfW * 1.1, tip = base * 0.34;   // tip 끝 반폭 — 이만큼이 둥근 끝이 된다
+        // The standing ear — **a triangle standing straight** along the normal. The root is generous (so the ear feels seated on the head) and the tip is **round and blunt**
+        // (a razor point reads as a horn; wide and low becomes the round ear)
+        const len = 0.155 * k, base = halfW * 1.1, tip = base * 0.34;   // tip is the tip's half-width — that much becomes the rounded end
         path = [
           nAt(-0.014, base), nAt(len * 0.55, base * 0.62), nAt(len * 0.86, tip * 1.15),
           nAt(len, tip * 0.55), nAt(len * 1.02, 0), nAt(len, -tip * 0.55),
           nAt(len * 0.86, -tip * 1.15), nAt(len * 0.55, -base * 0.62), nAt(-0.014, -base)
         ];
       } else {
-        const stand = 0.085 * k;         // 접힘선까지 선 높이 (법선 방향)
-        const drop = 0.075 * k;          // 덮개가 접혀 내려가는 길이
-        // 밑동 — 밑변은 윤곽 안(−0.014)에 박히고 위로 갈수록 좁아지는 사다리꼴 (세모귀와 같은 문법)
+        const stand = 0.085 * k;         // the standing height up to the crease (along the normal)
+        const drop = 0.075 * k;          // how far the flap folds down
+        // The root — a trapezoid whose base embeds inside the outline (−0.014) and narrows going up (the same grammar as the triangular ear)
         path = [nAt(-0.014, halfW), nAt(stand, halfW * 0.66), nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW)];
-        // 덮개 — 접힘선에서 접선 방향(+nv)으로 꺾여 **밑동 옆·아래**로 늘어진다. 끝이 접힘선보다 낮아야 접힌 귀다
+        // The flap — bends at the crease along the tangent (+nv) and hangs **beside and below** the root. The tip has to be lower than the crease for it to be a folded ear
         flap = [
           nAt(stand + 0.006 * k, -halfW * 0.6),
           nAt(stand + 0.004 * k, halfW * 1.15),
           nAt(stand - drop, halfW * 1.05)
         ];
         crease = [nAt(stand, -halfW * 0.66), nAt(stand + 0.004 * k, halfW * 1.1)];
-        // 밑동 윤곽 — 안쪽 위 → 안쪽 아래 → 바깥 아래 → 덮개 끝 높이까지만. 윗변과 그 위 바깥변은 덮개가 덮으므로 긋지 않는다
+        // The root outline — inner top → inner bottom → outer bottom → up to the flap's tip height only. The top edge and the outer edge above it are covered by the flap, so they are not stroked
         baseOutline = [nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW), nAt(-0.014, halfW), nAt(stand - drop - 0.004 * k, halfW * 0.72)];
       }
     } else {
-      // flap / long — 머리 옆에서 늘어지되 반대 기울기(0.25rad 안쪽)로 끝이 얼굴 쪽으로 모이는 로브
+      // flap / long — a lobe hanging from the side of the head at the opposite tilt (0.25 rad inward), its tip gathering toward the face
       const len = ry * (kind === "long" ? 0.95 : 0.65);
       const tilt = -0.25;
       const cx = bx + side * Math.sin(tilt) * (len * 0.5 - 0.005);
@@ -294,18 +294,18 @@ export function drawPupEars(ink, fills, spec, box) {
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
     fills.fill(path, cal && cal.side === side ? cal.dark : earFill);
-    // 안쪽 귀 — 귀 모양을 **밑동(얼굴과 만나는 자리)을 기준으로** 줄인 것. 밑변이 밑동에 그대로 붙고 위로 갈수록 좁아진다
-    // (가운데를 기준으로 줄이면 귀 한복판에 뜬 얼룩이 된다 — 레퍼런스의 안쪽 귀는 밑동에서 시작한다). 윤곽선은 없다 — 채운 얼룩이라 작아도 읽힌다.
-    // 늘어진 귀(flap·long)만 건너뛴다 — 그 자세는 귀 **바깥면**이 보인다. 접힌 귀는 **밑동(선 부분)이 안쪽 면**이라 여기에도 그린다
+    // The inner ear — the ear shape scaled **about its root (where it meets the face)**. Its base attaches right at the root and it narrows going up
+    // (scale about the centroid and it becomes a patch hanging mid-ear — the reference's inner ear starts at the root). There is no outline — being a filled patch, it reads even when small.
+    // Only hanging ears (flap, long) are skipped — that pose shows the ear's **outer** face. A folded ear is drawn here too, because **its root (the standing part) is the inner face**
     if (innerFill && kind !== "flap" && kind !== "long") {
-      const root = [anchor.x + nx * 0.004, anchor.y + ny * 0.004];   // 윤곽 살짝 밖 — 밑동 자리
+      const root = [anchor.x + nx * 0.004, anchor.y + ny * 0.004];   // just outside the outline — the root position
       fills.fill(path.map(([x, y]) => [root[0] + (x - root[0]) * 0.72, root[1] + (y - root[1]) * 0.72]), innerFill);
     }
     if (baseOutline) ink.stroke(baseOutline, earInk);
     else ink.outline(path, earInk);
     if (flap) {
-      // 덮개는 접혀 넘어온 **귀 뒷면(바깥면)** 이다 — 안쪽 귀 색이 아니라 털색 톤이다(조금 어둡게 해서 밑동과 갈린다).
-      // 밝은 털에서는 톤으로, 검은 털에서는 접힘선으로 읽힌다. 안쪽 면(분홍·톤)은 덮개 **밑** 선 부분에 밑동부터 그려져 덮개가 그 위를 덮는다
+      // The flap is **the ear's back (outer) face** folded over — so it takes a fur tone, not the inner-ear color (a shade darker, to separate it from the root).
+      // On light fur it reads by tone, on black fur by the crease. The inner face (pink or a tone) is drawn on the standing part **under** the flap, from the root up, and the flap covers it
       fills.fill(flap, shade(earFill, 0.82));
       ink.outline(flap, earInk);
       ink.stroke(crease, { color: spec.palette.ink, width: 0.009 });
@@ -313,7 +313,7 @@ export function drawPupEars(ink, fills, spec, box) {
   }
 }
 
-// 눈썹 선 — 눈(안경·고글·모노클·안대 테 포함) 바로 위. 모자 챙과 앞머리 끝단이 여기서 멈춘다.
+// The brow line — just above the eyes (including eyewear, goggle, monocle and patch rims). A hat brim and the hem of the bangs stop here.
 export function browLine(spec, box) {
   const { headCy: cy, headRy: ry } = box;
   const eyes = eyeGeometry(spec, box);

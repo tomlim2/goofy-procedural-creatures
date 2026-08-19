@@ -1,7 +1,7 @@
-// 시드 기반 난수. 같은 시드는 항상 같은 크리처를 만든다.
-// 렌더러가 아니라 여기가 이 랩의 뿌리다.
+// Seeded randomness. The same seed always makes the same creature.
+// The root of this lab is here, not in the renderer.
 
-// xmur3 — 문자열 시드를 32비트 정수로.
+// xmur3 — string seed to a 32-bit integer.
 export function seedFromString(text) {
   let h = 1779033703 ^ text.length;
   for (let i = 0; i < text.length; i += 1) {
@@ -11,7 +11,7 @@ export function seedFromString(text) {
   return (h ^= h >>> 16) >>> 0;
 }
 
-// mulberry32 — 짧고 분포가 고른 PRNG.
+// mulberry32 — short, evenly distributed PRNG.
 export function makeRng(seed) {
   let state = seed >>> 0;
 
@@ -30,20 +30,20 @@ export function makeRng(seed) {
     chance: (p) => next() < p,
     pick: (list) => list[Math.floor(next() * list.length)],
 
-    // 정규분포 근사. 비율 지터에 쓰면 극단값이 덜 나온다.
+    // Normal-ish distribution. Used for proportion jitter, it produces fewer extremes.
     gaussian: (mean = 0, deviation = 1) => {
       const u = 1 - next();
       const v = next();
       return mean + deviation * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
     },
 
-    // 평균 근처로 몰리되 범위를 벗어나지 않는 값.
+    // A value that clusters near the mean without leaving the range.
     around: (mean, spread) => {
       const value = mean + rng.gaussian(0, spread / 2);
       return Math.max(mean - spread, Math.min(mean + spread, value));
     },
 
-    // [["a", 3], ["b", 1]] → "a"가 3배 자주 나온다.
+    // [["a", 3], ["b", 1]] → "a" comes up three times as often.
     weighted: (entries) => {
       let total = 0;
       for (const [, weight] of entries) total += weight;
@@ -59,8 +59,8 @@ export function makeRng(seed) {
   return rng;
 }
 
-// 1D 값 노이즈. 선을 손그림처럼 떨리게 만드는 데 쓴다.
-// 격자점마다 난수를 두고 smoothstep으로 잇는다.
+// 1D value noise. Used to make lines wobble like a hand drew them.
+// A random number per lattice point, joined with smoothstep.
 export function makeNoise(rng) {
   const SIZE = 256;
   const table = new Float32Array(SIZE);
@@ -76,7 +76,7 @@ export function makeNoise(rng) {
   };
 }
 
-// 시드를 사람이 읽고 다시 입력할 수 있는 형태로.
+// The seed in a form a person can read and type back in.
 export function formatSeed(seed) {
   return seed.toString(36).toUpperCase().padStart(7, "0");
 }

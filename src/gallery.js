@@ -1,8 +1,8 @@
-// 파츠 갤러리 — 슬롯 하나의 모든 값을 같은 개체에 나란히 그린다. 종족·시드는 고정, 슬롯값만 바꾼다.
-// census가 분포(숫자)라면 이건 형태(그림)다. 파츠 하나를 판단할 때 쓴다.
-// 종족 forbid로 실제 판에는 안 나오는 값도 그린다 — 여긴 카탈로그지 추첨이 아니다.
+// Parts gallery — draws every value of one slot on the same individual, side by side. Species and seed are held fixed; only the slot value changes.
+// Where census is distribution (numbers), this is form (the picture). Used to judge a single part.
+// It also draws values a species forbids, which never appear on a real board — this is a catalog, not a draw.
 //   gallery.html?slot=legs&species=human&seed=0z0y9qe&fix=legLength:short
-// fix= 는 다른 슬롯 하나를 고정한다 — "짧은 다리에서 다리 유형 전부" 같은 조합을 볼 때.
+// fix= pins one other slot — for combinations like "every leg type on short legs".
 
 import * as THREE from "three";
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
@@ -25,15 +25,15 @@ let slot = SLOTS[params.get("slot")] ? params.get("slot") : "legs";
 let species = SPECIES.some((s) => s.name === params.get("species")) ? params.get("species") : "human";
 let seed = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : randomSeed();
 let bind = true;
-// values=a,b — 그 슬롯에서 볼 값만 (몇 개를 크게 놓고 볼 때). 슬롯에 없는 값은 무시, 하나도 안 남으면 전부
+// values=a,b — only the values of that slot to look at (for putting a few up large). Values not in the slot are ignored; if none is left, all of them
 const only = (params.get("values") || "").split(",").filter(Boolean);
-// 고정 슬롯 하나 { slot, value } — URL의 fix=slot:value
+// One pinned slot { slot, value } — fix=slot:value in the URL
 let fix = (() => {
   const [slotName, value] = (params.get("fix") || "").split(":");
   return SLOTS[slotName] && SLOTS[slotName].includes(value) ? { slot: slotName, value } : null;
 })();
 
-// FIX 드롭다운. 슬롯을 고르면 그 슬롯의 값 목록이 뜬다. "—"는 고정 없음.
+// The FIX dropdowns. Pick a slot and its value list appears. "—" means nothing pinned.
 function fillFixSelects() {
   fixSlotSel.innerHTML = "";
   addOption(fixSlotSel, "", "—");
@@ -51,13 +51,13 @@ for (const name of Object.keys(SLOTS)) addOption(slotSel, name, `${name} (${SLOT
 for (const s of SPECIES) addOption(speciesSel, s.name, s.name.toUpperCase());
 
 const scene = createScene(canvas);
-let cells = [];   // [{ x, y, value }] 월드 좌표 — 라벨을 투영해 붙인다
+let cells = [];   // [{ x, y, value }] in world coordinates — labels are projected onto them
 
 function build() {
   slotSel.value = slot;
   speciesSel.value = species;
   seedLabel.textContent = formatSeed(seed);
-  if (fix && fix.slot === slot) fix = null;   // 보고 있는 슬롯은 고정할 수 없다
+  if (fix && fix.slot === slot) fix = null;   // the slot being looked at cannot be pinned
   fillFixSelects();
   const fixed = fix ? { [fix.slot]: fix.value } : {};
   const picked = SLOTS[slot].filter((value) => only.includes(value));
@@ -66,7 +66,7 @@ function build() {
 
   const base = makeCreature(seed, species);
   const specs = values.map((value) => ({ ...base, parts: { ...base.parts, ...fixed, [slot]: value } }));
-  // 열 수는 캔버스 비율에 맞춘다 — 한 줄로 늘어놓으면 개체가 너무 작다
+  // Column count follows the canvas aspect — laid out in a single row the individuals come out too small
   const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
   const cols = Math.max(1, Math.min(values.length, Math.round(Math.sqrt(values.length * aspect * (CELL_H / CELL_W)))));
   const rows = Math.ceil(values.length / cols);
@@ -89,7 +89,7 @@ function build() {
   statusLabel.textContent = `${species.toUpperCase()} · ${slot} × ${values.length}`;
 }
 
-// 셀 밑에 라벨. 카메라 투영으로 위치를 잡는다 — 창 크기가 바뀌어도 따라간다.
+// Labels under the cells. Positioned by camera projection — they follow when the window resizes.
 const v = new THREE.Vector3();
 function placeLabels() {
   const spans = labelsBox.children;

@@ -1,10 +1,10 @@
-// 종이 텍스처. 문서: guidelines/drawing.md
+// Paper texture. Docs: guidelines/drawing.md
 
 import * as THREE from "three";
 import { makeRng } from "../rng.js";
 import { PAPER } from "../character/index.js";
 
-// 종이. 균일한 단색이면 선이 떠 보인다. 그레인과 얼룩을 절차적으로 굽는다.
+// Paper. A flat single color makes the lines look like they float. Grain and blotches are baked procedurally.
 export function makePaperTexture(seed) {
   const size = 512;
   const canvas = document.createElement("canvas");
@@ -25,9 +25,9 @@ export function makePaperTexture(seed) {
   }
   ctx.putImageData(image, 0, 0);
 
-  // 얼룩(둥근 흔적). 텍스처는 타일로 반복되므로 이음매가 없어야 한다 — 얼룩 하나를 3×3 이웃 위치에도
-  // 그려서 캔버스 가장자리에서 잘린 얼룩이 반대편으로 이어지게 한다. 안 그러면 가장자리에서
-  // 잘린 원이 반복될 때마다 곧은 날이 선다.
+  // Blotches (round marks). The texture repeats as a tile, so there must be no seam — each blotch is drawn
+  // at its 3×3 neighbour positions too, so a blotch clipped at the canvas edge continues on the opposite side.
+  // Without that, circles clipped at the edge line up into a straight ridge on every repeat.
   for (let i = 0; i < 18; i += 1) {
     const x = rng.float(0, size);
     const y = rng.float(0, size);
@@ -47,7 +47,7 @@ export function makePaperTexture(seed) {
   }
 
   const texture = new THREE.CanvasTexture(canvas);
-  // 캔버스는 sRGB로 그렸다. 명시하지 않으면 종이색이 뜬다.
+  // The canvas was drawn in sRGB. Without saying so, the paper color lifts.
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;

@@ -11,13 +11,13 @@ import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const PORT = Number(process.argv[2]) || 7300;
 
-// 서버가 뜬 시각. 모든 모듈 URL 뒤에 붙는다.
-// no-store만으로는 브라우저의 ES module map이 비워지지 않아서, 파일을 고쳐도
-// 이전 모듈이 그대로 실행되는 일이 있다. URL 자체를 바꿔야 확실하다.
+// The moment the server came up. Appended to every module URL.
+// no-store alone does not clear the browser's ES module map, so an edited file
+// can still run the previous module. Changing the URL itself is what works.
 const BUILD = Date.now().toString(36);
 const versioned = (spec) => (spec.includes("?") ? spec : `${spec}?v=${BUILD}`);
 
-// 상대 경로 import 지정자에만 붙인다. importmap의 bare specifier("three")는 건드리지 않는다.
+// Only relative import specifiers get it. The importmap's bare specifier ("three") is left alone.
 const rewriteJs = (text) =>
   text.replace(/(["'])(\.\.?\/[^"']+?\.m?js)(["'])/g, (_, a, spec, b) => `${a}${versioned(spec)}${b}`);
 

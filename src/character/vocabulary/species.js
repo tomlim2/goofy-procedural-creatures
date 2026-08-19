@@ -1,32 +1,32 @@
-// 종족 — 골격. 문서: guidelines/character/types.md
+// Species — the skeleton. Docs: guidelines/character/types.md
 
-// 종족. 아키타입이 "성향"이라면 종족은 "골격"이다. 줄 단위로 정해져서
-// 한 판에 사람 줄, 개 줄, 고양이 줄, 도깨비 줄이 섞인다.
-// bias는 아키타입보다 우선한다. 골격이 성향보다 먼저다.
+// Species. If an archetype is a "disposition", a species is a "skeleton". Decided per row,
+// so one board mixes a human row, a dog row, a cat row and an imp row.
+// bias takes precedence over the archetype. Skeleton comes before disposition.
 export const SPECIES = [
   {
     name: "human",
-    // 사람. 뿔·더듬이·외눈은 사람 것이 아니고, 바닥을 쓰는 긴 팔(long)은 도깨비 것이다.
-    // forbid는 "이 슬롯의 이 값이 나오면 이걸로 바꾼다". applyConstraints가 읽어서
-    // 결정적으로 덮어쓴다 — 아키타입 성향(scholar의 dot 눈 등)은 살아 있다.
+    // Humans. Horns, antennae and a cyclops eye are not human, and long arms that sweep the floor belong to imps.
+    // forbid means "if this value comes up for this slot, swap it for this". applyConstraints reads it and
+    // overwrites deterministically — the archetype's disposition (a scholar's dot eyes and so on) survives.
     forbid: {
-      arms: { none: "stick" },   // 사람은 팔이 있다 (팔 없음은 도깨비의 것)
-      face2: { tears: "none" },  // 눈물 자국은 사람에게 안 준다 (도깨비의 것)
-      // 사람 귀는 사람 귀뿐 — 작은 동그란 귀(round)나 없음. 동물 귀(뾰족·늘어짐·접힘·긴 귀)는 사람에게 안 준다
+      arms: { none: "stick" },   // humans have arms (armless belongs to imps)
+      face2: { tears: "none" },  // tear marks are not given to humans (they belong to imps)
+      // A human ear is only a human ear — a small round ear (round) or none. Animal ears (pointy, floppy, folded, long) are not given to humans
       ears: { roundMid: "round", roundBig: "round", pointy: "round", pointyMid: "round", pointyBig: "round", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "round", perkMid: "round", perkBig: "round" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       eyes: { cyclops: "wide" },
       armLength: { long: "medium" },
-      legLength: { verylong: "long" }   // 초장다리는 도깨비의 것
+      legLength: { verylong: "long" }   // stilts belong to imps
     },
-    // 정체성 — census가 검사한다. 위반 개체가 나오면 버그다.
+    // Identity — census checks it. An individual in violation is a bug.
     identity: {
-      ears: ["none", "round"],   // 사람 귀는 없거나 작은 동그란 귀 — 개·고양이 귀는 사람 것이 아니다
+      ears: ["none", "round"],   // a human ear is none or a small round one — dog and cat ears are not human
       skeleton: "biped",
       horns: ["none"],
       eyes: { not: ["cyclops"] },
       armLength: ["medium"],
-      legLength: { not: ["verylong"] },   // 초장다리는 도깨비의 것
+      legLength: { not: ["verylong"] },   // stilts belong to imps
       arms: true,
       tail: false
     },
@@ -36,16 +36,16 @@ export const SPECIES = [
     name: "pup",
     forbid: {
       ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid", perkBig: "perkMid" },
-      // 개 귀 경계 — 없음·왕귀는 개 귀로
+      // Dog ear boundary — none and the huge ear become dog ears
       eyes: { cyclops: "dot" },
-      // 개에게 뿔·머리카락은 없다 — 전부 none (털이지 머리카락이 아니다)
+      // Dogs have no horns and no hair — all none (it is fur, not hair)
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none", verylong: "none", twintailsBall: "none", appleBig: "none" },
-      brow: { flat: "none", angry: "none", worry: "none" },   // 동물에게 눈썹은 없다 (상태 전환의 대체 눈썹도 막힌다)
+      brow: { flat: "none", angry: "none", worry: "none" },   // animals have no brows (which blocks the alt brow of a state switch too)
       legLength: { verylong: "long" }
     },
     identity: {
-      ears: ["flap", "long", "pointy", "pointyMid", "round", "roundMid", "fold", "foldMid", "perk", "perkMid"],   // 개 귀 — 늘어진 귀가 기본, none·왕귀 없음
+      ears: ["flap", "long", "pointy", "pointyMid", "round", "roundMid", "fold", "foldMid", "perk", "perkMid"],   // dog ears — a floppy ear by default, no none and no huge ear
       skeleton: "quad",
       horns: ["none"],
       hair: ["none"],
@@ -56,9 +56,9 @@ export const SPECIES = [
       tail: true
     },
     bias: {
-      // 다리 — 레퍼런스의 굵은 스텁이 기본. 가는 다리·양말·떠 있는 발(레이맨식)도 섞인다
+      // Legs — the reference's thick stubs by default. Thin legs, socks and floating feet (Rayman style) are mixed in too
       legs: [["stub", 4], ["stick", 2], ["float", 1.5], ["boots", 1]],
-      // 귀 — 늘어진 로브(flap·long)가 기본, 쫑긋(pointy)·동그란(round)·접힌(fold) 귀도 섞인다
+      // Ears — hanging lobes (flap, long) by default, with perked (pointy), round (round) and folded (fold) mixed in
       ears: [["flap", 4], ["long", 3], ["pointy", 1.2], ["pointyMid", 0.8], ["round", 1], ["roundMid", 0.5], ["fold", 1], ["foldMid", 0.6], ["perk", 1.2], ["perkMid", 0.6]],
       horns: [["none", 1]],
       hair: [["none", 1]],
@@ -66,11 +66,11 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
-      marks: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1], ["calico", 1.5]],   // calico = 얼룩이(흰 바탕 + 검정 얼룩)
+      marks: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1], ["calico", 1.5]],   // calico = piebald (a white base plus black patches)
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
-      tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // 개는 굵거나 북슬(스피츠), 토끼 같은 몽실 꼬리도. ringed·wedge 비활성
+      tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // dogs are thick or bushy (a spitz), and a rabbit-like pom too. ringed and wedge disabled
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
-      // 입 — 주둥이 밑 w(omega)가 기본, 짖는 o(open), 헥헥 혀(tongue), 선·점·웃음. 오리입·지그재그·가시 이빨은 없다 (레퍼런스 3줄)
+      // Mouth — the w (omega) under the muzzle by default, a barking o (open), a panting tongue (tongue), plus line, dot and smile. No duck bill, zigzag or spiked teeth (3 reference rows)
       mouth: [["omega", 4], ["line", 2], ["open", 2], ["tongue", 2], ["dot", 1.5], ["smile", 1]],
       mouthSize: [["normal", 3], ["small", 1.5], ["wide", 0.5]],
       face2: [["none", 5], ["blush", 1]]
@@ -80,7 +80,7 @@ export const SPECIES = [
     name: "cat",
     forbid: {
       ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
-      // 고양이 귀 경계 — 늘어진 귀·없음은 정수리 귀로
+      // Cat ear boundary — floppy ears and none become crown ears
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none", verylong: "none", twintailsBall: "none", appleBig: "none" },
@@ -88,7 +88,7 @@ export const SPECIES = [
       legLength: { verylong: "long" }
     },
     identity: {
-      ears: ["pointy", "pointyMid", "pointyBig"],   // 정수리 세모귀만 (레퍼런스) — 동그란·접힌·늘어진 귀·none 없음
+      ears: ["pointy", "pointyMid", "pointyBig"],   // triangular crown ears only (the reference) — no round, folded or floppy ears, and no none
       skeleton: "quad",
       horns: ["none"],
       hair: ["none"],
@@ -100,22 +100,22 @@ export const SPECIES = [
     },
     bias: {
       legs: [["stub", 3], ["stick", 3], ["float", 1.5], ["boots", 1]],
-      // 정수리 귀 — 세모·동그란·접힌 귀 각각 작음·중간·큼. 늘어진 귀(flap·long)는 고양이에게 없다
-      // 세모귀만 — 기본 · 좁고 긴(Mid) · 넓고 큰(Big). 레퍼런스에 동그란·접힌·늘어진 귀는 없다
+      // Crown ears — triangular, round and folded ears each in small, mid and big. Floppy ears (flap, long) do not belong to cats
+      // Triangular ears only — default · narrow and tall (Mid) · wide and big (Big). The reference has no round, folded or floppy ears
       ears: [["pointy", 3], ["pointyMid", 2], ["pointyBig", 1.5]],
       horns: [["none", 1]],
       hair: [["none", 1]],
       headgear: [["none", 1]],
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
-      // 코 — 고양이는 슬롯을 고양이 코로 읽는다(face.js catNose): dot 작은 세모 · wedge 하트 · hook 세모+인중 · long 넓적+긴 인중 · none 없음
+      // Nose — cats read the slot as cat noses (face.js catNose): dot a small triangle · wedge a heart · hook triangle + philtrum · long a wide nose with a long philtrum · none nothing
       nose: [["dot", 3], ["wedge", 2], ["hook", 2], ["long", 1], ["none", 1.5]],
       eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["cross", 2], ["wide", 2], ["dot", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 2], ["sharp", 2], ["soft", 2]],
-      // 입 — ω 압도적, 뒤집은 ω(smug), 오므린 3, 선·점, 야옹 o(meow), 혀 빼꼼(blep). 물결·웃음은 없다 (레퍼런스 4줄)
+      // Mouth — ω dominates, then the flipped ω (smug), a pursed 3, line and dot, a meowing o (meow), a peeking tongue (blep). No wave and no smile (4 reference rows)
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
-      marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1], ["calico", 2]],   // calico = 삼색 (바탕 + 탄 + 검정 얼룩, 머리·한쪽 귀까지)
+      marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1], ["calico", 2]],   // calico = tricolor (base + tan + black patches, reaching the head and one ear)
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
-      tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // 고양이는 가는 선. ringed·wedge 비활성
+      tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. ringed and wedge disabled
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
       face2: [["none", 5], ["blush", 1], ["freckles", 1]]
     }
@@ -123,13 +123,13 @@ export const SPECIES = [
   {
     name: "imp",
     forbid: {
-      ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "pointy", perkMid: "pointy", perkBig: "pointy" }   // 도깨비 귀는 없거나 작은 뾰족귀
+      ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "pointy", perkMid: "pointy", perkBig: "pointy" }   // an imp ear is none or a small pointy one
     },
     identity: {
-      ears: ["none", "pointy"],   // 도깨비 귀는 없거나 뾰족 작은 것
+      ears: ["none", "pointy"],   // an imp ear is none or a small pointy one
       skeleton: "biped",
       darkHead: true,
-      // arms 미검사 — 도깨비는 팔이 없기도 하다 (arms none)
+      // arms unchecked — imps sometimes have no arms (arms none)
       tail: false
     },
     bias: {
@@ -140,18 +140,18 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["goggles", 1]],
       eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2], ["soft", 2]],
       nose: [["none", 4], ["dot", 2]],
-      // 입 — 넓다(종족 배율 1.3 + wide). 이빨 격자·해칭 뭉치·지그재그·큰 송곳니·이빨 띠 두 줄로 벌린 shout·open (레퍼런스 5줄)
+      // Mouth — wide (a species multiplier of 1.3 plus wide). The tooth grid, a hatched mass, zigzag, big fangs, and shout/open with two tooth strips (5 reference rows)
       mouth: [["grimace", 3], ["scribble", 2], ["zigzag", 2], ["fangs", 3], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["smug", 1], ["line", 0.5]],
       mouthSize: [["normal", 2], ["wide", 2], ["small", 0.5]],
       marks: [["stripes", 3], ["none", 2], ["hatch", 1]],
       face2: [["none", 6], ["tears", 1]],
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]],
-      arms: [["stubby", 5], ["stick", 2], ["none", 2]],   // 팔 없는 덩어리도 있다
-      // 바닥을 쓰는 긴 팔은 도깨비의 것 (사람은 forbid). 도깨비 열에 눈에 띌 만큼
+      arms: [["stubby", 5], ["stick", 2], ["none", 2]],   // some are blobs with no arms
+      // Long arms that sweep the floor belong to imps (humans forbid them). Enough to stand out in the imp row
       armLength: [["medium", 3], ["long", 2]],
       legs: [["stub", 3], ["stick", 3], ["float", 1]],
-      // 초장다리(verylong — long의 두 배)는 도깨비의 것. 도깨비 열에 눈에 띌 만큼
+      // Stilts (verylong — twice long) belong to imps. Enough to stand out in the imp row
       legLength: [["long", 3], ["medium", 2], ["short", 1], ["verylong", 1.5]]
     }
   }

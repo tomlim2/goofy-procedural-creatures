@@ -1,54 +1,54 @@
-// 팔레트. 문서: guidelines/character/types.md § 팔레트
+// Palette. Docs: guidelines/character/types.md § the palette
 
-// 종이 위에서 성립하는 색만 쓴다. 채도를 올리면 손그림 느낌이 바로 깨진다.
+// Only colors that hold up on paper. Push the saturation and the hand-drawn feel breaks immediately.
 export const PAPER = "#efe9dd";
 
 export const INKS = ["#2b2724", "#3a3430", "#252220", "#443c34"];
 
 export const FILLS = [
-  "#e8d5c4", // 살구
-  "#d9d2c7", // 회백
-  "#cdbfa8", // 탄
-  "#e3c9c6", // 분홍
-  "#c3c7c2", // 청회
-  "#ddd0b0", // 모래
-  "#c9b8a8"  // 갈회
+  "#e8d5c4", // apricot
+  "#d9d2c7", // grey-white
+  "#cdbfa8", // tan
+  "#e3c9c6", // pink
+  "#c3c7c2", // blue-grey
+  "#ddd0b0", // sand
+  "#c9b8a8"  // brown-grey
 ];
 
-// 색 포인트. 거의 모노톤인 판에 한두 개만 섞이는 채도 있는 색.
-// 한 판에 몇 개까지 허용할지는 creature.js의 makeGrid가 통제한다.
+// Color accents. Saturated colors that only one or two on a near-monotone board carry.
+// How many are allowed on one board is controlled by makeGrid in creature.js.
 export const POPS = ["#4a6fa5", "#5c7a3f", "#b0432e", "#c8871e", "#8a4b2a"];
 
-// 도깨비 머리·몸. 먹빛 하나가 아니라 짙은 회색·회청·회갈·자흑까지.
-// 전부 종이 위에서 "검다"고 읽힐 만큼 어둡되, 나란히 서면 서로 다르다.
+// Imp heads and bodies. Not one ink black but deep grey, blue-grey, brown-grey, even purple-black.
+// All dark enough to read as "black" on paper, yet different from each other when they stand side by side.
 export const DARKS = [
-  "#252220", // 먹
-  "#2b2724", // 갈흑
-  "#3a3430", // 회갈
-  "#443c34", // 밝은 회갈
-  "#33383a", // 회청
-  "#3d3f44", // 청회
-  "#4a4340", // 회
-  "#3a2f3a", // 자흑
-  "#2f3a33"  // 녹흑
+  "#252220", // ink
+  "#2b2724", // brown-black
+  "#3a3430", // brown-grey
+  "#443c34", // light brown-grey
+  "#33383a", // grey-blue
+  "#3d3f44", // blue-grey
+  "#4a4340", // grey
+  "#3a2f3a", // purple-black
+  "#2f3a33"  // green-black
 ];
 
-// 검정 계열 털 — 개·고양이 전용. **적당히 검정**이다: 도깨비의 먹빛(DARKS, 휘도 34~69)보다 밝고 FILLS(휘도 190~220)보다 훨씬 어둡다(휘도 75~85).
-// 종이 위에서 "검은 고양이·검은 개"로 읽히되 먹덩어리가 되지는 않는다. 이 털에는 얼굴 잉크가 밝은 쪽으로 바뀐다(spec.js faceInk, 휘도 < 120).
-// FUR_POOL은 뽑기 주머니 — null이 섞여 있어 **한 번의 pick**으로 "검정 털이냐"와 "어느 검정이냐"를 같이 정한다 (rng 호출 수 고정, guidelines/determinism.md)
+// Black-ish fur — dogs and cats only. It is **moderately** black: lighter than the imps' ink (DARKS, luminance 34~69) and far darker than FILLS (luminance 190~220), at luminance 75~85.
+// It reads as "a black cat, a black dog" on paper without turning into a blob of ink. On this fur the face ink switches to the light side (spec.js faceInk, luminance < 120).
+// FUR_POOL is the draw bag — null is mixed in so **one pick** settles both "is it black fur" and "which black" (a fixed number of rng calls, guidelines/determinism.md)
 export const FURS = [
-  "#4f4a44", // 먹갈
-  "#57534c", // 재빛 갈회
-  "#4b4d52", // 청먹
-  "#5a5450"  // 밝은 숯
+  "#4f4a44", // ink-brown
+  "#57534c", // ashy brown-grey
+  "#4b4d52", // blue-ink
+  "#5a5450"  // light charcoal
 ];
 export const FUR_POOL = [null, null, null, null, null, null, null, null, ...FURS];   // 4/12 ≈ 33%
 
-// 삼색(calico 무늬)의 가운데 톤 — 진짜 삼색의 주황 자리. 판이 모노톤이라 채도 있는 색 대신 **따뜻한 탄**(휘도 139): 바탕(FILLS 187~217·몸 톤 ≥170)과
-// 검정 털(FURS 75~85) 사이에 앉아 셋이 갈린다. 색 포인트(POPS)가 아니라 판당 상한을 안 먹는다
+// The middle tone of a calico (the calico marking) — where a real calico's orange goes. The board is monotone, so instead of a saturated color it is **a warm tan** (luminance 139): it sits between the base
+// (FILLS 187~217, body tones ≥170) and the black fur (FURS 75~85), which keeps the three apart. It is not a color accent (POPS), so it does not count against the per-board cap
 export const CALICO_MID = "#a3866a";
 
-// (같은 계열의 톤을 만드는 shade는 src/color.js — 개·고양이·도깨비의 몸을 머리색과 "비슷한 색"으로 줄 때 spec.js가 쓴다)
+// (shade, which makes a tone in the same family, is in src/color.js — spec.js uses it to give dogs, cats and imps a body "close to" the head color)
 
 export const ACCENTS = [
   "#8a7f72",

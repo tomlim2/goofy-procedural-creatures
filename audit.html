@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MENAGERIE — 얼굴 파츠 전수조사</title>
-<meta name="description" content="모든 개체 × 얼굴 상태에서 눈·코·입·눈썹·안경·볼이 실제 픽셀로 보이는지 센다.">
+<title>MENAGERIE — face part audit</title>
+<meta name="description" content="Counts real pixels to check that eyes, nose, mouth, brows, eyewear and cheeks show in every individual × face state.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -17,7 +17,7 @@
 </head>
 <body class="gallery audit">
 
-<canvas id="stage" aria-label="조사 중인 판"></canvas>
+<canvas id="stage" aria-label="Board under audit"></canvas>
 
 <header class="bar">
   <a class="mark" href="./index.html">MENAGERIE</a>
@@ -33,10 +33,10 @@
   </section>
   <section class="card">
     <h2>REPORT</h2>
-    <pre id="report" class="report">준비 중…</pre>
+    <pre id="report" class="report">Getting ready…</pre>
   </section>
-  <p class="hint">판 하나(7×5)의 모든 개체를 얼굴 상태별로 그려 파츠를 껐다 켰다 하며 픽셀 차이를 센다.
-  머리 폭의 4% 미만이면 "안 보임". 종족·시드·상태·파츠·슬롯값을 적는다 · R 새 판</p>
+  <p class="hint">Draws every individual on one board (7×5) in each face state, toggling parts off and on and counting the pixel difference.
+  Under 4% of the head width is written down as "not visible". Reports species, seed, state, part and slot value · R new board</p>
 </aside>
 
 <script type="module" src="./src/audit.js"></script>

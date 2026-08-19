@@ -1,9 +1,9 @@
-// 종족 × 슬롯 분포와 정체성 위반 검사.
-//   node scripts/census.mjs             → 종족별 슬롯 분포표 + 위반 목록
-//   node scripts/census.mjs --slot eyes → 한 슬롯만
-//   node scripts/census.mjs --check     → 위반만 (CI용, 위반 있으면 exit 1)
+// Species × slot distribution and identity violation check.
+//   node scripts/census.mjs             -> per-species slot distribution table + violation list
+//   node scripts/census.mjs --slot eyes -> one slot only
+//   node scripts/census.mjs --check     -> violations only (for CI, exit 1 if any)
 //
-// "사람에 외눈이 새고 있다" 같은 것을 요청 전에 잡는다. 눈으로 보지 말고 센다.
+// Catches things like "cyclops eyes are leaking into humans" before they are asked about. Do not eyeball it, count it.
 
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -17,7 +17,7 @@ const onlySlot = args.includes("--slot") ? args[args.indexOf("--slot") + 1] : nu
 const checkOnly = args.includes("--check");
 const BOARDS = 40;
 
-// ── 표본 ──
+// -- sample --
 const bySpecies = {};
 for (let s = 0; s < BOARDS; s += 1) {
   for (const c of makeGrid(s * 7919 + 1, 35, 7)) (bySpecies[c.species] ||= []).push(c);
@@ -25,69 +25,69 @@ for (let s = 0; s < BOARDS; s += 1) {
 const speciesNames = SPECIES.map((s) => s.name);
 const total = Object.values(bySpecies).flat().length;
 
-// ── 정체성 검사 ──
+// -- identity check --
 const violations = [];
 for (const sp of SPECIES) {
   const id = sp.identity || {};
   for (const c of bySpecies[sp.name] || []) {
     const where = `${sp.name} seed=${c.seed}`;
-    if (id.horns && !id.horns.includes(c.parts.horns)) violations.push(`${where}: horns=${c.parts.horns} (허용: ${id.horns.join("/")})`);
-    if (id.hair && !id.hair.includes(c.parts.hair)) violations.push(`${where}: hair=${c.parts.hair} (허용: ${id.hair.join("/")})`);
-    if (id.brow && !id.brow.includes(c.parts.brow)) violations.push(`${where}: brow=${c.parts.brow} (허용: ${id.brow.join("/")})`);
-    if (id.ears && !id.ears.includes(c.parts.ears)) violations.push(`${where}: ears=${c.parts.ears} (허용: ${id.ears.join("/")})`);
-    if (id.eyes?.not && id.eyes.not.includes(c.parts.eyes)) violations.push(`${where}: eyes=${c.parts.eyes} 금지`);
-    if (id.armLength && !id.armLength.includes(c.parts.armLength)) violations.push(`${where}: armLength=${c.parts.armLength} (허용: ${id.armLength.join("/")})`);
-    if (id.legLength?.not && id.legLength.not.includes(c.parts.legLength)) violations.push(`${where}: legLength=${c.parts.legLength} 금지`);
+    if (id.horns && !id.horns.includes(c.parts.horns)) violations.push(`${where}: horns=${c.parts.horns} (allowed: ${id.horns.join("/")})`);
+    if (id.hair && !id.hair.includes(c.parts.hair)) violations.push(`${where}: hair=${c.parts.hair} (allowed: ${id.hair.join("/")})`);
+    if (id.brow && !id.brow.includes(c.parts.brow)) violations.push(`${where}: brow=${c.parts.brow} (allowed: ${id.brow.join("/")})`);
+    if (id.ears && !id.ears.includes(c.parts.ears)) violations.push(`${where}: ears=${c.parts.ears} (allowed: ${id.ears.join("/")})`);
+    if (id.eyes?.not && id.eyes.not.includes(c.parts.eyes)) violations.push(`${where}: eyes=${c.parts.eyes} forbidden`);
+    if (id.armLength && !id.armLength.includes(c.parts.armLength)) violations.push(`${where}: armLength=${c.parts.armLength} (allowed: ${id.armLength.join("/")})`);
+    if (id.legLength?.not && id.legLength.not.includes(c.parts.legLength)) violations.push(`${where}: legLength=${c.parts.legLength} forbidden`);
     if (id.darkHead) {
       const v = parseInt(c.palette.skin.slice(1), 16);
       const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
-      if (lum >= 90) violations.push(`${where}: 머리가 어둡지 않다 ${c.palette.skin}`);
+      if (lum >= 90) violations.push(`${where}: head is not dark ${c.palette.skin}`);
     }
-    // 공통 가드레일 — 두 눈은 반지름 합의 70% 넘게 붙지 않는다 (eyeGeometry가 보장. 깨지면 여기서 잡힌다)
+    // Shared guardrail — the two eyes never sit closer than 70% of the sum of their radii (eyeGeometry guarantees it. If that breaks, this catches it)
     {
       const eyes = eyeGeometry(c, layout(c));
       if (eyes.length === 2) {
         const d = Math.hypot(eyes[1].x - eyes[0].x, eyes[1].y - eyes[0].y);
-        if (d < (eyes[0].r + eyes[1].r) * 0.7 - 1e-6) violations.push(`${where}: 눈 너무 겹침 (거리 ${d.toFixed(3)} < 반지름 합의 70% ${((eyes[0].r + eyes[1].r) * 0.7).toFixed(3)})`);
+        if (d < (eyes[0].r + eyes[1].r) * 0.7 - 1e-6) violations.push(`${where}: eyes overlap too much (distance ${d.toFixed(3)} < 70% of radius sum ${((eyes[0].r + eyes[1].r) * 0.7).toFixed(3)})`);
       }
     }
     if (id.arms !== undefined || id.tail !== undefined || id.skeleton) {
       const limbs = limbSketches(c);
       const hasArms = limbs.some((l) => l.kind === "arm");
       const tail = tailSketch(c);
-      const hasTail = tail.sketches.some((s) => !s.empty);   // 마디 중 하나라도
+      const hasTail = tail.sketches.some((s) => !s.empty);   // any one of the bones counts
       const legs = limbs.filter((l) => l.kind === "leg").length;
-      if (id.arms === true && !hasArms) violations.push(`${where}: 팔이 없다`);
-      if (id.arms === false && hasArms) violations.push(`${where}: 팔이 있다`);
-      if (id.tail === true && !hasTail) violations.push(`${where}: 꼬리가 없다`);
-      if (id.tail === false && hasTail) violations.push(`${where}: 꼬리가 있다`);
-      if (id.skeleton === "quad" && legs !== 4) violations.push(`${where}: 다리 ${legs}개 (네발)`);
-      if (id.skeleton === "biped" && legs !== 2) violations.push(`${where}: 다리 ${legs}개 (두발)`);
+      if (id.arms === true && !hasArms) violations.push(`${where}: no arms`);
+      if (id.arms === false && hasArms) violations.push(`${where}: has arms`);
+      if (id.tail === true && !hasTail) violations.push(`${where}: no tail`);
+      if (id.tail === false && hasTail) violations.push(`${where}: has a tail`);
+      if (id.skeleton === "quad" && legs !== 4) violations.push(`${where}: ${legs} legs (quad)`);
+      if (id.skeleton === "biped" && legs !== 2) violations.push(`${where}: ${legs} legs (biped)`);
     }
   }
 }
 
 if (checkOnly) {
   if (violations.length) {
-    console.log(`정체성 위반 ${violations.length}건`);
+    console.log(`identity violations: ${violations.length}`);
     for (const v of violations.slice(0, 30)) console.log("  " + v);
     process.exit(1);
   }
-  console.log(`정체성 위반 0건 (${BOARDS}판 ${total}마리)`);
+  console.log(`identity violations: 0 (${BOARDS} boards, ${total} creatures)`);
   process.exit(0);
 }
 
-// ── 분포표 ──
+// -- distribution table --
 const pad = (s, n) => String(s).padEnd(n);
 const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
 
-console.log(`표본: ${BOARDS}판 · ` + speciesNames.map((n) => `${n} ${(bySpecies[n] || []).length}`).join(" · "));
+console.log(`sample: ${BOARDS} boards · ` + speciesNames.map((n) => `${n} ${(bySpecies[n] || []).length}`).join(" · "));
 console.log();
 
 const slots = onlySlot ? [onlySlot] : Object.keys(SLOTS);
 for (const slot of slots) {
   const values = SLOTS[slot];
-  if (!values) { console.log(`슬롯 없음: ${slot}`); continue; }
+  if (!values) { console.log(`no such slot: ${slot}`); continue; }
   console.log(`## ${slot}`);
   console.log(pad("", 10) + speciesNames.map((n) => pad(n, 8)).join(""));
   for (const v of values) {
@@ -102,8 +102,8 @@ for (const slot of slots) {
 }
 
 if (violations.length) {
-  console.log(`⚠ 정체성 위반 ${violations.length}건`);
+  console.log(`⚠ identity violations: ${violations.length}`);
   for (const v of violations.slice(0, 20)) console.log("  " + v);
 } else {
-  console.log("정체성 위반 0건");
+  console.log("identity violations: 0");
 }

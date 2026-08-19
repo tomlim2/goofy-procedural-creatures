@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MENAGERIE — 파츠 갤러리</title>
-<meta name="description" content="슬롯 하나의 모든 값을 같은 개체에 나란히. 종족·시드 고정.">
+<title>MENAGERIE — parts gallery</title>
+<meta name="description" content="Every value of one slot on the same individual. Species and seed held fixed.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -17,7 +17,7 @@
 </head>
 <body class="gallery">
 
-<canvas id="stage" aria-label="슬롯 값별 크리처"></canvas>
+<canvas id="stage" aria-label="Creatures by slot value"></canvas>
 <div id="labels" class="labels" aria-hidden="true"></div>
 
 <header class="bar">
@@ -29,19 +29,19 @@
 <aside class="deck">
   <section class="card">
     <h2>SLOT</h2>
-    <select id="slotSel" class="wide" aria-label="슬롯"></select>
+    <select id="slotSel" class="wide" aria-label="Slot"></select>
   </section>
 
   <section class="card">
     <h2>SPECIES</h2>
-    <select id="speciesSel" class="wide" aria-label="종족"></select>
+    <select id="speciesSel" class="wide" aria-label="Species"></select>
   </section>
 
   <section class="card">
     <h2>FIX</h2>
     <div class="row seg">
-      <select id="fixSlot" aria-label="고정할 슬롯"></select>
-      <select id="fixValue" aria-label="고정할 값"></select>
+      <select id="fixSlot" aria-label="Slot to pin"></select>
+      <select id="fixValue" aria-label="Value to pin"></select>
     </div>
   </section>
 
@@ -53,16 +53,16 @@
 
   <section class="card">
     <h2>POSE</h2>
-    <div class="row seg" id="poseSeg" role="group" aria-label="포즈">
+    <div class="row seg" id="poseSeg" role="group" aria-label="Pose">
       <button data-pose="motion">MOTION</button>
       <button data-pose="bind" class="on">BIND</button>
     </div>
   </section>
 
-  <p class="hint">같은 개체, 슬롯값만 바꿔 그림 · FIX는 다른 슬롯 하나를 고정 · R 시드 · B 포즈 · 종족 forbid 값도 그린다</p>
+  <p class="hint">Same individual, only the slot value changes · FIX pins one other slot · R seed · B pose · values the species forbids are drawn too</p>
 </aside>
 
-<noscript><p class="noscript">이 페이지는 WebGL과 자바스크립트가 필요합니다.</p></noscript>
+<noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>
 
 <script type="module" src="./src/gallery.js"></script>
 </body>

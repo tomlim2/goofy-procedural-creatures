@@ -1,31 +1,31 @@
-// 이징 — 모든 모션 곡선은 부드럽게 들어가고 부드럽게 나온다(ease in / ease out). 시작·끝에서 속도가 0이다.
-// 문서: guidelines/motion/rules.md § 이징
+// Easing — every motion curve eases in and eases out. Velocity is 0 at the start and the end.
+// Docs: guidelines/motion/rules.md § easing
 //
-// 봉투(0→1→0)는 sin(πk)가 아니라 raised cosine — sin은 시작 기울기가 π라 "툭" 튀고, |sin|은 꺾인다.
-// 목표 추종(시선·얼굴 돌림·관절)은 지수 lerp가 아니라 임계감쇠 2차 필터 — lerp는 첫 프레임이 가장 빨라 시작이 딱딱하다.
+// The envelope (0→1→0) is a raised cosine, not sin(πk) — sin starts with slope π so it pops, and |sin| has a kink.
+// Target following (gaze, face turn, joints) is a critically damped second-order filter, not an exponential lerp — with lerp the first frame is the fastest, so the start feels stiff.
 
-// 0~1 S자. 양끝 기울기 0.
+// 0~1 S-curve. Slope 0 at both ends.
 export function smoothstep(a, b, x) {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 }
 
-// 0→1 램프 (0~1 입력). 선형 페이드 대신 쓴다.
+// 0→1 ramp (0~1 input). Used instead of a linear fade.
 export function ramp(x) { return smoothstep(0, 1, x); }
 
-// 0→1→0 한 번 (k 0~1). 양끝·꼭대기 모두 부드럽다.
+// 0→1→0 once (k 0~1). Smooth at both ends and at the peak.
 export function bump(k) { return 0.5 - 0.5 * Math.cos(2 * Math.PI * Math.min(1, Math.max(0, k))); }
 
-// 0→1→0 n번 (k 0~1). |sin(nπk)| 대신 — 바닥에서 꺾이지 않는다.
+// 0→1→0 n times (k 0~1). Instead of |sin(nπk)| — no kink at the bottom.
 export function bumps(k, n) { const s = Math.sin(n * Math.PI * Math.min(1, Math.max(0, k))); return s * s; }
 
-// 들어감(attack)·유지·나감(release) 봉투 (k 0~1). attack·release는 전체 길이의 비율.
+// Attack, hold and release envelope (k 0~1). attack and release are fractions of the whole length.
 export function envelope(k, attack, release) {
   return smoothstep(0, attack, k) * (1 - smoothstep(1 - release, 1, k));
 }
 
-// 임계감쇠 2차 추종 — s = { x, v } 를 target으로. w는 프레임당 각진동수 (0.1 ≈ 0.8초에 95%, 0.2 ≈ 0.4초).
-// 넘침 없이 S자로 붙는다. 프레임 기반(호출당 한 걸음)이라 결정적이다.
+// Critically damped second-order follow — s = { x, v } toward target. w is angular frequency per frame (0.1 ≈ 95% in 0.8 s, 0.2 ≈ 0.4 s).
+// Settles as an S-curve with no overshoot. Frame-based (one step per call), so it is deterministic.
 export function damp(s, target, w) {
   s.v += w * w * (target - s.x) - 2 * w * s.v;
   s.x += s.v;

@@ -1,40 +1,40 @@
-// 팔다리·꼬리 — 관절 피벗 원점 기준으로 굽는다. 자세·행위는 여기 없다(motion/actions.js).
-// 문서: guidelines/character/parts.md § legs·tail·arms·armLength, guidelines/rig.md
+// Limbs and tail — baked relative to the joint pivot's origin. Pose and action are not here (motion/actions.js).
+// Docs: guidelines/character/parts.md § legs · tail · arms · armLength, guidelines/rig.md
 
 import { Sketch, blobPath, arcPath } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, BUILD } from "./layout.js";
 import { shade } from "../../color.js";
 
-// 팔 치수. 길이 = 형태와 독립인 슬롯 × 개체 지터. medium이 기준 1, long은 그 1.64배(바닥을 쓸 만큼).
-// 기준 팔 길이 0.242 — 이보다 짧으면 손이 몸통 근처라 팔로 안 보인다.
-// 위팔:아래팔 = 0.48:0.52. 아래팔이 살짝 길어야 손이 멀리 간다.
+// Arm dimensions. Length = a slot independent of form × per-individual jitter. medium is the baseline 1, long is 1.64× that (enough to sweep the floor).
+// The baseline arm length is 0.242 — shorter than that and the hand is near the torso and does not read as an arm.
+// Upper:lower arm = 0.48:0.52. The forearm has to be slightly longer for the hand to reach far.
 const ARM_BASE = 0.242;
 const ARM_LENGTH_SCALE = { medium: 1, long: 1.64 };
 
-// 어깨 x — 몸통 좌우 윤곽 위. 몸 형태마다 어깨 높이(위에서 22%)에서의 반폭이 다르다:
-// box 1 · bean(타원) ≈0.85 · dress(사다리꼴, 위 0.6→아래 1.35) ≈0.76 · tube 0.62.
-// 팔은 몸통 옆구리에서 나와야 한다 — 안쪽에서 나오면 가슴 한가운데서 돋는 것처럼 보인다.
+// Shoulder x — on the torso's left/right outline. The half-width at shoulder height (22% from the top) differs per body form:
+// box 1 · bean (an ellipse) ≈0.85 · dress (a trapezoid, 0.6 at the top → 1.35 at the bottom) ≈0.76 · tube 0.62.
+// An arm has to come out of the torso's side — coming out further in, it looks like it sprouts from the middle of the chest.
 const SHOULDER_X = { bean: 0.85, box: 0.98, dress: 0.76, tube: 0.63 };
 
 function armDims(spec, box) {
   const reach = ARM_BASE * spec.proportions.armSpread * (ARM_LENGTH_SCALE[spec.parts.armLength] || 1);
   return {
-    x: box.bodyW * (SHOULDER_X[spec.parts.body] || 0.85),   // 어깨 x (오른팔. 왼팔은 -x)
-    y: box.bodyTop - (box.bodyTop - box.legTop) * 0.22,     // 어깨 y
+    x: box.bodyW * (SHOULDER_X[spec.parts.body] || 0.85),   // shoulder x (the right arm. The left is -x)
+    y: box.bodyTop - (box.bodyTop - box.legTop) * 0.22,     // shoulder y
     upper: reach * 0.48,
     lower: reach * 0.52
   };
 }
 
-// 관절 팔다리. 각 지체는 피벗(어깨·엉덩이) 원점 기준으로 그린다.
-// scene이 rotation.z로 흔든다.
+// Jointed limbs. Each limb is drawn relative to its pivot's origin (shoulder, hip).
+// The scene swings them with rotation.z.
 //
-// 레퍼런스(관절부 4배 확대): 팔은 유형이 여럿이며(뒷짐·소매+동그란 손·스텁+주먹·늘어짐),
-// 다리 끝에는 항상 동그란 발이 있다. 다리 뿌리는 몸 윤곽 안쪽(밑단 위)에서 시작해 관절이
-// "박혀" 보이고, 팔 뿌리는 몸통 좌우 윤곽 위(옆구리)다 — 안쪽이면 가슴에서 돋는 것처럼 보인다.
+// The reference (joints at 4× zoom): arms come in several types (behind the back, a sleeve plus a round hand, a stub plus a fist, hanging),
+// and a leg always ends in a round foot. A leg's root starts inside the body outline (above the hem) so the joint looks
+// "embedded", and an arm's root is on the torso's left/right outline (the side) — further in and it looks like it sprouts from the chest.
 //
-// 반환: [{ sketch, pivot: [x, y], kind: "arm"|"leg", side, index, behind }]
+// Returns: [{ sketch, pivot: [x, y], kind: "arm"|"leg", side, index, behind }]
 export function limbSketches(spec) {
   const rng = makeRng((spec.proportions.wobbleSeed + 303) >>> 0);
   const noise = makeNoise(rng);
@@ -54,10 +54,10 @@ export function limbSketches(spec) {
   const legKind = spec.parts.legs;
 
   if (box.quad) {
-    // 네 다리 — 앞다리 둘·뒷다리 둘이 각각 붙어 있다(옆에서 본 짐승). 뿌리는 몸 윤곽 안쪽(bodyH 25% 위, quadHips).
-    // 형태: stub(기본 — 굵은 스텁 + 발끝 + 발가락) · stick(가는 다리 + 둥근 발) · boots(양말) ·
-    // float(레이맨식 — 다리 없이 발만 떠 있다). bent·tiptoe는 네발에서 stick으로 그린다.
-    // 기장은 layout이 legLength로 정한다(short = 닥스훈트). 몸 길이는 build(box.bodyW).
+    // Four legs — two front and two hind, each pair together (a beast seen from the side). The roots are inside the body outline (25% of bodyH up, quadHips).
+    // Forms: stub (the default — a thick stub plus a toe tip plus toes) · stick (a thin leg plus a round foot) · boots (socks) ·
+    // float (Rayman style — no legs, just floating feet). bent and tiptoe are drawn as stick on a quad.
+    // Length is set by layout from legLength (short = a dachshund). Body length is build (box.bodyW).
     const { hipY, front, back, gap } = quadHips(box);
     const kind = ["stub", "stick", "boots", "float"].includes(legKind) ? legKind : "stick";
     [front - gap / 2, front + gap / 2, back - gap / 2, back + gap / 2].forEach((x, i) => {
@@ -65,19 +65,19 @@ export function limbSketches(spec) {
       const len = hipY;
       const lean = noise(i * 7.1) * 0.012;
       if (kind === "float") {
-        // 떠 있는 발 — 다리 선 없이 발만. 관절 지터로 발이 둥둥 흔들린다
+        // Floating feet — just the feet, with no leg line. Joint jitter makes them bob about
         dot(s, lean + 0.006, -len + 0.014, 0.024, skin);
       } else if (kind === "stick") {
         s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.01 });
         dot(s, lean + 0.006, -len + 0.012, 0.02, skin);
       } else if (kind === "boots") {
-        // 양말 — 발목까지 채운 작은 부츠
+        // Socks — a small boot filled to the ankle
         s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.012 });
         const boot = [[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]];
         s.fill(boot, cloth === skin ? ink0 : shade(cloth, 0.75));
         s.outline(boot, { color: ink0, width: 0.009 });
       } else {
-        // 굵은 스텁 다리 + 살짝 앞으로 나온 둥근 발끝 + 발가락 두 줄 (레퍼런스)
+        // A thick stub leg plus a round toe tip poking slightly forward plus two toe lines (the reference)
         s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.016 });
         s.stroke([[lean - 0.02, -len], [lean + 0.03, -len + 0.003]], { color: ink0, width: 0.012 });
         s.stroke([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, width: 0.006 });
@@ -88,10 +88,10 @@ export function limbSketches(spec) {
     return limbs;
   }
 
-  // ── 두발 다리 ──
-  // 뿌리는 몸 밑단보다 살짝 위(윤곽 안). 끝에는 항상 발.
+  // -- biped legs --
+  // The root is slightly above the body's hem (inside the outline). There is always a foot at the end.
   const hipY = box.legTop + 0.02;
-  // 스탠스(벌림)는 다리 형태가 아니라 몸통 체격이 정한다 — 넓은 몸이 넓은 스탠스를 받친다.
+  // The stance (how far they open) is set by the torso build, not the leg form — a wide body carries a wide stance.
   const spread = (BUILD[spec.parts.build] || BUILD.medium).stance;
   for (const side of [-1, 1]) {
     const x = side * box.bodyW * spread;
@@ -99,7 +99,7 @@ export function limbSketches(spec) {
     const len = hipY;
     let footX = 0;
     if (legKind === "float") {
-      // 레이맨식 — 다리 없이 큼직한 발만 떠 있다. 관절 지터·발 까딱이 발을 둥둥 흔든다
+      // Rayman style — no legs, just big feet floating. Joint jitter and a foot flick make them bob about
       dot(s, side * 0.008, -len + 0.016, 0.03, skin);
       limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
       continue;
@@ -110,7 +110,7 @@ export function limbSketches(spec) {
     } else if (legKind === "stub") {
       s.stroke([[0, 0], [0, -len]], { color: ink0, width: 0.019 });
     } else if (legKind === "tiptoe") {
-      // 발끝으로 선 가는 다리 — 발이 아래로 뾰족
+      // A thin leg standing on its toes — the foot points downward
       s.stroke([[0, 0], [side * 0.008, -len]], { color: ink0, width: 0.009 });
       s.stroke([[side * 0.008 - 0.012, -len + 0.012], [side * 0.008, -len], [side * 0.008 + 0.012, -len + 0.012]], { color: ink0, width: 0.009 });
       limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
@@ -119,30 +119,30 @@ export function limbSketches(spec) {
       s.stroke([[0, 0], [noise(side * 3.3) * 0.02, -len]], { color: ink0, width: 0.011 });
       footX = noise(side * 3.3) * 0.02;
     }
-    // 발
+    // The foot
     if (legKind === "boots") {
-      // 부츠 — 발목까지 채워진 덩어리
+      // Boots — a mass filled to the ankle
       const boot = [[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]];
       s.fill(boot, cloth === skin ? ink0 : shade(cloth, 0.75));
       s.outline(boot, { color: ink0, width: 0.01 });
     } else {
-      // 동그란 발 — 레퍼런스 기본
+      // A round foot — the reference default
       dot(s, footX + side * 0.008, -len + 0.012, 0.022, skin);
     }
     limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
   }
 
-  // ── 두발 팔 ──
-  // 형태(arms 슬롯)만 여기서 정한다. 자세는 scene이 회전과 앞/뒤 전환으로 준다.
+  // -- biped arms --
+  // Only the form (the arms slot) is set here. The pose comes from the scene, as rotation and a front/back switch.
   //
-  // 팔은 두 마디다: 위팔(어깨 피벗 원점, 아래로) + 아래팔(팔꿈치 피벗 원점, 아래로).
-  // scene이 아래팔 피벗을 위팔 끝에 붙이고 어깨각·팔꿈치각을 따로 준다.
-  // 그래야 팔이 접힌다 — 한 획으로 그리면 아무리 돌려도 막대기다.
+  // An arm is two bones: the upper arm (origin at the shoulder pivot, pointing down) plus the forearm (origin at the elbow pivot, pointing down).
+  // The scene attaches the forearm pivot to the end of the upper arm and gives the shoulder and elbow angles separately.
+  // That is what lets the arm fold — drawn as one stroke it is a stick however far you rotate it.
   //
-  // 뒷짐은 팔이 몸 뒤로 사라지고 팔꿈치 끝만 옆구리로 삐죽 나오는 형태라
-  // 회전만으로는 표현이 안 된다. back 스케치를 따로 굽는다.
+  // Hands behind the back has the arms disappear behind the body with only the elbow poking out at the side,
+  // which rotation alone cannot express. A back sketch is baked separately.
   const armKind = spec.parts.arms;
-  if (armKind === "none") return limbs;   // 팔 없음 — 지체도 리그도 없다 (도깨비 일부)
+  if (armKind === "none") return limbs;   // armless — no limb and no rig (some imps)
   const dims = armDims(spec, box);
   const shoulderY = dims.y;
   const upperLen = dims.upper;
@@ -155,26 +155,26 @@ export function limbSketches(spec) {
     const w = armKind === "stubby" ? 0.017 : 0.01;
 
     if (armKind === "sleeve") {
-      // 위팔은 옷색 소매. 아래팔은 맨팔 + 손.
+      // The upper arm is a cloth-colored sleeve. The forearm is a bare arm plus a hand.
       const sl = [[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]];
       upper.fill(sl, cloth);
       upper.outline(sl, { color: ink0, width: 0.01 });
       lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: 0.01 });
       dot(lower, side * 0.006, -lowerLen - 0.006, 0.022, skin);
     } else if (armKind === "stubby") {
-      // 짧고 굵은 두 마디 + 주먹
+      // Two short thick bones plus a fist
       upper.stroke([[0, 0], [side * 0.004, -upperLen]], { color: ink0, width: w });
       lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: w });
       dot(lower, side * 0.006, -lowerLen - 0.004, 0.02, skin);
     } else {
-      // stick / mitten — 가는 두 마디. 마디 끝에 관절 표시는 없다(손그림).
+      // stick / mitten — two thin bones. There is no joint marking at a bone's end (it is hand-drawn).
       upper.stroke([[0, 0], [side * 0.006, -upperLen]], { color: ink0, width: w });
       lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: w });
       if (armKind === "mitten") dot(lower, side * 0.006, -lowerLen - 0.006, 0.024, skin);
       else lower.stroke([[side * 0.006 - 0.016, -lowerLen], [side * 0.006 + 0.016, -lowerLen + 0.004]], { color: ink0, width: w });
     }
 
-    // back — 뒷짐. 팔꿈치만 옆구리에서 삐죽. 형태에 따라 굵기만 다르다
+    // back — hands behind the back. Only the elbow pokes out at the side. Only the thickness differs by form
     const back = make();
     const bw = armKind === "stubby" ? 0.017 : armKind === "sleeve" ? 0.014 : 0.011;
     back.stroke([[0, 0], [side * 0.03, -0.045], [side * 0.05, -0.08]], { color: ink0, width: bw });
@@ -188,36 +188,36 @@ export function limbSketches(spec) {
   return limbs;
 }
 
-// 바인드 포즈 — 캐릭터가 아무 모션도 받지 않았을 때의 팔. T포즈: 어깨 수평(1.57 outward),
-// 팔꿈치 0. 캐릭터에 "자세"란 없다 — idle과 행위(만세·인사·팔짱…)는 전부 motion/actions.js다.
-// 화면에서 T포즈는 BIND 뷰에서만 보인다.
+// The bind pose — the arms when the character has received no motion at all. The T-pose: shoulders horizontal (1.57 outward),
+// elbows 0. A character has no "posture" — idle and the actions (arms up, waving, arms crossed…) are all motion/actions.js.
+// On screen the T-pose is only visible in the BIND view.
 //
-// [어깨각, 팔꿈치각]. outward(몸 바깥) 양수. 세계 rotation.z로 바꾸려면 side를 곱한다:
-// 위팔은 (0, -len)으로 늘어진 채 굽고 rotation.z(반시계 양수)로 든다. 왼팔(side -1, x<0)을
-// 바깥(더 왼쪽)으로 들려면 시계방향 = 음수, 오른팔은 반시계 = 양수. 그래서 outward = side다.
+// [shoulder angle, elbow angle]. outward (away from the body) positive. Multiply by side to turn it into a world rotation.z:
+// the upper arm is baked hanging at (0, -len) and lifted by rotation.z (counter-clockwise positive). Lifting the left arm (side -1, x<0)
+// outward (further left) means clockwise = negative, and the right arm counter-clockwise = positive. Hence outward = side.
 export const BIND_ARM = [1.57, 0];
 
-// 네발 다리 뿌리 — 네 다리는 뿌리 높이 hipY(몸 밑단 + bodyH 25%)에, 앞 쌍은 front·뒷 쌍은 back을 중심으로 gap만큼 벌려 붙는다.
-// 그리기(limbSketches)와 리그 서술(motionRig — 앉기 자세를 푸는 데 쓴다)이 같은 값을 본다
+// Quad leg roots — the four legs attach at root height hipY (the body's hem + 25% of bodyH), the front pair opening by gap about front and the hind pair about back.
+// The drawing (limbSketches) and the rig description (motionRig — used to solve the sitting pose) look at the same values
 export function quadHips(box) {
   return {
     hipY: box.legTop + box.bodyH * 0.25,
     front: box.bodyCx - box.bodyW * 0.6,
     back: box.bodyCx + box.bodyW * 0.6,
-    gap: Math.max(0.03, box.bodyW * 0.16)          // 한 쌍 안의 두 다리 간격
+    gap: Math.max(0.03, box.bodyW * 0.16)          // the spacing between the two legs within a pair
   };
 }
 
-// 리그 서술 — 모션이 이 개체 위에서 돌 때 필요한 정적 치수. 전부 스펙에서 나온다.
-//   arm      두발의 팔(IK): 어깨 위치·위팔·아래팔 길이·몸 앵커. 앵커는 몸 좌표(발바닥 원점, y 위), 오른팔 기준 — 왼팔은 x 반전. 네발은 null
-//   legTop   몸통 밑단 높이 — 네발이 엎드려 잘 때 몸이 내려앉는 거리
-//   body     네발의 몸통·다리 뿌리 치수 { frontHipX, hindHipX, hipY, legTop, bodyH, bodyW, bodyCx } — 앉기 자세(motion/actions.js sitPose)를
-//            이 개체에 맞게 푼다(몸을 앞다리 뿌리를 축으로 기울여 엉덩이를 바닥에, 뒷다리를 접어 발이 바닥에). 두발은 null
-//   tailLift 꼬리 개체 지터(−1~1) — 고양이 idle 아치의 말림 정도를 개체마다 다르게 (motion/table.js tailIdlePose)
+// The rig description — the static dimensions motion needs to run on this individual. All of it comes from the spec.
+//   arm      a biped's arm (IK): shoulder position, upper and lower arm lengths, body anchors. Anchors are in body coordinates (origin at the soles, y up), for the right arm — the left mirrors x. null on a quad
+//   legTop   the torso hem height — how far the body settles when a quad lies down to sleep
+//   body     a quad's torso and leg-root dimensions { frontHipX, hindHipX, hipY, legTop, bodyH, bodyW, bodyCx } — the sitting pose (motion/actions.js sitPose)
+//            is solved to fit this individual (tilting the body about the front legs' root to put the hips on the floor, folding the hind legs to put the feet on the floor). null on a biped
+//   tailLift the tail's per-individual jitter (−1~1) — varies how far the cat idle arch curls per individual (motion/table.js tailIdlePose)
 export function motionRig(spec) {
   const box = layout(spec);
   const hips = box.quad ? quadHips(box) : null;
-  // arm은 팔이 있는 두발만. 팔 없는 두발(도깨비 arms none)은 arm null이지만 quad도 false — 팔 행위 층만 쉰다
+  // arm is only for bipeds with arms. An armless biped (an imp with arms none) has arm null but quad false too — only the arm action layer rests
   return {
     arm: box.quad || spec.parts.arms === "none" ? null : armRigOf(spec, box),
     legTop: box.legTop, quad: box.quad, tailLift: spec.proportions.tailLift,
@@ -230,41 +230,41 @@ function armRigOf(spec, box) {
   return {
     x: dims.x, y: dims.y, upper: dims.upper, lower: dims.lower,
     anchors: {
-      ground: 0,                                                        // 바닥. 손이 이 아래로 못 간다
-      hip: [box.bodyW * 0.6, box.legTop + 0.04],                        // 허리(골반 옆)
-      chestFar: [-box.bodyW * 0.15, box.bodyTop - box.bodyH * 0.32],    // 반대쪽 가슴 (팔짱)
-      chin: [box.headRx * 0.18, box.bodyTop],                           // 턱
-      brow: [box.headRx * 0.5, box.headCy + box.headRy * 0.25]          // 눈썹 옆 (경례)
+      ground: 0,                                                        // the floor. The hand cannot go below it
+      hip: [box.bodyW * 0.6, box.legTop + 0.04],                        // the waist (beside the pelvis)
+      chestFar: [-box.bodyW * 0.15, box.bodyTop - box.bodyH * 0.32],    // the far side of the chest (arms crossed)
+      chin: [box.headRx * 0.18, box.bodyTop],                           // the chin
+      brow: [box.headRx * 0.5, box.headCy + box.headRy * 0.25]          // beside the brow (a salute)
     }
   };
 }
 
-// ── 꼬리 — 골격(tail) × 스킨(tailSkin) ──
-// 꼬리는 세 슬롯이다. **골격**(curl·flag·longtail·stubtail·hook·kink·ring)은 척추의 모양(점 목록, 피벗 원점)이고,
-// **스킨**(line·thick·plume·tuft·block·ball·puff, 비활성 ringed·wedge)은 그 척추 위에 무엇을 입히나다 — 가는 선, 채운 굵은 꼬리, 북슬한 깃털,
-// 끝 뭉치, 네모, 구슬, 몽실 뭉치 — 그리고 **기장**(tailLength)이 골격을 통째로 줄인다.
-// 어느 골격에든 어느 스킨이든 입힌다 (스텁 골격에 깃털 스킨 = 폼폼). scene이 네 마디 체인으로 세워 마디마다 돌린다 (아래 tailSketch).
+// -- tail — skeleton (tail) × skin (tailSkin) --
+// A tail is three slots. The **skeleton** (curl, flag, longtail, stubtail, hook, kink, ring) is the spine's shape (a point list, origin at the pivot),
+// the **skin** (line, thick, plume, tuft, block, ball, puff, plus the disabled ringed and wedge) is what goes on that spine — a thin line, a filled thick tail, a bushy plume,
+// a tuft at the tip, a block, beads, a pom — and the **length** (tailLength) shrinks the whole skeleton.
+// Any skin goes on any skeleton (a plume skin on a stub skeleton = a pom). The scene stands it up as a four-bone chain and rotates each bone (tailSketch below).
 
-// 골격 — 척추 점 목록. tailLift(비율)로 끝이 조금 오르내린다
+// The skeleton — the spine point list. tailLift (a ratio) raises or lowers the tip a little
 function tailSpine(kind, lift) {
   const up = lift * 0.02;
   if (kind === "curl") return [[0, 0], [0.05, 0.08], [0.03 + up, 0.16], [-0.015, 0.2]];
   if (kind === "flag") return [[0, 0], [0.025, 0.1], [0.01 + up, 0.2]];
   if (kind === "longtail") return [[0, 0], [0.07, 0.015], [0.14, 0.05], [0.18, 0.12 + up]];
-  if (kind === "hook") return [[0, 0], [0.02, 0.08], [0.02, 0.16 + up], [-0.01, 0.215], [-0.045, 0.205], [-0.055, 0.165]];   // 위로 섰다 갈고리
-  if (kind === "kink") return [[0, 0], [0.035, 0.06], [0.005, 0.11], [0.045, 0.16], [0.02, 0.21 + up]];                     // 마디마다 꺾임
-  if (kind === "ring") return arcPath(-0.03, 0.075, 0.078, 0.078, -1.2, 4.3, 22);                                            // 등 위로 한 바퀴(스피츠)
-  return [[0, 0], [0.02, 0.03], [0.035, 0.05]];   // stubtail — 뭉툭
+  if (kind === "hook") return [[0, 0], [0.02, 0.08], [0.02, 0.16 + up], [-0.01, 0.215], [-0.045, 0.205], [-0.055, 0.165]];   // standing up, then hooked
+  if (kind === "kink") return [[0, 0], [0.035, 0.06], [0.005, 0.11], [0.045, 0.16], [0.02, 0.21 + up]];                     // a bend at every joint
+  if (kind === "ring") return arcPath(-0.03, 0.075, 0.078, 0.078, -1.2, 4.3, 22);                                            // one full turn over the back (a spitz)
+  return [[0, 0], [0.02, 0.03], [0.035, 0.05]];   // stubtail — blunt
 }
 
-// 척추의 누적 길이 비율 t(0~1) 목록
+// The list of cumulative length ratios t (0~1) along the spine
 function spineT(spine) {
   const acc = [0];
   for (let i = 1; i < spine.length; i += 1) acc.push(acc[i - 1] + Math.hypot(spine[i][0] - spine[i - 1][0], spine[i][1] - spine[i - 1][1]));
   const total = acc[acc.length - 1] || 1;
   return acc.map((a) => a / total);
 }
-// 척추를 따라 좌우로 두께 widthAt(t)만큼 부풀린 양쪽 가장자리. t는 tMap으로 전체 꼬리 기준(0~1)에 맞춘다
+// The two edges, swollen sideways along the spine by a thickness of widthAt(t). t is fitted to the whole tail (0~1) by tMap
 function tubeSides(spine, widthAt, tMap = (t) => t) {
   const ts = spineT(spine);
   const left = [], right = [];
@@ -279,7 +279,7 @@ function tubeSides(spine, widthAt, tMap = (t) => t) {
   }
   return { left, right };
 }
-// 꺾은선 위 길이 비율 t(0~1) 지점과 그 자리의 진행 방향
+// The point at length ratio t (0~1) along a polyline and the direction of travel there
 function alongSpine(spine, t) {
   const ts = spineT(spine);
   let i = 0;
@@ -290,7 +290,7 @@ function alongSpine(spine, t) {
   const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
   return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, dx, dy };
 }
-// 척추를 길이 기준으로 n등분한 마디들 → [{ spine(마디 원점 기준 점 목록), t0, t1, origin(꼬리 뿌리 기준), angle(쉼 자세의 방향) }]
+// The spine divided into n equal lengths → [{ spine (point list relative to the bone's origin), t0, t1, origin (relative to the tail root), angle (the rest pose's direction) }]
 function splitSpineN(spine, n) {
   const ts = spineT(spine);
   const parts = [];
@@ -308,9 +308,9 @@ function splitSpineN(spine, n) {
   return parts;
 }
 
-// 꼬리는 **네 마디 체인**이다 — 척추를 4등분해 마디마다 관절(원점)을 두고, scene이 마디를 따로 돌린다:
-// 뿌리(0)에 스위시·wag·걷기·잠, 끝(3)에 톡톡·떨림·팔로스루, 그리고 **세움**은 관절 각을 쉼 자세 → 곧게 선 자세로 섞는다(마디마다 목표각).
-// 스킨은 마디들에 이어서 입힌다 — 두께 함수는 전체 꼬리 기준 t로 계산해 이음새에서 굵기가 이어진다.
+// A tail is **a four-bone chain** — the spine is split into 4, a joint (origin) sits at each bone, and the scene rotates the bones separately:
+// the root (0) takes the swish, wag, walking and sleep; the tip (3) takes the tapping, tremble and follow-through; and **raise** blends each joint's angle from the rest pose toward standing straight (a target angle per bone).
+// The skin is applied continuously across the bones — the thickness function is computed on the whole tail's t, so the thickness carries across the seams.
 export const TAIL_BONES = 4;
 export function tailSketch(spec) {
   const rng = makeRng((spec.proportions.wobbleSeed + 404) >>> 0);
@@ -323,15 +323,15 @@ export function tailSketch(spec) {
   const ink0 = spec.palette.ink;
   const cx = box.bodyCx;
   const pivot = [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1];
-  // 기장 — 골격을 통째로 줄인다 (long 1 · medium 0.7 · short 0.45). 스킨 두께는 그대로
+  // Length — shrinks the whole skeleton (long 1 · medium 0.7 · short 0.45). The skin thickness is unchanged
   const lenK = spec.parts.tailLength === "short" ? 0.45 : spec.parts.tailLength === "medium" ? 0.7 : 1;
   const spine = tailSpine(spec.parts.tail, p.tailLift).map(([x, y]) => [x * lenK, y * lenK]);
   const skin = spec.parts.tailSkin || "line";
   const stub = spec.parts.tail === "stubtail";
-  const fur = spec.palette.skin;   // 털색 = 머리색 (개·고양이는 몸도 같은 계열)
+  const fur = spec.palette.skin;   // fur color = head color (on dogs and cats the body is in the same family too)
   const parts = splitSpineN(spine, TAIL_BONES);
 
-  // 두께 함수(전체 t 기준) — 스킨별
+  // The thickness function (on the whole tail's t) — per skin
   const widthOf = {
     thick: (t) => (stub ? 0.024 : 0.02) * (1 - t * 0.7) + 0.004,
     plume: (t) => (stub ? 0.03 : 0.016 + 0.024 * Math.sin(Math.PI * Math.min(1, t * 1.15))),
@@ -339,7 +339,7 @@ export function tailSketch(spec) {
     wedge: (t) => (stub ? 0.03 : 0.028) * (1 - t) + 0.001,
     ringed: (t) => (stub ? 0.024 : 0.019) * (1 - t * 0.55) + 0.004
   };
-  // 채운 몸통을 마디들에 이어 그린다 — 채움은 마디마다, 윤곽은 양옆 선만(이음새에 가로선이 안 생기게), 끝 마디에서 닫는다
+  // Draws the filled body continuously across the bones — the fill per bone, the outline only the two side lines (so no crossbar appears at a seam), closed on the last bone
   const tube = (widthAt) => {
     parts.forEach((part, i) => {
       const tMap = (t) => part.t0 + t * (part.t1 - part.t0);
@@ -348,10 +348,10 @@ export function tailSketch(spec) {
       sk.fill([...left, ...right.slice().reverse()], fur);
       sk.stroke(left, { color: ink0, width: 0.011, passes: 2 });
       sk.stroke(right, { color: ink0, width: 0.011, passes: 2 });
-      if (i === parts.length - 1) sk.stroke([left[left.length - 1], right[right.length - 1]], { color: ink0, width: 0.011 });   // 끝 마감
+      if (i === parts.length - 1) sk.stroke([left[left.length - 1], right[right.length - 1]], { color: ink0, width: 0.011 });   // closing off the tip
     });
   };
-  // 전체 t 지점의 자리와 그 조각 — 털 획·구슬·띠·뭉치를 놓을 때
+  // The point at a whole-tail t and the piece it falls in — for placing fur strokes, beads, bands and tufts
   const at = (t) => {
     const idx = Math.min(parts.length - 1, Math.floor(Math.max(0, Math.min(0.999, t)) * parts.length));
     const part = parts[idx];
@@ -360,12 +360,12 @@ export function tailSketch(spec) {
   };
 
   if (skin === "line") {
-    // 가는 선 — 손그림 꼬리 한 획 (스텁은 굵게). 마디들을 이어 긋는다
+    // A thin line — one hand-drawn tail stroke (thick on a stub). Drawn continuously across the bones
     for (const [i, part] of parts.entries()) sketches[i].stroke(part.spine, { color: ink0, width: stub ? 0.02 : 0.011, jitter: 0.003 });
   } else if (skin === "thick" || skin === "block" || skin === "wedge") {
     tube(widthOf[skin]);
   } else if (skin === "plume") {
-    // 북슬한 깃털 꼬리 — 가운데가 부푼 채운 몸통 + 털 획 (스텁이면 폼폼)
+    // A bushy plume tail — a filled body swollen in the middle plus fur strokes (a pom on a stub)
     tube(widthOf.plume);
     const n = stub ? 3 : 6;
     for (let i = 0; i < n; i += 1) {
@@ -377,7 +377,7 @@ export function tailSketch(spec) {
       a.sk.stroke([[a.x + nx * w * 0.7, a.y + ny * w * 0.7], [a.x + nx * (w + 0.02) + a.dx * 0.01, a.y + ny * (w + 0.02) + a.dy * 0.01]], { color: ink0, width: 0.007, jitter: 0.004 });
     }
   } else if (skin === "tuft") {
-    // 끝 뭉치 — 가는 선 + 끝에 채운 뭉치(사자 꼬리)
+    // A tuft at the tip — a thin line plus a filled tuft at the end (a lion's tail)
     for (const [i, part] of parts.entries()) sketches[i].stroke(part.spine, { color: ink0, width: 0.011, jitter: 0.003 });
     const tipPart = parts[parts.length - 1];
     const tip = tipPart.spine[tipPart.spine.length - 1];
@@ -386,19 +386,19 @@ export function tailSketch(spec) {
     tipSk.fill(ball, shade(fur, 0.82));
     tipSk.outline(ball, { color: ink0, width: 0.01 });
   } else if (skin === "puff") {
-    // 몽실 — 토끼 꼬리. 골격 길이와 상관없이 엉덩이 가까이(척추 0.3 지점) 북슬한 뭉치 하나 + 둘레 털 획 (뿌리 조각)
+    // A pom — a rabbit tail. Regardless of the skeleton's length, one bushy tuft near the rump (at spine 0.3) plus fur strokes around it (the root piece)
     const a = at(0.3);
     const r = 0.04;
     const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
     a.sk.fill(pom, fur);
     a.sk.outline(pom, { color: ink0, width: 0.011, passes: 2 });
     for (let i = 0; i < 6; i += 1) {
-      const ang = -1.0 + i * 0.66;   // 위·바깥 둘레
+      const ang = -1.0 + i * 0.66;   // around the top and outside
       const x0 = a.x + Math.cos(ang) * r * 0.9, y0 = a.y + 0.004 + Math.sin(ang) * r * 0.85;
       a.sk.stroke([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, width: 0.007, jitter: 0.004 });
     }
   } else if (skin === "ball") {
-    // 동그라미 — 척추를 따라 구슬을 꿴 꼬리. 스텁이면 폼폼 하나(토끼)
+    // Beads — a tail strung with beads along the spine. One pom on a stub (a rabbit)
     if (stub) {
       const a = at(0.6);
       const ball = blobPath(a.x, a.y + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
@@ -416,7 +416,7 @@ export function tailSketch(spec) {
       }
     }
   } else {
-    // ringed — 굵은 꼬리에 고리 무늬 (비활성 자산). 몸통 + 어두운 띠 셋
+    // ringed — ring markings on a thick tail (a disabled asset). The body plus three dark bands
     tube(widthOf.ringed);
     for (const t of stub ? [0.5] : [0.3, 0.55, 0.8]) {
       const a = at(t);

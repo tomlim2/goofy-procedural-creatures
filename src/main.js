@@ -1,4 +1,4 @@
-// 진입점. 시드를 정하고, 그리드를 굽고, 시계를 돌린다.
+// Entry point. Settles the seed, bakes the grid, runs the clock.
 
 import { createScene } from "./scene/index.js";
 import { makeGrid } from "./character/index.js";
@@ -13,15 +13,15 @@ const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
 
 const scene = createScene(canvas);
-// 디버그 손잡이 — 콘솔에서 window.menagerie.scene.creatures() 로 개체 리그를 들여다본다
+// Debug handle — inspect individual rigs from the console with window.menagerie.scene.creatures()
 window.menagerie = { scene };
 
 let columns = 7;
 let rows = 5;
-// 종족 프리뷰. null이면 고정 레인, 종족명이면 그 종족만.
+// Species preview. null means the fixed lanes; a species name means that species only.
 let only = null;
 let seed = readSeedFromHash() ?? randomSeed();
-// 부팅 중에는 굽지 않는다 — 주소의 값을 컨트롤에 다 넣고 맨 끝에서 한 번만 굽는다 (안 그러면 9×6을 세 번 굽는다)
+// Nothing is baked while booting — every value from the address goes into the controls and one bake happens at the very end (otherwise a 9×6 gets baked three times)
 let booted = false;
 
 function readSeedFromHash() {
@@ -33,8 +33,8 @@ function readSeedFromHash() {
 
 function render() {
   if (!booted) return;
-  // 라벨부터 갱신한다. 빌드가 어떤 이유로든 실패해도 클릭이 접수됐다는
-  // 사실은 화면에 보여야 한다.
+  // The label updates first. Whatever reason a build fails for, the fact that
+  // the click was registered has to show on screen.
   seedLabel.textContent = formatSeed(seed);
   syncUrl();
   const specs = makeGrid(seed, columns * rows, columns, only);
@@ -42,8 +42,8 @@ function render() {
   statusLabel.textContent = `${specs.length} ALIVE`;
 }
 
-// 디버그 URL — 지금 화면을 주소에 싣는다. 컨트롤은 쿼리(control.js가 만든다), 시드는 예전대로 해시다.
-// 버튼으로 만든 화면을 그대로 주소로 옮길 수 있고, 그 주소로 들어오면 같은 화면이 선다:
+// Debug URL — puts the current screen into the address. Controls go in the query (control.js builds it); the seed stays in the hash as before.
+// A screen built with the buttons can be moved straight into an address, and entering by that address stands the same screen up:
 //   ?grid=1x1&species=cat&pose=bind&ink=still&action=wave#01dkuwa
 function syncUrl() {
   if (!booted) return;
@@ -58,8 +58,8 @@ function reseed() {
 
 document.getElementById("reseed").addEventListener("click", reseed);
 
-// PNG 내보내기 — 지금 화면 그대로에 서명만 얹는다 (왼쪽 밑 시드, 오른쪽 밑 이름).
-// scene.draw()를 먼저 부르고 **같은 태스크에서** 읽는다 — WebGL 그리기 버퍼는 프레임이 끝나면 비워진다 (src/export.js)
+// PNG export — the screen exactly as it is, with only a signature laid on top (seed bottom-left, name bottom-right).
+// scene.draw() is called first and the read happens **in the same task** — WebGL clears the drawing buffer at the end of a frame (src/export.js)
 const exportButton = document.getElementById("exportPng");
 if (exportButton) {
   exportButton.addEventListener("click", () => {
@@ -69,50 +69,50 @@ if (exportButton) {
   });
 }
 
-// 행위 강제. AUTO는 각자 시계의 예약대로(idle + 이따금 행위, 층끼리 겹침), IDLE은 모든 층 idle,
-// 행위를 고르면 그 층만 강제하고 다른 층은 idle (팔 행위는 사람·도깨비, 네발 행위는 고양이·개, 몸 행위는 전원).
-// 행위 하나(인사·경례·점프·긁기…)가 어떻게 보이는지 판단할 때 쓴다.
-// 목록은 컨트롤러보다 **먼저** 채운다 — 주소에서 온 값을 넣을 때 옵션에 있는지 본다 (ui.js bindSelect).
-// 메인 화면에는 이 카드가 없다 (디버그 화면만) — 없으면 그냥 안 채운다.
+// Forcing an action. AUTO follows each creature's own schedule (idle plus the occasional action, layers overlapping), IDLE keeps every layer idle,
+// and picking an action forces that layer only while the others idle (arm actions for humans and imps, quad actions for cats and dogs, body actions for everyone).
+// Used to judge how one action (wave, salute, jump, scratch…) actually looks.
+// The list is filled **before** the controller — putting a value in from the address checks it is an option (ui.js bindSelect).
+// The main screen does not have this card (the debug screen only) — if it is missing, nothing is filled.
 const actionSel = document.getElementById("actionSel");
 if (actionSel) {
-  addOption(actionSel, "idle", "IDLE — 행위 없음");
+  addOption(actionSel, "idle", "IDLE — no action");
   for (const [name, def] of Object.entries(ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label}`);
-  // 기본 상태 — SLEEP은 네발을 엎드려 재운다 (사람·도깨비는 잠 자세가 없어 idle), WALK는 걷기 (전 종족, 팔 행위는 예약대로)
-  addOption(actionSel, "sleep", "SLEEP — 잠 (네발)");
-  addOption(actionSel, "sit", "SIT — 앉기 (네발)");
-  addOption(actionSel, "walk", "WALK — 걷기 (집↔밖 왕복)");
-  // 몸 행위 — 두발·네발 공통 (강제하면 쉬었다 반복)
-  for (const [name, def] of Object.entries(BODY_ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label} (몸)`);
-  // 네발 행위 — 고양이·개에게만 먹는다 (두발은 idle)
-  for (const [name, def] of Object.entries(QUAD_ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label} (네발)`);
+  // Base states — SLEEP lies quads down to sleep (humans and imps have no sleep pose, so they idle), WALK is walking (every species, arm actions on schedule)
+  addOption(actionSel, "sleep", "SLEEP — asleep (quad)");
+  addOption(actionSel, "sit", "SIT — sitting (quad)");
+  addOption(actionSel, "walk", "WALK — walking (out and back home)");
+  // Body actions — shared by bipeds and quads (forced, they repeat with a rest between)
+  for (const [name, def] of Object.entries(BODY_ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label} (body)`);
+  // Quad actions — they only bite on cats and dogs (bipeds idle)
+  for (const [name, def] of Object.entries(QUAD_ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label} (quad)`);
 }
 
-// 화면 컨트롤 — 값·주소·그 값으로 하는 일이 이 표 하나다 (control.js). 버튼에는 기능이 없다.
-// initial은 HTML에서 `.on`이 붙어 있는 버튼(ACTION은 첫 옵션)과 같아야 한다.
+// Screen controls — value, address and what that value does are this one table (control.js). The buttons carry no behaviour.
+// initial has to match the button carrying `.on` in the HTML (for ACTION, the first option).
 const controls = createControls({
-  // 그리드. 1×1은 한 마리를 화면에 꽉 채운다 — 파츠 하나를 눈으로 볼 때
+  // Grid. 1×1 fills the screen with one creature — for looking at a single part with your eyes
   grid: {
     el: document.getElementById("countSeg"), initial: "7x5", rebuild: true,
     apply: (value) => { [columns, rows] = value.split("x").map(Number); }
   },
-  // 포즈. MOTION은 시계가 리그를 움직이고, BIND는 리그를 바인드 포즈에 고정한다.
+  // Pose. MOTION lets the clock move the rig; BIND pins the rig to the bind pose.
   pose: {
     el: document.getElementById("poseSeg"), initial: "motion",
     apply: (value) => scene.setBind(value === "bind")
   },
-  // 잉크. BOIL은 선이 끓고(보일 3벌 순환), STILL은 0번 프레임 고정. 포즈와 별개 축.
+  // Ink. BOIL keeps the lines boiling (cycling 3 boil frames), STILL pins frame 0. A separate axis from pose.
   ink: {
     el: document.getElementById("inkSeg"), initial: "boil",
     apply: (value) => scene.setBoil(value === "boil")
   },
-  // 재생성. 기본은 STILL — 형태는 NEW SEED를 눌러야만 바뀐다.
-  // LIVE를 켜면 레퍼런스 영상처럼 슬롯이 각자의 시계로 교체된다.
+  // Regen. STILL by default — form changes only when NEW SEED is pressed.
+  // Turn LIVE on and slots swap on their own clocks, like the reference video.
   live: {
     el: document.getElementById("liveSeg"), initial: "off",
     apply: (value) => scene.setRegen(value === "on")
   },
-  // 종족 프리뷰. ALL은 고정 레인, 나머지는 그 종족만 — 색·파츠 분포를 판단할 때
+  // Species preview. ALL is the fixed lanes, the rest are that species only — for judging color and part distribution
   species: {
     el: document.getElementById("speciesSeg"), initial: "all", rebuild: true,
     apply: (value) => { only = value === "all" ? null : value; }
@@ -123,7 +123,7 @@ const controls = createControls({
   }
 }, (def) => (def.rebuild ? render() : syncUrl()));
 
-// 단축키 — R 시드 · B 포즈 · I 잉크 · S 재생성. 버튼과 같은 경로(set)를 탄다
+// Shortcuts — R seed · B pose · I ink · S regen. They go through the same path as the buttons (set)
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
   if (key === "r") reseed();
@@ -132,8 +132,8 @@ window.addEventListener("keydown", (event) => {
   if (key === "s") controls.set("live", controls.value("live") === "on" ? "off" : "on");
 });
 
-// 주소창에 시드 해시를 붙여 넣는 경우. 같은 문서 안의 해시 변경은 리로드가 없어서 이걸 안 걸면
-// 주소만 바뀌고 판은 그대로다. syncUrl이 쓴 해시로도 불리므로 값이 같으면 넘어간다
+// For pasting a seed hash into the address bar. A hash change within the same document does not reload, so without this
+// only the address would move while the board stayed put. It is also called for the hash syncUrl wrote, so an identical value is skipped
 window.addEventListener("hashchange", () => {
   const fromHash = readSeedFromHash();
   if (fromHash === null || fromHash === seed) return;
@@ -143,7 +143,7 @@ window.addEventListener("hashchange", () => {
 
 window.addEventListener("resize", () => scene.resize());
 
-// 주소의 값을 화면에 넣고 나서 한 번 굽는다
+// Puts the address's values into the screen, then bakes once
 controls.read(new URLSearchParams(window.location.search));
 booted = true;
 render();

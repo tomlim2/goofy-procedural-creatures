@@ -21,7 +21,7 @@ html, body {
   width: 100%;
   height: 100%;
   display: block;
-  /* 위계를 명시한다. DOM 순서에만 기대면 안 된다. */
+  /* Stated explicitly. Relying on DOM order alone is not enough. */
   z-index: 0;
 }
 
@@ -40,7 +40,7 @@ html, body {
 
 .mark { font-weight: 700; letter-spacing: 0.18em; text-decoration: none; }
 .sub { opacity: 0.5; }
-/* 헤더는 클릭을 캔버스로 흘려보내지만(pointer-events: none) 링크는 눌려야 한다 */
+/* The header lets clicks fall through to the canvas (pointer-events: none), but links still have to be clickable */
 .bar a { pointer-events: auto; color: inherit; }
 .status { margin-left: auto; opacity: 0.6; }
 
@@ -56,7 +56,7 @@ html, body {
 
 .card {
   border: 1px solid var(--line);
-  /* 반투명이면 뒤의 크리처가 비쳐서 버튼이 그림 밑에 깔린 것처럼 보인다 */
+  /* If it were translucent the creature behind would show through and the buttons would look buried under the drawing */
   background: #f2ecdf;
   box-shadow: 0 2px 12px rgba(43, 39, 36, 0.12);
   padding: 8px 12px;
@@ -99,7 +99,7 @@ select {
 }
 select.wide { width: 100%; }
 
-/* 나란한 셀렉트 둘 (갤러리 FIX) */
+/* Two selects side by side (the gallery FIX) */
 .seg select { flex: 1; min-width: 0; }
 
 .seg { display: flex; gap: 4px; }
@@ -108,8 +108,8 @@ select.wide { width: 100%; }
 .hint { margin: 0; opacity: 0.45; }
 .hint a, .sub a { color: inherit; }
 
-/* 파츠 갤러리 — 캔버스를 덱 오른쪽·헤더 아래로 밀어 카드가 그림을 안 가린다.
-   라벨은 캔버스와 같은 상자에 놓고 gallery.js가 카메라 투영으로 위치를 잡는다 */
+/* Parts gallery — the canvas is pushed right of the deck and below the header so the cards never cover the drawing.
+   Labels sit in the same box as the canvas and gallery.js places them by camera projection */
 .gallery #stage,
 .gallery .labels {
   left: 252px;
@@ -139,9 +139,9 @@ select.wide { width: 100%; }
   place-content: center;
 }
 
-/* 얼굴 파츠 전수조사 — 덱이 넓고(보고서), 캔버스는 그만큼 밀린다 */
+/* Face part audit — the deck is wide (it holds the report) and the canvas is pushed over by that much */
 .audit .deck { width: 360px; }
-.audit #stage { left: 0; width: 100%; }   /* 캔버스는 화면 전체 — 개체가 커야 픽셀 검사가 정확하다. 덱이 위에 뜬다 */
+.audit #stage { left: 0; width: 100%; }   /* Canvas takes the whole screen — individuals have to be big for the pixel check to be accurate. The deck floats above it */
 .audit .report {
   margin: 0;
   max-height: 60vh;

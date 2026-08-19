@@ -1,7 +1,7 @@
-// 화면 조작 유틸 — main.js·gallery.js가 같이 쓴다. 씬을 모른다.
+// Screen control utilities — main.js and gallery.js share them. They know nothing about the scene.
 
-// 세그먼트 버튼 묶음(`.seg > button[data-<attr>]`)을 배선한다. 클릭하면 `.on`을 그 버튼으로 옮기고 onChange(value)를 부른다.
-// 돌려주는 것: { value(), set(value) } — 키보드 단축키는 set으로 버튼 클릭과 같은 경로를 탄다.
+// Wires a segmented button group (`.seg > button[data-<attr>]`). A click moves `.on` to that button and calls onChange(value).
+// Returns { value(), set(value) } — keyboard shortcuts go through set, the same path as a button click.
 export function bindSeg(container, attr, onChange) {
   const buttons = () => [...container.querySelectorAll(`button[data-${attr}]`)];
   const select = (button) => {
@@ -24,8 +24,8 @@ export function bindSeg(container, attr, onChange) {
   };
 }
 
-// <select> 하나를 배선한다. bindSeg와 **같은 모양**({ value, set })을 돌려준다 — 컨트롤러가 버튼 묶음과 목록을 구별 없이 다룬다.
-// set은 목록에 있는 값만 받는다 (주소에서 들어온 값이 옵션에 없으면 아무것도 안 한다 — bindSeg의 set과 같은 태도).
+// Wires one <select>. Returns the **same shape** as bindSeg ({ value, set }) — so the controller handles button groups and dropdowns without telling them apart.
+// set only accepts values in the list (a value arriving from the address that is not an option does nothing — the same attitude as bindSeg's set).
 export function bindSelect(select, onChange) {
   select.addEventListener("change", () => onChange(select.value));
   return {
@@ -38,7 +38,7 @@ export function bindSelect(select, onChange) {
   };
 }
 
-// <select>에 옵션 하나를 붙인다
+// Appends one option to a <select>
 export function addOption(select, value, label) {
   const option = document.createElement("option");
   option.value = value;
@@ -46,13 +46,13 @@ export function addOption(select, value, label) {
   select.appendChild(option);
 }
 
-// 32비트 무작위 시드 (화면에서 NEW SEED를 누를 때만 — 생성 경로에서는 Math.random을 쓰지 않는다, guidelines/determinism.md)
+// A 32-bit random seed (only when NEW SEED is pressed on screen — the generation path never uses Math.random, guidelines/determinism.md)
 export function randomSeed() {
   return (Math.random() * 0xffffffff) >>> 0;
 }
 
-// rAF 루프. 예외가 나도 루프는 살린다 — rAF 루프가 죽으면 라벨만 바뀌고 캔버스가 멈춰서 "버튼이 안 눌린다"로 보인다.
-// tick(elapsedSeconds)을 프레임마다 부른다. onError는 상태 라벨 갱신용
+// rAF loop. The loop survives exceptions — if the rAF loop dies, only the label changes while the canvas freezes, which reads as "the buttons don't work".
+// Calls tick(elapsedSeconds) every frame. onError is for updating the status label
 export function runLoop(tick, onError) {
   const start = performance.now();
   const frame = () => {

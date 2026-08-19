@@ -1,7 +1,7 @@
-// 아키타입 — 성향. 문서: guidelines/character/types.md
+// Archetypes — dispositions. Docs: guidelines/character/types.md
 
-// 아키타입. 순수 랜덤 조합은 금방 "아까 본 것"처럼 보인다.
-// 성향을 먼저 뽑고 그 안에서 변주해야 35마리가 서로 달라 보인다.
+// Archetypes. Purely random combinations start looking like "the one I just saw".
+// Drawing a disposition first and varying inside it is what makes 35 creatures look different from each other.
 export const ARCHETYPES = [
   {
     name: "beast",
@@ -22,7 +22,7 @@ export const ARCHETYPES = [
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
       eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
       hair: [["bob", 3], ["helmet", 2], ["bangs", 2], ["longbob", 1.5], ["long", 1.5], ["verylong", 1], ["ponytail", 1], ["wisp", 2], ["curly", 2], ["cloud", 1], ["sweep", 2], ["none", 2]],
-      headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet 비활성
+      headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet disabled
       mouth: [["line", 3], ["dot", 2], ["smile", 2], ["three", 1.5], ["frown", 1], ["smug", 1.5], ["bracket", 1]],
       nose: [["long", 3], ["hook", 3], ["dot", 1]],
       horns: [["none", 6], ["nub", 1]]

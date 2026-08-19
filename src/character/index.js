@@ -1,9 +1,9 @@
-// 캐릭터 — "무엇인가". 시드가 결정하는 정적인 모든 것.
-//   vocabulary/  무엇이 있는가 (슬롯·종족·아키타입·팔레트)
-//   spec.js      시드 → 스펙 (조합 규칙·제약·비율)
-//   draw/        스펙 → 획 (지오메트리)
-// 움직임은 여기 없다. 그건 ../motion/이다.
-// 문서: guidelines/character/
+// Character — "what it is". Everything static that the seed decides.
+//   vocabulary/  what exists (slots, species, archetypes, palette)
+//   spec.js      seed -> spec (combination rules, constraints, proportions)
+//   draw/        spec -> strokes (geometry)
+// Movement is not here. That is ../motion/.
+// Docs: guidelines/character/
 
 export { makeCreature, makeGrid, laneSpecies, LANES } from "./spec.js";
 export { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, BIND_ARM, tailSketch, LAYER_KEYS, HAIR_KEYS, STATIC_EYE_KEYS } from "./draw/index.js";
