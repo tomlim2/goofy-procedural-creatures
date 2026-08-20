@@ -1,0 +1,243 @@
+// The medium page — draws how.html's legend live with the board's own code (stroke.js, material.js, the palette).
+// Nothing here is an illustration OF the system; every figure runs THROUGH it, so the page cannot drift from the truth.
+//
+// One hidden WebGL renderer paints every figure's small 2D canvas (one context, many views — a page of
+// per-figure contexts would hit the browser's context cap). Each figure is baked BOIL_FRAMES times like a
+// creature layer, differing only in jitter phase, and cycles at the board's own pace (rig.js boilFps).
+
+import * as THREE from "three";
+import { Sketch, blobPath, arcPath } from "./stroke.js";
+import { sketchMesh } from "./scene/material.js";
+import { makeRng, makeNoise, seedFromString } from "./rng.js";
+import { BOIL_FRAMES } from "./scene/rig.js";
+import { runLoop } from "./ui.js";
+import { shade } from "./color.js";
+import { PAPER, INKS, FILLS, POPS, DARKS } from "./character/index.js";
+import { FURS, CALICO_MID, ACCENTS } from "./character/vocabulary/palette.js";
+
+const TAU = Math.PI * 2;
+const INK = INKS[0];
+const BLUSH = "#d9968a";   // the blush/tongue pink (mouth.js PINK)
+
+// The page draws the same picture on every load — one fixed noise, like a creature's wobbleSeed
+const noise = makeNoise(makeRng(seedFromString("HOW")));
+
+// ---------------------------------------------------------------- figures
+// A figure: world [x0, y0, x1, y1] (left, bottom, right, top) and draw(sk), called once per boil variant.
+// sk(wobble) hands out a Sketch whose jitter phase is already scattered by variant and figure —
+// the draw functions only decide fills-before-ink order, exactly like a creature layer.
+const FIGS = {};
+function fig(name, world, draw) { FIGS[name] = { name, world, draw }; }
+
+// Three columns, one drawing each — the comparison figures (widths, wobble, blob knobs)
+const col = (i) => (i - 1) * 0.5;
+
+fig("ribbon", [-0.8, -0.12, 0.8, 0.12], (sk) => {
+  const ink = sk();
+  [0.007, 0.012, 0.022].forEach((width, i) => {
+    const x = col(i);
+    ink.stroke([[x - 0.21, 0], [x - 0.07, 0.02], [x + 0.07, -0.015], [x + 0.21, 0.01]], { color: INK, width });
+  });
+});
+
+fig("clipart", [-0.85, -0.1, 0.85, 0.1], (sk) => {
+  const ink = sk();
+  const wave = (x) => [[x - 0.3, 0], [x - 0.1, 0.035], [x + 0.1, -0.025], [x + 0.3, 0.01]];
+  ink.stroke(wave(-0.42), { color: INK, width: 0.012, jitter: 0 });   // the noise alone turned off — clip art
+  ink.stroke(wave(0.42), { color: INK, width: 0.012 });
+});
+
+fig("beans", [-0.5, -0.07, 0.5, 0.07], (sk) => {
+  const ink = sk();
+  for (let i = 0; i < 6; i += 1) {
+    const x = -0.375 + i * 0.15;
+    const half = i % 2 ? 0.005 : 0.015;                               // a freckle and a dot mouth
+    ink.stroke([[x - half, 0], [x + half, 0]], { color: INK, width: i % 2 ? 0.012 : 0.017 });
+  }
+});
+
+fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
+  [0.45, 1, 1.9].forEach((wobble, i) => {
+    const s = sk(wobble);                                             // one sketch per column — its own hand
+    const x = col(i);
+    s.outline(blobPath(x, 0, 0.14, 0.12, { lumps: 5, amount: 0.08, noise, phase: 2 + i }), { color: INK, width: 0.011 });
+    for (const side of [-1, 1]) s.stroke([[x + side * 0.05 - 0.012, 0.03], [x + side * 0.05 + 0.012, 0.03]], { color: INK, width: 0.016 });
+    s.stroke(arcPath(x, -0.03, 0.05, 0.035, Math.PI, TAU), { color: INK, width: 0.011 });
+  });
+});
+
+fig("outline", [-0.75, -0.27, 0.75, 0.27], (sk) => {
+  sk().outline(blobPath(0, 0, 0.42, 0.2, { lumps: 4, amount: 0.09, noise, phase: 7, square: 0.3 }), { color: INK, width: 0.012, passes: 2 });
+});
+
+fig("register", [-0.45, -0.22, 0.45, 0.22], (sk) => {
+  const fills = sk(), ink = sk();
+  const path = blobPath(0, 0, 0.26, 0.17, { lumps: 5, amount: 0.09, noise, phase: 11 });
+  fills.fill(path, FILLS[0], [0.03, -0.024]);                         // out of register, like every head and body
+  ink.outline(path, { color: INK, width: 0.012, passes: 2 });
+});
+
+fig("shading", [-0.45, -0.2, 0.45, 0.2], (sk) => {
+  const fills = sk(), ink = sk();
+  const path = blobPath(0, 0, 0.3, 0.15, { lumps: 4, amount: 0.1, noise, phase: 13 });
+  fills.fill(path, FILLS[5], [0.014, -0.01]);
+  fills.scribbleFill(0, 0, 0.24, 0.09, { color: shade(FILLS[5], 0.9), angle: Math.PI * 0.28, gap: 0.03, width: 0.006 });
+  ink.outline(path, { color: INK, width: 0.012, passes: 2 });
+});
+
+fig("hair", [-0.45, -0.26, 0.45, 0.26], (sk) => {
+  const ink = sk();
+  ink.outline(blobPath(0, -0.06, 0.24, 0.18, { lumps: 5, amount: 0.07, noise, phase: 17 }), { color: INK, width: 0.01 });
+  ink.scribble(arcPath(0, 0.06, 0.16, 0.09, Math.PI * 0.15, Math.PI * 0.85, 12), { color: INK, width: 0.008, spread: 0.045 });
+});
+
+fig("hatch", [-0.45, -0.2, 0.45, 0.2], (sk) => {
+  const fills = sk(), ink = sk();
+  const path = blobPath(0, 0, 0.24, 0.15, { lumps: 5, amount: 0.09, noise, phase: 19 });
+  fills.fill(path, FILLS[3], [0.016, -0.012]);
+  ink.outline(path, { color: INK, width: 0.011 });
+  ink.hatch(0.02, -0.01, 0.14, 0.08, Math.PI * 0.25, { color: INK, lines: 6, width: 0.006 });
+});
+
+// The blobPath knobs — one knob per figure, three values each
+function blobRow(sk, phase, make) {
+  const fills = sk(), ink = sk();
+  for (let i = 0; i < 3; i += 1) {
+    const path = make(i, col(i), phase + i * 3);
+    fills.fill(path, FILLS[1], [0.012, -0.01]);
+    ink.outline(path, { color: INK, width: 0.011 });
+  }
+}
+fig("lumps", [-0.75, -0.19, 0.75, 0.19], (sk) => blobRow(sk, 23, (i, x, phase) =>
+  blobPath(x, 0, 0.14, 0.13, { lumps: 5, amount: [0, 0.08, 0.2][i], noise: i ? noise : null, phase })));
+fig("square", [-0.75, -0.19, 0.75, 0.19], (sk) => blobRow(sk, 31, (i, x, phase) =>
+  blobPath(x, 0, 0.14, 0.13, { lumps: 5, amount: 0.06, noise, phase, square: [0, 0.9, 1.8][i] })));
+fig("taper", [-0.75, -0.19, 0.75, 0.19], (sk) => blobRow(sk, 41, (i, x, phase) =>
+  blobPath(x, 0, 0.14, 0.13, { lumps: 5, amount: 0.06, noise, phase, taper: [-0.35, 0, 0.35][i] })));
+
+fig("arcs", [-0.75, -0.14, 0.75, 0.14], (sk) => {
+  const ink = sk();
+  ink.stroke(arcPath(col(0), 0.02, 0.12, 0.08, Math.PI, TAU), { color: INK, width: 0.012 });         // smile
+  ink.stroke(arcPath(col(1), -0.04, 0.1, 0.07, 0, Math.PI), { color: INK, width: 0.012 });           // frown
+  ink.stroke(arcPath(col(2), 0.02, 0.1, 0.06, Math.PI * 1.1, Math.PI * 1.9, 10), { color: INK, width: 0.012 });   // a shut lid (rig.js LID_STYLE)
+});
+
+// Swatch strips — the palette groups, each color a small lumpy mass (a circle would break this page's own rules)
+function swatches(name, list) {
+  const n = list.length;
+  fig(name, [-n * 0.11, -0.105, n * 0.11, 0.105], (sk) => {
+    const fills = sk(), ink = sk();
+    list.forEach((hex, i) => {
+      const x = (i - (n - 1) / 2) * 0.22;
+      const path = blobPath(x, 0, 0.075, 0.075, { lumps: 4, amount: 0.12, noise, phase: 53 + i * 2.6 });
+      fills.fill(path, hex, [0.007, -0.006]);
+      ink.outline(path, { color: INK, width: 0.006 });
+    });
+  });
+  FIGS[name].labels = list;
+}
+swatches("paperink", [PAPER, ...INKS]);
+swatches("fillsRow", FILLS);
+swatches("pops", POPS);
+swatches("darks", DARKS);
+swatches("furs", [...FURS, CALICO_MID]);
+swatches("accents", ACCENTS);
+
+fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {
+  const fills = sk(), ink = sk();
+  const head = blobPath(0, 0, 0.27, 0.24, { lumps: 5, amount: 0.07, noise, phase: 71, square: 0.4, taper: 0.08 });
+  fills.fill(head, FILLS[2], [0.022, -0.018]);
+  for (const side of [-1, 1]) fills.scribbleFill(side * 0.17, -0.05, 0.045, 0.028, { color: BLUSH, gap: 0.02, width: 0.006 });
+  ink.outline(head, { color: INK, width: 0.012, passes: 2 });
+  for (const side of [-1, 1]) ink.stroke([[side * 0.09 - 0.015, 0.05], [side * 0.09 + 0.015, 0.05]], { color: INK, width: 0.017 });
+  ink.stroke(arcPath(0, -0.05, 0.06, 0.045, Math.PI, TAU), { color: INK, width: 0.011 });
+});
+
+// ---------------------------------------------------------------- machinery
+const statusLabel = document.getElementById("status");
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+renderer.setClearColor(0x000000, 0);
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+
+const figures = [];
+document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
+  const entry = FIGS[el.dataset.fig];
+  if (!entry) return;
+  const [x0, y0, x1, y1] = entry.world;
+  const scene = new THREE.Scene();
+  const frames = [];
+  for (let k = 0; k < BOIL_FRAMES; k += 1) {
+    const group = new THREE.Group();
+    const sketches = [];
+    const sk = (wobble = 1) => {
+      const s = new Sketch(noise, wobble);
+      s.phase = index * 131 + k * 997 + sketches.length * 17;   // the variant IS the phase — same drawing, different shiver
+      sketches.push(s);
+      return s;
+    };
+    entry.draw(sk);
+    group.add(sketchMesh(sketches, 1, 0));
+    group.visible = k === 0;
+    scene.add(group);
+    frames.push(group);
+  }
+  if (entry.labels) {
+    const subs = el.querySelector(".subs");
+    for (const hex of entry.labels) {
+      const span = document.createElement("span");
+      span.textContent = hex;
+      subs.appendChild(span);
+    }
+  }
+  figures.push({
+    el,
+    canvas: el.querySelector("canvas"),
+    subs: el.querySelector(".subs"),
+    camera: new THREE.OrthographicCamera(x0, x1, y1, y0, -1, 1),
+    scene, frames, frame: 0,
+    aspect: (y1 - y0) / (x1 - x0),
+    // The medium is tuned for the board's scale (about 230 px per world unit). Blown up much past it,
+    // the ribbon shows its seams — the closed loop's taper pinch, the press fins — so a figure never
+    // magnifies beyond 300 px per world unit; the canvas centres in its card instead of stretching
+    maxW: Math.round(300 * (x1 - x0)),
+    // The board's own cadence (rig.js) — staggered so the page never flips all at once
+    boilFps: (8 + (index % 5) * 0.5) / 15,
+    boilOffset: index % BOIL_FRAMES,
+    width: 0
+  });
+});
+
+const dpr = renderer.getPixelRatio();
+function paint(f) {
+  const w = Math.min(f.el.clientWidth - 24, f.maxW);   // 24 — the card's horizontal padding
+  if (w <= 0) return;
+  const h = Math.max(36, Math.round(w * f.aspect));
+  if (w !== f.width) {
+    f.width = w;
+    f.canvas.style.width = `${w}px`;
+    f.canvas.style.height = `${h}px`;
+    f.canvas.width = Math.round(w * dpr);
+    f.canvas.height = Math.round(h * dpr);
+    if (f.subs) f.subs.style.maxWidth = `${w}px`;
+  }
+  renderer.setSize(w, h, false);
+  renderer.render(f.scene, f.camera);
+  const ctx = f.canvas.getContext("2d");
+  ctx.clearRect(0, 0, f.canvas.width, f.canvas.height);
+  ctx.drawImage(renderer.domElement, 0, 0, f.canvas.width, f.canvas.height);
+}
+
+for (const f of figures) paint(f);
+window.addEventListener("resize", () => { for (const f of figures) { f.width = 0; paint(f); } });
+statusLabel.textContent = `${figures.length} FIGURES`;
+
+runLoop((t) => {
+  for (const f of figures) {
+    const frame = Math.floor(t * f.boilFps + f.boilOffset) % BOIL_FRAMES;
+    if (frame !== f.frame) {
+      f.frame = frame;
+      f.frames.forEach((group, k) => { group.visible = k === frame; });
+      paint(f);
+    }
+  }
+}, () => { statusLabel.textContent = "ERROR"; });

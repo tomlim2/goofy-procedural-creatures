@@ -165,6 +165,48 @@ select.wide { width: 100%; }
 }
 
 
+/* The medium page (how.html) — the only screen that scrolls: a document, not a board.
+   Every figure is a card holding one canvas; the bar gets a paper back so the text passes under it */
+body.how { height: auto; }
+.how .bar { background: var(--paper); border-bottom: 1px solid var(--line); }
+.how .page { max-width: 880px; margin: 0 auto; padding: 68px 20px 48px; }
+.how .lede, .how section > p { max-width: 660px; opacity: 0.8; }
+.how h2 {
+  margin: 44px 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: rgba(43, 39, 36, 0.55);
+}
+.how .figs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  margin-top: 14px;
+}
+.how figure {
+  margin: 0;
+  border: 1px solid var(--line);
+  background: #f2ecdf;   /* the card back — the canvases are transparent and sit on it */
+  padding: 12px 12px 10px;
+  /* A grid item grows to its min-content — nine unbreakable hex labels would push the card past a phone
+     screen. Let the card shrink and clip instead */
+  min-width: 0;
+  overflow: hidden;
+}
+.how figure.wide { grid-column: 1 / -1; }
+/* how.js caps a figure at ~300 px per world unit (the board's own scale) and centres it in the card */
+.how figure canvas { display: block; width: 100%; margin: 0 auto; }
+.how .subs { display: flex; margin: 2px auto 0; }
+.how .subs span { flex: 1; text-align: center; font-size: 10px; letter-spacing: 0.1em; opacity: 0.55; }
+.how figcaption { margin-top: 8px; font-size: 11px; line-height: 1.6; opacity: 0.85; }
+.how code { font: inherit; background: rgba(43, 39, 36, 0.08); padding: 0 3px; }
+.how .foot { margin-top: 52px; opacity: 0.6; }
+.how a { color: inherit; }
+@media (max-width: 700px) {
+  .how .figs { grid-template-columns: 1fr; }
+  .how .subs span { font-size: 8px; letter-spacing: 0; }   /* nine hex codes have to fit one phone row */
+}
+
 /* Face part audit — the deck is wide (it holds the report) and the canvas is pushed over by that much */
 .audit .deck { width: 360px; }
 .audit #stage { left: 0; width: 100%; }   /* Canvas takes the whole screen — individuals have to be big for the pixel check to be accurate. The deck floats above it */

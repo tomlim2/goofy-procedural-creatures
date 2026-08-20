@@ -39,6 +39,10 @@ To go back, press **MENAGERIE** in the header.
 (species and seed fixed). The FIX dropdown (`&fix=legLength:short`) pins one other slot, and `&values=bangs,bun` puts just a few of that slot's
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
+`/how.html` — **the medium page**. The legend of how everything is drawn — every stroke kind, the blobPath knobs,
+the palette groups and the boil — each figure drawn live by the same `src/stroke.js` that draws the creatures, at the board's own scale and cadence.
+The page cannot drift from the code, because it runs the code.
+
 `/audit.html?seed=…` — **the face part audit**. Draws one board (35 creatures) in 22 face states (startle, sleep, blink, ^^, wink, anger, brow/mouth switches,
 8-way turns, the ☆♥ variants, and combinations), toggling the eyes, nose, mouth, brows, eyewear, cheeks and sleep lids one at a time and counting the pixel difference. Under 4% of the head width is written down as
 "not visible". Run it whenever you change the face — it has to be 0.
@@ -87,6 +91,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
 | `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state | [character/rules](guidelines/character/rules.md) |
+| `src/how.js` · `how.html` | The medium page — the stroke kinds, the blobPath knobs, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
 | `guidelines/` | The catalog and rules for the two axes, plus the performance, seed and drawing rules. **Read before changing anything** | [README](guidelines/README.md) |
 | `reference/` | What it was made from, and what was and was not taken | [README](reference/README.md) |
 | `scripts/` | § Scripts below | |

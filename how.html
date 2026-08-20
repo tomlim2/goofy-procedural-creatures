@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MENAGERIE — how it is drawn</title>
+<meta name="description" content="The medium page: every stroke kind, shape recipe and color of the board, drawn live by the same code that draws the creatures.">
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body class="how">
+
+<header class="bar">
+  <a class="mark" href="./index.html">MENAGERIE</a>
+  <span class="sub">HOW IT IS DRAWN · <a href="./index.html">← GRID</a></span>
+  <span class="status" id="status">BOOT</span>
+</header>
+
+<main class="page">
+
+<p class="lede">Everything on the board is made of what is on this page. No textures, no brush images —
+the hand comes from rules alone. Every figure below is drawn live by <code>src/stroke.js</code>,
+the same code that draws the creatures, and the lines boil at the board's own pace.</p>
+
+<!-- ================================================================ -->
+<section>
+<h2>THE LINE</h2>
+<p>WebGL cannot draw a thick line, so there are no lines here at all — every stroke is a
+<b>triangle ribbon</b>. Four things have to be present together to read as a pencil:
+re-sampling at an even spacing, noise along the normal (a slow bend plus a fine tremor),
+an end taper, and uneven pressure through the middle. Leave out any one and it becomes vector clip art.</p>
+
+<div class="figs">
+  <figure data-fig="ribbon">
+    <canvas></canvas>
+    <div class="subs"><span>width 0.007</span><span>0.012</span><span>0.022</span></div>
+    <figcaption><b>s.stroke</b> — the ribbon. Re-sampled every 0.03, bent by two noises,
+    pinched at both ends, pressed unevenly in the middle. Width is the maximum, never the rule.</figcaption>
+  </figure>
+
+  <figure data-fig="clipart">
+    <canvas></canvas>
+    <div class="subs"><span>jitter 0 — clip art</span><span>the hand</span></div>
+    <figcaption><b>the four ingredients</b> — the same stroke with its noise turned off, above.
+    Taper and pressure alone are not enough; without the wobble it is already dead.</figcaption>
+  </figure>
+
+  <figure data-fig="beans">
+    <canvas></canvas>
+    <div class="subs"><span>shorter than the re-sample step</span></div>
+    <figcaption><b>the bean rule</b> — a stroke shorter than 0.03 samples only at its two ends,
+    and the end taper would erase it. It gets one sample in the middle, so a dot mouth or a
+    freckle stays a small bean instead of vanishing.</figcaption>
+  </figure>
+
+  <figure data-fig="hands">
+    <canvas></canvas>
+    <div class="subs"><span>wobble 0.45</span><span>1.0</span><span>1.9</span></div>
+    <figcaption><b>every individual has a different hand</b> — <code>proportions.wobble</code>
+    multiplies the jitter per creature. Some come out neat and some a mess; drawn with one
+    constant, the whole board falls into the same handwriting.</figcaption>
+  </figure>
+</div>
+</section>
+
+<!-- ================================================================ -->
+<section>
+<h2>THE MARKS</h2>
+<p>What an area gets. A flat fill is allowed, but it must miss its outline a little —
+and anything that means <em>shading</em> is not a fill at all, it is the pen going back and forth.</p>
+
+<div class="figs">
+  <figure data-fig="register">
+    <canvas></canvas>
+    <div class="subs"><span>fillOffset — out of register</span></div>
+    <figcaption><b>fill</b> — a fan of triangles from the centre, printed slightly off its line
+    (<code>fillOffset</code>, ±0.035 per individual) like a cheap print. A fill that lands
+    exactly inside its outline looks like a sticker.</figcaption>
+  </figure>
+
+  <figure data-fig="shading">
+    <canvas></canvas>
+    <div class="subs"><span>one zigzag stroke</span></div>
+    <figcaption><b>s.scribbleFill</b> — shading is one stroke zigzagging across the area,
+    so the pen direction shows. This is what a pencil-shaded patch really is; every body
+    carries one.</figcaption>
+  </figure>
+
+  <figure data-fig="hair">
+    <canvas></canvas>
+    <div class="subs"><span>14 passes, reaching outward</span></div>
+    <figcaption><b>s.scribble</b> — hair is never a filled shape. The same path is drawn
+    over and over with drift and wave, narrower toward the face, reaching outward.</figcaption>
+  </figure>
+
+  <figure data-fig="hatch">
+    <canvas></canvas>
+    <div class="subs"><span>parallel strokes, never a gradient</span></div>
+    <figcaption><b>s.hatch</b> — shadow on a cheek or a forehead: a few parallel strokes
+    clipped to an ellipse. Each one is a full ribbon, so each one wobbles on its own.</figcaption>
+  </figure>
+</div>
+</section>
+
+<!-- ================================================================ -->
+<section>
+<h2>THE SHAPES</h2>
+<p>The reference's head is not a circle but a lumpy mass. One recipe, <b>blobPath</b>, makes
+every closed shape on the board: a superellipse bent by noise, squared and tapered by two knobs.</p>
+
+<div class="figs">
+  <figure data-fig="lumps">
+    <canvas></canvas>
+    <div class="subs"><span>amount 0 — a circle</span><span>0.08</span><span>0.2</span></div>
+    <figcaption><b>lumps</b> — noise pushes the radius in and out. At amount 0 it is a perfect
+    ellipse, which is exactly why amount 0 never appears on the board.</figcaption>
+  </figure>
+
+  <figure data-fig="square">
+    <canvas></canvas>
+    <div class="subs"><span>square 0</span><span>0.9</span><span>1.8</span></div>
+    <figcaption><b>square</b> — the superellipse exponent. 0 is an ellipse, around 1.5 a rounded
+    box. Box heads and tube bodies live at the right end.</figcaption>
+  </figure>
+
+  <figure data-fig="taper">
+    <canvas></canvas>
+    <div class="subs"><span>taper −0.35</span><span>0</span><span>+0.35</span></div>
+    <figcaption><b>taper</b> — the top/bottom width ratio. Positive is wider at the bottom
+    (a pear), negative wider at the top. Most heads sit a little off zero.</figcaption>
+  </figure>
+
+  <figure data-fig="arcs">
+    <canvas></canvas>
+    <div class="subs"><span>smile</span><span>frown</span><span>a shut lid</span></div>
+    <figcaption><b>arcPath</b> — mouths, brows and lids are sections of an ellipse, handed to
+    <code>stroke</code> like any other path, so they wobble like everything else.</figcaption>
+  </figure>
+
+  <figure data-fig="outline" class="wide">
+    <canvas></canvas>
+    <div class="subs"><span>passes 2 — the two never quite agree</span></div>
+    <figcaption><b>s.outline</b> — the closed stroke. The head and the body draw theirs twice;
+    each pass re-rolls its jitter phase, so the doubled line is the contour's texture.</figcaption>
+  </figure>
+</div>
+</section>
+
+<!-- ================================================================ -->
+<section>
+<h2>THE COLORS</h2>
+<p>Only colors that hold up on paper — push the saturation and the hand-drawn feel breaks
+immediately. And they go in as <b>linear</b>: three.js reads vertex colors as linear space,
+so an sRGB hex fed raw brightens — the ink <code>#2b2724</code> would come out a mid grey.
+Every hex passes through <code>hexToRgb → srgbToLinear</code> in <code>src/color.js</code>, nothing bypasses it.</p>
+
+<div class="figs">
+  <figure data-fig="paperink" class="wide">
+    <canvas></canvas>
+    <div class="subs"></div>
+    <figcaption><b>paper + inks</b> — the ground and four near-black browns. The ink is never
+    pure black; on paper, black is a color too.</figcaption>
+  </figure>
+
+  <figure data-fig="fillsRow" class="wide">
+    <canvas></canvas>
+    <div class="subs"></div>
+    <figcaption><b>fills</b> — skin and cloth. Dusty, close in value, so thirty-odd of them
+    can stand side by side without shouting.</figcaption>
+  </figure>
+
+  <figure data-fig="pops" class="wide">
+    <canvas></canvas>
+    <div class="subs"></div>
+    <figcaption><b>pops</b> — the only saturated colors. One board allows only one or two
+    carriers (<code>makeGrid</code> caps them); scattered everywhere they would stop popping.</figcaption>
+  </figure>
+
+  <figure data-fig="darks" class="wide">
+    <canvas></canvas>
+    <div class="subs"></div>
+    <figcaption><b>darks</b> — imp heads and bodies. Not one ink black but nine: blue-black,
+    brown-black, purple-black — all reading as "black" on paper, all different side by side.</figcaption>
+  </figure>
+
+  <figure data-fig="furs" class="wide">
+    <canvas></canvas>
+    <div class="subs"></div>
+    <figcaption><b>furs + the calico mid</b> — black fur is only moderately black, far lighter
+    than an imp, so a black cat stays a drawing instead of a blob of ink. The calico's middle
+    tone is a warm tan where a real calico's orange would go.</figcaption>
+  </figure>
+
+  <figure data-fig="accents" class="wide">
+    <canvas></canvas>
+    <div class="subs"></div>
+    <figcaption><b>accents</b> — greyed in-betweens for hats, patches and small props.</figcaption>
+  </figure>
+</div>
+</section>
+
+<!-- ================================================================ -->
+<section>
+<h2>THE MATERIAL &amp; THE BOIL</h2>
+<p>There is exactly one material — a flat <code>MeshBasicMaterial</code> with vertex colors,
+shared per opacity level by every mesh on the board. No depth test, so stacking is decided
+entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
+(fills first, ink after — within a mesh, vertex order is the stacking), one draw call per layer.</p>
+
+<div class="figs">
+  <figure data-fig="boilface" class="wide">
+    <canvas></canvas>
+    <div class="subs"><span>three bakes of the same drawing, cycling</span></div>
+    <figcaption><b>the boil</b> — nothing is redrawn at runtime. The same drawing is baked
+    3 times, differing only in jitter phase, and <code>visible</code> cycles once every
+    1.5–1.9 s per individual. The boil is a material, not a motion: the lines shiver even
+    while the character is frozen in the bind pose.</figcaption>
+  </figure>
+</div>
+</section>
+
+<footer class="foot">
+  <p>the code: <code>src/stroke.js</code> · <code>src/scene/material.js</code> · the words:
+  <code>guidelines/drawing.md</code> · the board: <a href="./index.html">← grid</a></p>
+</footer>
+
+</main>
+
+<noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>
+
+<script type="module" src="./src/how.js"></script>
+</body>
+</html>
