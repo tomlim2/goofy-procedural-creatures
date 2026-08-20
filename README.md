@@ -43,7 +43,9 @@ values up large. For judging the form of a single part. Where census is numbers,
 8-way turns, the ☆♥ variants, and combinations), toggling the eyes, nose, mouth, brows, eyewear, cheeks and sleep lids one at a time and counting the pixel difference. Under 4% of the head width is written down as
 "not visible". Run it whenever you change the face — it has to be 0.
 
-The main screen (`/`) has only **SEED · SPECIES · GRID · EXPORT**. The rest belongs to the debug screen (`/debug.html`).
+The main screen (`/`) has only **SEED · EXPORT · SPECIES · GRID**. The rest belongs to the debug screen (`/debug.html`).
+On narrow screens (≤700px) the deck moves from the left edge to a bottom strip — cards run left to right and
+scroll sideways (main and debug screens; gallery and audit assume a desktop width).
 
 | Control | |
 | --- | --- |

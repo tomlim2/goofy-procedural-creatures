@@ -63,17 +63,22 @@ html, body {
 }
 
 .card h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   margin: 0 0 6px;
   font-size: 10px;
   letter-spacing: 0.22em;
-  opacity: 0.55;
+  /* Dimmed via color, not opacity — the seed value sits inside the h2 and has to stay at full ink */
+  color: rgba(43, 39, 36, 0.55);
   font-weight: 600;
 }
 
+/* The seed value rides next to the card title */
 .seed {
-  margin: 0 0 10px;
-  font-size: 20px;
+  font-size: 14px;
   letter-spacing: 0.12em;
+  color: var(--ink);
 }
 
 button {
@@ -138,6 +143,27 @@ select.wide { width: 100%; }
   display: grid;
   place-content: center;
 }
+
+/* Mobile — the deck leaves the left edge and becomes a bottom strip: cards run left to right and scroll
+   sideways. Only the main and debug screens; gallery and audit assume a wide screen and keep their desktop
+   decks. The canvas stays fullscreen behind it. */
+@media (max-width: 700px) {
+  body:not(.gallery):not(.audit) .deck {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+    overflow-x: auto;
+  }
+  /* Cards shrink-wrap their controls; the strip scrolls instead of squeezing them */
+  body:not(.gallery):not(.audit) .card { flex: 0 0 auto; }
+  .sub { display: none; }   /* the tagline does not fit next to the title */
+}
+
 
 /* Face part audit — the deck is wide (it holds the report) and the canvas is pushed over by that much */
 .audit .deck { width: 360px; }
