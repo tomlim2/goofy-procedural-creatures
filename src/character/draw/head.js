@@ -46,26 +46,38 @@ export function drawEars(ink, fills, spec, box) {
   if (spec.species === "cat") return;   // cat ears are the layer in front of the head (drawCatEars) — being filled triangular bumps, they have to sit on top of the head
 
   const y = box.headCy - box.headRy * 0.05;
+  // Every ear is **filled in the skin** (the creature's material) before its line — an unfilled ear showed the paper through it. The layer is
+  // behind the head, so the part of the fill inside the silhouette is covered by the head; only the ear that sticks out shows
+  const skin = spec.palette.skin;
 
   for (const side of [-1, 1]) {
     const x = side * box.headRx * 0.98;
     if (kind === "round") {
-      ink.outline(blobPath(x, y, 0.035 * size, 0.045 * size, { lumps: 3, amount: 0.15, noise: null }), {
-        color: spec.palette.ink, width: 0.011
-      });
+      const ear = blobPath(x, y, 0.035 * size, 0.045 * size, { lumps: 3, amount: 0.15, noise: null });
+      paintPart(fills, spec, ear, skin);
+      ink.outline(ear, { color: spec.palette.ink, width: 0.011 });
     } else if (kind === "pointy") {
       // A pointy ear to the side — the size multipliers (pointyMid, pointyBig) make it longer and wider
-      ink.stroke([[x - 0.01, y + 0.05 * size], [x + side * 0.075 * size, y + 0.02], [x - 0.01, y - 0.05 * size]], {
-        color: spec.palette.ink, width: 0.011
-      });
+      const ear = [[x - 0.01, y + 0.05 * size], [x + side * 0.075 * size, y + 0.02], [x - 0.01, y - 0.05 * size]];
+      paintPart(fills, spec, ear, skin);
+      ink.stroke(ear, { color: spec.palette.ink, width: 0.011 });
     } else if (kind === "long") {
       // A long hanging ear — it can go on something other than a dog
       const lobe = blobPath(x + side * 0.012, y - box.headRy * 0.32, 0.035, box.headRy * 0.45, {
         lumps: 3, amount: 0.12, noise: null
       });
+      paintPart(fills, spec, lobe, skin);
       ink.outline(lobe, { color: spec.palette.ink, width: 0.01, passes: 2 });
     } else if (kind === "fold") {
       // A folded ear — the tip bends over (size multipliers)
+      const ear = [   // the line's points, closed along the head
+        [x - side * 0.01, y + 0.04 * size],
+        [x + side * 0.055 * size, y + 0.055 * size],
+        [x + side * 0.05 * size, y - 0.01 * size],
+        [x + side * 0.015 * size, y - 0.03 * size],
+        [x - side * 0.01, y - 0.03 * size]
+      ];
+      paintPart(fills, spec, ear, skin);
       ink.stroke([
         [x - side * 0.01, y + 0.04 * size],
         [x + side * 0.055 * size, y + 0.055 * size],
@@ -74,9 +86,9 @@ export function drawEars(ink, fills, spec, box) {
       ], { color: spec.palette.ink, width: 0.011 });
     } else {
       // flap — an ear hanging downward
-      ink.stroke(arcPath(x, y, 0.05, 0.09, -Math.PI * 0.6, Math.PI * 0.6), {
-        color: spec.palette.ink, width: 0.011
-      });
+      const flap = arcPath(x, y, 0.05, 0.09, -Math.PI * 0.6, Math.PI * 0.6);
+      paintPart(fills, spec, flap, skin);
+      ink.stroke(flap, { color: spec.palette.ink, width: 0.011 });
     }
   }
 }
