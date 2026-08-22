@@ -161,13 +161,17 @@ pointy the triangular ear — **its vertex embedded in the head (the corner)** w
 fold **the folded ear** (a button ear) — drawn in **head-normal coordinates**: the base embeds inside the outline along the **tangent** at the attachment point and the ear grows **along the normal** (out of the head).
 Above that the flap bends toward the tangent and hangs **below the crease** — on **one ear only**, the other being a standing ear like perk ·
 perk **the standing ear** — a triangle standing straight in the same normal coordinates. The root is generous (the ear is seated on the head) and the tip is **round and blunt** — a razor point reads as a horn, and wide and low becomes the round ear.
+**A dog's ear has three colors.** The **front** face is the dog's own color (the head's); the **back** face is the same a shade darker (0.86×) — it is
+the far side; the **inner** face is tender skin — pink (the same as the nose and blush) or the dog's color one step lighter (mixed 45% toward a pale
+neutral: never darker, never neon). Which face shows is the ear's pose: a standing ear (pointy, round, perk) shows its front with the inner patch on it,
+a hanging ear (flap, long) shows its back, and **the folded ear shows all three** — the standing root (front, the inner patch on it) and the flap bent over it (back).
 **The inner ear** — a patch made by scaling the ear shape 0.72 **about its root (where it meets the face)**, with no outline: its base attaches at the root and it narrows going up.
-Scale about the centre and it becomes a **patch hanging** mid-ear — the inner ear starts at the root. Per individual, a tone in the same family 45% ·
-pink (the same as the nose and blush) 30% · none 25% (`wobbleSeed`, no rng).
+Scale about the centre and it becomes a **patch hanging** mid-ear — the inner ear starts at the root. Per individual, the lighter tone 45% ·
+pink 30% · none 25% (`wobbleSeed`, no rng) — except on the folded ear, which always has it (its "none" falls to pink or the tone): the three colors are its design.
 **Cats follow the same rule** — a triangle whose base attaches at the root is drawn inside the triangular ear (0.62× the width, 0.7× the height): double line 45% · fill 30% (pink or a tone in the same family —
 toward the light side on black fur) · one crease stroke 15% (from the middle of the root to half the height) · none 10%. The inner **line** is a mark on fur and uses `spec.faceInk` —
 a black line on black fur is lost (the outline meets the background, so it stays black). It is not drawn on hanging ears (flap, long) — that pose shows the ear's **outer** face. On a folded ear **the standing root is the inner face**, so it is drawn there from the root up, and
-**the flap is the back (outer) face folded over**, so it takes a fur tone (0.82×) — paint it in the inner color and the drawing is inside out. The flap covers the inner patch, leaving only the root side.
+**the flap is the back face folded over**, so it takes the back color — paint it in the inner color and the drawing is inside out. The flap covers the inner patch, leaving only the root side.
 Use an inward-leaning axis like the other ears and the base lifts off the scalp and looks like **a box glued on the head**;
 curve the tip upward and it is a horn; reach out sideways only and it is a flag. The flap is the ear's inner face, so it is a shade darker, and the crease is **one ink stroke** — on black fur the two pieces are the same color and
 without the line the fold is invisible. The root outline is **an open path** (the top edge and the outer edge above it, which the flap covers, are never stroked) — within one layer the ink sits above the fills, so

@@ -2,7 +2,7 @@
 
 import { blobPath, arcPath } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
-import { shade, isDark } from "../../color.js";
+import { shade, isDark, mix } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
 import { calicoColors, surfaceValue, headDecals, decalEdges, paintPart } from "./body.js";
 
@@ -196,13 +196,17 @@ export function drawPupEars(ink, fills, spec, box) {
   //   the upper corner (a bit below the crown, θ≈50°) — pointy a perked triangular ear · round a round ear · fold a folded ear. They stand tilted up and inward
   //   the side (slightly out from beside the eyes, θ≈88°) — flap a lobe (the reference beagle) · long a basset. They hang, with the tip gathering toward the face
   // θ is the polar angle on the ellipse (headRx, headRy), measured from the crown. A filled lobe plus an outline drawn twice. none is nothing.
-  const earFill = shade(spec.palette.skin, 0.8);
+  // A dog's ear has three colors (guidelines/character/parts.md § dog ears): the **front** face is the dog's own color; the **back** face the same,
+  // a shade darker (0.86) — it is the far side; the **inner** face is tender skin — pink (the nose's and the blush's) or the dog's color one step
+  // lighter (mixed 45% toward a pale neutral — never darker, never neon), per individual (wobbleSeed, no rng): a tone 45% · pink 30% · none 25%.
+  // Which face shows is the ear's pose: a standing ear (pointy, round, perk) shows its front with the inner patch on it, a hanging ear (flap, long)
+  // shows its back, and the folded ear shows all three — the standing root (front, the inner patch on it) and the flap bent over it (back).
+  // The folded ear always has its inner patch — the three colors are its design — so its "none" falls to pink or the tone
   const cal = calicoColors(spec);   // on a piebald (calico), the ear on the side is black (the same side as the head patch)
   const earInk = { color: spec.palette.ink, width: 0.011, closed: true };   // the ears' line — RIBBON through contour (which takes color and closed; the open base stroke takes the width)
-  // The inner ear — per individual (wobbleSeed, no rng): a tone in the same family 45% · pink (the same as the nose and blush) 30% · none 25%.
-  // Not drawn on hanging ears (flap, long) or on a folded side's flap — those poses show the ear's **outer** face
   const innerRoll = spec.proportions.wobbleSeed % 100;
-  const innerFill = innerRoll < 45 ? shade(earFill, isDark(earFill) ? 1.95 : 0.62) : innerRoll < 75 ? "#d9968a" : null;
+  const innerTone = (fur) => (innerRoll < 45 || (innerRoll >= 75 && innerRoll % 2) ? mix(fur, "#f3ece0", 0.45) : "#d9968a");
+  const innerShown = innerRoll < 75;
   const upper = kind === "pointy" || kind === "round" || kind === "fold" || kind === "perk";
   // The upper position starts at θ≈50° on a round head and at **the vertex** (θ = 45°) on a square head (square, block) — so the triangular ear reaches out from the corner
   const boxy = Math.min(1, headShape(spec).square / 1.5);
@@ -290,7 +294,9 @@ export function drawPupEars(ink, fills, spec, box) {
         // The root outline — inner top → inner bottom → outer bottom → up to the flap's tip height only. The top edge and the outer edge above it are covered by the flap, so they are not stroked
         baseOutline = [nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW), nAt(-0.014, halfW), nAt(stand - drop - 0.004 * k, halfW * 0.72)];
       }
-    } else {
+    }
+    const hanging = kind === "flap" || kind === "long";
+    if (hanging) {
       // flap / long — a lobe hanging from the side of the head at the opposite tilt (0.25 rad inward), its tip gathering toward the face
       const len = ry * (kind === "long" ? 0.95 : 0.65);
       const tilt = -0.25;
@@ -298,20 +304,22 @@ export function drawPupEars(ink, fills, spec, box) {
       const cy = by - Math.cos(tilt) * (len * 0.5 - 0.005);
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
-    paintPart(fills, spec, path, cal && cal.side === side ? cal.dark : earFill);   // the ear is fur — the creature's goofy material
+    const fur = cal && cal.side === side ? cal.dark : spec.palette.skin;   // the front face — the dog's own color (a piebald's black on the patch side)
+    const back = shade(fur, 0.86);                                          // the back face — a shade darker
+    paintPart(fills, spec, path, hanging ? back : fur);   // the ear is fur — the creature's goofy material; a hanging ear shows its back
     // The inner ear — the ear shape scaled **about its root (where it meets the face)**. Its base attaches right at the root and it narrows going up
     // (scale about the centroid and it becomes a patch hanging mid-ear — the reference's inner ear starts at the root). There is no outline — being a filled patch, it reads even when small.
-    // Only hanging ears (flap, long) are skipped — that pose shows the ear's **outer** face. A folded ear is drawn here too, because **its root (the standing part) is the inner face**
-    if (innerFill && kind !== "flap" && kind !== "long") {
+    // Only hanging ears (flap, long) are skipped — that pose shows the ear's **outer** face. A folded ear always has it, because **its root (the standing part) is the inner face**
+    if (!hanging && (innerShown || flap)) {
       const root = [anchor.x + nx * 0.004, anchor.y + ny * 0.004];   // just outside the outline — the root position
-      paintPart(fills, spec, path.map(([x, y]) => [root[0] + (x - root[0]) * 0.72, root[1] + (y - root[1]) * 0.72]), innerFill, { own: true });
+      paintPart(fills, spec, path.map(([x, y]) => [root[0] + (x - root[0]) * 0.72, root[1] + (y - root[1]) * 0.72]), innerTone(fur), { own: true });
     }
     if (baseOutline) ink.stroke(baseOutline, earInk);
     else ink.contour(path, "RIBBON", earInk);
     if (flap) {
-      // The flap is **the ear's back (outer) face** folded over — so it takes a fur tone, not the inner-ear color (a shade darker, to separate it from the root).
-      // On light fur it reads by tone, on black fur by the crease. The inner face (pink or a tone) is drawn on the standing part **under** the flap, from the root up, and the flap covers it
-      paintPart(fills, spec, flap, shade(earFill, 0.82));
+      // The flap is **the ear's back face** folded over — the back color, not the inner-ear color. On light fur it reads by tone, on black fur by the crease.
+      // The inner face (pink or a tone) is drawn on the standing part **under** the flap, from the root up, and the flap covers it
+      paintPart(fills, spec, flap, back);
       ink.contour(flap, "RIBBON", earInk);
       ink.stroke(crease, { color: spec.palette.ink, width: 0.009 });
     }
