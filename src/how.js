@@ -156,11 +156,18 @@ function ballFigure(box, key, label, phase, draw) {
   box.appendChild(el);
   fig(key, [-0.33, -0.26, 0.33, 0.26], (sk) => draw(sk(), sk(), blobPath(0, 0, 0.2, 0.2, { lumps: 5, amount: 0.05, noise, phase })));
 }
-// The goofy outlines — one ball per entry of GOOFY_OUTLINES: the same FLAT ball, its contour drawn with that outline
-Object.keys(GOOFY_OUTLINES).forEach((name, i) => ballFigure(document.getElementById("outlineBalls"), `outline:${name}`, name.toLowerCase(), 61 + i * 3, (fills, ink, ball) => {
-  fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
-  ink.contour(ball, name, { color: INK, closed: true, paper: CARD });
-}));
+// The goofy outlines — one line per entry of GOOFY_OUTLINES, the way the reference's legend shows its kinds: the same gentle
+// path drawn open with that outline, at the board's width. A line shows what a contour is made of better than a ball does
+Object.keys(GOOFY_OUTLINES).forEach((name, i) => {
+  const el = document.createElement("figure");
+  el.dataset.fig = `outline:${name}`;
+  el.innerHTML = `<canvas></canvas><div class="subs"><span>${name.toLowerCase()}</span></div>`;
+  document.getElementById("outlineBalls").appendChild(el);
+  fig(`outline:${name}`, [-0.7, -0.09, 0.7, 0.09], (sk) => {
+    const ink = sk();
+    ink.contour([[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]], name, { color: INK, paper: CARD });
+  });
+});
 // Fur balls — one per entry of GOOFY_FUR: the same FLAT ball, PENCIL contour, the fur grown along its crown as hair is
 Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("furBalls"), `fur:${name}`, name.toLowerCase(), 131 + i * 3, (fills, ink, ball) => {
   fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
