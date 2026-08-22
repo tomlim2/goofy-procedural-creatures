@@ -51,10 +51,10 @@ the ones that define that disposition. On the grid, a collision with the left or
 | --- | --- | --- | --- |
 | **beast** | 3 | Horns, ears, teeth | horns(curved/straight), ears(pointy/flap), mouth(grimace/grin), nose(wedge/hook/broad), hair(spikes/hedgehog/mop), head(round/wide) |
 | **scholar** | 2 | Glasses, a bob, a beret | eyewear(glasses/monocle), eyes(dot/half/sleepy), hair(bob/helmet/bangs/longbob/wisp/curly/cloud/sweep), headgear(beret), mouth(line), nose(long/hook), horns(none) |
-| **trooper** | 3 | A helmet, an eyepatch, stripes, boots | headgear(helmet/cap/band/pot), eyewear(patch/goggles), head(square/block), hair(scribble/spikes/hedgehog), marks(stripes/patch/hatch), arms(sleeve/stick), legs(boots) |
+| **trooper** | 3 | A helmet, an eyepatch, stripes, boots | headgear(helmet/cap/band/pot), eyewear(patch/goggles), head(square/block), hair(scribble/spikes/hedgehog), pattern(stripes/patch/hatch), arms(sleeve/stick), legs(boots) |
 | **sprite** | 3 | Antennae, big eyes, long limbs | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), build(narrow/skinny), legs(stick/tiptoe), arms(stick/mitten), hair(none/wisp/tuft/pigtails), nose(none/dot) |
 | **blob** | 2 | Wide, bald, blunt limbs | head(wide/round/pear), hair(none/tuft/mop), eyes(dot/ring/half), body(bean/dress), build(wide), legs(stub), arms(stubby), horns(none/nub) |
-| **wanderer** | 2 | A band, sleepy eyes, hatching | headgear(band/pot/cap), hair(scribble/mop/curly/bun), eyes(half/sleepy/cross), marks(hatch/stripes/patch), mouth(wave/line), body(dress/bean) |
+| **wanderer** | 2 | A band, sleepy eyes, hatching | headgear(band/pot/cap), hair(scribble/mop/curly/bun), eyes(half/sleepy/cross), pattern(hatch/stripes/patch), mouth(wave/line), body(dress/bean) |
 
 ## Proportion jitter (proportions)
 
@@ -90,10 +90,10 @@ the range. Most of the silhouette variety comes from here.
 | accent | 1 of the 4 ACCENTS | Hat and band colors |
 | fillOffset | ±0.035 | The fill goes off outside the lines (misregistered printing) |
 | **pop** | 5 POPS, at 14% probability, targeting hair/headgear/skin | A saturated color accent. **Capped at 3 per board** (`makeGrid` switches off the excess). Landing on the skin with luminance < 120, the face ink switches to the light color (`faceInk`) |
-| **CALICO_MID** | 1 color (#a3866a, luminance 139) | The middle tone of a calico (marks calico) — where a real calico's orange goes. Being a warm tan inside the palette, it does not count against the pop cap. The black patches come from FURS and the base from the skin (a calico withholds black fur — a light base) ([parts.md](parts.md) § marks) |
+| **CALICO_MID** | 1 color (#a3866a, luminance 139) | The middle tone of a calico (pattern calico) — where a real calico's orange goes. Being a warm tan inside the palette, it does not count against the pop cap. The black patches come from FURS and the base from the skin (a calico withholds black fur — a light base) ([parts.md](parts.md) § marks) |
 
 **Light ink on a dark surface.** At luminance < 120, the lines on that surface go to light ink (#e9e3d5) — the
-face is decided by the head color (`faceInk`) and body markings by the body color (`drawMarks`).
+face is decided by the head color (`faceInk`) and body markings by the body color (`drawCalico`).
 Black-furred dogs and cats and imps all ride the same rule. Objects (an eyepatch, a hat, a lens) and lines over a
 white fill (teeth) are the exception — they keep their own color or the dark ink ([rules.md](rules.md)).
 

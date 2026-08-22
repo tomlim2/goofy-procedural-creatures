@@ -94,8 +94,10 @@ shading. The cheek and forehead hatch are the same thing (an occlusion). Until i
 A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as channels.
 The `base` colour — the fill-up (`flat`, optionally a tone of the color) or a `wash` — always opaque (on the
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
-and its `texture` — `hatch`, `scratch`, `bloom`, `dab` or `speckle` — a pattern laid over it, clipped to
-the contour (`clipSegment`, `insidePath` in `stroke.js`). Both paint the same thing, the colour of the surface —
+— carrying the part's **pattern**, the creature's pattern (stripes, dots, spots, hatching: the `pattern` slot), drawn
+inside it and clipped to the contour, the way a pattern is part of an albedo (`paint(…, { pattern })`); and its
+`texture` — `hatch`, `scratch`, `bloom`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
+contour (`clipSegment`, `insidePath` in `stroke.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
 62% graphite, vertex alpha), `grain` (the paper showing through) — is not built; it would be a new key, not a
 second texture (two patterns on one surface are one texture's composition). That is the material, and nothing

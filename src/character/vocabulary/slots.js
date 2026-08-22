@@ -42,7 +42,7 @@ export const SLOTS = {
     "frown", "three", "grimace", "grin", "scribble", "tongue", "fangs", "shout", "meow", "blep", "bracket", "smug"],
   body: ["bean", "box", "dress", "tube"],
   // Markings — five in line (stripes · dots · patch hatching · hatch · spots outlined) + one filled (calico, the tricolor patch — color patches on the body, head and ear; dogs and cats only)
-  marks: ["none", "stripes", "dots", "patch", "hatch", "spots", "calico"],
+  pattern: ["none", "stripes", "dots", "patch", "hatch", "spots", "calico"],
   // Leg types (form only). Reference: all of them end in a round foot and come out from under the body.
   // float is Rayman style — no legs, just floating feet. How far they open (the stance) is not here —
   // the torso build decides that. Quads only draw stub, stick, boots and float, and read the rest as stick.
@@ -101,7 +101,7 @@ export const DEFAULT_BIAS = {
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3], ["perk", 0.7], ["perkMid", 0.3]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1]],
-  marks: [["none", 4], ["stripes", 2], ["hatch", 2], ["dots", 2], ["patch", 1], ["spots", 1]],
+  pattern: [["none", 4], ["stripes", 2], ["hatch", 2], ["dots", 2], ["patch", 1], ["spots", 1]],
   nose: [["hook", 3], ["dot", 2], ["wedge", 2], ["none", 4], ["long", 1], ["bulb", 2], ["broad", 1], ["nostrils", 1.5], ["box", 1.5]],
   face2: [["none", 5], ["blush", 2], ["freckles", 2], ["tears", 1.5]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],

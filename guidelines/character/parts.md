@@ -274,9 +274,9 @@ and a narrow body draws the legs together. The shoulder position (on the torso o
 `BUILD` (biped) and `QUAD_BUILD` (quad) in `layout()`. `LATE_SLOTS`. Default weights medium 4 · narrow 1.5 · wide 1.5 · skinny 1 · small 1.
 Gallery: `gallery.html?slot=build&fix=legLength:long`.
 
-### marks (7)
+### pattern (7) — the surface, not a part
 none / stripes (3 horizontal lines) / dots (4 dots) / patch (hatching on the left) / hatch (diagonals over the whole thing) / spots (3 dalmatian spots) / **calico** (the tricolor patch — below).
-The five line kinds are drawn in ink on the body only (`drawMarks`; light ink when the body color's luminance < 120). They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot.
+The five line kinds are part of the body's **material base color** — drawn inside the fill and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `stroke.js`; light ink when the body color's luminance < 120), under the material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
 
 **calico — the tricolor patch (dogs and cats only, filled).** Not lines but **color patches**, and they are on the body, head and ear alike. Every color is inside the palette (`calicoColors`, wobbleSeed, no rng):
 the base is the skin as-is (when it is calico, spec.js withholds black fur to guarantee **a light base**), the black patch is one of FURS, and the middle tone is `CALICO_MID` (a warm tan, luminance 139 —

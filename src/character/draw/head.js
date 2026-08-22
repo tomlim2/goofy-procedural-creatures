@@ -132,7 +132,7 @@ export function drawCatEars(ink, fills, spec, box) {
   const innerFill = (seed >> 7) % 2 ? "#d9968a" : shade(skin, isDark(skin) ? 1.5 : 0.62);
   // The inner line is **a mark drawn on fur**, so it uses face ink — a black line on black fur is lost and invisible (the outline meets the background, so it stays black)
   const innerInk = spec.faceInk || ink0;
-  const cal = calicoColors(spec);   // on a calico, the ear on the side is black (the same side as the head patch — body.js drawHeadMarks)
+  const cal = calicoColors(spec);   // on a calico, the ear on the side is black (the same side as the head patch — body.js drawHeadCalico)
   const boxy = headShape(spec).square >= 1.4;   // square and block — slightly inside the corner
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {

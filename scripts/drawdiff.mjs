@@ -75,6 +75,7 @@ try {
       const base = oldM.makeCreature(seed, species);
       if (JSON.stringify(base) !== JSON.stringify(newM.makeCreature(seed, species))) specDiffs += 1;
       for (const [slot, values] of Object.entries(oldSlots)) {
+        if (!newM.SLOTS[slot]) { onlyOne.add(`only in ${ref}: slot ${slot}`); continue; }   // a renamed or removed slot — the working tree cannot draw it
         for (const value of values) {
           // A value the working tree no longer has (a removed part) cannot be drawn by it — noted once, not compared
           if (newM.SLOTS[slot] && !newM.SLOTS[slot].includes(value)) { onlyOne.add(`only in ${ref}: ${slot}=${value}`); continue; }

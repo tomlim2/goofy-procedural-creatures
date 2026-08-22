@@ -119,8 +119,10 @@ in <code>src/stroke.js</code>. A closed pencil line is seamless: its sines snap 
 <section>
 <h2>THE MATERIAL</h2>
 <p>A material is what a surface is made of — the way a 3D material is: <b>how its area is filled</b>, as channels.
-The <b>base</b> colour — the fill-up, or a wash — always opaque and printed out of register, in the part's color; and
-its <b>texture</b> — hatch, scratch, bloom, dab or speckle — a pattern laid over it, clipped to the contour. Both
+The <b>base</b> colour — the fill-up, or a wash — always opaque and printed out of register, in the part's color,
+carrying the creature's pattern (stripes, dots, spots, hatching) inside it, clipped to the contour, the way a pattern
+is part of an albedo; and its <b>texture</b> — hatch, scratch, bloom, dab or speckle — the medium's pattern laid over
+it, clipped to the contour. Both
 paint the same thing, the colour of the surface; a channel that would be a different thing — opacity (the reference's
 62% graphite), grain (the paper showing through) — is not built yet. That is the material, and nothing else (the
 contour is the goofy outline, above). The color always comes from the part, and every tone the texture adds is a

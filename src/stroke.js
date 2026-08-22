@@ -97,8 +97,9 @@ export const PENCIL = {
 
 // Materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as channels. `base` is the base
 // color — the fill-up (flat) or a wash — always opaque (on the board the one in front has to hide the one behind), printed out of
-// register, in the part's color or a tone of it. `texture` is the base color's texture — hatch, scratch, bloom, dab or speckle —
-// a pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
+// register, in the part's color or a tone of it — and it carries the creature's pattern (stripes, dots, spots, hatching: the `pattern`
+// slot), drawn inside it and clipped to the contour, the way a pattern is part of an albedo. `texture` is the base color's texture —
+// hatch, scratch, bloom, dab or speckle — the medium's pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
 // different thing (opacity — the reference's 62% graphite; grain — the paper showing through) is not built, and would be a new key,
 // not a second texture. That is the material, and nothing else: the contour is a separate concept (GOOFY_OUTLINES, below). The
 // color always comes from the part; every tone the texture adds is a shade of that color (lighter on a dark color, darker on a
@@ -289,15 +290,19 @@ export class Sketch {
     else this.stroke(points, options);
   }
 
-  // Fills with a named material — its base color, then its texture, every mark clipped to the contour. offset prints the base out
-  // of register (a creature's fillOffset). only: "base" or "texture" draws that channel alone (the medium page's channel chips).
+  // Fills with a named material — its base color (with the part's pattern, if any), then its texture, every mark clipped to the
+  // contour. offset prints the base out of register (a creature's fillOffset). pattern: { kind, color } — the creature's pattern, part of
+  // the base color. only: "base" or "texture" draws that channel alone (the medium page's channel chips).
   // Every tone is a shade of the part's color — the material knows no colors of its own
-  paint(points, name, { color, offset = [0, 0], only } = {}) {
+  paint(points, name, { color, offset = [0, 0], only, pattern } = {}) {
     const m = MATERIALS[name];
     if (!m) throw new Error(`unknown material: ${name}`);
     const wantBase = only === undefined || only === "base";
-    if (m.base.kind === "flat" && !m.texture) {   // the fill-up alone — no randomness, the phase untouched
-      if (wantBase) this.fill(points, color, offset);
+    if (m.base.kind === "flat" && !m.texture) {   // the fill-up alone — no randomness, the phase untouched (the pattern strokes advance it as any stroke does)
+      if (wantBase) {
+        this.fill(points, color, offset);
+        if (pattern) this.patternOn(points, pattern);
+      }
       return;
     }
     this.phase += 5.55;
@@ -314,6 +319,7 @@ export class Sketch {
         this.fill(points, shade(color, base.pale), [offset[0] + base.drift, offset[1] - base.drift * 0.6]);   // the first, paler wash — out of register
         this.fill(points, color, offset);                                                                // the wash proper
       } else throw new Error(`material ${name}: unknown base kind ${base.kind}`);
+      if (pattern) this.patternOn(points, pattern);
     }
 
     const f = m.texture;
@@ -517,6 +523,49 @@ export class Sketch {
         rgb
       );
     }
+  }
+
+  // The base color's pattern — the creature's pattern (the `pattern` slot), drawn inside the shape and clipped to its contour:
+  // stripes (three lines across at the quarter heights) · dots (four beans) · hatch (diagonals over the middle) · spots (three
+  // dalmatian rings) · patch (hatching on the left). color is the pattern's ink (light on a dark part — the caller's rule)
+  patternOn(points, { kind, color }) {
+    const b = bounds(points);
+    const w = (b.x1 - b.x0) / 2, h = b.y1 - b.y0;
+    const hatchLines = (cx, cy, rx, ry, angle, lines, width) => {
+      const cos = Math.cos(angle), sin = Math.sin(angle);
+      for (let i = 0; i < lines; i += 1) {
+        const t = lines === 1 ? 0 : (i / (lines - 1)) * 2 - 1;
+        const half = Math.sqrt(Math.max(0, 1 - t * t));
+        const u = t * ry;
+        const a = [cx + (-half * rx) * cos - u * sin, cy + (-half * rx) * sin + u * cos];
+        const c = [cx + half * rx * cos - u * sin, cy + half * rx * sin + u * cos];
+        for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color, width, jitter: 0.01, step: 0.05 });
+      }
+    };
+    if (kind === "stripes") {
+      for (let i = 1; i <= 3; i += 1) {
+        const y = b.y0 + (h * i) / 4;
+        for (const piece of clipSegment([b.x0 - 0.02, y], [b.x1 + 0.02, y + 0.004], points)) this.stroke(piece, { color, width: 0.011 });
+      }
+    } else if (kind === "dots") {
+      for (let i = 0; i < 4; i += 1) {
+        const x = b.cx - w * 0.5 + (i % 2) * w;
+        const y = b.y0 + h * (0.3 + Math.floor(i / 2) * 0.35);
+        if (insidePath([x - 0.01, y], points) && insidePath([x + 0.01, y], points)) this.stroke([[x - 0.008, y], [x + 0.008, y]], { color, width: 0.012 });
+      }
+    } else if (kind === "hatch") {
+      hatchLines(b.cx, b.cy, w * 0.8, h * 0.35, Math.PI * 0.25, 5, 0.007);
+    } else if (kind === "spots") {
+      for (let i = 0; i < 3; i += 1) {
+        const sx = b.cx + (i - 1) * w * 0.5;
+        const sy = b.y0 + h * (0.35 + (i % 2) * 0.3);
+        let spot = blobPath(sx, sy, 0.025 + (i % 2) * 0.01, 0.02, { lumps: 4, amount: 0.25, noise: null });
+        if (spot.some((p) => !insidePath(p, points))) spot = spot.map(([x, y]) => [sx + (x - sx) * 0.6, sy + (y - sy) * 0.6]);   // a spot on the edge shrinks in
+        if (spot.every((p) => insidePath(p, points))) this.outline(spot, { color, width: 0.008 });
+      }
+    } else if (kind === "patch") {
+      hatchLines(b.cx - w * 0.35, b.cy, w * 0.4, h * 0.25, 0, 4, 0.008);
+    } else throw new Error(`unknown pattern: ${kind}`);
   }
 
   // Grows a named fur (GOOFY_FUR) along the path. passes, width and spread may be overridden — a style's volume; the rest is the fur's

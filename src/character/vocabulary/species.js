@@ -66,7 +66,7 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
-      marks: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1], ["calico", 1.5]],   // calico = piebald (a white base plus black patches)
+      pattern: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1], ["calico", 1.5]],   // calico = piebald (a white base plus black patches)
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
       tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // dogs are thick or bushy (a spitz), and a rabbit-like pom too. ringed and wedge disabled
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
@@ -113,7 +113,7 @@ export const SPECIES = [
       // Mouth — ω dominates, then the flipped ω (smug), a pursed 3, line and dot, a meowing o (meow), a peeking tongue (blep). No wave and no smile (4 reference rows)
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
-      marks: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1], ["calico", 2]],   // calico = tricolor (base + tan + black patches, reaching the head and one ear)
+      pattern: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1], ["calico", 2]],   // calico = tricolor (base + tan + black patches, reaching the head and one ear)
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
       tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. ringed and wedge disabled
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
@@ -143,7 +143,7 @@ export const SPECIES = [
       // Mouth — wide (a species multiplier of 1.3 plus wide). The tooth grid, a hatched mass, zigzag, big fangs, and shout/open with two tooth strips (5 reference rows)
       mouth: [["grimace", 3], ["scribble", 2], ["zigzag", 2], ["fangs", 3], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["smug", 1], ["line", 0.5]],
       mouthSize: [["normal", 2], ["wide", 2], ["small", 0.5]],
-      marks: [["stripes", 3], ["none", 2], ["hatch", 1]],
+      pattern: [["stripes", 3], ["none", 2], ["hatch", 1]],
       face2: [["none", 6], ["tears", 1]],
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]],

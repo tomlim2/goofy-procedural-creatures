@@ -4,6 +4,14 @@ import { blobPath } from "../../stroke.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { FURS, CALICO_MID } from "../vocabulary/palette.js";
 
+// The creature's pattern — the `pattern` slot as part of the material's base color (stroke.js patternOn). Light ink on a dark body,
+// the same rule as face ink. calico is not a line pattern but color regions (drawCalico / drawHeadCalico), and none is none
+function patternOf(spec) {
+  const kind = spec.parts.pattern;
+  if (!kind || kind === "none" || kind === "calico") return undefined;   // a spec without the slot (an older tree's, in drawdiff) has no pattern
+  return { kind, color: luminance(spec.palette.cloth) < 120 ? "#e9e3d5" : spec.palette.ink };
+}
+
 export function drawBody(ink, fills, spec, box, noise) {
   if (box.quad) {
     // A body lying horizontally. The head covers the front, so the body reaches backward.
@@ -12,7 +20,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
-    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset });   // the material slot (flat when absent)
+    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec) });   // the material slot (flat when absent), the marks in its base
     // The body's scribble shading is off — an ellipse it cannot clip to the contour (see drawHead); it returns as the light's shade
     ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
@@ -37,17 +45,17 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
   }
 
-  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset });   // the material slot (flat when absent)
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec) });   // the material slot (flat when absent), the marks in its base
   // The body's scribble shading is off — on a short or wide torso the tilted ellipse poked past the contour; it returns as the light's shade
   ink.contour(path, "PENCIL", { color: ink0, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   return { path, top, bottom, w, cx: 0 };
 }
 
-// Colors and placement for the calico (marks calico) — per individual (wobbleSeed, no rng). null if there is none.
+// Colors and placement for the calico (pattern calico) — per individual (wobbleSeed, no rng). null if there is none.
 //   dark  one black fur (FURS) · mid a warm tan (CALICO_MID — cats only; dogs are piebald, so black only) · side which side the head patch and black ear attach to (−1 left / +1 right)
 // The base stays the skin (when it is calico, spec.js withholds black fur to guarantee a light base). Every color is inside the palette — this is not a saturated accent
 export function calicoColors(spec) {
-  if (spec.parts.marks !== "calico" || (spec.species !== "cat" && spec.species !== "pup")) return null;
+  if (spec.parts.pattern !== "calico" || (spec.species !== "cat" && spec.species !== "pup")) return null;
   const seed = spec.proportions.wobbleSeed;
   return { dark: FURS[seed % FURS.length], mid: spec.species === "cat" ? CALICO_MID : null, side: (seed >> 4) % 2 ? 1 : -1 };
 }
@@ -102,7 +110,7 @@ function drawCalicoBody(ink, fills, spec, body, noise) {
 // plus a small tan low on the opposite side (the cheek, cats). drawHead returns the head outline point list.
 // A black patch **must never reach the eyes or brows** — line-drawn eyes (sleepy, half, dot…) and brows are black ink and vanish on top of black. The placement that comes
 // down the side (100°~185°) caught the eyes on 158 of 600 creatures; the crown placement (left 75°~150° / right 30°~105°, depth 0.4) catches 0. A tan patch keeps its contrast against ink, so the cheek is fine
-export function drawHeadMarks(ink, fills, spec, headPath, noise) {
+export function drawHeadCalico(ink, fills, spec, headPath, noise) {
   const c = calicoColors(spec);
   if (!c) return;
   const inkColor = spec.palette.ink;
@@ -111,42 +119,9 @@ export function drawHeadMarks(ink, fills, spec, headPath, noise) {
   if (c.mid) patch(ink, fills, headPath, c.side < 0 ? 300 : 210, 50, 0.4, c.mid, inkColor, noise, ph + 5);
 }
 
-export function drawMarks(ink, fills, spec, body, noise) {
-  const kind = spec.parts.marks;
-  if (kind === "none") return;
-  if (kind === "calico") { drawCalicoBody(ink, fills, spec, body, noise); return; }
-  // Body markings are drawn **on top of the body color** — a black marking is lost on a dark body (black-furred dogs and cats, imps). Same rule as face ink (luminance < 120 → light ink)
-  const ink0 = luminance(spec.palette.cloth) < 120 ? "#e9e3d5" : spec.palette.ink;
-  const { top, bottom, w, cx = 0 } = body;
-
-  if (kind === "stripes") {
-    for (let i = 1; i <= 3; i += 1) {
-      const y = bottom + ((top - bottom) * i) / 4;
-      ink.stroke([[cx - w * 0.85, y], [cx + w * 0.85, y + 0.004]], { color: ink0, width: 0.011 });
-    }
-  } else if (kind === "dots") {
-    for (let i = 0; i < 4; i += 1) {
-      const x = cx - w * 0.5 + (i % 2) * w;
-      const y = bottom + (top - bottom) * (0.3 + Math.floor(i / 2) * 0.35);
-      ink.stroke([[x - 0.008, y], [x + 0.008, y]], { color: ink0, width: 0.012 });
-    }
-  } else if (kind === "hatch") {
-    ink.hatch(cx, (top + bottom) / 2, w * 0.8, (top - bottom) * 0.35, Math.PI * 0.25, {
-      color: ink0, lines: 5, width: 0.007
-    });
-  } else if (kind === "spots") {
-    // Dalmatian spots
-    for (let i = 0; i < 3; i += 1) {
-      const sx = cx + (i - 1) * w * 0.5;
-      const sy = bottom + (top - bottom) * (0.35 + (i % 2) * 0.3);
-      ink.outline(blobPath(sx, sy, 0.025 + (i % 2) * 0.01, 0.02, { lumps: 4, amount: 0.25, noise: null }), {
-        color: ink0, width: 0.008
-      });
-    }
-  } else {
-    ink.hatch(cx - w * 0.35, (top + bottom) / 2, w * 0.4, (top - bottom) * 0.25, 0, {
-      color: ink0, lines: 4, width: 0.008
-    });
-  }
+// The calico — color regions of the base, on the body (the head's are drawHeadCalico). The line patterns (stripes, dots, hatch, spots,
+// patch) are no longer drawn here: they are part of the material's base color, inside the fill and clipped to the contour (patternOf → paint)
+export function drawCalico(ink, fills, spec, body, noise) {
+  if (spec.parts.pattern === "calico") drawCalicoBody(ink, fills, spec, body, noise);
 }
 
