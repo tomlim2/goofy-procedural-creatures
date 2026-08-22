@@ -84,6 +84,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     // The idle pose (tailArch, the cat arch): state.tailPose[i]. Both take the cumulative rotation from the skeleton's rest angle (restAngle) to that world angle, split it into joint shares, and blend by the weight
     // (the sum never passes 1, so the remainder is the skeleton as it is). Root tailAngle and tip tailTip go on top of that
     const UP = Math.PI * 0.5;
+    const rp = state.tailRaisePose;   // the raise's target pose — joint world angles (a ♥'s question mark), or null: every joint vertical
     const arch = state.tailArch || 0;
     const pose = state.tailPose;
     let cumUp = 0, cumArch = 0;   // the cumulative target rotation so far (relative to rest)
@@ -93,7 +94,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     let px = 0, py = 0;
     for (let i = 0; i < n; i += 1) {
       const b = bones[i];
-      const wantUp = UP - b.restAngle;   // the cumulative rotation this bone needs to reach vertical
+      const wantUp = (rp ? rp[Math.min(i, rp.length - 1)] : UP) - b.restAngle;   // the cumulative rotation this bone needs to reach its raise target
       let rot = (wantUp - cumUp) * raise;   // this joint's share, with the rotation up to its parent taken off
       cumUp = wantUp;
       if (arch > 0 && pose) {

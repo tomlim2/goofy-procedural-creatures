@@ -14,7 +14,7 @@ import * as E from "./events.js";
 import * as S from "./states.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, sitPose, bindArm, solveArms } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
-import { ramp, smoothstep, damp, approach } from "./ease.js";
+import { ramp, smoothstep, damp, approach, bump, envelope } from "./ease.js";
 import { TICK_FPS } from "../tick.js";
 
 export { MOTION } from "./table.js";
@@ -30,7 +30,7 @@ export const BIND_STATE = Object.freeze({
   sway: 0, rock: 0, headAngle: 0, headBob: 0,
   hopY: 0, squashX: 0, squashY: 0, stretchX: 0, shiverX: 0,
   jellyX: 0, jellyY: 0, faceTurn: [0, 0],
-  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0, tailArch: 0, tailPose: null,
+  happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0, tailRaisePose: null, tailArch: 0, tailPose: null,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
   mode: "idle", sleep: 0, walk: 0, sit: 0, bodyTilt: 0, walkX: 0, facing: 1,
   legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
@@ -80,9 +80,12 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   // An expression does not flicker past — once a ^^ starts it runs for **3 s or more** (a ^^ blink 22% and the ♥ emoji switch it on). Times only, no rng
   let happyUntil = -1;
   const happyWag = { x: 0, v: 0 };   // the envelope for wagging while smiling (switched on and off with critical damping) — dogs
-  // Raise (cats) — the tail shoots up while in a good mood (^^). k 0~1 rises and falls linearly (0.4 s up / 0.6 s down) and ramp makes it an S-curve. There is one shape — every joint exactly vertical.
-  // lastT is for dt (frame-based, so deterministic)
-  const raise = { k: 0, lastT: -1 };
+  // Raise (cats) — the tail shoots up while in a good mood (^^). k 0~1 rises and falls linearly (0.4 s up / 0.6 s down) and ramp makes it an S-curve. Two shapes: every joint
+  // exactly vertical for a ^^, and the **question mark** (table raisePose) when the mood is a ♥ — h 0~1 blends between them at the same rates, so a ♥ arriving mid-raise bends
+  // the tip over smoothly and never snaps. lastT is for dt (per tick, so deterministic)
+  const raise = { k: 0, h: 0, lastT: -1 };
+  // The happy wag's phase is integrated (not t × hz) so its rate can change — seated it slows — without the phase jumping
+  const wag = { phase: 0, lastT: -1 };
   // The idle tail pose (the cat arch, table tailIdlePose) — the list of joint world angles. The top two bones curl more or less by the individual's tailLift. No rng; built once per clock
   const IP = M.tailIdlePose || null;
   const tailPose = IP ? IP.angles.map((a, i) => a + (i >= IP.angles.length - 2 ? (rig && rig.tailLift ? rig.tailLift : 0) * IP.liftBend : 0)) : null;
@@ -298,26 +301,50 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (TT && TT.twitch) tailTip += flick * (TT.twitch.amp / 0.35);
       else tailAngle += flick;
       if (walkK > 0 && W && quad && W.tail) tailAngle += Math.sin(ph) * W.tail * walkK;   // walk — only a dog's tail sways with the step (table walk.tail)
-      // Wagging whenever it smiles (^^) — dogs (table wagOnHappy). The envelope is critically damped, so it does not snap on or off
+      // Wagging whenever it smiles (^^) — dogs (table wagOnHappy). The envelope is critically damped, so it does not snap on or off.
+      // Seated it slows and shrinks (table seated — a content wag, not the standing one); the phase is integrated so the change of rate never jumps
       if (M.wagOnHappy && quad) {
+        const WH = M.wagOnHappy;
         damp(happyWag, isHappy && !asleep ? 1 : 0, 0.3);
-        if (happyWag.x > 0.01) tailAngle += Math.sin(t * Math.PI * 2 * M.wagOnHappy.hz) * M.wagOnHappy.amp * happyWag.x;
+        const seatedK = WH.seated ? sitK : 0;
+        const wdt = wag.lastT < 0 ? 0 : Math.max(0, t - wag.lastT);
+        wag.lastT = t;
+        wag.phase += Math.PI * 2 * WH.hz * (1 - seatedK * (1 - (WH.seated ? WH.seated.hz : 1))) * wdt;
+        if (happyWag.x > 0.01) tailAngle += Math.sin(wag.phase) * WH.amp * (1 - seatedK * (1 - (WH.seated ? WH.seated.amp : 1))) * happyWag.x;
+      }
+      // The tuck — a dog's tail tucks under on a plain or ☆ startle (not a ♥ — that one wags): fear, for the startle's first second and a bit
+      if (TT && TT.tuck && quad && surprise.start >= 0 && surprise.variant !== "heart") {
+        const k = (t - surprise.start) / TT.tuck.dur;
+        if (k < 1) tailAngle -= TT.tuck.amp * envelope(k, 0.12, 0.35) * awake;
       }
       // Bristle — fur stands up when scared or **angry**: the anger envelope (angryK — hard up in 0.1 s, hold, released in 0.1 s, the law of a human eye being startled) as it is.
       // Only the thickness swells (the scene scales each bone perpendicular to the spine). It does not stand up on a startle. (The raise of a ♥ startle is handled by the raise below, via the ♥ emoji → ^^.
       // There is no tail lash — a cat lashing its tail is forbidden as a motion; a dog wags)
-      const tailPuff = TT && quad && TT.puff ? angryK * TT.puff : 0;
+      // On a startle too — a short bristle (table startlePuff: a bump of dur seconds at the startle's start), whichever is bigger
+      const startlePuff = TT && quad && TT.startlePuff && surprise.start >= 0 ? bump(Math.min(1, (t - surprise.start) / TT.startlePuff.dur)) * TT.startlePuff.amp * awake : 0;
+      const tailPuff = Math.max(TT && quad && TT.puff ? angryK * TT.puff : 0, startlePuff);
       // Raise — a cat's tail shoots up **whenever it is in a good mood** (^^ — a ^^ blink, the ♥ emoji, a ♥ startle). Regardless of the skeleton shape, the scene blends each joint from its rest pose to
       // **exactly vertical** (tailRaise 0~1) — with no bent variant (bent reads as curved rather than raised). Up in 0.4 s, held for the whole smile (3 s or more), down in 0.6 s.
       // While raised it is **stiff** — the swish, tapping and follow-through are killed by (1 − tailRaise) (without that it wobbles while raised and does not read as standing up). No rng
       let tailRaise = 0;
+      let tailRaisePose = null;
       if (TT && TT.raise && quad) {
         const dt = raise.lastT < 0 ? 0 : Math.max(0, t - raise.lastT);
         raise.lastT = t;
-        raise.k += Math.max(-dt / 0.6, Math.min(dt / 0.4, (isHappy && !asleep ? 1 : 0) - raise.k));
+        const good = isHappy && !asleep;
+        raise.k += Math.max(-dt / 0.6, Math.min(dt / 0.4, (good ? 1 : 0) - raise.k));
+        // The shape — a ♥ (the emoji floating, a ♥ startle) makes it the question mark; h follows at the raise's own rates
+        const heart = good && !!TT.raisePose && (emoji.kind === "heart" || (surprise.start >= 0 && surprise.variant === "heart"));
+        raise.h += Math.max(-dt / 0.6, Math.min(dt / 0.4, (heart ? 1 : 0) - raise.h));
         tailRaise = ramp(raise.k);
         tailAngle *= 1 - tailRaise;
         tailTip *= 1 - tailRaise;
+        if (tailRaise > 0) {
+          const h = ramp(raise.h);
+          tailRaisePose = h > 0 ? TT.raisePose.map((a) => Math.PI / 2 + (a - Math.PI / 2) * h) : null;
+          // The tremble — while raised by a ♥ the tip quivers (a very glad greeting); t-based, so its phase never jumps
+          if (TT.tremble && h > 0) tailTip += Math.sin(t * Math.PI * 2 * TT.tremble.hz) * TT.tremble.amp * tailRaise * h;
+        }
       }
       // The idle pose — while awake, a cat's tail stands in an **arch** (tailPose). A raise takes it out by that much (the sum is 1), sleep folds it back to the skeleton,
       // and sitting takes most of it out (×0.2) so it tilts with the body as the skeleton drew it and lies on the floor
@@ -398,7 +425,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
-        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailArch, tailPose,
+        happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailRaisePose, tailArch, tailPose,
         arms, legOffset, legOsc,
         mode: modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing,
         // The action running right now — the arm layer (biped) or the leg and tail layers (quad) plus which side (the active arm's side / the leg index), and the body layer. For debugging and statistics

@@ -45,7 +45,9 @@ export const MOTION = {
     modes: [["idle", 3], ["sleep", 1], ["walk", 1.5], ["sit", 1.5]], modeHold: { idle: [40, 120], sleep: [25, 60], walk: [6, 16], sit: [15, 45] },
     walk: { hz: 2.6, leg: 0.32, bob: 0.008, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.07, tail: 0.12 },   // a trot — diagonal leg pairs alternate, and the tail sways with the step
     quadActions: [["wag", 3.5], ["scratch", 1]], quadActionGap: [6, 16],   // dogs wag often
-    wagOnHappy: { amp: 0.35, hz: 3 },   // the tail wags whenever it smiles ^^ (a happy hold or a ^^ blink). 3 Hz — 8 ticks a cycle at 24; at 4 Hz the wag strobed (6 ticks: up·up·mid·down·down·mid)
+    // The tail wags whenever it smiles ^^ (a happy hold or a ^^ blink). 3 Hz — 8 ticks a cycle at 24; at 4 Hz the wag strobed (6 ticks: up·up·mid·down·down·mid).
+    // seated: the multipliers while sitting — a slow, small wag (content), not the standing one
+    wagOnHappy: { amp: 0.35, hz: 3, seated: { amp: 0.5, hz: 0.5 } },
     // The reference dog's legs are planted for the full 4 seconds. The body sways and the legs only look like they follow.
     legTap: [14, 32], legStep: [30, 70],
     sway: [0.004, 0.01], swayPeriod: [3, 6],
@@ -58,8 +60,9 @@ export const MOTION = {
     jelly: null, shiver: [40, 80],
     wink: null, happyHold: [6, 16], angry: null,
     tailSwish: null, tailFlick: [3, 9],
-    // The tail's tip bone — dogs get follow-through only (the tip lags behind on a wag). The rest, cat-only, is null
-    tailTip: { follow: 0.05, twitch: null, raise: null, puff: 0 },
+    // The tail's tip bone — dogs get follow-through (the tip lags behind on a wag) and the **tuck**: on a plain or ☆ startle the whole tail tucks under
+    // (amp rad) for dur seconds — fear. The rest, cat-only, is null
+    tailTip: { follow: 0.05, twitch: null, raise: null, puff: 0, tuck: { amp: 1.0, dur: 1.2 } },
     surprise: [10, 26], yaw: 0.7,
     // Dogs look often, and look up (toward their owner) readily too
     look: [4, 12], lookHold: [1, 3], lookAmp: [1, 1],
@@ -93,9 +96,11 @@ export const MOTION = {
     angry: [25, 60], angryHold: [3, 5],
     // The cat tail — the opposite of a dog's: fast movement is irritation or excitement, and joy is **holding it up**. Tip-bone motion stacks on the slow swish (rhythm).
     //   follow follow-through (the tip lags behind the root's velocity) · twitch the tip alone tapping (the tailFlick interval and shape — events.js, 3 cycles in 0.5 s — applied to the tip bone; amp scales it) ·
-    //   raise held up when in a good mood (during a ^^) — every joint exactly vertical, no bent variant (true/null) · puff the bristle multiplier (**while angry**, thickness only — the anger envelope 0.1/hold/0.1 as it is)
+    //   raise held up when in a good mood (during a ^^) — every joint exactly vertical (true/null); raisePose the joint world angles it takes instead when the mood is a ♥ (the emoji,
+    //   a ♥ startle) — a **question mark**, the greeting · tremble the tip's quiver while raised by a ♥ (amp rad, hz) — a very glad greeting ·
+    //   startlePuff a short bristle on a startle (amp = the thickness added, dur seconds) · puff the bristle multiplier (**while angry**, thickness only — the anger envelope 0.1/hold/0.1 as it is)
     tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [8, 20],
-    tailTip: { follow: 0.06, twitch: { amp: 0.35 }, raise: true, puff: 1 },   // there is no lash — a cat lashing its tail is forbidden as a motion
+    tailTip: { follow: 0.06, twitch: { amp: 0.35 }, raise: true, raisePose: [Math.PI / 2, Math.PI / 2, 1.25, 0.25], tremble: { amp: 0.08, hz: 4 }, puff: 1, startlePuff: { amp: 0.4, dur: 0.6 } },   // there is no lash — a cat lashing its tail is forbidden as a motion
     surprise: [9, 24], yaw: 0.8,
     // Cats rarely, and they stare for a long time
     look: [8, 20], lookHold: [2, 5], lookAmp: [0.9, 0.9],
