@@ -95,28 +95,29 @@ export const PENCIL = {
   grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
 };
 
-// Materials — what a surface is made of, the way a 3D material is: **how its area is filled**. Hatched, scratched, washed,
-// dabbed, dusted, banded, or simply the fill-up — that is the material, and nothing else: the contour is a separate concept
-// (GOOFY_OUTLINES, below). The color always comes from the part; the material only knows the technique, and every tone it adds is a
+// Materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as layers. `base` is the base color
+// layer — the fill-up (flat) or a wash — always opaque (on the board the one in front has to hide the one behind), printed out of
+// register, in the part's color or a tone of it. `layers` are the textures stacked on it — hatch, scratch, bloom, dab, speckle, band —
+// each clipped to the contour, combinable: a material is a base and any stack of textures. That is the material, and nothing else:
+// the contour is a separate concept (GOOFY_OUTLINES, below). The color always comes from the part; every tone a layer adds is a
 // shade of that color (lighter on a dark color, darker on a light one). A part names a material and hands over the path and the
-// color — it never picks a technique itself. Every base is opaque: on the board the one in front has to hide the one behind.
-// The medium page draws one shader ball per entry — the same ball, filled each way. Docs: guidelines/drawing.md § materials.
-// (Not the GPU materials — those live in scene/mesh.js.)
+// color — it never picks a technique itself. The medium page draws one shader ball per entry, and its layers one by one under it.
+// Docs: guidelines/drawing.md § materials. (Not the GPU materials — those live in scene/mesh.js.)
 export const MATERIALS = {
-  // Flat — the fill-up: the fan from the centre, printed out of register. What every creature is made of today
-  FLAT:        { kind: "flat" },
-  // Graphite — a pale ground hatched with thin pencil strokes, nearly upright and a little slanted
-  GRAPHITE:    { kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, ground: 1.15, tone: 0.6 },
+  // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
+  FLAT:        { base: { kind: "flat" } },
+  // Graphite — a pale ground, hatched with thin pencil strokes, nearly upright and a little slanted
+  GRAPHITE:    { base: { kind: "flat", tone: 1.15 }, layers: [{ kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, tone: 0.6 }] },
   // Ink — solid, scratched: a few long light lines dragged across the dark
-  INK:         { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 },
-  // Watercolour — a pale wash, a second wash out of register, a bloom inside
-  WATERCOLOUR: { kind: "wash", pale: 1.12, bloom: 1.18, drift: 0.022 },
+  INK:         { base: { kind: "flat" }, layers: [{ kind: "scratch", lines: 6, width: 0.005, tone: 1.35 }] },
+  // Watercolour — a pale wash with a second wash out of register, and a bloom inside
+  WATERCOLOUR: { base: { kind: "wash", pale: 1.12, drift: 0.022 }, layers: [{ kind: "bloom", tone: 1.18 }] },
   // Oil — thick short dabs in three tones along one diagonal, the ground covered
-  OIL:         { kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] },
+  OIL:         { base: { kind: "flat" }, layers: [{ kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] }] },
   // Charcoal — a ground dusted with dark specks
-  CHARCOAL:    { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 },
+  CHARCOAL:    { base: { kind: "flat" }, layers: [{ kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 }] },
   // Marker — wide diagonal bands of a deeper tone over the flat, blunt and even
-  MARKER:      { kind: "band", angle: 1.05, width: 0.026, gap: 0.066, tone: 0.86 }
+  MARKER:      { base: { kind: "flat" }, layers: [{ kind: "band", angle: 1.05, width: 0.026, gap: 0.066, tone: 0.86 }] }
 };
 
 // Outlines — the goofy outline: what a creature's contour is drawn with. A separate concept from the materials (a contour
@@ -301,92 +302,100 @@ export class Sketch {
     this.triangle(p[0] - nx, p[1] - ny, q[0] - nx, q[1] - ny, q[0] + nx, q[1] + ny, rgb);
   }
 
-  // Fills with a named material — how the area is filled. The base (the fill-up) is printed out of register by offset (a creature's
-  // fillOffset) and is always opaque; the technique is laid on top, every mark clipped to the contour.
+  // Fills with a named material — its base, then its texture layers, every mark clipped to the contour. offset prints the base out
+  // of register (a creature's fillOffset). only: "base" or a layer index draws that layer alone (the medium page's layer chips).
   // Every tone is a shade of the part's color — the material knows no colors of its own
-  paint(points, name, { color, offset = [0, 0] } = {}) {
-    const f = MATERIALS[name];
-    if (!f) throw new Error(`unknown material: ${name}`);
-    if (f.kind === "flat") { this.fill(points, color, offset); return; }   // the fill-up — no randomness, the phase untouched
+  paint(points, name, { color, offset = [0, 0], only } = {}) {
+    const m = MATERIALS[name];
+    if (!m) throw new Error(`unknown material: ${name}`);
+    const layers = m.layers || [];
+    const wantBase = only === undefined || only === "base";
+    if (m.base.kind === "flat" && layers.length === 0) {   // the fill-up alone — no randomness, the phase untouched
+      if (wantBase) this.fill(points, color, offset);
+      return;
+    }
     this.phase += 5.55;
     const ph = this.phase;
     const noise = this.noise;
-    const u = (k) => noise(ph * 0.29 + k * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
-    const h = (k) => hash01(Math.round(ph * 997) + k * 7919);     // a scattered one — neighbours unrelated
     const dark = isDark(color);
     const contrast = (factor) => shade(color, dark ? 1 + (1 - factor) * 1.6 : factor);   // a deeper tone on a light color, a lighter one on a dark color
-    switch (f.kind) {
-      case "hatch": {
-        this.fill(points, shade(color, dark ? 0.92 : f.ground), offset);
-        const tone = contrast(f.tone);
-        rules(points, f.angle, f.gap, (i) => (u(i) - 0.5) * 0.5).forEach((piece, i) =>
-          this.stroke(piece, { color: tone, width: f.width * (0.8 + 0.4 * u(i + 300)), jitter: f.wander, step: 0.02 }));
-        break;
-      }
-      case "scratch": {
-        this.fill(points, color, offset);
-        const tone = contrast(f.tone);
-        const b = bounds(points);
-        for (let i = 0; i < f.lines; i += 1) {
-          const angle = u(i) * Math.PI;
-          const o = (u(i + 50) - 0.5) * b.r * 1.4;
-          const dx = Math.cos(angle), dy = Math.sin(angle);
-          const a = [b.cx - dy * o - dx * b.r, b.cy + dx * o - dy * b.r];
-          const c = [b.cx - dy * o + dx * b.r, b.cy + dx * o + dy * b.r];
-          for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.03 });
-        }
-        break;
-      }
-      case "wash": {
-        this.fill(points, shade(color, f.pale), [offset[0] + f.drift, offset[1] - f.drift * 0.6]);   // the first, paler wash — out of register
-        this.fill(points, color, offset);                                                             // the wash proper
-        const b = bounds(points);
-        const bloom = blobPath(b.cx + (u(1) - 0.5) * b.r * 0.5, b.cy - b.r * 0.15, b.r * 0.34, b.r * 0.26, { lumps: 4, amount: 0.16, noise, phase: ph * 0.01 });
-        this.fill(bloom.filter((p) => insidePath(p, points)).length > bloom.length * 0.6 ? bloom : bloom.map(([x, y]) => [b.cx + (x - b.cx) * 0.7, b.cy + (y - b.cy) * 0.7]), shade(color, f.bloom));
-        break;
-      }
-      case "dab": {
-        this.fill(points, color, offset);
-        const tones = f.tones.map((t) => shade(color, t));
-        const b = bounds(points);
-        const dx = Math.cos(f.angle), dy = Math.sin(f.angle);
-        const nx = -dy, ny = dx;
-        let k = 0;
-        let row = 0;
-        for (let s = -b.r; s <= b.r; s += f.gap, row += 1) {
-          // Every other row starts half a dab later, and each dab slides a little along its row — no two rows line up into a weave
-          for (let t = -b.r + (row % 2) * f.length * 0.55 + (h(row) - 0.5) * f.length * 0.3; t <= b.r; t += f.length * 1.15, k += 1) {
-            const o = s + (u(k) - 0.5) * f.gap * 0.6;
-            const a = [b.cx + nx * o + dx * t, b.cy + ny * o + dy * t];
-            const c = [a[0] + dx * f.length, a[1] + dy * f.length];
-            const tone = tones[Math.floor(h(k) * tones.length) % tones.length];   // scattered — in lockstep with the grid the tones would form columns
-            for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.02 });
-          }
-        }
-        break;
-      }
-      case "speckle": {
-        this.fill(points, color, offset);
-        const tone = contrast(f.tone);
-        const rgb = hexToRgb(tone);
-        const b = bounds(points);
-        const count = Math.round(f.per * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
-        for (let i = 0; i < count; i += 1) {
-          const p = [b.x0 + (b.x1 - b.x0) * h(i * 2), b.y0 + (b.y1 - b.y0) * h(i * 2 + 1)];   // hashed — with the smooth noise the specks string into curves
-          if (!insidePath(p, points)) continue;
-          this.square(p[0], p[1], f.size[0] + (f.size[1] - f.size[0]) * h(i + 7000), rgb);
-        }
-        break;
-      }
-      case "band": {
-        this.fill(points, color, offset);
-        const rgb = hexToRgb(contrast(f.tone));
-        for (const [p, q] of rules(points, f.angle, f.gap, () => 0)) this.ribbon(p, q, f.width, rgb);
-        break;
-      }
-      default:
-        throw new Error(`material ${name}: unknown fill kind ${f.kind}`);
+    const b = bounds(points);
+
+    if (wantBase) {
+      const base = m.base;
+      if (base.kind === "flat") this.fill(points, base.tone === undefined ? color : shade(color, dark ? 0.92 : base.tone), offset);
+      else if (base.kind === "wash") {
+        this.fill(points, shade(color, base.pale), [offset[0] + base.drift, offset[1] - base.drift * 0.6]);   // the first, paler wash — out of register
+        this.fill(points, color, offset);                                                                // the wash proper
+      } else throw new Error(`material ${name}: unknown base kind ${base.kind}`);
     }
+
+    layers.forEach((f, index) => {
+      if (only !== undefined && only !== index) return;
+      const u = (k) => noise(ph * 0.29 + (k + index * 5000) * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
+      const h = (k) => hash01(Math.round(ph * 997) + (k + index * 5000) * 7919);   // a scattered one — neighbours unrelated
+      switch (f.kind) {
+        case "hatch": {
+          const tone = contrast(f.tone);
+          rules(points, f.angle, f.gap, (i) => (u(i) - 0.5) * 0.5).forEach((piece, i) =>
+            this.stroke(piece, { color: tone, width: f.width * (0.8 + 0.4 * u(i + 300)), jitter: f.wander, step: 0.02 }));
+          break;
+        }
+        case "scratch": {
+          const tone = contrast(f.tone);
+          for (let i = 0; i < f.lines; i += 1) {
+            const angle = u(i) * Math.PI;
+            const o = (u(i + 50) - 0.5) * b.r * 1.4;
+            const dx = Math.cos(angle), dy = Math.sin(angle);
+            const a = [b.cx - dy * o - dx * b.r, b.cy + dx * o - dy * b.r];
+            const c = [b.cx - dy * o + dx * b.r, b.cy + dx * o + dy * b.r];
+            for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.03 });
+          }
+          break;
+        }
+        case "bloom": {
+          const bloom = blobPath(b.cx + (u(1) - 0.5) * b.r * 0.5, b.cy - b.r * 0.15, b.r * 0.34, b.r * 0.26, { lumps: 4, amount: 0.16, noise, phase: ph * 0.01 });
+          const inside = bloom.filter((p) => insidePath(p, points)).length > bloom.length * 0.6;
+          this.fill(inside ? bloom : bloom.map(([x, y]) => [b.cx + (x - b.cx) * 0.7, b.cy + (y - b.cy) * 0.7]), shade(color, f.tone));
+          break;
+        }
+        case "dab": {
+          const tones = f.tones.map((t) => shade(color, t));
+          const dx = Math.cos(f.angle), dy = Math.sin(f.angle);
+          const nx = -dy, ny = dx;
+          let k = 0;
+          let row = 0;
+          for (let s = -b.r; s <= b.r; s += f.gap, row += 1) {
+            // Every other row starts half a dab later, and each dab slides a little along its row — no two rows line up into a weave
+            for (let t = -b.r + (row % 2) * f.length * 0.55 + (h(row) - 0.5) * f.length * 0.3; t <= b.r; t += f.length * 1.15, k += 1) {
+              const o = s + (u(k) - 0.5) * f.gap * 0.6;
+              const a = [b.cx + nx * o + dx * t, b.cy + ny * o + dy * t];
+              const c = [a[0] + dx * f.length, a[1] + dy * f.length];
+              const tone = tones[Math.floor(h(k) * tones.length) % tones.length];   // scattered — in lockstep with the grid the tones would form columns
+              for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.02 });
+            }
+          }
+          break;
+        }
+        case "speckle": {
+          const rgb = hexToRgb(contrast(f.tone));
+          const count = Math.round(f.per * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
+          for (let i = 0; i < count; i += 1) {
+            const p = [b.x0 + (b.x1 - b.x0) * h(i * 2), b.y0 + (b.y1 - b.y0) * h(i * 2 + 1)];   // hashed — with the smooth noise the specks string into curves
+            if (!insidePath(p, points)) continue;
+            this.square(p[0], p[1], f.size[0] + (f.size[1] - f.size[0]) * h(i + 7000), rgb);
+          }
+          break;
+        }
+        case "band": {
+          const rgb = hexToRgb(contrast(f.tone));
+          for (const [p, q] of rules(points, f.angle, f.gap, () => 0)) this.ribbon(p, q, f.width, rgb);
+          break;
+        }
+        default:
+          throw new Error(`material ${name}: unknown layer kind ${f.kind}`);
+      }
+    });
   }
 
   // A small axis-aligned square — the pencil's crumbs and bites

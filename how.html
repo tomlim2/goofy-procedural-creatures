@@ -118,13 +118,15 @@ in <code>src/stroke.js</code>. A closed pencil line is seamless: its sines snap 
 <!-- ================================================================ -->
 <section>
 <h2>THE MATERIAL</h2>
-<p>A material is what a surface is made of — the way a 3D material is: <b>how its area is filled</b>. Hatched,
-scratched, washed, dabbed, dusted, banded, or simply the fill-up — that is the material, and nothing else (the contour
-is the goofy outline, above). The color always comes from the part, and every tone a material adds is a shade of
-that color. A part names one and hands over the path and the color — <code>fills.paint(path, "FLAT", { color, offset })</code> —
-and never picks a technique itself. The board is made of <b>FLAT</b> today. The table is <code>MATERIALS</code> in
-<code>src/stroke.js</code>; every entry gets a shader ball — the same ball in the same color, filled each way, its
-contour the board's PENCIL.</p>
+<p>A material is what a surface is made of — the way a 3D material is: <b>how its area is filled</b>, as layers.
+A <b>base</b> colour layer — the fill-up, or a wash — always opaque and printed out of register, in the part's color;
+and <b>texture</b> layers stacked on it — hatch, scratch, bloom, dab, speckle, band — each clipped to the contour,
+any stack of them. That is the material, and nothing else (the contour is the goofy outline, above). The color
+always comes from the part, and every tone a layer adds is a shade of that color. A part names one and hands over
+the path and the color — <code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself.
+The board is made of <b>FLAT</b> today. The table is <code>MATERIALS</code> in <code>src/stroke.js</code>; every entry
+gets a shader ball — the same ball in the same color, its contour the board's PENCIL — and under it its layers one by
+one: the base alone, then each texture alone.</p>
 
 <div class="figs" id="materialBalls"></div>
 

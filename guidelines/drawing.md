@@ -82,27 +82,33 @@ per entry by itself.
 
 ## Materials — how a surface is filled
 
-A material is what a surface is made of, the way a 3D material is — **how its area is filled**. Hatched,
-scratched, washed, dabbed, dusted, banded, or simply the fill-up: that is the material, and nothing else. The
-color always comes from the part; a material knows no colors of its own, and every tone it adds is a shade of
-the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a material and hands
-over the path and the color: `fills.paint(path, "FLAT", { color, offset })`. The base is always opaque (on the
+A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as layers. A
+`base` colour layer — the fill-up (`flat`, optionally a tone of the color) or a `wash` — always opaque (on the
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
-the technique is laid on top, every mark clipped to the contour (`clipSegment`, `insidePath` in `stroke.js`).
+and `layers`, the textures stacked on it — `hatch`, `scratch`, `bloom`, `dab`, `speckle`, `band` — each clipped
+to the contour (`clipSegment`, `insidePath` in `stroke.js`), any stack of them: a material is a base and its
+textures, the way a 3D material is a base color and its maps. That is the material, and nothing else. The color
+always comes from the part; a material knows no colors of its own, and every tone a layer adds is a shade of
+the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a material and hands
+over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
 The table is `MATERIALS` in `stroke.js`; an unknown name throws, so a misspelt material cannot silently draw
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
 way, its contour the board's PENCIL — so the table cannot drift from what is seen.
 
-| Material | How the area is filled | On the board |
-| --- | --- | --- |
-| `FLAT` | the fill-up — the fan from the centre, out of register | the head, the body, the calico patches — **everything today** |
-| `GRAPHITE` | a pale ground hatched with thin pencil strokes, nearly upright | — |
-| `INK` | solid, with a few long light scratches dragged across | — |
-| `WATERCOLOUR` | a pale wash, a second wash out of register, a bloom inside | — |
-| `OIL` | thick short dabs in three tones along one diagonal | — |
-| `CHARCOAL` | a ground dusted with dark specks | — |
-| `MARKER` | wide even diagonal bands of a deeper tone | — |
+| Material | base | layers | On the board |
+| --- | --- | --- | --- |
+| `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the head, the body, the calico patches — **everything today** |
+| `GRAPHITE` | `flat`, a pale tone | `hatch` — thin pencil strokes, nearly upright | — |
+| `INK` | `flat` | `scratch` — a few long light lines dragged across | — |
+| `WATERCOLOUR` | `wash` — a pale wash with a second out of register | `bloom` — a lighter patch inside | — |
+| `OIL` | `flat` | `dab` — thick short dabs in three tones along one diagonal | — |
+| `CHARCOAL` | `flat` | `speckle` — dark specks | — |
+| `MARKER` | `flat` | `band` — wide even diagonal bands of a deeper tone | — |
+
+The medium page shows each ball's layers one by one under it — the base alone, then each texture alone
+(`paint(…, { only })`). A new material is a new row: a base and a stack; a new texture is a new layer kind in
+`paint()`.
 
 `Sketch.fill()` is FLAT itself; the parts that still call it directly (ears, eyes, teeth…) are drawing FLAT
 without naming it — naming the material is the direction, one part at a time, with `drawdiff` proving the
