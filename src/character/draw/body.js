@@ -1,8 +1,15 @@
 // Body — torso and markings. Docs: guidelines/character/parts.md § body
 
-import { blobPath } from "../../stroke.js";
+import { blobPath, valueStep } from "../../stroke.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { FURS, CALICO_MID } from "../vocabulary/palette.js";
+
+// The value step a surface draws at. A dog, a cat or an imp is **one mass** — the body is the head's color or a close tone of it
+// (spec.js) — so both take the head color's step: a tone that crosses a step would otherwise hatch the body differently from the head.
+// A human is two surfaces (skin, clothes), each at its own darkness. The hand (the density slot) moves the step either way
+export function surfaceValue(spec, color) {
+  return valueStep(spec.species === "human" ? color : spec.palette.skin, spec.parts.density);
+}
 
 // The creature's pattern — the `pattern` slot as part of the material's base color (stroke.js patternOn). Light ink on a dark body,
 // the same rule as face ink. calico is not a line pattern but color regions (drawCalico / drawHeadCalico), and none is none
@@ -20,7 +27,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
-    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), hand: spec.parts.density });   // the material and density slots (flat, a normal hand when absent), the pattern in its base
+    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step, the pattern in its base
     // The body's scribble shading is off — an ellipse it cannot clip to the contour (see drawHead); it returns as the light's shade
     ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
@@ -45,7 +52,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
   }
 
-  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), hand: spec.parts.density });   // the material and density slots (flat, a normal hand when absent), the pattern in its base
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step, the pattern in its base
   // The body's scribble shading is off — on a short or wide torso the tilted ellipse poked past the contour; it returns as the light's shade
   ink.contour(path, "PENCIL", { color: ink0, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   return { path, top, bottom, w, cx: 0 };

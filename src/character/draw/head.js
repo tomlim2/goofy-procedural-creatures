@@ -4,7 +4,7 @@ import { blobPath, arcPath } from "../../stroke.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
-import { calicoColors } from "./body.js";
+import { calicoColors, surfaceValue } from "./body.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -19,7 +19,7 @@ export function drawHead(ink, fills, spec, box, noise) {
   });
 
   // The material slot — how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
-  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset, hand: spec.parts.density });
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset, value: surfaceValue(spec, spec.palette.skin) });
 
   // The head's pencil scribble (a tilted zigzag in a darker tone over the fill) is **off**: scribbleFill shades an ellipse it cannot
   // clip to the contour, so on a tapered or squared head its corners poked past the outline. It comes back as the light's shade

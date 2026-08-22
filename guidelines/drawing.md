@@ -124,8 +124,11 @@ the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0
 step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → stipple → a bare ground),
 ink, oil and charcoal lay down more or less of their texture. The step comes from the part's color's darkness
 (`valueStep`: a dark cloth draws black, a pale skin light), moved one step by the creature's `density` — its hand,
-another late slot (light: one step lighter · dense: one step darker; nothing on flat). The medium page draws each
-textured material as a row of the five steps. Every other fill is FLAT.
+another late slot (light: one step lighter · dense: one step darker; nothing on flat). A dog, a cat or an imp is
+**one mass** — its body is the head's color or a close tone of it — so head and body take the head color's step
+(`surfaceValue` in `draw/body.js`; a tone that crosses a step would otherwise hatch the body differently from the
+head). A human is two surfaces, skin and clothes, each at its own step. The medium page draws each textured
+material as a row of the five steps. Every other fill is FLAT.
 
 The medium page shows each ball's channels under it — the base colour alone, then the texture alone
 (`paint(…, { only })`). A new material is a new row: a base and a texture; a new pattern is a new texture kind
