@@ -107,6 +107,10 @@ mouth laid on top). The rules:
 - **Only that eye is redrawn — static eyes are one layer per eye.** A wink changes one side only. With two static eyes in one mesh, the moment you switch the frame off to turn the winking eye into an arch, the other eye leaves a blank face (the bug where a cat's other eye vanished on a wink). So `drawCreature` bakes static eyes into two separate layers, `staticEyeBack` (the smaller eye) and
   `staticEyeFront` (the larger), and `animate` switches off **only that eye's layer** for sleep, ^^ and a wink (that side). The audit counts per eye too — the other static eye has to be
   visible through a wink (`eyes0`, `eyes1`)
+- **A quad's tail is counted too.** The audit toggles the tail over the whole cell at rest (BIND — the skeleton as drawn, behind the body) and raised (`tailRaise` 1 —
+  above the body); under 0.7× the head width in pixels — scaled by the length slot (long 1 · medium 0.7 · short 0.45) and a stub's 0.3 — it is hidden. Raised, that is a violation (a raised tail is above the body and head and has to show); at rest it is
+  written down as information — the tail is drawn behind the body by design ([parts.md](parts.md) § tail), and the count tells how many skeletons and skins the board
+  actually shows
 - If you changed it, count it with `/audit.html`. It has to be 0 on one board. What is left is only low contrast of the "black brows turning up over black hair" kind — that is an overlap, not a covering, so let it go
 
 ## Weights are settled by numbers, not by eye

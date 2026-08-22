@@ -9,9 +9,11 @@
 //   the eye rig's pupil (ring, wide, cyclops) — closed during a blink, ^^, a wink (that side) and sleep, so it is left out then. In exchange,
 //   the shut line has to be visible then — an eye closing must not make the eye disappear from the face
 //   the ^^ arc — visible when happy or winking (that side) · the sleep lid — visible when asleep
+//   a quad's tail — raised (tailRaise 1, drawn above the body) it has to show; at rest it is drawn behind the body, so a hidden one is written
+//   down as information, not a violation (the known cost of drawing it behind — parts.md § tail)
 
 import * as THREE from "three";
-import { createScene } from "./scene/index.js";
+import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { makeGrid, layout, eyeGeometry, facePartKinds } from "./character/index.js";
 import { drawEyes, drawFace2, drawNose, drawEyewear, drawWhiskers } from "./character/draw/face.js";
 import { Sketch } from "./stroke.js";
@@ -65,16 +67,28 @@ function audit() {
   const W = renderer.domElement.width, H = renderer.domElement.height;
   const V = new THREE.Vector3();
 
-  function region(item) {
-    item.group.updateWorldMatrix(true, true);
-    const gp = new THREE.Vector3();
-    item.group.getWorldPosition(gp);
-    const cx = gp.x, cy = gp.y + item.headTop - item.headRy;
-    const rx = item.headRx * 1.5, ry = item.headRy * 1.5;
+  // The pixel rectangle of a world box (centre, half sizes)
+  function boxRegion(cx, cy, rx, ry) {
     const a = V.set(cx - rx, cy - ry, 0).clone().project(cam), b = V.set(cx + rx, cy + ry, 0).clone().project(cam);
     const x0 = Math.max(0, Math.floor((Math.min(a.x, b.x) + 1) / 2 * W)), x1 = Math.min(W - 1, Math.ceil((Math.max(a.x, b.x) + 1) / 2 * W));
     const y0 = Math.max(0, Math.floor((Math.min(a.y, b.y) + 1) / 2 * H)), y1 = Math.min(H - 1, Math.ceil((Math.max(a.y, b.y) + 1) / 2 * H));
     return { x0, y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+  }
+  function worldPos(item) {
+    item.group.updateWorldMatrix(true, true);
+    const gp = new THREE.Vector3();
+    item.group.getWorldPosition(gp);
+    return gp;
+  }
+  // The head's region — 1.5× the head, where the face parts are
+  function region(item) {
+    const gp = worldPos(item);
+    return boxRegion(gp.x, gp.y + item.headTop - item.headRy, item.headRx * 1.5, item.headRy * 1.5);
+  }
+  // The whole cell — where a tail can be (the group's origin is the feet)
+  function cellRegion(item) {
+    const gp = worldPos(item);
+    return boxRegion(gp.x, gp.y + CELL_H * 0.4, CELL_W * 0.7, CELL_H * 0.65);
   }
   function grab(reg) {
     const buf = new Uint8Array(reg.w * reg.h * 4);
@@ -91,6 +105,8 @@ function audit() {
 
   const violations = [];
   const checked = {};
+  const tailHidden = [];   // tails hidden at rest — information, not violations
+  let tails = 0;
   let headPxMin = Infinity;
   for (const item of list) {
     for (const other of list) other.group.visible = other === item;   // one creature at a time — for speed
@@ -171,6 +187,31 @@ function audit() {
         }
       }
     }
+    // The tail — toggled off and on over the whole cell, at rest (BIND: the skeleton as drawn, behind the body) and raised (above the body).
+    // Under the threshold — 0.7× the head width in pixels, a tail's worth of ink, scaled by the length slot (long 1 · medium 0.7 · short 0.45) and
+    // a stub's 0.3 (a stub is meant to be small) — it is hidden: at rest that is information, raised a violation
+    if (item.tailGroup) {
+      tails += 1;
+      const cell = cellRegion(item);
+      const lenK = spec.parts.tailLength === "short" ? 0.45 : spec.parts.tailLength === "medium" ? 0.7 : 1;
+      const stubK = spec.parts.tail === "stubtail" ? 0.3 : 1;
+      const TAIL_PIXELS = Math.max(12, Math.round(headPx * 0.7 * lenK * stubK));
+      for (const [stateName, ov, strict] of [["rest", {}, false], ["raised", { tailRaise: 1 }, true]]) {
+        scene.probe(item, ov);
+        item.tailGroup.visible = true;
+        renderer.render(scene.scene, cam);
+        const on = grab(cell);
+        item.tailGroup.visible = false;
+        renderer.render(scene.scene, cam);
+        const off = grab(cell);
+        item.tailGroup.visible = true;
+        const d = diffCount(on, off);
+        if (d < TAIL_PIXELS) {
+          const line = `${spec.species} ${spec.seed.toString(36)} tail ${stateName} — tail=${spec.parts.tail} skin=${spec.parts.tailSkin} length=${spec.parts.tailLength} (${d}px, threshold ${TAIL_PIXELS}px)`;
+          (strict ? violations : tailHidden).push(line);
+        }
+      }
+    }
     for (const t of temp) for (const m of t.meshes) { item.faceGroup.remove(m); disposeGroup(m); }   // materials are shared — only the geometry is thrown away
   }
   for (const other of list) other.group.visible = true;
@@ -179,6 +220,8 @@ function audit() {
   const lines = [`board ${formatSeed(seed)} · ${list.length} creatures × ${Object.keys(STATES).length} states · head width ≥ ${Math.round(headPxMin)}px (threshold ${minPixels(headPxMin)}px)`, `checked ${Object.entries(checked).map(([k, v]) => `${k} ${v}`).join(" · ")}`, ""];
   lines.push(violations.length ? `not visible: ${violations.length}` : "not visible: 0 — every part shows in every state");
   lines.push(...violations);
+  lines.push("", `tails ${tails} · hidden at rest ${tailHidden.length} (drawn behind the body — information, not a violation; raised ones count above)`);
+  lines.push(...tailHidden);
   return { violations, text: lines.join("\n") };
 }
 

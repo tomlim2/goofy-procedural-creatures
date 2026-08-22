@@ -47,7 +47,7 @@ with — the ribbon and the pencil, with their anatomy), the goofy materials (ho
 balls are generated from the tables themselves. The figures hold still; INK BOIL (`I`) sets their lines boiling at the board's own cadence.
 The page cannot drift from the code, because it runs the code.
 
-`/audit.html?seed=…` — **the face part audit**. Draws one board (35 creatures) in 22 face states (startle, sleep, blink, ^^, wink, anger, brow/mouth switches,
+`/audit.html?seed=…` — **the face part audit** (and the tails). Draws one board (35 creatures) in 22 face states (startle, sleep, blink, ^^, wink, anger, brow/mouth switches,
 8-way turns, the ☆♥ variants, and combinations), toggling the eyes, nose, mouth, brows, eyewear, cheeks and sleep lids one at a time and counting the pixel difference. Under 4% of the head width is written down as
 "not visible". Run it whenever you change the face — it has to be 0.
 
@@ -102,7 +102,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
 | `src/pixeldiff.js` · `pixeldiff.html` | The pixel diff — the working tree against a git ref, rendered on the same GPU, the differing pixels counted per creature | [determinism](guidelines/determinism.md) |
-| `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state | [character/rules](guidelines/character/rules.md) |
+| `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state, and whether a quad's tail shows at rest and raised | [character/rules](guidelines/character/rules.md) |
 | `src/how.js` · `how.html` | The medium page — the goofy outlines, the goofy materials and the goofy fur (balls generated from the tables), the shapes, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
 | `guidelines/` | The catalog and rules for the two axes, plus the performance, seed and drawing rules. **Read before changing anything** | [README](guidelines/README.md) |
 | `reference/` | What it was made from, and what was and was not taken | [README](reference/README.md) |
