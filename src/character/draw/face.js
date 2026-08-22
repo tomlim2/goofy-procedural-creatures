@@ -106,7 +106,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // Inside the almond is the white — in skin tone it becomes a patch with a pupil floating in it, and on black fur or an imp the almond merges with the head
       const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, { lumps: 3, amount: 0.1, noise: null });
       paintPart(fills, spec, path, SCLERA, { flat: true });
-      fills.outline(path, { color: dark, width: 0.01 });
+      fills.contour(path, "RIBBON", { color: dark, closed: true });
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), dark, { own: true });
     } else if (kind === "line") {
       // A flat two-dash eye — an expressionless dash. It droops slightly on the outside
@@ -141,7 +141,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // For that, smallest first: the larger eye is drawn later and so ends up in front
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // a slightly crumpled circle
       paintPart(fills, spec, path, SCLERA, { flat: true });
-      fills.outline(path, { color: dark, width: 0.011, passes: 2 });   // the white's rim is black — being on the white, it is always visible
+      fills.contour(path, "RIBBON", { color: dark, closed: true });   // the white's rim is black — being on the white, it is always visible
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
       // The heavy-lidded set — **the same eye at different tilts**: lidded flat · sharp tilted toward the nose (the fierce look of a lifted outer corner) ·
       // soft tilted the other way (the gentle look of a drooping outer corner). The tilt rotates the white, the lid line and the pupil together about the eye's centre —
@@ -172,7 +172,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it
       const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
       paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
-      fills.outline(path, { color: dark, width: 0.011, passes: 2 });
+      fills.contour(path, "RIBBON", { color: dark, closed: true });
       // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil
       const gaze = (spec.proportions.wobbleSeed % 5 - 2) * 0.06;
       paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true });
@@ -292,7 +292,7 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
     const eye = eyes.find((e) => e.side === spec.parts.patchSide) || eyes[0];
     const patch = blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.35, { lumps: 3, amount: 0.025, noise: fills.noise, phase: 1.3 });   // almost a circle — only a touch, so it does not jiggle as the boil runs
     paintPart(fills, spec, patch, spec.palette.ink, { own: true });
-    if (spec.faceInk) ink.outline(patch, { color: spec.faceInk, width: 0.01, passes: 2, jitter: 0.003 });
+    if (spec.faceInk) ink.contour(patch, "RIBBON", { color: spec.faceInk, closed: true });
     // The strap crosses the head
     ink.stroke([[eye.x, eye.y + eye.r * 1.3], [-eye.side * box.headRx, box.headCy + box.headRy * 0.45]], {
       color: ink0, width: 0.009
@@ -302,9 +302,7 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
 
   if (kind === "monocle") {
     const eye = eyes[eyes.length - 1];
-    ink.outline(blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.5, { lumps: 4, amount: 0.06, noise: null }), {
-      color: ink0, width: 0.01
-    });
+    ink.contour(blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.5, { lumps: 4, amount: 0.06, noise: null }), "RIBBON", { color: ink0, closed: true });
     ink.stroke([[eye.x + eye.r * 1.4, eye.y - eye.r], [eye.x + eye.r * 1.9, eye.y - eye.r * 2.6]], {
       color: ink0, width: 0.008
     });
@@ -313,9 +311,7 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
 
   const scale = LENS_SCALE[kind] || 1.45;
   for (const eye of eyes) {
-    ink.outline(blobPath(eye.x, eye.y, eye.r * scale, eye.r * scale * 0.92, { lumps: 4, amount: 0.06, noise: null }), {
-      color: ink0, width: 0.011
-    });
+    ink.contour(blobPath(eye.x, eye.y, eye.r * scale, eye.r * scale * 0.92, { lumps: 4, amount: 0.06, noise: null }), "RIBBON", { color: ink0, closed: true });
   }
   ink.stroke([[eyes[0].x + eyes[0].r * scale, eyes[0].y], [eyes[1].x - eyes[1].r * scale, eyes[1].y]], {
     color: ink0, width: 0.009
@@ -408,7 +404,7 @@ function catNose(ink, fills, spec, box, eyes) {
     path = [[-w, y + h * 0.55], [-w * 0.55, y + h * 0.8], [w * 0.55, y + h * 0.8], [w, y + h * 0.55], [w * 0.4, y - h * 0.35], [0, y - h * 0.8], [-w * 0.4, y - h * 0.35]];
   }
   paintPart(fills, spec, path, "#d9968a", { own: true });
-  ink.outline(path, { color: ink0, width: 0.009 });
+  ink.contour(path, "RIBBON", { color: ink0, closed: true });
   // The philtrum — from under the nose toward the mouth. Short on hook, long on long (a Y-shaped face)
   const drop = kind === "hook" ? h * 1.1 : kind === "long" ? h * 2 : 0;
   if (drop) ink.stroke([[0, y - h * 0.7], [0.001, y - h * 0.7 - drop]], { color: ink0, width: 0.009 });
@@ -423,7 +419,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
     paintPart(fills, spec, muzzle, m.fill);   // the muzzle is fur — the creature's material
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
     paintPart(fills, spec, nose, spec.palette.ink, { own: true });   // the nose is an object — always black
-    if (m.dark) ink.outline(nose, { color: m.ink, width: 0.008 });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)
+    if (m.dark) ink.contour(nose, "RIBBON", { color: m.ink, closed: true, weight: 0.7 });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)
     return;
   }
 
@@ -449,19 +445,19 @@ export function drawNose(ink, fills, spec, box, eyes) {
     const b = bulbShape(spec, box, eyes);
     const path = blobPath(0.003 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.1, noise: fills.noise, phase: 2.3 });
     paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
-    ink.outline(path, { color: ink0, width: 0.01 });
+    ink.contour(path, "RIBBON", { color: ink0, closed: true });
   } else if (kind === "broad") {
     // Broad nose — a wide, low **filled triangle** (a ∇ with rounded corners). The same point layout as the cat's triangular nose but wider and in skin tones
     const { w, h, y: ny } = broadShape(spec, box, eyes);
     const path = [[-w, ny + h * 0.7], [-w * 0.2, ny + h], [w * 0.2, ny + h], [w, ny + h * 0.7], [w * 0.3, ny - h * 0.6], [0, ny - h], [-w * 0.3, ny - h * 0.6]];
     paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
-    ink.outline(path, { color: ink0, width: 0.01 });
+    ink.contour(path, "RIBBON", { color: ink0, closed: true });
   } else if (kind === "box") {
     // Square nose — a **rounded square** area. The exponent goes higher (2.5) than the head's square (1.5) — at nose size, 1.5 just smears into a circle and does not separate from bulb
     const b = boxShape(spec, box, eyes);
     const path = blobPath(0.002 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.04, noise: fills.noise, phase: 6.7, square: 2.5 });
     paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
-    ink.outline(path, { color: ink0, width: 0.01 });
+    ink.contour(path, "RIBBON", { color: ink0, closed: true });
   } else if (kind === "nostrils") {
     // Nostrils only — **two watermelon seeds** with no nose outline. Teardrops pointed at the top (taper +) tilted up and outward (left ＼ right ／).
     // A neighbour of the dot nose, separated by being two seeds, the tilt and the seed shape. The size is proportional to the head — at a fixed size it vanishes to a dot on a big head

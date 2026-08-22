@@ -77,7 +77,7 @@ const twintailsOf = (ball) => (h) => {
       // The end bunch — a round scribble mass at the end of the tail plus an outline
       const bx = tx + side * 0.05, by = ty - 0.34;
       back.fur(arcPath(bx, by, 0.05, 0.055, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 9, width: 0.009, spread: 0.032 });
-      back.outline(blobPath(bx, by, 0.057, 0.06, { lumps: 4, amount: 0.15, noise: null }), { color: ink0, width: 0.01, passes: 2 });
+      back.contour(blobPath(bx, by, 0.057, 0.06, { lumps: 4, amount: 0.15, noise: null }), "RIBBON", { color: ink0, closed: true });
     }
   }
 };
@@ -170,7 +170,7 @@ const voluminous = (kind) => (h) => {
       const by = cy + Math.sin(angle) * ry * grow * 0.96;
       if (by < bottomAt(bx)) continue;
       const r = 0.03 + noise(i * 4.4 + spec.seed * 0.002) * 0.012;
-      back.outline(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0, width: 0.01, jitter: 0.008 });
+      back.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), "RIBBON", { color: ink0, closed: true });
     }
   }
 };
@@ -197,7 +197,7 @@ function curly(h) {
     const bx = Math.cos(angle) * rx * 0.88;
     const by = cy + Math.sin(angle) * ry * 0.92;
     const r = 0.03 + noise(i * 4.4) * 0.012;
-    crown.outline(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0, width: 0.009, jitter: 0.008 });
+    crown.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), "RIBBON", { color: ink0, closed: true });
   }
 }
 
@@ -246,7 +246,7 @@ function bun(h) {
   cap(h, 0.32, 16, 7, ry * 0.14, 0.009);
   const bx = 0.01, by = cy + ry * 1.05;
   crown.fur(arcPath(bx, by, 0.045, 0.04, 0, Math.PI * 2, 14), "SCRIBBLE", { color: ink0, passes: 8, width: 0.009, spread: 0.028 });
-  crown.outline(blobPath(bx, by, 0.048, 0.042, { lumps: 4, amount: 0.15, noise: null }), { color: ink0, width: 0.01 });
+  crown.contour(blobPath(bx, by, 0.048, 0.042, { lumps: 4, amount: 0.15, noise: null }), "RIBBON", { color: ink0, closed: true });
   crown.stroke([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: ink0, width: 0.008 });
 }
 

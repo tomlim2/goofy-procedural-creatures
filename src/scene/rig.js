@@ -223,7 +223,7 @@ export function buildCreature(spec, noise, birth = 0) {
     const white = new Sketch(noise, 0.4);
     paintPart(white, spec, blobPath(0, 0, rx, ry, wob), "#f6f2e9", { flat: true });
     const rim = new Sketch(noise, 0.6);
-    rim.outline(blobPath(0, 0, rx, ry, { ...wob, lumps: 4, amount: 0.07 }), { color: spec.palette.ink, width: 0.011, passes: 2 });
+    rim.contour(blobPath(0, 0, rx, ry, { ...wob, lumps: 4, amount: 0.07 }), "RIBBON", { color: spec.palette.ink, closed: true });
     open.add(sketchMesh([white, rim], 1, o));
 
     const pupilSketch = new Sketch(noise, 0.4);
@@ -275,11 +275,11 @@ export function buildCreature(spec, noise, birth = 0) {
     const starSketch = new Sketch(noise, 0.5);
     const star = starPath(0, 0, eye.r * 1.1);
     paintPart(starSketch, spec, star, "#f6f2e9", { flat: true });
-    starSketch.outline(star, { color: spec.palette.ink, width: 0.01, step: 0.006 });
+    starSketch.contour(star, "RIBBON", { color: spec.palette.ink, closed: true, step: 0.006 });
     const heartSketch = new Sketch(noise, 0.5);
     const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
     paintPart(heartSketch, spec, heart, "#c9666a", { own: true });
-    heartSketch.outline(heart, { color: spec.palette.ink, width: 0.01, step: 0.006 });
+    heartSketch.contour(heart, "RIBBON", { color: spec.palette.ink, closed: true, step: 0.006 });
     const starMesh = sketchMesh(starSketch, 1, 6.32);
     const heartMesh = sketchMesh(heartSketch, 1, 6.32);
     for (const m of [starMesh, heartMesh]) {

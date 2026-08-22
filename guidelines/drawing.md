@@ -63,14 +63,14 @@ The head and body contours draw with it, as the PENCIL goofy outline (below); th
 
 ## The outline — what a contour is drawn with
 
-A creature's contour is drawn with one **goofy outline**, named from `GOOFY_OUTLINES` in `stroke.js`:
+Every closed line on a creature is drawn with one **goofy outline**, named from `GOOFY_OUTLINES` in `stroke.js`:
 `ink.contour(path, "PENCIL", { color, closed, weight })`. `weight` is a multiplier on the outline's width (the head
 contour runs at 1.15 of the body's); a part never picks a line function or a width itself. An unknown name
-throws. The outline is its own concept — not part of a material: a contour is not a way of filling.
+throws; `outline()` is never called by a part. The outline is its own concept — not part of a material: a contour is not a way of filling.
 
 | Outline | Line | On the board |
 | --- | --- | --- |
-| `RIBBON` | `stroke()` 0.012 laid twice, jitter 0.007 — the board's original contour, the two passes never quite agreeing | — |
+| `RIBBON` | `stroke()` 0.010 once, jitter 0.006 — one width, scaled by a part's weight (fine 0.7 · 1 · heavy 1.2) | every closed shape that is not a head or a body: ears, hats, hands, boots, sleeves, the tail's ends, hair loops, eye rings and eyewear, the nose, the mouth's parts, the static and effect eyes — 41 sites |
 | `PENCIL` | `pencil()` 0.012 — one seamless loop: wander, breathing width, the shed | the head (weight 1.15), the body — **today** |
 
 ## The goofy fur — how hair is grown

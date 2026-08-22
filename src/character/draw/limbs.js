@@ -49,7 +49,7 @@ export function limbSketches(spec) {
   const make = () => new Sketch(noise, p.wobble);
   const dot = (s, x, y, r, color) => {
     paintPart(s, spec, blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color);   // a hand — the creature's material
-    s.outline(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), { color: ink0, width: 0.009 });
+    s.contour(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), "RIBBON", { color: ink0, closed: true });
   };
 
   const legKind = spec.parts.legs;
@@ -76,7 +76,7 @@ export function limbSketches(spec) {
         s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.012 });
         const boot = crumple([[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]], 0.003, lean * 90);
         paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
-        s.outline(boot, { color: ink0, width: 0.009 });
+        s.contour(boot, "RIBBON", { color: ink0, closed: true });
       } else {
         // A thick stub leg plus a round toe tip poking slightly forward plus two toe lines (the reference)
         s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.016 });
@@ -125,7 +125,7 @@ export function limbSketches(spec) {
       // Boots — a mass filled to the ankle
       const boot = crumple([[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]], 0.003, footX * 90);
       paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
-      s.outline(boot, { color: ink0, width: 0.01 });
+      s.contour(boot, "RIBBON", { color: ink0, closed: true });
     } else {
       // A round foot — the reference default
       dot(s, footX + side * 0.008, -len + 0.012, 0.022, skin);
@@ -159,7 +159,7 @@ export function limbSketches(spec) {
       // The upper arm is a cloth-colored sleeve. The forearm is a bare arm plus a hand.
       const sl = crumple([[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]], 0.0025, side * 3);
       paintPart(upper, spec, sl, cloth);   // a sleeve — the creature's material
-      upper.outline(sl, { color: ink0, width: 0.01 });
+      upper.contour(sl, "RIBBON", { color: ink0, closed: true });
       lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: 0.01 });
       dot(lower, side * 0.006, -lowerLen - 0.006, 0.022, skin);
     } else if (armKind === "stubby") {
@@ -385,14 +385,14 @@ export function tailSketch(spec) {
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
     const tipSk = sketches[sketches.length - 1];
     paintPart(tipSk, spec, ball, shade(fur, 0.82));
-    tipSk.outline(ball, { color: ink0, width: 0.01 });
+    tipSk.contour(ball, "RIBBON", { color: ink0, closed: true });
   } else if (skin === "puff") {
     // A pom — a rabbit tail. Regardless of the skeleton's length, one bushy tuft near the rump (at spine 0.3) plus fur strokes around it (the root piece)
     const a = at(0.3);
     const r = 0.04;
     const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
     paintPart(a.sk, spec, pom, fur);
-    a.sk.outline(pom, { color: ink0, width: 0.011, passes: 2 });
+    a.sk.contour(pom, "RIBBON", { color: ink0, closed: true });
     for (let i = 0; i < 6; i += 1) {
       const ang = -1.0 + i * 0.66;   // around the top and outside
       const x0 = a.x + Math.cos(ang) * r * 0.9, y0 = a.y + 0.004 + Math.sin(ang) * r * 0.85;
@@ -404,7 +404,7 @@ export function tailSketch(spec) {
       const a = at(0.6);
       const ball = blobPath(a.x, a.y + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
       paintPart(a.sk, spec, ball, fur);
-      a.sk.outline(ball, { color: ink0, width: 0.011, passes: 2 });
+      a.sk.contour(ball, "RIBBON", { color: ink0, closed: true });
     } else {
       const n = 4;
       for (let i = 0; i < n; i += 1) {
@@ -413,7 +413,7 @@ export function tailSketch(spec) {
         const r = 0.024 - i * 0.004;
         const ball = blobPath(a.x, a.y, r, r, { lumps: 3, amount: 0.12, noise: null });
         paintPart(a.sk, spec, ball, fur);
-        a.sk.outline(ball, { color: ink0, width: 0.01, passes: 2 });
+        a.sk.contour(ball, "RIBBON", { color: ink0, closed: true });
       }
     }
   } else {

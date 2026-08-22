@@ -48,7 +48,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const bottom = brow;
     const { path, w } = cover(1.1, bottom);
     paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's material at its own color's step
-    ink.outline(path, { color: ink0, width: 0.013, passes: 2 });
+    ink.contour(path, "RIBBON", { color: ink0, closed: true, weight: 1.2 });
     ink.stroke([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0, width: 0.013 });
     ink.stroke([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, width: 0.008 });
     return;
@@ -59,10 +59,10 @@ export function drawHeadgear(ink, fills, spec, box) {
     const bottom = brow + ry * 0.05;
     const { path, w } = cover(1.04, bottom);
     paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's material at its own color's step
-    ink.outline(path, { color: ink0, width: 0.012 });
+    ink.contour(path, "RIBBON", { color: ink0, closed: true, weight: 1.2 });
     const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
     paintPart(fills, spec, brim, accent, { own: true });
-    ink.outline(brim, { color: ink0, width: 0.012 });
+    ink.contour(brim, "RIBBON", { color: ink0, closed: true, weight: 1.2 });
     return;
   }
 
@@ -76,7 +76,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const disc = blobPath(0, 0, rx * 0.95, ry * 0.3, { lumps: 4, amount: 0.12, noise: null })
       .map(([x, y]) => [bx + x * cos - y * sin, by + x * sin + y * cos]);
     paintPart(fills, spec, disc, accent, { own: true });
-    ink.outline(disc, { color: ink0, width: 0.012, passes: 2 });
+    ink.contour(disc, "RIBBON", { color: ink0, closed: true, weight: 1.2 });
     ink.stroke([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0, width: 0.012 });
     return;
   }
@@ -99,7 +99,7 @@ export function drawHeadgear(ink, fills, spec, box) {
   const top = crown + ry * 0.28;
   const pot = crumple([[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]], 0.004, 5);
   paintPart(fills, spec, pot, accent, { own: true });
-  ink.outline(pot, { color: ink0, width: 0.012 });
+  ink.contour(pot, "RIBBON", { color: ink0, closed: true, weight: 1.2 });
   ink.stroke([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, width: 0.008 });
 }
 
@@ -156,9 +156,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
         }
       }
     } else {
-      ink.outline(blobPath(bx, by + 0.035, 0.033 * scale, 0.045 * scale, { lumps: 3, amount: 0.15, noise: null }), {
-        color: ink0, width: 0.011
-      });
+      ink.contour(blobPath(bx, by + 0.035, 0.033 * scale, 0.045 * scale, { lumps: 3, amount: 0.15, noise: null }), "RIBBON", { color: ink0, closed: true });
     }
   }
 }

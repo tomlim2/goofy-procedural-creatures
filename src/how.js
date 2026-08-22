@@ -177,9 +177,8 @@ Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("
 // What the board actually draws its closed lines with today — three kinds, only the first through the table. The same open path
 // drawn each way, at the widths the parts use. The counts in the captions are read off the code (how.html), not computed here
 const IN_USE = [
-  { key: "use:pencil", label: "pencil · contour() · 0.012, the head ×1.15", draw: (ink, pts) => ink.contour(pts, "PENCIL", { color: INK, paper: CARD }) },
-  { key: "use:twice", label: "ribbon laid twice · outline(passes 2) · 0.010–0.013", draw: (ink, pts) => ink.stroke(pts, { color: INK, width: 0.011, passes: 2 }) },
-  { key: "use:once", label: "ribbon once · outline() · 0.006–0.012", draw: (ink, pts) => ink.stroke(pts, { color: INK, width: 0.009 }) }
+  { key: "use:pencil", label: "pencil · contour(PENCIL) · the head ×1.15, the body", draw: (ink, pts) => ink.contour(pts, "PENCIL", { color: INK, paper: CARD }) },
+  { key: "use:ribbon", label: "ribbon · contour(RIBBON) · weight 0.7 / 1 / 1.2", draw: (ink, pts) => ink.contour(pts, "RIBBON", { color: INK }) }
 ];
 IN_USE.forEach(({ key, label, draw }) => {
   const el = document.createElement("figure");

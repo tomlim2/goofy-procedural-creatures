@@ -77,7 +77,7 @@ function bowl(m, hw, depth, teeth = true) {
 function grid(m, hw, hh, bars) {
   const box = blobPath(m.x, m.y, hw, hh, { lumps: 3, amount: 0.04, noise: null, square: 2 });
   paintPart(m.fills, m.spec, box, TOOTH, { own: true });
-  m.ink.outline(box, { color: m.edge, width: 0.011 });
+  m.ink.contour(box, "RIBBON", { color: m.edge, closed: true });
   for (let i = 1; i <= bars; i += 1) {
     const x = m.x - hw + (2 * hw * i) / (bars + 1);
     m.ink.stroke([[x, m.y + hh * 0.9], [x + 0.001, m.y - hh * 0.9]], { color: m.edge, width: 0.008 });
@@ -87,7 +87,7 @@ function grid(m, hw, hh, bars) {
 function tongueBlob(m, cx, top, rx, ry) {
   const t = blobPath(cx, top - ry, rx, ry, { lumps: 3, amount: 0.1, noise: null });
   paintPart(m.fills, m.spec, t, PINK, { own: true });
-  m.ink.outline(t, { color: m.ink0, width: 0.008 });
+  m.ink.contour(t, "RIBBON", { color: m.ink0, closed: true, weight: 0.7 });
   m.ink.stroke([[cx, top - ry * 0.3], [cx + 0.001, top - ry * 1.6]], { color: m.ink0, width: 0.006 });
 }
 // Two fangs — **big** white triangles (outlined) below the mouth line. Teeth have to read big
@@ -97,7 +97,7 @@ function fangs(m, hw, drop) {
     const fx = m.x + s * hw * 0.55;
     const tri = crumple([[fx - half, m.y + 0.002], [fx + half, m.y + 0.002], [fx + s * 0.003, m.y - drop]], 0.0015, s * 4, 0.006);
     paintPart(m.fills, m.spec, tri, TOOTH, { own: true });
-    m.ink.outline(tri, { color: m.edge, width: 0.008 });
+    m.ink.contour(tri, "RIBBON", { color: m.edge, closed: true, weight: 0.7 });
   }
 }
 
@@ -112,7 +112,7 @@ export const MOUTH = {
   wave: (m) => m.ink.stroke([[m.x - m.w, m.y], [m.x - m.w * 0.3, m.y + 0.03], [m.x + m.w * 0.3, m.y - 0.02], [m.x + m.w, m.y + 0.015]], { color: m.ink0, width: 0.011 }),
   open: (m) => { bowl(m, m.w * 0.85, 0.95); },
   // Duck bill — a small startled o
-  pout: (m) => m.ink.outline(blobPath(m.x, m.y, 0.022, 0.017, { lumps: 3, amount: 0.15, noise: null }), { color: m.ink0, width: 0.011 }),
+  pout: (m) => m.ink.contour(blobPath(m.x, m.y, 0.022, 0.017, { lumps: 3, amount: 0.15, noise: null }), "RIBBON", { color: m.ink0, closed: true }),
   // ω — the cat mouth (two arcs bulging downward)
   omega: (m) => {
     m.ink.stroke(arcPath(m.x - m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, width: 0.01 });
@@ -191,7 +191,7 @@ export const MOUTH = {
     MOUTH.omega(m);
     const t = blobPath(m.x, m.y - 0.012, 0.011, 0.012, { lumps: 3, amount: 0.1, noise: null });
     paintPart(m.fills, m.spec, t, PINK, { own: true });
-    m.ink.outline(t, { color: m.ink0, width: 0.006 });
+    m.ink.contour(t, "RIBBON", { color: m.ink0, closed: true, weight: 0.7 });
   }
 };
 

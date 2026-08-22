@@ -41,27 +41,28 @@ lines boiling at the board's own pace.</p>
 <p>A creature's contour is drawn with one <b>goofy outline</b>, named from <code>GOOFY_OUTLINES</code> in
 <code>src/stroke.js</code> — <code>ink.contour(path, "PENCIL", { color, closed, weight })</code>. A part never picks
 a line function or a width; at most a weight (the head's contour runs at 1.15 of the body's). Two outlines exist:
-<b>RIBBON</b>, the board's original, and <b>PENCIL</b>, what the board draws with today. One line each, the same path:</p>
+<b>PENCIL</b>, the contour of the head and the body, and <b>RIBBON</b>, the line of every other closed shape — ears, hats,
+hands, eyes, noses, mouths — at one width, scaled by a part's weight. One line each, the same path:</p>
 
 <div class="figs" id="outlineBalls"></div>
 
 <h3>in use on the board</h3>
-<p>What the board's closed lines are actually drawn with today — three kinds, and only the first goes through the
-table. The other two are <code>outline()</code> calls outside it, at eight widths between 0.006 and 0.012, which is
-why one creature can wear a pencil head, two-line ears and one-line eyes. The list is the next thing to fold into
-<code>GOOFY_OUTLINES</code>: the silhouettes onto PENCIL, the details onto one named detail line.</p>
+<p>What the board's closed lines are actually drawn with today — two kinds, both through the table. Forty-one
+<code>outline()</code> calls at eight widths, eleven of them laid twice, became one RIBBON at one width with three
+weights (fine 0.7 · 1 · heavy 1.2); a creature no longer wears two-line ears beside one-line eyes. What is left to
+decide is which of those shapes should move from RIBBON to PENCIL.</p>
 
 <div class="figs" id="outlineUse"></div>
 <p class="note"><b>pencil</b> — 3 parts: the head (weight 1.15), the biped body, the quad body.
-<b>ribbon laid twice</b> — 11: the ear lobe, the cat and dog ears, the helmet, the beret, the twintail balls, the tail's pom and beads.
-<b>ribbon once</b> — 32: the round ear, the cap and its brim, the pot, the hands, the boots, the sleeves, the hair loops and bun, the eye rings
-and eyewear, the nose, the mouth's grid, tongue and fangs, the static eyes, the star and heart eyes.</p>
+<b>ribbon</b> — 41: the ears (all kinds, and the cat's and dog's), the helmet, cap and brim, beret and pot, the horn tip, the hands, boots and
+sleeves, the tail's tuft, pom and beads, the hair loops, bun and twintail balls, the eye rings and eyewear, the nose, the mouth's grid,
+tongue and fangs, the static eyes, the star and heart eyes — fine (0.7) for the eyes and the mouth's small parts, heavy (1.2) for the hats.</p>
 
 <h3>RIBBON — the ribbon</h3>
 <p>WebGL cannot draw a thick line, so there are no lines here at all — every stroke is a <b>triangle ribbon</b>.
 Four things have to be present together to read as a pencil: re-sampling at an even spacing, noise along the normal
 (a slow bend plus a fine tremor), an end taper, and uneven pressure through the middle. Leave out any one and it
-becomes vector clip art. RIBBON lays this stroke twice around the contour.</p>
+becomes vector clip art. RIBBON is this stroke, once.</p>
 
 <div class="figs">
   <figure data-fig="ribbon">
@@ -97,8 +98,8 @@ becomes vector clip art. RIBBON lays this stroke twice around the contour.</p>
   <figure data-fig="outline" class="wide">
     <canvas></canvas>
     <div class="subs"><span>passes 2 — the two never quite agree</span></div>
-    <figcaption><b>s.outline</b> — the closed stroke, laid twice: this is RIBBON, the contour every head and
-    body had until the pencil. Each pass re-rolls its jitter phase, so the doubled line is the contour's texture.</figcaption>
+    <figcaption><b>s.outline</b> — the closed stroke, laid twice: the contour every head and body had until the
+    pencil. Each pass re-rolls its jitter phase, so the doubled line was the contour's texture. RIBBON today is laid once.</figcaption>
   </figure>
 </div>
 
@@ -120,7 +121,7 @@ in <code>src/stroke.js</code>. A closed pencil line is seamless: its sines snap 
   <figure data-fig="twoLines">
     <canvas></canvas>
     <div class="subs"><span>RIBBON</span><span>PENCIL</span></div>
-    <figcaption><b>the same face twice</b> — the contour and the smile in the ribbon on the left, in the
+    <figcaption><b>the same face twice</b> — the contour and the smile in the ribbon (laid twice, as it was) on the left, in the
     pencil on the right. The loop on the right has no seam, and its quads share one normal per point, so it
     cannot crack at a corner either.</figcaption>
   </figure>
