@@ -26,7 +26,7 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
     │   ├── crownBackFrame ×3    ← depth −0.4 · side ears (humans, imps). Behind the head fill (1.7) — the root is hidden by the head
     │   ├── hornsFrame ×3        ← depth 0.45 · horns. Above the head ink (2.06)
     │   ├── hairCrownFrame ×3    ← depth 0.12 · hair on the scalp (the crown cap, spikes, a bun). The same depth as the horns, above them (2.06)
-    │   ├── frontFrame ×3        ← depth −0.4 · dog and cat ears. Above the head ink (2.12) — it covers the outline and the hair's root but cannot cover the eyes
+    │   ├── frontFrame ×3        ← depth 0.2 · dog and cat ears. Above the head ink (2.12) — it covers the outline and the hair's root but cannot cover the eyes
     │   └── hatFrame ×3          ← depth 0.45 · hat. Above the bangs, below the brows (6.58) — a hat sits on the hair, never under it
     │   └── hairFrontFrame ×3    ← depth 0.12 · the bangs band, side curtains, the front of the hood type. Over the face (6.55), below the brows and mouth (6.6)
     └── faceGroup            ← origin = the centre of the head (headCy). x/y shift plus squash from the face turn. Every feature
@@ -66,7 +66,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 1.7 | Side ears (humans, imps) — behind the head fill, so the root is hidden by the head (depth −0.4) |
 | 2 | Head (fills + outline ink) — the fill sits **above the body ink and is opaque**. So the body outline does not show through where the head covers the torso |
 | 2.06 | Horns (depth 0.45) · hair on the scalp (depth 0.12, above the horns) — above the outline |
-| 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth −0.4) |
+| 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth 0.2) |
 | 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) |
 | 2.4 | Face ink (whiskers, freckles, tears) · static eye ink (one layer per eye) |
 | 2.5 | Limbs, upper arm and forearm (above the body ink — the sleeve covers the outline) |
@@ -96,16 +96,17 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 A face turn is the illusion of shifting the features while the head outline stays put. For the remaining layers attached to the head (ears, horns, hair, hat), the shift is decided by
 **whether they are in front or behind** — one number per layer, `rig.js DEPTH`: the shift = depth × the features' shift (the same multiplier on x·y; size does not change).
 Layers are never grouped by meaning (hair, ears) and shifted as one mass — bangs (in front of the face) and back hair (behind the head) are both hair, yet their depths differ and they shift differently.
-Sharing a value is just a tag (the two ears; bangs and the scalp) and the movement is decided by the number. There is one group per layer (`item.parallax`, `animate.js`).
+Sharing a value is just a tag (bangs and the scalp) and the movement is decided by the number. There is one group per layer (`item.parallax`, `animate.js`).
 
 | Depth | Layer | Meaning |
 | --- | --- | --- |
 | 1 | The features (faceGroup) | The front of the face — the reference |
 | 0.45 | Hat · horns | Above the head, toward the front |
+| 0.2 | Dog and cat ears | On the crown — they stand off the scalp, not as far forward as a hat, so they go with the face, a little |
 | 0.12 | Bangs · hair on the scalp | The forehead and crown — attached to the head, so only a little |
 | 0 | The head outline (headGroup directly) | The skull axis — no shift |
 | −0.12 | Back hair | **Behind** the head — the other way, by as much as the bangs |
-| −0.4 | Ears (side ears · dog/cat ears) | Beside and behind the head — as the head turns they swing out to the far side from the face |
+| −0.4 | Side ears (humans, imps) | Beside and behind the head — as the head turns they swing out to the far side from the face |
 
 When attaching a new layer to the head, settle on one depth in this table and write it as `depth` in `LAYERS` — never slot it into an existing group.
 

@@ -27,8 +27,8 @@ export const LAYER_KEYS = ["body", "crownBack", "head", "horns", ...HAIR_KEYS, "
 // Body, head and face are baked separately — so the scene can roll and nod the head alone, and shift the face
 // (the features) as a whole to fake turning the head. Head = outline, ears, horns, hair, hat; face = eyes, cheeks, nose,
 // whiskers, muzzle, eyewear (brows and the mouth are separate meshes for state switching; live eyes are the eye rig).
-// The things attached to the head shift slightly on a face turn while the outline stays put (parallax): ears (crownBack side ears · front dog/cat ears) go **opposite** to the face,
-// crown (horns, hair) and hat go the same way as the face but less, and hairFront (bangs) barely at all. Static eyes are baked separately — for startle variants (☆_☆, ♥_♥)
+// The things attached to the head shift slightly on a face turn while the outline stays put (parallax): side ears (crownBack) go **opposite** to the face,
+// crown (horns, hair), hat and the dog's and cat's ears (front — they stand on the crown) go the same way as the face but less, and hairFront (bangs) barely at all. Static eyes are baked separately — for startle variants (☆_☆, ♥_♥)
 // the eyes are **removed** and replaced by the glyph rather than covered, which needs the eyes alone to be switchable.
 // variant is the boil frame number. Only the jitter phase differs; the composition is the same.
 export function drawCreature(spec, variant = 0) {

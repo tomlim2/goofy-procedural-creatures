@@ -11,7 +11,7 @@ import { sketchMesh } from "./mesh.js";
 export const BOIL_FRAMES = 3;
 
 // The fake 3D depth (z) — how many times the features' shift a layer moves on a face turn. 1 = the features (the front of the face), 0 = the head outline (the skull axis, no shift), negative = behind (the other way).
-// Set as **one number** per layer — how far forward or back it is *is* the shift. Layers meaning the same thing sharing a value is just a tag (the two ears; front hair and the scalp),
+// Set as **one number** per layer — how far forward or back it is *is* the shift. Layers meaning the same thing sharing a value is just a tag (front hair and the scalp),
 // and they are never grouped together by meaning: bangs (in front of the face) and back hair (behind the head) are both hair, yet their depths differ and they shift differently.
 // scene/animate.js sets position = depth × the features' shift per layer (the same multiplier on x and y). Size does not change. Docs: guidelines/rig.md § fake 3D depth
 export const DEPTH = {
@@ -21,7 +21,8 @@ export const DEPTH = {
   hairFront: 0.12,  // bangs — over the forehead (in front of the face) but attached to the head, so only a little
   hairCrown: 0.12,  // hair on the scalp — the cap and spikes continuous with the bangs
   hairBack: -0.12,  // back hair — **behind** the head, so the other way, by as much as the bangs
-  ears: -0.4,       // ears (side ears, dog/cat ears) — beside and behind the head; as the head turns they swing out to the far side from the face
+  sideEars: -0.4,   // side ears (humans, imps) — beside and behind the head; as the head turns they swing out to the far side from the face
+  frontEars: 0.2,   // dog and cat ears — on the crown, standing off the scalp (0.12) but not as far forward as a hat (0.45): they go with the face, a little
   head: 0           // the outline (headGroup directly)
 };
 
@@ -76,11 +77,11 @@ export function buildCreature(spec, noise, birth = 0) {
   const LAYERS = [
     { key: "body", group: bodyGroup, dy: 0, order: 1.5 },
     { key: "hairBack", depth: DEPTH.hairBack, dy: -neckY, order: 1.55 },     // back hair — behind the head and ears, above the body
-    { key: "crownBack", depth: DEPTH.ears, dy: -neckY, order: 1.7 },         // side ears — behind the head fill
+    { key: "crownBack", depth: DEPTH.sideEars, dy: -neckY, order: 1.7 },     // side ears — behind the head fill
     { key: "head", group: headGroup, dy: -neckY, order: 2 },
     { key: "horns", depth: DEPTH.horns, dy: -neckY, order: 2.06 },           // horns — above the head ink
     { key: "hairCrown", depth: DEPTH.hairCrown, dy: -neckY, order: 2.06 },   // hair on the scalp — the same depth as the horns, above them
-    { key: "front", depth: DEPTH.ears, dy: -neckY, order: 2.12 },            // in front of the head: dog and cat ears
+    { key: "front", depth: DEPTH.frontEars, dy: -neckY, order: 2.12 },       // in front of the head: dog and cat ears — on the crown, so with the face
     { key: "hat", depth: DEPTH.hat, dy: -neckY, order: 6.58 },               // hat — above the bangs (6.55): a hat sits on the hair, never under it; below the brows (6.6)
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },        // fills and ink kept apart (see above)
     // Static eyes — one layer per eye (the smaller eye Back → the larger Front; overlapping, the larger is in front). For sleep, ^^, a wink (that side) and startle variants, that eye's layer is switched off
