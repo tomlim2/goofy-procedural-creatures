@@ -66,6 +66,9 @@ export const SLOTS = {
   // The **material** — what the head and the body are made of: how their areas are filled (stroke.js MATERIALS — a base color and its
   // texture). flat is the fill-up alone; the rest lay a pattern over it in a tone of the part's own color. A late slot — the look, not the form
   material: ["flat", "graphite", "ink", "oil", "charcoal"],
+  // The **density** of the material's texture — a light hand, a normal one, a heavy one (stroke.js DENSITY: ×0.6 · ×1 · ×1.6 on the
+  // hatch's spacing, the scratches' count, the dabs' and specks' count). Nothing on flat. A late slot
+  density: ["normal", "light", "dense"],
   // Arm form. Posture (hanging, open, raised, behind the back) is not here — that is motion, in clocks.js. none is armless (some imps) — the arm action layer rests
   arms: ["stick", "sleeve", "stubby", "mitten", "none"],
   // Arm length. Independent of form, so short sleeved arms and very long gloved arms both come out.
@@ -84,7 +87,7 @@ export const SLOTS = {
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing seeds keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -114,6 +117,7 @@ export const DEFAULT_BIAS = {
   mouthSize: [["normal", 3], ["small", 2], ["wide", 1]],
   // Materials — the plain fill-up for most; the textured ones as seasoning, so a board reads as one hand with a few different tools
   material: [["flat", 5], ["graphite", 1.5], ["charcoal", 1], ["oil", 1], ["ink", 0.8]],
+  density: [["normal", 3], ["light", 1.5], ["dense", 1.5]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],

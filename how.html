@@ -130,7 +130,8 @@ shade of that color. A part names one and hands over the path and the color —
 <code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself. The board is made of
 <b>FLAT</b> today. The table is <code>MATERIALS</code> in <code>src/stroke.js</code>; every entry gets a shader ball —
 the same ball in the same color, its contour the board's PENCIL — and under it its channels: the base colour alone,
-then the texture alone.</p>
+then the texture alone, then the texture at a light hand and a heavy one — the <b>density</b>, one knob over every texture's
+crowding (the hatch's spacing, the scratches' count, the dabs' and the specks' count), which the board picks per creature.</p>
 
 <div class="figs" id="materialBalls"></div>
 

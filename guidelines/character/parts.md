@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 24 slots, 185 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 25 slots, 188 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -389,7 +389,13 @@ species bias of 3:2. The archetype does not take part.
 What the head and the body are made of — how their areas are filled ([../drawing.md](../drawing.md) § materials, the
 `MATERIALS` table in `stroke.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (a pale ground
 hatched with thin upright pencil strokes) · **ink** (solid, a few light scratches) · **oil** (thick dabs in three
-tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.) The texture is always a tone of the part's own color, so the palette rules hold; the base stays
+tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.)
+
+### density (3) — a late slot
+
+How crowded the material's texture is — **normal** (weight 3) · **light** (×0.6, 1.5) · **dense** (×1.6, 1.5): one knob over
+every texture's crowding (`stroke.js` `DENSITY` — the hatch's spacing, the scratches' count, the dabs' and the specks' count per
+area). A light hand and a heavy one. Nothing on flat. Both the head and the body take the creature's density, like its material. The texture is always a tone of the part's own color, so the palette rules hold; the base stays
 opaque, so neighbours still hide each other. Both the head and the body take the same material — one hand, one tool
 per creature. The contour is not part of it (the goofy outline, PENCIL). Calico patches stay flat over it.
 

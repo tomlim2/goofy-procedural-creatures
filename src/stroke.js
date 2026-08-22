@@ -121,6 +121,10 @@ export const MATERIALS = {
   CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
 };
 
+// Density — how crowded a texture is, one knob over every kind: the hatch's spacing, the scratches' count, the dabs' and the
+// specks' count per area all scale by it. The `density` slot picks one of these per creature (a light hand, a heavy one)
+export const DENSITY = { light: 0.6, normal: 1, dense: 1.6 };
+
 // Outlines — the goofy outline: what a creature's contour is drawn with. A separate concept from the materials (a contour
 // is not a way of filling). A part names one and hands over the path and the color; at most a weight on the width.
 // Docs: guidelines/drawing.md § the outline
@@ -292,9 +296,9 @@ export class Sketch {
 
   // Fills with a named material — its base color (with the part's pattern, if any), then its texture, every mark clipped to the
   // contour. offset prints the base out of register (a creature's fillOffset). pattern: { kind, color } — the creature's pattern, part of
-  // the base color. only: "base" or "texture" draws that channel alone (the medium page's channel chips).
-  // Every tone is a shade of the part's color — the material knows no colors of its own
-  paint(points, name, { color, offset = [0, 0], only, pattern } = {}) {
+  // the base color. density scales the texture's crowding (DENSITY — the creature's density slot). only: "base" or "texture" draws
+  // that channel alone (the medium page's channel chips). Every tone is a shade of the part's color — the material knows no colors of its own
+  paint(points, name, { color, offset = [0, 0], only, pattern, density = 1 } = {}) {
     const m = MATERIALS[name];
     if (!m) throw new Error(`unknown material: ${name}`);
     const wantBase = only === undefined || only === "base";
@@ -329,7 +333,7 @@ export class Sketch {
           // Pencil hatching: each rule across the shape is drawn as a few pencil strokes with small gaps — the hand lifts and comes
           // down again — so no line runs the whole height in one go; now and then a stroke is doubled, a hair beside itself
           const tone = contrast(f.tone);
-          rules(points, f.angle, f.gap, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => {
+          rules(points, f.angle, f.gap / density, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => {
             const len = Math.hypot(q[0] - p[0], q[1] - p[1]);
             const dx = (q[0] - p[0]) / len, dy = (q[1] - p[1]) / len;
             const at = (t) => [p[0] + dx * t, p[1] + dy * t];
@@ -352,7 +356,7 @@ export class Sketch {
         }
         case "scratch": {
           const tone = contrast(f.tone);
-          for (let i = 0; i < f.lines; i += 1) {
+          for (let i = 0; i < Math.round(f.lines * density); i += 1) {
             const angle = u(i) * Math.PI;
             const o = (u(i + 50) - 0.5) * b.r * 1.4;
             const dx = Math.cos(angle), dy = Math.sin(angle);
@@ -366,7 +370,7 @@ export class Sketch {
           // Thick paint: capsules scattered over the surface (their centres inside it), all along one diagonal give or take a little,
           // of one width and many lengths, in tones close to the ground, overlapping as they fall. An end the contour cuts stays flat
           const tones = f.tones.map((t) => hexToRgb(shade(color, t)));
-          const count = Math.round(f.per * (b.x1 - b.x0) * (b.y1 - b.y0));
+          const count = Math.round(f.per * density * (b.x1 - b.x0) * (b.y1 - b.y0));
           const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
           for (let i = 0; i < count; i += 1) {
             const cx = b.x0 + (b.x1 - b.x0) * h(i * 4);
@@ -383,7 +387,7 @@ export class Sketch {
           break;
         }
         case "speckle": {
-          this.dust(points, b, f, h, contrast(f.tone));
+          this.dust(points, b, { ...f, per: f.per * density }, h, contrast(f.tone));
           break;
         }
         default:

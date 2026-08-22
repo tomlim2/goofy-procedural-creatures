@@ -119,7 +119,9 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | `CHARCOAL` | `flat` | `speckle` — dark specks | the `material` slot (1) |
 
 The head and the body take the creature's `material` — a late slot ([character/parts.md](character/parts.md)
-§ surface), one tool per creature. Every other fill is FLAT.
+§ surface), one tool per creature — at the creature's `density` (another late slot: `DENSITY` light ×0.6 · normal
+×1 · dense ×1.6, one knob over every texture's crowding — the hatch's spacing, the scratches' count, the dabs' and
+the specks' count per area; nothing on flat). Every other fill is FLAT.
 
 The medium page shows each ball's channels under it — the base colour alone, then the texture alone
 (`paint(…, { only })`). A new material is a new row: a base and a texture; a new pattern is a new texture kind

@@ -6,7 +6,7 @@
 // creature layer, differing only in jitter phase. The figures hold still; INK BOIL cycles them at the board's own pace (rig.js boilFps).
 
 import * as THREE from "three";
-import { Sketch, blobPath, arcPath, MATERIALS, GOOFY_OUTLINES, GOOFY_FUR } from "./stroke.js";
+import { Sketch, blobPath, arcPath, MATERIALS, GOOFY_OUTLINES, GOOFY_FUR, DENSITY } from "./stroke.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
@@ -197,18 +197,19 @@ Object.keys(MATERIALS).forEach((name, i) => {
   const m = MATERIALS[name];
   const el = document.createElement("figure");
   el.dataset.fig = `material:${name}`;
-  el.innerHTML = `<canvas></canvas><div class="subs"><span>${name.toLowerCase()} · base ${m.base.kind}${m.texture ? ` + texture ${m.texture.kind}` : ""}</span></div>`;
+  el.innerHTML = `<canvas></canvas><div class="subs"><span>${name.toLowerCase()} · base ${m.base.kind}${m.texture ? ` + texture ${m.texture.kind} · light / dense` : ""}</span></div>`;
   document.getElementById("materialBalls").appendChild(el);
   fig(`material:${name}`, [-0.33, -0.32, 0.33, 0.27], (sk) => {
     const fills = sk(), ink = sk();
     const ball = blobPath(0, 0.04, 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 });
     fills.paint(ball, name, { color: FILLS[2], offset: [0.012, -0.01] });
     ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
-    const chips = m.texture ? ["base", "texture"] : ["base"];
-    chips.forEach((only, j) => {
+    // The chips: the base alone, the texture alone, then the texture at a light hand and a heavy one (the density slot)
+    const chips = m.texture ? [["base", 1], ["texture", 1], ["texture", DENSITY.light], ["texture", DENSITY.dense]] : [["base", 1]];
+    chips.forEach(([only, density], j) => {
       const x = (j - (chips.length - 1) / 2) * 0.13;
       const chip = blobPath(x, -0.245, 0.05, 0.05, { lumps: 4, amount: 0.06, noise, phase: 150 + i * 7 + j * 3 });
-      fills.paint(chip, name, { color: FILLS[2], offset: [0.004, -0.003], only });
+      fills.paint(chip, name, { color: FILLS[2], offset: [0.004, -0.003], only, density });
       ink.contour(chip, "PENCIL", { color: INK, closed: true, weight: 0.5, paper: CARD });
     });
   });
