@@ -18,7 +18,7 @@ export function drawHead(ink, fills, spec, box, noise) {
     taper: shape.taper
   });
 
-  fills.paint(path, "GRAPHITE", { color: spec.palette.skin, offset: spec.palette.fillOffset });   // the fill channel — out of register
+  fills.paint(path, "FLAT", { color: spec.palette.skin, offset: spec.palette.fillOffset });   // the material — the fill-up, out of register
 
   // Pencil scribble. Covers the flat fill with a single zigzag stroke in a darker tone
   // of the same family, leaving the stroke direction behind. On imps it scratches a slightly lighter tone over the ink-black.
@@ -34,8 +34,8 @@ export function drawHead(ink, fills, spec, box, noise) {
   }
 
   // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
-  // The contour is GRAPHITE (stroke.js MATERIALS) — the pencil; the head's line runs a little heavier than the body's (weight)
-  ink.mark(path, "GRAPHITE", { color: spec.palette.ink, closed: true, weight: 1.15 });
+  // The goofy outline — PENCIL (stroke.js GOOFY_OUTLINES); the head's contour runs a little heavier than the body's (weight)
+  ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true, weight: 1.15 });
   return path;
 }
 

@@ -93,6 +93,13 @@ an end taper, and uneven pressure through the middle. Leave out any one and it b
   </figure>
 </div>
 
+<p>A creature's contour is drawn with one <b>goofy outline</b>, named from <code>GOOFY_OUTLINES</code> in
+<code>src/stroke.js</code>: <b>RIBBON</b>, the board's original — <code>stroke</code> laid twice — or <b>PENCIL</b>, the
+line above. The board draws with PENCIL today. The outline is its own concept, not part of a material: a contour is
+not a way of filling.</p>
+
+<div class="figs" id="outlineBalls"></div>
+
 <p>And what an area gets. A flat fill is allowed, but it must miss its outline a little —
 and anything that means <em>shading</em> is not a fill at all, it is the pen going back and forth.</p>
 
@@ -132,21 +139,14 @@ and anything that means <em>shading</em> is not a fill at all, it is the pen goi
 <!-- ================================================================ -->
 <section>
 <h2>THE MATERIAL</h2>
-<p>A material is what a surface is made of — the way a 3D material is: a bundle of channels. <b>fill</b> is
-how its area is filled (the fill-up, printed out of register), <b>line</b> is how its contour is drawn; a material
-may have either or both. A part names one and hands over the path and the color — it never picks a width or a
-fill method itself. <b>GRAPHITE</b> is the fill-up under a pencil contour: the head and the body. <b>FLAT</b> is the
-fill-up alone, a cutout with no line of its own: the patches. The table is <code>MATERIALS</code> in
-<code>src/stroke.js</code>, and every entry gets a shader ball here.</p>
+<p>A material is what a surface is made of — the way a 3D material is: <b>how its area is filled</b>. Hatched,
+scratched, washed, dabbed, dusted, banded, or simply the fill-up — that is the material, and nothing else (the contour
+is the goofy outline, above). The color always comes from the part, and every tone a material adds is a shade of
+that color. A part names one and hands over the path and the color (<code>paint</code>) and never picks a technique
+itself. The board is made of <b>FLAT</b> today. The table is <code>MATERIALS</code> in <code>src/stroke.js</code>; every
+entry gets a shader ball below — the same ball in the same color, its contour the board's PENCIL.</p>
 
-<div class="figs">
-  <figure data-fig="materials" class="wide">
-    <canvas></canvas>
-    <div class="subs"></div>
-    <figcaption><b>shader balls</b> — the same ball per material, painted through its channels in order
-    (<code>paint</code>, then <code>mark</code>) exactly as a part would. Add an entry to the table and a ball appears.</figcaption>
-  </figure>
-</div>
+<div class="figs" id="materialBalls"></div>
 
 <p>Underneath there is exactly one GPU material — a flat <code>MeshBasicMaterial</code> with vertex colors,
 shared per opacity level by every mesh on the board. No depth test, so stacking is decided

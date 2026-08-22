@@ -52,34 +52,47 @@ The head and body contours draw with it, through the GRAPHITE material (below); 
 § the line) shows it next to `stroke()`. Switching another part onto it is a drawing change like any other —
 `drawdiff` will show it, and the audit has to stay at 0.
 
-## Materials — what a surface is made of
+## The outline — what a contour is drawn with
 
-A material is what a surface is made of, the way a 3D material is: a named bundle of **channels**. `fill` is
-how its area is filled, `line` is how its contour is drawn; a material may have either or both (a shade
-channel is the obvious next one). A part names a material and hands over the path and the color:
+A creature's contour is drawn with one **goofy outline**, named from `GOOFY_OUTLINES` in `stroke.js`:
+`ink.contour(path, "PENCIL", { color, closed, weight })`. `weight` is a multiplier on the outline's width (the head
+contour runs at 1.15 of the body's); a part never picks a line function or a width itself. An unknown name
+throws. The outline is its own concept — not part of a material: a contour is not a way of filling.
 
-- `fills.paint(path, "GRAPHITE", { color, offset })` — the fill channel. The fill-up: the fan from the centre,
-  printed out of register by the creature's `fillOffset`
-- `ink.mark(path, "GRAPHITE", { color, closed, weight })` — the line channel. `weight` is a multiplier on the
-  line's width (the head contour runs at 1.15 of the body's); a part never picks a width or a fill method itself
+| Outline | Line | On the board |
+| --- | --- | --- |
+| `RIBBON` | `stroke()` 0.012 laid twice, jitter 0.007 — the board's original contour, the two passes never quite agreeing | — |
+| `PENCIL` | `pencil()` 0.012 — one seamless loop: wander, breathing width, the shed | the head (weight 1.15), the body — **today** |
 
-The table is `MATERIALS` in `stroke.js`. A name without the channel asked for throws, so a misspelt material
-cannot silently draw nothing. The medium page draws one **shader ball** per entry — the same ball painted
-through the material's channels in order — so the table cannot drift from what is seen.
+## Materials — how a surface is filled
 
-| Material | fill | line | Used by |
-| --- | --- | --- | --- |
-| `GRAPHITE` | flat, out of register | `pencil()` 0.012 — wander, breathing width, overshoot, the shed; seamless when closed | the head (weight 1.15) and the body |
-| `FLAT` | flat | — | the calico patches (a cutout with no line of its own) |
+A material is what a surface is made of, the way a 3D material is — **how its area is filled**. Hatched,
+scratched, washed, dabbed, dusted, banded, or simply the fill-up: that is the material, and nothing else. The
+color always comes from the part; a material knows no colors of its own, and every tone it adds is a shade of
+the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a material and hands
+over the path and the color: `fills.paint(path, "FLAT", { color, offset })`. The base is always opaque (on the
+board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
+the technique is laid on top, every mark clipped to the contour (`clipSegment`, `insidePath` in `stroke.js`).
 
-`Sketch.fill()` is the flat fill channel itself; parts that still call it directly (ears, eyes, teeth…) are
-drawing FLAT without naming it — naming the material is the direction, one part at a time, with `drawdiff`
-proving the picture did not move. Candidates not built yet: NIB (the ribbon line, for details), SOFT (a
-wide pencil plus a scribble shade), CHALK (light ink on a dark face). Adding one is an entry in the table plus
-the parts that name it.
+The table is `MATERIALS` in `stroke.js`; an unknown name throws, so a misspelt material cannot silently draw
+nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
+way, its contour the board's PENCIL — so the table cannot drift from what is seen.
 
-(The GPU materials — one `MeshBasicMaterial` per opacity level — are a different thing and live in
-`scene/mesh.js`.)
+| Material | How the area is filled | On the board |
+| --- | --- | --- |
+| `FLAT` | the fill-up — the fan from the centre, out of register | the head, the body, the calico patches — **everything today** |
+| `GRAPHITE` | a pale ground hatched with thin pencil strokes, nearly upright | — |
+| `INK` | solid, with a few long light scratches dragged across | — |
+| `WATERCOLOUR` | a pale wash, a second wash out of register, a bloom inside | — |
+| `OIL` | thick short dabs in three tones along one diagonal | — |
+| `CHARCOAL` | a ground dusted with dark specks | — |
+| `MARKER` | wide even diagonal bands of a deeper tone | — |
+
+`Sketch.fill()` is FLAT itself; the parts that still call it directly (ears, eyes, teeth…) are drawing FLAT
+without naming it — naming the material is the direction, one part at a time, with `drawdiff` proving the
+picture did not move. Putting another material on a part is a drawing change like any other: `drawdiff`
+shows it, the audit has to stay at 0, and a filled technique costs triangles (hatching a head is a few hundred
+more per boil variant — measure, [performance.md](performance.md)).
 
 ## Layer order
 

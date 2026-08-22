@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 // Vertex colors go through hexToRgb (linear space) — color.js. Never bypassed (guidelines/drawing.md § colors go in as linear)
-import { hexToRgb } from "./color.js";
+import { hexToRgb, shade, isDark } from "./color.js";
 import { PAPER } from "./character/vocabulary/palette.js";   // the pencil's bites take the paper color (palette.js imports nothing — no cycle)
 
 const TAU = Math.PI * 2;
@@ -95,16 +95,108 @@ export const PENCIL = {
   grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
 };
 
-// Materials — what a surface is made of, the way a 3D material is: a bundle of channels. fill is how its area is filled (paint),
-// line is how its contour is drawn (mark); a material may have either or both. A part names a material and hands over the path and
-// the color — it never picks a width or a fill method itself (at most a weight, a multiplier on the line's width). The medium page
-// draws one shader ball per entry. Docs: guidelines/drawing.md § materials. (Not the GPU materials — those live in scene/mesh.js.)
+// Materials — what a surface is made of, the way a 3D material is: **how its area is filled**. Hatched, scratched, washed,
+// dabbed, dusted, banded, or simply the fill-up — that is the material, and nothing else: the contour is a separate concept
+// (GOOFY_OUTLINES, below). The color always comes from the part; the material only knows the technique, and every tone it adds is a
+// shade of that color (lighter on a dark color, darker on a light one). A part names a material and hands over the path and the
+// color — it never picks a technique itself. Every base is opaque: on the board the one in front has to hide the one behind.
+// The medium page draws one shader ball per entry — the same ball, filled each way. Docs: guidelines/drawing.md § materials.
+// (Not the GPU materials — those live in scene/mesh.js.)
 export const MATERIALS = {
-  // Graphite — what the head and the body are made of: the fill-up printed out of register, a pencil contour over it
-  GRAPHITE: { fill: { kind: "flat" }, line: { kind: "pencil", width: 0.012, passes: 1 } },
-  // Flat — the fill-up alone, a cutout with no line of its own: patches and the like
-  FLAT: { fill: { kind: "flat" } }
+  // Flat — the fill-up: the fan from the centre, printed out of register. What every creature is made of today
+  FLAT:        { kind: "flat" },
+  // Graphite — a pale ground hatched with thin pencil strokes, nearly upright and a little slanted
+  GRAPHITE:    { kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, ground: 1.15, tone: 0.6 },
+  // Ink — solid, scratched: a few long light lines dragged across the dark
+  INK:         { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 },
+  // Watercolour — a pale wash, a second wash out of register, a bloom inside
+  WATERCOLOUR: { kind: "wash", pale: 1.12, bloom: 1.18, drift: 0.022 },
+  // Oil — thick short dabs in three tones along one diagonal, the ground covered
+  OIL:         { kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] },
+  // Charcoal — a ground dusted with dark specks
+  CHARCOAL:    { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 },
+  // Marker — wide diagonal bands of a deeper tone over the flat, blunt and even
+  MARKER:      { kind: "band", angle: 1.05, width: 0.026, gap: 0.066, tone: 0.86 }
 };
+
+// Outlines — the goofy outline: what a creature's contour is drawn with. A separate concept from the materials (a contour
+// is not a way of filling). A part names one and hands over the path and the color; at most a weight on the width.
+// Docs: guidelines/drawing.md § the outline
+export const GOOFY_OUTLINES = {
+  // The ribbon — the board's original contour: stroke() laid twice, the two passes never quite agreeing
+  RIBBON: { kind: "stroke", width: 0.012, passes: 2, jitter: 0.007 },
+  // The pencil — pencil(): one seamless loop that wanders, breathes, runs past and sheds. What the board draws with today
+  PENCIL: { kind: "pencil", width: 0.012, passes: 1 }
+};
+
+// -- the fill procedures' geometry --
+// Point in a closed polygon (even-odd)
+function insidePath([x, y], poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i, i += 1) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+// The pieces of the segment a→b that lie inside the polygon — the marks of a fill stop at its contour
+function clipSegment(a, b, poly) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const ts = [];
+  for (let i = 0; i < poly.length; i += 1) {
+    const p = poly[i];
+    const q = poly[(i + 1) % poly.length];
+    const ex = q[0] - p[0];
+    const ey = q[1] - p[1];
+    const den = dx * ey - dy * ex;
+    if (Math.abs(den) < 1e-12) continue;
+    const t = ((p[0] - a[0]) * ey - (p[1] - a[1]) * ex) / den;
+    const u = ((p[0] - a[0]) * dy - (p[1] - a[1]) * dx) / den;
+    if (u >= 0 && u < 1 && t >= 0 && t <= 1) ts.push(t);
+  }
+  ts.sort((x, y) => x - y);
+  const pieces = [];
+  let inside = insidePath(a, poly);
+  let prev = 0;
+  for (const t of ts) {
+    if (inside) pieces.push([prev, t]);
+    inside = !inside;
+    prev = t;
+  }
+  if (inside) pieces.push([prev, 1]);
+  return pieces
+    .map(([t0, t1]) => [[a[0] + dx * t0, a[1] + dy * t0], [a[0] + dx * t1, a[1] + dy * t1]])
+    .filter(([p, q]) => Math.hypot(q[0] - p[0], q[1] - p[1]) > 0.006);
+}
+// A hash in [0, 1) — scattered, unlike the value noise, which is smooth: for specks and dabs that must not line up
+function hash01(k) {
+  let h = Math.imul(k | 0, 0x9e3779b1) ^ 0x7f4a7c15;
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+function bounds(points) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of points) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, r: Math.hypot(x1 - x0, y1 - y0) / 2, x0, y0, x1, y1 };
+}
+// Parallel lines at `angle` across the shape, `gap` apart, each one clipped to the contour. jitter(i) nudges a line off its rank
+function rules(points, angle, gap, jitter) {
+  const b = bounds(points);
+  const dx = Math.cos(angle), dy = Math.sin(angle);
+  const nx = -dy, ny = dx;
+  const out = [];
+  let i = 0;
+  for (let s = -b.r; s <= b.r; s += gap, i += 1) {
+    const o = s + jitter(i) * gap;
+    const a = [b.cx + nx * o - dx * b.r, b.cy + ny * o - dy * b.r];
+    const c = [b.cx + nx * o + dx * b.r, b.cy + ny * o + dy * b.r];
+    for (const piece of clipSegment(a, c, points)) out.push(piece);
+  }
+  return out;
+}
 
 export class Sketch {
   // inkScale is the global multiplier for stroke thickness. Change the cell size and this is the only thing to touch.
@@ -174,23 +266,118 @@ export class Sketch {
     this.stroke([...points, points[0]], options);
   }
 
-  // The line channel of a named material (MATERIALS). weight scales the line's width (a head contour is a little heavier than a
-  // body's); closed draws a loop. A name without a line channel throws — a part that misspells its material must not silently draw nothing
-  mark(points, name, { color = "#2b2724", closed = false, weight = 1, paper } = {}) {
-    const line = (MATERIALS[name] || {}).line;
-    if (!line) throw new Error(`material ${name} has no line`);
-    const options = { color, width: line.width * weight, passes: line.passes };
+  // The goofy outline — draws the contour with a named outline (GOOFY_OUTLINES). weight scales its width (a head's contour runs a
+  // little heavier than a body's); closed draws a loop. An unknown name throws — a part that misspells it must not silently draw nothing
+  contour(points, name, { color = "#2b2724", closed = false, weight = 1, paper } = {}) {
+    const o = GOOFY_OUTLINES[name];
+    if (!o) throw new Error(`unknown outline: ${name}`);
+    const options = { color, width: o.width * weight, passes: o.passes };
+    if (o.jitter !== undefined) options.jitter = o.jitter;
     if (paper) options.paper = paper;
-    if (line.kind === "pencil") this.pencil(points, { ...options, closed });
+    if (o.kind === "pencil") this.pencil(points, { ...options, closed });
     else if (closed) this.outline(points, options);
     else this.stroke(points, options);
   }
 
-  // The fill channel of a named material — the fill-up. offset prints it out of register (a creature's fillOffset)
+  // A blunt, even band from p to q — the marker's stroke: no taper, no wander
+  ribbon(p, q, width, rgb) {
+    let dx = q[0] - p[0];
+    let dy = q[1] - p[1];
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+    const h = width / 2;
+    const nx = -dy * h, ny = dx * h;
+    this.triangle(p[0] + nx, p[1] + ny, p[0] - nx, p[1] - ny, q[0] + nx, q[1] + ny, rgb);
+    this.triangle(p[0] - nx, p[1] - ny, q[0] - nx, q[1] - ny, q[0] + nx, q[1] + ny, rgb);
+  }
+
+  // Fills with a named material — how the area is filled. The base (the fill-up) is printed out of register by offset (a creature's
+  // fillOffset) and is always opaque; the technique is laid on top, every mark clipped to the contour.
+  // Every tone is a shade of the part's color — the material knows no colors of its own
   paint(points, name, { color, offset = [0, 0] } = {}) {
-    const fill = (MATERIALS[name] || {}).fill;
-    if (!fill) throw new Error(`material ${name} has no fill`);
-    this.fill(points, color, offset);   // "flat" is the only fill kind so far — the fan from the centre below
+    const f = MATERIALS[name];
+    if (!f) throw new Error(`unknown material: ${name}`);
+    if (f.kind === "flat") { this.fill(points, color, offset); return; }   // the fill-up — no randomness, the phase untouched
+    this.phase += 5.55;
+    const ph = this.phase;
+    const noise = this.noise;
+    const u = (k) => noise(ph * 0.29 + k * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
+    const h = (k) => hash01(Math.round(ph * 997) + k * 7919);     // a scattered one — neighbours unrelated
+    const dark = isDark(color);
+    const contrast = (factor) => shade(color, dark ? 1 + (1 - factor) * 1.6 : factor);   // a deeper tone on a light color, a lighter one on a dark color
+    switch (f.kind) {
+      case "hatch": {
+        this.fill(points, shade(color, dark ? 0.92 : f.ground), offset);
+        const tone = contrast(f.tone);
+        rules(points, f.angle, f.gap, (i) => (u(i) - 0.5) * 0.5).forEach((piece, i) =>
+          this.stroke(piece, { color: tone, width: f.width * (0.8 + 0.4 * u(i + 300)), jitter: f.wander, step: 0.02 }));
+        break;
+      }
+      case "scratch": {
+        this.fill(points, color, offset);
+        const tone = contrast(f.tone);
+        const b = bounds(points);
+        for (let i = 0; i < f.lines; i += 1) {
+          const angle = u(i) * Math.PI;
+          const o = (u(i + 50) - 0.5) * b.r * 1.4;
+          const dx = Math.cos(angle), dy = Math.sin(angle);
+          const a = [b.cx - dy * o - dx * b.r, b.cy + dx * o - dy * b.r];
+          const c = [b.cx - dy * o + dx * b.r, b.cy + dx * o + dy * b.r];
+          for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.03 });
+        }
+        break;
+      }
+      case "wash": {
+        this.fill(points, shade(color, f.pale), [offset[0] + f.drift, offset[1] - f.drift * 0.6]);   // the first, paler wash — out of register
+        this.fill(points, color, offset);                                                             // the wash proper
+        const b = bounds(points);
+        const bloom = blobPath(b.cx + (u(1) - 0.5) * b.r * 0.5, b.cy - b.r * 0.15, b.r * 0.34, b.r * 0.26, { lumps: 4, amount: 0.16, noise, phase: ph * 0.01 });
+        this.fill(bloom.filter((p) => insidePath(p, points)).length > bloom.length * 0.6 ? bloom : bloom.map(([x, y]) => [b.cx + (x - b.cx) * 0.7, b.cy + (y - b.cy) * 0.7]), shade(color, f.bloom));
+        break;
+      }
+      case "dab": {
+        this.fill(points, color, offset);
+        const tones = f.tones.map((t) => shade(color, t));
+        const b = bounds(points);
+        const dx = Math.cos(f.angle), dy = Math.sin(f.angle);
+        const nx = -dy, ny = dx;
+        let k = 0;
+        let row = 0;
+        for (let s = -b.r; s <= b.r; s += f.gap, row += 1) {
+          // Every other row starts half a dab later, and each dab slides a little along its row — no two rows line up into a weave
+          for (let t = -b.r + (row % 2) * f.length * 0.55 + (h(row) - 0.5) * f.length * 0.3; t <= b.r; t += f.length * 1.15, k += 1) {
+            const o = s + (u(k) - 0.5) * f.gap * 0.6;
+            const a = [b.cx + nx * o + dx * t, b.cy + ny * o + dy * t];
+            const c = [a[0] + dx * f.length, a[1] + dy * f.length];
+            const tone = tones[Math.floor(h(k) * tones.length) % tones.length];   // scattered — in lockstep with the grid the tones would form columns
+            for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.02 });
+          }
+        }
+        break;
+      }
+      case "speckle": {
+        this.fill(points, color, offset);
+        const tone = contrast(f.tone);
+        const rgb = hexToRgb(tone);
+        const b = bounds(points);
+        const count = Math.round(f.per * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
+        for (let i = 0; i < count; i += 1) {
+          const p = [b.x0 + (b.x1 - b.x0) * h(i * 2), b.y0 + (b.y1 - b.y0) * h(i * 2 + 1)];   // hashed — with the smooth noise the specks string into curves
+          if (!insidePath(p, points)) continue;
+          this.square(p[0], p[1], f.size[0] + (f.size[1] - f.size[0]) * h(i + 7000), rgb);
+        }
+        break;
+      }
+      case "band": {
+        this.fill(points, color, offset);
+        const rgb = hexToRgb(contrast(f.tone));
+        for (const [p, q] of rules(points, f.angle, f.gap, () => 0)) this.ribbon(p, q, f.width, rgb);
+        break;
+      }
+      default:
+        throw new Error(`material ${name}: unknown fill kind ${f.kind}`);
+    }
   }
 
   // A small axis-aligned square — the pencil's crumbs and bites

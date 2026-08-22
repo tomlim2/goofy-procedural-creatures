@@ -6,7 +6,7 @@
 // creature layer, differing only in jitter phase. The figures hold still; INK BOIL cycles them at the board's own pace (rig.js boilFps).
 
 import * as THREE from "three";
-import { Sketch, blobPath, arcPath, MATERIALS } from "./stroke.js";
+import { Sketch, blobPath, arcPath, MATERIALS, GOOFY_OUTLINES } from "./stroke.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
@@ -109,7 +109,7 @@ fig("shading", [-0.45, -0.2, 0.45, 0.2], (sk) => {
   const fills = sk(), ink = sk();
   const path = blobPath(0, 0, 0.3, 0.15, { lumps: 4, amount: 0.1, noise, phase: 13 });
   fills.fill(path, FILLS[5], [0.014, -0.01]);
-  fills.scribbleFill(0, 0, 0.24, 0.09, { color: shade(FILLS[5], 0.9), angle: Math.PI * 0.28, gap: 0.03, width: 0.006 });
+  fills.scribbleFill(0, 0, 0.19, 0.08, { color: shade(FILLS[5], 0.9), angle: Math.PI * 0.22, gap: 0.03, width: 0.006 });   // the tilted ellipse has to stay inside the blob
   ink.outline(path, { color: INK, width: 0.012, passes: 2 });
 });
 
@@ -171,20 +171,25 @@ swatches("darks", DARKS);
 swatches("furs", [...FURS, CALICO_MID]);
 swatches("accents", ACCENTS);
 
-// Shader balls — one per entry of MATERIALS, like a 3D material preview: the same ball, painted through whatever channels the
-// material has (paint, then mark), exactly as a part would. Labels come from the table
-const MATERIAL_NAMES = Object.keys(MATERIALS);
-fig("materials", [-0.75, -0.22, 0.75, 0.22], (sk) => {
-  const fills = sk(), ink = sk();
-  MATERIAL_NAMES.forEach((name, i) => {
-    const x = (i - (MATERIAL_NAMES.length - 1) / 2) * 0.5;
-    const ball = blobPath(x, 0, 0.17, 0.17, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 });
-    const m = MATERIALS[name];
-    if (m.fill) fills.paint(ball, name, { color: FILLS[2], offset: [0.016, -0.013] });
-    if (m.line) ink.mark(ball, name, { color: INK, closed: true, paper: CARD });
-  });
-});
-FIGS.materials.labels = MATERIAL_NAMES;
+// A ball figure made from a table entry — the figures are created here, from the tables, so an entry cannot go unshown
+function ballFigure(box, key, label, phase, draw) {
+  const el = document.createElement("figure");
+  el.dataset.fig = key;
+  el.innerHTML = `<canvas></canvas><div class="subs"><span>${label}</span></div>`;
+  box.appendChild(el);
+  fig(key, [-0.33, -0.26, 0.33, 0.26], (sk) => draw(sk(), sk(), blobPath(0, 0, 0.2, 0.2, { lumps: 5, amount: 0.05, noise, phase })));
+}
+// The goofy outlines — one ball per entry of GOOFY_OUTLINES: the same FLAT ball, its contour drawn with that outline
+Object.keys(GOOFY_OUTLINES).forEach((name, i) => ballFigure(document.getElementById("outlineBalls"), `outline:${name}`, name.toLowerCase(), 61 + i * 3, (fills, ink, ball) => {
+  fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
+  ink.contour(ball, name, { color: INK, closed: true, paper: CARD });
+}));
+// Shader balls — one per entry of MATERIALS, like a 3D material preview: the same ball in the same color, filled the material's
+// way. The contour is the board's outline, PENCIL — a material is only the filling
+Object.keys(MATERIALS).forEach((name, i) => ballFigure(document.getElementById("materialBalls"), `material:${name}`, name.toLowerCase(), 97 + i * 3, (fills, ink, ball) => {
+  fills.paint(ball, name, { color: FILLS[2], offset: [0.012, -0.01] });
+  ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
+}));
 
 fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {   // the demonstration of the boil — the one figure that never holds still (always, below)
   const fills = sk(), ink = sk();
