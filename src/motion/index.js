@@ -321,7 +321,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       }
       // The idle pose — while awake, a cat's tail stands in an **arch** (tailPose). A raise takes it out by that much (the sum is 1), sleep folds it back to the skeleton,
       // and sitting takes most of it out (×0.2) so it tilts with the body as the skeleton drew it and lies on the floor
-      const tailArch = tailPose && quad ? IP.weight * awake * (1 - tailRaise) * (1 - 0.8 * sitK) : 0;
+      const tailArch = tailPose && quad ? IP.weight * awake * (1 - tailRaise) * (1 - 0.3 * sitK) : 0;   // seated, a cat keeps 70% of its arch — the tail stays up
       const j = R.stepJelly(jelly, t);
 
       // Quad actions — one leg or the tail overwritten over idle. Oscillation goes on without easing (legOsc, the tail), faded by an envelope
@@ -348,9 +348,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // The tail tilts with the body and drops a little further, to lie on the floor
       if (sitK > 0 && sit) {
         for (let i = 0; i < 4; i += 1) if (!(qact && qact.index === i)) legOffset[i] = legOffset[i] * (1 - sitK) + sit.legs[i] * sitK;
-        // Seated, the tail lies on the floor and **stills** — the swish goes out by 90% (a tail sweeping the floor back and forth read as
-        // a tail moving down); the tip's taps and flicks carry on, and so does a dog's wag (it is added after the swish, not scaled here)
-        tailAngle -= (0.3 + swish * 0.9) * sitK * (1 - tailRaise);   // a raised tail stays dead vertical even while seated
+        // Seated, a dog's tail lies on the floor and **stills** — the swish goes out by 90% (a tail sweeping the floor back and forth read as
+        // a tail moving down); the tip's taps and flicks carry on, and so does the wag (added after the swish, not scaled here). A cat's tail
+        // stays **up** in its arch (tailPose) and keeps swinging — a cat's tail moves up, back and forth, and nowhere else while awake
+        if (!tailPose) tailAngle -= (0.3 + swish * 0.9) * sitK * (1 - tailRaise);   // a raised tail stays dead vertical even while seated
       }
       // The sleeping pose — the legs fold under the body (front legs back, hind legs forward), the tail lowers and the head rests on the front paws.
       // sleepK blends it so lying down and getting up are smooth
