@@ -113,8 +113,9 @@ export const MATERIALS = {
   GRAPHITE:    { base: { kind: "flat", tone: 1.15 }, texture: { kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, tone: 0.6 } },
   // Ink — solid, scratched: a few long light lines dragged across the dark
   INK:         { base: { kind: "flat" }, texture: { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 } },
-  // Oil — thick short dabs in three tones along one diagonal, the ground covered
-  OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] } },
+  // Oil — thick paint laid in blunt strokes: round-ended capsules of one width and many lengths, all along one diagonal, scattered
+  // and overlapping, in four tones close to the ground (the reference's ball: calm, dense, a knife's work), cut flat by the contour
+  OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, tones: [0.86, 0.94, 1.06, 1.16] } },
   // Charcoal — a ground dusted with dark specks
   CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
 };
@@ -342,20 +343,22 @@ export class Sketch {
           break;
         }
         case "dab": {
-          const tones = f.tones.map((t) => shade(color, t));
-          const dx = Math.cos(f.angle), dy = Math.sin(f.angle);
-          const nx = -dy, ny = dx;
-          let k = 0;
-          let row = 0;
-          for (let s = -b.r; s <= b.r; s += f.gap, row += 1) {
-            // Every other row starts half a dab later, and each dab slides a little along its row — no two rows line up into a weave
-            for (let t = -b.r + (row % 2) * f.length * 0.55 + (h(row) - 0.5) * f.length * 0.3; t <= b.r; t += f.length * 1.15, k += 1) {
-              const o = s + (u(k) - 0.5) * f.gap * 0.6;
-              const a = [b.cx + nx * o + dx * t, b.cy + ny * o + dy * t];
-              const c = [a[0] + dx * f.length, a[1] + dy * f.length];
-              const tone = tones[Math.floor(h(k) * tones.length) % tones.length];   // scattered — in lockstep with the grid the tones would form columns
-              for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.02 });
-            }
+          // Thick paint: capsules scattered over the surface (their centres inside it), all along one diagonal give or take a little,
+          // of one width and many lengths, in tones close to the ground, overlapping as they fall. An end the contour cuts stays flat
+          const tones = f.tones.map((t) => hexToRgb(shade(color, t)));
+          const count = Math.round(f.per * (b.x1 - b.x0) * (b.y1 - b.y0));
+          const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
+          for (let i = 0; i < count; i += 1) {
+            const cx = b.x0 + (b.x1 - b.x0) * h(i * 4);
+            const cy = b.y0 + (b.y1 - b.y0) * h(i * 4 + 1);
+            if (!insidePath([cx, cy], points)) continue;
+            const len = f.length[0] + (f.length[1] - f.length[0]) * h(i * 4 + 2);
+            const ang = f.angle + (h(i * 4 + 3) - 0.5) * f.spread;
+            const dx = Math.cos(ang), dy = Math.sin(ang);
+            const a = [cx - (dx * len) / 2, cy - (dy * len) / 2];
+            const c = [cx + (dx * len) / 2, cy + (dy * len) / 2];
+            const rgb = tones[Math.floor(h(i + 50000) * tones.length) % tones.length];
+            for (const [p, q] of clipSegment(a, c, points)) this.capsule(p, q, f.width, rgb, near(p, a), near(q, c));
           }
           break;
         }
@@ -506,6 +509,32 @@ export class Sketch {
         rgb
       );
     }
+  }
+
+  // A capsule from p to q — a blunt paint stroke: a strip of one width with a round cap at each end that is a real end (an end cut
+  // by the contour stays flat). No taper, no wander — thick paint does not tremble
+  capsule(p, q, width, rgb, capP = true, capQ = true) {
+    let dx = q[0] - p[0];
+    let dy = q[1] - p[1];
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+    const r = width / 2;
+    const nx = -dy * r, ny = dx * r;
+    this.triangle(p[0] + nx, p[1] + ny, p[0] - nx, p[1] - ny, q[0] + nx, q[1] + ny, rgb);
+    this.triangle(p[0] - nx, p[1] - ny, q[0] - nx, q[1] - ny, q[0] + nx, q[1] + ny, rgb);
+    const cap = (c, sx, sy) => {   // a half-disc fan from the normal round past the end
+      const steps = 6;
+      for (let i = 0; i < steps; i += 1) {
+        const a0 = Math.PI * (i / steps), a1 = Math.PI * ((i + 1) / steps);
+        // from +normal, round through the stroke's direction, to −normal
+        const px = (t) => c[0] + nx * Math.cos(t) + sx * r * Math.sin(t);
+        const py = (t) => c[1] + ny * Math.cos(t) + sy * r * Math.sin(t);
+        this.triangle(c[0], c[1], px(a0), py(a0), px(a1), py(a1), rgb);
+      }
+    };
+    if (capP) cap(p, -dx, -dy);
+    if (capQ) cap(q, dx, dy);
   }
 
   // Dust inside a shape — specks of a fixed size at a density per unit area, hashed so they never string into curves

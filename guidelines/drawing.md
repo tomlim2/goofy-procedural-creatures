@@ -115,7 +115,7 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | `GRAPHITE` | `flat`, a pale tone | `hatch` — thin pencil strokes, nearly upright | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
 | `INK` | `flat` | `scratch` — a few long light lines dragged across | the `material` slot (0.8) |
-| `OIL` | `flat` | `dab` — thick short dabs in three tones along one diagonal | the `material` slot (1) |
+| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, four tones close to the ground, cut flat by the contour | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — dark specks | the `material` slot (1) |
 
 The head and the body take the creature's `material` — a late slot ([character/parts.md](character/parts.md)
