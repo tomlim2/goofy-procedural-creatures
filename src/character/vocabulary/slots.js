@@ -66,8 +66,8 @@ export const SLOTS = {
   // The **material** — what the head and the body are made of: how their areas are filled (stroke.js MATERIALS — a base color and its
   // texture). flat is the fill-up alone; the rest lay a pattern over it in a tone of the part's own color. A late slot — the look, not the form
   material: ["flat", "graphite", "ink", "oil", "charcoal"],
-  // The **density** of the material's texture — a light hand, a normal one, a heavy one (stroke.js DENSITY: ×0.6 · ×1 · ×1.6 on the
-  // hatch's spacing, the scratches' count, the dabs' and specks' count). Nothing on flat. A late slot
+  // The **density** — the hand: how dark the material draws a surface, one step lighter or darker on the value scale (stroke.js
+  // VALUES: black · hatch · scribble · stipple · light — the step itself comes from the part's color). Nothing on flat. A late slot
   density: ["normal", "light", "dense"],
   // Arm form. Posture (hanging, open, raised, behind the back) is not here — that is motion, in clocks.js. none is armless (some imps) — the arm action layer rests
   arms: ["stick", "sleeve", "stubby", "mitten", "none"],

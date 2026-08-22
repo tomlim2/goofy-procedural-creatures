@@ -6,7 +6,7 @@
 // creature layer, differing only in jitter phase. The figures hold still; INK BOIL cycles them at the board's own pace (rig.js boilFps).
 
 import * as THREE from "three";
-import { Sketch, blobPath, arcPath, MATERIALS, GOOFY_OUTLINES, GOOFY_FUR, DENSITY } from "./stroke.js";
+import { Sketch, blobPath, arcPath, MATERIALS, GOOFY_OUTLINES, GOOFY_FUR, VALUES } from "./stroke.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
@@ -167,27 +167,25 @@ Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("
   ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
   ink.fur(arcPath(0, 0.02, 0.17, 0.17, Math.PI * 0.15, Math.PI * 0.85, 12), name, { color: INK });
 }));
-// Shader balls — one per entry of MATERIALS, like a 3D material preview: the same ball in the same color, filled the material's
-// way (the contour is the board's outline, PENCIL — a material is only the filling). Under the ball, its channels as small chips —
-// the base color alone, then the texture alone — the way a material editor previews its channels
+// Shader balls — one row per entry of MATERIALS, like a 3D material preview: the same ball in the same color at the five value
+// steps (black · hatch · scribble · stipple · light), filled the material's way at each — the contour is the board's outline,
+// PENCIL; a material is only the filling. FLAT has no texture, so one ball
 Object.keys(MATERIALS).forEach((name, i) => {
   const m = MATERIALS[name];
+  const steps = m.texture ? VALUES.map((_, k) => k) : [2];
   const el = document.createElement("figure");
   el.dataset.fig = `material:${name}`;
-  el.innerHTML = `<canvas></canvas><div class="subs"><span>${name.toLowerCase()} · base ${m.base.kind}${m.texture ? ` + texture ${m.texture.kind} · light / dense` : ""}</span></div>`;
+  if (m.texture) el.className = "wide";
+  el.innerHTML = `<canvas></canvas><div class="subs">${steps.map((k) => `<span>${m.texture ? `${VALUES[k].name} · ${VALUES[k].v}` : name.toLowerCase()}</span>`).join("")}</div>`;
   document.getElementById("materialBalls").appendChild(el);
-  fig(`material:${name}`, [-0.33, -0.32, 0.33, 0.27], (sk) => {
+  const half = steps.length * 0.25;
+  fig(`material:${name}`, [-half, -0.25, half, 0.25], (sk) => {
     const fills = sk(), ink = sk();
-    const ball = blobPath(0, 0.04, 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 });
-    fills.paint(ball, name, { color: FILLS[2], offset: [0.012, -0.01] });
-    ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
-    // The chips: the base alone, the texture alone, then the texture at a light hand and a heavy one (the density slot)
-    const chips = m.texture ? [["base", 1], ["texture", 1], ["texture", DENSITY.light], ["texture", DENSITY.dense]] : [["base", 1]];
-    chips.forEach(([only, density], j) => {
-      const x = (j - (chips.length - 1) / 2) * 0.13;
-      const chip = blobPath(x, -0.245, 0.05, 0.05, { lumps: 4, amount: 0.06, noise, phase: 150 + i * 7 + j * 3 });
-      fills.paint(chip, name, { color: FILLS[2], offset: [0.004, -0.003], only, density });
-      ink.contour(chip, "PENCIL", { color: INK, closed: true, weight: 0.5, paper: CARD });
+    steps.forEach((k, j) => {
+      const x = (j - (steps.length - 1) / 2) * 0.5;
+      const ball = blobPath(x, 0, 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 + j });
+      fills.paint(ball, name, { color: FILLS[2], offset: [0.012, -0.01], value: k });
+      ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
     });
   });
 });

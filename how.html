@@ -131,10 +131,11 @@ shade of that color. A part names one and hands over the path and the color —
 creature's head and body take the creature's <b>material</b> (a slot: FLAT for most, GRAPHITE, INK, OIL or CHARCOAL
 for the rest) at its <b>density</b> (another slot: a light hand, a normal one, a heavy one); its <b>pattern</b> (stripes,
 dots, spots, hatching — a third slot) is drawn inside the base colour. The table is <code>MATERIALS</code> in
-<code>src/stroke.js</code>; every entry gets a shader ball —
-the same ball in the same color, its contour the board's PENCIL — and under it its channels: the base colour alone,
-then the texture alone, then the texture at a light hand and a heavy one — the <b>density</b>, one knob over every texture's
-crowding (the hatch's spacing, the scratches' count, the dabs' and the specks' count), which the board picks per creature.</p>
+<code>src/stroke.js</code>; every entry gets a row of shader balls — the same ball in the same color at the five
+<b>value</b> steps, <b>black · hatch · scribble · stipple · light</b> (the reference's scale, named for the way graphite
+makes each): a material renders darkness its own way, graphite changing technique step by step, ink, oil and charcoal
+laying down more or less of their texture. On the board the step comes from the part's color — a dark cloth draws black,
+a pale skin light — moved one step by the creature's <b>density</b>, its hand.</p>
 
 <div class="figs" id="materialBalls"></div>
 

@@ -393,9 +393,10 @@ tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.
 
 ### density (3) — a late slot
 
-How crowded the material's texture is — **normal** (weight 3) · **light** (×0.6, 1.5) · **dense** (×1.6, 1.5): one knob over
-every texture's crowding (`stroke.js` `DENSITY` — the hatch's spacing, the scratches' count, the dabs' and the specks' count per
-area). A light hand and a heavy one. Nothing on flat. Both the head and the body take the creature's density, like its material. The texture is always a tone of the part's own color, so the palette rules hold; the base stays
+The hand — **normal** (weight 3) · **light** (1.5) · **dense** (1.5): one step lighter or darker on the material's value scale
+(`stroke.js` `VALUES`: black · hatch · scribble · stipple · light — the step itself comes from the part's color's darkness, so a
+dark cloth draws black and a pale skin light; a light hand moves one step lighter, a heavy one darker). Nothing on flat. Both the
+head and the body take the creature's density, like its material ([../drawing.md](../drawing.md) § materials). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
 opaque, so neighbours still hide each other. Both the head and the body take the same material — one hand, one tool
 per creature. The contour is not part of it (the goofy outline, PENCIL). Calico patches stay flat over it.
 

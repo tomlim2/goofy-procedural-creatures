@@ -1,6 +1,6 @@
 // Body — torso and markings. Docs: guidelines/character/parts.md § body
 
-import { blobPath, DENSITY } from "../../stroke.js";
+import { blobPath } from "../../stroke.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { FURS, CALICO_MID } from "../vocabulary/palette.js";
 
@@ -20,7 +20,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
-    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), density: DENSITY[spec.parts.density] || 1 });   // the material and density slots (flat, ×1 when absent), the pattern in its base
+    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), hand: spec.parts.density });   // the material and density slots (flat, a normal hand when absent), the pattern in its base
     // The body's scribble shading is off — an ellipse it cannot clip to the contour (see drawHead); it returns as the light's shade
     ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
@@ -45,7 +45,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
   }
 
-  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), density: DENSITY[spec.parts.density] || 1 });   // the material and density slots (flat, ×1 when absent), the pattern in its base
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), hand: spec.parts.density });   // the material and density slots (flat, a normal hand when absent), the pattern in its base
   // The body's scribble shading is off — on a short or wide torso the tilted ellipse poked past the contour; it returns as the light's shade
   ink.contour(path, "PENCIL", { color: ink0, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   return { path, top, bottom, w, cx: 0 };
