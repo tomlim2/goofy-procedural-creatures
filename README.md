@@ -30,6 +30,8 @@ git tag v0.1.0 && git push origin v0.1.0
 ```
 
 `serve.mjs` is local-only (it invalidates the module cache). On Pages the browser gets the static files directly.
+`node serve.mjs [port] [ref]` — the port can also come from `PORT` (so two sessions can each run one), and the ref (HEAD by default)
+is extracted once at start and served under `/base/` for the pixel diff page.
 
 `/debug.html` — **the debug screen**. The main page has only SEED, SPECIES and GRID; to touch the pose, ink, actions or regen, come here.
 The drawing is the same and only the control cards differ (the same `src/main.js`). Nothing links here from the main page — you type the address.
@@ -48,6 +50,11 @@ The page cannot drift from the code, because it runs the code.
 `/audit.html?seed=…` — **the face part audit**. Draws one board (35 creatures) in 22 face states (startle, sleep, blink, ^^, wink, anger, brow/mouth switches,
 8-way turns, the ☆♥ variants, and combinations), toggling the eyes, nose, mouth, brows, eyewear, cheeks and sleep lids one at a time and counting the pixel difference. Under 4% of the head width is written down as
 "not visible". Run it whenever you change the face — it has to be 0.
+
+`/pixeldiff.html?seed=…&boards=4&tol=4` — **the pixel diff**. Renders the same boards (7×5, bind pose, boil pinned) with the working tree and with the base
+tree (`serve.mjs`'s ref under `/base/`, HEAD by default) on the same GPU and counts the pixels that differ, per creature, with a DIFF view that paints them red.
+The gate that sees the picture itself — the scene and the shaders (the paper, the sheet pass, a mesh's opacity, the parallax) that `drawdiff` is blind to.
+A refactor has to come out at 0; a change shows where the picture moved.
 
 The main screen (`/`) has only **SEED · EXPORT · SPECIES · GRID**. The rest belongs to the debug screen (`/debug.html`).
 On narrow screens (≤700px) the deck moves from the left edge to a bottom strip — cards run left to right and
@@ -94,6 +101,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | `src/main.js` · `src/control.js` · `src/ui.js` | The entry point. `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the rAF loop; shared with gallery and audit) | |
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
+| `src/pixeldiff.js` · `pixeldiff.html` | The pixel diff — the working tree against a git ref, rendered on the same GPU, the differing pixels counted per creature | [determinism](guidelines/determinism.md) |
 | `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state | [character/rules](guidelines/character/rules.md) |
 | `src/how.js` · `how.html` | The medium page — the goofy outlines, the goofy materials and the goofy fur (balls generated from the tables), the shapes, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
 | `guidelines/` | The catalog and rules for the two axes, plus the performance, seed and drawing rules. **Read before changing anything** | [README](guidelines/README.md) |

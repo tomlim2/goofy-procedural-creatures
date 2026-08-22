@@ -26,7 +26,7 @@ Looking good to the eye and being right are different things. There is a tool fo
 | How one **action** looks | The on-screen ACTION card (forcing it on every biped, IDLE) | [motion/catalog.md](motion/catalog.md) § the bind pose and arm actions |
 | Motion **frequency** | Counting firings in a 60 s simulation | [motion/rules.md](motion/rules.md) § count the firing frequency |
 | Motion noise while judging form | POSE BIND (pinned to the T-pose) · INK STILL (the boil stopped) | [rig.md](rig.md) § pose and ink |
-| **Invariance** before and after a refactor | `node scripts/snapshot.mjs before/after` (specs, one board's geometry, motion trajectories) · `node scripts/drawdiff.mjs` (drawing — every slot value against HEAD) | [determinism.md](determinism.md) |
+| **Invariance** before and after a refactor | `node scripts/snapshot.mjs before/after` (specs, one board's geometry, motion trajectories) · `node scripts/drawdiff.mjs` (drawing — every slot value against HEAD) · `/pixeldiff.html` (the picture — the rendered board against a ref, pixel by pixel; the only gate that sees the scene and the shaders) | [determinism.md](determinism.md) |
 | **Performance** (frame cost) | Read `renderer.info.render.calls` and the frame time from the console | [performance.md](performance.md) § how it is measured |
 
 ## In one line each

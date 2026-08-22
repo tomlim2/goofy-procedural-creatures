@@ -269,7 +269,8 @@ included**. That is the `grain` channel of § the goofy material, and it is the 
 stays opaque within itself — the front creature hides the one behind completely — and only the finished board
 meets the paper. The one thing the target changes: it blends in linear light where the canvas blended in sRGB,
 so the two steady translucencies keep their old grey by new numbers — the floor line 0.72 → 0.88, the pupil
-0.95 → 0.985 (the emoji fade is left alone). The PNG export reads the canvas after `draw()`, the composite.
+0.95 → 0.985 (the emoji fade is left alone). The PNG export reads the canvas after `draw()`, the composite. `drawdiff` cannot see any of this — `/pixeldiff.html`
+([determinism.md](determinism.md) § how to check) is the gate for the sheet and every other shader.
 
 ## The boil
 

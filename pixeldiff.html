@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MENAGERIE — pixel diff</title>
+<meta name="description" content="Renders the same boards with the working tree and with a git ref on the same GPU and counts the pixels that differ, per creature — the gate that sees the picture, shaders included.">
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body class="gallery audit pixeldiff">
+
+<!-- The two boards are drawn off screen at one fixed size (1050×750 css px, the pixel ratio on top); the stage shows one of them, or the diff -->
+<canvas id="tree" class="offstage" aria-hidden="true"></canvas>
+<canvas id="base" class="offstage" aria-hidden="true"></canvas>
+<canvas id="stage" aria-label="The board, the base board, or the pixels that differ"></canvas>
+
+<header class="bar">
+  <a class="mark" href="./index.html">MENAGERIE</a>
+  <span class="sub">PIXEL DIFF · <a href="./index.html">← GRID</a> · <a href="./audit.html">AUDIT</a></span>
+  <span class="status" id="status">BOOT</span>
+</header>
+
+<aside class="deck">
+  <section class="card">
+    <h2>SEED <span class="seed" id="seed">·······</span></h2>
+    <button id="reseed" class="wide">NEW SEEDS</button>
+  </section>
+  <section class="card">
+    <h2>VIEW</h2>
+    <div class="seg" id="viewSeg">
+      <button data-view="diff" class="on">DIFF</button>
+      <button data-view="tree">TREE</button>
+      <button data-view="base">BASE</button>
+    </div>
+    <div class="seg" id="boardSeg"></div>
+  </section>
+  <section class="card">
+    <h2>REPORT</h2>
+    <pre id="report" class="report">Getting ready…</pre>
+  </section>
+  <p class="hint">Draws the same boards (7×5, bind pose, boil pinned) with the working tree and with the base tree — a git ref served by
+  <code>serve.mjs</code> under <code>/base/</code>, HEAD by default — and counts the pixels that differ, per creature. A refactor has to
+  come out at 0; a change shows where the picture moved. <code>?seed=…&amp;boards=4&amp;tol=4</code> · R new seeds</p>
+</aside>
+
+<script type="module" src="./src/pixeldiff.js"></script>
+</body>
+</html>

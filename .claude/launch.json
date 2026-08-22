@@ -4,8 +4,11 @@
     {
       "name": "creatures",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["serve.mjs"],
-      "port": 7300
+      "runtimeArgs": [
+        "serve.mjs"
+      ],
+      "port": 7300,
+      "autoPort": true
     }
   ]
 }

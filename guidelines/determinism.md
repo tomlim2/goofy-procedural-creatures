@@ -72,6 +72,14 @@ value — if you moved drawing code in a big way (splitting files, turning it in
 `node scripts/drawdiff.mjs [ref]` to compare **every slot value × species × seed** against the previous tree
 (git, HEAD by default), sketch by sketch. It has to come out at 0.
 
+`drawdiff` compares sketches — the triangles a part hands to the GPU — and is blind to everything after them: the
+scene (a mesh's opacity, the parallax depths, render order) and the shaders (the paper, the sheet pass). For those,
+`/pixeldiff.html?seed=…&boards=4` renders the same boards with the working tree and with a base tree on the same
+GPU and counts the pixels that differ per creature (`serve.mjs [port] [ref]` serves the ref under `/base/`, HEAD by
+default). Bind pose, boil pinned, so the only variable is the code. A refactor has to come out at **0 — identical**;
+a change shows exactly where the picture moved (the DIFF view paints every differing pixel red). It runs in the
+browser — any session with a server started inside the checkout can run it; there is no headless form.
+
 ```bash
 node scripts/snapshot.mjs before   # before the change
 node scripts/snapshot.mjs after    # after — diff 0 means behaviour is unchanged
