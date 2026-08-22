@@ -89,8 +89,9 @@ export const PENCIL = {
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
   // An ink crumb lands outside the edge, scatter × the half width out; a bite (the bite share of crumbs) is a paper-coloured square
-  // inside, up to inside × the half width from the spine. A crumb's side is size × the half width
-  grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [1.05, 1.5], bite: 0.45, inside: 0.8, size: [0.35, 0.6] }
+  // inside, up to inside × the half width from the spine. A crumb's side is size (world) — fixed, not a share of the width:
+  // graphite sheds the same grain whether the line is thin or thick, so a thick line does not shed boulders
+  grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [1.05, 1.5], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
 };
 
 export class Sketch {
@@ -269,7 +270,7 @@ export class Sketch {
         const isBite = noise(ph * 0.31 + i * 5.39) * 0.5 + 0.5 < G.bite;
         const h = halves[i];
         const d = isBite ? v * G.inside * h : Math.sign(v || 1) * (G.scatter[0] + (G.scatter[1] - G.scatter[0]) * Math.abs(v)) * h;
-        const size = (G.size[0] + (G.size[1] - G.size[0]) * Math.abs(noise(ph * 0.17 + i * 7.13))) * h;
+        const size = G.size[0] + (G.size[1] - G.size[0]) * Math.abs(noise(ph * 0.17 + i * 7.13));
         this.square(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, isBite ? biteRgb : rgb);
       }
     }
