@@ -149,9 +149,10 @@ inside it and clipped to the contour, the way a pattern is part of an albedo (`p
 `texture` — `hatch`, `scratch`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
 contour (`clipSegment`, `insidePath` in `medium/materials.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
-62% graphite, vertex alpha), `grain` (the paper showing through) — is not built; it would be a new key, not a
-second texture (two patterns on one surface are one texture's composition). That is the goofy material, and nothing
-else. The color always comes from the part; a goofy material knows no colors of its own, and every tone the texture
+62% graphite, vertex alpha) — is not built; it would be a new key, not a
+second texture (two patterns on one surface are one texture's composition). `grain` — the paper showing through —
+is not a channel at all: the sheet does it for the whole board in its own pass (§ the paper). That is the goofy material,
+and nothing else. The color always comes from the part; a goofy material knows no colors of its own, and every tone the texture
 adds is a shade of the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a
 goofy material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
@@ -242,9 +243,17 @@ its repeat as a diagonal weave. The fragment has no resolution, so the grain is 
   the renderer's output pass (§ colors go in as linear). It is the one place a color is handled in sRGB, and it
   never meets `hexToRgb`.
 
-What it is not, yet: the paper shows only *around* the drawing. A sheet that shows *through* the ink (the `grain`
-channel of § the goofy material) needs the board composited over the paper in a second pass — the same shader, on
-a render target of the board instead of on the paper's own color.
+**Two passes.** The board is drawn on a transparent render target (4 samples — the lines get their anti-aliasing
+there now), and then the sheet is drawn over the canvas with the board as a texture (`render()` in
+`scene/index.js`; the plain sheet stays in the scene as its background, hidden for the board pass, and is what
+the audit's direct renders see). The sheet composites premultiplied: `out = board·t + sheet·(1 − a·t)`, with
+`t = 1 − TOOTH·peak` — the light cells of the grain are the peaks of the tooth, and graphite skips them, so up
+to 30% of the ink comes off there (`TOOTH`, `paper.js`) and **the paper shows through the drawing, fills
+included**. That is the `grain` channel of § the goofy material, and it is the sheet's, not a material's: the board
+stays opaque within itself — the front creature hides the one behind completely — and only the finished board
+meets the paper. The one thing the target changes: it blends in linear light where the canvas blended in sRGB,
+so the two steady translucencies keep their old grey by new numbers — the floor line 0.72 → 0.88, the pupil
+0.95 → 0.985 (the emoji fade is left alone). The PNG export reads the canvas after `draw()`, the composite.
 
 ## The boil
 

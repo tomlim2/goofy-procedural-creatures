@@ -142,7 +142,8 @@ is part of an albedo — and its <b>decals</b>, colour regions that take their e
 calico's patches), painted in the base too, so the texture passes over them; and its <b>texture</b> — hatch, scratch, dab or speckle — the medium's pattern laid over it,
 clipped to the contour. Both
 paint the same thing, the colour of the surface; a channel that would be a different thing — opacity (the reference's
-62% graphite), grain (the paper showing through) — is not built yet. That is the goofy material, and nothing else (the
+62% graphite) — is not built yet; grain (the paper showing through) is not a channel at all but the sheet's, done for the
+whole board in the paper's pass (below). That is the goofy material, and nothing else (the
 contour is the goofy outline, above). The color always comes from the part, and every tone the texture adds is a
 shade of that color. A part names one and hands over the path and the color —
 <code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself. On the board each
@@ -161,7 +162,10 @@ a pale skin light — moved one step by the creature's <b>density</b>, its hand.
 <h3>the GPU material underneath, and the boil</h3>
 <p>Underneath there is exactly one GPU material — a flat <code>MeshBasicMaterial</code> with vertex colors,
 shared per opacity level by every mesh on the board. The paper under it is the board's one shader — a procedural
-GLSL grain on a single plane, no texture and no tile (<code>src/scene/paper.js</code>, drawing.md § the paper). No depth test, so stacking is decided
+GLSL grain on a single plane, no texture and no tile (<code>src/scene/paper.js</code>, drawing.md § the paper) — and the
+frame is two passes: the board on a transparent target, then the sheet over the canvas with the board as a texture,
+thinned on the grain's peaks, so the paper shows through the drawing, fills included. The board stays opaque within
+itself; only the finished board meets the sheet. No depth test, so stacking is decided
 entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
 (fills first, ink after — within a mesh, vertex order is the stacking), one draw call per layer.</p>
 

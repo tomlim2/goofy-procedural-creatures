@@ -29,6 +29,12 @@ export function createScene(canvas) {
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
   camera.position.z = 10;
+  // The board is drawn on a transparent target (board), then the sheet is drawn over the canvas with the board as a texture — the paper
+  // shows through the ink (paper.js). The target clears to nothing; the sheet covers the canvas, so the clear color is never seen
+  renderer.setClearColor(0x000000, 0);
+  const overlay = new THREE.Scene();
+  let board = null;
+  let sheet = null;
 
   let paper = null;
   let ground = null;
@@ -105,6 +111,8 @@ export function createScene(canvas) {
       // come out as blotches instead of grain. The shader gets the 9×6 view as its grain space
       const [grainW, grainH] = viewSize(PAPER_GRID[0], PAPER_GRID[1], aspect);
       paper.material.uniforms.grain.value.set(grainW, grainH);
+      sheet.scale.set(viewW, viewH, 1);
+      sheet.material.uniforms.grain.value.set(grainW, grainH);
     }
   }
 
@@ -155,11 +163,17 @@ export function createScene(canvas) {
     noise = makeNoise(rng);
 
     if (!paper) {
-      // The sheet — the board's one shader (paper.js). Seed 7, fixed: the paper does not change with the board's seed
+      // The sheet — the board's one shader (paper.js). Seed 7, fixed: the paper does not change with the board's seed.
+      // The plain one stays in the scene as its background — hidden while the board is drawn on the target, seen by the audit's
+      // direct renders; the one in the overlay carries the board (the same numbers, so the two sheets are one sheet)
       paper = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), makePaperMaterial(7));
       paper.renderOrder = 0;
       paper.position.z = -1;
       scene.add(paper);
+      // 4 samples: the target is where the lines get their anti-aliasing now, not the canvas. No depth — nothing on the board tests it
+      board = new THREE.WebGLRenderTarget(Math.max(1, canvas.width), Math.max(1, canvas.height), { samples: 4, depthBuffer: false, stencilBuffer: false });
+      sheet = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), makePaperMaterial(7, { board: board.texture }));
+      overlay.add(sheet);
     }
 
     specs.forEach((spec, index) => {
@@ -177,7 +191,9 @@ export function createScene(canvas) {
         color: "#4a423a", width: 0.012, jitter: 0.02, step: 0.08
       });
     }
-    ground = new THREE.Mesh(groundSketch.build(), inkMaterial(0.72));
+    // 0.88 — the 0.72 it was on the canvas, where blending happened in sRGB; on the target it blends in linear light, and this is the
+    // opacity that gives the same grey over the paper (0.72 there would read a shade lighter)
+    ground = new THREE.Mesh(groundSketch.build(), inkMaterial(0.88));
     ground.renderOrder = 1;
     scene.add(ground);
 
@@ -203,6 +219,7 @@ export function createScene(canvas) {
     if (width !== sized[0] || height !== sized[1] || dpr !== sized[2]) {
       renderer.setPixelRatio(dpr);
       renderer.setSize(width, height, false);
+      if (board) board.setSize(canvas.width, canvas.height);   // the target is the drawing buffer's size — one texel per device pixel
       sized = [width, height, dpr];
     }
     if (width !== laidOut[0] || height !== laidOut[1]) layout();
@@ -225,7 +242,17 @@ export function createScene(canvas) {
       }
       applyState(item, state, t, noise, { boil: boilOn });
     }
+    render();
+  }
+
+  // The frame — two passes. The board on the transparent target (the sheet hidden), then the sheet over the canvas with the board on it
+  function render() {
+    paper.visible = false;
+    renderer.setRenderTarget(board);
     renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    paper.visible = true;
+    renderer.render(overlay, camera);
   }
 
   function setRegen(value) {
@@ -248,7 +275,7 @@ export function createScene(canvas) {
   // Draws the current state for one frame. The PNG export calls it **immediately before** reading the canvas —
   // WebGL clears the drawing buffer at the end of a frame, so it has to be redrawn in the same task to be readable (src/export.js)
   function draw() {
-    renderer.render(scene, camera);
+    render();
   }
 
   // Debug — applies an arbitrary state (fields written over BIND_STATE) to one individual immediately and draws one frame.

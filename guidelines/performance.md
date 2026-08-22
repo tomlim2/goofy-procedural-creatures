@@ -7,6 +7,10 @@ board, so the GPU idles; what JS does each frame is a few hundred lines of state
 (`applyState`) plus three.js setting up a material and drawing for every mesh. So there are three rules:
 **fewer meshes, shared materials, and never build geometry per frame.**
 
+The frame is two passes since the sheet became a shader ([drawing.md](drawing.md) § the paper): the board on a
+4-sample render target, then one quad over the canvas — one draw call and one resolve more, which the numbers
+below do not include.
+
 ## The numbers (7×5 = 35 creatures, measured at pixel ratio 2 on a 1500×1428 canvas — the absolute values differ per machine; only the ratio matters)
 
 | | Before shared materials and merged meshes | Now |

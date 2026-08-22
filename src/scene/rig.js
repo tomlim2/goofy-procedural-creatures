@@ -229,7 +229,8 @@ export function buildCreature(spec, noise, birth = 0) {
 
     const pupilSketch = new Sketch(noise, 0.4);
     paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink, { own: true });
-    const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
+    // 0.985 — the 0.95 it was on the canvas (sRGB blending); the board blends in linear light on its target now, and this gives the same dark
+    const pupil = sketchMesh(pupilSketch, 0.985, o + 0.2);
     open.add(pupil);
     rig.add(open);
 
