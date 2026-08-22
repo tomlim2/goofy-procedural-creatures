@@ -30,8 +30,10 @@ From the console (`window.menagerie.scene`):
 
 ```js
 const s = menagerie.scene, r = s.renderer;
+r.info.autoReset = false; r.info.reset();   // a frame is two renders (the board on its target, the sheet over it) — count both
 const t0 = performance.now(); for (let f = 0; f < 120; f++) { s.resize(); s.update(10 + f / 60); }
-console.log("ms/frame", ((performance.now() - t0) / 120).toFixed(2), "calls", r.info.render.calls, "tris", r.info.render.triangles);
+console.log("ms/frame", ((performance.now() - t0) / 120).toFixed(2), "calls", r.info.render.calls / 120, "tris", r.info.render.triangles / 120);
+r.info.autoReset = true;
 ```
 
 `renderer.info.render` holds the draw call and triangle counts of the last `render()`. Count individuals,
@@ -39,6 +41,14 @@ meshes and materials with `s.scene.traverse`.
 If you changed the scene structure (layers, rig, meshes), measure these numbers again and update the table above.
 
 ## Rules
+
+### A part that boils without a mesh per frame — `sketchMeshBoil`
+
+The thirteen layers boil as three meshes each, switched by `visible`. The tail's four bones and the limbs boil
+differently: every frame's triangles sit in **one geometry**, one after another, and the frame is chosen by
+`geometry.setDrawRange` (`scene/mesh.js sketchMeshBoil`, `animate.js` over `item.boilRanges`). Three frames cost
+three times the geometry — a few thousand vertices per quad — and **no draw call**. Use it for any new part
+that boils and rotates on its own joint.
 
 ### One material per opacity level — `inkMaterial(opacity)`
 

@@ -88,7 +88,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 - **depth groups** (`item.parallax`) — the same origin as headGroup (the neck). On a face turn, position only = depth × the features' shift (§ fake 3D depth). scale is never touched — an attachment moves position and does not change size
 - **limb pivot** — the shoulder (22% below bodyTop, on the torso's left/right outline — half-width per form: box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / the hip (0.02 above the hem) / a quad's root (25% of bodyH up). A limb is baked hanging from the pivot's origin. Arms are stood up with `bindArm(side)` (the T-pose) and the clock's `state.arms` supplies the joint angles
 - **elbow** — the end of the upper arm. The forearm is baked hanging from the elbow's origin. Upper:lower arm = 0.48:0.52. `armRig(spec)` passes the same dimensions to the clock so it can solve actions by IK
-- **tailGroup** — the tail root (the back end of the body). Inside it, **a four-bone chain** (`tailSketch().bones` — joint origins and rest-pose directions). The skin is baked continuously across the bones, with a **cap** (a disc of the tube's width) at every joint on the parent bone, so a bend opens no wedge ([character/parts.md](character/parts.md) § tail). A bone's mesh sits inside three groups, along(θ)·thick·back(−θ) — bristle is thick.scale.y only (perpendicular to the spine)
+- **tailGroup** — the tail root (the back end of the body). Inside it, **a four-bone chain** (`tailSketch().bones` — joint origins and rest-pose directions). The skin is baked continuously across the bones — in every boil frame, all three in one mesh per bone, switched by drawRange ([performance.md](performance.md)) — with a **cap** (a disc of the tube's width) at every joint on the parent bone, so a bend opens no wedge ([character/parts.md](character/parts.md) § tail). A bone's mesh sits inside three groups, along(θ)·thick·back(−θ) — bristle is thick.scale.y only (perpendicular to the spine)
 - **eyeRig** — the eye's centre. pupil.scale is the startle (1 → 0.5), pupil.position the gaze, lid.scale.y the lid. The rig itself never grows
 
 ## fake 3D depth — the parallax of a face turn
@@ -114,7 +114,7 @@ When attaching a new layer to the head, settle on one depth in this table and wr
 
 | Baked once (per individual) | Changed every frame |
 | --- | --- |
-| 13 layers (body, back hair, side ears, head, horns, hair on the scalp, dog/cat ears, hat, face, static eyes ×2 (one per eye), the front of the face, bangs) × 3 boil sets — one mesh per layer (two for the face and static eyes: fills and ink) | Toggling visible (static eyes per eye — for sleep, ^^, a wink and startle variants only that eye is switched off) |
+| 13 layers (body, back hair, side ears, head, horns, hair on the scalp, dog/cat ears, hat, face, static eyes ×2 (one per eye), the front of the face, bangs) × 3 boil sets — one mesh per layer; the tail's bones and the limbs boil too, all three frames in one mesh each (drawRange) (two for the face and static eyes: fills and ink) | Toggling visible (static eyes per eye — for sleep, ^^, a wink and startle variants only that eye is switched off) |
 | Limb pieces (front, back) | pivot.rotation.z, elbow.rotation.z (the eased target angle plus un-eased oscillation), front/back visible |
 | The tail | Joint rotation.z · a bone's thick.scale.y (bristle — thickness only) |
 | Brow and mouth rest/alt | visible |

@@ -37,8 +37,9 @@ function armDims(spec, box) {
 // "embedded", and an arm's root is on the torso's left/right outline (the side) — further in and it looks like it sprouts from the chest.
 //
 // Returns: [{ sketch, pivot: [x, y], kind: "arm"|"leg", side, index, behind }]
-export function limbSketches(spec) {
-  const rng = makeRng((spec.proportions.wobbleSeed + 303) >>> 0);
+// variant is the boil frame — only the drawing noise differs; the pivots, joints and shapes are the same in every frame
+export function limbSketches(spec, variant = 0) {
+  const rng = makeRng(((spec.proportions.wobbleSeed + 303) ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
   const box = layout(spec);
   const p = spec.proportions;
@@ -314,8 +315,9 @@ function splitSpineN(spine, n) {
 // the root (0) takes the swish, wag, walking and sleep; the tip (3) takes the tapping, tremble and follow-through; and **raise** blends each joint's angle from the rest pose toward standing straight (a target angle per bone).
 // The skin is applied continuously across the bones — the thickness function is computed on the whole tail's t, so the thickness carries across the seams.
 export const TAIL_BONES = 4;
-export function tailSketch(spec) {
-  const rng = makeRng((spec.proportions.wobbleSeed + 404) >>> 0);
+// variant is the boil frame — only the drawing noise differs; the bones and the pivot are the same in every frame
+export function tailSketch(spec, variant = 0) {
+  const rng = makeRng(((spec.proportions.wobbleSeed + 404) ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
   const box = layout(spec);
   const sketches = Array.from({ length: TAIL_BONES }, () => new Sketch(noise, spec.proportions.wobble));

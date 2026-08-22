@@ -38,6 +38,25 @@ function makeInkMaterial(opacity) {
   });
 }
 
+// Boil variants → one mesh. variants is a list (one per boil frame) of sketch lists; every variant's triangles go into **one geometry**, one after
+// another, and the frame is chosen by the geometry's drawRange (animate: item.boilRanges) — so a part boils without one mesh per frame
+// (the tail's bones and the limbs: a draw call each, not three). Returns the mesh and the [start, count] vertex range of each frame
+export function sketchMeshBoil(variants, opacity, renderOrder, dy = 0) {
+  const ranges = [];
+  let start = 0;
+  const all = [];
+  for (const sketches of variants) {
+    const list = sketches.filter((s) => !s.empty);
+    const count = list.reduce((n, s) => n + s.positions.length / 3, 0);
+    ranges.push([start, count]);
+    start += count;
+    all.push(...list);
+  }
+  const mesh = sketchMesh(all, opacity, renderOrder, dy);
+  mesh.geometry.setDrawRange(ranges[0][0], ranges[0][1]);
+  return { mesh, ranges };
+}
+
 // Sketch(es) → mesh. Given several, they are joined into one geometry — earlier ones end up underneath (fills → ink). Used to bake a layer's fills and ink into one mesh.
 // Lowers the geometry by dy up front. Used to line up the rotation axis (the group origin). own means the material is not shared.
 export function sketchMesh(sketches, opacity, renderOrder, dy = 0, { own = false } = {}) {

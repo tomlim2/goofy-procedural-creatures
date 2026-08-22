@@ -6,7 +6,7 @@ import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, t
 import { Sketch } from "../stroke.js";
 import { blobPath, arcPath } from "../shape.js";
 import { makeClock, bindArm } from "../motion/index.js";
-import { sketchMesh } from "./mesh.js";
+import { sketchMesh, sketchMeshBoil } from "./mesh.js";
 
 export const BOIL_FRAMES = 3;
 
@@ -117,9 +117,12 @@ export function buildCreature(spec, noise, birth = 0) {
   // animate: tailAngle on bone[0] (swish, wag, walking, sleep), tailTip on the tip bone (tapping, tremble, follow-through), and raise (tailRaise) blends each joint's target angle from rest toward straight.
   // Bristle (tailPuff) is **thickness only** — each bone's mesh is wrapped in three groups, R(θ)·S(1,p)·R(−θ) (along, thick, back), scaling only perpendicular to the rest-pose spine direction (θ).
   // The joint's (g) rotation and its child bones sit outside that, so length and position are unchanged
+  // The tail and the limbs boil too — every frame's sketches in one mesh, the frame picked by drawRange (mesh.js sketchMeshBoil, animate: boilRanges)
+  const boilRanges = [];
   let tailGroup = null;
   const tailBones = [];
-  const tail = tailSketch(spec);
+  const tails = Array.from({ length: BOIL_FRAMES }, (_, k) => tailSketch(spec, k));
+  const tail = tails[0];
   if (tail.sketches.some((s) => !s.empty)) {
     tailGroup = new THREE.Group();
     tailGroup.position.set(tail.pivot[0], tail.pivot[1], 0);
@@ -135,7 +138,9 @@ export function buildCreature(spec, noise, birth = 0) {
         thick = new THREE.Group();
         const back = new THREE.Group();
         back.rotation.z = -bone.angle;
-        back.add(sketchMesh(tail.sketches[i], 1, 0.8));
+        const boiled = sketchMeshBoil(tails.map((t) => [t.sketches[i]]), 1, 0.8);
+        back.add(boiled.mesh);
+        boilRanges.push({ geometry: boiled.mesh.geometry, ranges: boiled.ranges });
         thick.add(back);
         along.add(thick);
         g.add(along);
@@ -153,24 +158,30 @@ export function buildCreature(spec, noise, birth = 0) {
   // between them by pose. The sleeve and hand have to cover the body outline for the joint to look embedded in the body.
   // An arm has two joints: pivot (shoulder) ─ front (upper arm) ─ elbow (the elbow pivot) ─ lower (forearm).
   // The shoulder angle and elbow angle have to be given separately for the arm to fold.
-  const limbs = limbSketches(spec).map((limb) => {
+  const limbFrames = Array.from({ length: BOIL_FRAMES }, (_, k) => limbSketches(spec, k));
+  const boiledMesh = (pick, opacity, order) => {
+    const boiled = sketchMeshBoil(limbFrames.map((frameLimbs) => [pick(frameLimbs)]), opacity, order);
+    boilRanges.push({ geometry: boiled.mesh.geometry, ranges: boiled.ranges });
+    return boiled.mesh;
+  };
+  const limbs = limbFrames[0].map((limb, li) => {
     const pivot = new THREE.Group();
     pivot.position.set(limb.pivot[0], limb.pivot[1], 0);
     const front = new THREE.Group();
-    front.add(sketchMesh(limb.sketch, 1, 2.5));
+    front.add(boiledMesh((fl) => fl[li].sketch, 1, 2.5));
     pivot.add(front);
 
     let elbow = null;
     if (limb.lowerSketch) {
       elbow = new THREE.Group();
       elbow.position.set(limb.elbow[0], limb.elbow[1], 0);
-      elbow.add(sketchMesh(limb.lowerSketch, 1, 2.5));
+      elbow.add(boiledMesh((fl) => fl[li].lowerSketch, 1, 2.5));
       front.add(elbow);
     }
 
     let back = null;
     if (limb.backSketch) {
-      back = sketchMesh(limb.backSketch, 1, 0.5);
+      back = boiledMesh((fl) => fl[li].backSketch, 1, 0.5);
       back.visible = false;
       pivot.add(back);
     }
@@ -304,6 +315,7 @@ export function buildCreature(spec, noise, birth = 0) {
     tailBones,
     limbs,
     frames,
+    boilRanges,   // [{ geometry, ranges }] — the tail's bones and the limbs, every boil frame in one mesh; animate picks the frame by drawRange
     eyeRigs,
     staticLids,
     faceStates,

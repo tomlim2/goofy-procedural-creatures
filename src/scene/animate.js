@@ -19,6 +19,8 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     const list = item.frames[key];
     for (let k = 0; k < BOIL_FRAMES; k += 1) list[k].visible = k === frame;
   }
+  // The tail and the limbs — every frame in one mesh, the frame picked by drawRange (rig.js boilRanges)
+  for (const b of item.boilRanges || []) b.geometry.setDrawRange(b.ranges[frame][0], b.ranges[frame][1]);
 
   // The whole body — sway (rotating about the feet), shiver, jump, breathing + rocking + jelly + stretch
   item.group.rotation.z = state.sway;
