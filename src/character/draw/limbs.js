@@ -49,7 +49,7 @@ export function limbSketches(spec) {
 
   const make = () => new Sketch(noise, p.wobble);
   const dot = (s, x, y, r, color) => {
-    paintPart(s, spec, blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color);   // a hand — the creature's material
+    paintPart(s, spec, blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color);   // a hand — the creature's goofy material
     s.contour(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), "RIBBON", { color: ink0, closed: true });
   };
 
@@ -159,7 +159,7 @@ export function limbSketches(spec) {
     if (armKind === "sleeve") {
       // The upper arm is a cloth-colored sleeve. The forearm is a bare arm plus a hand.
       const sl = crumple([[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]], 0.0025, side * 3);
-      paintPart(upper, spec, sl, cloth);   // a sleeve — the creature's material
+      paintPart(upper, spec, sl, cloth);   // a sleeve — the creature's goofy material
       upper.contour(sl, "RIBBON", { color: ink0, closed: true });
       lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: 0.01 });
       dot(lower, side * 0.006, -lowerLen - 0.006, 0.022, skin);
@@ -347,7 +347,7 @@ export function tailSketch(spec) {
       const tMap = (t) => part.t0 + t * (part.t1 - part.t0);
       const { left, right } = tubeSides(part.spine, widthAt, tMap);
       const sk = sketches[i];
-      paintPart(sk, spec, [...left, ...right.slice().reverse()], fur);   // the tail is fur — the creature's material
+      paintPart(sk, spec, [...left, ...right.slice().reverse()], fur);   // the tail is fur — the creature's goofy material
       sk.stroke(left, { color: ink0, width: 0.011, passes: 2 });
       sk.stroke(right, { color: ink0, width: 0.011, passes: 2 });
       if (i === parts.length - 1) sk.stroke([left[left.length - 1], right[right.length - 1]], { color: ink0, width: 0.011 });   // closing off the tip

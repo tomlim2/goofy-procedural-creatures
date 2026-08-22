@@ -276,7 +276,7 @@ Gallery: `gallery.html?slot=build&fix=legLength:long`.
 
 ### pattern (7) — the surface, not a part
 none / stripes (3 horizontal lines) / dots (4 dots) / patch (hatching on the left) / hatch (diagonals over the whole thing) / spots (3 dalmatian spots) / **calico** (the tricolor patch — below).
-The five line kinds are part of the body's **material base color** — drawn inside the fill and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `stroke.js`; light ink when the body color's luminance < 120), under the material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
+The five line kinds are part of the body's **goofy material's base color** — drawn inside the fill and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `medium/materials.js`; light ink when the body color's luminance < 120), under the goofy material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
 
 **calico — the tricolor patch (dogs and cats only, filled).** Not lines but **color patches**, and they are on the body, head and ear alike. Every color is inside the palette (`calicoColors`, wobbleSeed, no rng):
 the base is the skin as-is (when it is calico, spec.js withholds black fur to guarantee **a light base**), the black patch is one of FURS, and the middle tone is `CALICO_MID` (a warm tan, luminance 139 —
@@ -386,21 +386,21 @@ species bias of 3:2. The archetype does not take part.
 
 ### material (5) — a late slot
 
-What the head and the body are made of — how their areas are filled ([../drawing.md](../drawing.md) § materials, the
-`MATERIALS` table in `medium/materials.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (the color hatched with thin
+The creature's **goofy material** — what the head and the body are made of, how their areas are filled ([../drawing.md](../drawing.md) § the goofy material, the
+`GOOFY_MATERIALS` table in `medium/materials.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (the color hatched with thin
 upright pencil strokes) · **ink** (solid, a few light scratches) · **oil** (thick dabs in three
 tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.)
 
 ### density (3) — a late slot
 
-The hand — **normal** (weight 3) · **light** (1.5) · **dense** (1.5): one step lighter or darker on the material's value scale
+The hand — **normal** (weight 3) · **light** (1.5) · **dense** (1.5): one step lighter or darker on the goofy material's value scale
 (`medium/materials.js` `VALUES`: black · hatch · scribble · stipple · light — the step itself comes from the part's color's darkness, so a
 dark cloth draws black and a pale skin light; a light hand moves one step lighter, a heavy one darker). Nothing on flat. Both the
-head and the body take the creature's density, like its material — and on a dog, a cat or an imp both take the **head color's**
-step, one mass ([../drawing.md](../drawing.md) § materials). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
-opaque, so neighbours still hide each other. Everything the creature fills takes the same material — the head, the body, the ears and their insides, the muzzle, the
+head and the body take the creature's density, like its goofy material — and on a dog, a cat or an imp both take the **head color's**
+step, one mass ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
+opaque, so neighbours still hide each other. Everything the creature fills takes the same goofy material — the head, the body, the ears and their insides, the muzzle, the
 hands, boots and sleeves, the tail, the hats, the eyes, the nose, the mouth — one hand, one tool per creature ([../drawing.md](../drawing.md)
-§ what takes the material). The contour is not part of it (the goofy outline, PENCIL). The calico's patches are decals in the base.
+§ what takes the goofy material). The contour is not part of it (the goofy outline, PENCIL). The calico's patches are decals in the base.
 
 ## Render order
 

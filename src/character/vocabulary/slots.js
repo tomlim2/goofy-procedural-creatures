@@ -63,10 +63,10 @@ export const SLOTS = {
   // The mouth **size** — width multipliers small 0.7 · normal 1 · wide 1.4 (draw/mouth.js MOUTH_SIZE). In the reference, very small mouths and very wide mouths split at the extremes.
   // For imps a species multiplier of 1.3 is applied on top
   mouthSize: ["normal", "small", "wide"],
-  // The **material** — what the head and the body are made of: how their areas are filled (stroke.js MATERIALS — a base color and its
+  // The **material** — the creature's goofy material: what the head and the body are made of, how their areas are filled (medium/materials.js GOOFY_MATERIALS — a base color and its
   // texture). flat is the fill-up alone; the rest lay a pattern over it in a tone of the part's own color. A late slot — the look, not the form
   material: ["flat", "graphite", "ink", "oil", "charcoal"],
-  // The **density** — the hand: how dark the material draws a surface, one step lighter or darker on the value scale (stroke.js
+  // The **density** — the hand: how dark the goofy material draws a surface, one step lighter or darker on the value scale (medium/materials.js
   // VALUES: black · hatch · scribble · stipple · light — the step itself comes from the part's color). Nothing on flat. A late slot
   density: ["normal", "light", "dense"],
   // Arm form. Posture (hanging, open, raised, behind the back) is not here — that is motion, in clocks.js. none is armless (some imps) — the arm action layer rests
@@ -115,7 +115,7 @@ export const DEFAULT_BIAS = {
   mouth: [["line", 3], ["dot", 2], ["smile", 2], ["frown", 1.5], ["smug", 1.5], ["three", 1.5], ["pout", 1], ["open", 1], ["wave", 1], ["grimace", 1], ["grin", 1], ["bracket", 1], ["scribble", 0.3]],
   mouthPos: [["mid", 2], ["high", 1.5], ["low", 1.5]],
   mouthSize: [["normal", 3], ["small", 2], ["wide", 1]],
-  // Materials — the plain fill-up for most; the textured ones as seasoning, so a board reads as one hand with a few different tools
+  // Goofy materials — the plain fill-up for most; the textured ones as seasoning, so a board reads as one hand with a few different tools
   material: [["flat", 5], ["graphite", 1.5], ["charcoal", 1], ["oil", 1], ["ink", 0.8]],
   density: [["normal", 3], ["light", 1.5], ["dense", 1.5]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],

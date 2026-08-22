@@ -40,7 +40,7 @@ To go back, press **MENAGERIE** in the header.
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
 `/how.html` — **the medium page**. The legend of how everything is drawn, on three axes: the goofy outlines (what a contour is drawn
-with — the ribbon and the pencil, with their anatomy), the materials (how a surface is filled — five of them as shader balls) and the goofy fur
+with — the ribbon and the pencil, with their anatomy), the goofy materials (how a surface is filled — five of them as shader balls) and the goofy fur
 (how hair is grown — fur balls), then the shapes, the colors and the boil. Every figure is drawn live by the same `src/stroke.js` and `src/medium/` that draw the creatures, at the board's own scale, and the
 balls are generated from the tables themselves. The figures hold still; INK BOIL (`I`) sets their lines boiling at the board's own cadence.
 The page cannot drift from the code, because it runs the code.
@@ -85,7 +85,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | `src/rng.js` | The seeded PRNG (mulberry32), weighted draws, 1D value noise | [determinism](guidelines/determinism.md) |
 | `src/stroke.js` | The lines — strokes → ribbon geometry: `stroke()` (wobble, pressure, taper), `pencil()` (the reference's line, its numbers in `PENCIL`), the fill-up, the scribble, hatching; `buildGeometry` (several sketches → one geometry). A `Sketch` draws the three concepts by name — `contour()`, `paint()`, `fur()` — delegating to `medium/` | [drawing](guidelines/drawing.md) |
 | `src/shape.js` | The shapes — `blobPath` (a lumpy closed curve: superellipse, taper, noise or two sines — never a perfect ellipse), `arcPath`, `crumple` (a hand-written polygon with the ruler taken out) | [drawing](guidelines/drawing.md) § nothing raw |
-| **`src/medium/`** | The three concepts, each a table and a procedure over a sketch. `outlines.js` — `GOOFY_OUTLINES` (RIBBON, PENCIL) + `contourWith`. `materials.js` — `MATERIALS` (FLAT, GRAPHITE, INK, OIL, CHARCOAL: a base color and its texture), `VALUES` (black · hatch · scribble · stipple · light) + `paintWith` (the pattern and the decals in the base, the texture at a value step, every mark clipped to the contour). `fur.js` — `GOOFY_FUR` (SCRIBBLE) + `furWith`. A part names them (the board: FLAT, PENCIL, SCRIBBLE) instead of picking techniques and widths; everything a creature fills goes through `paintPart` (`draw/body.js`) | [drawing](guidelines/drawing.md) |
+| **`src/medium/`** | The three concepts, each a table and a procedure over a sketch. `outlines.js` — `GOOFY_OUTLINES` (RIBBON, PENCIL) + `contourWith`. `materials.js` — `GOOFY_MATERIALS` (FLAT, GRAPHITE, INK, OIL, CHARCOAL: a base color and its texture), `VALUES` (black · hatch · scribble · stipple · light) + `paintWith` (the pattern and the decals in the base, the texture at a value step, every mark clipped to the contour). `fur.js` — `GOOFY_FUR` (SCRIBBLE) + `furWith`. A part names them (the board: FLAT, PENCIL, SCRIBBLE) instead of picking techniques and widths; everything a creature fills goes through `paintPart` (`draw/body.js`) | [drawing](guidelines/drawing.md) |
 | `src/color.js` | Hex color utilities — linear conversion (`hexToRgb`), luminance (`luminance`, `isDark`), tones (`shade`). Character and drawing share them | [drawing](guidelines/drawing.md) § colors |
 | **`src/character/`** | What the seed decides. `vocabulary/` (slots, species, archetypes, palette) `spec.js` (seed→spec) `draw/` (spec→strokes: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | What the clock decides. `table.js` (per-species parameters) `rhythm.js` (standing) `events.js` (intermittent) `states.js` (held — including the base states idle/sleep/walk) `actions.js` (idle and actions — arm, body and quad layers) `emoji.js` (emoji animation — the trigger layer) `ease.js` (curve shapes — envelopes and following, all eased in and out) `index.js` (assembly in a fixed rng order) | [motion/](guidelines/motion/) |
@@ -95,7 +95,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
 | `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state | [character/rules](guidelines/character/rules.md) |
-| `src/how.js` · `how.html` | The medium page — the goofy outlines, the materials and the goofy fur (balls generated from the tables), the shapes, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
+| `src/how.js` · `how.html` | The medium page — the goofy outlines, the goofy materials and the goofy fur (balls generated from the tables), the shapes, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
 | `guidelines/` | The catalog and rules for the two axes, plus the performance, seed and drawing rules. **Read before changing anything** | [README](guidelines/README.md) |
 | `reference/` | What it was made from, and what was and was not taken | [README](reference/README.md) |
 | `scripts/` | § Scripts below | |
@@ -125,7 +125,7 @@ Draw the slots by even random and around the thirtieth creature you get "the one
 4. **Proportion jitter** — head size, width and lumps; eye size, spacing and left-right asymmetry; body width; arm length; hand shake.
    Most of the silhouette variety comes from here
 
-25 slots, 188 parts. A slot holds form only (the `material` slot the look of a surface); pose and action are motion. Length and build (`armLength`, `legLength`, `build`) are dimension
+25 slots, 188 parts. A slot holds form only (the `material` slot a surface's goofy material — its look); pose and action are motion. Length and build (`armLength`, `legLength`, `build`) are dimension
 slots independent of form — not a scale, only length and width change, and the leg stance is set by the torso's width.
 
 ## The hand-drawn texture

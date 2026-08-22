@@ -1,24 +1,24 @@
-// The materials — what a surface is made of: how its area is filled. The tables (MATERIALS, VALUES) and the procedures that paint a
+// The goofy materials — what a surface is made of: how its area is filled. The tables (GOOFY_MATERIALS, VALUES) and the procedures that paint a
 // sketch with them. A Sketch delegates paint() here; nothing here imports stroke.js — the sketch is handed in.
-// Docs: guidelines/drawing.md § materials, § values, § decals; how.html § the material
+// Docs: guidelines/drawing.md § the goofy material, § values, § decals; how.html § the goofy material
 
 import { hexToRgb, shade, isDark, luminance, mix } from "../color.js";
 import { blobPath } from "../shape.js";
 
 const TAU = Math.PI * 2;
 
-// Materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as channels. `base` is the base
+// Goofy materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as channels. `base` is the base
 // color — the fill-up (flat) — always opaque (on the board the one in front has to hide the one behind), printed out of
 // register, in the part's color or a tone of it — and it carries the creature's pattern (stripes, dots, spots, hatching: the `pattern`
 // slot), drawn inside it and clipped to the contour, the way a pattern is part of an albedo. `texture` is the base color's texture —
 // hatch, scratch, dab or speckle — the medium's pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
 // different thing (opacity — the reference's 62% graphite; grain — the paper showing through) is not built, and would be a new key,
-// not a second texture. That is the material, and nothing else: the contour is a separate concept (GOOFY_OUTLINES, below). The
+// not a second texture. That is the goofy material, and nothing else: the contour is a separate concept (GOOFY_OUTLINES, below). The
 // color always comes from the part; every tone the texture adds is a shade of that color (lighter on a dark color, darker on a
-// light one). A part names a material and hands over the path and the color — it never picks a technique itself. The medium page
-// draws one shader ball per entry, and its channels under it. Docs: guidelines/drawing.md § materials.
-// (Not the GPU materials — those live in scene/mesh.js.)
-export const MATERIALS = {
+// light one). A part names a goofy material and hands over the path and the color — it never picks a technique itself. The medium page
+// draws one shader ball per entry, and its channels under it. Docs: guidelines/drawing.md § the goofy material.
+// (Goofy, to keep them apart from the GPU materials — those live in scene/mesh.js.)
+export const GOOFY_MATERIALS = {
   // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
   FLAT:        { base: { kind: "flat" } },
   // Graphite — the part's color hatched with the pencil (the reference's ground is paper because its color is paper; ours keeps the
@@ -40,7 +40,7 @@ const LIGHT_INK = "#e9e3d5";
 
 
 // Values — how dark a surface is drawn, in five steps, named for the way graphite makes each (the reference's scale): black,
-// hatch, scribble, stipple, light. A material renders a step its own way — graphite changes technique step by step (cross-hatch →
+// hatch, scribble, stipple, light. A goofy material renders a step its own way — graphite changes technique step by step (cross-hatch →
 // hatch → a wavy scribble → stipple → a bare ground), ink, oil and charcoal change how much of their texture they lay down.
 // The step a part gets comes from its color's darkness (valueStep), nudged one step by the hand — the `density` slot
 export const VALUES = [
@@ -130,15 +130,15 @@ function rules(points, angle, gap, jitter) {
 }
 
 
-// Fills with a named material — its base color (with the part's pattern, if any), then its texture at a value step, every mark
+// Fills with a named goofy material — its base color (with the part's pattern, if any), then its texture at a value step, every mark
 // clipped to the contour. offset prints the base out of register (a creature's fillOffset). pattern: { kind, color } — the creature's
 // pattern, part of the base color. decals: [{ path, color }] — color regions that take their edge from the host's outline (the
 // calico; guidelines/drawing.md § decals), painted in the base too, so the texture passes over them. hand: the creature's density
 // slot, one step lighter or darker on the value scale; value: a step index given outright (the medium page's rows). only: "base" or
-// "texture" draws that channel alone. Every tone is a shade of the part's color — the material knows no colors of its own
+// "texture" draws that channel alone. Every tone is a shade of the part's color — the goofy material knows no colors of its own
 export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, decals = [], hand = "normal", value } = {}) {
-  const m = MATERIALS[name];
-  if (!m) throw new Error(`unknown material: ${name}`);
+  const m = GOOFY_MATERIALS[name];
+  if (!m) throw new Error(`unknown goofy material: ${name}`);
   const step = value === undefined ? valueStep(color, hand) : value;
   const V = VALUES[step];
   const wantBase = only === undefined || only === "base";
@@ -163,7 +163,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   if (wantBase) {
     const base = m.base;
     if (base.kind === "flat") sketch.fill(points, base.tone === undefined ? color : shade(color, dark ? 0.92 : base.tone), offset);
-    else throw new Error(`material ${name}: unknown base kind ${base.kind}`);
+    else throw new Error(`goofy material ${name}: unknown base kind ${base.kind}`);
     if (pattern) patternOn(sketch, points, pattern);
     for (const d of decals) sketch.fill(d.path, d.color);   // the decals — part of the base color; the texture goes over them
   }
@@ -270,7 +270,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
         break;
       }
       default:
-        throw new Error(`material ${name}: unknown texture kind ${f.kind}`);
+        throw new Error(`goofy material ${name}: unknown texture kind ${f.kind}`);
     }
   }
 }

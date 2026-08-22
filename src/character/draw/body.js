@@ -12,8 +12,8 @@ export function surfaceValue(spec, color) {
   return valueStep(spec.species === "human" ? color : spec.palette.skin, spec.parts.density);
 }
 
-// Paints a part's surface with the creature's material — the one way in for every skin, fur and cloth surface that is not the head or
-// the body (ears, the muzzle, hands, boots, sleeves, the tail, hats): guidelines/drawing.md § what takes the material. The value step
+// Paints a part's surface with the creature's goofy material — the one way in for every skin, fur and cloth surface that is not the head or
+// the body (ears, the muzzle, hands, boots, sleeves, the tail, hats): guidelines/drawing.md § what takes the goofy material. The value step
 // is the creature's (one mass on a dog, a cat or an imp), or the part's own color's when `own` — a hat is an object, not the fur
 export function paintPart(fills, spec, path, color, { own = false, flat = false, offset } = {}) {
   const options = { color, value: own ? valueStep(color, spec.parts.density) : surfaceValue(spec, color) };
@@ -21,7 +21,7 @@ export function paintPart(fills, spec, path, color, { own = false, flat = false,
   fills.paint(path, flat ? "FLAT" : (spec.parts.material || "flat").toUpperCase(), options);   // flat: the whites of the eyes — never textured
 }
 
-// The creature's pattern — the `pattern` slot as part of the material's base color (stroke.js patternOn). Light ink on a dark body,
+// The creature's pattern — the `pattern` slot as part of the goofy material's base color (medium/materials.js patternOn). Light ink on a dark body,
 // the same rule as face ink. calico is not a line pattern but decals — color regions of the base (bodyDecals / headDecals), and none is none
 function patternOf(spec) {
   const kind = spec.parts.pattern;
@@ -38,7 +38,7 @@ export function drawBody(ink, fills, spec, box, noise) {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
     const decals = bodyDecals(spec, path, noise);
-    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step; the pattern and the decals in its base
+    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the goofy material (the material slot; flat when absent) at the creature's value step; the pattern and the decals in its base
     // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
     ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     decalEdges(ink, spec, decals);
@@ -66,7 +66,7 @@ export function drawBody(ink, fills, spec, box, noise) {
 
   const decals = bodyDecals(spec, path, noise);
 
-  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step; the pattern and the decals in its base
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the goofy material (the material slot; flat when absent) at the creature's value step; the pattern and the decals in its base
   // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
   ink.contour(path, "PENCIL", { color: ink0, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   decalEdges(ink, spec, decals);

@@ -22,7 +22,7 @@ Looking good to the eye and being right are different things. There is a tool fo
 | One part's **form** | The parts gallery — every value of a slot (or a few chosen with `values=`) on the same individual, side by side | `/gallery.html?slot=…&species=…&fix=…&values=…` ([../README.md](../README.md) § Running) |
 | Part **distribution** and species identity | `node scripts/census.mjs [--slot X \| --check]` | [character/rules.md](character/rules.md) § distribution is read with census |
 | Whether a face part **is visible in every state** | The face part audit — the whole board × 22 face states, the pixel difference per part | `/audit.html?seed=…` ([character/rules.md](character/rules.md) § a face part has to be visible in every state) |
-| What the **medium** itself does | The medium page — the goofy outlines, the materials as shader balls, the goofy fur, the shapes and the palette, drawn live by `stroke.js` from its own tables | `/how.html` ([drawing.md](drawing.md)) |
+| What the **medium** itself does | The medium page — the goofy outlines, the goofy materials as shader balls, the goofy fur, the shapes and the palette, drawn live by `stroke.js` from its own tables | `/how.html` ([drawing.md](drawing.md)) |
 | How one **action** looks | The on-screen ACTION card (forcing it on every biped, IDLE) | [motion/catalog.md](motion/catalog.md) § the bind pose and arm actions |
 | Motion **frequency** | Counting firings in a 60 s simulation | [motion/rules.md](motion/rules.md) § count the firing frequency |
 | Motion noise while judging form | POSE BIND (pinned to the T-pose) · INK STILL (the boil stopped) | [rig.md](rig.md) § pose and ink |

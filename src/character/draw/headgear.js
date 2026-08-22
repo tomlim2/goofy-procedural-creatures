@@ -47,7 +47,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     // Helmet — covers from above the brows to the crown along the head shape (1.1×). A lower rim plus a centre ridge
     const bottom = brow;
     const { path, w } = cover(1.1, bottom);
-    paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's material at its own color's step
+    paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's goofy material at its own color's step
     ink.contour(path, "RIBBON", { color: ink0, closed: true, weight: 1.2 });
     ink.stroke([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0, width: 0.013 });
     ink.stroke([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, width: 0.008 });
@@ -58,7 +58,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     // Baseball cap — a dome following the head shape (1.04×) plus a brim out to one side (the brow line). The brim droops slightly
     const bottom = brow + ry * 0.05;
     const { path, w } = cover(1.04, bottom);
-    paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's material at its own color's step
+    paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's goofy material at its own color's step
     ink.contour(path, "RIBBON", { color: ink0, closed: true, weight: 1.2 });
     const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
     paintPart(fills, spec, brim, accent, { own: true });

@@ -416,7 +416,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
     const m = muzzleGeometry(spec, box);
     // The muzzle (the region the nose and mouth are grouped into) is **color only** — no outline is drawn round it. An outline makes it look like a board tacked onto the face (it has to stay a color patch)
     const muzzle = blobPath(0, m.my, m.rx, m.ry, { lumps: 3, amount: 0.1, noise: null });
-    paintPart(fills, spec, muzzle, m.fill);   // the muzzle is fur — the creature's material
+    paintPart(fills, spec, muzzle, m.fill);   // the muzzle is fur — the creature's goofy material
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
     paintPart(fills, spec, nose, spec.palette.ink, { own: true });   // the nose is an object — always black
     if (m.dark) ink.contour(nose, "RIBBON", { color: m.ink, closed: true, weight: 0.7 });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)

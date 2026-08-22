@@ -8,7 +8,7 @@
 import * as THREE from "three";
 import { Sketch } from "./stroke.js";
 import { blobPath, arcPath } from "./shape.js";
-import { MATERIALS, VALUES } from "./medium/materials.js";
+import { GOOFY_MATERIALS, VALUES } from "./medium/materials.js";
 import { GOOFY_OUTLINES } from "./medium/outlines.js";
 import { GOOFY_FUR } from "./medium/fur.js";
 import { sketchMesh } from "./scene/mesh.js";
@@ -192,11 +192,11 @@ IN_USE.forEach(({ key, label, draw }) => {
   fig(key, [-0.7, -0.09, 0.7, 0.09], (sk) => draw(sk(), [[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]]));
 });
 
-// Shader balls — one row per entry of MATERIALS, like a 3D material preview: the same ball in the same color at the five value
-// steps (black · hatch · scribble · stipple · light), filled the material's way at each — the contour is the board's outline,
-// PENCIL; a material is only the filling. FLAT has no texture, so one ball
-Object.keys(MATERIALS).forEach((name, i) => {
-  const m = MATERIALS[name];
+// Shader balls — one row per entry of GOOFY_MATERIALS, like a 3D material preview: the same ball in the same color at the five value
+// steps (black · hatch · scribble · stipple · light), filled the goofy material's way at each — the contour is the board's outline,
+// PENCIL; a goofy material is only the filling. FLAT has no texture, so one ball
+Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
+  const m = GOOFY_MATERIALS[name];
   const steps = m.texture ? VALUES.map((_, k) => k) : [2];
   const el = document.createElement("figure");
   el.dataset.fig = `material:${name}`;

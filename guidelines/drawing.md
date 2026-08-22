@@ -69,7 +69,7 @@ The head and body contours draw with it, as the PENCIL goofy outline (below); th
 Every closed line on a creature is drawn with one **goofy outline**, named from `GOOFY_OUTLINES` in `medium/outlines.js`:
 `ink.contour(path, "PENCIL", { color, closed, weight })`. `weight` is a multiplier on the outline's width (the head
 contour runs at 1.15 of the body's); a part never picks a line function or a width itself. An unknown name
-throws; `outline()` is never called by a part. The outline is its own concept — not part of a material: a contour is not a way of filling.
+throws; `outline()` is never called by a part. The outline is its own concept — not part of a goofy material: a contour is not a way of filling.
 
 | Outline | Line | On the board |
 | --- | --- | --- |
@@ -94,16 +94,16 @@ per entry by itself.
 
 ## The light — not built yet
 
-Shading is not a material's job: in 3D, `material × light = shading`. The tilted scribble ellipses that once
+Shading is not a goofy material's job: in 3D, `material × light = shading`. The tilted scribble ellipses that once
 shaded every head and body (a zigzag fill that could not clip to a contour, so it poked past the outline on
 tapered heads and short torsos) are gone — the method with them. What replaces them is a light: one direction per board or per
 creature, and for every filled part a shade — the region facing away from the light, clipped to the contour
-and filled in the material's shadow technique and a deeper tone of the part's color. Two steps, like cel
+and filled in the goofy material's shadow technique and a deeper tone of the part's color. Two steps, like cel
 shading. The cheek and forehead hatch are the same thing (an occlusion). Until it exists, surfaces are flat.
 
-## What takes the material
+## What takes the goofy material
 
-One tool per creature: **everything a creature fills takes its `material`**, through `paint` — the head and
+One tool per creature: **everything a creature fills takes its goofy material** (the `material` slot), through `paint` — the head and
 the body directly, everything else through `paintPart` in `draw/body.js`. A skin, fur or cloth surface (the
 ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes the creature's value step — one
 mass on a dog, a cat or an imp (`surfaceValue`), its own color's on a human. A detail or an object — the hats,
@@ -128,7 +128,7 @@ a surface and bounded by it. The calico's patches are decals (`decalAlong`, `bod
    and deepest in the middle, bumpy with noise — and the two close into one polygon (a fan fill, so the span
    stays at or below 130°)
 3. It is painted **in the host's base color**, after the fill-up and the pattern and before the texture
-   (`paint(…, { decals })`) — so the material's texture passes over it, as over the rest of the surface
+   (`paint(…, { decals })`) — so the goofy material's texture passes over it, as over the rest of the surface
 4. Its only line is its inner edge, drawn after the contour in the host's ink (`decalEdges`)
 5. It is placed by angle on the outline; on a head a dark decal stays out of the eye and brow zone
    ([character/parts.md](character/parts.md) § pattern — the calico)
@@ -137,9 +137,11 @@ The inner ear (the ear shape scaled about its root) and the roots of ears, horns
 (`headAnchor`) are the same idea's neighbours — an **anchor** is a point on the real outline plus its normal —
 and are not under this contract yet.
 
-## Materials — how a surface is filled
+## The goofy material — how a surface is filled
 
-A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as channels.
+A goofy material is what a surface is made of, the way a 3D material is — **how its area is filled**, as channels.
+(Goofy, like the outline and the fur, to keep it apart from the GPU material in `scene/mesh.js` — one flat
+`MeshBasicMaterial` for the whole board.)
 The `base` colour — the fill-up (`flat`, optionally a tone of the color) — always opaque (on the
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
 — carrying the part's **pattern**, the creature's pattern (stripes, dots, spots, hatching: the `pattern` slot), drawn
@@ -148,16 +150,16 @@ inside it and clipped to the contour, the way a pattern is part of an albedo (`p
 contour (`clipSegment`, `insidePath` in `medium/materials.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
 62% graphite, vertex alpha), `grain` (the paper showing through) — is not built; it would be a new key, not a
-second texture (two patterns on one surface are one texture's composition). That is the material, and nothing
-else. The color always comes from the part; a material knows no colors of its own, and every tone the texture
+second texture (two patterns on one surface are one texture's composition). That is the goofy material, and nothing
+else. The color always comes from the part; a goofy material knows no colors of its own, and every tone the texture
 adds is a shade of the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a
-material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
+goofy material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
-The table is `MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt material cannot silently draw
+The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt goofy material cannot silently draw
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
 way, its contour the board's PENCIL — so the table cannot drift from what is seen.
 
-| Material | base | texture | On the board |
+| Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |
 | `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
 | `GRAPHITE` | `flat` | `hatch` — thin grey pencil strokes, nearly upright, each rule drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled | the `material` slot (1.5) |
@@ -166,9 +168,9 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, four tones close to the ground, cut flat by the contour | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — dark specks | the `material` slot (1) |
 
-The head and the body take the creature's `material` — a late slot ([character/parts.md](character/parts.md)
+The head and the body take the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)
 § surface), one tool per creature — at a **value step**. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
-the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34. A material renders a
+the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34. A goofy material renders a
 step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → stipple → a bare ground),
 ink, oil and charcoal lay down more or less of their texture. The step comes from the part's color's darkness
 (`valueStep`: a dark cloth draws black, a pale skin light), moved one step by the creature's `density` — its hand,
@@ -176,16 +178,15 @@ another late slot (light: one step lighter · dense: one step darker; nothing on
 **one mass** — its body is the head's color or a close tone of it — so head and body take the head color's step
 (`surfaceValue` in `draw/body.js`; a tone that crosses a step would otherwise hatch the body differently from the
 head). A human is two surfaces, skin and clothes, each at its own step. The medium page draws each textured
-material as a row of the five steps. Every other fill is FLAT.
+goofy material as a row of the five steps. Every other fill is FLAT.
 
 The medium page shows each ball's channels under it — the base colour alone, then the texture alone
-(`paint(…, { only })`). A new material is a new row: a base and a texture; a new pattern is a new texture kind
+(`paint(…, { only })`). A new goofy material is a new row: a base and a texture; a new pattern is a new texture kind
 in `paint()`.
 
-`Sketch.fill()` is FLAT itself; the parts that still call it directly (ears, eyes, teeth…) are drawing FLAT
-without naming it — naming the material is the direction, one part at a time, with `drawdiff` proving the
-picture did not move. Putting a material on another part is a drawing change like any other: `drawdiff`
-shows it, the audit has to stay at 0, and a textured material costs triangles (a hatched head is a couple of
+Every part names its goofy material through `paintPart` (`draw/body.js`); `Sketch.fill()` is FLAT itself, and no
+part calls it directly any more. Putting a goofy material on another part is a drawing change like any other:
+`drawdiff` shows it, the audit has to stay at 0, and a textured goofy material costs triangles (a hatched head is a couple of
 thousand more per boil variant — measure, [performance.md](performance.md)).
 
 ## Layer order
@@ -228,7 +229,7 @@ If the answer is yes, the design is usually wrong.
 The same drawing is baked in 3 sets differing only in jitter phase (`drawCreature(spec, variant)`) and visible
 is cycled at roughly 0.53~0.67 fps per individual (once every 1.5~1.9 s).
 
-**The boil is a material, not a motion.** The lines boil even while the character is frozen in the bind pose —
+**The boil belongs to the medium, not to motion.** The lines boil even while the character is frozen in the bind pose —
 that is what a pencil line on paper does; it is not the character doing something. Which is why the on-screen
 toggles are split into POSE (the rig) and INK (the lines). When judging motion, turn the boil noise off with
 INK STILL and watch the joints alone.

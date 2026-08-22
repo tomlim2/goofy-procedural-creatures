@@ -171,7 +171,7 @@ export class Sketch {
   // The goofy outline (medium/outlines.js) — the contour of a closed shape, by name
   contour(points, name, options) { return contourWith(this, points, name, options); }
 
-  // The material (medium/materials.js) — how an area is filled, by name
+  // The goofy material (medium/materials.js) — how an area is filled, by name
   paint(points, name, options) { return paintWith(this, points, name, options); }
 
   // The goofy fur (medium/fur.js) — how hair is grown along a path, by name

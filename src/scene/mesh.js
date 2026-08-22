@@ -1,4 +1,4 @@
-// Meshes and the shared GPU materials (MeshBasicMaterial — not the drawing materials, which are stroke.js MATERIALS). Docs: guidelines/drawing.md § colors go in as linear, guidelines/rig.md, guidelines/performance.md
+// Meshes and the shared GPU materials (MeshBasicMaterial — not the goofy materials — medium/materials.js GOOFY_MATERIALS). Docs: guidelines/drawing.md § colors go in as linear, guidelines/rig.md, guidelines/performance.md
 
 import * as THREE from "three";
 import { buildGeometry } from "../stroke.js";

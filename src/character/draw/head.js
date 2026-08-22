@@ -18,8 +18,8 @@ export function drawHead(ink, fills, spec, box, noise) {
     taper: shape.taper
   });
 
-  // The material slot — how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
-  const decals = headDecals(spec, path, noise);   // the calico's cap and cheek — in the base, under the material's texture
+  // The material slot — the creature's goofy material: how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
+  const decals = headDecals(spec, path, noise);   // the calico's cap and cheek — in the base, under the goofy material's texture
   fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset, decals, value: surfaceValue(spec, spec.palette.skin) });
 
   // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
@@ -44,7 +44,7 @@ export function drawEars(ink, fills, spec, box) {
   if (spec.species === "cat") return;   // cat ears are the layer in front of the head (drawCatEars) — being filled triangular bumps, they have to sit on top of the head
 
   const y = box.headCy - box.headRy * 0.05;
-  // Every ear is **filled in the skin** (the creature's material) before its line — an unfilled ear showed the paper through it. The layer is
+  // Every ear is **filled in the skin** (the creature's goofy material) before its line — an unfilled ear showed the paper through it. The layer is
   // behind the head, so the part of the fill inside the silhouette is covered by the head; only the ear that sticks out shows
   const skin = spec.palette.skin;
 
@@ -171,7 +171,7 @@ export function drawCatEars(ink, fills, spec, box) {
     const path = [
       baseAt(-def.w, 0.02), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w, 0.02)
     ];
-    paintPart(fills, spec, path, earFill);   // the ear is skin — the creature's material
+    paintPart(fills, spec, path, earFill);   // the ear is skin — the creature's goofy material
     ink.stroke([
       baseAt(-def.w * 1.02, 0.024), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w * 1.02, 0.024)
     ], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
@@ -298,7 +298,7 @@ export function drawPupEars(ink, fills, spec, box) {
       const cy = by - Math.cos(tilt) * (len * 0.5 - 0.005);
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
-    paintPart(fills, spec, path, cal && cal.side === side ? cal.dark : earFill);   // the ear is fur — the creature's material
+    paintPart(fills, spec, path, cal && cal.side === side ? cal.dark : earFill);   // the ear is fur — the creature's goofy material
     // The inner ear — the ear shape scaled **about its root (where it meets the face)**. Its base attaches right at the root and it narrows going up
     // (scale about the centroid and it becomes a patch hanging mid-ear — the reference's inner ear starts at the root). There is no outline — being a filled patch, it reads even when small.
     // Only hanging ears (flap, long) are skipped — that pose shows the ear's **outer** face. A folded ear is drawn here too, because **its root (the standing part) is the inner face**

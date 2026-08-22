@@ -1,7 +1,7 @@
 // The goofy outline — what a creature's closed lines are drawn with: the table and the procedure. A Sketch delegates contour() here.
 // Docs: guidelines/drawing.md § the outline; how.html § the goofy outline
 
-// Outlines — the goofy outline: what a creature's contour is drawn with. A separate concept from the materials (a contour
+// Outlines — the goofy outline: what a creature's contour is drawn with. A separate concept from the goofy materials (a contour
 // is not a way of filling). A part names one and hands over the path and the color; at most a weight on the width.
 // Docs: guidelines/drawing.md § the outline
 export const GOOFY_OUTLINES = {

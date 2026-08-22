@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MENAGERIE — how it is drawn</title>
-<meta name="description" content="The medium page: the goofy outline, the materials and the goofy fur — how the board's creatures are drawn, every figure drawn live by the same code that draws them.">
+<meta name="description" content="The medium page: the goofy outline, the goofy material and the goofy fur — how the board's creatures are drawn, every figure drawn live by the same code that draws them.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -30,7 +30,7 @@
 <main class="page">
 
 <p class="lede">Everything on the board is made of what is on this page, on three axes: the <b>goofy outline</b> —
-what a creature's contour is drawn with — the <b>material</b> — how its surfaces are filled — and the <b>goofy fur</b> —
+what a creature's contour is drawn with — the <b>goofy material</b> — how its surfaces are filled — and the <b>goofy fur</b> —
 how its hair is grown. No textures, no brush images; the hand comes from rules alone. And it is all <b>three.js</b> (WebGL) — there is no 2D canvas
 anywhere: every stroke and every fill is triangles, one geometry per layer, and the boil is a set of pre-drawn variants
 shown in turn. Every figure is drawn live by <code>src/stroke.js</code> and <code>src/medium/</code>, the same
@@ -133,31 +133,32 @@ in <code>src/stroke.js</code>. A closed pencil line is seamless: its sines snap 
 
 <!-- ================================================================ -->
 <section>
-<h2>THE MATERIAL</h2>
-<p>A material is what a surface is made of — the way a 3D material is: <b>how its area is filled</b>, as channels.
+<h2>THE GOOFY MATERIAL</h2>
+<p>A goofy material is what a surface is made of — the way a 3D material is (goofy, like the outline and the
+fur, to keep it apart from the GPU material underneath): <b>how its area is filled</b>, as channels.
 The <b>base</b> colour — the fill-up — always opaque and printed out of register, in the part's color,
 carrying the creature's pattern (stripes, dots, spots, hatching) inside it, clipped to the contour, the way a pattern
 is part of an albedo — and its <b>decals</b>, colour regions that take their edge from the host's own outline (the
 calico's patches), painted in the base too, so the texture passes over them; and its <b>texture</b> — hatch, scratch, dab or speckle — the medium's pattern laid over it,
 clipped to the contour. Both
 paint the same thing, the colour of the surface; a channel that would be a different thing — opacity (the reference's
-62% graphite), grain (the paper showing through) — is not built yet. That is the material, and nothing else (the
+62% graphite), grain (the paper showing through) — is not built yet. That is the goofy material, and nothing else (the
 contour is the goofy outline, above). The color always comes from the part, and every tone the texture adds is a
 shade of that color. A part names one and hands over the path and the color —
 <code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself. On the board each
-creature's head and body take the creature's <b>material</b> (a slot: FLAT for most, GRAPHITE, INK, OIL or CHARCOAL
+creature's head and body take the creature's <b>goofy material</b> (the <code>material</code> slot: FLAT for most, GRAPHITE, INK, OIL or CHARCOAL
 for the rest) — and so does everything it fills, ears and tail, eyes and nose, teeth and hat: one tool per creature,
 the details at their own colour's step — at its <b>density</b> (another slot: a light hand, a normal one, a heavy one); its <b>pattern</b> (stripes,
-dots, spots, hatching — a third slot) is drawn inside the base colour. The table is <code>MATERIALS</code> in
+dots, spots, hatching — a third slot) is drawn inside the base colour. The table is <code>GOOFY_MATERIALS</code> in
 <code>src/medium/materials.js</code>; every entry gets a row of shader balls — the same ball in the same color at the five
 <b>value</b> steps, <b>black · hatch · scribble · stipple · light</b> (the reference's scale, named for the way graphite
-makes each): a material renders darkness its own way, graphite changing technique step by step, ink, oil and charcoal
+makes each): a goofy material renders darkness its own way, graphite changing technique step by step, ink, oil and charcoal
 laying down more or less of their texture. On the board the step comes from the part's color — a dark cloth draws black,
 a pale skin light — moved one step by the creature's <b>density</b>, its hand.</p>
 
 <div class="figs" id="materialBalls"></div>
 
-<h3>the material underneath, and the boil</h3>
+<h3>the GPU material underneath, and the boil</h3>
 <p>Underneath there is exactly one GPU material — a flat <code>MeshBasicMaterial</code> with vertex colors,
 shared per opacity level by every mesh on the board. No depth test, so stacking is decided
 entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
@@ -169,7 +170,7 @@ entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>
     <div class="subs"><span>three bakes of the same drawing, cycling — this figure never holds still</span></div>
     <figcaption><b>the boil</b> — nothing is redrawn at runtime. The same drawing is baked
     3 times, differing only in jitter phase, and <code>visible</code> cycles once every
-    1.5–1.9 s per individual. The boil is a material, not a motion: the lines shiver even
+    1.5–1.9 s per individual. The boil belongs to the medium, not to motion: the lines shiver even
     while the character is frozen in the bind pose.</figcaption>
   </figure>
 </div>
