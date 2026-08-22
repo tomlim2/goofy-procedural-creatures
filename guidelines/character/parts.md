@@ -387,8 +387,8 @@ species bias of 3:2. The archetype does not take part.
 ### material (5) — a late slot
 
 What the head and the body are made of — how their areas are filled ([../drawing.md](../drawing.md) § materials, the
-`MATERIALS` table in `stroke.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (a pale ground
-hatched with thin upright pencil strokes) · **ink** (solid, a few light scratches) · **oil** (thick dabs in three
+`MATERIALS` table in `stroke.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (the color hatched with thin
+upright pencil strokes) · **ink** (solid, a few light scratches) · **oil** (thick dabs in three
 tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.)
 
 ### density (3) — a late slot

@@ -109,9 +109,10 @@ export const PENCIL = {
 export const MATERIALS = {
   // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
   FLAT:        { base: { kind: "flat" } },
-  // Graphite — a near-paper ground hatched with the pencil: thin grey lines, nearly upright and a little slanted, each one drawn as
+  // Graphite — the part's color hatched with the pencil (the reference's ground is paper because its color is paper; ours keeps the
+  // part's color — a lightened ground bleached pale parts and left them a different color from their decals and neighbours): thin grey lines, nearly upright and a little slanted, each one drawn as
   // a few strokes — the pencil lifts and comes down again (lift: the strokes' lengths and the gaps between), now and then doubled
-  GRAPHITE:    { base: { kind: "flat", tone: 1.22 }, texture: { kind: "hatch", angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
+  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
   // Ink — solid, scratched: a few long light lines dragged across the dark
   INK:         { base: { kind: "flat" }, texture: { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 } },
   // Oil — thick paint laid in blunt strokes: round-ended capsules of one width and many lengths, all along one diagonal, scattered

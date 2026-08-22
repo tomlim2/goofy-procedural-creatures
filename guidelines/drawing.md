@@ -133,7 +133,7 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | Material | base | texture | On the board |
 | --- | --- | --- | --- |
 | `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
-| `GRAPHITE` | `flat`, a near-paper tone | `hatch` — thin grey pencil strokes, nearly upright, each rule drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled | the `material` slot (1.5) |
+| `GRAPHITE` | `flat` | `hatch` — thin grey pencil strokes, nearly upright, each rule drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
 | `INK` | `flat` | `scratch` — a few long light lines dragged across | the `material` slot (0.8) |
 | `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, four tones close to the ground, cut flat by the contour | the `material` slot (1) |
