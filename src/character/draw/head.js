@@ -272,8 +272,8 @@ export function drawPupEars(ink, fills, spec, box) {
       const foldSide = spec.proportions.wobbleSeed % 2 ? 1 : -1;
       if (kind === "perk" || side !== foldSide) {
         // The standing ear — **a triangle standing straight** along the normal. The root is generous (so the ear feels seated on the head) and the tip is **round and blunt**
-        // (a razor point reads as a horn; wide and low becomes the round ear)
-        const len = 0.155 * k, base = halfW * 1.1, tip = base * 0.34;   // tip is the tip's half-width — that much becomes the rounded end
+        // (a razor point reads as a horn; wide and low becomes the round ear). Low: about twice the root's half-width — taller (it was 0.155) and it is a fennec's ear
+        const len = 0.11 * k, base = halfW * 1.1, tip = base * 0.34;   // tip is the tip's half-width — that much becomes the rounded end
         path = [
           nAt(-0.014, base), nAt(len * 0.55, base * 0.62), nAt(len * 0.86, tip * 1.15),
           nAt(len, tip * 0.55), nAt(len * 1.02, 0), nAt(len, -tip * 0.55),

@@ -161,6 +161,7 @@ pointy the triangular ear — **its vertex embedded in the head (the corner)** w
 fold **the folded ear** (a button ear) — drawn in **head-normal coordinates**: the base embeds inside the outline along the **tangent** at the attachment point and the ear grows **along the normal** (out of the head).
 Above that the flap bends toward the tangent and hangs **below the crease** — on **one ear only**, the other being a standing ear like perk ·
 perk **the standing ear** — a triangle standing straight in the same normal coordinates. The root is generous (the ear is seated on the head) and the tip is **round and blunt** — a razor point reads as a horn, and wide and low becomes the round ear.
+It stands **low**: 0.11 tall at size 1 (about twice the root's half-width, 0.048 × 1.1) — taller and it is a fennec's ear, not a dog's. The folded ear's standing side is this ear.
 **A dog's ear has three colors.** The **front** face is the dog's own color (the head's); the **back** face is the same a shade darker (0.86×) — it is
 the far side; the **inner** face is tender skin — pink (the same as the nose and blush) or the dog's color one step lighter (mixed 45% toward a pale
 neutral: never darker, never neon). Which face shows is the ear's pose: a standing ear (pointy, round, perk) shows its front with the inner patch on it,
