@@ -398,8 +398,8 @@ The hand — **normal** (weight 3) · **light** (1.5) · **dense** (1.5): one st
 dark cloth draws black and a pale skin light; a light hand moves one step lighter, a heavy one darker). Nothing on flat. Both the
 head and the body take the creature's density, like its material — and on a dog, a cat or an imp both take the **head color's**
 step, one mass ([../drawing.md](../drawing.md) § materials). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
-opaque, so neighbours still hide each other. Every skin, fur and cloth surface takes the same material — the head, the body, the
-ears, the muzzle, the hands, boots and sleeves, the tail, the hats — one hand, one tool per creature ([../drawing.md](../drawing.md)
+opaque, so neighbours still hide each other. Everything the creature fills takes the same material — the head, the body, the ears and their insides, the muzzle, the
+hands, boots and sleeves, the tail, the hats, the eyes, the nose, the mouth — one hand, one tool per creature ([../drawing.md](../drawing.md)
 § what takes the material). The contour is not part of it (the goofy outline, PENCIL). The calico's patches are decals in the base.
 
 ## Render order

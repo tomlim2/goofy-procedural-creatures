@@ -130,7 +130,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
       const tipX = bx + side * 0.05 + lean;
       const tipY = by + 0.24 * scale;
       ink.stroke([[bx, by], [tipX, tipY]], { color: ink0, width: 0.008 });
-      fills.fill(blobPath(tipX, tipY, 0.022 * scale, 0.022 * scale, { lumps: 3, amount: 0.2, noise: null }), ink0);
+      paintPart(fills, spec, blobPath(tipX, tipY, 0.022 * scale, 0.022 * scale, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
     } else if (kind === "ram") {
       // Ram horn curled into a spiral
       const spiral = [];

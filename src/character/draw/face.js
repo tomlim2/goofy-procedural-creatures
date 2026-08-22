@@ -59,7 +59,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
     if (patched(spec, eye)) continue;
 
     if (kind === "dot") {
-      fills.fill(blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0);
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
     } else if (kind === "sleepy") {
       ink.stroke(arcPath(eye.x, eye.y, eye.r, eye.r * 0.7, Math.PI, TAU), { color: ink0, width: 0.011 });
     } else if (kind === "cross") {
@@ -105,9 +105,9 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // the almond is raised a little (0.7r) and the pupil filled as an area, so it reads as a cat eye from a distance.
       // Inside the almond is the white — in skin tone it becomes a patch with a pupil floating in it, and on black fur or an imp the almond merges with the head
       const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, { lumps: 3, amount: 0.1, noise: null });
-      fills.fill(path, SCLERA);
+      paintPart(fills, spec, path, SCLERA, { own: true });
       fills.outline(path, { color: dark, width: 0.01 });
-      fills.fill(blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), dark);
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), dark, { own: true });
     } else if (kind === "line") {
       // A flat two-dash eye — an expressionless dash. It droops slightly on the outside
       ink.stroke([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0, width: 0.013 });
@@ -127,20 +127,20 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // What the lower arc encloses is the white — the arc starts at both ends of the lid line and goes round the bottom, so filling it whitens only below that line.
       // Above the line (the lid) is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
-      fills.fill(arc, SCLERA);
+      paintPart(fills, spec, arc, SCLERA, { own: true });
       fills.stroke(arc, { color: dark, width: 0.011 });
       fills.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark, width: 0.013 });
-      fills.fill(blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark);
+      paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark, { own: true });
     } else if (kind === "droop") {
       // ´･ω･` — drooping outer corners. A lid stroke falling outward over a dot eye (glum)
-      fills.fill(blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0);
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
       ink.stroke([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0, width: 0.011 });
     } else if (kind === "hollow") {
       // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket).
       // The fill and outline are drawn per eye into **the same sketch (fills)** — when two eyes overlap the later eye (the larger) covers the front eye's outline (no crossing line).
       // For that, smallest first: the larger eye is drawn later and so ends up in front
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // a slightly crumpled circle
-      fills.fill(path, SCLERA);
+      paintPart(fills, spec, path, SCLERA, { own: true });
       fills.outline(path, { color: dark, width: 0.011, passes: 2 });   // the white's rim is black — being on the white, it is always visible
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
       // The heavy-lidded set — **the same eye at different tilts**: lidded flat · sharp tilted toward the nose (the fierce look of a lifted outer corner) ·
@@ -168,14 +168,14 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         lid.push([x, eye.y + eye.r * (rel * 1.05) - Math.sin(Math.PI * t) * eye.r * 0.16]);
       }
       const lidLine = rot(lid);
-      fills.fill(path, SCLERA);
+      paintPart(fills, spec, path, SCLERA, { own: true });
       // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it
       const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
-      fills.fill([...lidLine, ...brow], spec.palette.skin);
+      paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
       fills.outline(path, { color: dark, width: 0.011, passes: 2 });
       // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil
       const gaze = (spec.proportions.wobbleSeed % 5 - 2) * 0.06;
-      fills.fill(rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark);
+      paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true });
       // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
       fills.stroke(lidLine, { color: dark, width: Math.max(0.011, Math.min(0.017, eye.r * 0.2)), passes: 2 });
     } else if (kind === "half") {
@@ -185,12 +185,12 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const a0 = Math.asin(lidY / eye.r);   // the angle at which the lid line meets the circle
       // What the arc encloses (below the line) is the white. Above the line is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
-      fills.fill(arc, SCLERA);
+      paintPart(fills, spec, arc, SCLERA, { own: true });
       fills.stroke(arc, { color: dark, width: 0.011, jitter: 0.006 });
       fills.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], {
         color: dark, width: 0.013
       });
-      fills.fill(blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark);
+      paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark, { own: true });
     }
     // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
     // as separate meshes to move the startle (pupil shrink), gaze and lids.
@@ -223,7 +223,7 @@ export function drawFace2(ink, fills, spec, box, eyes) {
     // The cheeks are below the eyes — with a big eye they drop below the (startle-widened) eye. So they are not covered whole by the white
     const cheekY = Math.min(box.headCy - box.headRy * 0.28, eyeFloor(spec, eyes, cx) - 0.02);
     if (kind === "blush") {
-      fills.fill(blobPath(cx, cheekY, 0.042, 0.026, { lumps: 3, amount: 0.15, noise: null }), "#d9968a");
+      paintPart(fills, spec, blobPath(cx, cheekY, 0.042, 0.026, { lumps: 3, amount: 0.15, noise: null }), "#d9968a", { own: true });
     } else {
       // freckles — three dots per cheek
       for (let i = 0; i < 3; i += 1) {
@@ -291,7 +291,7 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
     // On an ink-black head a light rim holds its shape so the black patch reads. The strap is face ink (black on a light head, light on an ink-black one)
     const eye = eyes.find((e) => e.side === spec.parts.patchSide) || eyes[0];
     const patch = blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.35, { lumps: 3, amount: 0.025, noise: fills.noise, phase: 1.3 });   // almost a circle — only a touch, so it does not jiggle as the boil runs
-    fills.fill(patch, spec.palette.ink);
+    paintPart(fills, spec, patch, spec.palette.ink, { own: true });
     if (spec.faceInk) ink.outline(patch, { color: spec.faceInk, width: 0.01, passes: 2, jitter: 0.003 });
     // The strap crosses the head
     ink.stroke([[eye.x, eye.y + eye.r * 1.3], [-eye.side * box.headRx, box.headCy + box.headRy * 0.45]], {
@@ -407,7 +407,7 @@ function catNose(ink, fills, spec, box, eyes) {
     // Triangular nose — wide at the top, pointed below, corners slightly rounded
     path = [[-w, y + h * 0.55], [-w * 0.55, y + h * 0.8], [w * 0.55, y + h * 0.8], [w, y + h * 0.55], [w * 0.4, y - h * 0.35], [0, y - h * 0.8], [-w * 0.4, y - h * 0.35]];
   }
-  fills.fill(path, "#d9968a");
+  paintPart(fills, spec, path, "#d9968a", { own: true });
   ink.outline(path, { color: ink0, width: 0.009 });
   // The philtrum — from under the nose toward the mouth. Short on hook, long on long (a Y-shaped face)
   const drop = kind === "hook" ? h * 1.1 : kind === "long" ? h * 2 : 0;
@@ -422,7 +422,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
     const muzzle = blobPath(0, m.my, m.rx, m.ry, { lumps: 3, amount: 0.1, noise: null });
     paintPart(fills, spec, muzzle, m.fill);   // the muzzle is fur — the creature's material
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
-    fills.fill(nose, spec.palette.ink);   // the nose is an object — always black
+    paintPart(fills, spec, nose, spec.palette.ink, { own: true });   // the nose is an object — always black
     if (m.dark) ink.outline(nose, { color: m.ink, width: 0.008 });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)
     return;
   }
@@ -448,19 +448,19 @@ export function drawNose(ink, fills, spec, box, eyes) {
     // Having a different silhouette from the four line noses is this nose's whole reason — at grid distance it separates as "the mass nose"
     const b = bulbShape(spec, box, eyes);
     const path = blobPath(0.003 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.1, noise: fills.noise, phase: 2.3 });
-    fills.fill(path, shade(spec.palette.skin, 0.86));
+    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
     ink.outline(path, { color: ink0, width: 0.01 });
   } else if (kind === "broad") {
     // Broad nose — a wide, low **filled triangle** (a ∇ with rounded corners). The same point layout as the cat's triangular nose but wider and in skin tones
     const { w, h, y: ny } = broadShape(spec, box, eyes);
     const path = [[-w, ny + h * 0.7], [-w * 0.2, ny + h], [w * 0.2, ny + h], [w, ny + h * 0.7], [w * 0.3, ny - h * 0.6], [0, ny - h], [-w * 0.3, ny - h * 0.6]];
-    fills.fill(path, shade(spec.palette.skin, 0.86));
+    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
     ink.outline(path, { color: ink0, width: 0.01 });
   } else if (kind === "box") {
     // Square nose — a **rounded square** area. The exponent goes higher (2.5) than the head's square (1.5) — at nose size, 1.5 just smears into a circle and does not separate from bulb
     const b = boxShape(spec, box, eyes);
     const path = blobPath(0.002 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.04, noise: fills.noise, phase: 6.7, square: 2.5 });
-    fills.fill(path, shade(spec.palette.skin, 0.86));
+    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
     ink.outline(path, { color: ink0, width: 0.01 });
   } else if (kind === "nostrils") {
     // Nostrils only — **two watermelon seeds** with no nose outline. Teardrops pointed at the top (taper +) tilted up and outward (left ＼ right ／).
@@ -471,7 +471,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
       const cx = side * s.gap;
       const seed = blobPath(0, 0, s.rx, s.ry, { lumps: 3, amount: 0.08, noise: null, taper: 0.55 });   // built about the origin, then rotated and moved
       const a = -side * tilt, cos = Math.cos(a), sin = Math.sin(a);
-      fills.fill(seed.map(([x, y]) => [cx + x * cos - y * sin, s.cy + x * sin + y * cos]), ink0);
+      paintPart(fills, spec, seed.map(([x, y]) => [cx + x * cos - y * sin, s.cy + x * sin + y * cos]), ink0, { own: true });
     }
   } else {
     // long — a long nose coming down from the forehead
@@ -497,10 +497,10 @@ export function noseBottomY(spec, box, eyes) {
 
 // The fierce eye (anger) — the eye is **redrawn**: a thick slanted lid dropping on the inner (nose) side plus a glaring dot beneath it (a dot under ＼ ／). A cyclops gets a horizontal lid.
 // Live eyes (the rig) and static eyes both use the same shape (scene/rig.js). Coordinates are relative to the eye's centre
-export function angryEyeSketch(sketch, eye, ink) {
+export function angryEyeSketch(sketch, eye, ink, spec) {
   const r = eye.r;
   const inward = -eye.side;   // the nose side (0 on a cyclops)
   const lid = inward === 0 ? [[-r * 0.95, r * 0.45], [r * 0.95, r * 0.45]] : [[-inward * r * 0.95, r * 0.55], [inward * r * 0.95, r * 0.05]];
   sketch.stroke(lid, { color: ink, width: 0.015, jitter: 0.004 });
-  sketch.fill(blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink);
+  paintPart(sketch, spec, blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink, { own: true });
 }

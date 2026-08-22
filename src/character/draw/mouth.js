@@ -5,6 +5,7 @@
 // The kind table for state switching (rest, alt, angry, ^^) is faceStates.js.
 
 import { blobPath, arcPath } from "../../stroke.js";
+import { paintPart } from "./body.js";
 import { TAU, eyeGeometry } from "./layout.js";
 import { eyeFloor, noseBottomY, muzzleGeometry } from "./face.js";
 
@@ -46,13 +47,13 @@ export function mouthPlacement(spec, box) {
 // The cavity is always **dark ink (palette ink)** and the rim is face ink — on a light face the rim matches the cavity and is lost; on a dark face a light rim holds the mouth's shape.
 // Filling the cavity with light face ink leaves nothing but an empty bright blob on an imp's face (which reads as a mistake). Teeth are a white strip plus dark lines (edge)
 function cavity(m, pts) {
-  m.fills.fill(pts, m.spec.palette.ink);
+  paintPart(m.fills, m.spec, pts, m.spec.palette.ink, { own: true });
   m.ink.stroke([...pts, pts[0]], { color: m.ink0, width: 0.01 });
 }
 // A tooth strip — h tall, going up (dir −1: down from the upper lip) or down (dir +1). Vertical lines divide the teeth
 function teethStrip(m, x0, x1, edgeY, h, dir, count) {
   const inner = edgeY + dir * h;
-  m.fills.fill([[x0, edgeY], [x1, edgeY], [x1, inner], [x0, inner]], TOOTH);
+  paintPart(m.fills, m.spec, [[x0, edgeY], [x1, edgeY], [x1, inner], [x0, inner]], TOOTH, { own: true });
   m.ink.stroke([[x0, inner], [x1, inner]], { color: m.edge, width: 0.006 });
   for (let i = 1; i < count; i += 1) {
     const x = x0 + ((x1 - x0) * i) / count;
@@ -75,7 +76,7 @@ function bowl(m, hw, depth, teeth = true) {
 // The tooth grid — vertical lines inside a wide, flat rounded rectangle (white fill plus outline). The reference's signature mouth (a growl, tension, an imp's open mouth)
 function grid(m, hw, hh, bars) {
   const box = blobPath(m.x, m.y, hw, hh, { lumps: 3, amount: 0.04, noise: null, square: 2 });
-  m.fills.fill(box, TOOTH);
+  paintPart(m.fills, m.spec, box, TOOTH, { own: true });
   m.ink.outline(box, { color: m.edge, width: 0.011 });
   for (let i = 1; i <= bars; i += 1) {
     const x = m.x - hw + (2 * hw * i) / (bars + 1);
@@ -85,7 +86,7 @@ function grid(m, hw, hh, bars) {
 // Tongue — a pink mass hanging below the mouth plus a centre line
 function tongueBlob(m, cx, top, rx, ry) {
   const t = blobPath(cx, top - ry, rx, ry, { lumps: 3, amount: 0.1, noise: null });
-  m.fills.fill(t, PINK);
+  paintPart(m.fills, m.spec, t, PINK, { own: true });
   m.ink.outline(t, { color: m.ink0, width: 0.008 });
   m.ink.stroke([[cx, top - ry * 0.3], [cx + 0.001, top - ry * 1.6]], { color: m.ink0, width: 0.006 });
 }
@@ -95,7 +96,7 @@ function fangs(m, hw, drop) {
   for (const s of [-1, 1]) {
     const fx = m.x + s * hw * 0.55;
     const tri = [[fx - half, m.y + 0.002], [fx + half, m.y + 0.002], [fx + s * 0.003, m.y - drop]];
-    m.fills.fill(tri, TOOTH);
+    paintPart(m.fills, m.spec, tri, TOOTH, { own: true });
     m.ink.outline(tri, { color: m.edge, width: 0.008 });
   }
 }
@@ -146,7 +147,7 @@ export const MOUTH = {
     const hw = m.w * 1.05, top = m.y + 0.004, depth = Math.max(0.016, Math.min(0.03, m.openH * 0.7));
     const seg = [];
     for (let i = 0; i <= 12; i += 1) { const t = (i / 12) * Math.PI; seg.push([m.x - hw * Math.cos(t), top - depth * Math.sin(t)]); }
-    m.fills.fill(seg, TOOTH);
+    paintPart(m.fills, m.spec, seg, TOOTH, { own: true });
     m.ink.stroke(seg, { color: m.edge, width: 0.011 });
     m.ink.stroke([[m.x - hw, top], [m.x + hw, top + 0.002]], { color: m.edge, width: 0.01 });
     for (const k of [-0.33, 0.33]) m.ink.stroke([[m.x + hw * k, top], [m.x + hw * k + 0.001, top - depth * 0.7]], { color: m.edge, width: 0.007 });
@@ -174,7 +175,7 @@ export const MOUTH = {
     m.ink.stroke([[m.x - hw * 1.08, top + 0.003], [m.x + hw * 1.08, top]], { color: m.ink0, width: 0.012 });
   },
   // Meow — a small filled vertical ellipse (a cat's open mouth)
-  meow: (m) => m.fills.fill(blobPath(m.x, m.y - 0.004, 0.013, Math.max(0.016, Math.min(0.024, m.openH * 0.55)), { lumps: 3, amount: 0.12, noise: null }), m.ink0),
+  meow: (m) => paintPart(m.fills, m.spec, blobPath(m.x, m.y - 0.004, 0.013, Math.max(0.016, Math.min(0.024, m.openH * 0.55)), { lumps: 3, amount: 0.12, noise: null }), m.ink0, { own: true }),
   // Bracket mouth )-( — a short flat mouth with inward-bulging cheek-crease brackets. The Adventure Time "hmm…" (a closed mouth with the cheeks pressed in)
   bracket: (m) => {
     const hw = m.w * 0.55, bh = Math.max(0.012, Math.min(0.02, m.openH * 0.45));
@@ -189,7 +190,7 @@ export const MOUTH = {
   blep: (m) => {
     MOUTH.omega(m);
     const t = blobPath(m.x, m.y - 0.012, 0.011, 0.012, { lumps: 3, amount: 0.1, noise: null });
-    m.fills.fill(t, PINK);
+    paintPart(m.fills, m.spec, t, PINK, { own: true });
     m.ink.outline(t, { color: m.ink0, width: 0.006 });
   }
 };

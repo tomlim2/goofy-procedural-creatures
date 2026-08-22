@@ -91,20 +91,18 @@ shading. The cheek and forehead hatch are the same thing (an occlusion). Until i
 
 ## What takes the material
 
-One tool per creature: **every skin, fur and cloth surface** takes the creature's `material` (and its value
-step), through `paint` — the head and the body directly, and every other surface through `paintPart` in
-`draw/body.js`: the ears (standing, hanging, folded, the flap), the muzzle, the hands, the boots and sleeves,
-the tail and its ends, and the hats (an object of its own color, so at its own color's step — `own`). A dog, a
-cat or an imp is one mass, so all of its surfaces share the head color's step (`surfaceValue`); a human's take
-their own color's.
+One tool per creature: **everything a creature fills takes its `material`**, through `paint` — the head and
+the body directly, everything else through `paintPart` in `draw/body.js`. A skin, fur or cloth surface (the
+ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes the creature's value step — one
+mass on a dog, a cat or an imp (`surfaceValue`), its own color's on a human. A detail or an object — the hats,
+the inner ear, the eyes (whites, pupils, irises, highlights, the static eyes, the star and heart eyes, the angry
+eye), the nose, the mouth's inside, teeth and tongue, the blush, the freckles, the eye patch, the cheek and
+forehead shade patches, the horn tip — takes its **own color's** step (`own`): a white eye is drawn light, a
+black nose black, whatever the creature's hand. The only flat fills left are the emoji, which are not a
+creature's part.
 
-What does **not** take the material, by design: the eyes (whites, pupils, irises, highlights, the static eyes),
-the nose (an object — always black), the mouth's inside, teeth and tongue, the blush and the freckles, the eye
-patch, the inner ear and the cheek and forehead shade patches (tone patches over the surface, the light's job
-later), the emoji. These are details and objects, not surfaces; they are drawn flat.
-
-Adding a surface part means painting it through `paintPart`, never `fill` — a `fill` on a skin, fur or cloth
-surface is a bug (it stands flat beside a hatched head).
+Adding a filled part means painting it through `paintPart`, never `fill` — a `fill` on a creature is a bug
+(it stands flat beside a hatched head).
 
 ## Decals — what sits on a surface
 

@@ -1,6 +1,7 @@
 // Assembling an individual's rig. Hierarchy, origins and renderOrder are in guidelines/rig.md; mesh and material counts in guidelines/performance.md.
 
 import * as THREE from "three";
+import { paintPart } from "../character/draw/body.js";
 import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath, angryEyeSketch, STATIC_EYE_KEYS } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
@@ -29,7 +30,7 @@ const LID_STYLE = {
   rig: { shutY: 0.1, shutWobble: 0.5, shutWidth: 0.012 },
   static: { shutY: 0.15, shutWobble: 0.4, shutWidth: 0.011 }
 };
-function lidSketches(eye, ink, noise, style) {
+function lidSketches(eye, ink, noise, style, spec) {
   const s = LID_STYLE[style];
   const shut = new Sketch(noise, s.shutWobble);
   shut.stroke(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink, width: s.shutWidth });
@@ -37,7 +38,7 @@ function lidSketches(eye, ink, noise, style) {
   smile.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink, width: 0.013 });
   // Anger — the fierce eye (an inward-down slanted lid plus a glaring dot). While angry, the open eye is switched off and this stands instead (character/draw/face.js angryEyeSketch)
   const angry = new Sketch(noise, 0.5);
-  angryEyeSketch(angry, eye, ink);
+  angryEyeSketch(angry, eye, ink, spec);
   return { shut, smile, angry };
 }
 
@@ -220,19 +221,19 @@ export function buildCreature(spec, noise, birth = 0) {
     // Not a perfect circle but a slightly crumpled hand-drawn one — given noise (a different phase per eye). The white and rim are one mesh (fill below, rim above)
     const wob = { lumps: 3, amount: 0.06, noise, phase: eye.side * 3.7 + spec.seed * 0.001 };
     const white = new Sketch(noise, 0.4);
-    white.fill(blobPath(0, 0, rx, ry, wob), "#f6f2e9");
+    paintPart(white, spec, blobPath(0, 0, rx, ry, wob), "#f6f2e9", { own: true });
     const rim = new Sketch(noise, 0.6);
     rim.outline(blobPath(0, 0, rx, ry, { ...wob, lumps: 4, amount: 0.07 }), { color: spec.palette.ink, width: 0.011, passes: 2 });
     open.add(sketchMesh([white, rim], 1, o));
 
     const pupilSketch = new Sketch(noise, 0.4);
-    pupilSketch.fill(blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink);
+    paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink, { own: true });
     const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
     open.add(pupil);
     rig.add(open);
 
     // ^^ (smile) — happily closed eyes · the shut line (shut) — when the lid is all the way down (the peak of a blink, sleep). The open eye is switched off and this arch stands instead — so a closed eye does not become a blank face
-    const lids = lidSketches(eye, faceInk, noise, "rig");
+    const lids = lidSketches(eye, faceInk, noise, "rig", spec);
     const smile = sketchMesh(lids.smile, 1, o + 0.35);
     smile.visible = false;
     rig.add(smile);
@@ -255,7 +256,7 @@ export function buildCreature(spec, noise, birth = 0) {
   // layer (frames) is switched off (animate) and the arch stands instead — layers being per eye, only the winking side changes and the other eye stays. It pairs with a live eye's open/shut/smile
   const staticLids = [];
   for (const { key, eye } of firstDrawn.staticEyes) {
-    const lids = lidSketches(eye, faceInk, noise, "static");
+    const lids = lidSketches(eye, faceInk, noise, "static", spec);
     const shut = sketchMesh(lids.shut, 1, 3.6);
     const smile = sketchMesh(lids.smile, 1, 3.6);
     const angry = sketchMesh(lids.angry, 1, 3.6);
@@ -273,11 +274,11 @@ export function buildCreature(spec, noise, birth = 0) {
   for (const eye of allEyes) {
     const starSketch = new Sketch(noise, 0.5);
     const star = starPath(0, 0, eye.r * 1.1);
-    starSketch.fill(star, "#f6f2e9");
+    paintPart(starSketch, spec, star, "#f6f2e9", { own: true });
     starSketch.outline(star, { color: spec.palette.ink, width: 0.01, step: 0.006 });
     const heartSketch = new Sketch(noise, 0.5);
     const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
-    heartSketch.fill(heart, "#c9666a");
+    paintPart(heartSketch, spec, heart, "#c9666a", { own: true });
     heartSketch.outline(heart, { color: spec.palette.ink, width: 0.01, step: 0.006 });
     const starMesh = sketchMesh(starSketch, 1, 6.32);
     const heartMesh = sketchMesh(heartSketch, 1, 6.32);

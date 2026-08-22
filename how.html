@@ -130,8 +130,8 @@ contour is the goofy outline, above). The color always comes from the part, and 
 shade of that color. A part names one and hands over the path and the color —
 <code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself. On the board each
 creature's head and body take the creature's <b>material</b> (a slot: FLAT for most, GRAPHITE, INK, OIL or CHARCOAL
-for the rest) — and so do its ears, muzzle, hands, boots, sleeves, tail and hat: every skin, fur and cloth surface, one tool
-per creature — at its <b>density</b> (another slot: a light hand, a normal one, a heavy one); its <b>pattern</b> (stripes,
+for the rest) — and so does everything it fills, ears and tail, eyes and nose, teeth and hat: one tool per creature,
+the details at their own colour's step — at its <b>density</b> (another slot: a light hand, a normal one, a heavy one); its <b>pattern</b> (stripes,
 dots, spots, hatching — a third slot) is drawn inside the base colour. The table is <code>MATERIALS</code> in
 <code>src/stroke.js</code>; every entry gets a row of shader balls — the same ball in the same color at the five
 <b>value</b> steps, <b>black · hatch · scribble · stipple · light</b> (the reference's scale, named for the way graphite

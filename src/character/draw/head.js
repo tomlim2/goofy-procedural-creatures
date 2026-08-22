@@ -169,7 +169,7 @@ export function drawCatEars(ink, fills, spec, box) {
     const innerTip = [bx + ax * def.h * 0.7, by + ay * def.h * 0.7];
     const innerBase = [baseAt(-def.w * 0.62, 0.012), innerTip, baseAt(def.w * 0.62, 0.012)];
     if (inner === "line") ink.stroke(innerBase, { color: earInnerInk, width: 0.008 });
-    else if (inner === "dark") fills.fill(innerBase, innerFill);
+    else if (inner === "dark") paintPart(fills, spec, innerBase, innerFill, { own: true });
     // The crease — one line from the middle of the root to half the ear's height (it reads as a fold mark)
     else if (inner === "notch") ink.stroke([baseAt(0, 0.012), [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: earInnerInk, width: 0.008 });
   }
@@ -294,7 +294,7 @@ export function drawPupEars(ink, fills, spec, box) {
     // Only hanging ears (flap, long) are skipped — that pose shows the ear's **outer** face. A folded ear is drawn here too, because **its root (the standing part) is the inner face**
     if (innerFill && kind !== "flap" && kind !== "long") {
       const root = [anchor.x + nx * 0.004, anchor.y + ny * 0.004];   // just outside the outline — the root position
-      fills.fill(path.map(([x, y]) => [root[0] + (x - root[0]) * 0.72, root[1] + (y - root[1]) * 0.72]), innerFill);
+      paintPart(fills, spec, path.map(([x, y]) => [root[0] + (x - root[0]) * 0.72, root[1] + (y - root[1]) * 0.72]), innerFill, { own: true });
     }
     if (baseOutline) ink.stroke(baseOutline, earInk);
     else ink.outline(path, earInk);
