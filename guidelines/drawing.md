@@ -82,21 +82,23 @@ per entry by itself.
 
 ## Materials — how a surface is filled
 
-A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as layers. A
-`base` colour layer — the fill-up (`flat`, optionally a tone of the color) or a `wash` — always opaque (on the
+A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as channels.
+The `base` colour — the fill-up (`flat`, optionally a tone of the color) or a `wash` — always opaque (on the
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
-and `layers`, the textures stacked on it — `hatch`, `scratch`, `bloom`, `dab`, `speckle`, `band` — each clipped
-to the contour (`clipSegment`, `insidePath` in `stroke.js`), any stack of them: a material is a base and its
-textures, the way a 3D material is a base color and its maps. That is the material, and nothing else. The color
-always comes from the part; a material knows no colors of its own, and every tone a layer adds is a shade of
-the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a material and hands
-over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
+and its `texture` — `hatch`, `scratch`, `bloom`, `dab`, `speckle` or `band` — a pattern laid over it, clipped to
+the contour (`clipSegment`, `insidePath` in `stroke.js`). Both paint the same thing, the colour of the surface —
+base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
+62% graphite, vertex alpha), `grain` (the paper showing through) — is not built; it would be a new key, not a
+second texture (two patterns on one surface are one texture's composition). That is the material, and nothing
+else. The color always comes from the part; a material knows no colors of its own, and every tone the texture
+adds is a shade of the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a
+material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
 The table is `MATERIALS` in `stroke.js`; an unknown name throws, so a misspelt material cannot silently draw
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
 way, its contour the board's PENCIL — so the table cannot drift from what is seen.
 
-| Material | base | layers | On the board |
+| Material | base | texture | On the board |
 | --- | --- | --- | --- |
 | `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the head, the body, the calico patches — **everything today** |
 | `GRAPHITE` | `flat`, a pale tone | `hatch` — thin pencil strokes, nearly upright | — |
@@ -106,9 +108,9 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | `CHARCOAL` | `flat` | `speckle` — dark specks | — |
 | `MARKER` | `flat` | `band` — wide even diagonal bands of a deeper tone | — |
 
-The medium page shows each ball's layers one by one under it — the base alone, then each texture alone
-(`paint(…, { only })`). A new material is a new row: a base and a stack; a new texture is a new layer kind in
-`paint()`.
+The medium page shows each ball's channels under it — the base colour alone, then the texture alone
+(`paint(…, { only })`). A new material is a new row: a base and a texture; a new pattern is a new texture kind
+in `paint()`.
 
 `Sketch.fill()` is FLAT itself; the parts that still call it directly (ears, eyes, teeth…) are drawing FLAT
 without naming it — naming the material is the direction, one part at a time, with `drawdiff` proving the

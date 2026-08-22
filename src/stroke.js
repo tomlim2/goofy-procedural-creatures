@@ -95,29 +95,31 @@ export const PENCIL = {
   grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
 };
 
-// Materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as layers. `base` is the base color
-// layer — the fill-up (flat) or a wash — always opaque (on the board the one in front has to hide the one behind), printed out of
-// register, in the part's color or a tone of it. `layers` are the textures stacked on it — hatch, scratch, bloom, dab, speckle, band —
-// each clipped to the contour, combinable: a material is a base and any stack of textures. That is the material, and nothing else:
-// the contour is a separate concept (GOOFY_OUTLINES, below). The color always comes from the part; every tone a layer adds is a
-// shade of that color (lighter on a dark color, darker on a light one). A part names a material and hands over the path and the
-// color — it never picks a technique itself. The medium page draws one shader ball per entry, and its layers one by one under it.
-// Docs: guidelines/drawing.md § materials. (Not the GPU materials — those live in scene/mesh.js.)
+// Materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as channels. `base` is the base
+// color — the fill-up (flat) or a wash — always opaque (on the board the one in front has to hide the one behind), printed out of
+// register, in the part's color or a tone of it. `texture` is the base color's texture — hatch, scratch, bloom, dab, speckle or band
+// — a pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
+// different thing (opacity — the reference's 62% graphite; grain — the paper showing through) is not built, and would be a new key,
+// not a second texture. That is the material, and nothing else: the contour is a separate concept (GOOFY_OUTLINES, below). The
+// color always comes from the part; every tone the texture adds is a shade of that color (lighter on a dark color, darker on a
+// light one). A part names a material and hands over the path and the color — it never picks a technique itself. The medium page
+// draws one shader ball per entry, and its channels under it. Docs: guidelines/drawing.md § materials.
+// (Not the GPU materials — those live in scene/mesh.js.)
 export const MATERIALS = {
   // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
   FLAT:        { base: { kind: "flat" } },
   // Graphite — a pale ground, hatched with thin pencil strokes, nearly upright and a little slanted
-  GRAPHITE:    { base: { kind: "flat", tone: 1.15 }, layers: [{ kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, tone: 0.6 }] },
+  GRAPHITE:    { base: { kind: "flat", tone: 1.15 }, texture: { kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, tone: 0.6 } },
   // Ink — solid, scratched: a few long light lines dragged across the dark
-  INK:         { base: { kind: "flat" }, layers: [{ kind: "scratch", lines: 6, width: 0.005, tone: 1.35 }] },
+  INK:         { base: { kind: "flat" }, texture: { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 } },
   // Watercolour — a pale wash with a second wash out of register, and a bloom inside
-  WATERCOLOUR: { base: { kind: "wash", pale: 1.12, drift: 0.022 }, layers: [{ kind: "bloom", tone: 1.18 }] },
+  WATERCOLOUR: { base: { kind: "wash", pale: 1.12, drift: 0.022 }, texture: { kind: "bloom", tone: 1.18 } },
   // Oil — thick short dabs in three tones along one diagonal, the ground covered
-  OIL:         { base: { kind: "flat" }, layers: [{ kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] }] },
+  OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] } },
   // Charcoal — a ground dusted with dark specks
-  CHARCOAL:    { base: { kind: "flat" }, layers: [{ kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 }] },
+  CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 } },
   // Marker — wide diagonal bands of a deeper tone over the flat, blunt and even
-  MARKER:      { base: { kind: "flat" }, layers: [{ kind: "band", angle: 1.05, width: 0.026, gap: 0.066, tone: 0.86 }] }
+  MARKER:      { base: { kind: "flat" }, texture: { kind: "band", angle: 1.05, width: 0.026, gap: 0.066, tone: 0.86 } }
 };
 
 // Outlines — the goofy outline: what a creature's contour is drawn with. A separate concept from the materials (a contour
@@ -302,15 +304,14 @@ export class Sketch {
     this.triangle(p[0] - nx, p[1] - ny, q[0] - nx, q[1] - ny, q[0] + nx, q[1] + ny, rgb);
   }
 
-  // Fills with a named material — its base, then its texture layers, every mark clipped to the contour. offset prints the base out
-  // of register (a creature's fillOffset). only: "base" or a layer index draws that layer alone (the medium page's layer chips).
+  // Fills with a named material — its base color, then its texture, every mark clipped to the contour. offset prints the base out
+  // of register (a creature's fillOffset). only: "base" or "texture" draws that channel alone (the medium page's channel chips).
   // Every tone is a shade of the part's color — the material knows no colors of its own
   paint(points, name, { color, offset = [0, 0], only } = {}) {
     const m = MATERIALS[name];
     if (!m) throw new Error(`unknown material: ${name}`);
-    const layers = m.layers || [];
     const wantBase = only === undefined || only === "base";
-    if (m.base.kind === "flat" && layers.length === 0) {   // the fill-up alone — no randomness, the phase untouched
+    if (m.base.kind === "flat" && !m.texture) {   // the fill-up alone — no randomness, the phase untouched
       if (wantBase) this.fill(points, color, offset);
       return;
     }
@@ -330,10 +331,11 @@ export class Sketch {
       } else throw new Error(`material ${name}: unknown base kind ${base.kind}`);
     }
 
-    layers.forEach((f, index) => {
-      if (only !== undefined && only !== index) return;
-      const u = (k) => noise(ph * 0.29 + (k + index * 5000) * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
-      const h = (k) => hash01(Math.round(ph * 997) + (k + index * 5000) * 7919);   // a scattered one — neighbours unrelated
+    const f = m.texture;
+    if (!f || (only !== undefined && only !== "texture")) return;
+    {
+      const u = (k) => noise(ph * 0.29 + k * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
+      const h = (k) => hash01(Math.round(ph * 997) + k * 7919);   // a scattered one — neighbours unrelated
       switch (f.kind) {
         case "hatch": {
           const tone = contrast(f.tone);
@@ -393,9 +395,9 @@ export class Sketch {
           break;
         }
         default:
-          throw new Error(`material ${name}: unknown layer kind ${f.kind}`);
+          throw new Error(`material ${name}: unknown texture kind ${f.kind}`);
       }
-    });
+    }
   }
 
   // A small axis-aligned square — the pencil's crumbs and bites

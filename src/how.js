@@ -191,21 +191,20 @@ Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("
   ink.fur(arcPath(0, 0.02, 0.17, 0.17, Math.PI * 0.15, Math.PI * 0.85, 12), name, { color: INK });
 }));
 // Shader balls — one per entry of MATERIALS, like a 3D material preview: the same ball in the same color, filled the material's
-// way (the contour is the board's outline, PENCIL — a material is only the filling). Under the ball, its layers one by one as
-// small chips — the base alone, then each texture alone — the way a material editor previews its channels
+// way (the contour is the board's outline, PENCIL — a material is only the filling). Under the ball, its channels as small chips —
+// the base color alone, then the texture alone — the way a material editor previews its channels
 Object.keys(MATERIALS).forEach((name, i) => {
   const m = MATERIALS[name];
-  const layers = m.layers || [];
   const el = document.createElement("figure");
   el.dataset.fig = `material:${name}`;
-  el.innerHTML = `<canvas></canvas><div class="subs"><span>${name.toLowerCase()} · ${[`base ${m.base.kind}`, ...layers.map((l) => l.kind)].join(" + ")}</span></div>`;
+  el.innerHTML = `<canvas></canvas><div class="subs"><span>${name.toLowerCase()} · base ${m.base.kind}${m.texture ? ` + texture ${m.texture.kind}` : ""}</span></div>`;
   document.getElementById("materialBalls").appendChild(el);
   fig(`material:${name}`, [-0.33, -0.32, 0.33, 0.27], (sk) => {
     const fills = sk(), ink = sk();
     const ball = blobPath(0, 0.04, 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 });
     fills.paint(ball, name, { color: FILLS[2], offset: [0.012, -0.01] });
     ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
-    const chips = ["base", ...layers.map((_, j) => j)];
+    const chips = m.texture ? ["base", "texture"] : ["base"];
     chips.forEach((only, j) => {
       const x = (j - (chips.length - 1) / 2) * 0.13;
       const chip = blobPath(x, -0.245, 0.05, 0.05, { lumps: 4, amount: 0.06, noise, phase: 150 + i * 7 + j * 3 });
