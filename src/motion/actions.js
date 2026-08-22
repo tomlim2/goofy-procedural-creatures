@@ -25,7 +25,7 @@ export const ARM_POSES = {
   raise:  { hand: [0.45, 0.88], bend: "out" },
   hi:     { hand: [0.3, 0.95], bend: "out" },
   wave:   { hand: [0.5, 0.7], bend: "out", osc: { shoulder: 0, elbow: 0.5, hz: 3 } },
-  flap:   { hand: [0.75, 0.5], bend: "out", osc: { shoulder: 0.28, elbow: 0.12, hz: 5 } },
+  flap:   { hand: [0.75, 0.5], bend: "out", osc: { shoulder: 0.28, elbow: 0.12, hz: 4 } },   // 4 Hz — 6 ticks a cycle at 24; 5 strobed
   point:  { hand: [0.95, 0.3], bend: "down" },
   hips:   { hand: "hip", bend: "out" },
   cross:  { hand: "chestFar", bend: "down" },
@@ -76,7 +76,7 @@ export function jumpCurve(tau, def) {
 //   osc   oscillation laid on without easing { amp, hz }. tail: oscillation laid on the tail
 export const QUAD_ACTIONS = {
   scratch: { leg: "hind",  angle: -0.9, osc: { amp: 0.15, hz: 6 }, hold: [1, 2.2],  label: "scratching with a hind paw" },
-  wag:     { tail: { osc: { amp: 0.35, hz: 4 } },                   hold: [1.5, 3],  label: "wagging the tail", emoji: "heart" }
+  wag:     { tail: { osc: { amp: 0.35, hz: 3 } },                   hold: [1.5, 3],  label: "wagging the tail", emoji: "heart" }   // 3 Hz — 8 ticks a cycle at 24 (4 strobed)
 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

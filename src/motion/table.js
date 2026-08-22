@@ -45,7 +45,7 @@ export const MOTION = {
     modes: [["idle", 3], ["sleep", 1], ["walk", 1.5], ["sit", 1.5]], modeHold: { idle: [40, 120], sleep: [25, 60], walk: [6, 16], sit: [15, 45] },
     walk: { hz: 2.6, leg: 0.32, bob: 0.008, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.07, tail: 0.12 },   // a trot — diagonal leg pairs alternate, and the tail sways with the step
     quadActions: [["wag", 3.5], ["scratch", 1]], quadActionGap: [6, 16],   // dogs wag often
-    wagOnHappy: { amp: 0.35, hz: 4 },   // the tail wags whenever it smiles ^^ (a happy hold or a ^^ blink)
+    wagOnHappy: { amp: 0.35, hz: 3 },   // the tail wags whenever it smiles ^^ (a happy hold or a ^^ blink). 3 Hz — 8 ticks a cycle at 24; at 4 Hz the wag strobed (6 ticks: up·up·mid·down·down·mid)
     // The reference dog's legs are planted for the full 4 seconds. The body sways and the legs only look like they follow.
     legTap: [14, 32], legStep: [30, 70],
     sway: [0.004, 0.01], swayPeriod: [3, 6],
@@ -92,10 +92,10 @@ export const MOTION = {
     // Anger — 3~5 s every 25~60 s. Fierce eyes and a bared-tooth mouth, and the tail fur stands up meanwhile (tailTip.puff). Dogs do not have it yet (null)
     angry: [25, 60], angryHold: [3, 5],
     // The cat tail — the opposite of a dog's: fast movement is irritation or excitement, and joy is **holding it up**. Tip-bone motion stacks on the slow swish (rhythm).
-    //   follow follow-through (the tip lags behind the root's velocity) · twitch the tip alone tapping (the tailFlick interval applied to the tip bone) ·
+    //   follow follow-through (the tip lags behind the root's velocity) · twitch the tip alone tapping (the tailFlick interval and shape — events.js, 3 cycles in 0.5 s — applied to the tip bone; amp scales it) ·
     //   raise held up when in a good mood (during a ^^) — every joint exactly vertical, no bent variant (true/null) · puff the bristle multiplier (**while angry**, thickness only — the anger envelope 0.1/hold/0.1 as it is)
     tailSwish: { amp: [0.16, 0.3], period: [2.4, 5] }, tailFlick: [8, 20],
-    tailTip: { follow: 0.06, twitch: { amp: 0.35, hz: 6, dur: 0.5 }, raise: true, puff: 1 },   // there is no lash — a cat lashing its tail is forbidden as a motion
+    tailTip: { follow: 0.06, twitch: { amp: 0.35 }, raise: true, puff: 1 },   // there is no lash — a cat lashing its tail is forbidden as a motion
     surprise: [9, 24], yaw: 0.8,
     // Cats rarely, and they stare for a long time
     look: [8, 20], lookHold: [2, 5], lookAmp: [0.9, 0.9],

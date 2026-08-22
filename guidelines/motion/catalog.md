@@ -139,7 +139,7 @@ When and which action happens is `stepArmAction` in `states.js` (the per-species
 | cross | both | The hands at the far side of the chest (the chestFar anchor) | 3~7 | arms crossed | 2 | — |
 | hips | both | The hands at the waist (the hip anchor), elbows out | 3~7 | hands on hips | 2 | 1.5 |
 | behind | both | Behind the body (the back sketch) | 3~7 | hands behind the back | 1.5 | 1 |
-| flap | both | Shoulder ±0.28, elbow ±0.12 rad at 5Hz | 1.5~3 | flapping (fond) + ♥ | 1 | 2 |
+| flap | both | Shoulder ±0.28, elbow ±0.12 rad at 4Hz (6 ticks a cycle at 24 — 5Hz strobed) | 1.5~3 | flapping (fond) + ♥ | 1 | 2 |
 
 Firing measures at 2.4/min on humans and 2.8/min on imps, split evenly left and right (measured over 60 s × 40 individuals). Quads (cat, pup) have no arms — see § quad idle and actions below.
 There is no action for letting the arms hang — that is idle.
@@ -156,7 +156,7 @@ The rig description comes from character: `armRig(spec)` in `character/draw/limb
 `makeClock(seed, birth, species, armRig(spec))`. All of it is static dimensions coming from the spec.
 
 Laid on top of an action: the arm pendulum (anti-phase to the sway), arms-up on a jump and joint jitter are added to the shoulder angle, and half of that to the elbow.
-The oscillation of a wave or a flap (`osc`) is laid straight onto the rig rotation without easing — through easing, 3~5Hz gets smeared out.
+The oscillation of a wave or a flap (`osc`) is laid straight onto the rig rotation without easing — through easing, 3~4Hz gets smeared out.
 Going into and out of an action, a 0.35 s envelope fades it so the arm does not snap the moment it ends.
 The front/back (hands behind the back) switch only happens once the shoulder angle is back within 0.35 rad of the target.
 
@@ -228,7 +228,7 @@ Actions stack over idle and any leg or tail not decided stays at idle. The rig i
 | Action | What | Hold (s) | Meaning | pup | cat |
 | --- | --- | --- | --- | --- | --- |
 | scratch | One hind leg to −0.9 rad (forward and up) plus ±0.15 rad at 6Hz | 1~2.2 | scratching with a hind paw | 1 | 1 |
-| wag | The tail ±0.35 rad at 4Hz | 1.5~3 | wagging the tail (dogs only — a cat does not wag like a dog. Forced from the ACTION card a cat still idles, and the walking tail sway is dogs-only too, `walk.tail`) | 2.5 | — |
+| wag | The tail ±0.35 rad at 3Hz (8 ticks a cycle at 24 — 4Hz strobed) | 1.5~3 | wagging the tail (dogs only — a cat does not wag like a dog. Forced from the ACTION card a cat still idles, and the walking tail sway is dogs-only too, `walk.tail`) | 2.5 | — |
 
 Interval pup 8~22 s / cat 10~28 s. Which leg is drawn within the pair at the start (`actionSide` = the leg index).
 The oscillation goes onto `legOsc` (legs) and `tailAngle` (the tail) without easing, faded by a 0.35 s envelope. There is no raise-a-front-paw-and-wave action — it looks human.
