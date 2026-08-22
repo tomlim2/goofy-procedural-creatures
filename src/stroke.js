@@ -88,10 +88,11 @@ export const PENCIL = {
   over: [0.35, 1.1],                   // the overshoot past each end, in widths
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
-  // An ink crumb lands outside the edge, scatter × the half width out; a bite (the bite share of crumbs) is a paper-coloured square
+  // An ink crumb sits on the edge, its centre scatter × the half width out — never past the edge, so it frays the line instead of
+  // floating loose beside it; a bite (the bite share of crumbs) is a paper-coloured square
   // inside, up to inside × the half width from the spine. A crumb's side is size (world) — fixed, not a share of the width:
   // graphite sheds the same grain whether the line is thin or thick, so a thick line does not shed boulders
-  grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [1.05, 1.5], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
+  grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
 };
 
 export class Sketch {
