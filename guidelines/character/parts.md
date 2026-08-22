@@ -29,7 +29,7 @@ Built from `blobPath`'s superellipse (angularity), taper (the top/bottom width r
 | egg | 0.2 | +0.28 | 0.94 / 1.14 | A tall egg |
 | block | 2.2 | 0 | 1.06 / 0.98 | Almost square |
 
-Noise lumps (headLumps) are laid on top of the head. (The pencil scribble fill that covered it is off for now — it could not be clipped to the contour; it returns as the light's shade, [../drawing.md](../drawing.md) § the light.)
+Noise lumps (headLumps) are laid on top of the head. No shading — that is the light's job ([../drawing.md](../drawing.md) § the light).
 
 ### eyes — eye kinds (20)
 | Value | Drawing | Alive (pupil, blink) |
@@ -255,7 +255,7 @@ A white fill (the grid, grin, fangs, tooth strips) is paper white and the rims a
 ## Body
 
 ### body (4)
-bean (a crumpled ellipse) / box / dress (a bottom-heavy trapezoid) / tube (a narrow tube). Fill (+ the scribble shading, off for now — see the head) + outline.
+bean (a crumpled ellipse) / box / dress (a bottom-heavy trapezoid) / tube (a narrow tube). Fill + outline.
 A quad is a horizontal blob regardless of the slot value.
 
 ### build — the build (5)

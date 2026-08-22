@@ -219,7 +219,7 @@ fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {   // the demonstration of the 
   const fills = sk(), ink = sk();
   const head = blobPath(0, 0, 0.27, 0.24, { lumps: 5, amount: 0.07, noise, phase: 71, square: 0.4, taper: 0.08 });
   fills.fill(head, FILLS[2], [0.022, -0.018]);
-  for (const side of [-1, 1]) fills.scribbleFill(side * 0.17, -0.05, 0.045, 0.028, { color: BLUSH, gap: 0.02, width: 0.006 });
+  for (const side of [-1, 1]) fills.fill(blobPath(side * 0.17, -0.05, 0.04, 0.026, { lumps: 3, amount: 0.15, noise, phase: 5 + side }), BLUSH);   // the blush — a flat blob, as on the board
   ink.outline(head, { color: INK, width: 0.012, passes: 2 });
   for (const side of [-1, 1]) ink.stroke([[side * 0.09 - 0.015, 0.05], [side * 0.09 + 0.015, 0.05]], { color: INK, width: 0.017 });
   ink.stroke(arcPath(0, -0.05, 0.06, 0.045, Math.PI, TAU), { color: INK, width: 0.011 });

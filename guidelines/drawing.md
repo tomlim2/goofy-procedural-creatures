@@ -91,9 +91,9 @@ per entry by itself.
 
 ## The light — not built yet
 
-Shading is not a material's job: in 3D, `material × light = shading`. The tilted scribble ellipses that shaded
-every head and body (`scribbleFill`, a technique that cannot clip to a contour, so it poked past the outline
-on tapered heads and short torsos) are **off**. What replaces them is a light: one direction per board or per
+Shading is not a material's job: in 3D, `material × light = shading`. The tilted scribble ellipses that once
+shaded every head and body (a zigzag fill that could not clip to a contour, so it poked past the outline on
+tapered heads and short torsos) are gone — the method with them. What replaces them is a light: one direction per board or per
 creature, and for every filled part a shade — the region facing away from the light, clipped to the contour
 and filled in the material's shadow technique and a deeper tone of the part's color. Two steps, like cel
 shading. The cheek and forehead hatch are the same thing (an occlusion). Until it exists, surfaces are flat.
@@ -223,8 +223,7 @@ If the answer is yes, the design is usually wrong.
 ## The boil
 
 The same drawing is baked in 3 sets differing only in jitter phase (`drawCreature(spec, variant)`) and visible
-is cycled at roughly 0.53~0.67 fps per individual (once every 1.5~1.9 s). Scribble fills are redrawn per
-variant too and boil along with it.
+is cycled at roughly 0.53~0.67 fps per individual (once every 1.5~1.9 s).
 
 **The boil is a material, not a motion.** The lines boil even while the character is frozen in the bind pose —
 that is what a pencil line on paper does; it is not the character doing something. Which is why the on-screen

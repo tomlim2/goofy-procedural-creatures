@@ -128,7 +128,7 @@ Being a drawing-only change, it does not break seeds.
 | --- | --- | --- |
 | 1 | Fixed lanes | **adopted** — human · cat · dog · imp cycling down the rows and wrapping (`LANES`). The observed board was five rows of human, human, cat, dog, imp; v0.2.0 replaced the per-row-count table with one cycling list so no species goes missing at any row count |
 | 2 | Individual regeneration | **adopted** — 6~14 s per slot, species kept |
-| 3 | Scribble fill | **adopted** — a single zigzag stroke fill, stroke direction visible |
+| 3 | Scribble fill | adopted, then **removed** — a single zigzag stroke fill that could not clip to a contour; shading is the light's job now (guidelines/drawing.md § the light) |
 | 4 | Color accents | **adopted** — capped at 3 per board |
 | 6 | Dog ears and muzzle | **adopted** — a hanging ear lobe plus muzzle and nose |
 | 8 | Imp horns and body | **adopted** — horns 1.8×, light striped bodies half the time |

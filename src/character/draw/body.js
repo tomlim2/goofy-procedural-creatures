@@ -39,7 +39,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
     const decals = bodyDecals(spec, path, noise);
     fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step; the pattern and the decals in its base
-    // The body's scribble shading is off — an ellipse it cannot clip to the contour (see drawHead); it returns as the light's shade
+    // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
     ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     decalEdges(ink, spec, decals);
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
@@ -67,7 +67,7 @@ export function drawBody(ink, fills, spec, box, noise) {
   const decals = bodyDecals(spec, path, noise);
 
   fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step; the pattern and the decals in its base
-  // The body's scribble shading is off — on a short or wide torso the tilted ellipse poked past the contour; it returns as the light's shade
+  // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
   ink.contour(path, "PENCIL", { color: ink0, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   decalEdges(ink, spec, decals);
   return { path, top, bottom, w, cx: 0 };

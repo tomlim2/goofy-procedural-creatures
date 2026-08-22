@@ -22,9 +22,7 @@ export function drawHead(ink, fills, spec, box, noise) {
   const decals = headDecals(spec, path, noise);   // the calico's cap and cheek — in the base, under the material's texture
   fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset, decals, value: surfaceValue(spec, spec.palette.skin) });
 
-  // The head's pencil scribble (a tilted zigzag in a darker tone over the fill) is **off**: scribbleFill shades an ellipse it cannot
-  // clip to the contour, so on a tapered or squared head its corners poked past the outline. It comes back as the light's shade
-  // (guidelines/drawing.md § the light) — a shadow computed from a light direction and clipped to the contour, like a material's texture
+  // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
 
   // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
   // The goofy outline — PENCIL (stroke.js GOOFY_OUTLINES); the head's contour runs a little heavier than the body's (weight)
