@@ -130,13 +130,15 @@ slots independent of form — not a scale, only length and width change, and the
 
 ## The hand-drawn texture
 
-WebGL's `linewidth` is fixed at 1 nearly everywhere, so `Line` gives no control over thickness. Every stroke
+The board is three.js, and there is no 2D canvas: every stroke and every fill is triangles in one geometry per
+layer (WebGL's `linewidth` is fixed at 1 nearly everywhere, so `Line` gives no control over thickness). A stroke
 becomes a ribbon mesh.
 
 - The stroke is re-sampled at an even spacing and pushed along the normal. Low frequency (the whole thing bending) and
   high frequency (fine tremor) are overlaid
 - It thins toward the ends and the pressure wavers in the middle
-- Outlines are drawn twice, leaving the overlap visible
+- A contour is laid once — RIBBON on the small shapes, the PENCIL on the head and the body, which wanders, breathes and
+  sheds ([guidelines/drawing.md](guidelines/drawing.md) § the outline)
 - The head is not a circle but a closed curve crumpled with noise
 - Hair is not filled as an area but scribbled back and forth. Fills are covered with a scribble too, so the stroke direction shows
 - Fills are offset off the lines

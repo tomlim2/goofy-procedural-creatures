@@ -31,7 +31,9 @@
 
 <p class="lede">Everything on the board is made of what is on this page, on three axes: the <b>goofy outline</b> —
 what a creature's contour is drawn with — the <b>material</b> — how its surfaces are filled — and the <b>goofy fur</b> —
-how its hair is grown. No textures, no brush images; the hand comes from rules alone. Every figure is drawn live by <code>src/stroke.js</code> and <code>src/medium/</code>, the same
+how its hair is grown. No textures, no brush images; the hand comes from rules alone. And it is all <b>three.js</b> (WebGL) — there is no 2D canvas
+anywhere: every stroke and every fill is triangles, one geometry per layer, and the boil is a set of pre-drawn variants
+shown in turn. Every figure is drawn live by <code>src/stroke.js</code> and <code>src/medium/</code>, the same
 code that draws the creatures. The figures hold still; <b>INK BOIL</b> in the header (or <code>I</code>) sets their
 lines boiling at the board's own pace.</p>
 
@@ -107,7 +109,8 @@ becomes vector clip art. RIBBON is this stroke, once.</p>
 <p>The reference's line (<a href="https://kindergrimm.vercel.app/how.html">kindergrimm</a> § the pencil), kept next to
 the ribbon as <code>s.pencil</code>. The spine wanders on two sines per length, the width breathes, the ends run past
 where they should stop instead of pinching, and a thick line sheds — ink crumbs on the edge, paper bites inside.
-Its 62% ink is left out on purpose (ours stays opaque), and so is its tremor. Every number is in <code>PENCIL</code>
+Theirs is a polygon filled on a 2D canvas; ours is the same polygon as three.js triangles, and its 62% ink is left
+out on purpose (ours stays opaque — an opaque fill is what lets a front creature hide the one behind it), and so is its tremor. Every number is in <code>PENCIL</code>
 in <code>src/stroke.js</code>. A closed pencil line is seamless: its sines snap to whole cycles and it never overshoots.</p>
 
 <div class="figs">

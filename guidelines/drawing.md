@@ -25,8 +25,11 @@ their own; this is for the fills under them and the shapes that are only a fill.
 
 ## A line is a ribbon, not a Line
 
-WebGL's `linewidth` is fixed at 1 in most environments. `THREE.Line` gives you no control over thickness.
-Every stroke goes through `Sketch.stroke()` and becomes a triangle ribbon.
+The board is three.js, and nothing is drawn on a 2D canvas (the only 2D contexts are the paper texture, the PNG
+export and the medium page copying its renders into its cards). WebGL's `linewidth` is fixed at 1 in most
+environments and `THREE.Line` gives you no control over thickness, so every stroke goes through `Sketch.stroke()`
+or `Sketch.pencil()` and becomes a triangle ribbon; every fill is a fan of triangles; a layer's ink and fills go
+into one `BufferGeometry` with vertex colors.
 
 Four things have to be present together to look hand-drawn. Leave out any one and it becomes vector clip art.
 
