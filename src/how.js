@@ -3,14 +3,14 @@
 //
 // One hidden WebGL renderer paints every figure's small 2D canvas (one context, many views — a page of
 // per-figure contexts would hit the browser's context cap). Each figure is baked BOIL_FRAMES times like a
-// creature layer, differing only in jitter phase, and cycles at the board's own pace (rig.js boilFps).
+// creature layer, differing only in jitter phase. The figures hold still; INK BOIL cycles them at the board's own pace (rig.js boilFps).
 
 import * as THREE from "three";
 import { Sketch, blobPath, arcPath } from "./stroke.js";
 import { sketchMesh } from "./scene/material.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
-import { runLoop } from "./ui.js";
+import { runLoop, bindSeg } from "./ui.js";
 import { shade } from "./color.js";
 import { PAPER, INKS, FILLS, POPS, DARKS } from "./character/index.js";
 import { FURS, CALICO_MID, ACCENTS } from "./character/vocabulary/palette.js";
@@ -143,7 +143,7 @@ swatches("darks", DARKS);
 swatches("furs", [...FURS, CALICO_MID]);
 swatches("accents", ACCENTS);
 
-fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {
+fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {   // the demonstration of the boil — the one figure that never holds still (always, below)
   const fills = sk(), ink = sk();
   const head = blobPath(0, 0, 0.27, 0.24, { lumps: 5, amount: 0.07, noise, phase: 71, square: 0.4, taper: 0.08 });
   fills.fill(head, FILLS[2], [0.022, -0.018]);
@@ -152,6 +152,7 @@ fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {
   for (const side of [-1, 1]) ink.stroke([[side * 0.09 - 0.015, 0.05], [side * 0.09 + 0.015, 0.05]], { color: INK, width: 0.017 });
   ink.stroke(arcPath(0, -0.05, 0.06, 0.045, Math.PI, TAU), { color: INK, width: 0.011 });
 });
+FIGS.boilface.always = true;
 
 // ---------------------------------------------------------------- machinery
 const statusLabel = document.getElementById("status");
@@ -195,6 +196,7 @@ document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
     subs: el.querySelector(".subs"),
     camera: new THREE.OrthographicCamera(x0, x1, y1, y0, -1, 1),
     scene, frames, frame: 0,
+    always: !!entry.always,
     aspect: (y1 - y0) / (x1 - x0),
     // The medium is tuned for the board's scale (about 230 px per world unit). Blown up much past it,
     // the ribbon shows its seams — the closed loop's taper pinch, the press fins — so a figure never
@@ -231,13 +233,27 @@ for (const f of figures) paint(f);
 window.addEventListener("resize", () => { for (const f of figures) { f.width = 0; paint(f); } });
 statusLabel.textContent = `${figures.length} FIGURES`;
 
+// Ink — the board's own axis (rig.md § pose and ink): STILL pins boil frame 0, BOIL cycles. Still by default —
+// a legend is read, not watched — except the boil's own figure, which is the demonstration and always cycles
+let boil = false;
+function setFrame(f, frame) {
+  if (frame === f.frame) return;
+  f.frame = frame;
+  f.frames.forEach((group, k) => { group.visible = k === frame; });
+  paint(f);
+}
+const ink = bindSeg(document.getElementById("inkSeg"), "ink", (value) => {
+  boil = value === "boil";
+  if (!boil) for (const f of figures) if (!f.always) setFrame(f, 0);
+});
+window.addEventListener("keydown", (event) => {
+  if (event.key.toLowerCase() === "i") ink.set(boil ? "still" : "boil");
+});
+
 runLoop((t) => {
   for (const f of figures) {
+    if (!boil && !f.always) continue;
     const frame = Math.floor(t * f.boilFps + f.boilOffset) % BOIL_FRAMES;
-    if (frame !== f.frame) {
-      f.frame = frame;
-      f.frames.forEach((group, k) => { group.visible = k === frame; });
-      paint(f);
-    }
+    setFrame(f, frame);
   }
 }, () => { statusLabel.textContent = "ERROR"; });

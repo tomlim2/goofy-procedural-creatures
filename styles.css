@@ -168,7 +168,9 @@ select.wide { width: 100%; }
 /* The medium page (how.html) — the only screen that scrolls: a document, not a board.
    Every figure is a card holding one canvas; the bar gets a paper back so the text passes under it */
 body.how { height: auto; }
-.how .bar { background: var(--paper); border-bottom: 1px solid var(--line); }
+.how .bar { background: var(--paper); border-bottom: 1px solid var(--line); pointer-events: auto; }
+.how .bar .seg { flex: 0 0 auto; }
+.how .bar .seg button { flex: 0 0 auto; padding: 3px 9px; font-size: 10px; letter-spacing: 0.14em; }
 .how .page { max-width: 880px; margin: 0 auto; padding: 68px 20px 48px; }
 .how .lede, .how section > p { max-width: 660px; opacity: 0.8; }
 .how h2 {

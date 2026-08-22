@@ -21,13 +21,18 @@
   <a class="mark" href="./index.html">MENAGERIE</a>
   <span class="sub">HOW IT IS DRAWN · <a href="./index.html">← GRID</a></span>
   <span class="status" id="status">BOOT</span>
+  <div class="seg ink" id="inkSeg" role="group" aria-label="Ink">
+    <button data-ink="still" class="on">STILL</button>
+    <button data-ink="boil">BOIL</button>
+  </div>
 </header>
 
 <main class="page">
 
 <p class="lede">Everything on the board is made of what is on this page. No textures, no brush images —
 the hand comes from rules alone. Every figure below is drawn live by <code>src/stroke.js</code>,
-the same code that draws the creatures, and the lines boil at the board's own pace.</p>
+the same code that draws the creatures. The figures hold still; <b>INK BOIL</b> in the header
+(or <code>I</code>) sets their lines boiling at the board's own pace.</p>
 
 <!-- ================================================================ -->
 <section>
@@ -217,7 +222,7 @@ entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>
 <div class="figs">
   <figure data-fig="boilface" class="wide">
     <canvas></canvas>
-    <div class="subs"><span>three bakes of the same drawing, cycling</span></div>
+    <div class="subs"><span>three bakes of the same drawing, cycling — this figure never holds still</span></div>
     <figcaption><b>the boil</b> — nothing is redrawn at runtime. The same drawing is baked
     3 times, differing only in jitter phase, and <code>visible</code> cycles once every
     1.5–1.9 s per individual. The boil is a material, not a motion: the lines shiver even

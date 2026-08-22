@@ -40,7 +40,8 @@ To go back, press **MENAGERIE** in the header.
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
 `/how.html` — **the medium page**. The legend of how everything is drawn — every stroke kind, the blobPath knobs,
-the palette groups and the boil — each figure drawn live by the same `src/stroke.js` that draws the creatures, at the board's own scale and cadence.
+the palette groups and the boil — each figure drawn live by the same `src/stroke.js` that draws the creatures, at the board's own scale. The figures hold still;
+INK BOIL (`I`) sets their lines boiling at the board's own cadence.
 The page cannot drift from the code, because it runs the code.
 
 `/audit.html?seed=…` — **the face part audit**. Draws one board (35 creatures) in 22 face states (startle, sleep, blink, ^^, wink, anger, brow/mouth switches,
