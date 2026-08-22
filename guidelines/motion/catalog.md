@@ -237,7 +237,9 @@ The ACTION card's SCRATCH/WAG only bite on quads. Hopping in place is on the bod
 
 The tail is **a four-bone chain under one skin** splitting the spine into 4 (`TAIL_BONES` in `limbs.js`) — four sibling bones placed by forward kinematics and one skinned mesh bent by them ([../rig.md](../rig.md)). The root bone takes
 `tailAngle` (swish, wag, walking, sleep), the tip bone `tailTip` (tapping, tremble, follow-through), and **the raise `tailRaise` (0~1)** blends each joint from the rest pose (the spine direction)
-toward vertical — whether the skeleton curls or reaches back, it **shoots straight up** (every joint at π/2, with no bent variant).
+toward vertical — whether the skeleton curls or reaches back, it **shoots straight up** (every joint at π/2, with no bent variant). A joint's share of either blend is taken
+**the short way round and capped** — 100° at the root, 60° at the joints along the tail — the rest cascading to the next joint (`animate.js`): a hook's tip sat at −131° and the arch asked it for −20° — a 171° twist at one
+joint, which folded the skin onto itself. A curled skeleton stays curled under the arch and the raise, as a real tail does — it cannot hinge through half a turn at one joint.
 `tailTip` in `table.js` holds the tip bone and raise parameters. Dogs and cats read it **oppositely** — for a dog fast wagging is joy, while for a cat fast movement is irritation or excitement and
 joy is **holding it up** (research: raised/a question mark = greeting, a trembling tip = a very glad greeting, a slow swish = focus or mild irritation, tip tapping = interest, lashing = anger,
 puffed = a startle, wrapped round the body = at ease, and nearly fixed while walking).

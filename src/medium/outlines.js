@@ -25,8 +25,9 @@ export function markWith(sketch, points, options) { return draw(sketch, points, 
 // weight scales the kind's width (a head's contour runs a little heavier than a body's; open lines are fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6).
 // paper is the color the pencil's bites take when the line runs over a fill. step re-samples a tiny ribbon finer (the star eye).
 // joint = [start, end] marks a line end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there.
+// skinT = [t0, t1] tags the line's triangles with their t along a bent part's spine (stroke.js — the tail's skin reads its bones from it).
 // An unknown name throws — a misspelt role or kind must not silently draw nothing
-function draw(sketch, points, role, closed, { color = "#2b2724", weight = 1, paper, step, outline, joint } = {}) {
+function draw(sketch, points, role, closed, { color = "#2b2724", weight = 1, paper, step, outline, joint, skinT } = {}) {
   const name = outline || BOARD_LINES[role];
   const o = GOOFY_OUTLINES[name];
   if (!o) throw new Error(`unknown outline: ${name} (${role})`);
@@ -35,6 +36,7 @@ function draw(sketch, points, role, closed, { color = "#2b2724", weight = 1, pap
   if (paper) options.paper = paper;
   if (step) options.step = step;
   if (joint) options.joint = joint;
+  if (skinT) options.skinT = skinT;   // the skin tag along the line — [t0, t1] on a bent part's spine (the tail)
   if (o.kind === "pencil") sketch.pencil(points, { ...options, closed });
   else if (closed) sketch.outline(points, options);
   else sketch.stroke(points, options);

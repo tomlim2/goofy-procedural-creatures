@@ -267,7 +267,7 @@ function spineT(spine) {
   const total = acc[acc.length - 1] || 1;
   return acc.map((a) => a / total);
 }
-// The two edges, swollen sideways along the spine by a thickness of widthAt(t). t is fitted to the whole tail (0~1) by tMap
+// The two edges, swollen sideways along the spine by a thickness of widthAt(t, i). t is fitted to the whole tail (0~1) by tMap; i is the rung
 function tubeSides(spine, widthAt, tMap = (t) => t) {
   const ts = spineT(spine);
   const left = [], right = [];
@@ -276,7 +276,7 @@ function tubeSides(spine, widthAt, tMap = (t) => t) {
     const [nx0, ny0] = spine[Math.max(0, i - 1)], [nx1, ny1] = spine[Math.min(spine.length - 1, i + 1)];
     let dx = nx1 - nx0, dy = ny1 - ny0;
     const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
-    const w = widthAt(tMap(ts[i]));
+    const w = widthAt(tMap(ts[i]), i);
     left.push([x - dy * w, y + dx * w]);
     right.push([x + dy * w, y - dx * w]);
   }
@@ -324,7 +324,7 @@ export function tailSketch(spec, variant = 0) {
   const noise = makeNoise(rng);
   const box = layout(spec);
   const sketch = new Sketch(noise, spec.proportions.wobble);
-  const none = { sketches: [sketch], sketch, bones: [], pivot: [0, 0], weightsOf: () => [0, 1, 0, 0] };
+  const none = { sketches: [sketch], sketch, bones: [], pivot: [0, 0], weightsAt: () => [0, 1, 0, 0], weightsOf: () => [0, 1, 0, 0] };
   if (!box.quad) return none;
 
   const p = spec.proportions;
@@ -362,50 +362,80 @@ export function tailSketch(spec, variant = 0) {
     if (pattern.kind === "stripes") {
       for (let d = 0.06; d < total - 0.025; d += 0.05) {
         const t = d / total, a = at(t), w = widthAt(t) * 0.98;
-        sketch.mark([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color, weight: 1 });   // a ring
+        sketch.mark([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color, weight: 1, skinT: [t, t] });   // a ring
       }
     } else if (pattern.kind === "dots") {
       let side = 1;
       for (let d = 0.05; d < total - 0.02; d += 0.045, side = -side) {
         const t = d / total, a = at(t), w = widthAt(t) * 0.45;
         const x = a.x - a.dy * w * side, y = a.y + a.dx * w * side;
-        sketch.mark([[x - a.dx * 0.006, y - a.dy * 0.006], [x + a.dx * 0.006, y + a.dy * 0.006]], { color, weight: 1 });
+        sketch.mark([[x - a.dx * 0.006, y - a.dy * 0.006], [x + a.dx * 0.006, y + a.dy * 0.006]], { color, weight: 1, skinT: [t, t] });
       }
     } else if (pattern.kind === "spots") {
       for (let d = 0.07; d < total - 0.03; d += 0.075) {
         const t = d / total, a = at(t), r = Math.min(0.012, widthAt(t) * 0.55);
-        if (r > 0.005) sketch.contour(blobPath(a.x, a.y, r, r * 0.8, { lumps: 4, amount: 0.25, noise: null }), { color, weight: 0.7 });
+        if (r > 0.005) sketch.contour(blobPath(a.x, a.y, r, r * 0.8, { lumps: 4, amount: 0.25, noise: null }), { color, weight: 0.7, skinT: [t, t] });
       }
     } else if (pattern.kind === "hatch") {
       for (let d = 0.05; d < total - 0.02; d += 0.035) {
         const t = d / total, a = at(t), w = widthAt(t) * 0.9;
-        sketch.mark([[a.x - a.dy * w - a.dx * w * 0.5, a.y + a.dx * w - a.dy * w * 0.5], [a.x + a.dy * w + a.dx * w * 0.5, a.y - a.dx * w + a.dy * w * 0.5]], { color, weight: 0.6 });
+        sketch.mark([[a.x - a.dy * w - a.dx * w * 0.5, a.y + a.dx * w - a.dy * w * 0.5], [a.x + a.dy * w + a.dx * w * 0.5, a.y - a.dx * w + a.dy * w * 0.5]], { color, weight: 0.6, skinT: [t, t] });
       }
     }
     // the calico's patch — not on the tail: its patches are decals on the head and the body
   };
-  // The filled body along the whole spine — the fill, the tip's disc, the pattern, then the two side lines (their root end a joint: no
-  // overshoot into the body) and the tip: an arc for a round tip, a bar for a square one (block)
+  // The filled body along the whole spine — the fill, the pattern, then the two side lines. The lines run **fine** (0.7): a tube is a small part,
+  // and at weight 1 the two lines ate a thin tail's width and its tip turned into a black knob. The root end of the lines is a joint (no overshoot
+  // into the body). The tip **tapers to a point** under the lines — the rails close over 1.6 end-widths and the lines meet there, the pencil's flick
+  // meeting there without a flick (two flicks doubled into a spike; a disc and an arc of line were ink on ink). block keeps its square tip; a tip thinner than 0.004 (wedge) is a point already.
+  // The rails run on a fine spine (a rung every 0.012) and the base is a strip between them — the bones bend it rung by rung; a fan from the centre of a
+  // coarse spine threw long triangles across the bones and folded like a paddle
+  // The fine spine is **smoothed** (two passes of a three-point mean, the ends kept) so the skeleton's corners round off, and the width at every rung is
+  // **clamped by the bend** — at most 0.85 × the radius of curvature there — so a tube can never be thicker than its curl and fold over itself (a hook
+  // skeleton under a plume did, at the tip)
   const tube = (widthAt, { squareTip = false } = {}) => {
-    // The rails on a fine spine (a rung every 0.012) and the base as a strip between them — the bones bend it rung by rung; a fan from the
-    // centre of a coarse spine threw long triangles across the bones and folded like a paddle
-    const { left, right } = tubeSides(resample(spine, 0.012), widthAt);
-    const end = spine[spine.length - 1];
+    let fine = resample(spine, 0.012);
+    for (let pass = 0; pass < 2; pass += 1) fine = fine.map((q, i) => (i === 0 || i === fine.length - 1 ? q : [(fine[i - 1][0] + q[0] + fine[i + 1][0]) / 3, (fine[i - 1][1] + q[1] + fine[i + 1][1]) / 3]));
+    const end = spine[spine.length - 1], prev = spine[spine.length - 2];
     const wEnd = widthAt(1);
-    const round = !squareTip && wEnd > 0.004;
-    paintPart(sketch, spec, [...left, ...right.slice().reverse()], fur, { strip: [left, right] });   // the tail is fur — the creature's goofy material
-    if (round) paintPart(sketch, spec, blobPath(end[0], end[1], wEnd, wEnd, { lumps: 3, amount: 0.06, noise: null }), fur);
+    const taper = !squareTip && wEnd > 0.004;
+    const taperLen = wEnd * 1.6;
+    if (taper) {
+      const len = Math.hypot(end[0] - prev[0], end[1] - prev[1]) || 1;
+      const dx = (end[0] - prev[0]) / len, dy = (end[1] - prev[1]) / len;
+      for (let k = 1; k <= 4; k += 1) fine.push([end[0] + dx * taperLen * k / 4, end[1] + dy * taperLen * k / 4]);
+    }
+    const whole = fine.reduce((acc, q, i) => (i ? acc + Math.hypot(q[0] - fine[i - 1][0], q[1] - fine[i - 1][1]) : 0), 0);
+    const body = taper ? whole - taperLen : whole;   // the spine's own length — the taper lies past it
+    const widthOnFine = (t) => {
+      const d = t * whole;
+      if (d <= body) return widthAt(Math.min(1, d / body));
+      return wEnd * Math.pow(Math.max(0, 1 - (d - body) / taperLen), 0.7);   // 0 at the point
+    };
+    // The radius of the bend at each rung — the segment length over the turning angle; straight is infinite
+    const radius = fine.map((q, i) => {
+      if (i === 0 || i === fine.length - 1) return Infinity;
+      const a = fine[i - 1], c = fine[i + 1];
+      const ux = q[0] - a[0], uy = q[1] - a[1], vx = c[0] - q[0], vy = c[1] - q[1];
+      const lu = Math.hypot(ux, uy) || 1e-9, lv = Math.hypot(vx, vy) || 1e-9;
+      const turn = Math.abs(Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy));
+      return turn < 1e-6 ? Infinity : ((lu + lv) / 2) / turn;
+    });
+    const { left, right } = tubeSides(fine, (t, i) => Math.min(widthOnFine(t), 0.85 * radius[i]));
+    if (taper) { left[left.length - 1] = fine[fine.length - 1].slice(); right[right.length - 1] = fine[fine.length - 1].slice(); }   // the rails meet at the point
+    // Every triangle carries its t along the spine as its skin tag — the strip per rung, the side lines by arc fraction — so the skin is bent by
+    // construction, never guessed from a vertex's position (beside a tight curl a guess picks the curl's other arm, and the skin tears)
+    const tsFine = spineT(fine);
+    const tRung = (i) => Math.min(1, (tsFine[i] * whole) / body);
+    paintPart(sketch, spec, [...left, ...right.slice().reverse()], fur, { strip: [left, right], stripT: tRung });   // the tail is fur — the creature's goofy material
     tubePattern(widthAt);
-    sketch.line(left, { color: ink0, weight: 1, joint: [true, true] });
-    sketch.line(right, { color: ink0, weight: 1, joint: [true, true] });
-    if (round) {
-      const prev = spine[spine.length - 2];
-      const dir = Math.atan2(end[1] - prev[1], end[0] - prev[0]);
-      sketch.line(arcPath(end[0], end[1], wEnd, wEnd, dir + Math.PI / 2, dir - Math.PI / 2, 8), { color: ink0, weight: 1, joint: [true, true] });
-    } else sketch.line([left[left.length - 1], right[right.length - 1]], { color: ink0, weight: 1, joint: [true, true] });
+    const railT = left.map((_, i) => tRung(i));   // the rails' tags follow the spine's t rung by rung — a rail's own length runs short on the inside of a curl
+    sketch.line(left, { color: ink0, weight: 0.7, joint: [true, true], skinT: railT });    // both ends joints — at the point two flicks would double into a spike
+    sketch.line(right, { color: ink0, weight: 0.7, joint: [true, true], skinT: railT });
+    if (!taper) sketch.line([left[left.length - 1], right[right.length - 1]], { color: ink0, weight: 0.7, joint: [true, true], skinT: [1, 1] });
   };
   // A thin spine line — its root a joint (no overshoot into the body), the tip free (the pencil's flick)
-  const spineLine = (weight) => sketch.line(spine, { color: ink0, weight, joint: [true, false] });
+  const spineLine = (weight) => sketch.line(spine, { color: ink0, weight, joint: [true, false], skinT: [0, 1] });
 
   if (skin === "line") {
     // A thin line — one hand-drawn tail stroke (thick on a stub)
@@ -413,43 +443,57 @@ export function tailSketch(spec, variant = 0) {
   } else if (skin === "thick" || skin === "block" || skin === "wedge") {
     tube(widthOf[skin], { squareTip: skin === "block" });
   } else if (skin === "plume") {
-    // A bushy plume tail — a filled body swollen in the middle plus fur strokes (a pom on a stub)
+    // A bushy plume tail — a filled body swollen in the middle plus fur strands: hairs growing from the tube's **edge** (the local width), leaning
+    // back toward the root, fine pencil lines (0.25) rooted at the edge and flicking at their ends — a mark from a fixed distance read as a thorn,
+    // and the ones crowding the tip made a black knob with the lines. The tip fans out into three hairs past the point — the bushy end. A pom on a stub
     tube(widthOf.plume);
-    const n = stub ? 3 : 6;
+    const n = stub ? 3 : 8;
     for (let i = 0; i < n; i += 1) {
-      const t = stub ? 0.3 + i * 0.25 : 0.25 + i * 0.13;
+      const t = stub ? 0.3 + i * 0.25 : 0.15 + i * 0.09;
       const a = at(Math.min(0.98, t));
       const side = i % 2 ? 1 : -1;
       const nx = -a.dy * side, ny = a.dx * side;
-      const w = stub ? 0.03 : 0.028;
-      sketch.mark([[a.x + nx * w * 0.7, a.y + ny * w * 0.7], [a.x + nx * (w + 0.02) + a.dx * 0.01, a.y + ny * (w + 0.02) + a.dy * 0.01]], { color: ink0, weight: 0.6 });   // a fur strand
+      const w = (stub ? 0.03 : widthOf.plume(t)) * 0.85;
+      const len = stub ? 0.024 : 0.032;
+      const tt = Math.min(0.98, t);
+      sketch.line([[a.x + nx * w, a.y + ny * w], [a.x + nx * (w + len) - a.dx * len * 0.35, a.y + ny * (w + len) - a.dy * len * 0.35]], { color: ink0, weight: 0.25, joint: [true, false], skinT: [tt, tt] });   // a hair — rooted at the edge, flicking at its end; under the grit's width, so no crumbs
+    }
+    if (!stub) {
+      const e = at(1);
+      const reach = widthOf.plume(1) * 1.6;   // the taper's length — the point is this far past the spine's end
+      for (const ang of [-0.45, 0, 0.45]) {
+        const c = Math.cos(ang), sn = Math.sin(ang);
+        const dx = e.dx * c - e.dy * sn, dy = e.dx * sn + e.dy * c;
+        const x0 = e.x + e.dx * reach * 0.6, y0 = e.y + e.dy * reach * 0.6;
+        sketch.line([[x0, y0], [x0 + dx * 0.03, y0 + dy * 0.03]], { color: ink0, weight: 0.25, joint: [true, false], skinT: [1, 1] });   // the tip's tuft
+      }
     }
   } else if (skin === "tuft") {
     // A tuft at the tip — a thin line plus a filled tuft at the end (a lion's tail)
     spineLine(1);
     const tip = spine[spine.length - 1];
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
-    paintPart(sketch, spec, ball, shade(fur, 0.82));
-    sketch.contour(ball, { color: ink0 });
+    paintPart(sketch, spec, ball, shade(fur, 0.82), { skinT: 1 });
+    sketch.contour(ball, { color: ink0, skinT: [1, 1] });
   } else if (skin === "puff") {
     // A pom — a rabbit tail. Regardless of the skeleton's length, one bushy tuft near the rump (at spine 0.3) plus fur strokes around it
     const a = at(0.3);
     const r = 0.04;
     const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
-    paintPart(sketch, spec, pom, fur);
-    sketch.contour(pom, { color: ink0 });
+    paintPart(sketch, spec, pom, fur, { skinT: 0.3 });
+    sketch.contour(pom, { color: ink0, skinT: [0.3, 0.3] });
     for (let i = 0; i < 6; i += 1) {
       const ang = -1.0 + i * 0.66;   // around the top and outside
       const x0 = a.x + Math.cos(ang) * r * 0.9, y0 = a.y + 0.004 + Math.sin(ang) * r * 0.85;
-      sketch.mark([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, weight: 0.6 });
+      sketch.mark([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, weight: 0.6, skinT: [0.3, 0.3] });
     }
   } else if (skin === "ball") {
     // Beads — a tail strung with beads along the spine, **on a thin spine line** (without it the beads float behind the rump). One pom on a stub (a rabbit)
     if (stub) {
       const a = at(0.6);
       const ball = blobPath(a.x, a.y + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
-      paintPart(sketch, spec, ball, fur);
-      sketch.contour(ball, { color: ink0 });
+      paintPart(sketch, spec, ball, fur, { skinT: 0.6 });
+      sketch.contour(ball, { color: ink0, skinT: [0.6, 0.6] });
     } else {
       spineLine(0.7);
       const n = 4;
@@ -458,16 +502,24 @@ export function tailSketch(spec, variant = 0) {
         const a = at(t);
         const r = 0.024 - i * 0.004;
         const ball = blobPath(a.x, a.y, r, r, { lumps: 3, amount: 0.12, noise: null });
-        paintPart(sketch, spec, ball, fur);
-        sketch.contour(ball, { color: ink0 });
+        paintPart(sketch, spec, ball, fur, { skinT: t });
+        sketch.contour(ball, { color: ink0, skinT: [t, t] });
       }
     }
   } else throw new Error(`unknown tail skin: ${skin}`);   // a misspelt skin must not silently draw another
 
-  // Skin weights — a vertex's t along the rest spine (its nearest point on the polyline) picks its bone (the quarter it falls in), blended
-  // with the neighbour over ±BAND of the tail around each joint by a smoothstep (no kink where the band starts), so a bend curves the skin
+  // Skin weights by t along the rest spine — the bone is the quarter t falls in, blended with the neighbour over ±BAND of the tail around each
+  // joint by a smoothstep (no kink where the band starts), so a bend curves the skin. weightsAt(t) serves the skin tags (every triangle the tail
+  // draws carries its t); weightsOf(x, y) is the fallback for an untagged vertex — its nearest point on the spine — and is wrong beside a tight curl
   const BAND = 0.09;
   const blend = (u) => { const c = Math.max(-1, Math.min(1, u)); return 0.5 + 0.5 * c * (1.5 - 0.5 * c * c); };   // −1..1 → 0..1, flat at both ends
+  const weightsAt = (t) => {
+    const k = Math.min(TAIL_BONES - 1, Math.max(0, Math.floor(t * TAIL_BONES)));
+    const root = k / TAIL_BONES, ahead = (k + 1) / TAIL_BONES;   // the joints behind and ahead of this bone
+    if (k > 0 && t < root + BAND) { const w = blend((t - root) / BAND); return [k, w, k - 1, 1 - w]; }
+    if (k < TAIL_BONES - 1 && t > ahead - BAND) { const w = blend((ahead - t) / BAND); return [k, w, k + 1, 1 - w]; }
+    return [k, 1, k, 0];
+  };
   const weightsOf = (x, y) => {
     let best = Infinity, t = 0;
     for (let i = 1; i < spine.length; i += 1) {
@@ -477,11 +529,7 @@ export function tailSketch(spec, variant = 0) {
       const d = (x - ax - dx * u) ** 2 + (y - ay - dy * u) ** 2;
       if (d < best) { best = d; t = ts[i - 1] + (ts[i] - ts[i - 1]) * u; }
     }
-    const k = Math.min(TAIL_BONES - 1, Math.floor(t * TAIL_BONES));
-    const root = k / TAIL_BONES, ahead = (k + 1) / TAIL_BONES;   // the joints behind and ahead of this bone
-    if (k > 0 && t < root + BAND) { const w = blend((t - root) / BAND); return [k, w, k - 1, 1 - w]; }
-    if (k < TAIL_BONES - 1 && t > ahead - BAND) { const w = blend((ahead - t) / BAND); return [k, w, k + 1, 1 - w]; }
-    return [k, 1, k, 0];
+    return weightsAt(t);
   };
-  return { sketches: [sketch], sketch, bones: parts.map((q) => ({ origin: q.origin, angle: q.angle })), pivot, weightsOf };
+  return { sketches: [sketch], sketch, bones: parts.map((q) => ({ origin: q.origin, angle: q.angle })), pivot, weightsAt, weightsOf };
 }

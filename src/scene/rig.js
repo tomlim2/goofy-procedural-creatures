@@ -133,7 +133,7 @@ export function buildCreature(spec, noise, birth = 0) {
       tailGroup.add(b);
       return b;
     });
-    const boiled = sketchMeshBoil(tails.map((t) => [t.sketch]), 1, 0.8, 0, { skin: { weightsOf: tail.weightsOf } });
+    const boiled = sketchMeshBoil(tails.map((t) => [t.sketch]), 1, 0.8, 0, { skin: { weightsAt: tail.weightsAt, weightsOf: tail.weightsOf } });
     tailGroup.add(boiled.mesh);
     tailGroup.updateMatrixWorld(true);           // the bind reads the bones' and the mesh's world matrices — the rest pose, in the same space
     boiled.mesh.bind(new THREE.Skeleton(bones));

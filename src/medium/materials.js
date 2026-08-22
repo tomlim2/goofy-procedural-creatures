@@ -138,8 +138,9 @@ function rules(points, angle, gap, jitter) {
 // "texture" draws that channel alone. strip: [left, right] — the base is cut as a strip between the two rails instead of a fan from the
 // centre (a tube that bones will bend: the tail); the contour (points) still clips the texture. Every tone is a shade of the part's color —
 // the goofy material knows no colors of its own
-export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, decals = [], hand = "normal", value, strip } = {}) {
-  const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, offset) : sketch.fill(points, c, offset));
+export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, decals = [], hand = "normal", value, strip, stripT, skinT } = {}) {
+  // stripT(i) / skinT: the skin tags of the base — per rung of a strip, or one t for a fill (a bead on the tail); the texture's marks stay untagged
+  const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, offset, stripT) : sketch.fill(points, c, offset, skinT));
   const m = GOOFY_MATERIALS[name];
   if (!m) throw new Error(`unknown goofy material: ${name}`);
   const step = value === undefined ? valueStep(color, hand) : value;
@@ -149,7 +150,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
     if (wantBase) {
       base(color);
       if (pattern) patternOn(sketch, points, pattern);
-      for (const d of decals) sketch.fill(d.path, d.color);
+      for (const d of decals) sketch.fill(d.path, d.color, [0, 0], skinT);
     }
     return;
   }
@@ -167,7 +168,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
     if (m.base.kind === "flat") base(m.base.tone === undefined ? color : shade(color, dark ? 0.92 : m.base.tone));
     else throw new Error(`goofy material ${name}: unknown base kind ${m.base.kind}`);
     if (pattern) patternOn(sketch, points, pattern);
-    for (const d of decals) sketch.fill(d.path, d.color);   // the decals — part of the base color; the texture goes over them
+    for (const d of decals) sketch.fill(d.path, d.color, [0, 0], skinT);   // the decals — part of the base color; the texture goes over them
   }
 
   const f = m.texture;

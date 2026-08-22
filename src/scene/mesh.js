@@ -41,7 +41,8 @@ function makeInkMaterial(opacity) {
 // Boil variants → one mesh. variants is a list (one per boil frame) of sketch lists; every variant's triangles go into **one geometry**, one after
 // another, and the frame is chosen by the geometry's drawRange (animate: item.boilRanges) — so a part boils without one mesh per frame
 // (the tail's bones and the limbs: a draw call each, not three). Returns the mesh and the [start, count] vertex range of each frame
-// skin: { weightsOf } makes it a SkinnedMesh — the tail: every vertex weighted to two bones by skin.weightsOf(x, y) → [i, wi, j, wj]; the caller binds the skeleton
+// skin: { weightsAt, weightsOf } makes it a SkinnedMesh — the tail: every vertex weighted to two bones by its skin tag (weightsAt(t)) or its position
+// (weightsOf(x, y)) → [i, wi, j, wj]; the caller binds the skeleton
 export function sketchMeshBoil(variants, opacity, renderOrder, dy = 0, { skin = null } = {}) {
   const ranges = [];
   let start = 0;
@@ -58,15 +59,21 @@ export function sketchMeshBoil(variants, opacity, renderOrder, dy = 0, { skin = 
   return { mesh, ranges };
 }
 
-// A skinned mesh — the geometry is in the bones' parent space, every vertex weighted to two bones (skin.weightsOf), and the bones bend it on the
-// GPU. The shared ink material serves it as it is (three.js compiles a skinning variant of the same material — no new material object)
+// A skinned mesh — the geometry is in the bones' parent space, every vertex weighted to two bones, and the bones bend it on the GPU. A vertex's
+// bones come from its **skin tag** (stroke.js tags — the t along the spine the triangle was drawn at, skin.weightsAt(t)); an untagged vertex
+// falls back to its position (skin.weightsOf(x, y) — a projection, wrong beside a tight curl, so the tail tags everything it draws).
+// The shared ink material serves it as it is (three.js compiles a skinning variant of the same material — no new material object)
 function skinnedMesh(sketches, opacity, renderOrder, skin) {
-  const geometry = buildGeometry(sketches);
+  const filled = sketches.filter((s) => !s.empty);
+  const geometry = buildGeometry(filled);
+  const tags = [];
+  for (const s of filled) tags.push(...s.tags);
   const pos = geometry.attributes.position;
   const n = pos.count;
   const index = new Uint16Array(n * 4), weight = new Float32Array(n * 4);
   for (let v = 0; v < n; v += 1) {
-    const [i, wi, j, wj] = skin.weightsOf(pos.getX(v), pos.getY(v));
+    const t = tags[v];
+    const [i, wi, j, wj] = Number.isNaN(t) || t === undefined ? skin.weightsOf(pos.getX(v), pos.getY(v)) : skin.weightsAt(t);
     index[v * 4] = i; index[v * 4 + 1] = j;
     weight[v * 4] = wi; weight[v * 4 + 1] = wj;
   }

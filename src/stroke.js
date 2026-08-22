@@ -82,6 +82,22 @@ function extend(from, to, length, step) {
 // The spine wanders on two sines per world length, the width breathes, the ends run past where they should stop instead of pinching
 // to a point, and a thick line sheds: ink crumbs outside the edge, paper-coloured bites inside. Every number it uses is in this table
 // and nowhere else. Docs: guidelines/drawing.md § the pencil. Drawn by the medium page (how.html); no creature draws with it yet
+// The skin tag at arc length u along `points` — skinT is [t0, t1] (linear over the whole line) or one t per point (piecewise linear between
+// points, so a line's tag can follow another curve's parameter — the tail's rails follow the spine's t, which on the inner side of a curl runs
+// faster than the rail's own length)
+function tagAlong(points, skinT, u, total) {
+  if (skinT.length === points.length && points.length > 2) {
+    let acc = 0;
+    for (let k = 1; k < points.length; k += 1) {
+      const seg = Math.hypot(points[k][0] - points[k - 1][0], points[k][1] - points[k - 1][1]);
+      if (u <= acc + seg || k === points.length - 1) return skinT[k - 1] + (skinT[k] - skinT[k - 1]) * Math.max(0, Math.min(1, (u - acc) / (seg || 1e-9)));
+      acc += seg;
+    }
+  }
+  const f = Math.max(0, Math.min(1, u / (total || 1e-9)));
+  return skinT[0] + (skinT[skinT.length - 1] - skinT[0]) * f;
+}
+
 export const PENCIL = {
   step: 0.01,                          // re-sample spacing (world) — about 2.3 px at board scale; theirs max(2.2, w·.9) px
   wander: 0.0045,                      // the spine's wander amplitude (world), × the individual's wobble
@@ -108,19 +124,26 @@ export class Sketch {
     this.inkScale = inkScale;
     this.positions = [];
     this.colors = [];
+    // The skin tag — one number per vertex (tags), the t along a bent part's spine that the triangle was drawn at, or NaN. A skinned mesh
+    // (the tail) reads its bones from it, so a vertex is never guessed from its position (beside a tight curl, a guess picks the wrong bone).
+    // skinT is the tag the next triangles take; the drawing calls set it (stroke/pencil by arc fraction from a [t0, t1], fill by a constant)
+    this.tags = [];
+    this.skinT = NaN;
     this.phase = 0;
   }
 
   triangle(ax, ay, bx, by, cx, cy, rgb) {
     this.positions.push(ax, ay, 0, bx, by, 0, cx, cy, 0);
     for (let i = 0; i < 3; i += 1) this.colors.push(rgb[0], rgb[1], rgb[2]);
+    this.tags.push(this.skinT, this.skinT, this.skinT);
   }
 
   // One stroke. width is the maximum, and it thins toward the ends — except at a joint: joint = [start, end] marks an end that meets
   // another line or a fill's edge (the tail's root, its side lines meeting the tip's arc), and that end keeps its width
-  stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03, joint = null } = {}) {
+  stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03, joint = null, skinT = null } = {}) {
     const rgb = hexToRgb(color);
     width *= this.inkScale;
+    if (!skinT) this.skinT = NaN;
 
     for (let pass = 0; pass < passes; pass += 1) {
       this.phase += 13.37;
@@ -140,7 +163,10 @@ export class Sketch {
       const press = (t, k) => 0.75 + 0.45 * noise(phase * 0.5 + t * 6 + k);
       const last = path.length - 1;
 
+      let arc = 0;
+      const arcTotal = sampled.reduce((acc, q, k) => (k ? acc + Math.hypot(q[0] - sampled[k - 1][0], q[1] - sampled[k - 1][1]) : 0), 0);
       for (let i = 1; i < path.length; i += 1) {
+        if (skinT) { this.skinT = tagAlong(points, skinT, arc, arcTotal); arc += Math.hypot(sampled[i][0] - sampled[i - 1][0], sampled[i][1] - sampled[i - 1][1]); }
         const [ax, ay] = path[i - 1];
         const [bx, by] = path[i];
         let dx = bx - ax;
@@ -167,6 +193,7 @@ export class Sketch {
     }
   }
 
+  // (the tag is per call — every tagged call resets it at its end, so an untagged call draws NaN)
   // A closed stroke. Used for the head and body outlines.
   outline(points, options = {}) {
     this.stroke([...points, points[0]], options);
@@ -194,11 +221,12 @@ export class Sketch {
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
   // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
-  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, paper = PAPER, joint = null } = {}) {
+  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, paper = PAPER, joint = null, skinT = null } = {}) {
     const P = PENCIL;
     const rgb = hexToRgb(color);
     const biteRgb = hexToRgb(paper);
     width *= this.inkScale;
+    if (!skinT) this.skinT = NaN;
     if (closed && points.length > 2) {
       const [ax, ay] = points[0];
       const [bx, by] = points[points.length - 1];
@@ -268,8 +296,11 @@ export class Sketch {
         else if (!closed && L - s[i] < tail1) tip = P.tip + (1 - P.tip) * ((L - s[i]) / tail1);
         halves.push((w / 2) * Math.max(0.08, k) * tip);
       }
+      // The skin tag along the line — the arc fraction between the overshoot tails, so the tails take the ends' tags
+      const tagAt = (i) => (skinT ? tagAlong(points, skinT, Math.max(0, Math.min(L - tail0 - tail1, s[i] - tail0)), L - tail0 - tail1) : NaN);
       const quads = closed ? n : n - 1;
       for (let i = 0; i < quads; i += 1) {
+        if (skinT) this.skinT = tagAt(i);
         const j = (i + 1) % n;
         const [ax, ay] = path[i];
         const [bx, by] = path[j];
@@ -293,6 +324,7 @@ export class Sketch {
         const h = halves[i];
         const d = isBite ? v * G.inside * h : Math.sign(v || 1) * (G.scatter[0] + (G.scatter[1] - G.scatter[0]) * Math.abs(v)) * h;
         const size = G.size[0] + (G.size[1] - G.size[0]) * Math.abs(noise(ph * 0.17 + i * 7.13));
+        if (skinT) this.skinT = tagAt(i);
         this.square(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, isBite ? biteRgb : rgb);
       }
     }
@@ -301,10 +333,13 @@ export class Sketch {
   // A strip fill — the area between two rails (left[i], right[i] pairs), cut as short quads rung by rung. For a tube that is going to be
   // bent by bones (the tail): a fan from the centre would throw long triangles across the bones and fold like a paddle, a strip keeps
   // every triangle between neighbouring rungs, so the skin bends where the bones bend
-  fillStrip(left, right, color, offset = [0, 0]) {
+  // tOf(i) tags rung i's quads with its t along the spine (the skin tag)
+  fillStrip(left, right, color, offset = [0, 0], tOf = null) {
     const rgb = hexToRgb(color);
     const [ox, oy] = offset;
+    if (!tOf) this.skinT = NaN;
     for (let i = 0; i + 1 < Math.min(left.length, right.length); i += 1) {
+      if (tOf) this.skinT = tOf(i);
       const a = left[i], b = right[i], c = left[i + 1], d = right[i + 1];
       this.triangle(a[0] + ox, a[1] + oy, b[0] + ox, b[1] + oy, c[0] + ox, c[1] + oy, rgb);
       this.triangle(b[0] + ox, b[1] + oy, d[0] + ox, d[1] + oy, c[0] + ox, c[1] + oy, rgb);
@@ -313,7 +348,9 @@ export class Sketch {
 
   // Area fill. Cut as a fan from the centre.
   // Every shape we use is visible from its centre, so this is enough.
-  fill(points, color, offset = [0, 0]) {
+  // skinT tags the fan with one t (the skin tag) — a bead, a tuft, a pom sitting at one place on a bent part
+  fill(points, color, offset = [0, 0], skinT = NaN) {
+    this.skinT = skinT;
     const rgb = hexToRgb(color);
     let cx = 0;
     let cy = 0;

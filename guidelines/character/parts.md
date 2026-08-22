@@ -350,7 +350,7 @@ is a pom (`tailSpine`, `tubeSides` in `limbs.js`).
 | --- | --- |
 | line | One thin stroke (thick on a stub) — the reference default |
 | thick | A filled body, thick at the root and thinning to the tip (fur color), plus an outline |
-| plume | A filled body swollen in the middle plus fur strokes (bushy — a spitz or fox) |
+| plume | A filled body swollen in the middle plus **hairs** — fine pencil lines (0.25, under the grit's width) rooted at the tube's edge, leaning back, and three fanning past the point (bushy — a spitz or fox) |
 | tuft | A thin line plus a filled tuft at the tip (a lion) |
 | block | A block — a strip of constant width with a squared tip |
 | wedge | A wedge — wide at the root, pointed at the tip — **disabled** (a rat tail). Assets and gallery only |
@@ -364,12 +364,15 @@ tailSkin and tailLength are late slots (`LATE_SLOTS`). Bipeds draw them but neve
 The tail is drawn **behind** the torso and head (renderOrder 0.8) — the part curling over the back or lying on the body is hidden.
 The tail is **a four-bone chain under one skin** — the spine is split into 4 (`TAIL_BONES`) with a joint origin and rest-pose direction per bone, and the scene bends each joint separately (the swish,
 the tip tapping, follow-through, and the raise as a straight target angle per joint — it shoots up whatever the skeleton, [../motion/catalog.md](../motion/catalog.md) § the tail).
-**One skin.** The skin is drawn **once along the whole spine** in the pivot's space — the tube as a **strip** between its rails on a spine re-sampled every 0.012 (a fan from
-the centre of a coarse spine throws long triangles across the bones and folds like a paddle when bent), two side lines, the tip, the pattern — and every vertex is weighted to
-two of the bones (`weightsOf`: its t along the rest spine picks the bone, blended by a smoothstep over ±0.09 of the tail around each joint). The scene bends it as a
-`SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side
-lines' root end and the tip's arc are **joints** (`line(…, { joint })`: no overshoot, no thinning); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick).
-A tube's tip is **round** — a disc and an arc — except block, which stays square.
+**One skin.** The skin is drawn **once along the whole spine** in the pivot's space — the tube as a **strip** between its rails on a spine re-sampled every 0.012 and
+smoothed (a fan from the centre of a coarse spine throws long triangles across the bones and folds like a paddle when bent), its width **clamped by the bend** (at most
+0.85 × the radius of curvature, so a tube is never thicker than its curl), two **fine** side lines (weight 0.7 — at 1 the two lines ate a thin tail's width and its tip was
+a black knob), the tip, the pattern. Every triangle the tail draws carries its t along the spine as a **skin tag** (`Sketch.tags`, set by `skinT` / `stripT`) and the skinned
+mesh reads its two bones from the tag (`weightsAt`: the quarter t falls in, blended by a smoothstep over ±0.09 of the tail around each joint) — never from the vertex's
+position, which beside a tight curl picks the curl's other arm and tears the skin (`weightsOf` stays as the fallback for untagged triangles). The scene bends it as a
+`SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side lines'
+ends are **joints** (`line(…, { joint })`: no overshoot, no thinning); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick). A tube's tip
+**tapers to a point** under the lines over 1.6 end-widths (a brush end — a disc and an arc of line were ink on ink) except block, which stays square.
 **Color and pattern.** The tail is the body's color (a quad's `cloth` — the head color or a tone of it), at the head's value step like the rest of the mass. A tube carries the creature's
 **pattern** (the `pattern` slot, [../drawing.md](../drawing.md) § what takes the goofy material) along itself — stripes as **rings**, dots and spots along the spine, hatch across it — in the
 body's pattern ink (light on dark fur). A thin line, a tuft, beads and a pom have no area for it; the calico's patches stay on the head and the body.

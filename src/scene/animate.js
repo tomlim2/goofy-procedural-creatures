@@ -80,10 +80,17 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       const order = (item.orderBase || 0) + (front ? 2.08 : 0.8);
       item.tailGroup.traverse((node) => { if (node.isMesh) node.renderOrder = order; });
     }
-    // Two sets of joint target angles — bone directions (world angles). Raise (tailRaise): **all exactly up (π/2)** — dead vertical whatever the skeleton, with no bent variant.
-    // The idle pose (tailArch, the cat arch): state.tailPose[i]. Both take the cumulative rotation from the skeleton's rest angle (restAngle) to that world angle, split it into joint shares, and blend by the weight
-    // (the sum never passes 1, so the remainder is the skeleton as it is). Root tailAngle and tip tailTip go on top of that
+    // Two sets of joint target angles — bone directions (world angles). Raise (tailRaise): every joint up (π/2), or the raise pose (a ♥'s question mark).
+    // The idle pose (tailArch, the cat arch): state.tailPose[i]. Both take the rotation from the skeleton's rest angle (restAngle) to that world angle, split it into joint
+    // shares, and blend by the weight (the sum never passes 1, so the remainder is the skeleton as it is). Root tailAngle and tip tailTip go on top of that.
+    // A share is taken **the short way round** (wrapped to ±180°) and **capped per joint** (100° at the root, 60° along the tail), the rest cascading to the next joint: a hook's tip sat at −131°
+    // and the arch asked it for −20° — a 171° twist at one joint, which folded the skin onto itself (the black knob at the tip). A curled skeleton now stays
+    // curled under the arch and the raise (its joints turn at most 60°), which is what a real tail does: it cannot hinge through half a turn at one joint
     const UP = Math.PI * 0.5;
+    // The cap per joint: the root may swing 100° (a tail lifts from flat to up at its base), the joints along it 60°
+    const capOf = (i) => (i === 0 ? Math.PI * 0.556 : Math.PI / 3);
+    const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+    const share = (want, cum, i) => Math.max(-capOf(i), Math.min(capOf(i), wrap(want - cum)));
     const rp = state.tailRaisePose;   // the raise's target pose — joint world angles (a ♥'s question mark), or null: every joint vertical
     const arch = state.tailArch || 0;
     const pose = state.tailPose;
@@ -94,13 +101,14 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     let px = 0, py = 0;
     for (let i = 0; i < n; i += 1) {
       const b = bones[i];
-      const wantUp = (rp ? rp[Math.min(i, rp.length - 1)] : UP) - b.restAngle;   // the cumulative rotation this bone needs to reach its raise target
-      let rot = (wantUp - cumUp) * raise;   // this joint's share, with the rotation up to its parent taken off
-      cumUp = wantUp;
+      const wantUp = (rp ? rp[Math.min(i, rp.length - 1)] : UP) - b.restAngle;   // the rotation this bone needs to reach its raise target
+      const sUp = share(wantUp, cumUp, i);   // this joint's share, with the rotation up to its parent taken off — short way round, capped
+      let rot = sUp * raise;
+      cumUp += sUp;
       if (arch > 0 && pose) {
-        const wantArch = pose[Math.min(i, pose.length - 1)] - b.restAngle;
-        rot += (wantArch - cumArch) * arch;
-        cumArch = wantArch;
+        const sArch = share(pose[Math.min(i, pose.length - 1)] - b.restAngle, cumArch, i);
+        rot += sArch * arch;
+        cumArch += sArch;
       }
       if (i === 0) rot += state.tailAngle;
       if (i === n - 1) rot += state.tailTip || 0;
