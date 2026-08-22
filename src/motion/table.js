@@ -76,7 +76,9 @@ export const MOTION = {
     // (weight — at 1 the skeleton is invisible; at 0.85, 15% of its character remains so each individual differs a little). The root leans slightly toward the head as it rises, and the tip goes over
     // **to the far side from the head (back)**, coming **down to −75°** (almost a vertical drop) — an ∩ arch hanging in the air behind its back. The top two bones vary by the individual's tailLift (−1~1)
     // by ±liftBend (±7°) — only slightly. Asleep or raised, this pose drops out (motion/index.js tailArch)
-    tailIdlePose: { angles: [1.85, 1.3, 0.05, -75 * Math.PI / 180], weight: 0.85, liftBend: 0.12 },
+    // The arch — an open question mark: rising with a lean toward the head, the tip curling forward and a little down (−20°). It was an ∩ with the tip
+    // straight down (3°, −75°): a line tail read it as a curl, a thick plume folded onto itself into a lump
+    tailIdlePose: { angles: [1.8, 1.3, 0.45, -20 * Math.PI / 180], weight: 0.85, liftBend: 0.12 },
     // Cats sleep and sit more often, and for longer
     modes: [["idle", 2], ["sleep", 1], ["walk", 1], ["sit", 1.5]], modeHold: { idle: [40, 120], sleep: [30, 90], walk: [6, 14], sit: [20, 60] },
     walk: { hz: 2.2, leg: 0.28, bob: 0.006, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.05, tail: 0 },   // an unhurried walk — the tail does not sway with it (a cat does not wag like a dog)
