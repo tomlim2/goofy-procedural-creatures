@@ -21,18 +21,9 @@ export function drawHead(ink, fills, spec, box, noise) {
   // The material slot — how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
   fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset });
 
-  // Pencil scribble. Covers the flat fill with a single zigzag stroke in a darker tone
-  // of the same family, leaving the stroke direction behind. On imps it scratches a slightly lighter tone over the ink-black.
-  const scribbleAngle = Math.PI * (0.14 + noise(p.wobbleSeed * 0.03) * 0.22);
-  if (isDark(spec.palette.skin)) {
-    fills.scribbleFill(0.01, box.headCy, box.headRx * 0.82, box.headRy * 0.8, {
-      color: shade(spec.palette.skin, 1.5), angle: scribbleAngle, gap: 0.03, width: 0.006
-    });
-  } else {
-    fills.scribbleFill(0.01, box.headCy, box.headRx * 0.8, box.headRy * 0.76, {
-      color: shade(spec.palette.skin, 0.9), angle: scribbleAngle, gap: 0.034, width: 0.007
-    });
-  }
+  // The head's pencil scribble (a tilted zigzag in a darker tone over the fill) is **off**: scribbleFill shades an ellipse it cannot
+  // clip to the contour, so on a tapered or squared head its corners poked past the outline. It comes back as the light's shade
+  // (guidelines/drawing.md § the light) — a shadow computed from a light direction and clipped to the contour, like a material's texture
 
   // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
   // The goofy outline — PENCIL (stroke.js GOOFY_OUTLINES); the head's contour runs a little heavier than the body's (weight)

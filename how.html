@@ -135,8 +135,8 @@ then the texture alone.</p>
 <h3>the techniques</h3>
 <p>What the recipes are written in — a material's <code>kind</code>. A flat fill is allowed, but it must miss its
 outline a little; anything that means <em>shading</em> is not a fill at all, it is the pen going back and forth.
-<code>scribbleFill</code> has no recipe naming it yet — every body calls it directly (a <b>SHADED</b> material, flat
-plus this, is the candidate).</p>
+<code>scribbleFill</code> is not a material's texture and is off on the board for now: shading is the light's job, not
+the surface's — a shadow computed from a light direction and clipped to the contour (the next axis).</p>
 
 <div class="figs">
   <figure data-fig="register">
@@ -151,8 +151,9 @@ plus this, is the candidate).</p>
     <canvas></canvas>
     <div class="subs"><span>one zigzag stroke</span></div>
     <figcaption><b>s.scribbleFill</b> — shading is one stroke zigzagging across the area,
-    so the pen direction shows. This is what a pencil-shaded patch really is; every body
-    carries one.</figcaption>
+    so the pen direction shows. Every head and body carried one — <b>off on the board for now</b>: it
+    shades an ellipse it cannot clip to the contour, and poked past it. It returns as the light's
+    shade.</figcaption>
   </figure>
 
   <figure data-fig="hatch">

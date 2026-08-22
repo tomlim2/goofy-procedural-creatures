@@ -80,6 +80,15 @@ Candidates not grown yet: TUFT (short and dense — an animal's tail end), WISP 
 that bunch). Adding one is an entry in the table plus the parts that name it; the medium page grows a fur ball
 per entry by itself.
 
+## The light — not built yet
+
+Shading is not a material's job: in 3D, `material × light = shading`. The tilted scribble ellipses that shaded
+every head and body (`scribbleFill`, a technique that cannot clip to a contour, so it poked past the outline
+on tapered heads and short torsos) are **off**. What replaces them is a light: one direction per board or per
+creature, and for every filled part a shade — the region facing away from the light, clipped to the contour
+and filled in the material's shadow technique and a deeper tone of the part's color. Two steps, like cel
+shading. The cheek and forehead hatch are the same thing (an occlusion). Until it exists, surfaces are flat.
+
 ## Materials — how a surface is filled
 
 A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as channels.

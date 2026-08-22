@@ -13,10 +13,7 @@ export function drawBody(ink, fills, spec, box, noise) {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
     fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset });   // the material slot (flat when absent)
-    fills.scribbleFill(cx, cy, box.bodyW * 0.8, (box.bodyTop - box.legTop) * 0.4, {
-      color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
-      angle: Math.PI * 0.22, gap: 0.026, width: 0.006
-    });
+    // The body's scribble shading is off — an ellipse it cannot clip to the contour (see drawHead); it returns as the light's shade
     ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
   }
@@ -41,10 +38,7 @@ export function drawBody(ink, fills, spec, box, noise) {
   }
 
   fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset });   // the material slot (flat when absent)
-  fills.scribbleFill(0, (top + bottom) / 2, w * 0.72, (top - bottom) * 0.4, {
-    color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
-    angle: Math.PI * 0.28, gap: 0.03, width: 0.006
-  });
+  // The body's scribble shading is off — on a short or wide torso the tilted ellipse poked past the contour; it returns as the light's shade
   ink.contour(path, "PENCIL", { color: ink0, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   return { path, top, bottom, w, cx: 0 };
 }
