@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MENAGERIE — how it is drawn</title>
-<meta name="description" content="The medium page: every stroke kind, shape recipe and color of the board, drawn live by the same code that draws the creatures.">
+<meta name="description" content="The medium page: the goofy outline, the materials and the goofy fur — how the board's creatures are drawn, every figure drawn live by the same code that draws them.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -127,8 +127,11 @@ paint the same thing, the colour of the surface; a channel that would be a diffe
 62% graphite), grain (the paper showing through) — is not built yet. That is the material, and nothing else (the
 contour is the goofy outline, above). The color always comes from the part, and every tone the texture adds is a
 shade of that color. A part names one and hands over the path and the color —
-<code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself. The board is made of
-<b>FLAT</b> today. The table is <code>MATERIALS</code> in <code>src/stroke.js</code>; every entry gets a shader ball —
+<code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself. On the board each
+creature's head and body take the creature's <b>material</b> (a slot: FLAT for most, GRAPHITE, INK, OIL or CHARCOAL
+for the rest) at its <b>density</b> (another slot: a light hand, a normal one, a heavy one); its <b>pattern</b> (stripes,
+dots, spots, hatching — a third slot) is drawn inside the base colour. The table is <code>MATERIALS</code> in
+<code>src/stroke.js</code>; every entry gets a shader ball —
 the same ball in the same color, its contour the board's PENCIL — and under it its channels: the base colour alone,
 then the texture alone, then the texture at a light hand and a heavy one — the <b>density</b>, one knob over every texture's
 crowding (the hatch's spacing, the scratches' count, the dabs' and the specks' count), which the board picks per creature.</p>
