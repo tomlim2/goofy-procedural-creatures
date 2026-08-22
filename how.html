@@ -135,40 +135,6 @@ crowding (the hatch's spacing, the scratches' count, the dabs' and the specks' c
 
 <div class="figs" id="materialBalls"></div>
 
-<h3>the techniques</h3>
-<p>What the recipes are written in — a material's <code>kind</code>. A flat fill is allowed, but it must miss its
-outline a little; anything that means <em>shading</em> is not a fill at all, it is the pen going back and forth.
-<code>scribbleFill</code> is not a material's texture and is off on the board for now: shading is the light's job, not
-the surface's — a shadow computed from a light direction and clipped to the contour (the next axis).</p>
-
-<div class="figs">
-  <figure data-fig="register">
-    <canvas></canvas>
-    <div class="subs"><span>fillOffset — out of register</span></div>
-    <figcaption><b>fill</b> — FLAT itself: a fan of triangles from the centre, printed slightly off its line
-    (<code>fillOffset</code>, ±0.035 per individual) like a cheap print. Every material's base is this fill-up;
-    a fill that lands exactly inside its outline looks like a sticker.</figcaption>
-  </figure>
-
-  <figure data-fig="shading">
-    <canvas></canvas>
-    <div class="subs"><span>one zigzag stroke</span></div>
-    <figcaption><b>s.scribbleFill</b> — shading is one stroke zigzagging across the area,
-    so the pen direction shows. Every head and body carried one — <b>off on the board for now</b>: it
-    shades an ellipse it cannot clip to the contour, and poked past it. It returns as the light's
-    shade.</figcaption>
-  </figure>
-
-  <figure data-fig="hatch">
-    <canvas></canvas>
-    <div class="subs"><span>parallel strokes, never a gradient</span></div>
-    <figcaption><b>s.hatch</b> — shadow on a cheek or a forehead: a few parallel strokes
-    clipped to an ellipse. Each one is a full ribbon, so each one wobbles on its own. GRAPHITE
-    is this, clipped to the contour instead.</figcaption>
-  </figure>
-
-</div>
-
 <h3>the material underneath, and the boil</h3>
 <p>Underneath there is exactly one GPU material — a flat <code>MeshBasicMaterial</code> with vertex colors,
 shared per opacity level by every mesh on the board. No depth test, so stacking is decided

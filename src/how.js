@@ -11,7 +11,6 @@ import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
 import { runLoop, bindSeg } from "./ui.js";
-import { shade } from "./color.js";
 import { PAPER, INKS, FILLS, POPS, DARKS } from "./character/index.js";
 import { FURS, CALICO_MID, ACCENTS } from "./character/vocabulary/palette.js";
 
@@ -98,33 +97,11 @@ fig("outline", [-0.75, -0.27, 0.75, 0.27], (sk) => {
   sk().outline(blobPath(0, 0, 0.42, 0.2, { lumps: 4, amount: 0.09, noise, phase: 7, square: 0.3 }), { color: INK, width: 0.012, passes: 2 });
 });
 
-fig("register", [-0.45, -0.22, 0.45, 0.22], (sk) => {
-  const fills = sk(), ink = sk();
-  const path = blobPath(0, 0, 0.26, 0.17, { lumps: 5, amount: 0.09, noise, phase: 11 });
-  fills.fill(path, FILLS[0], [0.03, -0.024]);                         // out of register, like every head and body
-  ink.outline(path, { color: INK, width: 0.012, passes: 2 });
-});
-
-fig("shading", [-0.45, -0.2, 0.45, 0.2], (sk) => {
-  const fills = sk(), ink = sk();
-  const path = blobPath(0, 0, 0.3, 0.15, { lumps: 4, amount: 0.1, noise, phase: 13 });
-  fills.fill(path, FILLS[5], [0.014, -0.01]);
-  fills.scribbleFill(0, 0, 0.19, 0.08, { color: shade(FILLS[5], 0.9), angle: Math.PI * 0.22, gap: 0.03, width: 0.006 });   // the tilted ellipse has to stay inside the blob
-  ink.outline(path, { color: INK, width: 0.012, passes: 2 });
-});
 
 fig("hair", [-0.45, -0.26, 0.45, 0.26], (sk) => {
   const ink = sk();
   ink.outline(blobPath(0, -0.06, 0.24, 0.18, { lumps: 5, amount: 0.07, noise, phase: 17 }), { color: INK, width: 0.01 });
   ink.fur(arcPath(0, 0.06, 0.16, 0.09, Math.PI * 0.15, Math.PI * 0.85, 12), "SCRIBBLE", { color: INK, width: 0.008, spread: 0.045 });
-});
-
-fig("hatch", [-0.45, -0.2, 0.45, 0.2], (sk) => {
-  const fills = sk(), ink = sk();
-  const path = blobPath(0, 0, 0.24, 0.15, { lumps: 5, amount: 0.09, noise, phase: 19 });
-  fills.fill(path, FILLS[3], [0.016, -0.012]);
-  ink.outline(path, { color: INK, width: 0.011 });
-  ink.hatch(0.02, -0.01, 0.14, 0.08, Math.PI * 0.25, { color: INK, lines: 6, width: 0.006 });
 });
 
 // The blobPath knobs — one knob per figure, three values each
