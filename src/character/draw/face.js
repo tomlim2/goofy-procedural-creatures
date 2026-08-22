@@ -105,7 +105,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // the almond is raised a little (0.7r) and the pupil filled as an area, so it reads as a cat eye from a distance.
       // Inside the almond is the white — in skin tone it becomes a patch with a pupil floating in it, and on black fur or an imp the almond merges with the head
       const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, { lumps: 3, amount: 0.1, noise: null });
-      paintPart(fills, spec, path, SCLERA, { own: true });
+      paintPart(fills, spec, path, SCLERA, { flat: true });
       fills.outline(path, { color: dark, width: 0.01 });
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), dark, { own: true });
     } else if (kind === "line") {
@@ -127,7 +127,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // What the lower arc encloses is the white — the arc starts at both ends of the lid line and goes round the bottom, so filling it whitens only below that line.
       // Above the line (the lid) is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
-      paintPart(fills, spec, arc, SCLERA, { own: true });
+      paintPart(fills, spec, arc, SCLERA, { flat: true });
       fills.stroke(arc, { color: dark, width: 0.011 });
       fills.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark, width: 0.013 });
       paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark, { own: true });
@@ -140,7 +140,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // The fill and outline are drawn per eye into **the same sketch (fills)** — when two eyes overlap the later eye (the larger) covers the front eye's outline (no crossing line).
       // For that, smallest first: the larger eye is drawn later and so ends up in front
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // a slightly crumpled circle
-      paintPart(fills, spec, path, SCLERA, { own: true });
+      paintPart(fills, spec, path, SCLERA, { flat: true });
       fills.outline(path, { color: dark, width: 0.011, passes: 2 });   // the white's rim is black — being on the white, it is always visible
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
       // The heavy-lidded set — **the same eye at different tilts**: lidded flat · sharp tilted toward the nose (the fierce look of a lifted outer corner) ·
@@ -168,7 +168,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         lid.push([x, eye.y + eye.r * (rel * 1.05) - Math.sin(Math.PI * t) * eye.r * 0.16]);
       }
       const lidLine = rot(lid);
-      paintPart(fills, spec, path, SCLERA, { own: true });
+      paintPart(fills, spec, path, SCLERA, { flat: true });
       // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it
       const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
       paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
@@ -185,7 +185,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const a0 = Math.asin(lidY / eye.r);   // the angle at which the lid line meets the circle
       // What the arc encloses (below the line) is the white. Above the line is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
-      paintPart(fills, spec, arc, SCLERA, { own: true });
+      paintPart(fills, spec, arc, SCLERA, { flat: true });
       fills.stroke(arc, { color: dark, width: 0.011, jitter: 0.006 });
       fills.stroke([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], {
         color: dark, width: 0.013

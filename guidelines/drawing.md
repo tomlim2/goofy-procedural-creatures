@@ -97,9 +97,9 @@ ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes the
 mass on a dog, a cat or an imp (`surfaceValue`), its own color's on a human. A detail or an object — the hats,
 the inner ear, the eyes (whites, pupils, irises, highlights, the static eyes, the star and heart eyes, the angry
 eye), the nose, the mouth's inside, teeth and tongue, the blush, the freckles, the eye patch, the cheek and
-forehead shade patches, the horn tip — takes its **own color's** step (`own`): a white eye is drawn light, a
-black nose black, whatever the creature's hand. The only flat fills left are the emoji, which are not a
-creature's part.
+forehead shade patches, the horn tip — takes its **own color's** step (`own`): a black nose black, whatever the creature's hand. Two things stay FLAT
+by rule: the **whites of the eyes** (the sclera, the static eyes' white, the star eye — `flat`: a white of the
+eye is not a surface the pencil touches) and the emoji, which are not a creature's part.
 
 Adding a filled part means painting it through `paintPart`, never `fill` — a `fill` on a creature is a bug
 (it stands flat beside a hatched head).
