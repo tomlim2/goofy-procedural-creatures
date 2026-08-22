@@ -1,4 +1,5 @@
 // Screen control utilities — main.js and gallery.js share them. They know nothing about the scene.
+import { TICK_FPS } from "./tick.js";
 
 // Wires a segmented button group (`.seg > button[data-<attr>]`). A click moves `.on` to that button and calls onChange(value).
 // Returns { value(), set(value) } — keyboard shortcuts go through set, the same path as a button click.
@@ -53,14 +54,22 @@ export function randomSeed() {
 
 // rAF loop. The loop survives exceptions — if the rAF loop dies, only the label changes while the canvas freezes, which reads as "the buttons don't work".
 // Calls tick(elapsedSeconds) every frame. onError is for updating the status label
+// The loop — a fixed TICK_FPS ticks per second (tick.js). A rAF frame whose tick has not changed does nothing: no update, no render.
+// tick(t) gets t = n / TICK_FPS, the n-th tick's time, never the display's clock — so the pose at tick n is the same on every machine.
+// A stall (a hidden tab) skips ticks rather than catching up: time is the truth, not the step count
 export function runLoop(tick, onError) {
   const start = performance.now();
+  let last = -1;
   const frame = () => {
-    try {
-      tick((performance.now() - start) / 1000);
-    } catch (error) {
-      onError(error);
-      console.error(error);
+    const n = Math.floor(((performance.now() - start) / 1000) * TICK_FPS);
+    if (n !== last) {
+      last = n;
+      try {
+        tick(n / TICK_FPS);
+      } catch (error) {
+        onError(error);
+        console.error(error);
+      }
     }
     requestAnimationFrame(frame);
   };

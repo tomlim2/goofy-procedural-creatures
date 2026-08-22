@@ -15,6 +15,7 @@ import * as S from "./states.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, sitPose, bindArm, solveArms } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
 import { ramp, smoothstep, damp } from "./ease.js";
+import { TICK_FPS } from "../tick.js";
 
 export { MOTION } from "./table.js";
 export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms } from "./actions.js";
@@ -356,11 +357,11 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         tailAngle = tailAngle * awake - 0.55 * sleepK;
         tailTip = tailTip * awake - 0.6 * sleepK;   // the tip folds further, against the body
       }
-      // Follow-through — the tip bone lags slightly behind, counter to the root's angular velocity (critically damped). Frame-based, so deterministic
+      // Follow-through — the tip bone lags slightly behind, counter to the root's angular velocity (critically damped). One step per tick, so deterministic
       if (TT && TT.follow) {
-        const vel = tailPrevBase === null ? 0 : tailAngle - tailPrevBase;
+        const vel = tailPrevBase === null ? 0 : tailAngle - tailPrevBase;   // per tick
         tailPrevBase = tailAngle;
-        damp(tailFollow, Math.max(-0.5, Math.min(0.5, -vel * TT.follow * 60)), 0.25);
+        damp(tailFollow, Math.max(-0.5, Math.min(0.5, -vel * TT.follow * TICK_FPS)), 0.25);   // × ticks per second — the velocity per second
         tailTip += tailFollow.x;
       }
       const sleepHead = sleepK * 0.32 * (seed % 2 ? 1 : -1);      // the head tilts to one side as it rests

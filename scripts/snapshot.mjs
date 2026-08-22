@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { TICK_FPS } from "../src/tick.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -62,14 +63,14 @@ for (const spec of grid) {
   out.geometry.push(entry);
 }
 
-// 3. motion trajectories — four species, 60 s, sampled every 10 frames
+// 3. motion trajectories — four species, 60 s at the board's tick (TICK_FPS), sampled every 10 ticks
 for (const species of ["human", "pup", "cat", "imp"]) {
   // The rig description (motionRig) is passed in — motion IK solves hand targets into angles, and knows how far the body settles when a quad sleeps
   const rig = draw.motionRig ? draw.motionRig(draw.makeCreature(42, species)) : false;
   const clock = clocks.makeClock(42, 3, species, rig);
   const samples = [];
-  for (let f = 0; f < 3600; f += 1) {
-    const s = clock.update(3 + f / 60);
+  for (let f = 0; f < 60 * TICK_FPS; f += 1) {
+    const s = clock.update(3 + f / TICK_FPS);
     if (f % 10 === 0) {
       const flat = {};
       for (const [k, v] of Object.entries(s)) {

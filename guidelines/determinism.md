@@ -63,6 +63,16 @@ condition first (fixing the call count) or, if it is a species restriction, use 
 `character/draw/` builds its own rng from `spec.proportions.wobbleSeed`. The generation rng is never carried
 on into drawing. That is what lets you change the drawing without changing the combinations.
 
+## The tick — motion is sampled 24 times a second
+
+The loop (`ui.js runLoop`) does not hand the motion the display's clock. It counts **ticks** — `TICK_FPS` 24 a
+second (`src/tick.js`) — and calls `update(n / 24)` only when the tick changes; rAF frames in between do nothing.
+So the pose at tick n is the same on every machine, 60 Hz or 120 Hz, and the seed's determinism reaches the
+motion. The per-step filters (`motion/ease.js damp`) advance one tick per call by the exact solution of the
+critically damped system, so their settling times are seconds, not frames; everything else in `motion/` is a
+function of t. A stall skips ticks rather than catching up — time is the truth, not the step count. The snapshot's
+motion trajectories and the frequency count ([motion/rules.md](motion/rules.md)) step at the same tick.
+
 ## How to check
 
 `scripts/snapshot.mjs` verifies specs, geometry and motion trajectories in one pass

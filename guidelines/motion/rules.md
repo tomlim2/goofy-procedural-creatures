@@ -65,7 +65,7 @@ Velocity has to be 0 at the start and the end. There is no curve in this lab tha
 | n times (a nod ×2, a paw flick ×3) | `bumps(k, n)` — sin² | `\|sin(nπk)\|` (a kink at the bottom) |
 | Attack, hold, release (the startle eye, the shiver, a tail flick) | `envelope(k, attack, release)` — smoothstepped at both ends | `sin(πk)^0.6`, a `(1 - k)` decay |
 | A fade (the 0.35 s oscillation envelope, an emoji entering and leaving) | `ramp(x)` | a linear `min(1, x)` |
-| Following a target (the gaze w 0.2 · the face turn w 0.1 · joints w 0.18) | `damp({x, v}, target, w)` — critically damped second order, no overshoot | an exponential lerp `x += (t - x) * 0.06` (the first frame is the fastest) |
+| Following a target (the gaze w 0.2 · the face turn w 0.1 · joints w 0.18) | `damp({x, v}, target, w)` — critically damped second order, no overshoot; w per 60-Hz frame (0.1 ≈ 0.8 s), stepped one tick per call by the exact solution | an exponential lerp `x += (t - x) * 0.06` (the first frame is the fastest) |
 
 The only exceptions are where the physics really is like that — a jump's airborne trajectory (the moment the feet kick off the ground is meant to pop) and oscillation itself (a sine wave). The startle shrinks the pupil in 0.1 s
 (as an S-curve even so), holds 3.8 s and releases in 0.1 s.
@@ -106,15 +106,15 @@ big joint events are rare and small. Settle a new motion's amplitude and interva
 
 ## Count the firing frequency
 
-If you changed it, count how many frames it fires over a 60 s simulation. Never judge by eye alone.
+If you changed it, count how many ticks it fires over a 60 s simulation — at the board's tick, 24 a second ([../determinism.md](../determinism.md) § the tick). Never judge by eye alone.
 
 ```bash
 node --input-type=module -e "
 Promise.all([import('./src/motion/index.js'), import('./src/character/index.js')]).then(([{makeClock}, {makeCreature, armRig}]) => {
   const c = makeClock(42, 0, 'human', armRig(makeCreature(42, 'human')));
   let n = 0;
-  for (let f = 0; f < 3600; f++) { const s = c.update(f/60); if (s.YOUR_STATE) n++; }
-  console.log(n, 'frames / 3600');
+  for (let f = 0; f < 1440; f++) { const s = c.update(f / 24); if (s.YOUR_STATE) n++; }
+  console.log(n, 'ticks / 1440');
 });"
 ```
 

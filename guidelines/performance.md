@@ -31,7 +31,7 @@ From the console (`window.menagerie.scene`):
 ```js
 const s = menagerie.scene, r = s.renderer;
 r.info.autoReset = false; r.info.reset();   // a frame is two renders (the board on its target, the sheet over it) — count both
-const t0 = performance.now(); for (let f = 0; f < 120; f++) { s.resize(); s.update(10 + f / 60); }
+const t0 = performance.now(); for (let f = 0; f < 120; f++) { s.resize(); s.update(10 + f / 24); }
 console.log("ms/frame", ((performance.now() - t0) / 120).toFixed(2), "calls", r.info.render.calls / 120, "tris", r.info.render.triangles / 120);
 r.info.autoReset = true;
 ```
@@ -41,6 +41,12 @@ meshes and materials with `s.scene.traverse`.
 If you changed the scene structure (layers, rig, meshes), measure these numbers again and update the table above.
 
 ## Rules
+
+### The tick — 24 a second, and nothing in between
+
+The loop runs the motion at a fixed 24 ticks a second ([determinism.md](determinism.md) § the tick) and a rAF
+frame whose tick has not changed neither updates nor renders. On a 60 Hz screen that is 24 frames drawn, not 60 —
+the two passes and their draw calls run 2.5× less often — and on 120 Hz, 5×. The numbers above are per drawn frame.
 
 ### A part that boils without a mesh per frame — `sketchMeshBoil`
 
