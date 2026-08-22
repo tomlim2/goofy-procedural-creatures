@@ -29,18 +29,27 @@
 
 <main class="page">
 
-<p class="lede">Everything on the board is made of what is on this page. No textures, no brush images —
-the hand comes from rules alone. Every figure below is drawn live by <code>src/stroke.js</code>,
-the same code that draws the creatures. The figures hold still; <b>INK BOIL</b> in the header
-(or <code>I</code>) sets their lines boiling at the board's own pace.</p>
+<p class="lede">Everything on the board is made of what is on this page, on two axes: the <b>goofy outline</b> —
+what a creature's contour is drawn with — and the <b>material</b> — how its surfaces are filled. No textures, no
+brush images; the hand comes from rules alone. Every figure is drawn live by <code>src/stroke.js</code>, the same
+code that draws the creatures. The figures hold still; <b>INK BOIL</b> in the header (or <code>I</code>) sets their
+lines boiling at the board's own pace.</p>
 
 <!-- ================================================================ -->
 <section>
-<h2>THE LINE</h2>
-<p>WebGL cannot draw a thick line, so there are no lines here at all — every stroke is a
-<b>triangle ribbon</b>. Four things have to be present together to read as a pencil:
-re-sampling at an even spacing, noise along the normal (a slow bend plus a fine tremor),
-an end taper, and uneven pressure through the middle. Leave out any one and it becomes vector clip art.</p>
+<h2>THE GOOFY OUTLINE</h2>
+<p>A creature's contour is drawn with one <b>goofy outline</b>, named from <code>GOOFY_OUTLINES</code> in
+<code>src/stroke.js</code> — <code>ink.contour(path, "PENCIL", { color, closed, weight })</code>. A part never picks
+a line function or a width; at most a weight (the head's contour runs at 1.15 of the body's). Two outlines exist:
+<b>RIBBON</b>, the board's original, and <b>PENCIL</b>, what the board draws with today. The same FLAT ball, each contour:</p>
+
+<div class="figs" id="outlineBalls"></div>
+
+<h3>RIBBON — the ribbon</h3>
+<p>WebGL cannot draw a thick line, so there are no lines here at all — every stroke is a <b>triangle ribbon</b>.
+Four things have to be present together to read as a pencil: re-sampling at an even spacing, noise along the normal
+(a slow bend plus a fine tremor), an end taper, and uneven pressure through the middle. Leave out any one and it
+becomes vector clip art. RIBBON lays this stroke twice around the contour.</p>
 
 <div class="figs">
   <figure data-fig="ribbon">
@@ -53,7 +62,7 @@ an end taper, and uneven pressure through the middle. Leave out any one and it b
   <figure data-fig="clipart">
     <canvas></canvas>
     <div class="subs"><span>jitter 0 — clip art</span><span>the hand</span></div>
-    <figcaption><b>the four ingredients</b> — the same stroke with its noise turned off, above.
+    <figcaption><b>the four ingredients</b> — the same stroke with its noise turned off, on the left.
     Taper and pressure alone are not enough; without the wobble it is already dead.</figcaption>
   </figure>
 
@@ -73,65 +82,35 @@ an end taper, and uneven pressure through the middle. Leave out any one and it b
     constant, the whole board falls into the same handwriting.</figcaption>
   </figure>
 
+  <figure data-fig="outline" class="wide">
+    <canvas></canvas>
+    <div class="subs"><span>passes 2 — the two never quite agree</span></div>
+    <figcaption><b>s.outline</b> — the closed stroke, laid twice: this is RIBBON, the contour every head and
+    body had until the pencil. Each pass re-rolls its jitter phase, so the doubled line is the contour's texture.</figcaption>
+  </figure>
+</div>
+
+<h3>PENCIL — the pencil</h3>
+<p>The reference's line (<a href="https://kindergrimm.vercel.app/how.html">kindergrimm</a> § the pencil), kept next to
+the ribbon as <code>s.pencil</code>. The spine wanders on two sines per length, the width breathes, the ends run past
+where they should stop instead of pinching, and a thick line sheds — ink crumbs on the edge, paper bites inside.
+Its 62% ink is left out on purpose (ours stays opaque), and so is its tremor. Every number is in <code>PENCIL</code>
+in <code>src/stroke.js</code>. A closed pencil line is seamless: its sines snap to whole cycles and it never overshoots.</p>
+
+<div class="figs">
   <figure data-fig="pencil">
     <canvas></canvas>
     <div class="subs"><span>width 0.007</span><span>0.012</span><span>0.022</span></div>
-    <figcaption><b>s.pencil</b> — the reference's line, next to ours
-    (<a href="https://kindergrimm.vercel.app/how.html">kindergrimm</a> § the pencil). The spine wanders on
-    two sines per length, the width breathes, the ends run past where they should stop instead of
-    pinching, and a thick line sheds — ink crumbs outside the edge, paper bites inside. Its 62% ink is
-    left out on purpose (ours stays opaque), and so is its tremor. Every number is in <code>PENCIL</code>
-    in <code>src/stroke.js</code>; no creature draws with it yet.</figcaption>
+    <figcaption><b>s.pencil</b> — the same three widths as the ribbon's, for the comparison. This is the line
+    the board's contours are drawn with today.</figcaption>
   </figure>
 
   <figure data-fig="twoLines">
     <canvas></canvas>
-    <div class="subs"><span>s.stroke · s.outline</span><span>s.pencil</span></div>
-    <figcaption><b>the same face twice</b> — the contour and the smile in our ribbon on the left, in the
-    pencil on the right. The loop on the right has no seam: a closed pencil line snaps its sines to whole
-    cycles and never overshoots. Its quads share one normal per point, so it cannot crack at a corner either.</figcaption>
-  </figure>
-</div>
-
-<p>A creature's contour is drawn with one <b>goofy outline</b>, named from <code>GOOFY_OUTLINES</code> in
-<code>src/stroke.js</code>: <b>RIBBON</b>, the board's original — <code>stroke</code> laid twice — or <b>PENCIL</b>, the
-line above. The board draws with PENCIL today. The outline is its own concept, not part of a material: a contour is
-not a way of filling.</p>
-
-<div class="figs" id="outlineBalls"></div>
-
-<p>And what an area gets. A flat fill is allowed, but it must miss its outline a little —
-and anything that means <em>shading</em> is not a fill at all, it is the pen going back and forth.</p>
-
-<div class="figs">
-  <figure data-fig="register">
-    <canvas></canvas>
-    <div class="subs"><span>fillOffset — out of register</span></div>
-    <figcaption><b>fill</b> — a fan of triangles from the centre, printed slightly off its line
-    (<code>fillOffset</code>, ±0.035 per individual) like a cheap print. A fill that lands
-    exactly inside its outline looks like a sticker.</figcaption>
-  </figure>
-
-  <figure data-fig="shading">
-    <canvas></canvas>
-    <div class="subs"><span>one zigzag stroke</span></div>
-    <figcaption><b>s.scribbleFill</b> — shading is one stroke zigzagging across the area,
-    so the pen direction shows. This is what a pencil-shaded patch really is; every body
-    carries one.</figcaption>
-  </figure>
-
-  <figure data-fig="hair">
-    <canvas></canvas>
-    <div class="subs"><span>14 passes, reaching outward</span></div>
-    <figcaption><b>s.scribble</b> — hair is never a filled shape. The same path is drawn
-    over and over with drift and wave, narrower toward the face, reaching outward.</figcaption>
-  </figure>
-
-  <figure data-fig="hatch">
-    <canvas></canvas>
-    <div class="subs"><span>parallel strokes, never a gradient</span></div>
-    <figcaption><b>s.hatch</b> — shadow on a cheek or a forehead: a few parallel strokes
-    clipped to an ellipse. Each one is a full ribbon, so each one wobbles on its own.</figcaption>
+    <div class="subs"><span>RIBBON</span><span>PENCIL</span></div>
+    <figcaption><b>the same face twice</b> — the contour and the smile in the ribbon on the left, in the
+    pencil on the right. The loop on the right has no seam, and its quads share one normal per point, so it
+    cannot crack at a corner either.</figcaption>
   </figure>
 </div>
 </section>
@@ -142,12 +121,51 @@ and anything that means <em>shading</em> is not a fill at all, it is the pen goi
 <p>A material is what a surface is made of — the way a 3D material is: <b>how its area is filled</b>. Hatched,
 scratched, washed, dabbed, dusted, banded, or simply the fill-up — that is the material, and nothing else (the contour
 is the goofy outline, above). The color always comes from the part, and every tone a material adds is a shade of
-that color. A part names one and hands over the path and the color (<code>paint</code>) and never picks a technique
-itself. The board is made of <b>FLAT</b> today. The table is <code>MATERIALS</code> in <code>src/stroke.js</code>; every
-entry gets a shader ball below — the same ball in the same color, its contour the board's PENCIL.</p>
+that color. A part names one and hands over the path and the color — <code>fills.paint(path, "FLAT", { color, offset })</code> —
+and never picks a technique itself. The board is made of <b>FLAT</b> today. The table is <code>MATERIALS</code> in
+<code>src/stroke.js</code>; every entry gets a shader ball — the same ball in the same color, filled each way, its
+contour the board's PENCIL.</p>
 
 <div class="figs" id="materialBalls"></div>
 
+<h3>the marks a material is made of</h3>
+<p>A flat fill is allowed, but it must miss its outline a little — and anything that means <em>shading</em> is not a
+fill at all, it is the pen going back and forth. The techniques above are built from these.</p>
+
+<div class="figs">
+  <figure data-fig="register">
+    <canvas></canvas>
+    <div class="subs"><span>fillOffset — out of register</span></div>
+    <figcaption><b>fill</b> — FLAT itself: a fan of triangles from the centre, printed slightly off its line
+    (<code>fillOffset</code>, ±0.035 per individual) like a cheap print. Every material's base is this fill-up;
+    a fill that lands exactly inside its outline looks like a sticker.</figcaption>
+  </figure>
+
+  <figure data-fig="shading">
+    <canvas></canvas>
+    <div class="subs"><span>one zigzag stroke</span></div>
+    <figcaption><b>s.scribbleFill</b> — shading is one stroke zigzagging across the area,
+    so the pen direction shows. This is what a pencil-shaded patch really is; every body
+    carries one.</figcaption>
+  </figure>
+
+  <figure data-fig="hatch">
+    <canvas></canvas>
+    <div class="subs"><span>parallel strokes, never a gradient</span></div>
+    <figcaption><b>s.hatch</b> — shadow on a cheek or a forehead: a few parallel strokes
+    clipped to an ellipse. Each one is a full ribbon, so each one wobbles on its own. GRAPHITE
+    is this, clipped to the contour instead.</figcaption>
+  </figure>
+
+  <figure data-fig="hair">
+    <canvas></canvas>
+    <div class="subs"><span>14 passes, reaching outward</span></div>
+    <figcaption><b>s.scribble</b> — hair is never a filled shape. The same path is drawn
+    over and over with drift and wave, narrower toward the face, reaching outward.</figcaption>
+  </figure>
+</div>
+
+<h3>the material underneath, and the boil</h3>
 <p>Underneath there is exactly one GPU material — a flat <code>MeshBasicMaterial</code> with vertex colors,
 shared per opacity level by every mesh on the board. No depth test, so stacking is decided
 entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
@@ -164,7 +182,8 @@ entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>
   </figure>
 </div>
 
-<p>Its colors — only the ones that hold up on paper; push the saturation and the hand-drawn feel breaks
+<h3>the colors</h3>
+<p>Only the ones that hold up on paper; push the saturation and the hand-drawn feel breaks
 immediately. And they go in as <b>linear</b>: three.js reads vertex colors as linear space,
 so an sRGB hex fed raw brightens — the ink <code>#2b2724</code> would come out a mid grey.
 Every hex passes through <code>hexToRgb → srgbToLinear</code> in <code>src/color.js</code>, nothing bypasses it.</p>
@@ -247,13 +266,6 @@ every closed shape on the board: a superellipse bent by noise, squared and taper
     <div class="subs"><span>smile</span><span>frown</span><span>a shut lid</span></div>
     <figcaption><b>arcPath</b> — mouths, brows and lids are sections of an ellipse, handed to
     <code>stroke</code> like any other path, so they wobble like everything else.</figcaption>
-  </figure>
-
-  <figure data-fig="outline" class="wide">
-    <canvas></canvas>
-    <div class="subs"><span>passes 2 — the two never quite agree</span></div>
-    <figcaption><b>s.outline</b> — the closed stroke. The head and the body draw theirs twice;
-    each pass re-rolls its jitter phase, so the doubled line is the contour's texture.</figcaption>
   </figure>
 </div>
 </section>

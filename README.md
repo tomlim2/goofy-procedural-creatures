@@ -39,9 +39,10 @@ To go back, press **MENAGERIE** in the header.
 (species and seed fixed). The FIX dropdown (`&fix=legLength:short`) pins one other slot, and `&values=bangs,bun` puts just a few of that slot's
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
-`/how.html` — **the medium page**. The legend of how everything is drawn — every stroke kind, the blobPath knobs,
-the palette groups and the boil — each figure drawn live by the same `src/stroke.js` that draws the creatures, at the board's own scale. The figures hold still;
-INK BOIL (`I`) sets their lines boiling at the board's own cadence.
+`/how.html` — **the medium page**. The legend of how everything is drawn, on two axes: the goofy outlines (what a contour is drawn
+with — the ribbon and the pencil, with their anatomy) and the materials (how a surface is filled — seven of them as shader balls), then the shapes,
+the colors and the boil. Every figure is drawn live by the same `src/stroke.js` that draws the creatures, at the board's own scale, and the
+balls are generated from the tables themselves. The figures hold still; INK BOIL (`I`) sets their lines boiling at the board's own cadence.
 The page cannot drift from the code, because it runs the code.
 
 `/audit.html?seed=…` — **the face part audit**. Draws one board (35 creatures) in 22 face states (startle, sleep, blink, ^^, wink, anger, brow/mouth switches,
@@ -92,7 +93,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
 | `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state | [character/rules](guidelines/character/rules.md) |
-| `src/how.js` · `how.html` | The medium page — the stroke kinds, the blobPath knobs, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
+| `src/how.js` · `how.html` | The medium page — the goofy outlines and the materials (balls generated from the tables), the shapes, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
 | `guidelines/` | The catalog and rules for the two axes, plus the performance, seed and drawing rules. **Read before changing anything** | [README](guidelines/README.md) |
 | `reference/` | What it was made from, and what was and was not taken | [README](reference/README.md) |
 | `scripts/` | § Scripts below | |

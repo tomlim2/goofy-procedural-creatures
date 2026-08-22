@@ -48,8 +48,8 @@ Every number lives in the `PENCIL` table at the top of `stroke.js` and nowhere e
 normal per point, so it never cracks at a corner. `paper` is the color the bites take — pass the fill's
 color when the line runs over a fill. Not for dots: the overshoot lengthens them.
 
-The head and body contours draw with it, through the GRAPHITE material (below); the medium page (`/how.html`
-§ the line) shows it next to `stroke()`. Switching another part onto it is a drawing change like any other —
+The head and body contours draw with it, as the PENCIL goofy outline (below); the medium page (`/how.html`
+§ the goofy outline) shows it next to `stroke()`. Switching another part onto it is a drawing change like any other —
 `drawdiff` will show it, and the audit has to stay at 0.
 
 ## The outline — what a contour is drawn with
