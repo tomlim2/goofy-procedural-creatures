@@ -387,14 +387,14 @@ species bias of 3:2. The archetype does not take part.
 ### material (5) — a late slot
 
 What the head and the body are made of — how their areas are filled ([../drawing.md](../drawing.md) § materials, the
-`MATERIALS` table in `stroke.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (the color hatched with thin
+`MATERIALS` table in `medium/materials.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (the color hatched with thin
 upright pencil strokes) · **ink** (solid, a few light scratches) · **oil** (thick dabs in three
 tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.)
 
 ### density (3) — a late slot
 
 The hand — **normal** (weight 3) · **light** (1.5) · **dense** (1.5): one step lighter or darker on the material's value scale
-(`stroke.js` `VALUES`: black · hatch · scribble · stipple · light — the step itself comes from the part's color's darkness, so a
+(`medium/materials.js` `VALUES`: black · hatch · scribble · stipple · light — the step itself comes from the part's color's darkness, so a
 dark cloth draws black and a pale skin light; a light hand moves one step lighter, a heavy one darker). Nothing on flat. Both the
 head and the body take the creature's density, like its material — and on a dog, a cat or an imp both take the **head color's**
 step, one mass ([../drawing.md](../drawing.md) § materials). The texture is always a tone of the part's own color, so the palette rules hold; the base stays

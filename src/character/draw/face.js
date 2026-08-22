@@ -2,7 +2,7 @@
 // Docs: guidelines/character/parts.md § head (eyes~nose), guidelines/motion/catalog.md § the face
 
 import { paintPart } from "./body.js";
-import { blobPath, arcPath } from "../../stroke.js";
+import { blobPath, arcPath } from "../../shape.js";
 import { TAU } from "./layout.js";
 import { shade, luminance } from "../../color.js";
 

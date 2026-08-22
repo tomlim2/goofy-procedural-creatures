@@ -8,7 +8,7 @@
 // One drawing function per kind — the HAIR table. New hair means adding a function here and putting the name in slots.js SLOTS.hair.
 // A function takes h (the context): { back, crown, front, spec, box, noise, ink0 (the hair color), rx, ry, cy (the head's half-width, half-height and centre), shoulder (the floor for back hair) }
 
-import { blobPath, arcPath } from "../../stroke.js";
+import { blobPath, arcPath } from "../../shape.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
 

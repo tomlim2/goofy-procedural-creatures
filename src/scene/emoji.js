@@ -1,7 +1,8 @@
 // Emoji glyphs (♥ ! ? …). motion/emoji.js supplies the animation curves; this only bakes the shapes.
 // Docs: guidelines/motion/catalog.md § emoji animation
 
-import { Sketch, arcPath, blobPath } from "../stroke.js";
+import { Sketch } from "../stroke.js";
+import { arcPath, blobPath } from "../shape.js";
 import { sketchMesh } from "./mesh.js";
 
 // Emoji sit above every individual — a value larger than any individual's block (index × 10 + layer)

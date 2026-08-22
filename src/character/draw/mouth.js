@@ -4,7 +4,7 @@
 // Position, width and ink are decided by mouthPlacement — species (above the muzzle for dogs), mouthPos, mouthSize and per-individual jitter are all solved there at once.
 // The kind table for state switching (rest, alt, angry, ^^) is faceStates.js.
 
-import { blobPath, arcPath, crumple } from "../../stroke.js";
+import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { TAU, eyeGeometry } from "./layout.js";
 import { eyeFloor, noseBottomY, muzzleGeometry } from "./face.js";

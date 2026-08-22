@@ -6,8 +6,12 @@
 
 import * as THREE from "three";
 // Vertex colors go through hexToRgb (linear space) — color.js. Never bypassed (guidelines/drawing.md § colors go in as linear)
-import { hexToRgb, shade, isDark, luminance, mix } from "./color.js";
+import { hexToRgb } from "./color.js";
 import { PAPER } from "./character/vocabulary/palette.js";   // the pencil's bites take the paper color (palette.js imports nothing — no cycle)
+// The three concepts a sketch draws by name. They take the sketch in; they never import this file
+import { contourWith } from "./medium/outlines.js";
+import { paintWith } from "./medium/materials.js";
+import { furWith } from "./medium/fur.js";
 
 const TAU = Math.PI * 2;
 
@@ -95,144 +99,6 @@ export const PENCIL = {
   grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
 };
 
-// Materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as channels. `base` is the base
-// color — the fill-up (flat) — always opaque (on the board the one in front has to hide the one behind), printed out of
-// register, in the part's color or a tone of it — and it carries the creature's pattern (stripes, dots, spots, hatching: the `pattern`
-// slot), drawn inside it and clipped to the contour, the way a pattern is part of an albedo. `texture` is the base color's texture —
-// hatch, scratch, dab or speckle — the medium's pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
-// different thing (opacity — the reference's 62% graphite; grain — the paper showing through) is not built, and would be a new key,
-// not a second texture. That is the material, and nothing else: the contour is a separate concept (GOOFY_OUTLINES, below). The
-// color always comes from the part; every tone the texture adds is a shade of that color (lighter on a dark color, darker on a
-// light one). A part names a material and hands over the path and the color — it never picks a technique itself. The medium page
-// draws one shader ball per entry, and its channels under it. Docs: guidelines/drawing.md § materials.
-// (Not the GPU materials — those live in scene/mesh.js.)
-export const MATERIALS = {
-  // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
-  FLAT:        { base: { kind: "flat" } },
-  // Graphite — the part's color hatched with the pencil (the reference's ground is paper because its color is paper; ours keeps the
-  // part's color — a lightened ground bleached pale parts and left them a different color from their decals and neighbours): thin grey lines, nearly upright and a little slanted, each one drawn as
-  // a few strokes — the pencil lifts and comes down again (lift: the strokes' lengths and the gaps between), now and then doubled
-  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
-  // Ink — solid, scratched: a few long light lines dragged across the dark
-  INK:         { base: { kind: "flat" }, texture: { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 } },
-  // Oil — thick paint laid in blunt strokes: round-ended capsules of one width and many lengths, all along one diagonal, scattered
-  // and overlapping, in four tones close to the ground (the reference's ball: calm, dense, a knife's work), cut flat by the contour
-  OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, tones: [0.86, 0.94, 1.06, 1.16] } },
-  // Charcoal — a ground dusted with dark specks
-  CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
-};
-
-// The light ink — what a mark on a dark part is drawn in (the face-ink rule), and what a lighter tone mixes toward
-const LIGHT_INK = "#e9e3d5";
-
-// Values — how dark a surface is drawn, in five steps, named for the way graphite makes each (the reference's scale): black,
-// hatch, scribble, stipple, light. A material renders a step its own way — graphite changes technique step by step (cross-hatch →
-// hatch → a wavy scribble → stipple → a bare ground), ink, oil and charcoal change how much of their texture they lay down.
-// The step a part gets comes from its color's darkness (valueStep), nudged one step by the hand — the `density` slot
-export const VALUES = [
-  { name: "black", v: 1 },
-  { name: "hatch", v: 0.72 },
-  { name: "scribble", v: 0.62 },
-  { name: "stipple", v: 0.5 },
-  { name: "light", v: 0.34 }
-];
-// The value step a color asks for — its darkness — moved one step by the hand: a light hand one step lighter, a heavy one darker
-export function valueStep(color, hand = "normal") {
-  const lum = luminance(color);
-  let i = lum < 70 ? 0 : lum < 120 ? 1 : lum < 160 ? 2 : lum < 200 ? 3 : 4;
-  if (hand === "dense") i -= 1;
-  if (hand === "light") i += 1;
-  return Math.max(0, Math.min(VALUES.length - 1, i));
-}
-
-// Outlines — the goofy outline: what a creature's contour is drawn with. A separate concept from the materials (a contour
-// is not a way of filling). A part names one and hands over the path and the color; at most a weight on the width.
-// Docs: guidelines/drawing.md § the outline
-export const GOOFY_OUTLINES = {
-  // The ribbon — stroke() once: the line of every closed shape that is not a head or a body (ears, hats, hands, eyes, noses, mouths…),
-  // at one width, scaled by a part's weight (0.7 fine · 1 · 1.2 heavy). It was the board's original contour, laid twice
-  RIBBON: { kind: "stroke", width: 0.01, passes: 1, jitter: 0.006 },
-  // The pencil — pencil(): one seamless loop that wanders, breathes, runs past and sheds. What the board draws with today
-  PENCIL: { kind: "pencil", width: 0.012, passes: 1 }
-};
-
-// The goofy fur — how hair and fur are grown along a path: the same path drawn over and over, each pass pushed outward from the
-// root, every point waving. A part names a fur and hands over the path and the color; passes, width and spread ride as overrides
-// (a style's volume), everything else is the fur's own. The medium page grows one fur ball per entry. Docs: guidelines/drawing.md § the goofy fur
-export const GOOFY_FUR = {
-  // The scribble — today's hair. root/reach: where the passes start and how far they fan, in spreads (−0.25 → 0.6, outward);
-  // scatter: a pass's own push; wave: a point's own push; lean/waveLean: how much of each goes sideways
-  SCRIBBLE: { passes: 14, width: 0.009, spread: 0.05, root: -0.25, reach: 0.85, scatter: 0.4, wave: 0.4, lean: 0.4, waveLean: 0.3, jitter: 0.012, step: 0.045 }
-};
-
-// -- the fill procedures' geometry --
-// Point in a closed polygon (even-odd)
-function insidePath([x, y], poly) {
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i, i += 1) {
-    const [xi, yi] = poly[i];
-    const [xj, yj] = poly[j];
-    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
-// The pieces of the segment a→b that lie inside the polygon — the marks of a fill stop at its contour
-function clipSegment(a, b, poly) {
-  const dx = b[0] - a[0];
-  const dy = b[1] - a[1];
-  const ts = [];
-  for (let i = 0; i < poly.length; i += 1) {
-    const p = poly[i];
-    const q = poly[(i + 1) % poly.length];
-    const ex = q[0] - p[0];
-    const ey = q[1] - p[1];
-    const den = dx * ey - dy * ex;
-    if (Math.abs(den) < 1e-12) continue;
-    const t = ((p[0] - a[0]) * ey - (p[1] - a[1]) * ex) / den;
-    const u = ((p[0] - a[0]) * dy - (p[1] - a[1]) * dx) / den;
-    if (u >= 0 && u < 1 && t >= 0 && t <= 1) ts.push(t);
-  }
-  ts.sort((x, y) => x - y);
-  const pieces = [];
-  let inside = insidePath(a, poly);
-  let prev = 0;
-  for (const t of ts) {
-    if (inside) pieces.push([prev, t]);
-    inside = !inside;
-    prev = t;
-  }
-  if (inside) pieces.push([prev, 1]);
-  return pieces
-    .map(([t0, t1]) => [[a[0] + dx * t0, a[1] + dy * t0], [a[0] + dx * t1, a[1] + dy * t1]])
-    .filter(([p, q]) => Math.hypot(q[0] - p[0], q[1] - p[1]) > 0.006);
-}
-// A hash in [0, 1) — scattered, unlike the value noise, which is smooth: for specks and dabs that must not line up
-function hash01(k) {
-  let h = Math.imul(k | 0, 0x9e3779b1) ^ 0x7f4a7c15;
-  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
-  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
-  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-}
-function bounds(points) {
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const [x, y] of points) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
-  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, r: Math.hypot(x1 - x0, y1 - y0) / 2, x0, y0, x1, y1 };
-}
-// Parallel lines at `angle` across the shape, `gap` apart, each one clipped to the contour. jitter(i) nudges a line off its rank
-function rules(points, angle, gap, jitter) {
-  const b = bounds(points);
-  const dx = Math.cos(angle), dy = Math.sin(angle);
-  const nx = -dy, ny = dx;
-  const out = [];
-  let i = 0;
-  for (let s = -b.r; s <= b.r; s += gap, i += 1) {
-    const o = s + jitter(i) * gap;
-    const a = [b.cx + nx * o - dx * b.r, b.cy + ny * o - dy * b.r];
-    const c = [b.cx + nx * o + dx * b.r, b.cy + ny * o + dy * b.r];
-    for (const piece of clipSegment(a, c, points)) out.push(piece);
-  }
-  return out;
-}
 
 export class Sketch {
   // inkScale is the global multiplier for stroke thickness. Change the cell size and this is the only thing to touch.
@@ -302,164 +168,14 @@ export class Sketch {
     this.stroke([...points, points[0]], options);
   }
 
-  // The goofy outline — draws the contour with a named outline (GOOFY_OUTLINES). weight scales its width (a head's contour runs a
-  // little heavier than a body's); closed draws a loop. An unknown name throws — a part that misspells it must not silently draw nothing
-  contour(points, name, { color = "#2b2724", closed = false, weight = 1, paper, step } = {}) {
-    const o = GOOFY_OUTLINES[name];
-    if (!o) throw new Error(`unknown outline: ${name}`);
-    const options = { color, width: o.width * weight, passes: o.passes };
-    if (o.jitter !== undefined) options.jitter = o.jitter;
-    if (paper) options.paper = paper;
-    if (step) options.step = step;   // a tiny shape with corners (the star eye) re-samples finer than the ribbon's 0.03
-    if (o.kind === "pencil") this.pencil(points, { ...options, closed });
-    else if (closed) this.outline(points, options);
-    else this.stroke(points, options);
-  }
+  // The goofy outline (medium/outlines.js) — the contour of a closed shape, by name
+  contour(points, name, options) { return contourWith(this, points, name, options); }
 
-  // Fills with a named material — its base color (with the part's pattern, if any), then its texture at a value step, every mark
-  // clipped to the contour. offset prints the base out of register (a creature's fillOffset). pattern: { kind, color } — the creature's
-  // pattern, part of the base color. decals: [{ path, color }] — color regions that take their edge from the host's outline (the
-  // calico; guidelines/drawing.md § decals), painted in the base too, so the texture passes over them. hand: the creature's density
-  // slot, one step lighter or darker on the value scale; value: a step index given outright (the medium page's rows). only: "base" or
-  // "texture" draws that channel alone. Every tone is a shade of the part's color — the material knows no colors of its own
-  paint(points, name, { color, offset = [0, 0], only, pattern, decals = [], hand = "normal", value } = {}) {
-    const m = MATERIALS[name];
-    if (!m) throw new Error(`unknown material: ${name}`);
-    const step = value === undefined ? valueStep(color, hand) : value;
-    const V = VALUES[step];
-    const wantBase = only === undefined || only === "base";
-    if (m.base.kind === "flat" && !m.texture) {   // the fill-up alone — no randomness, the phase untouched (the pattern strokes advance it as any stroke does)
-      if (wantBase) {
-        this.fill(points, color, offset);
-        if (pattern) this.patternOn(points, pattern);
-        for (const d of decals) this.fill(d.path, d.color);
-      }
-      return;
-    }
-    this.phase += 5.55;
-    const ph = this.phase;
-    const noise = this.noise;
-    const dark = isDark(color);
-    // A tone of the part's color. Deeper is shade; lighter is a mix toward the light ink — white pigment, never a multiply that clips a
-    // saturated color (a pop red × 1.6 came out neon). contrast(f): a deeper tone on a light color, a lighter one on a dark color
-    const tone = (factor) => (factor >= 1 ? mix(color, LIGHT_INK, Math.min(0.6, (factor - 1) * 0.45)) : shade(color, factor));   // × 1.6 ≈ a quarter of the way to the light ink
-    const contrast = (factor) => (dark ? tone(1 + (1 - factor) * 1.6) : shade(color, factor));
-    const b = bounds(points);
+  // The material (medium/materials.js) — how an area is filled, by name
+  paint(points, name, options) { return paintWith(this, points, name, options); }
 
-    if (wantBase) {
-      const base = m.base;
-      if (base.kind === "flat") this.fill(points, base.tone === undefined ? color : shade(color, dark ? 0.92 : base.tone), offset);
-      else throw new Error(`material ${name}: unknown base kind ${base.kind}`);
-      if (pattern) this.patternOn(points, pattern);
-      for (const d of decals) this.fill(d.path, d.color);   // the decals — part of the base color; the texture goes over them
-    }
-
-    const f = m.texture;
-    if (!f || (only !== undefined && only !== "texture")) return;
-    {
-      const u = (k) => noise(ph * 0.29 + k * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
-      const h = (k) => hash01(Math.round(ph * 997) + k * 7919);   // a scattered one — neighbours unrelated
-      switch (f.kind) {
-        case "hatch": {
-          // Graphite, step by step: black — cross-hatching, two sets of rules, close and dark · hatch — one set · scribble — wavy
-          // rules, nearly level · stipple — dots · light — the bare ground. Every rule is pencil strokes with gaps, the hand lifting
-          const tone = contrast(f.tone);
-          const liftedRule = (pts, i, width) => {   // the polyline drawn as a few pencil strokes with small gaps — the hand lifts and comes down again
-            const lens = [0];
-            for (let k = 1; k < pts.length; k += 1) lens.push(lens[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
-            const total = lens[lens.length - 1];
-            const at = (t) => {   // the point t along the polyline
-              let k = 1;
-              while (k < lens.length - 1 && lens[k] < t) k += 1;
-              const seg = (t - lens[k - 1]) / Math.max(1e-9, lens[k] - lens[k - 1]);
-              return [pts[k - 1][0] + (pts[k][0] - pts[k - 1][0]) * seg, pts[k - 1][1] + (pts[k][1] - pts[k - 1][1]) * seg];
-            };
-            let t = 0;
-            for (let k = 0; t < total && k < 40; k += 1) {
-              const r = (n) => h(i * 131 + k * 7 + n);
-              const end = f.lift ? Math.min(total, t + f.lift.length[0] + (f.lift.length[1] - f.lift.length[0]) * r(0)) : total;
-              if (end - t > 0.012) {
-                const run = [];
-                for (let q = t; q < end; q += 0.008) run.push(at(q));
-                run.push(at(end));
-                const w = width * (0.8 + 0.4 * r(1));
-                this.pencil(run, { color: tone, width: w });
-                if (f.double && r(2) < f.double) this.pencil(run.map(([x, y]) => [x + 0.0025, y]), { color: tone, width: w * 0.8 });
-              }
-              t = f.lift ? end + f.lift.gap[0] + (f.lift.gap[1] - f.lift.gap[0]) * r(4) : total;
-            }
-          };
-          const hatchAt = (angle, gap, width) => rules(points, angle, gap, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => liftedRule([p, q], i, width));
-          if (V.name === "black") {
-            hatchAt(f.angle, f.gap * 0.75, f.width * 1.1);
-            hatchAt(f.angle - 0.95, f.gap * 0.8, f.width);
-          } else if (V.name === "hatch") {
-            hatchAt(f.angle, f.gap, f.width);
-          } else if (V.name === "scribble") {
-            // wavy rules, nearly level — the pencil going side to side
-            rules(points, 0.08, f.gap * 1.05, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => {
-              const len = Math.hypot(q[0] - p[0], q[1] - p[1]);
-              const dx = (q[0] - p[0]) / len, dy = (q[1] - p[1]) / len;
-              const n = Math.max(2, Math.round(len / 0.005));
-              const pts = [];
-              for (let k = 0; k <= n; k += 1) {
-                const t = (k / n) * len;
-                const wave = Math.sin((t / 0.02) * TAU + i * 1.7) * 0.0032;
-                pts.push([p[0] + dx * t - dy * wave, p[1] + dy * t + dx * wave]);
-              }
-              liftedRule(pts, i + 500, f.width);
-            });
-          } else if (V.name === "stipple") {
-            this.dust(points, b, { per: 1500, size: [0.0018, 0.003] }, h, contrast(f.tone * 0.85));
-          }
-          // light — the bare ground
-          break;
-        }
-        case "scratch": {
-          const tone = contrast(f.tone);
-          for (let i = 0; i < Math.round(f.lines * (0.3 + V.v * 0.9)); i += 1) {   // black: all the scratches and more · light: a few
-            const angle = u(i) * Math.PI;
-            const o = (u(i + 50) - 0.5) * b.r * 1.4;
-            const dx = Math.cos(angle), dy = Math.sin(angle);
-            const a = [b.cx - dy * o - dx * b.r, b.cy + dx * o - dy * b.r];
-            const c = [b.cx - dy * o + dx * b.r, b.cy + dx * o + dy * b.r];
-            for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.03 });
-          }
-          if (V.name === "black") {   // the darkest ink is worked over once more — a faint upright hatch under the scratches
-            const faint = contrast(1.12);
-            for (const [p, q] of rules(points, 1.5, 0.014, (i) => (u(i + 900) - 0.5) * 0.4)) this.stroke([p, q], { color: faint, width: 0.002, jitter: 0.002, step: 0.03 });
-          }
-          break;
-        }
-        case "dab": {
-          // Thick paint: capsules scattered over the surface (their centres inside it), all along one diagonal give or take a little,
-          // of one width and many lengths, in tones close to the ground, overlapping as they fall. An end the contour cuts stays flat
-          const tones = f.tones.map((t) => hexToRgb(tone(t)));
-          const count = Math.round(f.per * (0.45 + V.v * 0.7) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
-          const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
-          for (let i = 0; i < count; i += 1) {
-            const cx = b.x0 + (b.x1 - b.x0) * h(i * 4);
-            const cy = b.y0 + (b.y1 - b.y0) * h(i * 4 + 1);
-            if (!insidePath([cx, cy], points)) continue;
-            const len = f.length[0] + (f.length[1] - f.length[0]) * h(i * 4 + 2);
-            const ang = f.angle + (h(i * 4 + 3) - 0.5) * f.spread;
-            const dx = Math.cos(ang), dy = Math.sin(ang);
-            const a = [cx - (dx * len) / 2, cy - (dy * len) / 2];
-            const c = [cx + (dx * len) / 2, cy + (dy * len) / 2];
-            const rgb = tones[Math.floor(h(i + 50000) * tones.length) % tones.length];
-            for (const [p, q] of clipSegment(a, c, points)) this.capsule(p, q, f.width, rgb, near(p, a), near(q, c));
-          }
-          break;
-        }
-        case "speckle": {
-          this.dust(points, b, { ...f, per: f.per * (0.4 + V.v * 0.8) }, h, contrast(f.tone));   // black: thick dust · light: a few specks
-          break;
-        }
-        default:
-          throw new Error(`material ${name}: unknown texture kind ${f.kind}`);
-      }
-    }
-  }
+  // The goofy fur (medium/fur.js) — how hair is grown along a path, by name
+  fur(points, name, options) { return furWith(this, points, name, options); }
 
   // A small axis-aligned square — the pencil's crumbs and bites
   square(cx, cy, size, rgb) {
@@ -600,97 +316,6 @@ export class Sketch {
     }
   }
 
-  // A capsule from p to q — a blunt paint stroke: a strip of one width with a round cap at each end that is a real end (an end cut
-  // by the contour stays flat). No taper, no wander — thick paint does not tremble
-  capsule(p, q, width, rgb, capP = true, capQ = true) {
-    let dx = q[0] - p[0];
-    let dy = q[1] - p[1];
-    const len = Math.hypot(dx, dy) || 1;
-    dx /= len;
-    dy /= len;
-    const r = width / 2;
-    const nx = -dy * r, ny = dx * r;
-    this.triangle(p[0] + nx, p[1] + ny, p[0] - nx, p[1] - ny, q[0] + nx, q[1] + ny, rgb);
-    this.triangle(p[0] - nx, p[1] - ny, q[0] - nx, q[1] - ny, q[0] + nx, q[1] + ny, rgb);
-    const cap = (c, sx, sy) => {   // a half-disc fan from the normal round past the end
-      const steps = 6;
-      for (let i = 0; i < steps; i += 1) {
-        const a0 = Math.PI * (i / steps), a1 = Math.PI * ((i + 1) / steps);
-        // from +normal, round through the stroke's direction, to −normal
-        const px = (t) => c[0] + nx * Math.cos(t) + sx * r * Math.sin(t);
-        const py = (t) => c[1] + ny * Math.cos(t) + sy * r * Math.sin(t);
-        this.triangle(c[0], c[1], px(a0), py(a0), px(a1), py(a1), rgb);
-      }
-    };
-    if (capP) cap(p, -dx, -dy);
-    if (capQ) cap(q, dx, dy);
-  }
-
-  // Dust inside a shape — specks of a fixed size at a density per unit area, hashed so they never string into curves
-  dust(points, b, { per, size, tone }, h, color) {
-    const rgb = hexToRgb(color);
-    const count = Math.round(per * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
-    for (let i = 0; i < count; i += 1) {
-      const p = [b.x0 + (b.x1 - b.x0) * h(i * 2), b.y0 + (b.y1 - b.y0) * h(i * 2 + 1)];
-      if (!insidePath(p, points)) continue;
-      this.square(p[0], p[1], size[0] + (size[1] - size[0]) * h(i + 7000), rgb);
-    }
-  }
-
-  // The base color's pattern — the creature's pattern (the `pattern` slot), drawn inside the shape and clipped to its contour:
-  // stripes (three lines across at the quarter heights) · dots (four beans) · hatch (diagonals over the middle) · spots (three
-  // dalmatian rings) · patch (hatching on the left). color is the pattern's ink (light on a dark part — the caller's rule)
-  patternOn(points, { kind, color }) {
-    const b = bounds(points);
-    const w = (b.x1 - b.x0) / 2, h = b.y1 - b.y0;
-    const hatchLines = (cx, cy, rx, ry, angle, lines, width) => {
-      const cos = Math.cos(angle), sin = Math.sin(angle);
-      for (let i = 0; i < lines; i += 1) {
-        const t = lines === 1 ? 0 : (i / (lines - 1)) * 2 - 1;
-        const half = Math.sqrt(Math.max(0, 1 - t * t));
-        const u = t * ry;
-        const a = [cx + (-half * rx) * cos - u * sin, cy + (-half * rx) * sin + u * cos];
-        const c = [cx + half * rx * cos - u * sin, cy + half * rx * sin + u * cos];
-        for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color, width, jitter: 0.01, step: 0.05 });
-      }
-    };
-    if (kind === "stripes") {
-      for (let i = 1; i <= 3; i += 1) {
-        const y = b.y0 + (h * i) / 4;
-        for (const piece of clipSegment([b.x0 - 0.02, y], [b.x1 + 0.02, y + 0.004], points)) this.stroke(piece, { color, width: 0.011 });
-      }
-    } else if (kind === "dots") {
-      for (let i = 0; i < 4; i += 1) {
-        const x = b.cx - w * 0.5 + (i % 2) * w;
-        const y = b.y0 + h * (0.3 + Math.floor(i / 2) * 0.35);
-        if (insidePath([x - 0.01, y], points) && insidePath([x + 0.01, y], points)) this.stroke([[x - 0.008, y], [x + 0.008, y]], { color, width: 0.012 });
-      }
-    } else if (kind === "hatch") {
-      hatchLines(b.cx, b.cy, w * 0.8, h * 0.35, Math.PI * 0.25, 5, 0.007);
-    } else if (kind === "spots") {
-      for (let i = 0; i < 3; i += 1) {
-        const sx = b.cx + (i - 1) * w * 0.5;
-        const sy = b.y0 + h * (0.35 + (i % 2) * 0.3);
-        let spot = blobPath(sx, sy, 0.025 + (i % 2) * 0.01, 0.02, { lumps: 4, amount: 0.25, noise: null });
-        if (spot.some((p) => !insidePath(p, points))) spot = spot.map(([x, y]) => [sx + (x - sx) * 0.6, sy + (y - sy) * 0.6]);   // a spot on the edge shrinks in
-        if (spot.every((p) => insidePath(p, points))) this.outline(spot, { color, width: 0.008 });
-      }
-    } else if (kind === "patch") {
-      hatchLines(b.cx - w * 0.35, b.cy, w * 0.4, h * 0.25, 0, 4, 0.008);
-    } else throw new Error(`unknown pattern: ${kind}`);
-  }
-
-  // Grows a named fur (GOOFY_FUR) along the path. passes, width and spread may be overridden — a style's volume; the rest is the fur's
-  fur(points, name, { color, passes, width, spread } = {}) {
-    const f = GOOFY_FUR[name];
-    if (!f) throw new Error(`unknown fur: ${name}`);
-    const over = { color };
-    if (passes !== undefined) over.passes = passes;
-    if (width !== undefined) over.width = width;
-    if (spread !== undefined) over.spread = spread;
-    this.scribble(points, { ...f, ...over });
-  }
-
   // The scribble — hair is not filled as an area but drawn back and forth with the pen (the reference's hair works this way).
   // The growth constants are GOOFY_FUR.SCRIBBLE's; fur() is the named way in
   scribble(points, { color = "#2b2724", passes = 14, width = 0.009, spread = 0.05, root = -0.25, reach = 0.85, scatter = 0.4, wave = 0.4, lean = 0.4, waveLean = 0.3, jitter = 0.012, step = 0.045 } = {}) {
@@ -750,6 +375,7 @@ export class Sketch {
   }
 }
 
+
 // Several sketches into one geometry. Earlier ones are drawn first and end up underneath — give it a fills sketch then an ink sketch and one layer comes out as one mesh.
 // With no depthTest, vertex order is front-to-back, so the order within and between sketches is exactly the stacking order
 export function buildGeometry(sketches) {
@@ -769,59 +395,3 @@ export function buildGeometry(sketches) {
   return geometry;
 }
 
-// An irregular closed curve. The reference's head is not a circle but a lumpy mass.
-//
-// square: how much the superellipse exponent rises. 0 is an ellipse, around 1.5 a rounded square.
-// taper: the top/bottom width ratio. Positive is wider at the bottom (a pear), negative wider at the top.
-// Without a noise (the details: eyes, noses, hands, tail ends — shapes that must not boil), the lumps come from two sines of the angle
-// (the reference's recipe: 0.63·sin(2θ+p1) + 0.37·sin(5θ+p2), the phases from `phase`) — so amount works there too and **no blobPath is
-// ever a perfect ellipse**. Noise or sines, `amount` is the word for how far the radius wanders
-export function blobPath(cx, cy, rx, ry, { lumps = 5, amount = 0.08, noise, phase = 0, steps = 48, square = 0, taper = 0 } = {}) {
-  const n = 2 + square;
-  const points = [];
-  const p1 = phase * 1.7, p2 = phase * 0.9 + 1.3;
-  for (let i = 0; i < steps; i += 1) {
-    const angle = (i / steps) * Math.PI * 2;
-    const c = Math.cos(angle);
-    const sSin = Math.sin(angle);
-    const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
-    const uy = Math.sign(sSin) * Math.pow(Math.abs(sSin), 2 / n);
-    const widen = 1 - taper * uy;
-    const lumpiness = noise ? noise(phase + c * lumps + sSin * lumps) : 0.63 * Math.sin(2 * angle + p1) + 0.37 * Math.sin(5 * angle + p2);
-    const r = 1 + lumpiness * amount;
-    points.push([cx + ux * rx * widen * r, cy + uy * ry * r]);
-  }
-  return points;
-}
-
-// Takes the ruler out of a hand-written polygon (a boot, a sleeve, a pot, a brim, a fang): the edges are re-sampled every `step` and every
-// point pushed along its normal by two sines of its position — a crumple that keeps the corners where they are (amount in world units).
-// No drawn edge on the board is a straight line; the contour strokes wobble already, this is for the fills under them and the shapes
-// that are only a fill
-export function crumple(points, amount = 0.0035, phase = 0, step = 0.012) {
-  const n = points.length;
-  const out = [];
-  let k = 0;
-  for (let i = 0; i < n; i += 1) {
-    const [ax, ay] = points[i];
-    const [bx, by] = points[(i + 1) % n];
-    const len = Math.hypot(bx - ax, by - ay);
-    const segs = Math.max(1, Math.round(len / step));
-    const nx = -(by - ay) / (len || 1), ny = (bx - ax) / (len || 1);
-    for (let j = 0; j < segs; j += 1, k += 1) {
-      const t = j / segs;
-      const push = j === 0 ? 0 : amount * (0.63 * Math.sin(k * 0.9 + phase) + 0.37 * Math.sin(k * 2.3 + phase * 1.7));   // the corners stay
-      out.push([ax + (bx - ax) * t + nx * push, ay + (by - ay) * t + ny * push]);
-    }
-  }
-  return out;
-}
-
-export function arcPath(cx, cy, rx, ry, from, to, steps = 16) {
-  const points = [];
-  for (let i = 0; i <= steps; i += 1) {
-    const angle = from + ((to - from) * i) / steps;
-    points.push([cx + Math.cos(angle) * rx, cy + Math.sin(angle) * ry]);
-  }
-  return points;
-}

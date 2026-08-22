@@ -63,7 +63,7 @@ The head and body contours draw with it, as the PENCIL goofy outline (below); th
 
 ## The outline — what a contour is drawn with
 
-Every closed line on a creature is drawn with one **goofy outline**, named from `GOOFY_OUTLINES` in `stroke.js`:
+Every closed line on a creature is drawn with one **goofy outline**, named from `GOOFY_OUTLINES` in `medium/outlines.js`:
 `ink.contour(path, "PENCIL", { color, closed, weight })`. `weight` is a multiplier on the outline's width (the head
 contour runs at 1.15 of the body's); a part never picks a line function or a width itself. An unknown name
 throws; `outline()` is never called by a part. The outline is its own concept — not part of a material: a contour is not a way of filling.
@@ -76,7 +76,7 @@ throws; `outline()` is never called by a part. The outline is its own concept �
 ## The goofy fur — how hair is grown
 
 Hair and fur are neither a contour nor a filling — in 3D they are a groom; here they are the **goofy fur**,
-named from `GOOFY_FUR` in `stroke.js`: `ink.fur(path, "SCRIBBLE", { color, passes, width, spread })`. A part
+named from `GOOFY_FUR` in `medium/fur.js`: `ink.fur(path, "SCRIBBLE", { color, passes, width, spread })`. A part
 hands over the path (the crown arc, a tail, a bang) and the color; `passes`, `width` and `spread` may be
 overridden — a style's volume — and everything else (root, reach, scatter, wave, lean) is the fur's own. An
 unknown name throws. `Sketch.scribble()` is the engine underneath; `fur()` is the named way in.
@@ -142,7 +142,7 @@ board the one in front has to hide the one behind) and printed out of register b
 — carrying the part's **pattern**, the creature's pattern (stripes, dots, spots, hatching: the `pattern` slot), drawn
 inside it and clipped to the contour, the way a pattern is part of an albedo (`paint(…, { pattern })`); and its
 `texture` — `hatch`, `scratch`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
-contour (`clipSegment`, `insidePath` in `stroke.js`). Both paint the same thing, the colour of the surface —
+contour (`clipSegment`, `insidePath` in `medium/materials.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
 62% graphite, vertex alpha), `grain` (the paper showing through) — is not built; it would be a new key, not a
 second texture (two patterns on one surface are one texture's composition). That is the material, and nothing
@@ -150,7 +150,7 @@ else. The color always comes from the part; a material knows no colors of its ow
 adds is a shade of the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a
 material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
-The table is `MATERIALS` in `stroke.js`; an unknown name throws, so a misspelt material cannot silently draw
+The table is `MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt material cannot silently draw
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
 way, its contour the board's PENCIL — so the table cannot drift from what is seen.
 
@@ -164,7 +164,7 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | `CHARCOAL` | `flat` | `speckle` — dark specks | the `material` slot (1) |
 
 The head and the body take the creature's `material` — a late slot ([character/parts.md](character/parts.md)
-§ surface), one tool per creature — at a **value step**. `VALUES` is the reference's scale, five steps named for
+§ surface), one tool per creature — at a **value step**. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
 the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34. A material renders a
 step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → stipple → a bare ground),
 ink, oil and charcoal lay down more or less of their texture. The step comes from the part's color's darkness

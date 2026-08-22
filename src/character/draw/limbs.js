@@ -1,7 +1,8 @@
 // Limbs and tail — baked relative to the joint pivot's origin. Pose and action are not here (motion/actions.js).
 // Docs: guidelines/character/parts.md § legs · tail · arms · armLength, guidelines/rig.md
 
-import { Sketch, blobPath, arcPath, crumple } from "../../stroke.js";
+import { Sketch } from "../../stroke.js";
+import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, BUILD } from "./layout.js";

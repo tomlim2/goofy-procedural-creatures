@@ -1,7 +1,7 @@
 // Hats and horns — the things that sit on top of the head. Docs: guidelines/character/parts.md § headgear · horns
 // A hat sits above the brow line (head.js browLine) and covers along the head outline shape (layout.js headShape).
 
-import { blobPath, arcPath, crumple } from "../../stroke.js";
+import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";

@@ -6,7 +6,11 @@
 // creature layer, differing only in jitter phase. The figures hold still; INK BOIL cycles them at the board's own pace (rig.js boilFps).
 
 import * as THREE from "three";
-import { Sketch, blobPath, arcPath, MATERIALS, GOOFY_OUTLINES, GOOFY_FUR, VALUES } from "./stroke.js";
+import { Sketch } from "./stroke.js";
+import { blobPath, arcPath } from "./shape.js";
+import { MATERIALS, VALUES } from "./medium/materials.js";
+import { GOOFY_OUTLINES } from "./medium/outlines.js";
+import { GOOFY_FUR } from "./medium/fur.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";

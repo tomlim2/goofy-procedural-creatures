@@ -1,6 +1,7 @@
 // Body — torso and markings. Docs: guidelines/character/parts.md § body
 
-import { blobPath, valueStep } from "../../stroke.js";
+import { blobPath } from "../../shape.js";
+import { valueStep } from "../../medium/materials.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { FURS, CALICO_MID } from "../vocabulary/palette.js";
 

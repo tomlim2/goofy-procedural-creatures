@@ -1,6 +1,6 @@
 // Head — the outline, ears, anchors on the outline, the brow line. Hair is hair.js; hats and horns are headgear.js. Docs: guidelines/character/parts.md § head
 
-import { blobPath, arcPath } from "../../stroke.js";
+import { blobPath, arcPath } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
