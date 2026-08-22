@@ -8,7 +8,7 @@ import { drawHead, drawEars, drawPupEars, drawCatEars } from "./head.js";
 import { drawHair } from "./hair.js";
 import { drawHeadgear, drawHorns } from "./headgear.js";
 import { drawEyes, drawFace2, drawEyewear, drawNose, drawWhiskers, RIG_EYES, patched } from "./face.js";
-import { drawBody, drawCalico, drawHeadCalico } from "./body.js";
+import { drawBody } from "./body.js";
 
 export { facePartKinds, facePartSketch } from "./faceStates.js";
 export { limbSketches, motionRig, BIND_ARM, tailSketch } from "./limbs.js";
@@ -41,11 +41,9 @@ export function drawCreature(spec, variant = 0) {
   const eyes = eyeGeometry(spec, box);
 
   const body = drawBody(L.body.ink, L.body.fills, spec, box, noise);
-  drawCalico(L.body.ink, L.body.fills, spec, body, noise);   // the calico patch — fills plus ink (its inner edge); the line patterns are in the body's base color (drawBody → paint)
 
   drawEars(L.crownBack.ink, L.crownBack.fills, spec, box);   // side ears — behind the head fill (their root is hidden by the head)
   const headPath = drawHead(L.head.ink, L.head.fills, spec, box, noise);
-  drawHeadCalico(L.head.ink, L.head.fills, spec, headPath, noise);   // calico patch — above the head fill, below the outline (the same layer's fill)
   // The layer in front of the head — dog ears and cat ears. The fill has to sit on top of the head ink or the outline shows through the ear
   drawPupEars(L.front.ink, L.front.fills, spec, box);
   drawCatEars(L.front.ink, L.front.fills, spec, box);

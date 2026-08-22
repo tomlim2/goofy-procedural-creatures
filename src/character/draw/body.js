@@ -12,7 +12,7 @@ export function surfaceValue(spec, color) {
 }
 
 // The creature's pattern — the `pattern` slot as part of the material's base color (stroke.js patternOn). Light ink on a dark body,
-// the same rule as face ink. calico is not a line pattern but color regions (drawCalico / drawHeadCalico), and none is none
+// the same rule as face ink. calico is not a line pattern but decals — color regions of the base (bodyDecals / headDecals), and none is none
 function patternOf(spec) {
   const kind = spec.parts.pattern;
   if (!kind || kind === "none" || kind === "calico") return undefined;   // a spec without the slot (an older tree's, in drawdiff) has no pattern
@@ -27,9 +27,11 @@ export function drawBody(ink, fills, spec, box, noise) {
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
-    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step, the pattern in its base
+    const decals = bodyDecals(spec, path, noise);
+    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step; the pattern and the decals in its base
     // The body's scribble shading is off — an ellipse it cannot clip to the contour (see drawHead); it returns as the light's shade
     ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
+    decalEdges(ink, spec, decals);
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
   }
 
@@ -52,9 +54,12 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
   }
 
-  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step, the pattern in its base
+  const decals = bodyDecals(spec, path, noise);
+
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the material slot (flat when absent) at the creature's value step; the pattern and the decals in its base
   // The body's scribble shading is off — on a short or wide torso the tilted ellipse poked past the contour; it returns as the light's shade
   ink.contour(path, "PENCIL", { color: ink0, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
+  decalEdges(ink, spec, decals);
   return { path, top, bottom, w, cx: 0 };
 }
 
@@ -67,11 +72,13 @@ export function calicoColors(spec) {
   return { dark: FURS[seed % FURS.length], mid: spec.species === "cat" ? CALICO_MID : null, side: (seed >> 4) % 2 ? 1 : -1 };
 }
 
-// A patch that sits along the outline — of the closed outline point list (blobPath, 48 points, angle 0 = right, counter-clockwise), it takes the outer points from angle `from` across `span`,
-// then joins an inner curve (bumpy with noise) made by pulling those points toward the centre by depth, and closes it. The outer edge is **exactly** the outline, so nothing sticks out,
-// and the patch takes on the calico-specific shape that wraps the edge of the body or head. The fill is a fan from the centre (stroke.js fill), so span stays at or below 130° —
-// a crescent opened too far leaves corners the centroid cannot see. Returns { path (closed), inner (the inner curve only — the only part that gets a line) }
-export function outlinePatch(outline, fromDeg, spanDeg, depth, noise, phase) {
+// A decal — a color region that takes its edge from its host's own outline (guidelines/drawing.md § decals). Of the closed outline
+// point list (blobPath, 48 points, angle 0 = right, counter-clockwise) one stretch — from angle `from` across `span` — is the outer
+// edge exactly, so nothing sticks out and the decal wears the host's lumps; the inner edge is those points pulled toward the centre by
+// depth (0 at both ends, deepest in the middle, bumpy with noise), and the two close into one polygon. The fill is a fan from the
+// centre (stroke.js fill), so span stays at or below 130° — a crescent opened too far leaves corners the centroid cannot see.
+// Returns { path (closed), inner (the inner edge only — the only part that gets a line) }
+export function decalAlong(outline, fromDeg, spanDeg, depth, noise, phase) {
   const n = outline.length;
   let cx = 0, cy = 0;
   for (const [x, y] of outline) { cx += x; cy += y; }
@@ -83,52 +90,46 @@ export function outlinePatch(outline, fromDeg, spanDeg, depth, noise, phase) {
   for (let k = outer.length - 1; k >= 0; k -= 1) {
     const [x, y] = outer[k];
     const t = k / (outer.length - 1);
-    // Both ends touch the outline (depth 0) and the middle is deep — the patch edge falls away from the outline smoothly. Bumpy with noise
+    // Both ends touch the outline (depth 0) and the middle is deep — the decal's edge falls away from the outline smoothly. Bumpy with noise
     const d = depth * Math.sin(Math.PI * t) * (1 + (noise ? noise(phase + k * 1.7) : 0) * 0.35);
     inner.push([x + (cx - x) * d, y + (cy - y) * d]);
   }
   return { path: [...outer, ...inner.slice(1, -1)], inner };
 }
 
-// One patch — the fill plus a thin line on the inner edge only (the outer edge already has the outline)
-function patch(ink, fills, outline, fromDeg, spanDeg, depth, color, inkColor, noise, phase) {
-  const { path, inner } = outlinePatch(outline, fromDeg, spanDeg, depth, noise, phase);
-  fills.paint(path, "FLAT", { color });   // a cutout with no line of its own
-  ink.stroke(inner, { color: inkColor, width: 0.007, jitter: 0.004 });
-}
-
-// Body patches (calico) — black wrapping the rump (the tail end), tan on the front of the belly (cats). Dogs get one big black. Angles are relative to blobPath (0 right = the tail end on a quad,
-// 90 up, 180 left = the head end). The front top of the body is hidden by the big head, so the patches go at the back end and the front of the belly — put one mid-back and it disappears behind the head
-function drawCalicoBody(ink, fills, spec, body, noise) {
+// The body's decals (the calico) — black wrapping the rump (the tail end), tan on the front of the belly (cats). Dogs get one big black.
+// Angles are relative to blobPath (0 right = the tail end on a quad, 90 up, 180 left = the head end). The front top of the body is hidden
+// by the big head, so the decals go at the back end and the front of the belly — put one mid-back and it disappears behind the head.
+// [] when the creature is not a calico
+export function bodyDecals(spec, path, noise) {
   const c = calicoColors(spec);
-  if (!c || !body.path) return;
-  const inkColor = spec.palette.ink;
+  if (!c || !path) return [];
   const ph = spec.proportions.wobbleSeed * 0.013;
-  const flip = c.side > 0;   // slightly offset per individual — so patches do not line up in the same place across the board
-  if (c.mid) {
-    patch(ink, fills, body.path, flip ? -40 : -15, 95, 0.55, c.dark, inkColor, noise, ph);
-    patch(ink, fills, body.path, flip ? 215 : 195, 75, 0.45, c.mid, inkColor, noise, ph + 7);
-  } else {
-    patch(ink, fills, body.path, flip ? -35 : -10, 120, 0.6, c.dark, inkColor, noise, ph);
-  }
+  const flip = c.side > 0;   // slightly offset per individual — so the decals do not line up in the same place across the board
+  const one = (from, span, depth, color, phase) => ({ ...decalAlong(path, from, span, depth, noise, phase), color });
+  return c.mid
+    ? [one(flip ? -40 : -15, 95, 0.55, c.dark, ph), one(flip ? 215 : 195, 75, 0.45, c.mid, ph + 7)]
+    : [one(flip ? -35 : -10, 120, 0.6, c.dark, ph)];
 }
 
-// Head patch (calico) — black on the side, **a cap shape from the crown leaning that way** (the ear on that side is black too, so the two read as one mass — head.js drawCatEars/drawPupEars),
-// plus a small tan low on the opposite side (the cheek, cats). drawHead returns the head outline point list.
-// A black patch **must never reach the eyes or brows** — line-drawn eyes (sleepy, half, dot…) and brows are black ink and vanish on top of black. The placement that comes
-// down the side (100°~185°) caught the eyes on 158 of 600 creatures; the crown placement (left 75°~150° / right 30°~105°, depth 0.4) catches 0. A tan patch keeps its contrast against ink, so the cheek is fine
-export function drawHeadCalico(ink, fills, spec, headPath, noise) {
+// The head's decals (the calico) — black on the side, **a cap shape from the crown leaning that way** (the ear on that side is black too,
+// so the two read as one mass — head.js drawCatEars/drawPupEars), plus a small tan low on the opposite side (the cheek, cats).
+// A black decal **must never reach the eyes or brows** — line-drawn eyes (sleepy, half, dot…) and brows are black ink and vanish on top
+// of black. The placement that comes down the side (100°~185°) caught the eyes on 158 of 600 creatures; the crown placement (left
+// 75°~150° / right 30°~105°, depth 0.4) catches 0. A tan decal keeps its contrast against ink, so the cheek is fine
+export function headDecals(spec, headPath, noise) {
   const c = calicoColors(spec);
-  if (!c) return;
-  const inkColor = spec.palette.ink;
+  if (!c) return [];
   const ph = spec.proportions.wobbleSeed * 0.017 + 3;
-  patch(ink, fills, headPath, c.side < 0 ? 75 : 30, 75, 0.4, c.dark, inkColor, noise, ph);
-  if (c.mid) patch(ink, fills, headPath, c.side < 0 ? 300 : 210, 50, 0.4, c.mid, inkColor, noise, ph + 5);
+  const one = (from, span, depth, color, phase) => ({ ...decalAlong(headPath, from, span, depth, noise, phase), color });
+  const out = [one(c.side < 0 ? 75 : 30, 75, 0.4, c.dark, ph)];
+  if (c.mid) out.push(one(c.side < 0 ? 300 : 210, 50, 0.4, c.mid, ph + 5));
+  return out;
 }
 
-// The calico — color regions of the base, on the body (the head's are drawHeadCalico). The line patterns (stripes, dots, hatch, spots,
-// patch) are no longer drawn here: they are part of the material's base color, inside the fill and clipped to the contour (patternOf → paint)
-export function drawCalico(ink, fills, spec, body, noise) {
-  if (spec.parts.pattern === "calico") drawCalicoBody(ink, fills, spec, body, noise);
+// A decal's only line — its inner edge (the outer edge already has the contour). Drawn after the contour, in the host's ink
+export function decalEdges(ink, spec, decals) {
+  for (const d of decals) ink.stroke(d.inner, { color: spec.palette.ink, width: 0.007, jitter: 0.004 });
 }
+
 

@@ -93,7 +93,7 @@ the range. Most of the silhouette variety comes from here.
 | **CALICO_MID** | 1 color (#a3866a, luminance 139) | The middle tone of a calico (pattern calico) — where a real calico's orange goes. Being a warm tan inside the palette, it does not count against the pop cap. The black patches come from FURS and the base from the skin (a calico withholds black fur — a light base) ([parts.md](parts.md) § marks) |
 
 **Light ink on a dark surface.** At luminance < 120, the lines on that surface go to light ink (#e9e3d5) — the
-face is decided by the head color (`faceInk`) and body markings by the body color (`drawCalico`).
+face is decided by the head color (`faceInk`) and body markings by the body color (`patternOf`).
 Black-furred dogs and cats and imps all ride the same rule. Objects (an eyepatch, a hat, a lens) and lines over a
 white fill (teeth) are the exception — they keep their own color or the dark ink ([rules.md](rules.md)).
 

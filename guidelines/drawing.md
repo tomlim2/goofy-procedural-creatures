@@ -89,6 +89,27 @@ creature, and for every filled part a shade — the region facing away from the 
 and filled in the material's shadow technique and a deeper tone of the part's color. Two steps, like cel
 shading. The cheek and forehead hatch are the same thing (an occlusion). Until it exists, surfaces are flat.
 
+## Decals — what sits on a surface
+
+A **decal** is a color region that takes its edge from its host's own outline — the way a decal is projected onto
+a surface and bounded by it. The calico's patches are decals (`decalAlong`, `bodyDecals`, `headDecals` in
+`draw/body.js`). The contract:
+
+1. The outer edge is **one stretch of the host outline's own points** (an angle and a span) — never a free curve,
+   so nothing sticks out and the decal wears the host's lumps
+2. The inner edge is **derived** from those points — pulled toward the centre by a depth that is 0 at both ends
+   and deepest in the middle, bumpy with noise — and the two close into one polygon (a fan fill, so the span
+   stays at or below 130°)
+3. It is painted **in the host's base color**, after the fill-up and the pattern and before the texture
+   (`paint(…, { decals })`) — so the material's texture passes over it, as over the rest of the surface
+4. Its only line is its inner edge, drawn after the contour in the host's ink (`decalEdges`)
+5. It is placed by angle on the outline; on a head a dark decal stays out of the eye and brow zone
+   ([character/parts.md](character/parts.md) § pattern — the calico)
+
+The inner ear (the ear shape scaled about its root) and the roots of ears, horns and hair on the outline
+(`headAnchor`) are the same idea's neighbours — an **anchor** is a point on the real outline plus its normal —
+and are not under this contract yet.
+
 ## Materials — how a surface is filled
 
 A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as channels.

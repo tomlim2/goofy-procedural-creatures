@@ -288,7 +288,7 @@ where a real calico's orange goes. Not a saturated accent, so it does not count 
 | Head | Black on the side, **a cap shape from the crown leaning that way**, plus a small tan on the opposite cheek | The black cap shape |
 | Ear | The ear on that side black (the inner mark in light ink) | The same |
 
-A patch **sits along the outline** (`outlinePatch` — one stretch of the outline's point list is used as the outer edge and the inner side is pulled toward the centre and closed): the outer edge is exactly
+A patch is a **decal** ([../drawing.md](../drawing.md) § decals) — it **sits along the outline** (`decalAlong` — one stretch of the outline's point list is used as the outer edge and the inner side is pulled toward the centre and closed): the outer edge is exactly
 the outline, so nothing sticks out, and only the inner edge gets a thin line. The fill is a fan from the centre, so one patch is at most 130°. The front top of the body is hidden by the big head, so the patches go at
 the back end and the front of the belly. **A black patch must never reach the eyes or brows** — line eyes and brows are black ink and vanish on black. The placement coming down the side (100°~185°)
 caught the eyes on 158 of 600 creatures; the crown placement (left 75°~150° / right 30°~105°, depth 0.4) catches 0 — hence the cap shape. Tan keeps its contrast against ink, so the cheek is fine.

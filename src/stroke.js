@@ -312,10 +312,11 @@ export class Sketch {
 
   // Fills with a named material — its base color (with the part's pattern, if any), then its texture at a value step, every mark
   // clipped to the contour. offset prints the base out of register (a creature's fillOffset). pattern: { kind, color } — the creature's
-  // pattern, part of the base color. hand: the creature's density slot, one step lighter or darker on the value scale; value: a step
-  // index given outright (the medium page's rows). only: "base" or "texture" draws that channel alone.
-  // Every tone is a shade of the part's color — the material knows no colors of its own
-  paint(points, name, { color, offset = [0, 0], only, pattern, hand = "normal", value } = {}) {
+  // pattern, part of the base color. decals: [{ path, color }] — color regions that take their edge from the host's outline (the
+  // calico; guidelines/drawing.md § decals), painted in the base too, so the texture passes over them. hand: the creature's density
+  // slot, one step lighter or darker on the value scale; value: a step index given outright (the medium page's rows). only: "base" or
+  // "texture" draws that channel alone. Every tone is a shade of the part's color — the material knows no colors of its own
+  paint(points, name, { color, offset = [0, 0], only, pattern, decals = [], hand = "normal", value } = {}) {
     const m = MATERIALS[name];
     if (!m) throw new Error(`unknown material: ${name}`);
     const step = value === undefined ? valueStep(color, hand) : value;
@@ -325,6 +326,7 @@ export class Sketch {
       if (wantBase) {
         this.fill(points, color, offset);
         if (pattern) this.patternOn(points, pattern);
+        for (const d of decals) this.fill(d.path, d.color);
       }
       return;
     }
@@ -340,6 +342,7 @@ export class Sketch {
       if (base.kind === "flat") this.fill(points, base.tone === undefined ? color : shade(color, dark ? 0.92 : base.tone), offset);
       else throw new Error(`material ${name}: unknown base kind ${base.kind}`);
       if (pattern) this.patternOn(points, pattern);
+      for (const d of decals) this.fill(d.path, d.color);   // the decals — part of the base color; the texture goes over them
     }
 
     const f = m.texture;

@@ -4,7 +4,7 @@ import { blobPath, arcPath } from "../../stroke.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
-import { calicoColors, surfaceValue } from "./body.js";
+import { calicoColors, surfaceValue, headDecals, decalEdges } from "./body.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -19,7 +19,8 @@ export function drawHead(ink, fills, spec, box, noise) {
   });
 
   // The material slot — how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
-  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset, value: surfaceValue(spec, spec.palette.skin) });
+  const decals = headDecals(spec, path, noise);   // the calico's cap and cheek — in the base, under the material's texture
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset, decals, value: surfaceValue(spec, spec.palette.skin) });
 
   // The head's pencil scribble (a tilted zigzag in a darker tone over the fill) is **off**: scribbleFill shades an ellipse it cannot
   // clip to the contour, so on a tapered or squared head its corners poked past the outline. It comes back as the light's shade
@@ -28,6 +29,7 @@ export function drawHead(ink, fills, spec, box, noise) {
   // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
   // The goofy outline — PENCIL (stroke.js GOOFY_OUTLINES); the head's contour runs a little heavier than the body's (weight)
   ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true, weight: 1.15 });
+  decalEdges(ink, spec, decals);
   return path;
 }
 
@@ -132,7 +134,7 @@ export function drawCatEars(ink, fills, spec, box) {
   const innerFill = (seed >> 7) % 2 ? "#d9968a" : shade(skin, isDark(skin) ? 1.5 : 0.62);
   // The inner line is **a mark drawn on fur**, so it uses face ink — a black line on black fur is lost and invisible (the outline meets the background, so it stays black)
   const innerInk = spec.faceInk || ink0;
-  const cal = calicoColors(spec);   // on a calico, the ear on the side is black (the same side as the head patch — body.js drawHeadCalico)
+  const cal = calicoColors(spec);   // on a calico, the ear on the side is black (the same side as the head decal — body.js headDecals)
   const boxy = headShape(spec).square >= 1.4;   // square and block — slightly inside the corner
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {
