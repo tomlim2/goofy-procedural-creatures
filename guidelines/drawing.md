@@ -162,7 +162,8 @@ The `base` colour — the fill-up (`flat`, optionally a tone of the color) — a
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
 — carrying the part's **pattern**, the creature's pattern (stripes, dots, spots, hatching: the `pattern` slot), drawn
 inside it and clipped to the contour, the way a pattern is part of an albedo (`paint(…, { pattern })`; on a tail it runs
-along the tube instead — stripes as rings, [character/parts.md](character/parts.md) § tail); and its
+along the tube instead — stripes as rings, [character/parts.md](character/parts.md) § tail — and the tube's base is cut as a
+**strip** between its rails, `paint(…, { strip })`, so the bones can bend it); and its
 `texture` — `hatch`, `scratch`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
 contour (`clipSegment`, `insidePath` in `medium/materials.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's

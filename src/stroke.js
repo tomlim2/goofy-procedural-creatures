@@ -16,7 +16,7 @@ import { furWith } from "./medium/fur.js";
 const TAU = Math.PI * 2;
 
 // Re-samples the stroke at an even spacing. Without this, the noise only bites on long segments.
-function resample(points, step) {
+export function resample(points, step) {
   if (points.length < 2) return points.slice();
   const out = [points[0]];
   let carry = 0;
@@ -295,6 +295,19 @@ export class Sketch {
         const size = G.size[0] + (G.size[1] - G.size[0]) * Math.abs(noise(ph * 0.17 + i * 7.13));
         this.square(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, isBite ? biteRgb : rgb);
       }
+    }
+  }
+
+  // A strip fill — the area between two rails (left[i], right[i] pairs), cut as short quads rung by rung. For a tube that is going to be
+  // bent by bones (the tail): a fan from the centre would throw long triangles across the bones and fold like a paddle, a strip keeps
+  // every triangle between neighbouring rungs, so the skin bends where the bones bend
+  fillStrip(left, right, color, offset = [0, 0]) {
+    const rgb = hexToRgb(color);
+    const [ox, oy] = offset;
+    for (let i = 0; i + 1 < Math.min(left.length, right.length); i += 1) {
+      const a = left[i], b = right[i], c = left[i + 1], d = right[i + 1];
+      this.triangle(a[0] + ox, a[1] + oy, b[0] + ox, b[1] + oy, c[0] + ox, c[1] + oy, rgb);
+      this.triangle(b[0] + ox, b[1] + oy, d[0] + ox, d[1] + oy, c[0] + ox, c[1] + oy, rgb);
     }
   }
 

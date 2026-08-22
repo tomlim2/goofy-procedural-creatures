@@ -364,8 +364,9 @@ tailSkin and tailLength are late slots (`LATE_SLOTS`). Bipeds draw them but neve
 The tail is drawn **behind** the torso and head (renderOrder 0.8) — the part curling over the back or lying on the body is hidden.
 The tail is **a four-bone chain under one skin** — the spine is split into 4 (`TAIL_BONES`) with a joint origin and rest-pose direction per bone, and the scene bends each joint separately (the swish,
 the tip tapping, follow-through, and the raise as a straight target angle per joint — it shoots up whatever the skeleton, [../motion/catalog.md](../motion/catalog.md) § the tail).
-**One skin.** The skin is drawn **once along the whole spine** in the pivot's space — one tube, two side lines, the tip, the pattern — and every vertex is weighted to two of the
-bones (`weightsOf`: its t along the rest spine picks the bone, blended linearly over ±0.06 of the tail around each joint, about one tube width). The scene bends it as a
+**One skin.** The skin is drawn **once along the whole spine** in the pivot's space — the tube as a **strip** between its rails on a spine re-sampled every 0.012 (a fan from
+the centre of a coarse spine throws long triangles across the bones and folds like a paddle when bent), two side lines, the tip, the pattern — and every vertex is weighted to
+two of the bones (`weightsOf`: its t along the rest spine picks the bone, blended by a smoothstep over ±0.09 of the tail around each joint). The scene bends it as a
 `SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side
 lines' root end and the tip's arc are **joints** (`line(…, { joint })`: no overshoot, no thinning); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick).
 A tube's tip is **round** — a disc and an arc — except block, which stays square.

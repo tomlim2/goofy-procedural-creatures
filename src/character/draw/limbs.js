@@ -1,7 +1,7 @@
 // Limbs and tail — baked relative to the joint pivot's origin. Pose and action are not here (motion/actions.js).
 // Docs: guidelines/character/parts.md § legs · tail · arms · armLength, guidelines/rig.md
 
-import { Sketch } from "../../stroke.js";
+import { Sketch, resample } from "../../stroke.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart, patternOf } from "./body.js";
 import { makeNoise, makeRng } from "../../rng.js";
@@ -387,11 +387,13 @@ export function tailSketch(spec, variant = 0) {
   // The filled body along the whole spine — the fill, the tip's disc, the pattern, then the two side lines (their root end a joint: no
   // overshoot into the body) and the tip: an arc for a round tip, a bar for a square one (block)
   const tube = (widthAt, { squareTip = false } = {}) => {
-    const { left, right } = tubeSides(spine, widthAt);
+    // The rails on a fine spine (a rung every 0.012) and the base as a strip between them — the bones bend it rung by rung; a fan from the
+    // centre of a coarse spine threw long triangles across the bones and folded like a paddle
+    const { left, right } = tubeSides(resample(spine, 0.012), widthAt);
     const end = spine[spine.length - 1];
     const wEnd = widthAt(1);
     const round = !squareTip && wEnd > 0.004;
-    paintPart(sketch, spec, [...left, ...right.slice().reverse()], fur);   // the tail is fur — the creature's goofy material
+    paintPart(sketch, spec, [...left, ...right.slice().reverse()], fur, { strip: [left, right] });   // the tail is fur — the creature's goofy material
     if (round) paintPart(sketch, spec, blobPath(end[0], end[1], wEnd, wEnd, { lumps: 3, amount: 0.06, noise: null }), fur);
     tubePattern(widthAt);
     sketch.line(left, { color: ink0, weight: 1, joint: [true, true] });
@@ -463,8 +465,9 @@ export function tailSketch(spec, variant = 0) {
   } else throw new Error(`unknown tail skin: ${skin}`);   // a misspelt skin must not silently draw another
 
   // Skin weights — a vertex's t along the rest spine (its nearest point on the polyline) picks its bone (the quarter it falls in), blended
-  // linearly with the neighbour over ±BAND of the tail around each joint (about one tube width), so a bend curves the skin instead of breaking it
-  const BAND = 0.06;
+  // with the neighbour over ±BAND of the tail around each joint by a smoothstep (no kink where the band starts), so a bend curves the skin
+  const BAND = 0.09;
+  const blend = (u) => { const c = Math.max(-1, Math.min(1, u)); return 0.5 + 0.5 * c * (1.5 - 0.5 * c * c); };   // −1..1 → 0..1, flat at both ends
   const weightsOf = (x, y) => {
     let best = Infinity, t = 0;
     for (let i = 1; i < spine.length; i += 1) {
@@ -476,8 +479,8 @@ export function tailSketch(spec, variant = 0) {
     }
     const k = Math.min(TAIL_BONES - 1, Math.floor(t * TAIL_BONES));
     const root = k / TAIL_BONES, ahead = (k + 1) / TAIL_BONES;   // the joints behind and ahead of this bone
-    if (k > 0 && t < root + BAND) { const w = 0.5 + 0.5 * ((t - root) / BAND); return [k, w, k - 1, 1 - w]; }
-    if (k < TAIL_BONES - 1 && t > ahead - BAND) { const w = 0.5 + 0.5 * ((ahead - t) / BAND); return [k, w, k + 1, 1 - w]; }
+    if (k > 0 && t < root + BAND) { const w = blend((t - root) / BAND); return [k, w, k - 1, 1 - w]; }
+    if (k < TAIL_BONES - 1 && t > ahead - BAND) { const w = blend((ahead - t) / BAND); return [k, w, k + 1, 1 - w]; }
     return [k, 1, k, 0];
   };
   return { sketches: [sketch], sketch, bones: parts.map((q) => ({ origin: q.origin, angle: q.angle })), pivot, weightsOf };

@@ -135,8 +135,11 @@ function rules(points, angle, gap, jitter) {
 // pattern, part of the base color. decals: [{ path, color }] — color regions that take their edge from the host's outline (the
 // calico; guidelines/drawing.md § decals), painted in the base too, so the texture passes over them. hand: the creature's density
 // slot, one step lighter or darker on the value scale; value: a step index given outright (the medium page's rows). only: "base" or
-// "texture" draws that channel alone. Every tone is a shade of the part's color — the goofy material knows no colors of its own
-export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, decals = [], hand = "normal", value } = {}) {
+// "texture" draws that channel alone. strip: [left, right] — the base is cut as a strip between the two rails instead of a fan from the
+// centre (a tube that bones will bend: the tail); the contour (points) still clips the texture. Every tone is a shade of the part's color —
+// the goofy material knows no colors of its own
+export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, decals = [], hand = "normal", value, strip } = {}) {
+  const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, offset) : sketch.fill(points, c, offset));
   const m = GOOFY_MATERIALS[name];
   if (!m) throw new Error(`unknown goofy material: ${name}`);
   const step = value === undefined ? valueStep(color, hand) : value;
@@ -144,7 +147,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   const wantBase = only === undefined || only === "base";
   if (m.base.kind === "flat" && !m.texture) {   // the fill-up alone — no randomness, the phase untouched (the pattern strokes advance it as any stroke does)
     if (wantBase) {
-      sketch.fill(points, color, offset);
+      base(color);
       if (pattern) patternOn(sketch, points, pattern);
       for (const d of decals) sketch.fill(d.path, d.color);
     }
@@ -161,9 +164,8 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   const b = bounds(points);
 
   if (wantBase) {
-    const base = m.base;
-    if (base.kind === "flat") sketch.fill(points, base.tone === undefined ? color : shade(color, dark ? 0.92 : base.tone), offset);
-    else throw new Error(`goofy material ${name}: unknown base kind ${base.kind}`);
+    if (m.base.kind === "flat") base(m.base.tone === undefined ? color : shade(color, dark ? 0.92 : m.base.tone));
+    else throw new Error(`goofy material ${name}: unknown base kind ${m.base.kind}`);
     if (pattern) patternOn(sketch, points, pattern);
     for (const d of decals) sketch.fill(d.path, d.color);   // the decals — part of the base color; the texture goes over them
   }

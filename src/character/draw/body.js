@@ -15,9 +15,10 @@ export function surfaceValue(spec, color) {
 // Paints a part's surface with the creature's goofy material — the one way in for every skin, fur and cloth surface that is not the head or
 // the body (ears, the muzzle, hands, boots, sleeves, the tail, hats): guidelines/drawing.md § what takes the goofy material. The value step
 // is the creature's (one mass on a dog, a cat or an imp), or the part's own color's when `own` — a hat is an object, not the fur
-export function paintPart(fills, spec, path, color, { own = false, flat = false, offset } = {}) {
+export function paintPart(fills, spec, path, color, { own = false, flat = false, offset, strip } = {}) {
   const options = { color, value: own ? valueStep(color, spec.parts.density) : surfaceValue(spec, color) };
   if (offset) options.offset = offset;
+  if (strip) options.strip = strip;   // a tube's base cut as a strip between its rails (the tail — bones bend it)
   fills.paint(path, flat ? "FLAT" : (spec.parts.material || "flat").toUpperCase(), options);   // flat: the whites of the eyes — never textured
 }
 
