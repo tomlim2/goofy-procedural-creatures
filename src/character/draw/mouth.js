@@ -4,7 +4,7 @@
 // Position, width and ink are decided by mouthPlacement — species (above the muzzle for dogs), mouthPos, mouthSize and per-individual jitter are all solved there at once.
 // The kind table for state switching (rest, alt, angry, ^^) is faceStates.js.
 
-import { blobPath, arcPath } from "../../stroke.js";
+import { blobPath, arcPath, crumple } from "../../stroke.js";
 import { paintPart } from "./body.js";
 import { TAU, eyeGeometry } from "./layout.js";
 import { eyeFloor, noseBottomY, muzzleGeometry } from "./face.js";
@@ -95,7 +95,7 @@ function fangs(m, hw, drop) {
   const half = Math.max(0.011, Math.min(0.016, drop * 0.4));
   for (const s of [-1, 1]) {
     const fx = m.x + s * hw * 0.55;
-    const tri = [[fx - half, m.y + 0.002], [fx + half, m.y + 0.002], [fx + s * 0.003, m.y - drop]];
+    const tri = crumple([[fx - half, m.y + 0.002], [fx + half, m.y + 0.002], [fx + s * 0.003, m.y - drop]], 0.0015, s * 4, 0.006);
     paintPart(m.fills, m.spec, tri, TOOTH, { own: true });
     m.ink.outline(tri, { color: m.edge, width: 0.008 });
   }

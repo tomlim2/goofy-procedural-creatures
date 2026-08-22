@@ -14,6 +14,15 @@ colors, tones) use the same functions.
 The same goes for textures baked onto a canvas. State `colorSpace = THREE.SRGBColorSpace` on a
 `CanvasTexture`.
 
+## Nothing raw
+
+No perfect circle and no straight edge is drawn on the board. `blobPath` always lumps — with the creature's
+noise where the shape boils (heads, bodies), and from two sines of the angle where it must not (the details:
+eyes, noses, hands, tail ends — `noise: null`); `amount` works either way, and amount 0 appears nowhere. A
+hand-written polygon (a boot, a sleeve, the pot, the brim, a fang) goes through `crumple` — its edges
+re-sampled and pushed by two sines, the corners kept — before it is filled. The contour strokes wobble on
+their own; this is for the fills under them and the shapes that are only a fill.
+
 ## A line is a ribbon, not a Line
 
 WebGL's `linewidth` is fixed at 1 in most environments. `THREE.Line` gives you no control over thickness.

@@ -1,7 +1,7 @@
 // Limbs and tail — baked relative to the joint pivot's origin. Pose and action are not here (motion/actions.js).
 // Docs: guidelines/character/parts.md § legs · tail · arms · armLength, guidelines/rig.md
 
-import { Sketch, blobPath, arcPath } from "../../stroke.js";
+import { Sketch, blobPath, arcPath, crumple } from "../../stroke.js";
 import { paintPart } from "./body.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, BUILD } from "./layout.js";
@@ -74,7 +74,7 @@ export function limbSketches(spec) {
       } else if (kind === "boots") {
         // Socks — a small boot filled to the ankle
         s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.012 });
-        const boot = [[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]];
+        const boot = crumple([[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]], 0.003, lean * 90);
         paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
         s.outline(boot, { color: ink0, width: 0.009 });
       } else {
@@ -123,7 +123,7 @@ export function limbSketches(spec) {
     // The foot
     if (legKind === "boots") {
       // Boots — a mass filled to the ankle
-      const boot = [[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]];
+      const boot = crumple([[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]], 0.003, footX * 90);
       paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
       s.outline(boot, { color: ink0, width: 0.01 });
     } else {
@@ -157,7 +157,7 @@ export function limbSketches(spec) {
 
     if (armKind === "sleeve") {
       // The upper arm is a cloth-colored sleeve. The forearm is a bare arm plus a hand.
-      const sl = [[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]];
+      const sl = crumple([[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]], 0.0025, side * 3);
       paintPart(upper, spec, sl, cloth);   // a sleeve — the creature's material
       upper.outline(sl, { color: ink0, width: 0.01 });
       lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: 0.01 });

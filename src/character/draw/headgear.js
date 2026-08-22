@@ -1,7 +1,7 @@
 // Hats and horns — the things that sit on top of the head. Docs: guidelines/character/parts.md § headgear · horns
 // A hat sits above the brow line (head.js browLine) and covers along the head outline shape (layout.js headShape).
 
-import { blobPath, arcPath } from "../../stroke.js";
+import { blobPath, arcPath, crumple } from "../../stroke.js";
 import { paintPart } from "./body.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
@@ -60,7 +60,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const { path, w } = cover(1.04, bottom);
     paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's material at its own color's step
     ink.outline(path, { color: ink0, width: 0.012 });
-    const brim = [[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]];
+    const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
     paintPart(fills, spec, brim, accent, { own: true });
     ink.outline(brim, { color: ink0, width: 0.012 });
     return;
@@ -97,7 +97,7 @@ export function drawHeadgear(ink, fills, spec, box) {
   const bottom = brow + ry * 0.12;
   const w = halfW(bottom) * 0.9;
   const top = crown + ry * 0.28;
-  const pot = [[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]];
+  const pot = crumple([[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]], 0.004, 5);
   paintPart(fills, spec, pot, accent, { own: true });
   ink.outline(pot, { color: ink0, width: 0.012 });
   ink.stroke([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, width: 0.008 });
