@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 // Vertex colors go through hexToRgb (linear space) — color.js. Never bypassed (guidelines/drawing.md § colors go in as linear)
-import { hexToRgb, shade, isDark, luminance } from "./color.js";
+import { hexToRgb, shade, isDark, luminance, mix } from "./color.js";
 import { PAPER } from "./character/vocabulary/palette.js";   // the pencil's bites take the paper color (palette.js imports nothing — no cycle)
 
 const TAU = Math.PI * 2;
@@ -120,6 +120,9 @@ export const MATERIALS = {
   // Charcoal — a ground dusted with dark specks
   CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
 };
+
+// The light ink — what a mark on a dark part is drawn in (the face-ink rule), and what a lighter tone mixes toward
+const LIGHT_INK = "#e9e3d5";
 
 // Values — how dark a surface is drawn, in five steps, named for the way graphite makes each (the reference's scale): black,
 // hatch, scribble, stipple, light. A material renders a step its own way — graphite changes technique step by step (cross-hatch →
@@ -334,7 +337,10 @@ export class Sketch {
     const ph = this.phase;
     const noise = this.noise;
     const dark = isDark(color);
-    const contrast = (factor) => shade(color, dark ? 1 + (1 - factor) * 1.6 : factor);   // a deeper tone on a light color, a lighter one on a dark color
+    // A tone of the part's color. Deeper is shade; lighter is a mix toward the light ink — white pigment, never a multiply that clips a
+    // saturated color (a pop red × 1.6 came out neon). contrast(f): a deeper tone on a light color, a lighter one on a dark color
+    const tone = (factor) => (factor >= 1 ? mix(color, LIGHT_INK, Math.min(0.6, (factor - 1) * 0.45)) : shade(color, factor));   // × 1.6 ≈ a quarter of the way to the light ink
+    const contrast = (factor) => (dark ? tone(1 + (1 - factor) * 1.6) : shade(color, factor));
     const b = bounds(points);
 
     if (wantBase) {
@@ -425,7 +431,7 @@ export class Sketch {
         case "dab": {
           // Thick paint: capsules scattered over the surface (their centres inside it), all along one diagonal give or take a little,
           // of one width and many lengths, in tones close to the ground, overlapping as they fall. An end the contour cuts stays flat
-          const tones = f.tones.map((t) => hexToRgb(shade(color, t)));
+          const tones = f.tones.map((t) => hexToRgb(tone(t)));
           const count = Math.round(f.per * (0.45 + V.v * 0.7) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
           const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
           for (let i = 0; i < count; i += 1) {

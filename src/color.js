@@ -35,6 +35,14 @@ export function isDark(hex) {
 }
 
 // A tone in the same family. factor < 1 darker, > 1 lighter. For pencil shading (a shade darker than the fill) and for giving dogs, cats and imps a body "close to" the head color
+// Mixes two hex colors in sRGB, t of the way toward b. Lightening by mixing toward a pale neutral is "adding white pigment" — it
+// desaturates as it brightens — where multiplying a saturated color past its channels' tops clips it into neon (shade × 1.6 on a pop)
+export function mix(a, b, t) {
+  const va = parseInt(a.slice(1), 16), vb = parseInt(b.slice(1), 16);
+  const ch = (s) => Math.round(((va >> s) & 255) * (1 - t) + ((vb >> s) & 255) * t).toString(16).padStart(2, "0");
+  return "#" + ch(16) + ch(8) + ch(0);
+}
+
 export function shade(hex, factor) {
   const v = parseInt(hex.slice(1), 16);
   const ch = (x) => Math.round(Math.max(0, Math.min(255, x * factor))).toString(16).padStart(2, "0");
