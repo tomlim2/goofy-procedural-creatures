@@ -236,7 +236,7 @@ The ACTION card's SCRATCH/WAG only bite on quads. Hopping in place is on the bod
 
 ## The tail (quads) — a four-bone chain
 
-The tail is **a four-bone chain** splitting the spine into 4 (`TAIL_BONES` in `limbs.js`) — a group per joint, nested (bone[i] is a child of bone[i-1]). The root bone takes
+The tail is **a four-bone chain under one skin** splitting the spine into 4 (`TAIL_BONES` in `limbs.js`) — four sibling bones placed by forward kinematics and one skinned mesh bent by them ([../rig.md](../rig.md)). The root bone takes
 `tailAngle` (swish, wag, walking, sleep), the tip bone `tailTip` (tapping, tremble, follow-through), and **the raise `tailRaise` (0~1)** blends each joint from the rest pose (the spine direction)
 toward vertical — whether the skeleton curls or reaches back, it **shoots straight up** (every joint at π/2, with no bent variant).
 `tailTip` in `table.js` holds the tip bone and raise parameters. Dogs and cats read it **oppositely** — for a dog fast wagging is joy, while for a cat fast movement is irritation or excitement and
@@ -247,11 +247,11 @@ puffed = a startle, wrapped round the body = at ease, and nearly fixed while wal
 | --- | --- | --- | --- |
 | Swish (the root) | rhythm | — | **amplitude 0.16~0.3, period 2.4~5 s** — slow |
 | Follow-through (the tip) | rhythm | the root's angular velocity × 0.05, critically damped — the tip lags behind on a wag | × 0.06 |
-| Flick / **tip tapping** | event | The whole thing 0.35 rad × 3, 0.5 s, every 3~9 s | **the tip alone** 0.35 rad at 6Hz × 3, 0.5 s, every 8~20 s (the root stays put) |
+| Flick / **tip tapping** | event | The whole thing — 0.35 rad, 1.5 cycles in 0.5 s (3Hz) under an attack-release envelope, every 3~9 s | **the tip alone** — the same shape on the tip bone (0.35 rad, 1.5 cycles in 0.5 s), every 8~20 s (the root stays put) |
 | Walking sway (the root) | state | ±0.12 with the step (`walk.tail`) | none (fixed) |
-| wag | action | ±0.35 at 4Hz (`QUAD_ACTIONS`), every 6~16 s (wag 3.5 : scratch 1) · **it also wags whenever it smiles ^^** (`wagOnHappy`, a critically damped envelope) | none (it idles even when forced) |
+| wag | action | ±0.35 at 3Hz (`QUAD_ACTIONS`; 8 ticks a cycle at 24 — 4Hz strobed), every 6~16 s (wag 3.5 : scratch 1) · **it also wags whenever it smiles ^^** (`wagOnHappy`, a critically damped envelope) | none (it idles even when forced) |
 | Lashing | — | — | **there is none** — a cat lashing its tail is forbidden as a motion (there is no code for it. A dog's wag is wag) |
-| **idle pose** arch | state | The skeleton as-is (the root +0.25) | **the arch** — joint world angles [1.85, 1.3, 0.05, −75°] × 85% (`tailIdlePose`, an ∩ whose tip goes over to the far side from the head and comes down to −75°), the top two bones ±0.12 by the individual's tailLift. While awake and not raised |
+| **idle pose** arch | state | The skeleton as-is (the root +0.25) | **the arch** — joint world angles [1.85, 1.3, 0.05, −75°] × 85% (`tailIdlePose`, an ∩ whose tip goes over to the far side from the head and comes down to −75°), the top two bones ±0.12 by the individual's tailLift. While awake and not raised; seated it keeps 70% |
 | **raise** | tied to a good mood (^^) | — | **while smiling ^^** (a ^^ blink 22%, the ♥ emoji, a ♥ startle — 3 s or more) `tailRaise` goes 0→1 (0.4 s), holds for the whole smile and drops in 0.6 s. As a target angle per joint, independent of the skeleton, **every joint is exactly vertical (π/2)** — with no bent variant (bent reads as curved rather than raised). While raised, the swish, tapping and follow-through are killed by (1 − tailRaise) — it is **stiff**. A raised tail is drawn above the body and head (2.08 — so a big head does not hide it, [../rig.md](../rig.md)) |
 | **bristle** puff | tied to **anger** | — | Fur stands up when scared or angry — while angry, only the tail's **thickness** goes 1 → 1.6× (`tailPuff`, the length unchanged). The envelope follows anger (`state.angry`) as it is: bristling in 0.1 s, held for the 3~5 s of anger, subsiding in 0.1 s. It does not bristle on a startle |
 | Sleep | state | The root −0.55 | The root −0.55 plus the tip −0.6 (wrapped round the body) |
