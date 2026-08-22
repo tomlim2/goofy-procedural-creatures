@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 23 slots, 180 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 24 slots, 187 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -381,6 +381,18 @@ Three pieces are baked per arm — **the upper arm, the forearm and back (hands 
 Independent of form, so 4×2 combinations. There are only two steps — shorter than the baseline (1) and the hand is near the torso and does not read as an arm;
 longer than 1.64 and it goes through the floor. Arm length is **decided by the species** — humans are always medium via forbid, and imps have a
 species bias of 3:2. The archetype does not take part.
+
+## Surface
+
+### material (7) — a late slot
+
+What the head and the body are made of — how their areas are filled ([../drawing.md](../drawing.md) § materials, the
+`MATERIALS` table in `stroke.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (a pale ground
+hatched with thin upright pencil strokes) · **ink** (solid, a few light scratches) · **watercolour** (a pale wash, a
+second out of register, a bloom) · **oil** (thick dabs in three tones) · **charcoal** (dusted with specks) · **marker**
+(wide even bands). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
+opaque, so neighbours still hide each other. Both the head and the body take the same material — one hand, one tool
+per creature. The contour is not part of it (the goofy outline, PENCIL). Calico patches stay flat over it.
 
 ## Render order
 

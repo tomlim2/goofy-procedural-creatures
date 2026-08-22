@@ -123,7 +123,7 @@ Draw the slots by even random and around the thirtieth creature you get "the one
 4. **Proportion jitter** — head size, width and lumps; eye size, spacing and left-right asymmetry; body width; arm length; hand shake.
    Most of the silhouette variety comes from here
 
-23 slots, 180 parts. A slot holds form only; pose and action are motion. Length and build (`armLength`, `legLength`, `build`) are dimension
+24 slots, 187 parts. A slot holds form only (the `material` slot the look of a surface); pose and action are motion. Length and build (`armLength`, `legLength`, `build`) are dimension
 slots independent of form — not a scale, only length and width change, and the leg stance is set by the torso's width.
 
 ## The hand-drawn texture

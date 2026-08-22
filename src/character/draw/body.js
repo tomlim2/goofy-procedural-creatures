@@ -12,7 +12,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
-    fills.paint(path, "FLAT", { color: spec.palette.cloth, offset: spec.palette.fillOffset });
+    fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset });   // the material slot (flat when absent)
     fills.scribbleFill(cx, cy, box.bodyW * 0.8, (box.bodyTop - box.legTop) * 0.4, {
       color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
       angle: Math.PI * 0.22, gap: 0.026, width: 0.006
@@ -40,7 +40,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
   }
 
-  fills.paint(path, "FLAT", { color: spec.palette.cloth, offset: spec.palette.fillOffset });
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset });   // the material slot (flat when absent)
   fills.scribbleFill(0, (top + bottom) / 2, w * 0.72, (top - bottom) * 0.4, {
     color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
     angle: Math.PI * 0.28, gap: 0.03, width: 0.006

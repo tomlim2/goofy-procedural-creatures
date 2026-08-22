@@ -18,7 +18,8 @@ export function drawHead(ink, fills, spec, box, noise) {
     taper: shape.taper
   });
 
-  fills.paint(path, "FLAT", { color: spec.palette.skin, offset: spec.palette.fillOffset });   // the material — the fill-up, out of register
+  // The material slot — how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset });
 
   // Pencil scribble. Covers the flat fill with a single zigzag stroke in a darker tone
   // of the same family, leaving the stroke direction behind. On imps it scratches a slightly lighter tone over the ink-black.
