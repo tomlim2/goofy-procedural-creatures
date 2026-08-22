@@ -118,8 +118,8 @@ export const MATERIALS = {
   // edge darkening (pigment walks to the edge of the wash as it dries — a deeper band just inside the contour), and granulation
   // (heavy pigment settling into the paper's tooth — fine dust everywhere)
   WATERCOLOUR: { base: { kind: "wash", pale: 1.12, drift: 0.022 },
-                 texture: { kind: "bloom", count: [2, 4], size: [0.22, 0.42], squash: [0.75, 1.1], tone: 1.13, rim: 0.965,
-                            edge: { inset: 0.04, width: 0.012, tone: 0.93 }, grain: { per: 2600, size: [0.0012, 0.0022], tone: 0.9 } } },
+                 texture: { kind: "bloom", count: [2, 4], size: [0.22, 0.42], squash: [0.75, 1.1], tone: 1.13, rim: { tone: 0.9, width: 0.003 },
+                            edge: { inset: 0.04, width: 0.012, tone: 0.93 }, grain: { per: 1900, size: [0.0012, 0.002], tone: 0.85 } } },
   // Oil — thick short dabs in three tones along one diagonal, the ground covered
   OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] } },
   // Charcoal — a ground dusted with dark specks
@@ -367,11 +367,11 @@ export class Sketch {
             if (!insidePath([cx, cy], points)) continue;
             const r = b.r * (f.size[0] + (f.size[1] - f.size[0]) * h(10 + i));
             const squash = f.squash[0] + (f.squash[1] - f.squash[0]) * h(40 + i);
-            const bloom = blobPath(cx, cy, r, r * squash, { lumps: 5, amount: 0.22, noise, phase: ph * 0.01 + i * 7.3 });
+            const bloom = blobPath(cx, cy, r, r * squash, { lumps: 4, amount: 0.14, noise, phase: ph * 0.01 + i * 7.3 });   // soft round lobes, not spikes
             this.fillClipped(bloom, points, shade(color, f.tone));
-            if (f.rim) {
-              const rgb = hexToRgb(shade(color, f.rim));
-              for (let k = 0; k < bloom.length; k += 1) for (const [p, q] of clipSegment(bloom[k], bloom[(k + 1) % bloom.length], points)) this.strip(p, q, 0.0025, rgb);
+            if (f.rim) {   // the pigment the water pushed out, gathered at the patch's edge — a thin line, clearly deeper than the wash
+              const rgb = hexToRgb(shade(color, f.rim.tone));
+              for (let k = 0; k < bloom.length; k += 1) for (const [p, q] of clipSegment(bloom[k], bloom[(k + 1) % bloom.length], points)) this.strip(p, q, f.rim.width, rgb);
             }
           }
           // Granulation — heavy pigment settling into the paper's tooth
