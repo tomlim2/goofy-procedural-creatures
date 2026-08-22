@@ -38,3 +38,10 @@ export function damp(s, target, w) {
   s.x = target + yNext;
   return s.x;
 }
+
+// An exponential approach — x toward target by the share k **per 60-Hz frame** (0.05 ≈ 95% in a second), applied per tick: the share
+// is re-expressed for the tick (1 − (1 − k)^(60·TICK)), so a blend takes the same seconds at 24 ticks as it did at 60 frames.
+// For mode blends (sleeping, sitting, walking, the head tilt, the facing) — a following that may overshoot nothing and needs no velocity
+export function approach(x, target, k) {
+  return x + (target - x) * (1 - Math.pow(1 - k, 60 * TICK));
+}

@@ -197,16 +197,16 @@ The scene puts the state object's `walkX` (x from home, in cells) and `facing` (
 **a quad faces its walking direction** (mirrored −1 going right, thinning to paper through 0 and flipping; standing back home it faces left again), while a biped does not flip but
 **looks** the way it walks (the look target goes that way). A forced WALK paces home↔out without a rest.
 
-`walkK` (eased at 0.06/frame) blends the walking in. The step phase ph = t·2π·hz + a per-individual phase (from the seed) — on a quad the diagonal pairs (0·3 / 1·2)
+`walkK` (eased at 0.06 per 60-Hz frame — `approach`, the same seconds at any tick) blends the walking in. The step phase ph = t·2π·hz + a per-individual phase (from the seed) — on a quad the diagonal pairs (0·3 / 1·2)
 alternate front and back by sin(ph)·leg, and on a biped the two legs alternately open and close (a walk seen head-on). Each step (twice the period) the body lifts by bob and the head by
 half that; a biped leans side to side by sway and swings its arms counter to its legs by arm; and a quad's tail sways with the step (0.12).
 
-**The sleeping pose** (defined for quads only): blended with idle by `sleepK` (eased at 0.03/frame) — the legs fold under the body (front legs +1.35/+1.25, hind legs
+**The sleeping pose** (defined for quads only): blended with idle by `sleepK` (eased at 0.03 per 60-Hz frame — `approach`) — the legs fold under the body (front legs +1.35/+1.25, hind legs
 −1.3/−1.2 rad), the body settles to the hem (`rig.legTop`) and flattens (squash), the tail lowers (−0.55), the head tilts to one side (0.32,
 on the parity of the seed) and dips slightly (−0.05), the eyes close (lid 1 — a static eye gets the scene's sleep lid cover plus an arch; a live eye gets the shut line over the lid), and the gaze and face turn go centre and down.
 Breathing is slow (×0.65) and deep (×1.6). A z emoji every 6 s. Falling asleep and waking are eased, so nothing snaps. Force it with the ACTION card's SLEEP.
 
-**The sitting pose** (quads only, `sitPose(rig.body)` in `actions.js` — solved per individual from the rig dimensions `motionRig().body`): blended with idle by `sitK` (eased at 0.05/frame, about a second) —
+**The sitting pose** (quads only, `sitPose(rig.body)` in `actions.js` — solved per individual from the rig dimensions `motionRig().body`): blended with idle by `sitK` (eased at 0.05 per 60-Hz frame, about a second — `approach`) —
 the body tilts about **the front legs' root** so the back goes down (`bodyTilt`; the scene rotates bodyGroup about that axis), bringing the hip reference point (low at the back of the body) to the floor;
 the front legs stand at world angle 0 (vertical) and the hind legs fold forward to the angle that puts the feet on the floor. The head is directly above the axis and stays put (it is awake — the face and looking carry on).
 A dog's tail tilts with the body and drops a little further (−0.3) to lie on the floor, its **swish stilled by 90%** — a seated tail lies and only its tip taps and flicks (a tail sweeping the floor read as a tail moving down); the wag carries on. A cat's tail **stays up**: the arch keeps 70% and the swish carries on, so a seated cat swings its tail up, back and forth — awake, a cat's tail points up and nowhere else. A leg is one bone (no knee), so with a short body and long legs the hind foot passes the front one; the tilt

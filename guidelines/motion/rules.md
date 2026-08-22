@@ -65,6 +65,7 @@ Velocity has to be 0 at the start and the end. There is no curve in this lab tha
 | n times (a nod ×2, a paw flick ×3) | `bumps(k, n)` — sin² | `\|sin(nπk)\|` (a kink at the bottom) |
 | Attack, hold, release (the startle eye, the shiver, a tail flick) | `envelope(k, attack, release)` — smoothstepped at both ends | `sin(πk)^0.6`, a `(1 - k)` decay |
 | A fade (the 0.35 s oscillation envelope, an emoji entering and leaving) | `ramp(x)` | a linear `min(1, x)` |
+| A mode blend (sleeping 0.03 · sitting 0.05 · walking 0.06 · the facing 0.18 · the head tilt 0.07) | `approach(x, target, k)` — an exponential approach by k per 60-Hz frame, re-expressed per tick so the seconds hold at 24 | `x += (t - x) * k` per call (2.5× slower at 24 ticks than at 60 frames) |
 | Following a target (the gaze w 0.2 · the face turn w 0.1 · joints w 0.18) | `damp({x, v}, target, w)` — critically damped second order, no overshoot; w per 60-Hz frame (0.1 ≈ 0.8 s), stepped one tick per call by the exact solution | an exponential lerp `x += (t - x) * 0.06` (the first frame is the fastest) |
 
 The only exceptions are where the physics really is like that — a jump's airborne trajectory (the moment the feet kick off the ground is meant to pop) and oscillation itself (a sine wave). The startle shrinks the pupil in 0.1 s

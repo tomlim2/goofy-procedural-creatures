@@ -5,7 +5,7 @@
 // Shape: { next: the next entry time, until: when the hold ends (otherwise -1) }
 
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./actions.js";
-import { ramp } from "./ease.js";
+import { ramp, approach } from "./ease.js";
 
 const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infinity);
 
@@ -62,7 +62,7 @@ export function stepTilt(s, t, rng, M) {
     s.next = t + rng.float(M.tilt[0], M.tilt[1]);
   }
   if (s.until >= 0 && t >= s.until) s.until = -1;
-  s.angle += ((s.until >= 0 ? s.target : 0) - s.angle) * 0.07;
+  s.angle = approach(s.angle, s.until >= 0 ? s.target : 0, 0.07);
   return s.angle;
 }
 // -- action layer scheduling (shared by arm, body and quad) --

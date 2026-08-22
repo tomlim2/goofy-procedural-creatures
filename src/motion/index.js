@@ -14,7 +14,7 @@ import * as E from "./events.js";
 import * as S from "./states.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, sitPose, bindArm, solveArms } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
-import { ramp, smoothstep, damp } from "./ease.js";
+import { ramp, smoothstep, damp, approach } from "./ease.js";
 import { TICK_FPS } from "../tick.js";
 
 export { MOTION } from "./table.js";
@@ -181,18 +181,18 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       lastMode = modeName;
       // A quad faces its walking direction — mirrored (-1) when going right. Standing back home it faces left again (+1). Idling outside it keeps the last direction
       const facingTarget = !quad ? 1 : (modeName === "walk" && trip.start >= 0) ? (trip.dir > 0 ? -1 : 1) : (Math.abs(trip.x) < 1e-4 ? 1 : facing < 0 ? -1 : 1);
-      facing += (facingTarget - facing) * 0.18;
+      facing = approach(facing, facingTarget, 0.18);
       const asleep = modeName === "sleep" && canSleep;
-      sleepK += ((asleep ? 1 : 0) - sleepK) * 0.03;
+      sleepK = approach(sleepK, asleep ? 1 : 0, 0.03);
       if (sleepK < 0.001) sleepK = 0;
       const awake = 1 - sleepK;
-      // Sit — it sits and rises faster than it sleeps (0.05/frame, about a second). It is an awake state, so the face, looking and quad actions all carry on
+      // Sit — it sits and rises faster than it sleeps (0.05 per 60-Hz frame, about a second — ease.js approach keeps the seconds at any tick). It is an awake state, so the face, looking and quad actions all carry on
       const sitting = modeName === "sit" && !!sit;
-      sitK += ((sitting ? 1 : 0) - sitK) * 0.05;
+      sitK = approach(sitK, sitting ? 1 : 0, 0.05);
       if (sitK < 0.001) sitK = 0;
       // Walk — walking in place. walkK eases in and out (about 0.5 s). The step phase ph is t-based, so it never breaks
       const walking = modeName === "walk" && !!W;
-      walkK += ((walking ? 1 : 0) - walkK) * 0.06;
+      walkK = approach(walkK, walking ? 1 : 0, 0.06);
       if (walkK < 0.001) walkK = 0;
       const ph = W ? t * Math.PI * 2 * W.hz + walkPhase : 0;
       const stepBump = 0.5 - 0.5 * Math.cos(2 * ph);   // 0→1→0 once per step (twice the period)
