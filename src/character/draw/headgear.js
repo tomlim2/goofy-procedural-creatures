@@ -2,6 +2,7 @@
 // A hat sits above the brow line (head.js browLine) and covers along the head outline shape (layout.js headShape).
 
 import { blobPath, arcPath } from "../../stroke.js";
+import { paintPart } from "./body.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
 
@@ -46,7 +47,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     // Helmet — covers from above the brows to the crown along the head shape (1.1×). A lower rim plus a centre ridge
     const bottom = brow;
     const { path, w } = cover(1.1, bottom);
-    fills.fill(path, accent);
+    paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's material at its own color's step
     ink.outline(path, { color: ink0, width: 0.013, passes: 2 });
     ink.stroke([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0, width: 0.013 });
     ink.stroke([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, width: 0.008 });
@@ -57,10 +58,10 @@ export function drawHeadgear(ink, fills, spec, box) {
     // Baseball cap — a dome following the head shape (1.04×) plus a brim out to one side (the brow line). The brim droops slightly
     const bottom = brow + ry * 0.05;
     const { path, w } = cover(1.04, bottom);
-    fills.fill(path, accent);
+    paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's material at its own color's step
     ink.outline(path, { color: ink0, width: 0.012 });
     const brim = [[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]];
-    fills.fill(brim, accent);
+    paintPart(fills, spec, brim, accent, { own: true });
     ink.outline(brim, { color: ink0, width: 0.012 });
     return;
   }
@@ -74,7 +75,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const sin = Math.sin(tilt);
     const disc = blobPath(0, 0, rx * 0.95, ry * 0.3, { lumps: 4, amount: 0.12, noise: null })
       .map(([x, y]) => [bx + x * cos - y * sin, by + x * sin + y * cos]);
-    fills.fill(disc, accent);
+    paintPart(fills, spec, disc, accent, { own: true });
     ink.outline(disc, { color: ink0, width: 0.012, passes: 2 });
     ink.stroke([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0, width: 0.012 });
     return;
@@ -97,7 +98,7 @@ export function drawHeadgear(ink, fills, spec, box) {
   const w = halfW(bottom) * 0.9;
   const top = crown + ry * 0.28;
   const pot = [[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]];
-  fills.fill(pot, accent);
+  paintPart(fills, spec, pot, accent, { own: true });
   ink.outline(pot, { color: ink0, width: 0.012 });
   ink.stroke([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, width: 0.008 });
 }

@@ -89,6 +89,23 @@ creature, and for every filled part a shade — the region facing away from the 
 and filled in the material's shadow technique and a deeper tone of the part's color. Two steps, like cel
 shading. The cheek and forehead hatch are the same thing (an occlusion). Until it exists, surfaces are flat.
 
+## What takes the material
+
+One tool per creature: **every skin, fur and cloth surface** takes the creature's `material` (and its value
+step), through `paint` — the head and the body directly, and every other surface through `paintPart` in
+`draw/body.js`: the ears (standing, hanging, folded, the flap), the muzzle, the hands, the boots and sleeves,
+the tail and its ends, and the hats (an object of its own color, so at its own color's step — `own`). A dog, a
+cat or an imp is one mass, so all of its surfaces share the head color's step (`surfaceValue`); a human's take
+their own color's.
+
+What does **not** take the material, by design: the eyes (whites, pupils, irises, highlights, the static eyes),
+the nose (an object — always black), the mouth's inside, teeth and tongue, the blush and the freckles, the eye
+patch, the inner ear and the cheek and forehead shade patches (tone patches over the surface, the light's job
+later), the emoji. These are details and objects, not surfaces; they are drawn flat.
+
+Adding a surface part means painting it through `paintPart`, never `fill` — a `fill` on a skin, fur or cloth
+surface is a bug (it stands flat beside a hatched head).
+
 ## Decals — what sits on a surface
 
 A **decal** is a color region that takes its edge from its host's own outline — the way a decal is projected onto

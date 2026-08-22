@@ -2,6 +2,7 @@
 // Docs: guidelines/character/parts.md § legs · tail · arms · armLength, guidelines/rig.md
 
 import { Sketch, blobPath, arcPath } from "../../stroke.js";
+import { paintPart } from "./body.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, BUILD } from "./layout.js";
 import { shade } from "../../color.js";
@@ -47,7 +48,7 @@ export function limbSketches(spec) {
 
   const make = () => new Sketch(noise, p.wobble);
   const dot = (s, x, y, r, color) => {
-    s.fill(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color);
+    paintPart(s, spec, blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color);   // a hand — the creature's material
     s.outline(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), { color: ink0, width: 0.009 });
   };
 
@@ -74,7 +75,7 @@ export function limbSketches(spec) {
         // Socks — a small boot filled to the ankle
         s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.012 });
         const boot = [[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]];
-        s.fill(boot, cloth === skin ? ink0 : shade(cloth, 0.75));
+        paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
         s.outline(boot, { color: ink0, width: 0.009 });
       } else {
         // A thick stub leg plus a round toe tip poking slightly forward plus two toe lines (the reference)
@@ -123,7 +124,7 @@ export function limbSketches(spec) {
     if (legKind === "boots") {
       // Boots — a mass filled to the ankle
       const boot = [[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]];
-      s.fill(boot, cloth === skin ? ink0 : shade(cloth, 0.75));
+      paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
       s.outline(boot, { color: ink0, width: 0.01 });
     } else {
       // A round foot — the reference default
@@ -157,7 +158,7 @@ export function limbSketches(spec) {
     if (armKind === "sleeve") {
       // The upper arm is a cloth-colored sleeve. The forearm is a bare arm plus a hand.
       const sl = [[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]];
-      upper.fill(sl, cloth);
+      paintPart(upper, spec, sl, cloth);   // a sleeve — the creature's material
       upper.outline(sl, { color: ink0, width: 0.01 });
       lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: 0.01 });
       dot(lower, side * 0.006, -lowerLen - 0.006, 0.022, skin);
@@ -345,7 +346,7 @@ export function tailSketch(spec) {
       const tMap = (t) => part.t0 + t * (part.t1 - part.t0);
       const { left, right } = tubeSides(part.spine, widthAt, tMap);
       const sk = sketches[i];
-      sk.fill([...left, ...right.slice().reverse()], fur);
+      paintPart(sk, spec, [...left, ...right.slice().reverse()], fur);   // the tail is fur — the creature's material
       sk.stroke(left, { color: ink0, width: 0.011, passes: 2 });
       sk.stroke(right, { color: ink0, width: 0.011, passes: 2 });
       if (i === parts.length - 1) sk.stroke([left[left.length - 1], right[right.length - 1]], { color: ink0, width: 0.011 });   // closing off the tip
@@ -383,14 +384,14 @@ export function tailSketch(spec) {
     const tip = tipPart.spine[tipPart.spine.length - 1];
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
     const tipSk = sketches[sketches.length - 1];
-    tipSk.fill(ball, shade(fur, 0.82));
+    paintPart(tipSk, spec, ball, shade(fur, 0.82));
     tipSk.outline(ball, { color: ink0, width: 0.01 });
   } else if (skin === "puff") {
     // A pom — a rabbit tail. Regardless of the skeleton's length, one bushy tuft near the rump (at spine 0.3) plus fur strokes around it (the root piece)
     const a = at(0.3);
     const r = 0.04;
     const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
-    a.sk.fill(pom, fur);
+    paintPart(a.sk, spec, pom, fur);
     a.sk.outline(pom, { color: ink0, width: 0.011, passes: 2 });
     for (let i = 0; i < 6; i += 1) {
       const ang = -1.0 + i * 0.66;   // around the top and outside
@@ -402,7 +403,7 @@ export function tailSketch(spec) {
     if (stub) {
       const a = at(0.6);
       const ball = blobPath(a.x, a.y + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
-      a.sk.fill(ball, fur);
+      paintPart(a.sk, spec, ball, fur);
       a.sk.outline(ball, { color: ink0, width: 0.011, passes: 2 });
     } else {
       const n = 4;
@@ -411,7 +412,7 @@ export function tailSketch(spec) {
         const a = at(t);
         const r = 0.024 - i * 0.004;
         const ball = blobPath(a.x, a.y, r, r, { lumps: 3, amount: 0.12, noise: null });
-        a.sk.fill(ball, fur);
+        paintPart(a.sk, spec, ball, fur);
         a.sk.outline(ball, { color: ink0, width: 0.01, passes: 2 });
       }
     }

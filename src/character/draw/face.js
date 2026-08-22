@@ -1,6 +1,7 @@
 // Face — eyes, brows, eyewear, nose, muzzle, cheeks, whiskers. The mouth is mouth.js; the brow and mouth state sets are faceStates.js.
 // Docs: guidelines/character/parts.md § head (eyes~nose), guidelines/motion/catalog.md § the face
 
+import { paintPart } from "./body.js";
 import { blobPath, arcPath } from "../../stroke.js";
 import { TAU } from "./layout.js";
 import { shade, luminance } from "../../color.js";
@@ -419,7 +420,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
     const m = muzzleGeometry(spec, box);
     // The muzzle (the region the nose and mouth are grouped into) is **color only** — no outline is drawn round it. An outline makes it look like a board tacked onto the face (it has to stay a color patch)
     const muzzle = blobPath(0, m.my, m.rx, m.ry, { lumps: 3, amount: 0.1, noise: null });
-    fills.fill(muzzle, m.fill);
+    paintPart(fills, spec, muzzle, m.fill);   // the muzzle is fur — the creature's material
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
     fills.fill(nose, spec.palette.ink);   // the nose is an object — always black
     if (m.dark) ink.outline(nose, { color: m.ink, width: 0.008 });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)

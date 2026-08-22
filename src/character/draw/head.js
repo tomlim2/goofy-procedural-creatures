@@ -4,7 +4,7 @@ import { blobPath, arcPath } from "../../stroke.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
-import { calicoColors, surfaceValue, headDecals, decalEdges } from "./body.js";
+import { calicoColors, surfaceValue, headDecals, decalEdges, paintPart } from "./body.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -161,7 +161,7 @@ export function drawCatEars(ink, fills, spec, box) {
     const path = [
       baseAt(-def.w, 0.02), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w, 0.02)
     ];
-    fills.fill(path, earFill);
+    paintPart(fills, spec, path, earFill);   // the ear is skin — the creature's material
     ink.stroke([
       baseAt(-def.w * 1.02, 0.024), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w * 1.02, 0.024)
     ], { color: ink0, width: 0.014, passes: 2, step: 0.008 });
@@ -288,7 +288,7 @@ export function drawPupEars(ink, fills, spec, box) {
       const cy = by - Math.cos(tilt) * (len * 0.5 - 0.005);
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
-    fills.fill(path, cal && cal.side === side ? cal.dark : earFill);
+    paintPart(fills, spec, path, cal && cal.side === side ? cal.dark : earFill);   // the ear is fur — the creature's material
     // The inner ear — the ear shape scaled **about its root (where it meets the face)**. Its base attaches right at the root and it narrows going up
     // (scale about the centroid and it becomes a patch hanging mid-ear — the reference's inner ear starts at the root). There is no outline — being a filled patch, it reads even when small.
     // Only hanging ears (flap, long) are skipped — that pose shows the ear's **outer** face. A folded ear is drawn here too, because **its root (the standing part) is the inner face**
@@ -301,7 +301,7 @@ export function drawPupEars(ink, fills, spec, box) {
     if (flap) {
       // The flap is **the ear's back (outer) face** folded over — so it takes a fur tone, not the inner-ear color (a shade darker, to separate it from the root).
       // On light fur it reads by tone, on black fur by the crease. The inner face (pink or a tone) is drawn on the standing part **under** the flap, from the root up, and the flap covers it
-      fills.fill(flap, shade(earFill, 0.82));
+      paintPart(fills, spec, flap, shade(earFill, 0.82));
       ink.outline(flap, earInk);
       ink.stroke(crease, { color: spec.palette.ink, width: 0.009 });
     }

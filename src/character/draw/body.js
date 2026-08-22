@@ -11,6 +11,15 @@ export function surfaceValue(spec, color) {
   return valueStep(spec.species === "human" ? color : spec.palette.skin, spec.parts.density);
 }
 
+// Paints a part's surface with the creature's material — the one way in for every skin, fur and cloth surface that is not the head or
+// the body (ears, the muzzle, hands, boots, sleeves, the tail, hats): guidelines/drawing.md § what takes the material. The value step
+// is the creature's (one mass on a dog, a cat or an imp), or the part's own color's when `own` — a hat is an object, not the fur
+export function paintPart(fills, spec, path, color, { own = false, offset } = {}) {
+  const options = { color, value: own ? valueStep(color, spec.parts.density) : surfaceValue(spec, color) };
+  if (offset) options.offset = offset;
+  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), options);
+}
+
 // The creature's pattern — the `pattern` slot as part of the material's base color (stroke.js patternOn). Light ink on a dark body,
 // the same rule as face ink. calico is not a line pattern but decals — color regions of the base (bodyDecals / headDecals), and none is none
 function patternOf(spec) {
