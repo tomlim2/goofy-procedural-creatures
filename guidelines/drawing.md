@@ -85,7 +85,7 @@ per entry by itself.
 A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as channels.
 The `base` colour — the fill-up (`flat`, optionally a tone of the color) or a `wash` — always opaque (on the
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
-and its `texture` — `hatch`, `scratch`, `bloom`, `dab`, `speckle` or `band` — a pattern laid over it, clipped to
+and its `texture` — `hatch`, `scratch`, `bloom`, `dab` or `speckle` — a pattern laid over it, clipped to
 the contour (`clipSegment`, `insidePath` in `stroke.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
 62% graphite, vertex alpha), `grain` (the paper showing through) — is not built; it would be a new key, not a
@@ -106,7 +106,6 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | `WATERCOLOUR` | `wash` — a pale wash with a second out of register | `bloom` — a lighter patch inside | the `material` slot (1.5) |
 | `OIL` | `flat` | `dab` — thick short dabs in three tones along one diagonal | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — dark specks | the `material` slot (1) |
-| `MARKER` | `flat` | `band` — wide even diagonal bands of a deeper tone | the `material` slot (1.5) |
 
 The head and the body take the creature's `material` — a late slot ([character/parts.md](character/parts.md)
 § surface), one tool per creature. Every other fill is FLAT.

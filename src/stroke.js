@@ -97,8 +97,8 @@ export const PENCIL = {
 
 // Materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as channels. `base` is the base
 // color — the fill-up (flat) or a wash — always opaque (on the board the one in front has to hide the one behind), printed out of
-// register, in the part's color or a tone of it. `texture` is the base color's texture — hatch, scratch, bloom, dab, speckle or band
-// — a pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
+// register, in the part's color or a tone of it. `texture` is the base color's texture — hatch, scratch, bloom, dab or speckle —
+// a pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
 // different thing (opacity — the reference's 62% graphite; grain — the paper showing through) is not built, and would be a new key,
 // not a second texture. That is the material, and nothing else: the contour is a separate concept (GOOFY_OUTLINES, below). The
 // color always comes from the part; every tone the texture adds is a shade of that color (lighter on a dark color, darker on a
@@ -117,9 +117,7 @@ export const MATERIALS = {
   // Oil — thick short dabs in three tones along one diagonal, the ground covered
   OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] } },
   // Charcoal — a ground dusted with dark specks
-  CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 } },
-  // Marker — wide diagonal bands of a deeper tone over the flat, blunt and even
-  MARKER:      { base: { kind: "flat" }, texture: { kind: "band", angle: 1.05, width: 0.026, gap: 0.066, tone: 0.86 } }
+  CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
 };
 
 // Outlines — the goofy outline: what a creature's contour is drawn with. A separate concept from the materials (a contour
@@ -291,19 +289,6 @@ export class Sketch {
     else this.stroke(points, options);
   }
 
-  // A blunt, even band from p to q — the marker's stroke: no taper, no wander
-  ribbon(p, q, width, rgb) {
-    let dx = q[0] - p[0];
-    let dy = q[1] - p[1];
-    const len = Math.hypot(dx, dy) || 1;
-    dx /= len;
-    dy /= len;
-    const h = width / 2;
-    const nx = -dy * h, ny = dx * h;
-    this.triangle(p[0] + nx, p[1] + ny, p[0] - nx, p[1] - ny, q[0] + nx, q[1] + ny, rgb);
-    this.triangle(p[0] - nx, p[1] - ny, q[0] - nx, q[1] - ny, q[0] + nx, q[1] + ny, rgb);
-  }
-
   // Fills with a named material — its base color, then its texture, every mark clipped to the contour. offset prints the base out
   // of register (a creature's fillOffset). only: "base" or "texture" draws that channel alone (the medium page's channel chips).
   // Every tone is a shade of the part's color — the material knows no colors of its own
@@ -387,11 +372,6 @@ export class Sketch {
             if (!insidePath(p, points)) continue;
             this.square(p[0], p[1], f.size[0] + (f.size[1] - f.size[0]) * h(i + 7000), rgb);
           }
-          break;
-        }
-        case "band": {
-          const rgb = hexToRgb(contrast(f.tone));
-          for (const [p, q] of rules(points, f.angle, f.gap, () => 0)) this.ribbon(p, q, f.width, rgb);
           break;
         }
         default:

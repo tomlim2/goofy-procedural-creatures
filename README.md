@@ -40,7 +40,7 @@ To go back, press **MENAGERIE** in the header.
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
 `/how.html` — **the medium page**. The legend of how everything is drawn, on three axes: the goofy outlines (what a contour is drawn
-with — the ribbon and the pencil, with their anatomy), the materials (how a surface is filled — seven of them as shader balls) and the goofy fur
+with — the ribbon and the pencil, with their anatomy), the materials (how a surface is filled — six of them as shader balls) and the goofy fur
 (how hair is grown — fur balls), then the shapes, the colors and the boil. Every figure is drawn live by the same `src/stroke.js` that draws the creatures, at the board's own scale, and the
 balls are generated from the tables themselves. The figures hold still; INK BOIL (`I`) sets their lines boiling at the board's own cadence.
 The page cannot drift from the code, because it runs the code.
@@ -83,7 +83,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | Where | What it does | Docs |
 | --- | --- | --- |
 | `src/rng.js` | The seeded PRNG (mulberry32), weighted draws, 1D value noise | [determinism](guidelines/determinism.md) |
-| `src/stroke.js` | Strokes → ribbon geometry. Wobble, pressure, scribbles, scribble fills, hatching. `pencil()` — the reference's line kept next to `stroke()`, its numbers in `PENCIL`. `MATERIALS` + `paint()` — what a surface is made of: how its area is filled, as channels — a base color (flat, wash) and its texture (hatch, scratch, bloom, dab, speckle, band). `GOOFY_OUTLINES` + `contour()` — the goofy outline (RIBBON, PENCIL). `GOOFY_FUR` + `fur()` — the goofy fur, how hair is grown (SCRIBBLE). A part names them (the board: FLAT, PENCIL, SCRIBBLE) instead of picking techniques and widths. `buildGeometry` (several sketches → one geometry) | [drawing](guidelines/drawing.md) |
+| `src/stroke.js` | Strokes → ribbon geometry. Wobble, pressure, scribbles, scribble fills, hatching. `pencil()` — the reference's line kept next to `stroke()`, its numbers in `PENCIL`. `MATERIALS` + `paint()` — what a surface is made of: how its area is filled, as channels — a base color (flat, wash) and its texture (hatch, scratch, bloom, dab, speckle). `GOOFY_OUTLINES` + `contour()` — the goofy outline (RIBBON, PENCIL). `GOOFY_FUR` + `fur()` — the goofy fur, how hair is grown (SCRIBBLE). A part names them (the board: FLAT, PENCIL, SCRIBBLE) instead of picking techniques and widths. `buildGeometry` (several sketches → one geometry) | [drawing](guidelines/drawing.md) |
 | `src/color.js` | Hex color utilities — linear conversion (`hexToRgb`), luminance (`luminance`, `isDark`), tones (`shade`). Character and drawing share them | [drawing](guidelines/drawing.md) § colors |
 | **`src/character/`** | What the seed decides. `vocabulary/` (slots, species, archetypes, palette) `spec.js` (seed→spec) `draw/` (spec→strokes: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | What the clock decides. `table.js` (per-species parameters) `rhythm.js` (standing) `events.js` (intermittent) `states.js` (held — including the base states idle/sleep/walk) `actions.js` (idle and actions — arm, body and quad layers) `emoji.js` (emoji animation — the trigger layer) `ease.js` (curve shapes — envelopes and following, all eased in and out) `index.js` (assembly in a fixed rng order) | [motion/](guidelines/motion/) |
@@ -123,7 +123,7 @@ Draw the slots by even random and around the thirtieth creature you get "the one
 4. **Proportion jitter** — head size, width and lumps; eye size, spacing and left-right asymmetry; body width; arm length; hand shake.
    Most of the silhouette variety comes from here
 
-24 slots, 187 parts. A slot holds form only (the `material` slot the look of a surface); pose and action are motion. Length and build (`armLength`, `legLength`, `build`) are dimension
+24 slots, 186 parts. A slot holds form only (the `material` slot the look of a surface); pose and action are motion. Length and build (`armLength`, `legLength`, `build`) are dimension
 slots independent of form — not a scale, only length and width change, and the leg stance is set by the torso's width.
 
 ## The hand-drawn texture

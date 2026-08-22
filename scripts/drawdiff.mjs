@@ -75,13 +75,17 @@ try {
       const base = oldM.makeCreature(seed, species);
       if (JSON.stringify(base) !== JSON.stringify(newM.makeCreature(seed, species))) specDiffs += 1;
       for (const [slot, values] of Object.entries(oldSlots)) {
-        for (const value of values) check({ ...base, parts: { ...base.parts, [slot]: value } }, `${species}/${seed}/${slot}=${value}`);
+        for (const value of values) {
+          // A value the working tree no longer has (a removed part) cannot be drawn by it — noted once, not compared
+          if (newM.SLOTS[slot] && !newM.SLOTS[slot].includes(value)) { onlyOne.add(`only in ${ref}: ${slot}=${value}`); continue; }
+          check({ ...base, parts: { ...base.parts, [slot]: value } }, `${species}/${seed}/${slot}=${value}`);
+        }
       }
     }
   }
   console.log(`${ref} ↔ working tree: ${n} sketches compared, ${specDiffs} spec differences, ${diffs.length} drawing differences${diffs.length >= 30 ? " or more" : ""}`);
   for (const d of diffs) console.log("  " + d);
-  if (onlyOne.size) console.log(`layer name present on one side only (not compared): ${[...onlyOne].join(" · ")}`);
+  if (onlyOne.size) console.log(`present on one side only (not compared): ${[...onlyOne].join(" · ")}`);
   process.exitCode = diffs.length || specDiffs || onlyOne.size ? 1 : 0;
 } finally {
   rmSync(tmp, { recursive: true, force: true });
