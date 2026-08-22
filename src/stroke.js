@@ -113,8 +113,13 @@ export const MATERIALS = {
   GRAPHITE:    { base: { kind: "flat", tone: 1.15 }, texture: { kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, tone: 0.6 } },
   // Ink — solid, scratched: a few long light lines dragged across the dark
   INK:         { base: { kind: "flat" }, texture: { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 } },
-  // Watercolour — a pale wash with a second wash out of register, and a bloom inside
-  WATERCOLOUR: { base: { kind: "wash", pale: 1.12, drift: 0.022 }, texture: { kind: "bloom", tone: 1.18 } },
+  // Watercolour — a pale wash with a second out of register; then how a wash dries: blooms (water dropped into the half-dry wash
+  // pushes the pigment out — a paler lobed patch with a slightly darker rim, two to four of them, some cut by the contour), the
+  // edge darkening (pigment walks to the edge of the wash as it dries — a deeper band just inside the contour), and granulation
+  // (heavy pigment settling into the paper's tooth — fine dust everywhere)
+  WATERCOLOUR: { base: { kind: "wash", pale: 1.12, drift: 0.022 },
+                 texture: { kind: "bloom", count: [2, 4], size: [0.22, 0.42], squash: [0.75, 1.1], tone: 1.13, rim: 0.965,
+                            edge: { inset: 0.04, width: 0.012, tone: 0.93 }, grain: { per: 2600, size: [0.0012, 0.0022], tone: 0.9 } } },
   // Oil — thick short dabs in three tones along one diagonal, the ground covered
   OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] } },
   // Charcoal — a ground dusted with dark specks
@@ -347,9 +352,30 @@ export class Sketch {
           break;
         }
         case "bloom": {
-          const bloom = blobPath(b.cx + (u(1) - 0.5) * b.r * 0.5, b.cy - b.r * 0.15, b.r * 0.34, b.r * 0.26, { lumps: 4, amount: 0.16, noise, phase: ph * 0.01 });
-          const inside = bloom.filter((p) => insidePath(p, points)).length > bloom.length * 0.6;
-          this.fill(inside ? bloom : bloom.map(([x, y]) => [b.cx + (x - b.cx) * 0.7, b.cy + (y - b.cy) * 0.7]), shade(color, f.tone));
+          // How a wash dries. First the edge darkening — pigment walks to the edge: a deeper band just inside the contour (the shape
+          // pulled toward its centre by inset, so the band stays inside; the contour ink covers what little crosses)
+          if (f.edge) {
+            const inset = points.map(([x, y]) => [b.cx + (x - b.cx) * (1 - f.edge.inset), b.cy + (y - b.cy) * (1 - f.edge.inset)]);
+            this.outline(inset, { color: shade(color, f.edge.tone), width: f.edge.width, jitter: 0.004, step: 0.02 });
+          }
+          // The blooms — water dropped into the half-dry wash: a paler lobed patch, its centre on the surface but its body free to run
+          // past the contour and be cut by it, and the pigment it pushed out gathered in a slightly darker rim
+          const count = Math.round(f.count[0] + (f.count[1] - f.count[0]) * h(1));
+          for (let i = 0; i < count; i += 1) {
+            const cx = b.x0 + (b.x1 - b.x0) * (0.1 + 0.8 * h(20 + i));
+            const cy = b.y0 + (b.y1 - b.y0) * (0.1 + 0.8 * h(30 + i));
+            if (!insidePath([cx, cy], points)) continue;
+            const r = b.r * (f.size[0] + (f.size[1] - f.size[0]) * h(10 + i));
+            const squash = f.squash[0] + (f.squash[1] - f.squash[0]) * h(40 + i);
+            const bloom = blobPath(cx, cy, r, r * squash, { lumps: 5, amount: 0.22, noise, phase: ph * 0.01 + i * 7.3 });
+            this.fillClipped(bloom, points, shade(color, f.tone));
+            if (f.rim) {
+              const rgb = hexToRgb(shade(color, f.rim));
+              for (let k = 0; k < bloom.length; k += 1) for (const [p, q] of clipSegment(bloom[k], bloom[(k + 1) % bloom.length], points)) this.strip(p, q, 0.0025, rgb);
+            }
+          }
+          // Granulation — heavy pigment settling into the paper's tooth
+          if (f.grain) this.dust(points, b, f.grain, (k) => h(k + 90000), contrast(f.grain.tone));
           break;
         }
         case "dab": {
@@ -371,13 +397,7 @@ export class Sketch {
           break;
         }
         case "speckle": {
-          const rgb = hexToRgb(contrast(f.tone));
-          const count = Math.round(f.per * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
-          for (let i = 0; i < count; i += 1) {
-            const p = [b.x0 + (b.x1 - b.x0) * h(i * 2), b.y0 + (b.y1 - b.y0) * h(i * 2 + 1)];   // hashed — with the smooth noise the specks string into curves
-            if (!insidePath(p, points)) continue;
-            this.square(p[0], p[1], f.size[0] + (f.size[1] - f.size[0]) * h(i + 7000), rgb);
-          }
+          this.dust(points, b, f, h, contrast(f.tone));
           break;
         }
         default:
@@ -522,6 +542,41 @@ export class Sketch {
         b[0] + offset[0], b[1] + offset[1],
         rgb
       );
+    }
+  }
+
+  // A blunt strip from p to q, width across — no taper, no wander: the scanlines of a clipped fill and the pigment rims
+  strip(p, q, width, rgb) {
+    let dx = q[0] - p[0];
+    let dy = q[1] - p[1];
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+    const nx = (-dy * width) / 2, ny = (dx * width) / 2;
+    this.triangle(p[0] + nx, p[1] + ny, p[0] - nx, p[1] - ny, q[0] + nx, q[1] + ny, rgb);
+    this.triangle(p[0] - nx, p[1] - ny, q[0] - nx, q[1] - ny, q[0] + nx, q[1] + ny, rgb);
+  }
+
+  // Fills a polygon, but only where it lies inside `clip` — scanline strips cut by both outlines (a bloom that runs past the
+  // contour is cut by it, like the wash itself). step is the strip height (world); the strips overlap a little so no hairline shows
+  fillClipped(poly, clip, color, step = 0.004) {
+    const rgb = hexToRgb(color);
+    const b = bounds(poly);
+    for (let y = b.y0 + step / 2; y < b.y1; y += step) {
+      for (const [p, q] of clipSegment([b.x0 - 0.01, y], [b.x1 + 0.01, y], poly)) {
+        for (const piece of clipSegment(p, q, clip)) this.strip(piece[0], piece[1], step * 1.3, rgb);
+      }
+    }
+  }
+
+  // Dust inside a shape — specks of a fixed size at a density per unit area, hashed so they never string into curves
+  dust(points, b, { per, size, tone }, h, color) {
+    const rgb = hexToRgb(color);
+    const count = Math.round(per * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
+    for (let i = 0; i < count; i += 1) {
+      const p = [b.x0 + (b.x1 - b.x0) * h(i * 2), b.y0 + (b.y1 - b.y0) * h(i * 2 + 1)];
+      if (!insidePath(p, points)) continue;
+      this.square(p[0], p[1], size[0] + (size[1] - size[0]) * h(i + 7000), rgb);
     }
   }
 

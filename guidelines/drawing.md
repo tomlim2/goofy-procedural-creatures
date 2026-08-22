@@ -114,7 +114,7 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
 | `GRAPHITE` | `flat`, a pale tone | `hatch` — thin pencil strokes, nearly upright | the `material` slot (1.5) |
 | `INK` | `flat` | `scratch` — a few long light lines dragged across | the `material` slot (0.8) |
-| `WATERCOLOUR` | `wash` — a pale wash with a second out of register | `bloom` — a lighter patch inside | the `material` slot (1.5) |
+| `WATERCOLOUR` | `wash` — a pale wash with a second out of register | `bloom` — how a wash dries: 2–4 blooms (paler lobed patches with a faint pigment rim, cut by the contour), the edge darkening (a deeper band inside the contour), granulation (fine dust) | the `material` slot (1.5) |
 | `OIL` | `flat` | `dab` — thick short dabs in three tones along one diagonal | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — dark specks | the `material` slot (1) |
 
