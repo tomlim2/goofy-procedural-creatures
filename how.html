@@ -92,12 +92,8 @@ an end taper, and uneven pressure through the middle. Leave out any one and it b
     cycles and never overshoots. Its quads share one normal per point, so it cannot crack at a corner either.</figcaption>
   </figure>
 </div>
-</section>
 
-<!-- ================================================================ -->
-<section>
-<h2>THE MARKS</h2>
-<p>What an area gets. A flat fill is allowed, but it must miss its outline a little —
+<p>And what an area gets. A flat fill is allowed, but it must miss its outline a little —
 and anything that means <em>shading</em> is not a fill at all, it is the pen going back and forth.</p>
 
 <div class="figs">
@@ -135,52 +131,24 @@ and anything that means <em>shading</em> is not a fill at all, it is the pen goi
 
 <!-- ================================================================ -->
 <section>
-<h2>THE SHAPES</h2>
-<p>The reference's head is not a circle but a lumpy mass. One recipe, <b>blobPath</b>, makes
-every closed shape on the board: a superellipse bent by noise, squared and tapered by two knobs.</p>
+<h2>THE MATERIAL</h2>
+<p>There is exactly one material — a flat <code>MeshBasicMaterial</code> with vertex colors,
+shared per opacity level by every mesh on the board. No depth test, so stacking is decided
+entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
+(fills first, ink after — within a mesh, vertex order is the stacking), one draw call per layer.</p>
 
 <div class="figs">
-  <figure data-fig="lumps">
+  <figure data-fig="boilface" class="wide">
     <canvas></canvas>
-    <div class="subs"><span>amount 0 — a circle</span><span>0.08</span><span>0.2</span></div>
-    <figcaption><b>lumps</b> — noise pushes the radius in and out. At amount 0 it is a perfect
-    ellipse, which is exactly why amount 0 never appears on the board.</figcaption>
-  </figure>
-
-  <figure data-fig="square">
-    <canvas></canvas>
-    <div class="subs"><span>square 0</span><span>0.9</span><span>1.8</span></div>
-    <figcaption><b>square</b> — the superellipse exponent. 0 is an ellipse, around 1.5 a rounded
-    box. Box heads and tube bodies live at the right end.</figcaption>
-  </figure>
-
-  <figure data-fig="taper">
-    <canvas></canvas>
-    <div class="subs"><span>taper −0.35</span><span>0</span><span>+0.35</span></div>
-    <figcaption><b>taper</b> — the top/bottom width ratio. Positive is wider at the bottom
-    (a pear), negative wider at the top. Most heads sit a little off zero.</figcaption>
-  </figure>
-
-  <figure data-fig="arcs">
-    <canvas></canvas>
-    <div class="subs"><span>smile</span><span>frown</span><span>a shut lid</span></div>
-    <figcaption><b>arcPath</b> — mouths, brows and lids are sections of an ellipse, handed to
-    <code>stroke</code> like any other path, so they wobble like everything else.</figcaption>
-  </figure>
-
-  <figure data-fig="outline" class="wide">
-    <canvas></canvas>
-    <div class="subs"><span>passes 2 — the two never quite agree</span></div>
-    <figcaption><b>s.outline</b> — the closed stroke. The head and the body draw theirs twice;
-    each pass re-rolls its jitter phase, so the doubled line is the contour's texture.</figcaption>
+    <div class="subs"><span>three bakes of the same drawing, cycling — this figure never holds still</span></div>
+    <figcaption><b>the boil</b> — nothing is redrawn at runtime. The same drawing is baked
+    3 times, differing only in jitter phase, and <code>visible</code> cycles once every
+    1.5–1.9 s per individual. The boil is a material, not a motion: the lines shiver even
+    while the character is frozen in the bind pose.</figcaption>
   </figure>
 </div>
-</section>
 
-<!-- ================================================================ -->
-<section>
-<h2>THE COLORS</h2>
-<p>Only colors that hold up on paper — push the saturation and the hand-drawn feel breaks
+<p>Its colors — only the ones that hold up on paper; push the saturation and the hand-drawn feel breaks
 immediately. And they go in as <b>linear</b>: three.js reads vertex colors as linear space,
 so an sRGB hex fed raw brightens — the ink <code>#2b2724</code> would come out a mid grey.
 Every hex passes through <code>hexToRgb → srgbToLinear</code> in <code>src/color.js</code>, nothing bypasses it.</p>
@@ -232,20 +200,44 @@ Every hex passes through <code>hexToRgb → srgbToLinear</code> in <code>src/col
 
 <!-- ================================================================ -->
 <section>
-<h2>THE MATERIAL &amp; THE BOIL</h2>
-<p>There is exactly one material — a flat <code>MeshBasicMaterial</code> with vertex colors,
-shared per opacity level by every mesh on the board. No depth test, so stacking is decided
-entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
-(fills first, ink after — within a mesh, vertex order is the stacking), one draw call per layer.</p>
+<h2>THE SHAPES</h2>
+<p>The reference's head is not a circle but a lumpy mass. One recipe, <b>blobPath</b>, makes
+every closed shape on the board: a superellipse bent by noise, squared and tapered by two knobs.</p>
 
 <div class="figs">
-  <figure data-fig="boilface" class="wide">
+  <figure data-fig="lumps">
     <canvas></canvas>
-    <div class="subs"><span>three bakes of the same drawing, cycling — this figure never holds still</span></div>
-    <figcaption><b>the boil</b> — nothing is redrawn at runtime. The same drawing is baked
-    3 times, differing only in jitter phase, and <code>visible</code> cycles once every
-    1.5–1.9 s per individual. The boil is a material, not a motion: the lines shiver even
-    while the character is frozen in the bind pose.</figcaption>
+    <div class="subs"><span>amount 0 — a circle</span><span>0.08</span><span>0.2</span></div>
+    <figcaption><b>lumps</b> — noise pushes the radius in and out. At amount 0 it is a perfect
+    ellipse, which is exactly why amount 0 never appears on the board.</figcaption>
+  </figure>
+
+  <figure data-fig="square">
+    <canvas></canvas>
+    <div class="subs"><span>square 0</span><span>0.9</span><span>1.8</span></div>
+    <figcaption><b>square</b> — the superellipse exponent. 0 is an ellipse, around 1.5 a rounded
+    box. Box heads and tube bodies live at the right end.</figcaption>
+  </figure>
+
+  <figure data-fig="taper">
+    <canvas></canvas>
+    <div class="subs"><span>taper −0.35</span><span>0</span><span>+0.35</span></div>
+    <figcaption><b>taper</b> — the top/bottom width ratio. Positive is wider at the bottom
+    (a pear), negative wider at the top. Most heads sit a little off zero.</figcaption>
+  </figure>
+
+  <figure data-fig="arcs">
+    <canvas></canvas>
+    <div class="subs"><span>smile</span><span>frown</span><span>a shut lid</span></div>
+    <figcaption><b>arcPath</b> — mouths, brows and lids are sections of an ellipse, handed to
+    <code>stroke</code> like any other path, so they wobble like everything else.</figcaption>
+  </figure>
+
+  <figure data-fig="outline" class="wide">
+    <canvas></canvas>
+    <div class="subs"><span>passes 2 — the two never quite agree</span></div>
+    <figcaption><b>s.outline</b> — the closed stroke. The head and the body draw theirs twice;
+    each pass re-rolls its jitter phase, so the doubled line is the contour's texture.</figcaption>
   </figure>
 </div>
 </section>
