@@ -27,7 +27,7 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
     │   ├── hornsFrame ×3        ← depth 0.45 · horns. Above the head ink (2.06)
     │   ├── hairCrownFrame ×3    ← depth 0.12 · hair on the scalp (the crown cap, spikes, a bun). The same depth as the horns, above them (2.06)
     │   ├── frontFrame ×3        ← depth −0.4 · dog and cat ears. Above the head ink (2.12) — it covers the outline and the hair's root but cannot cover the eyes
-    │   └── hatFrame ×3          ← depth 0.45 · hat. Above the ears, below the face (2.16) — it covers the ears' roots and the hair
+    │   └── hatFrame ×3          ← depth 0.45 · hat. Above the bangs, below the brows (6.58) — a hat sits on the hair, never under it
     │   └── hairFrontFrame ×3    ← depth 0.12 · the bangs band, side curtains, the front of the hood type. Over the face (6.55), below the brows and mouth (6.6)
     └── faceGroup            ← origin = the centre of the head (headCy). x/y shift plus squash from the face turn. Every feature
         ├── faceFrame ×3         ← boil variants. Cheeks, whiskers — fills (2.3) and ink (2.4) as **two meshes** (they have to interleave with the static eyes)
@@ -67,8 +67,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 2 | Head (fills + outline ink) — the fill sits **above the body ink and is opaque**. So the body outline does not show through where the head covers the torso |
 | 2.06 | Horns (depth 0.45) · hair on the scalp (depth 0.12, above the horns) — above the outline |
 | 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth −0.4) |
-| 2.16 | Hat — above the ears, below the face (depth 0.45) |
-| 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) — above the hat (so the eyes are not hidden by it) |
+| 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) |
 | 2.4 | Face ink (whiskers, freckles, tears) · static eye ink (one layer per eye) |
 | 2.5 | Limbs, upper arm and forearm (above the body ink — the sleeve covers the outline) |
 | 3.0~3.35 | The back (smaller) eye's rig — white+rim 3 · pupil 3.2 · ^^/shut line 3.35 (on closing, the white, rim and pupil are switched off and only the line remains) |
@@ -76,7 +75,8 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 3.6 | A static eye's shut line and smile arch — the static eye frame is switched off then (no cover) |
 | 6.32 | The startle variant ☆·♥ glyphs — meanwhile the eyes (the static frame, the rig) are switched off. Below the nose and eyewear |
 | 6.5 | The frontmost face (muzzle fills plus nose and eyewear ink) — so a lid or an eye cover cannot cover the nose or a rim |
-| 6.55 | Bangs — above the nose and eyewear, below the brows and mouth (depth 0.12) |
+| 6.55 | Bangs — above the nose and eyewear, below the hat, the brows and the mouth (depth 0.12) |
+| 6.58 | Hat — above the bangs (a hat sits on the hair, never under it), below the brows and mouth (depth 0.45) |
 | 6.6 | Brows and mouth — above the eye rig (so a closed lid does not erase the brows and a widened cyclops white does not erase the mouth) |
 | 100000 | The emoji (♥ ! ? … ;) — above every individual's block (`EMOJI_ORDER`) |
 
