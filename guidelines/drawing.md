@@ -25,7 +25,7 @@ their own; this is for the fills under them and the shapes that are only a fill.
 
 ## A line is a ribbon, not a Line
 
-The board is three.js, and nothing is drawn on a 2D canvas (the only 2D contexts are the paper texture, the PNG
+The board is three.js, and nothing is drawn on a 2D canvas (the only 2D contexts are the PNG
 export and the medium page copying its renders into its cards). WebGL's `linewidth` is fixed at 1 in most
 environments and `THREE.Line` gives you no control over thickness, so every stroke goes through `Sketch.stroke()`
 or `Sketch.pencil()` and becomes a triangle ribbon; every fill is a fan of triangles; a layer's ink and fills go
@@ -223,6 +223,28 @@ Never rebuild strokes every frame. Regenerating 35 creatures × dozens of stroke
 
 If you want to add a new moving element, first ask "does this require rebuilding geometry?".
 If the answer is yes, the design is usually wrong.
+
+## The paper
+
+The sheet under the board is one plane at renderOrder 0 and the board's **only shader** — a procedural GLSL fragment
+(`scene/paper.js`, a `ShaderMaterial`; GLSL, not TSL: it drops into the WebGL renderer as it is). No texture and no
+tile: the 2D-canvas tile it replaced (512 px for 3 grain units, bilinear, repeated) smeared on a big screen and showed
+its repeat as a diagonal weave. The fragment has no resolution, so the grain is the same statistic at any size.
+
+- **Grain space** — the view of the 9×6 board (`PAPER_GRID`), whatever the grid, set on every layout as the `grain`
+  uniform; the grain is pinned to that board so 1×1 does not turn it into blotches.
+- **Grain** — a cell of 3/512 grain units (the old tile's texel), a uniform ±13/255 per channel, nearest (it never smears).
+- **Blotches** — three octaves of value noise (a third to a whole grain unit, the old discs' size), thinned to the
+  darker patches and mixed 7% toward a warm tint (`#968468`), so most of the sheet is clean and nothing repeats.
+- **Seed** — fixed at 7. The paper is the desk, not the creature: NEW SEED changes the board, not the sheet. The
+  hash is an integer one (pcg2d), so every GPU draws the same grain.
+- **Color** — the arithmetic is in sRGB on purpose, as the canvas's was, and the last line converts to linear for
+  the renderer's output pass (§ colors go in as linear). It is the one place a color is handled in sRGB, and it
+  never meets `hexToRgb`.
+
+What it is not, yet: the paper shows only *around* the drawing. A sheet that shows *through* the ink (the `grain`
+channel of § the goofy material) needs the board composited over the paper in a second pass — the same shader, on
+a render target of the board instead of on the paper's own color.
 
 ## The boil
 

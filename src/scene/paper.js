@@ -1,55 +1,86 @@
-// Paper texture. Docs: guidelines/drawing.md
+// The paper — one plane behind the board and the board's only shader: a procedural GLSL fragment, no texture, no tile.
+// Docs: guidelines/drawing.md § the paper
 
 import * as THREE from "three";
-import { makeRng } from "../rng.js";
 import { PAPER } from "../character/index.js";
 
-// Paper. A flat single color makes the lines look like they float. Grain and blotches are baked procedurally.
-export function makePaperTexture(seed) {
-  const size = 512;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = PAPER;
-  ctx.fillRect(0, 0, size, size);
+// The 2D-canvas tile it replaces (512 px for 3 grain units, bilinear, repeated) smeared on a big screen and showed its repeat as a
+// diagonal weave. A fragment has no tile and no resolution: the grain is the same statistic at any size — a cell of 3/512 grain units,
+// a uniform ±13/255 on each channel, as the canvas laid it — and the blotches are a low noise instead of 18 discs, so they never repeat.
+// The arithmetic is in sRGB on purpose, as the canvas's was, and the last line converts to linear for the renderer's output pass
+// (drawing.md § colors go in as linear) — the only place a color is handled in sRGB, and it never meets hexToRgb
+const VERTEX = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
 
-  const rng = makeRng(seed);
-  const image = ctx.getImageData(0, 0, size, size);
-  const data = image.data;
-  for (let i = 0; i < data.length; i += 4) {
-    const grain = (rng.next() - 0.5) * 26;
-    data[i] = Math.max(0, Math.min(255, data[i] + grain));
-    data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + grain));
-    data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + grain));
-  }
-  ctx.putImageData(image, 0, 0);
+const FRAGMENT = /* glsl */ `
+uniform vec3 paper;     // the paper color, sRGB 0..1
+uniform vec3 blotch;    // the blotches' tint, sRGB 0..1
+uniform vec2 grain;     // the plane's size in grain units — the view of the 9×6 board, so the grain is pinned to that board whatever the grid
+uniform float seed;
+varying vec2 vUv;
 
-  // Blotches (round marks). The texture repeats as a tile, so there must be no seam — each blotch is drawn
-  // at its 3×3 neighbour positions too, so a blotch clipped at the canvas edge continues on the opposite side.
-  // Without that, circles clipped at the edge line up into a straight ridge on every repeat.
-  for (let i = 0; i < 18; i += 1) {
-    const x = rng.float(0, size);
-    const y = rng.float(0, size);
-    const r = rng.float(40, 160);
-    for (const ox of [-size, 0, size]) {
-      for (const oy of [-size, 0, size]) {
-        const cx = x + ox;
-        const cy = y + oy;
-        if (cx + r < 0 || cx - r > size || cy + r < 0 || cy - r > size) continue;
-        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-        gradient.addColorStop(0, "rgba(150,132,104,0.05)");
-        gradient.addColorStop(1, "rgba(150,132,104,0)");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-      }
-    }
-  }
+// An integer hash (pcg2d) — the same grain on every GPU; sin-based hashes fall apart far from the origin and differ by driver
+vec2 pcg2d(uvec2 v) {
+  v = v * 1664525u + 1013904223u;
+  v.x += v.y * 1664525u;
+  v.y += v.x * 1664525u;
+  v ^= v >> 16u;
+  v.x += v.y * 1664525u;
+  v.y += v.x * 1664525u;
+  v ^= v >> 16u;
+  return vec2(v) / 4294967295.0;
+}
+// A uniform number in [0, 1) per lattice cell. The offset keeps the cast positive (a negative float to uint is undefined)
+float hash(vec2 cell) {
+  return pcg2d(uvec2(ivec2(cell) + ivec2(1048576) + ivec2(seed * 7919.0, seed * 104729.0))).x;
+}
+// 2D value noise, the 1D one of rng.js in two axes — a number per lattice point, joined with smoothstep
+float vnoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+// sRGB → linear, the exact curve of color.js srgbToLinear
+vec3 toLinear(vec3 c) {
+  return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
+}
 
-  const texture = new THREE.CanvasTexture(canvas);
-  // The canvas was drawn in sRGB. Without saying so, the paper color lifts.
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  return texture;
+void main() {
+  vec2 p = (vUv - 0.5) * grain;
+  vec3 color = paper;
+  // The grain — a cell of 3/512 grain units (the tile's texel), a uniform ±13/255, as the canvas had it; nearest, so it never smears
+  color += (hash(floor(p * (512.0 / 3.0))) - 0.5) * (26.0 / 255.0);
+  // The blotches — soft, a little darker and warmer, the size of the old discs (a third to a whole grain unit), thinned so most of the sheet is clean
+  float n = vnoise(p * 1.1 + 17.0) * 0.6 + vnoise(p * 2.3 + 41.0) * 0.3 + vnoise(p * 4.7 + 83.0) * 0.1;
+  color = mix(color, blotch, 0.07 * smoothstep(0.5, 0.82, n));
+  gl_FragColor = vec4(toLinear(color), 1.0);
+  #include <colorspace_fragment>
+}`;
+
+// "#rrggbb" → sRGB [r, g, b] 0..1 — not hexToRgb: this shader does its own arithmetic in sRGB and converts at its last line
+function srgb(hex) {
+  const value = parseInt(hex.slice(1), 16);
+  return new THREE.Vector3(((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255);
+}
+
+// The paper's material. seed is fixed by the caller — the paper is the desk, not the creature: NEW SEED changes the board, not the sheet.
+// The scene sets `grain` (uniforms.grain) to the 9×6 board's view size on every layout, the way the tile's repeat was set
+export function makePaperMaterial(seed) {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      paper: { value: srgb(PAPER) },
+      blotch: { value: srgb("#968468") },   // the tint the canvas's discs had — rgba(150,132,104, 0.05)
+      grain: { value: new THREE.Vector2(1, 1) },
+      seed: { value: seed }
+    },
+    vertexShader: VERTEX,
+    fragmentShader: FRAGMENT,
+    depthTest: false,
+    depthWrite: false
+  });
 }

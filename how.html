@@ -160,7 +160,8 @@ a pale skin light — moved one step by the creature's <b>density</b>, its hand.
 
 <h3>the GPU material underneath, and the boil</h3>
 <p>Underneath there is exactly one GPU material — a flat <code>MeshBasicMaterial</code> with vertex colors,
-shared per opacity level by every mesh on the board. No depth test, so stacking is decided
+shared per opacity level by every mesh on the board. The paper under it is the board's one shader — a procedural
+GLSL grain on a single plane, no texture and no tile (<code>src/scene/paper.js</code>, drawing.md § the paper). No depth test, so stacking is decided
 entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
 (fills first, ink after — within a mesh, vertex order is the stacking), one draw call per layer.</p>
 

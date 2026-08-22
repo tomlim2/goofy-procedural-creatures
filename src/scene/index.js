@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Sketch } from "../stroke.js";
 import { makeCreature } from "../character/index.js";
 import { makeNoise, makeRng } from "../rng.js";
-import { makePaperTexture } from "./paper.js";
+import { makePaperMaterial } from "./paper.js";
 import { inkMaterial, disposeGroup } from "./mesh.js";
 import { buildCreature } from "./rig.js";
 import { applyState } from "./animate.js";
@@ -101,10 +101,10 @@ export function createScene(canvas) {
     if (paper) {
       paper.scale.set(viewW, viewH, 1);
       // Paper grain does not follow the grid — it is pinned to the size it appears at on the 9×6 board (PAPER_GRID).
-      // Derived from the current view, the tile grows relative to the screen as the view narrows: at 1×1 a single
-      // 3-unit tile ends up bigger than the screen, so it comes out as smears instead of grain.
+      // Derived from the current view, the grain would grow relative to the screen as the view narrows: at 1×1 it would
+      // come out as blotches instead of grain. The shader gets the 9×6 view as its grain space
       const [grainW, grainH] = viewSize(PAPER_GRID[0], PAPER_GRID[1], aspect);
-      paper.material.map.repeat.set(grainW / 3, grainH / 3);
+      paper.material.uniforms.grain.value.set(grainW, grainH);
     }
   }
 
@@ -155,10 +155,8 @@ export function createScene(canvas) {
     noise = makeNoise(rng);
 
     if (!paper) {
-      paper = new THREE.Mesh(
-        new THREE.PlaneGeometry(1, 1),
-        new THREE.MeshBasicMaterial({ map: makePaperTexture(7), depthTest: false })
-      );
+      // The sheet — the board's one shader (paper.js). Seed 7, fixed: the paper does not change with the board's seed
+      paper = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), makePaperMaterial(7));
       paper.renderOrder = 0;
       paper.position.z = -1;
       scene.add(paper);
