@@ -109,8 +109,9 @@ export const PENCIL = {
 export const MATERIALS = {
   // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
   FLAT:        { base: { kind: "flat" } },
-  // Graphite — a pale ground, hatched with thin pencil strokes, nearly upright and a little slanted
-  GRAPHITE:    { base: { kind: "flat", tone: 1.15 }, texture: { kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, tone: 0.6 } },
+  // Graphite — a near-paper ground hatched with the pencil: thin grey lines, nearly upright and a little slanted, each one drawn as
+  // a few strokes — the pencil lifts and comes down again (lift: the strokes' lengths and the gaps between), now and then doubled
+  GRAPHITE:    { base: { kind: "flat", tone: 1.22 }, texture: { kind: "hatch", angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
   // Ink — solid, scratched: a few long light lines dragged across the dark
   INK:         { base: { kind: "flat" }, texture: { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 } },
   // Oil — thick paint laid in blunt strokes: round-ended capsules of one width and many lengths, all along one diagonal, scattered
@@ -325,9 +326,28 @@ export class Sketch {
       const h = (k) => hash01(Math.round(ph * 997) + k * 7919);   // a scattered one — neighbours unrelated
       switch (f.kind) {
         case "hatch": {
+          // Pencil hatching: each rule across the shape is drawn as a few pencil strokes with small gaps — the hand lifts and comes
+          // down again — so no line runs the whole height in one go; now and then a stroke is doubled, a hair beside itself
           const tone = contrast(f.tone);
-          rules(points, f.angle, f.gap, (i) => (u(i) - 0.5) * 0.5).forEach((piece, i) =>
-            this.stroke(piece, { color: tone, width: f.width * (0.8 + 0.4 * u(i + 300)), jitter: f.wander, step: 0.02 }));
+          rules(points, f.angle, f.gap, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => {
+            const len = Math.hypot(q[0] - p[0], q[1] - p[1]);
+            const dx = (q[0] - p[0]) / len, dy = (q[1] - p[1]) / len;
+            const at = (t) => [p[0] + dx * t, p[1] + dy * t];
+            let t = 0;
+            for (let k = 0; t < len && k < 40; k += 1) {
+              const r = (n) => h(i * 131 + k * 7 + n);
+              const end = f.lift ? Math.min(len, t + f.lift.length[0] + (f.lift.length[1] - f.lift.length[0]) * r(0)) : len;
+              if (end - t > 0.012) {
+                const width = f.width * (0.8 + 0.4 * r(1));
+                this.pencil([at(t), at(end)], { color: tone, width });
+                if (f.double && r(2) < f.double) {   // the doubled stroke — the same run a hair to the side
+                  const o = f.gap * 0.22 * (r(3) < 0.5 ? -1 : 1);
+                  this.pencil([[p[0] + dx * t - dy * o, p[1] + dy * t + dx * o], [p[0] + dx * end - dy * o, p[1] + dy * end + dx * o]], { color: tone, width: width * 0.8 });
+                }
+              }
+              t = f.lift ? end + f.lift.gap[0] + (f.lift.gap[1] - f.lift.gap[0]) * r(4) : len;
+            }
+          });
           break;
         }
         case "scratch": {
