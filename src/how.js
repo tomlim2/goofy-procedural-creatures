@@ -18,6 +18,7 @@ import { FURS, CALICO_MID, ACCENTS } from "./character/vocabulary/palette.js";
 const TAU = Math.PI * 2;
 const INK = INKS[0];
 const BLUSH = "#d9968a";   // the blush/tongue pink (mouth.js PINK)
+const CARD = "#f2ecdf";    // the figure card's back (styles.css .how figure) — the pencil's bites take it here, paper on the board
 
 // The page draws the same picture on every load — one fixed noise, like a creature's wobbleSeed
 const noise = makeNoise(makeRng(seedFromString("HOW")));
@@ -63,6 +64,33 @@ fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
     s.outline(blobPath(x, 0, 0.14, 0.12, { lumps: 5, amount: 0.08, noise, phase: 2 + i }), { color: INK, width: 0.011 });
     for (const side of [-1, 1]) s.stroke([[x + side * 0.05 - 0.012, 0.03], [x + side * 0.05 + 0.012, 0.03]], { color: INK, width: 0.016 });
     s.stroke(arcPath(x, -0.03, 0.05, 0.035, Math.PI, TAU), { color: INK, width: 0.011 });
+  });
+});
+
+// The pencil — the reference's line next to ours (stroke.js PENCIL). Same widths as the ribbon figure, for the comparison
+fig("pencil", [-0.8, -0.12, 0.8, 0.12], (sk) => {
+  const ink = sk();
+  [0.007, 0.012, 0.022].forEach((width, i) => {
+    const x = col(i);
+    ink.pencil([[x - 0.21, 0], [x - 0.07, 0.02], [x + 0.07, -0.015], [x + 0.21, 0.01]], { color: INK, width, paper: CARD });
+  });
+});
+
+// The same face twice — contour and smile in our ribbon, then in the pencil. The eyes stay beans on both (the pencil is not for dots)
+fig("twoLines", [-0.75, -0.2, 0.75, 0.2], (sk) => {
+  const s = sk();
+  [false, true].forEach((pen, i) => {
+    const x = (i - 0.5) * 0.72;
+    const head = blobPath(x, 0, 0.17, 0.15, { lumps: 5, amount: 0.08, noise, phase: 83 });
+    const smile = arcPath(x, -0.035, 0.06, 0.04, Math.PI, TAU);
+    if (pen) {
+      s.pencil(head, { color: INK, width: 0.012, closed: true, paper: CARD });
+      s.pencil(smile, { color: INK, width: 0.011, paper: CARD });
+    } else {
+      s.outline(head, { color: INK, width: 0.012 });
+      s.stroke(smile, { color: INK, width: 0.011 });
+    }
+    for (const side of [-1, 1]) s.stroke([[x + side * 0.06 - 0.012, 0.035], [x + side * 0.06 + 0.012, 0.035]], { color: INK, width: 0.016 });
   });
 });
 

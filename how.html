@@ -72,6 +72,25 @@ an end taper, and uneven pressure through the middle. Leave out any one and it b
     multiplies the jitter per creature. Some come out neat and some a mess; drawn with one
     constant, the whole board falls into the same handwriting.</figcaption>
   </figure>
+
+  <figure data-fig="pencil">
+    <canvas></canvas>
+    <div class="subs"><span>width 0.007</span><span>0.012</span><span>0.022</span></div>
+    <figcaption><b>s.pencil</b> — the reference's line, next to ours
+    (<a href="https://kindergrimm.vercel.app/how.html">kindergrimm</a> § the pencil). The spine wanders on
+    two sines per length, the width breathes, the ends run past where they should stop instead of
+    pinching, and a thick line sheds — ink crumbs outside the edge, paper bites inside. Its 62% ink is
+    left out on purpose (ours stays opaque), and so is its tremor. Every number is in <code>PENCIL</code>
+    in <code>src/stroke.js</code>; no creature draws with it yet.</figcaption>
+  </figure>
+
+  <figure data-fig="twoLines">
+    <canvas></canvas>
+    <div class="subs"><span>s.stroke · s.outline</span><span>s.pencil</span></div>
+    <figcaption><b>the same face twice</b> — the contour and the smile in our ribbon on the left, in the
+    pencil on the right. The loop on the right has no seam: a closed pencil line snaps its sines to whole
+    cycles and never overshoots. Its quads share one normal per point, so it cannot crack at a corner either.</figcaption>
+  </figure>
 </div>
 </section>
 

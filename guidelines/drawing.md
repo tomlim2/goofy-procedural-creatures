@@ -33,6 +33,24 @@ Four things have to be present together to look hand-drawn. Leave out any one an
 When the thickness needs changing globally, adjust `Sketch`'s `inkScale` rather than the individual `width`
 values.
 
+## The pencil — a second line
+
+`Sketch.pencil()` is the reference's line ([reference/README.md](../reference/README.md) § 3) kept next to
+`stroke()`, not in place of it. It differs in four ways: the spine wanders on two sines **per world length**
+(a slow drift and a waver — a tiny stroke gets a gentle bend, a head contour one or two cycles), the width
+**breathes** on two more sines plus a per-stroke jitter, the ends **run past** where they should stop
+instead of pinching to a point, and a thick line **sheds** — ink crumbs outside the edge, paper-coloured
+bites inside. Two parts of the reference are left out on purpose: its 62% ink (our ink stays opaque) and
+its tremor (the sizzle).
+
+Every number lives in the `PENCIL` table at the top of `stroke.js` and nowhere else — tune there. A
+`closed` pencil line is seamless (no overshoot; the sines snapped to whole cycles), and its quads share one
+normal per point, so it never cracks at a corner. `paper` is the color the bites take — pass the fill's
+color when the line runs over a fill. Not for dots: the overshoot lengthens them.
+
+Today only the medium page (`/how.html` § the line) draws with it. Switching a creature part onto it is a
+drawing change like any other — `drawdiff` will show it, and the audit has to stay at 0.
+
 ## Layer order
 
 Everything is drawn with `depthTest: false`, so order is decided entirely by `renderOrder`. The table lives in

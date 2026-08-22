@@ -7,6 +7,9 @@
 import * as THREE from "three";
 // Vertex colors go through hexToRgb (linear space) — color.js. Never bypassed (guidelines/drawing.md § colors go in as linear)
 import { hexToRgb } from "./color.js";
+import { PAPER } from "./character/vocabulary/palette.js";   // the pencil's bites take the paper color (palette.js imports nothing — no cycle)
+
+const TAU = Math.PI * 2;
 
 // Re-samples the stroke at an even spacing. Without this, the noise only bites on long segments.
 function resample(points, step) {
@@ -56,6 +59,39 @@ function perturb(points, noise, amount, phase) {
   }
   return out;
 }
+
+// Continues a polyline past `to` in the direction from → to, one point per step, ending exactly `length` out. The pencil's overshoot
+function extend(from, to, length, step) {
+  let dx = to[0] - from[0];
+  let dy = to[1] - from[1];
+  const len = Math.hypot(dx, dy) || 1;
+  dx /= len;
+  dy /= len;
+  const out = [];
+  for (let d = step; d < length; d += step) out.push([to[0] + dx * d, to[1] + dy * d]);
+  out.push([to[0] + dx * length, to[1] + dy * length]);
+  return out;
+}
+
+// The pencil — a second line next to stroke(): the reference's line (reference/README.md § 3, kindergrimm § the pencil), taken without
+// two of its parts — its 62% ink (our ink stays opaque, a deliberate exclusion) and its tremor (the sizzle; quiet here).
+// The spine wanders on two sines per world length, the width breathes, the ends run past where they should stop instead of pinching
+// to a point, and a thick line sheds: ink crumbs outside the edge, paper-coloured bites inside. Every number it uses is in this table
+// and nowhere else. Docs: guidelines/drawing.md § the pencil. Drawn by the medium page (how.html); no creature draws with it yet
+export const PENCIL = {
+  step: 0.01,                          // re-sample spacing (world) — about 2.3 px at board scale; theirs max(2.2, w·.9) px
+  wander: 0.0045,                      // the spine's wander amplitude (world), × the individual's wobble
+  drift: { amp: 0.55, f: [5, 12] },    // the slow bend — its share of the wander, and rad per world unit (one or two cycles round a head)
+  waver: { amp: 0.3, f: [20, 36] },    // the second bend
+  breathe: [[0.38, 6], [0.14, 16]],    // the width breathing — [amplitude, rad per world unit], summed
+  jr: [0.88, 1.14],                    // per-stroke width jitter
+  over: [0.35, 1.1],                   // the overshoot past each end, in widths
+  tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
+  // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
+  // An ink crumb lands outside the edge, scatter × the half width out; a bite (the bite share of crumbs) is a paper-coloured square
+  // inside, up to inside × the half width from the spine. A crumb's side is size × the half width
+  grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [1.05, 1.5], bite: 0.45, inside: 0.8, size: [0.35, 0.6] }
+};
 
 export class Sketch {
   // inkScale is the global multiplier for stroke thickness. Change the cell size and this is the only thing to touch.
@@ -123,6 +159,120 @@ export class Sketch {
   // A closed stroke. Used for the head and body outlines.
   outline(points, options = {}) {
     this.stroke([...points, points[0]], options);
+  }
+
+  // A small axis-aligned square — the pencil's crumbs and bites
+  square(cx, cy, size, rgb) {
+    const h = size / 2;
+    this.triangle(cx - h, cy - h, cx + h, cy - h, cx + h, cy + h, rgb);
+    this.triangle(cx - h, cy - h, cx + h, cy + h, cx - h, cy + h, rgb);
+  }
+
+  // The pencil — every number in PENCIL (above). closed draws a seamless loop: no overshoot, and the sines snapped to whole cycles
+  // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
+  // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them
+  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, paper = PAPER } = {}) {
+    const P = PENCIL;
+    const rgb = hexToRgb(color);
+    const biteRgb = hexToRgb(paper);
+    width *= this.inkScale;
+    if (closed && points.length > 2) {
+      const [ax, ay] = points[0];
+      const [bx, by] = points[points.length - 1];
+      if (Math.hypot(ax - bx, ay - by) < 1e-6) points = points.slice(0, -1);   // an already-closed list — the loop closes itself
+    }
+    if (points.length < 2) return;
+
+    for (let pass = 0; pass < passes; pass += 1) {
+      this.phase += 13.37;
+      const ph = this.phase;
+      const noise = this.noise;
+      const r = (k) => noise(ph * 0.37 + k * 2.71) * 0.5 + 0.5;             // a per-stroke number in [0, 1], from the drawing noise
+      const jr = (k, [a, b]) => a + (b - a) * r(k);
+      const w = width * jr(1, P.jr);
+
+      // The spine — re-sampled, and on an open line run past both ends along the end tangents
+      let spine = resample(closed ? [...points, points[0]] : points, P.step);
+      if (closed) spine.pop();
+      if (spine.length === 2) spine.splice(1, 0, [(spine[0][0] + spine[1][0]) / 2, (spine[0][1] + spine[1][1]) / 2]);
+      if (spine.length < 3) continue;
+      let tail0 = 0;
+      let tail1 = 0;
+      if (!closed) {
+        tail0 = w * jr(2, P.over);
+        tail1 = w * jr(3, P.over);
+        spine = [
+          ...extend(spine[1], spine[0], tail0, P.step).reverse(),
+          ...spine,
+          ...extend(spine[spine.length - 2], spine[spine.length - 1], tail1, P.step)
+        ];
+      }
+      const n = spine.length;
+      const s = new Float64Array(n);                                           // arc length per sample
+      for (let i = 1; i < n; i += 1) s[i] = s[i - 1] + Math.hypot(spine[i][0] - spine[i - 1][0], spine[i][1] - spine[i - 1][1]);
+      const L = closed ? s[n - 1] + Math.hypot(spine[0][0] - spine[n - 1][0], spine[0][1] - spine[n - 1][1]) : s[n - 1];
+      if (L < 1e-6) continue;
+      const snap = (om) => (closed ? Math.max(1, Math.round((om * L) / TAU)) * (TAU / L) : om);
+      const f1 = snap(jr(4, P.drift.f));
+      const p1 = r(5) * TAU;
+      const f2 = snap(jr(6, P.waver.f));
+      const p2 = r(7) * TAU;
+      const breathe = P.breathe.map(([amp, om], k) => [amp, snap(om), r(8 + k) * TAU]);
+      const wander = P.wander * this.wobble;
+
+      // Per-point normals (cyclic on a loop), shared by the quads on either side
+      const normals = [];
+      for (let i = 0; i < n; i += 1) {
+        const a = spine[closed ? (i + n - 1) % n : Math.max(0, i - 1)];
+        const b = spine[closed ? (i + 1) % n : Math.min(n - 1, i + 1)];
+        let nx = -(b[1] - a[1]);
+        let ny = b[0] - a[0];
+        const len = Math.hypot(nx, ny) || 1;
+        normals.push([nx / len, ny / len]);
+      }
+      // The spine wanders along its normals on two sines per length
+      const path = spine.map(([x, y], i) => {
+        const off = wander * (P.drift.amp * Math.sin(s[i] * f1 + p1) + P.waver.amp * Math.sin(s[i] * f2 + p2));
+        return [x + normals[i][0] * off, y + normals[i][1] * off];
+      });
+      // The half width — breathing, and thinning only inside the overshoot tails
+      const halves = [];
+      for (let i = 0; i < n; i += 1) {
+        let k = 1;
+        for (const [amp, om, p] of breathe) k += amp * Math.sin(s[i] * om + p);
+        let tip = 1;
+        if (!closed && s[i] < tail0) tip = P.tip + (1 - P.tip) * (s[i] / tail0);
+        else if (!closed && L - s[i] < tail1) tip = P.tip + (1 - P.tip) * ((L - s[i]) / tail1);
+        halves.push((w / 2) * Math.max(0.08, k) * tip);
+      }
+      const quads = closed ? n : n - 1;
+      for (let i = 0; i < quads; i += 1) {
+        const j = (i + 1) % n;
+        const [ax, ay] = path[i];
+        const [bx, by] = path[j];
+        const [nax, nay] = normals[i];
+        const [nbx, nby] = normals[j];
+        const ha = halves[i];
+        const hb = halves[j];
+        this.triangle(ax + nax * ha, ay + nay * ha, ax - nax * ha, ay - nay * ha, bx + nbx * hb, by + nby * hb, rgb);
+        this.triangle(ax - nax * ha, ay - nay * ha, bx - nbx * hb, by - nby * hb, bx + nbx * hb, by + nby * hb, rgb);
+      }
+
+      // The shed — after the ribbon, so a bite covers ink and a crumb sits on the paper
+      if (w < P.grit.minWidth) continue;
+      const density = jr(10, P.grit.density);
+      const G = P.grit;
+      for (let i = 0; i < n; i += 1) {
+        if (!closed && (s[i] < tail0 || L - s[i] < tail1)) continue;
+        if (noise(ph * 0.11 + i * 1.93) * 0.5 + 0.5 > density) continue;
+        const v = noise(ph * 0.23 + i * 3.17);                                 // [-1, 1] — which side, and how far
+        const isBite = noise(ph * 0.31 + i * 5.39) * 0.5 + 0.5 < G.bite;
+        const h = halves[i];
+        const d = isBite ? v * G.inside * h : Math.sign(v || 1) * (G.scatter[0] + (G.scatter[1] - G.scatter[0]) * Math.abs(v)) * h;
+        const size = (G.size[0] + (G.size[1] - G.size[0]) * Math.abs(noise(ph * 0.17 + i * 7.13))) * h;
+        this.square(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, isBite ? biteRgb : rgb);
+      }
+    }
   }
 
   // Area fill. Cut as a fan from the centre.

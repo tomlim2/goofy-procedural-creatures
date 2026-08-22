@@ -44,6 +44,29 @@ Thirty-five creatures blinking at once look like a machine.
 **What was not taken** — the character design. The only thing in common is the use of three.js; the
 internals are unknowable.
 
+## 3. kindergrimm — how it is drawn
+
+- Source: <https://kindergrimm.vercel.app/how.html>
+- A procedural creature page with its own "how" page — a legend of its pencil, its shapes, its materials,
+  its head, its boil and its seed, every figure drawn live by the same code
+- Its pencil: a filled ribbon on a 2D canvas at **62% ink**; the spine re-sampled every `max(2.2, w·.9)` px
+  and bent by three summed sines per stroke (drift 1.5–3.5 · waver 5–9 · tremor 11–17, shares .55/.3/.15);
+  the width breathing on two more (7.3 and 19, shares .38/.14) with a per-stroke jitter of .88–1.14; the
+  ends running past where they should stop; thick lines shedding ink crumbs to ±1.05 of the half width, 45%
+  of them paper-coloured squares biting back in. Three kinds from one function — `sline` (detail, the pen
+  sometimes lifts) · `stroke` (mass) · `broken` (contour, 2–3 overlapping passes). A mulberry32 reseeded per
+  boil frame, so the same seed gives back the same stroke crumb for crumb
+
+**What was taken** — the line, as `Sketch.pencil()` next to `stroke()`: the two-sine wander per length, the
+breathing width, the overshoot and the shed, with every number in `PENCIL` (`src/stroke.js`,
+[drawing.md](../guidelines/drawing.md) § the pencil). And the idea of the page itself — `/how.html` is a
+legend drawn by the code it describes, like theirs.
+
+**What was not taken** — the 62% ink (a deliberate exclusion: our ink stays opaque), the tremor (the sizzle
+was tried and rejected — the lines here are quiet), the three-role split (`sline`/`stroke`/`broken` — ours is
+one `stroke()` for everything, plus the pencil), their shape recipe (the two fixed sines and the Chaikin pass;
+`blobPath` keeps its noise lumps), and the canvas, media and editor systems around it.
+
 ## Image files
 
 The original images are not kept in this folder. Both are someone else's work, so keeping them here would
