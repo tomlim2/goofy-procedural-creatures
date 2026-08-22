@@ -92,11 +92,11 @@ shading. The cheek and forehead hatch are the same thing (an occlusion). Until i
 ## Materials — how a surface is filled
 
 A material is what a surface is made of, the way a 3D material is — **how its area is filled**, as channels.
-The `base` colour — the fill-up (`flat`, optionally a tone of the color) or a `wash` — always opaque (on the
+The `base` colour — the fill-up (`flat`, optionally a tone of the color) — always opaque (on the
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
 — carrying the part's **pattern**, the creature's pattern (stripes, dots, spots, hatching: the `pattern` slot), drawn
 inside it and clipped to the contour, the way a pattern is part of an albedo (`paint(…, { pattern })`); and its
-`texture` — `hatch`, `scratch`, `bloom`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
+`texture` — `hatch`, `scratch`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
 contour (`clipSegment`, `insidePath` in `stroke.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
 62% graphite, vertex alpha), `grain` (the paper showing through) — is not built; it would be a new key, not a
@@ -113,8 +113,8 @@ way, its contour the board's PENCIL — so the table cannot drift from what is s
 | --- | --- | --- | --- |
 | `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
 | `GRAPHITE` | `flat`, a pale tone | `hatch` — thin pencil strokes, nearly upright | the `material` slot (1.5) |
+| (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
 | `INK` | `flat` | `scratch` — a few long light lines dragged across | the `material` slot (0.8) |
-| `WATERCOLOUR` | `wash` — a pale wash with a second out of register | `bloom` — how a wash dries: 2–4 blooms (paler lobed patches with a faint pigment rim, cut by the contour), the edge darkening (a deeper band inside the contour), granulation (fine dust) | the `material` slot (1.5) |
 | `OIL` | `flat` | `dab` — thick short dabs in three tones along one diagonal | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — dark specks | the `material` slot (1) |
 

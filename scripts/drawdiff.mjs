@@ -74,12 +74,21 @@ try {
     for (const seed of [11, 2222, 333333]) {
       const base = oldM.makeCreature(seed, species);
       if (JSON.stringify(base) !== JSON.stringify(newM.makeCreature(seed, species))) specDiffs += 1;
+      // A base spec may itself hold a value the working tree no longer has (a removed part) — the tree cannot draw it, so that slot
+      // is drawn as the tree's first value instead, noted once. The other slots' comparisons still stand
+      const drawable = { ...base, parts: { ...base.parts } };
+      for (const [slot, values] of Object.entries(newM.SLOTS)) {
+        if (drawable.parts[slot] !== undefined && !values.includes(drawable.parts[slot])) {
+          onlyOne.add(`only in ${ref}: ${slot}=${drawable.parts[slot]} (a base spec, drawn as ${values[0]})`);
+          drawable.parts[slot] = values[0];
+        }
+      }
       for (const [slot, values] of Object.entries(oldSlots)) {
         if (!newM.SLOTS[slot]) { onlyOne.add(`only in ${ref}: slot ${slot}`); continue; }   // a renamed or removed slot — the working tree cannot draw it
         for (const value of values) {
           // A value the working tree no longer has (a removed part) cannot be drawn by it — noted once, not compared
-          if (newM.SLOTS[slot] && !newM.SLOTS[slot].includes(value)) { onlyOne.add(`only in ${ref}: ${slot}=${value}`); continue; }
-          check({ ...base, parts: { ...base.parts, [slot]: value } }, `${species}/${seed}/${slot}=${value}`);
+          if (!newM.SLOTS[slot].includes(value)) { onlyOne.add(`only in ${ref}: ${slot}=${value}`); continue; }
+          check({ ...drawable, parts: { ...drawable.parts, [slot]: value } }, `${species}/${seed}/${slot}=${value}`);
         }
       }
     }

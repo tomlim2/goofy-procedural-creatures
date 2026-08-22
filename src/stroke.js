@@ -96,10 +96,10 @@ export const PENCIL = {
 };
 
 // Materials — what a surface is made of, the way a 3D material is: **how its area is filled**, as channels. `base` is the base
-// color — the fill-up (flat) or a wash — always opaque (on the board the one in front has to hide the one behind), printed out of
+// color — the fill-up (flat) — always opaque (on the board the one in front has to hide the one behind), printed out of
 // register, in the part's color or a tone of it — and it carries the creature's pattern (stripes, dots, spots, hatching: the `pattern`
 // slot), drawn inside it and clipped to the contour, the way a pattern is part of an albedo. `texture` is the base color's texture —
-// hatch, scratch, bloom, dab or speckle — the medium's pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
+// hatch, scratch, dab or speckle — the medium's pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
 // different thing (opacity — the reference's 62% graphite; grain — the paper showing through) is not built, and would be a new key,
 // not a second texture. That is the material, and nothing else: the contour is a separate concept (GOOFY_OUTLINES, below). The
 // color always comes from the part; every tone the texture adds is a shade of that color (lighter on a dark color, darker on a
@@ -113,13 +113,6 @@ export const MATERIALS = {
   GRAPHITE:    { base: { kind: "flat", tone: 1.15 }, texture: { kind: "hatch", angle: 1.42, gap: 0.011, width: 0.0035, wander: 0.003, tone: 0.6 } },
   // Ink — solid, scratched: a few long light lines dragged across the dark
   INK:         { base: { kind: "flat" }, texture: { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 } },
-  // Watercolour — a pale wash with a second out of register; then how a wash dries: blooms (water dropped into the half-dry wash
-  // pushes the pigment out — a paler lobed patch with a slightly darker rim, two to four of them, some cut by the contour), the
-  // edge darkening (pigment walks to the edge of the wash as it dries — a deeper band just inside the contour), and granulation
-  // (heavy pigment settling into the paper's tooth — fine dust everywhere)
-  WATERCOLOUR: { base: { kind: "wash", pale: 1.12, drift: 0.022 },
-                 texture: { kind: "bloom", count: [2, 4], size: [0.22, 0.42], squash: [0.75, 1.1], tone: 1.13, rim: { tone: 0.9, width: 0.003 },
-                            edge: { inset: 0.04, width: 0.012, tone: 0.93 }, grain: { per: 1900, size: [0.0012, 0.002], tone: 0.85 } } },
   // Oil — thick short dabs in three tones along one diagonal, the ground covered
   OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.95, width: 0.02, length: 0.085, gap: 0.021, tones: [0.72, 0.88, 1.18] } },
   // Charcoal — a ground dusted with dark specks
@@ -320,10 +313,7 @@ export class Sketch {
     if (wantBase) {
       const base = m.base;
       if (base.kind === "flat") this.fill(points, base.tone === undefined ? color : shade(color, dark ? 0.92 : base.tone), offset);
-      else if (base.kind === "wash") {
-        this.fill(points, shade(color, base.pale), [offset[0] + base.drift, offset[1] - base.drift * 0.6]);   // the first, paler wash — out of register
-        this.fill(points, color, offset);                                                                // the wash proper
-      } else throw new Error(`material ${name}: unknown base kind ${base.kind}`);
+      else throw new Error(`material ${name}: unknown base kind ${base.kind}`);
       if (pattern) this.patternOn(points, pattern);
     }
 
@@ -349,33 +339,6 @@ export class Sketch {
             const c = [b.cx - dy * o + dx * b.r, b.cy + dx * o + dy * b.r];
             for (const piece of clipSegment(a, c, points)) this.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.03 });
           }
-          break;
-        }
-        case "bloom": {
-          // How a wash dries. First the edge darkening — pigment walks to the edge: a deeper band just inside the contour (the shape
-          // pulled toward its centre by inset, so the band stays inside; the contour ink covers what little crosses)
-          if (f.edge) {
-            const inset = points.map(([x, y]) => [b.cx + (x - b.cx) * (1 - f.edge.inset), b.cy + (y - b.cy) * (1 - f.edge.inset)]);
-            this.outline(inset, { color: shade(color, f.edge.tone), width: f.edge.width, jitter: 0.004, step: 0.02 });
-          }
-          // The blooms — water dropped into the half-dry wash: a paler lobed patch, its centre on the surface but its body free to run
-          // past the contour and be cut by it, and the pigment it pushed out gathered in a slightly darker rim
-          const count = Math.round(f.count[0] + (f.count[1] - f.count[0]) * h(1));
-          for (let i = 0; i < count; i += 1) {
-            const cx = b.x0 + (b.x1 - b.x0) * (0.1 + 0.8 * h(20 + i));
-            const cy = b.y0 + (b.y1 - b.y0) * (0.1 + 0.8 * h(30 + i));
-            if (!insidePath([cx, cy], points)) continue;
-            const r = b.r * (f.size[0] + (f.size[1] - f.size[0]) * h(10 + i));
-            const squash = f.squash[0] + (f.squash[1] - f.squash[0]) * h(40 + i);
-            const bloom = blobPath(cx, cy, r, r * squash, { lumps: 4, amount: 0.14, noise, phase: ph * 0.01 + i * 7.3 });   // soft round lobes, not spikes
-            this.fillClipped(bloom, points, shade(color, f.tone));
-            if (f.rim) {   // the pigment the water pushed out, gathered at the patch's edge — a thin line, clearly deeper than the wash
-              const rgb = hexToRgb(shade(color, f.rim.tone));
-              for (let k = 0; k < bloom.length; k += 1) for (const [p, q] of clipSegment(bloom[k], bloom[(k + 1) % bloom.length], points)) this.strip(p, q, f.rim.width, rgb);
-            }
-          }
-          // Granulation — heavy pigment settling into the paper's tooth
-          if (f.grain) this.dust(points, b, f.grain, (k) => h(k + 90000), contrast(f.grain.tone));
           break;
         }
         case "dab": {
@@ -542,30 +505,6 @@ export class Sketch {
         b[0] + offset[0], b[1] + offset[1],
         rgb
       );
-    }
-  }
-
-  // A blunt strip from p to q, width across — no taper, no wander: the scanlines of a clipped fill and the pigment rims
-  strip(p, q, width, rgb) {
-    let dx = q[0] - p[0];
-    let dy = q[1] - p[1];
-    const len = Math.hypot(dx, dy) || 1;
-    dx /= len;
-    dy /= len;
-    const nx = (-dy * width) / 2, ny = (dx * width) / 2;
-    this.triangle(p[0] + nx, p[1] + ny, p[0] - nx, p[1] - ny, q[0] + nx, q[1] + ny, rgb);
-    this.triangle(p[0] - nx, p[1] - ny, q[0] - nx, q[1] - ny, q[0] + nx, q[1] + ny, rgb);
-  }
-
-  // Fills a polygon, but only where it lies inside `clip` — scanline strips cut by both outlines (a bloom that runs past the
-  // contour is cut by it, like the wash itself). step is the strip height (world); the strips overlap a little so no hairline shows
-  fillClipped(poly, clip, color, step = 0.004) {
-    const rgb = hexToRgb(color);
-    const b = bounds(poly);
-    for (let y = b.y0 + step / 2; y < b.y1; y += step) {
-      for (const [p, q] of clipSegment([b.x0 - 0.01, y], [b.x1 + 0.01, y], poly)) {
-        for (const piece of clipSegment(p, q, clip)) this.strip(piece[0], piece[1], step * 1.3, rgb);
-      }
     }
   }
 
