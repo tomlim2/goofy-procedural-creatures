@@ -211,6 +211,7 @@ body.how { height: auto; }
 .how figcaption { margin-top: 8px; font-size: 11px; line-height: 1.6; opacity: 0.85; }
 .how code { font: inherit; background: rgba(43, 39, 36, 0.08); padding: 0 3px; }
 .how .foot { margin-top: 52px; opacity: 0.6; }
+.how .note { font-size: 11px; line-height: 1.6; opacity: 0.75; max-width: 880px; }
 .how a { color: inherit; }
 @media (max-width: 700px) {
   .how .figs { grid-template-columns: 1fr; }

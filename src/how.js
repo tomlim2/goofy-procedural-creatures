@@ -174,6 +174,21 @@ Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("
   ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
   ink.fur(arcPath(0, 0.02, 0.17, 0.17, Math.PI * 0.15, Math.PI * 0.85, 12), name, { color: INK });
 }));
+// What the board actually draws its closed lines with today — three kinds, only the first through the table. The same open path
+// drawn each way, at the widths the parts use. The counts in the captions are read off the code (how.html), not computed here
+const IN_USE = [
+  { key: "use:pencil", label: "pencil · contour() · 0.012, the head ×1.15", draw: (ink, pts) => ink.contour(pts, "PENCIL", { color: INK, paper: CARD }) },
+  { key: "use:twice", label: "ribbon laid twice · outline(passes 2) · 0.010–0.013", draw: (ink, pts) => ink.stroke(pts, { color: INK, width: 0.011, passes: 2 }) },
+  { key: "use:once", label: "ribbon once · outline() · 0.006–0.012", draw: (ink, pts) => ink.stroke(pts, { color: INK, width: 0.009 }) }
+];
+IN_USE.forEach(({ key, label, draw }) => {
+  const el = document.createElement("figure");
+  el.dataset.fig = key;
+  el.innerHTML = `<canvas></canvas><div class="subs"><span>${label}</span></div>`;
+  document.getElementById("outlineUse").appendChild(el);
+  fig(key, [-0.7, -0.09, 0.7, 0.09], (sk) => draw(sk(), [[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]]));
+});
+
 // Shader balls — one row per entry of MATERIALS, like a 3D material preview: the same ball in the same color at the five value
 // steps (black · hatch · scribble · stipple · light), filled the material's way at each — the contour is the board's outline,
 // PENCIL; a material is only the filling. FLAT has no texture, so one ball
