@@ -237,9 +237,11 @@ export function drawPupEars(ink, fills, spec, box) {
     let path;
     let flap = null;    // a folded ear's flap — drawn over the root
     let crease = null;  // the fold line — on black fur the two pieces are the same color, so without the line the fold is invisible
-    // Used when drawing the root outline as **an open path**. Within one layer the ink sits above the fills (guidelines/rig.md), so the flap's fill cannot hide the root outline —
-    // the stretch that would be hidden (under the flap) is simply never stroked
-    let baseOutline = null;
+    // Open outlines instead of the closed contour — the standing ear (perk, the folded ear's other side) and the folded ear's root. Their **base is never
+    // stroked**: the ear sits on the head without a line across its root, its fill covering the head outline so it attaches as a bump in the silhouette.
+    // Within one layer the ink sits above the fills (guidelines/rig.md), so the flap's fill cannot hide the root outline — the stretch that would be
+    // hidden (under the flap) is simply never stroked either
+    let openOutlines = null;
     if (kind === "pointy") {
       // Triangular ear — **its vertex attaches to the head** (not its base). The topmost vertex is embedded in the outline (the corner on a square head)
       // and the body droops outward and down from there: the base is the outer end. The size multipliers make it long and wide
@@ -279,6 +281,7 @@ export function drawPupEars(ink, fills, spec, box) {
           nAt(len, tip * 0.55), nAt(len * 1.02, 0), nAt(len, -tip * 0.55),
           nAt(len * 0.86, -tip * 1.15), nAt(len * 0.55, -base * 0.62), nAt(-0.014, -base)
         ];
+        openOutlines = [path];   // from one base corner over the tip to the other — the base itself is not a line
       } else {
         const stand = 0.085 * k;         // the standing height up to the crease (along the normal)
         const drop = 0.075 * k;          // how far the flap folds down
@@ -291,8 +294,12 @@ export function drawPupEars(ink, fills, spec, box) {
           nAt(stand - drop, halfW * 1.05)
         ];
         crease = [nAt(stand, -halfW * 0.66), nAt(stand + 0.004 * k, halfW * 1.1)];
-        // The root outline — inner top → inner bottom → outer bottom → up to the flap's tip height only. The top edge and the outer edge above it are covered by the flap, so they are not stroked
-        baseOutline = [nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW), nAt(-0.014, halfW), nAt(stand - drop - 0.004 * k, halfW * 0.72)];
+        // The root outline — the inner side (crease down to the base) and the outer side (the base up to the flap's tip height only): two strokes, no base.
+        // The top edge and the outer edge above the flap's tip are covered by the flap, so they are not stroked
+        openOutlines = [
+          [nAt(stand, -halfW * 0.66), nAt(-0.014, -halfW)],
+          [nAt(-0.014, halfW), nAt(stand - drop - 0.004 * k, halfW * 0.72)]
+        ];
       }
     }
     const hanging = kind === "flap" || kind === "long";
@@ -314,7 +321,7 @@ export function drawPupEars(ink, fills, spec, box) {
       const root = [anchor.x + nx * 0.004, anchor.y + ny * 0.004];   // just outside the outline — the root position
       paintPart(fills, spec, path.map(([x, y]) => [root[0] + (x - root[0]) * 0.72, root[1] + (y - root[1]) * 0.72]), innerTone(fur), { own: true });
     }
-    if (baseOutline) ink.stroke(baseOutline, earInk);
+    if (openOutlines) for (const line of openOutlines) ink.stroke(line, earInk);
     else ink.contour(path, "RIBBON", earInk);
     if (flap) {
       // The flap is **the ear's back face** folded over — the back color, not the inner-ear color. On light fur it reads by tone, on black fur by the crease.
