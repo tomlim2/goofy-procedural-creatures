@@ -68,7 +68,7 @@ export const SPECIES = [
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
       pattern: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1], ["calico", 1.5]],   // calico = piebald (a white base plus black patches)
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
-      tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // dogs are thick or bushy (a spitz), and a rabbit-like pom too. ringed and wedge disabled
+      tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // dogs are thick or bushy (a spitz), and a rabbit-like pom too. wedge disabled
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
       // Mouth — the w (omega) under the muzzle by default, a barking o (open), a panting tongue (tongue), plus line, dot and smile. No duck bill, zigzag or spiked teeth (3 reference rows)
       mouth: [["omega", 4], ["line", 2], ["open", 2], ["tongue", 2], ["dot", 1.5], ["smile", 1]],
@@ -115,7 +115,7 @@ export const SPECIES = [
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
       pattern: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1], ["calico", 2]],   // calico = tricolor (base + tan + black patches, reaching the head and one ear)
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
-      tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. ringed and wedge disabled
+      tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. wedge disabled
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
       face2: [["none", 5], ["blush", 1], ["freckles", 1]]
     }

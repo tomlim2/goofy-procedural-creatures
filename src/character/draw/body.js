@@ -23,7 +23,7 @@ export function paintPart(fills, spec, path, color, { own = false, flat = false,
 
 // The creature's pattern — the `pattern` slot as part of the goofy material's base color (medium/materials.js patternOn). Light ink on a dark body,
 // the same rule as face ink. calico is not a line pattern but decals — color regions of the base (bodyDecals / headDecals), and none is none
-function patternOf(spec) {
+export function patternOf(spec) {
   const kind = spec.parts.pattern;
   if (!kind || kind === "none" || kind === "calico") return undefined;   // a spec without the slot (an older tree's, in drawdiff) has no pattern
   return { kind, color: luminance(spec.palette.cloth) < 120 ? "#e9e3d5" : spec.palette.ink };

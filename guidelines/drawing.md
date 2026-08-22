@@ -73,7 +73,7 @@ color, with at most a `weight` on the kind's width:
 | Role | Call | What it is | Weights in use |
 | --- | --- | --- | --- |
 | contour | `ink.contour(path, { color, weight })` | the closed line of a shape — the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts | fine 0.7 · 1 · the head 1.15 · heavy 1.2 |
-| line | `ink.line(path, { color, weight })` | an open line — a brow, a lid, a whisker, a limb, a strand, a horn, the floor | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
+| line | `ink.line(path, { color, weight, joint })` | an open line — a brow, a lid, a whisker, a limb, a strand, a horn, the floor. `joint = [start, end]` marks an end that meets another line (a tail bone's seam): no overshoot, no thinning there | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
 | mark | `ink.mark(path, { color, weight })` | a dot or a dash a few widths long — a freckle, a tooth's edge, a claw, a glyph's dot | 0.6 · 0.7 · 1 |
 
 Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL", line: "PENCIL", mark: "RIBBON" }`.
@@ -161,7 +161,8 @@ A goofy material is what a surface is made of, the way a 3D material is — **ho
 The `base` colour — the fill-up (`flat`, optionally a tone of the color) — always opaque (on the
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
 — carrying the part's **pattern**, the creature's pattern (stripes, dots, spots, hatching: the `pattern` slot), drawn
-inside it and clipped to the contour, the way a pattern is part of an albedo (`paint(…, { pattern })`); and its
+inside it and clipped to the contour, the way a pattern is part of an albedo (`paint(…, { pattern })`; on a tail it runs
+along the tube instead — stripes as rings, [character/parts.md](character/parts.md) § tail); and its
 `texture` — `hatch`, `scratch`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
 contour (`clipSegment`, `insidePath` in `medium/materials.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's

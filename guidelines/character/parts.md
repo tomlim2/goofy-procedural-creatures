@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 25 slots, 188 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 25 slots, 187 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -329,12 +329,12 @@ Independent of form (legs), so every leg type has a length. `layout()` multiplie
 Quads follow it too. Being in `LATE_SLOTS`, it is drawn at the very end. Default weights long 3 · medium 2 · short 1, plus verylong 1.5 in the imp bias.
 Gallery: `gallery.html?slot=legs&fix=legLength:short`.
 
-### tail — the skeleton (7) × tailSkin — the skin (9) × tailLength — the length (3) — quads only
+### tail — the skeleton (7) × tailSkin — the skin (8) × tailLength — the length (3) — quads only
 The skeleton is the **rest pose** (BIND, sleep) and sets the bone lengths and where the skin goes. In an awake idle a cat blends its joints 85% toward an **arch** whatever the skeleton (the motion `tailIdlePose`),
 and stands it vertical on a ^^ — the skeleton's character shows in the remaining 15%, in sleep and in BIND ([../motion/catalog.md](../motion/catalog.md) § the tail).
 The tail is **three slots**: skeleton, skin and length. The skeleton (`tail`) is the spine's shape (a point list), the skin (`tailSkin`) is what goes on it, and the length (`tailLength`) is
 the multiplier shrinking the whole skeleton (long 1 · medium 0.7 · short 0.45 — the skin thickness is unchanged). Any skin goes on any skeleton — a plume skin on a stub skeleton
-is a pom (`tailSpine`, `tubePath` in `limbs.js`).
+is a pom (`tailSpine`, `tubeSides` in `limbs.js`).
 
 | Skeleton (tail) | Spine |
 | --- | --- |
@@ -352,20 +352,25 @@ is a pom (`tailSpine`, `tubePath` in `limbs.js`).
 | thick | A filled body, thick at the root and thinning to the tip (fur color), plus an outline |
 | plume | A filled body swollen in the middle plus fur strokes (bushy — a spitz or fox) |
 | tuft | A thin line plus a filled tuft at the tip (a lion) |
-| ringed | Three dark bands on a thick body (a raccoon) — **disabled**: it reads as a rat tail and is in no bias (never drawn). Assets and gallery only |
 | block | A block — a strip of constant width with a squared tip |
 | wedge | A wedge — wide at the root, pointed at the tip — **disabled** (a rat tail). Assets and gallery only |
-| ball | Beads — four beads along the spine (getting smaller); on a stub, one pom |
+| ball | Beads — four beads along the spine (getting smaller) on a thin spine line (without it they floated behind the rump); on a stub, one pom |
 | puff | A pom — a bushy rabbit tail attached near the rump regardless of the skeleton (a tuft plus fur strokes around it). Dogs |
 
 The pivot is at the tail root. Species bias — skeleton: pup flag 4 · stubtail 3 · longtail 2 · ring 2 · curl 1 · hook 0.5 / cat curl 4 · longtail 3 · hook 2.5 · flag 2 ·
 kink 1.5 · stubtail 1 (kink is cats only, ring dogs only). Skin: pup thick 3 · line 2 · plume 2 · puff 2 · tuft 1 · ball 1 · block 0.5 / cat line 3 · thick 2 · plume 1.5 ·
-tuft 1 · block 0.5 · ball 0.5 · puff 0.3 (ringed and wedge are disabled). Length: pup long 2 · medium 2 · short 2 / cat long 3 · medium 2 · short 1.
+tuft 1 · block 0.5 · ball 0.5 · puff 0.3 (wedge is disabled; ringed was dropped — rings are the pattern's job now). Length: pup long 2 · medium 2 · short 2 / cat long 3 · medium 2 · short 1.
 tailSkin and tailLength are late slots (`LATE_SLOTS`). Bipeds draw them but never render them.
 The tail is drawn **behind** the torso and head (renderOrder 0.8) — the part curling over the back or lying on the body is hidden.
 The tail is baked as **a four-bone chain** — the spine is split into 4 (`TAIL_BONES`) with a joint origin and rest-pose direction per bone, and the scene rotates each joint separately (the swish,
 the tip tapping, follow-through, and the raise as a straight target angle per joint — it shoots up whatever the skeleton, [../motion/catalog.md](../motion/catalog.md) § the tail).
 The skin's thickness function is computed on the whole tail's t, so the thickness carries across the seams, and the outline strokes only the two side lines so no crossbar appears at a seam.
+**Joints and tips.** Every joint gets a **cap** — a disc of the tube's width on the parent bone — so when the child bends, the wedge that would open on the outside of the bend is covered (the
+overlap on the inside hides under the fills). The side lines end at the joints and at the root as **joints** (`line(…, { joint })`: no overshoot, no thinning), so two bones read as one line;
+a thin-line tail runs past its tip (the pencil's flick). A tube's tip is **round** — a disc and an arc — except block, which stays square.
+**Color and pattern.** The tail is the body's color (a quad's `cloth` — the head color or a tone of it), at the head's value step like the rest of the mass. A tube carries the creature's
+**pattern** (the `pattern` slot, [../drawing.md](../drawing.md) § what takes the goofy material) along itself — stripes as **rings**, dots and spots along the spine, hatch across it — in the
+body's pattern ink (light on dark fur). A thin line, a tuft, beads and a pom have no area for it; the calico's patches stay on the head and the body.
 
 ### arms — form (5) — bipeds only
 | Value | Drawing |

@@ -116,8 +116,9 @@ export class Sketch {
     for (let i = 0; i < 3; i += 1) this.colors.push(rgb[0], rgb[1], rgb[2]);
   }
 
-  // One stroke. width is the maximum, and it thins toward the ends.
-  stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03 } = {}) {
+  // One stroke. width is the maximum, and it thins toward the ends — except at a joint: joint = [start, end] marks an end that meets
+  // another line (a tail bone's seam), and that end keeps its width so the two lines read as one
+  stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03, joint = null } = {}) {
     const rgb = hexToRgb(color);
     width *= this.inkScale;
 
@@ -132,7 +133,10 @@ export class Sketch {
       // Thin at the ends, thick in the middle (taper). Pressure variation is laid on top with noise (press).
       const phase = this.phase;
       const noise = this.noise;
-      const taper = (t) => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 0.35);
+      const ramp = (u) => Math.pow(Math.sin((Math.PI / 2) * Math.min(1, Math.max(0, u))), 0.35);
+      const taper = joint
+        ? (t) => (joint[0] ? 1 : ramp(t * 2)) * (joint[1] ? 1 : ramp((1 - t) * 2))
+        : (t) => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 0.35);
       const press = (t, k) => 0.75 + 0.45 * noise(phase * 0.5 + t * 6 + k);
       const last = path.length - 1;
 
@@ -188,8 +192,9 @@ export class Sketch {
 
   // The pencil — every number in PENCIL (above). closed draws a seamless loop: no overshoot, and the sines snapped to whole cycles
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
-  // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them
-  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, paper = PAPER } = {}) {
+  // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
+  // joint = [start, end]: an end that meets another line (a tail bone's seam) gets no overshoot and no thinning, so the two read as one line
+  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, paper = PAPER, joint = null } = {}) {
     const P = PENCIL;
     const rgb = hexToRgb(color);
     const biteRgb = hexToRgb(paper);
@@ -217,12 +222,12 @@ export class Sketch {
       let tail0 = 0;
       let tail1 = 0;
       if (!closed) {
-        tail0 = w * jr(2, P.over);
-        tail1 = w * jr(3, P.over);
+        tail0 = joint && joint[0] ? 0 : w * jr(2, P.over);
+        tail1 = joint && joint[1] ? 0 : w * jr(3, P.over);
         spine = [
-          ...extend(spine[1], spine[0], tail0, P.step).reverse(),
+          ...(tail0 > 0 ? extend(spine[1], spine[0], tail0, P.step).reverse() : []),
           ...spine,
-          ...extend(spine[spine.length - 2], spine[spine.length - 1], tail1, P.step)
+          ...(tail1 > 0 ? extend(spine[spine.length - 2], spine[spine.length - 1], tail1, P.step) : [])
         ];
       }
       const n = spine.length;

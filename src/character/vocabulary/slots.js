@@ -51,11 +51,12 @@ export const SLOTS = {
   // The tail **skeleton** — the spine shape only. curl curled up · flag straight up · longtail long and back · stubtail blunt · hook standing then hooked (cats) ·
   // kink a kinked tail (cats) · ring a ring curled over the back (a spitz). What it is dressed in is tailSkin
   tail: ["curl", "flag", "longtail", "stubtail", "hook", "kink", "ring"],
-  // The tail **skin** — what goes on the skeleton. line one thin stroke · thick a filled thick tail · plume a bushy plume (fur strokes) · tuft a tuft at the tip (a lion) · ringed ring markings (a raccoon) ·
+  // The tail **skin** — what goes on the skeleton. line one thin stroke · thick a filled thick tail · plume a bushy plume (fur strokes) · tuft a tuft at the tip (a lion) ·
   // block a block (constant width, squared tip) · wedge a wedge (wide root, pointed tip) · ball circles (beads along the spine; on a stub, one pom).
-  // ringed and wedge read as a rat tail and are **disabled** — the assets (drawing, gallery) stay but they are in no bias (they never get drawn)
+  // wedge reads as a rat tail and is **disabled** — the asset (drawing, gallery) stays but it is in no bias (it never gets drawn). ringed (ring markings)
+  // was dropped: rings are the pattern's job now — a striped creature's tube tail wears them (limbs.js tubePattern)
   // puff a pom — a bushy rabbit tail attached at the rump regardless of the skeleton (a pom plus fur strokes). Dogs
-  tailSkin: ["line", "thick", "plume", "tuft", "ringed", "block", "wedge", "ball", "puff"],
+  tailSkin: ["line", "thick", "plume", "tuft", "block", "wedge", "ball", "puff"],
   // The tail **length** — shrinks the whole skeleton (long 1 · medium 0.7 · short 0.45). The skin thickness is unchanged
   tailLength: ["long", "medium", "short"],
   // The mouth **position** — where it sits between the bottom of the nose and above the chin: high (just under the nose) · mid · low (near the chin). Dogs ignore it, being on the muzzle rule
@@ -109,7 +110,7 @@ export const DEFAULT_BIAS = {
   face2: [["none", 5], ["blush", 2], ["freckles", 2], ["tears", 1.5]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2], ["hook", 1.5], ["kink", 1], ["ring", 1.5]],
-  tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["block", 1], ["ball", 1], ["puff", 1]],   // ringed and wedge disabled
+  tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["block", 1], ["ball", 1], ["puff", 1]],   // wedge disabled
   tailLength: [["long", 3], ["medium", 2], ["short", 1.5]],
   // Mouths — the human baseline (when there is no species bias). A small mouth by default, with the grid, grin and hatching as seasoning. Spiked teeth, zigzag, meow and blep belong to species, so 0
   mouth: [["line", 3], ["dot", 2], ["smile", 2], ["frown", 1.5], ["smug", 1.5], ["three", 1.5], ["pout", 1], ["open", 1], ["wave", 1], ["grimace", 1], ["grin", 1], ["bracket", 1], ["scribble", 0.3]],
