@@ -6,7 +6,7 @@ import { Sketch } from "../stroke.js";
 import { makeCreature } from "../character/index.js";
 import { makeNoise, makeRng } from "../rng.js";
 import { makePaperTexture } from "./paper.js";
-import { inkMaterial, disposeGroup } from "./material.js";
+import { inkMaterial, disposeGroup } from "./mesh.js";
 import { buildCreature } from "./rig.js";
 import { applyState } from "./animate.js";
 import { BIND_STATE } from "../motion/index.js";

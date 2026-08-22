@@ -95,6 +95,14 @@ export const PENCIL = {
   grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
 };
 
+// Materials — what a mark is made of. A part names a material and hands over the path and the color; the material decides the line
+// function, its width and its habits (passes, the shed). Parts never pick widths — at most a weight, a multiplier on the material's.
+// One so far: GRAPHITE, the pencil, which the head and body contours are drawn with. Docs: guidelines/drawing.md § materials.
+// (Not the GPU materials — those live in scene/mesh.js.)
+export const MATERIALS = {
+  GRAPHITE: { line: "pencil", width: 0.012, passes: 1 }
+};
+
 export class Sketch {
   // inkScale is the global multiplier for stroke thickness. Change the cell size and this is the only thing to touch.
   constructor(noise, wobble = 1, inkScale = 1.5) {
@@ -161,6 +169,18 @@ export class Sketch {
   // A closed stroke. Used for the head and body outlines.
   outline(points, options = {}) {
     this.stroke([...points, points[0]], options);
+  }
+
+  // Draws with a named material (MATERIALS). weight scales the material's width (a head contour is a little heavier than a body's);
+  // closed draws a loop. An unknown name throws — a part that misspells its material must not silently draw nothing
+  mark(points, name, { color = "#2b2724", closed = false, weight = 1, paper } = {}) {
+    const m = MATERIALS[name];
+    if (!m) throw new Error(`unknown material: ${name}`);
+    const options = { color, width: m.width * weight, passes: m.passes };
+    if (paper) options.paper = paper;
+    if (m.line === "pencil") this.pencil(points, { ...options, closed });
+    else if (closed) this.outline(points, options);
+    else this.stroke(points, options);
   }
 
   // A small axis-aligned square — the pencil's crumbs and bites

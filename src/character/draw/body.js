@@ -17,7 +17,7 @@ export function drawBody(ink, fills, spec, box, noise) {
       color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
       angle: Math.PI * 0.22, gap: 0.026, width: 0.006
     });
-    ink.outline(path, { color: spec.palette.ink, width: 0.012, passes: 2 });
+    ink.mark(path, "GRAPHITE", { color: spec.palette.ink, closed: true });   // the contour — the pencil (stroke.js MATERIALS)
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
   }
 
@@ -45,7 +45,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
     angle: Math.PI * 0.28, gap: 0.03, width: 0.006
   });
-  ink.outline(path, { color: ink0, width: 0.012, passes: 2 });
+  ink.mark(path, "GRAPHITE", { color: ink0, closed: true });   // the contour — the pencil (stroke.js MATERIALS)
   return { path, top, bottom, w, cx: 0 };
 }
 

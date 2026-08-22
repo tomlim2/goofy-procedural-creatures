@@ -2,7 +2,7 @@
 // Docs: guidelines/motion/catalog.md § emoji animation
 
 import { Sketch, arcPath, blobPath } from "../stroke.js";
-import { sketchMesh } from "./material.js";
+import { sketchMesh } from "./mesh.js";
 
 // Emoji sit above every individual — a value larger than any individual's block (index × 10 + layer)
 export const EMOJI_ORDER = 100000;

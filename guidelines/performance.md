@@ -1,6 +1,6 @@
 # Performance
 
-> Basis: `src/scene/material.js`, `src/scene/rig.js`, `src/scene/index.js`, `src/stroke.js`. When the code changes, fix this document in the same commit.
+> Basis: `src/scene/mesh.js`, `src/scene/rig.js`, `src/scene/index.js`, `src/stroke.js`. When the code changes, fix this document in the same commit.
 
 This lab's frame cost is almost entirely **the number of draw calls**. There are only about 60k triangles on a
 board, so the GPU idles; what JS does each frame is a few hundred lines of state application per individual
@@ -38,7 +38,7 @@ If you changed the scene structure (layers, rig, meshes), measure these numbers 
 
 ### One material per opacity level — `inkMaterial(opacity)`
 
-`scene/material.js` makes one material per opacity level and every mesh shares it (`userData.shared`). The
+`scene/mesh.js` makes one material per opacity level and every mesh shares it (`userData.shared`). The
 renderer skips uniform updates while the same material runs on, and does not bake new materials on a regen.
 
 - **Nobody disposes a shared material** — `disposeGroup` skips them. Temporary meshes (the audit) are removed

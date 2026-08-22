@@ -48,8 +48,28 @@ Every number lives in the `PENCIL` table at the top of `stroke.js` and nowhere e
 normal per point, so it never cracks at a corner. `paper` is the color the bites take — pass the fill's
 color when the line runs over a fill. Not for dots: the overshoot lengthens them.
 
-Today only the medium page (`/how.html` § the line) draws with it. Switching a creature part onto it is a
-drawing change like any other — `drawdiff` will show it, and the audit has to stay at 0.
+The head and body contours draw with it, through the GRAPHITE material (below); the medium page (`/how.html`
+§ the line) shows it next to `stroke()`. Switching another part onto it is a drawing change like any other —
+`drawdiff` will show it, and the audit has to stay at 0.
+
+## Materials — what a mark is made of
+
+A material is a named bundle of *what a mark is made of*: which line function, its width, its habits. A part
+names a material and hands over the path and the color — `ink.mark(path, "GRAPHITE", { color, closed })` —
+and never picks a width itself; at most a `weight`, a multiplier on the material's width (the head contour
+runs at 1.15 of the body's). The table is `MATERIALS` in `stroke.js`; an unknown name throws, so a misspelt
+material cannot silently draw nothing.
+
+| Material | Line | Width | Used by |
+| --- | --- | --- | --- |
+| `GRAPHITE` | `pencil()` — wander, breathing width, overshoot, the shed; seamless when closed | 0.012 | the head contour (weight 1.15), the body contour |
+
+Candidates not built yet: NIB (the ribbon, for details), SOFT (a wide pencil for shading), WASH (the fill
+that misses its line), CHALK (light ink on a dark face). Adding one is an entry in the table plus the parts
+that name it — the medium page draws a sample per entry by itself.
+
+(The GPU materials — one `MeshBasicMaterial` per opacity level — are a different thing and live in
+`scene/mesh.js`.)
 
 ## Layer order
 

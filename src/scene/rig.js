@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath, angryEyeSketch, STATIC_EYE_KEYS } from "../character/index.js";
 import { blobPath, arcPath, Sketch } from "../stroke.js";
 import { makeClock, bindArm } from "../motion/index.js";
-import { sketchMesh } from "./material.js";
+import { sketchMesh } from "./mesh.js";
 
 export const BOIL_FRAMES = 3;
 

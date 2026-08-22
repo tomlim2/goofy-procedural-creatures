@@ -34,7 +34,8 @@ export function drawHead(ink, fills, spec, box, noise) {
   }
 
   // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
-  ink.outline(path, { color: spec.palette.ink, width: 0.014, jitter: spec.species === "human" ? 0.006 : 0.008, passes: 2 });
+  // The contour is GRAPHITE (stroke.js MATERIALS) — the pencil; the head's line runs a little heavier than the body's (weight)
+  ink.mark(path, "GRAPHITE", { color: spec.palette.ink, closed: true, weight: 1.15 });
   return path;
 }
 

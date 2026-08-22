@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { buildEmoji } from "./emoji.js";
-import { disposeGroup } from "./material.js";
+import { disposeGroup } from "./mesh.js";
 import { BOIL_FRAMES } from "./rig.js";
 import { damp } from "../motion/ease.js";
 

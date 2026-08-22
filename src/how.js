@@ -1,4 +1,4 @@
-// The medium page — draws how.html's legend live with the board's own code (stroke.js, material.js, the palette).
+// The medium page — draws how.html's legend live with the board's own code (stroke.js, mesh.js, the palette).
 // Nothing here is an illustration OF the system; every figure runs THROUGH it, so the page cannot drift from the truth.
 //
 // One hidden WebGL renderer paints every figure's small 2D canvas (one context, many views — a page of
@@ -6,8 +6,8 @@
 // creature layer, differing only in jitter phase. The figures hold still; INK BOIL cycles them at the board's own pace (rig.js boilFps).
 
 import * as THREE from "three";
-import { Sketch, blobPath, arcPath } from "./stroke.js";
-import { sketchMesh } from "./scene/material.js";
+import { Sketch, blobPath, arcPath, MATERIALS } from "./stroke.js";
+import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
 import { runLoop, bindSeg } from "./ui.js";
@@ -170,6 +170,18 @@ swatches("pops", POPS);
 swatches("darks", DARKS);
 swatches("furs", [...FURS, CALICO_MID]);
 swatches("accents", ACCENTS);
+
+// The materials — a loop and a stroke per entry of MATERIALS, drawn through mark() exactly as a part would. Labels come from the table
+const MATERIAL_NAMES = Object.keys(MATERIALS);
+fig("materials", [-0.75, -0.22, 0.75, 0.22], (sk) => {
+  const ink = sk();
+  MATERIAL_NAMES.forEach((name, i) => {
+    const x = (i - (MATERIAL_NAMES.length - 1) / 2) * 0.5;
+    ink.mark(blobPath(x, 0.04, 0.15, 0.11, { lumps: 5, amount: 0.08, noise, phase: 97 + i * 3 }), name, { color: INK, closed: true, paper: CARD });
+    ink.mark([[x - 0.2, -0.15], [x - 0.07, -0.125], [x + 0.07, -0.16], [x + 0.2, -0.14]], name, { color: INK, paper: CARD });
+  });
+});
+FIGS.materials.labels = MATERIAL_NAMES;
 
 fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {   // the demonstration of the boil — the one figure that never holds still (always, below)
   const fills = sk(), ink = sk();

@@ -16,7 +16,7 @@ import { makeGrid, layout, eyeGeometry, facePartKinds } from "./character/index.
 import { drawEyes, drawFace2, drawNose, drawEyewear, drawWhiskers } from "./character/draw/face.js";
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng, formatSeed } from "./rng.js";
-import { sketchMesh, disposeGroup } from "./scene/material.js";
+import { sketchMesh, disposeGroup } from "./scene/mesh.js";
 import { randomSeed } from "./ui.js";
 
 const COLS = 7, ROWS = 5;

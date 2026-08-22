@@ -82,11 +82,11 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | Where | What it does | Docs |
 | --- | --- | --- |
 | `src/rng.js` | The seeded PRNG (mulberry32), weighted draws, 1D value noise | [determinism](guidelines/determinism.md) |
-| `src/stroke.js` | Strokes → ribbon geometry. Wobble, pressure, scribbles, scribble fills, hatching. `pencil()` — the reference's line kept next to `stroke()`, its numbers in `PENCIL` (the medium page only, so far). `buildGeometry` (several sketches → one geometry) | [drawing](guidelines/drawing.md) |
+| `src/stroke.js` | Strokes → ribbon geometry. Wobble, pressure, scribbles, scribble fills, hatching. `pencil()` — the reference's line kept next to `stroke()`, its numbers in `PENCIL`. `MATERIALS` + `mark()` — what a mark is made of; a part names a material (GRAPHITE: the contours) instead of picking widths. `buildGeometry` (several sketches → one geometry) | [drawing](guidelines/drawing.md) |
 | `src/color.js` | Hex color utilities — linear conversion (`hexToRgb`), luminance (`luminance`, `isDark`), tones (`shade`). Character and drawing share them | [drawing](guidelines/drawing.md) § colors |
 | **`src/character/`** | What the seed decides. `vocabulary/` (slots, species, archetypes, palette) `spec.js` (seed→spec) `draw/` (spec→strokes: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | What the clock decides. `table.js` (per-species parameters) `rhythm.js` (standing) `events.js` (intermittent) `states.js` (held — including the base states idle/sleep/walk) `actions.js` (idle and actions — arm, body and quad layers) `emoji.js` (emoji animation — the trigger layer) `ease.js` (curve shapes — envelopes and following, all eased in and out) `index.js` (assembly in a fixed rng order) | [motion/](guidelines/motion/) |
-| `src/scene/` | three.js. `rig.js` (geometry → hierarchy) `animate.js` (state → rig) `paper.js` `material.js` (shared materials and meshes) `emoji.js` (glyph shapes) `index.js` (the scene, the loop, regen) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
+| `src/scene/` | three.js. `rig.js` (geometry → hierarchy) `animate.js` (state → rig) `paper.js` `mesh.js` (meshes and the shared GPU materials) `emoji.js` (glyph shapes) `index.js` (the scene, the loop, regen) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
 | `src/export.js` | Screen → PNG. Puts the WebGL canvas onto a 2D canvas and lays a signature (seed, name) on top to download. It knows nothing about the scene — it takes a canvas already drawn | |
 | `src/main.js` · `src/control.js` · `src/ui.js` | The entry point. `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the rAF loop; shared with gallery and audit) | |
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
@@ -143,7 +143,7 @@ becomes a ribbon mesh.
 
 - **Color space** — three.js reads vertex colors as linear. Feed it an sRGB hex as-is and dark ink
   brightens into mid grey. `srgbToLinear` (`hexToRgb`) in `color.js` corrects that
-- **Performance** — the frame cost is the number of draw calls. Materials are shared per opacity level (`scene/material.js`) and one layer is one mesh (fills + ink).
+- **Performance** — the frame cost is the number of draw calls. Materials are shared per opacity level (`scene/mesh.js`) and one layer is one mesh (fills + ink).
   550 draw calls and 0.8 ms/frame of render JS for 35 creatures. How to measure it and the rules are in [guidelines/performance.md](guidelines/performance.md)
 - **The module cache** — `serve.mjs` appends `?v=` to relative imports. `Cache-Control: no-store` alone does not clear
   the browser's ES module map, so an edited file sometimes still runs the previous code
