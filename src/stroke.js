@@ -129,6 +129,15 @@ export const GOOFY_OUTLINES = {
   PENCIL: { kind: "pencil", width: 0.012, passes: 1 }
 };
 
+// The goofy fur — how hair and fur are grown along a path: the same path drawn over and over, each pass pushed outward from the
+// root, every point waving. A part names a fur and hands over the path and the color; passes, width and spread ride as overrides
+// (a style's volume), everything else is the fur's own. The medium page grows one fur ball per entry. Docs: guidelines/drawing.md § the goofy fur
+export const GOOFY_FUR = {
+  // The scribble — today's hair. root/reach: where the passes start and how far they fan, in spreads (−0.25 → 0.6, outward);
+  // scatter: a pass's own push; wave: a point's own push; lean/waveLean: how much of each goes sideways
+  SCRIBBLE: { passes: 14, width: 0.009, spread: 0.05, root: -0.25, reach: 0.85, scatter: 0.4, wave: 0.4, lean: 0.4, waveLean: 0.3, jitter: 0.012, step: 0.045 }
+};
+
 // -- the fill procedures' geometry --
 // Point in a closed polygon (even-odd)
 function insidePath([x, y], poly) {
@@ -519,19 +528,30 @@ export class Sketch {
     }
   }
 
-  // Hair. Not filled as an area but drawn back and forth with the pen.
-  // The reference's hair works this way, which is why the scribble is needed separately.
-  scribble(points, { color = "#2b2724", passes = 14, width = 0.009, spread = 0.05 } = {}) {
+  // Grows a named fur (GOOFY_FUR) along the path. passes, width and spread may be overridden — a style's volume; the rest is the fur's
+  fur(points, name, { color, passes, width, spread } = {}) {
+    const f = GOOFY_FUR[name];
+    if (!f) throw new Error(`unknown fur: ${name}`);
+    const over = { color };
+    if (passes !== undefined) over.passes = passes;
+    if (width !== undefined) over.width = width;
+    if (spread !== undefined) over.spread = spread;
+    this.scribble(points, { ...f, ...over });
+  }
+
+  // The scribble — hair is not filled as an area but drawn back and forth with the pen (the reference's hair works this way).
+  // The growth constants are GOOFY_FUR.SCRIBBLE's; fur() is the named way in
+  scribble(points, { color = "#2b2724", passes = 14, width = 0.009, spread = 0.05, root = -0.25, reach = 0.85, scatter = 0.4, wave = 0.4, lean = 0.4, waveLean = 0.3, jitter = 0.012, step = 0.045 } = {}) {
     for (let i = 0; i < passes; i += 1) {
       this.phase += 7.77;
       const t = i / Math.max(1, passes - 1);
       // Narrows the spread on the inner side (toward the face). Hair reaches outward.
-      const drift = (this.noise(this.phase * 0.3) * 0.4 + (t * 0.85 - 0.25)) * spread;
+      const drift = (this.noise(this.phase * 0.3) * scatter + (t * reach + root)) * spread;
       const shifted = points.map(([x, y], index) => {
-        const wave = this.noise(this.phase * 0.2 + index * 0.4) * spread * 0.4;
-        return [x + drift * 0.4 + wave * 0.3, y + drift + wave];
+        const w = this.noise(this.phase * 0.2 + index * 0.4) * spread * wave;
+        return [x + drift * lean + w * waveLean, y + drift + w];
       });
-      this.stroke(shifted, { color, width, jitter: 0.012, step: 0.045 });
+      this.stroke(shifted, { color, width, jitter, step });
     }
   }
 

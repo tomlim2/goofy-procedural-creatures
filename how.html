@@ -29,9 +29,9 @@
 
 <main class="page">
 
-<p class="lede">Everything on the board is made of what is on this page, on two axes: the <b>goofy outline</b> —
-what a creature's contour is drawn with — and the <b>material</b> — how its surfaces are filled. No textures, no
-brush images; the hand comes from rules alone. Every figure is drawn live by <code>src/stroke.js</code>, the same
+<p class="lede">Everything on the board is made of what is on this page, on three axes: the <b>goofy outline</b> —
+what a creature's contour is drawn with — the <b>material</b> — how its surfaces are filled — and the <b>goofy fur</b> —
+how its hair is grown. No textures, no brush images; the hand comes from rules alone. Every figure is drawn live by <code>src/stroke.js</code>, the same
 code that draws the creatures. The figures hold still; <b>INK BOIL</b> in the header (or <code>I</code>) sets their
 lines boiling at the board's own pace.</p>
 
@@ -128,9 +128,11 @@ contour the board's PENCIL.</p>
 
 <div class="figs" id="materialBalls"></div>
 
-<h3>the marks a material is made of</h3>
-<p>A flat fill is allowed, but it must miss its outline a little — and anything that means <em>shading</em> is not a
-fill at all, it is the pen going back and forth. The techniques above are built from these.</p>
+<h3>the techniques</h3>
+<p>What the recipes are written in — a material's <code>kind</code>. A flat fill is allowed, but it must miss its
+outline a little; anything that means <em>shading</em> is not a fill at all, it is the pen going back and forth.
+<code>scribbleFill</code> has no recipe naming it yet — every body calls it directly (a <b>SHADED</b> material, flat
+plus this, is the candidate).</p>
 
 <div class="figs">
   <figure data-fig="register">
@@ -157,12 +159,6 @@ fill at all, it is the pen going back and forth. The techniques above are built 
     is this, clipped to the contour instead.</figcaption>
   </figure>
 
-  <figure data-fig="hair">
-    <canvas></canvas>
-    <div class="subs"><span>14 passes, reaching outward</span></div>
-    <figcaption><b>s.scribble</b> — hair is never a filled shape. The same path is drawn
-    over and over with drift and wave, narrower toward the face, reaching outward.</figcaption>
-  </figure>
 </div>
 
 <h3>the material underneath, and the boil</h3>
@@ -229,6 +225,33 @@ Every hex passes through <code>hexToRgb → srgbToLinear</code> in <code>src/col
     <canvas></canvas>
     <div class="subs"></div>
     <figcaption><b>accents</b> — greyed in-betweens for hats, patches and small props.</figcaption>
+  </figure>
+</div>
+</section>
+
+<!-- ================================================================ -->
+<section>
+<h2>THE GOOFY FUR</h2>
+<p>Hair and fur are neither a contour nor a filling — in 3D they are a <em>groom</em>, and here they are the
+<b>goofy fur</b>: how hair is grown along a path, named from <code>GOOFY_FUR</code> in <code>src/stroke.js</code> —
+<code>ink.fur(path, "SCRIBBLE", { color, passes, spread })</code>. A part hands over the path (the crown arc, a tail,
+a bang) and the color; passes, width and spread ride as a style's volume, everything else is the fur's own. One fur
+exists: <b>SCRIBBLE</b>, what every hairstyle is grown with today. The same ball, fur grown along its crown:</p>
+
+<div class="figs" id="furBalls"></div>
+
+<h3>SCRIBBLE — the scribble</h3>
+<p>The same path drawn over and over. Each pass is pushed outward from the root (<code>root</code> −0.25 →
+<code>reach</code> 0.6 spreads, so the mass fans away from the face), every point waves on its own, and a share of
+each push leans sideways. Candidates not grown yet: TUFT (short and dense — an animal's tail end), WISP (thin and
+sparse), CLUMP (strands that bunch, the groom's clump).</p>
+
+<div class="figs">
+  <figure data-fig="hair">
+    <canvas></canvas>
+    <div class="subs"><span>14 passes, reaching outward</span></div>
+    <figcaption><b>s.fur — SCRIBBLE</b> — hair is never a filled shape. The same path is drawn
+    over and over with drift and wave, narrower toward the face, reaching outward.</figcaption>
   </figure>
 </div>
 </section>

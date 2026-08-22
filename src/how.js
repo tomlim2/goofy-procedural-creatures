@@ -6,7 +6,7 @@
 // creature layer, differing only in jitter phase. The figures hold still; INK BOIL cycles them at the board's own pace (rig.js boilFps).
 
 import * as THREE from "three";
-import { Sketch, blobPath, arcPath, MATERIALS, GOOFY_OUTLINES } from "./stroke.js";
+import { Sketch, blobPath, arcPath, MATERIALS, GOOFY_OUTLINES, GOOFY_FUR } from "./stroke.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
@@ -116,7 +116,7 @@ fig("shading", [-0.45, -0.2, 0.45, 0.2], (sk) => {
 fig("hair", [-0.45, -0.26, 0.45, 0.26], (sk) => {
   const ink = sk();
   ink.outline(blobPath(0, -0.06, 0.24, 0.18, { lumps: 5, amount: 0.07, noise, phase: 17 }), { color: INK, width: 0.01 });
-  ink.scribble(arcPath(0, 0.06, 0.16, 0.09, Math.PI * 0.15, Math.PI * 0.85, 12), { color: INK, width: 0.008, spread: 0.045 });
+  ink.fur(arcPath(0, 0.06, 0.16, 0.09, Math.PI * 0.15, Math.PI * 0.85, 12), "SCRIBBLE", { color: INK, width: 0.008, spread: 0.045 });
 });
 
 fig("hatch", [-0.45, -0.2, 0.45, 0.2], (sk) => {
@@ -183,6 +183,12 @@ function ballFigure(box, key, label, phase, draw) {
 Object.keys(GOOFY_OUTLINES).forEach((name, i) => ballFigure(document.getElementById("outlineBalls"), `outline:${name}`, name.toLowerCase(), 61 + i * 3, (fills, ink, ball) => {
   fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
   ink.contour(ball, name, { color: INK, closed: true, paper: CARD });
+}));
+// Fur balls — one per entry of GOOFY_FUR: the same FLAT ball, PENCIL contour, the fur grown along its crown as hair is
+Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("furBalls"), `fur:${name}`, name.toLowerCase(), 131 + i * 3, (fills, ink, ball) => {
+  fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
+  ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
+  ink.fur(arcPath(0, 0.02, 0.17, 0.17, Math.PI * 0.15, Math.PI * 0.85, 12), name, { color: INK });
 }));
 // Shader balls — one per entry of MATERIALS, like a 3D material preview: the same ball in the same color, filled the material's
 // way. The contour is the board's outline, PENCIL — a material is only the filling

@@ -64,6 +64,22 @@ throws. The outline is its own concept — not part of a material: a contour is 
 | `RIBBON` | `stroke()` 0.012 laid twice, jitter 0.007 — the board's original contour, the two passes never quite agreeing | — |
 | `PENCIL` | `pencil()` 0.012 — one seamless loop: wander, breathing width, the shed | the head (weight 1.15), the body — **today** |
 
+## The goofy fur — how hair is grown
+
+Hair and fur are neither a contour nor a filling — in 3D they are a groom; here they are the **goofy fur**,
+named from `GOOFY_FUR` in `stroke.js`: `ink.fur(path, "SCRIBBLE", { color, passes, width, spread })`. A part
+hands over the path (the crown arc, a tail, a bang) and the color; `passes`, `width` and `spread` may be
+overridden — a style's volume — and everything else (root, reach, scatter, wave, lean) is the fur's own. An
+unknown name throws. `Sketch.scribble()` is the engine underneath; `fur()` is the named way in.
+
+| Fur | How it grows | On the board |
+| --- | --- | --- |
+| `SCRIBBLE` | the same path over and over, each pass pushed outward from the root (−0.25 → 0.6 spreads), every point waving | every hairstyle, the twintail and ponytail masses — **all hair today** |
+
+Candidates not grown yet: TUFT (short and dense — an animal's tail end), WISP (thin and sparse), CLUMP (strands
+that bunch). Adding one is an entry in the table plus the parts that name it; the medium page grows a fur ball
+per entry by itself.
+
 ## Materials — how a surface is filled
 
 A material is what a surface is made of, the way a 3D material is — **how its area is filled**. Hatched,
