@@ -48,16 +48,16 @@ export function mouthPlacement(spec, box) {
 // Filling the cavity with light face ink leaves nothing but an empty bright blob on an imp's face (which reads as a mistake). Teeth are a white strip plus dark lines (edge)
 function cavity(m, pts) {
   paintPart(m.fills, m.spec, pts, m.spec.palette.ink, { own: true });
-  m.ink.stroke([...pts, pts[0]], { color: m.ink0, width: 0.01 });
+  m.ink.line([...pts, pts[0]], { color: m.ink0, weight: 1 });
 }
 // A tooth strip — h tall, going up (dir −1: down from the upper lip) or down (dir +1). Vertical lines divide the teeth
 function teethStrip(m, x0, x1, edgeY, h, dir, count) {
   const inner = edgeY + dir * h;
   paintPart(m.fills, m.spec, [[x0, edgeY], [x1, edgeY], [x1, inner], [x0, inner]], TOOTH, { own: true });
-  m.ink.stroke([[x0, inner], [x1, inner]], { color: m.edge, width: 0.006 });
+  m.ink.line([[x0, inner], [x1, inner]], { color: m.edge, weight: 0.6 });
   for (let i = 1; i < count; i += 1) {
     const x = x0 + ((x1 - x0) * i) / count;
-    m.ink.stroke([[x, edgeY], [x + 0.001, inner]], { color: m.edge, width: 0.006 });
+    m.ink.mark([[x, edgeY], [x + 0.001, inner]], { color: m.edge, weight: 0.6 });
   }
 }
 // The open mouth — not a round hole but **a bowl with a straight upper lip and a rounded bottom** (a D on its side). The cavity + an upper tooth strip + the upper lip line
@@ -70,25 +70,25 @@ function bowl(m, hw, depth, teeth = true) {
   }
   cavity(m, pts);
   if (teeth) teethStrip(m, m.x - hw * 0.72, m.x + hw * 0.72, top, Math.max(0.008, Math.min(0.016, (top - bottom) * 0.35)), -1, 4);
-  m.ink.stroke([[m.x - hw * 1.05, top + 0.003], [m.x + hw * 1.05, top]], { color: m.ink0, width: 0.012 });   // the upper lip
+  m.ink.line([[m.x - hw * 1.05, top + 0.003], [m.x + hw * 1.05, top]], { color: m.ink0, weight: 1 });   // the upper lip
   return { top, bottom };
 }
 // The tooth grid — vertical lines inside a wide, flat rounded rectangle (white fill plus outline). The reference's signature mouth (a growl, tension, an imp's open mouth)
 function grid(m, hw, hh, bars) {
   const box = blobPath(m.x, m.y, hw, hh, { lumps: 3, amount: 0.04, noise: null, square: 2 });
   paintPart(m.fills, m.spec, box, TOOTH, { own: true });
-  m.ink.contour(box, "RIBBON", { color: m.edge, closed: true });
+  m.ink.contour(box, { color: m.edge });
   for (let i = 1; i <= bars; i += 1) {
     const x = m.x - hw + (2 * hw * i) / (bars + 1);
-    m.ink.stroke([[x, m.y + hh * 0.9], [x + 0.001, m.y - hh * 0.9]], { color: m.edge, width: 0.008 });
+    m.ink.mark([[x, m.y + hh * 0.9], [x + 0.001, m.y - hh * 0.9]], { color: m.edge, weight: 0.7 });
   }
 }
 // Tongue — a pink mass hanging below the mouth plus a centre line
 function tongueBlob(m, cx, top, rx, ry) {
   const t = blobPath(cx, top - ry, rx, ry, { lumps: 3, amount: 0.1, noise: null });
   paintPart(m.fills, m.spec, t, PINK, { own: true });
-  m.ink.contour(t, "RIBBON", { color: m.ink0, closed: true, weight: 0.7 });
-  m.ink.stroke([[cx, top - ry * 0.3], [cx + 0.001, top - ry * 1.6]], { color: m.ink0, width: 0.006 });
+  m.ink.contour(t, { color: m.ink0, weight: 0.7 });
+  m.ink.mark([[cx, top - ry * 0.3], [cx + 0.001, top - ry * 1.6]], { color: m.ink0, weight: 0.6 });
 }
 // Two fangs — **big** white triangles (outlined) below the mouth line. Teeth have to read big
 function fangs(m, hw, drop) {
@@ -97,26 +97,26 @@ function fangs(m, hw, drop) {
     const fx = m.x + s * hw * 0.55;
     const tri = crumple([[fx - half, m.y + 0.002], [fx + half, m.y + 0.002], [fx + s * 0.003, m.y - drop]], 0.0015, s * 4, 0.006);
     paintPart(m.fills, m.spec, tri, TOOTH, { own: true });
-    m.ink.contour(tri, "RIBBON", { color: m.edge, closed: true, weight: 0.7 });
+    m.ink.contour(tri, { color: m.edge, weight: 0.7 });
   }
 }
 
 // Kind → drawing function. 1:1 with the names in slots.js SLOTS.mouth
 export const MOUTH = {
   // Dot mouth — a short stroke thins from the end taper, so it goes slightly longer and thicker (it has to read as one bean)
-  dot: (m) => m.ink.stroke([[m.x - 0.015, m.y], [m.x + 0.015, m.y]], { color: m.ink0, width: 0.017 }),
-  line: (m) => m.ink.stroke([[m.x - m.w, m.y], [m.x + m.w, m.y + 0.004]], { color: m.ink0, width: 0.011 }),
-  smile: (m) => m.ink.stroke(arcPath(m.x, m.y + 0.03, m.w, 0.045, Math.PI, TAU), { color: m.ink0, width: 0.011 }),
+  dot: (m) => m.ink.mark([[m.x - 0.015, m.y], [m.x + 0.015, m.y]], { color: m.ink0, weight: 1.3 }),
+  line: (m) => m.ink.line([[m.x - m.w, m.y], [m.x + m.w, m.y + 0.004]], { color: m.ink0, weight: 1 }),
+  smile: (m) => m.ink.line(arcPath(m.x, m.y + 0.03, m.w, 0.045, Math.PI, TAU), { color: m.ink0, weight: 1 }),
   // Frowning mouth ⌢ — the opposite of a smile. Small
-  frown: (m) => m.ink.stroke(arcPath(m.x, m.y - 0.026, m.w * 0.75, 0.036, 0, Math.PI), { color: m.ink0, width: 0.011 }),
-  wave: (m) => m.ink.stroke([[m.x - m.w, m.y], [m.x - m.w * 0.3, m.y + 0.03], [m.x + m.w * 0.3, m.y - 0.02], [m.x + m.w, m.y + 0.015]], { color: m.ink0, width: 0.011 }),
+  frown: (m) => m.ink.line(arcPath(m.x, m.y - 0.026, m.w * 0.75, 0.036, 0, Math.PI), { color: m.ink0, weight: 1 }),
+  wave: (m) => m.ink.line([[m.x - m.w, m.y], [m.x - m.w * 0.3, m.y + 0.03], [m.x + m.w * 0.3, m.y - 0.02], [m.x + m.w, m.y + 0.015]], { color: m.ink0, weight: 1 }),
   open: (m) => { bowl(m, m.w * 0.85, 0.95); },
   // Duck bill — a small startled o
-  pout: (m) => m.ink.contour(blobPath(m.x, m.y, 0.022, 0.017, { lumps: 3, amount: 0.15, noise: null }), "RIBBON", { color: m.ink0, closed: true }),
+  pout: (m) => m.ink.contour(blobPath(m.x, m.y, 0.022, 0.017, { lumps: 3, amount: 0.15, noise: null }), { color: m.ink0 }),
   // ω — the cat mouth (two arcs bulging downward)
   omega: (m) => {
-    m.ink.stroke(arcPath(m.x - m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, width: 0.01 });
-    m.ink.stroke(arcPath(m.x + m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, width: 0.01 });
+    m.ink.line(arcPath(m.x - m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, weight: 1 });
+    m.ink.line(arcPath(m.x + m.w * 0.35, m.y + 0.012, m.w * 0.38, 0.028, Math.PI, TAU), { color: m.ink0, weight: 1 });
   },
   // Smug mouth — **one stroke** whose middle rises and whose ends drop away (y = peak·cos πt). Two arcs side by side read as twin humps and make a different face.
   // Small and thick — it settles on the face like a dot while the drooping ends make the pout
@@ -127,18 +127,18 @@ export const MOUTH = {
       const t = i / 14;
       pts.push([m.x - hw + 2 * hw * t, m.y + peak * Math.cos(Math.PI * t)]);
     }
-    m.ink.stroke(pts, { color: m.ink0, width: 0.014, jitter: 0.004 });
+    m.ink.line(pts, { color: m.ink0, weight: 1.3 });
   },
   // 3 — a small pursed mouth (the kaomoji 3). Half an ω, thicker — cats and cute humans
   three: (m) => {
     const hw = Math.max(0.012, m.w * 0.22);
-    m.ink.stroke(arcPath(m.x - hw * 0.9, m.y + 0.006, hw, 0.014, Math.PI, TAU), { color: m.ink0, width: 0.012 });
-    m.ink.stroke(arcPath(m.x + hw * 0.9, m.y + 0.006, hw, 0.014, Math.PI, TAU), { color: m.ink0, width: 0.012 });
+    m.ink.line(arcPath(m.x - hw * 0.9, m.y + 0.006, hw, 0.014, Math.PI, TAU), { color: m.ink0, weight: 1 });
+    m.ink.line(arcPath(m.x + hw * 0.9, m.y + 0.006, hw, 0.014, Math.PI, TAU), { color: m.ink0, weight: 1 });
   },
   zigzag: (m) => {
     const zig = [];
     for (let i = 0; i <= 6; i += 1) zig.push([m.x - m.w + (2 * m.w * i) / 6, m.y + (i % 2 ? -0.016 : 0.012)]);
-    m.ink.stroke(zig, { color: m.ink0, width: 0.011 });
+    m.ink.line(zig, { color: m.ink0, weight: 1 });
   },
   // Tooth grid — a wide grimace (reference human 6th, and imps). The number of grid lines is proportional to the width, the teeth big
   grimace: (m) => grid(m, m.w * 1.15, Math.max(0.014, Math.min(0.026, m.openH * 0.55)), Math.max(3, Math.min(6, Math.round(m.w * 1.15 / 0.022)))),
@@ -148,9 +148,9 @@ export const MOUTH = {
     const seg = [];
     for (let i = 0; i <= 12; i += 1) { const t = (i / 12) * Math.PI; seg.push([m.x - hw * Math.cos(t), top - depth * Math.sin(t)]); }
     paintPart(m.fills, m.spec, seg, TOOTH, { own: true });
-    m.ink.stroke(seg, { color: m.edge, width: 0.011 });
-    m.ink.stroke([[m.x - hw, top], [m.x + hw, top + 0.002]], { color: m.edge, width: 0.01 });
-    for (const k of [-0.33, 0.33]) m.ink.stroke([[m.x + hw * k, top], [m.x + hw * k + 0.001, top - depth * 0.7]], { color: m.edge, width: 0.007 });
+    m.ink.line(seg, { color: m.edge, weight: 1 });
+    m.ink.line([[m.x - hw, top], [m.x + hw, top + 0.002]], { color: m.edge, weight: 1 });
+    for (const k of [-0.33, 0.33]) m.ink.mark([[m.x + hw * k, top], [m.x + hw * k + 0.001, top - depth * 0.7]], { color: m.edge, weight: 0.6 });
   },
   // Hatched mouth — covers the mouth position with a mass of horizontal hatching (reference human row 2, 4th, and imps). Reads as clenched teeth, or as a moustache
   scribble: (m) => m.ink.hatch(m.x, m.y, m.w * 0.9, Math.max(0.012, Math.min(0.02, m.openH * 0.45)), 0.08, { color: m.ink0, lines: 5, width: 0.007 }),
@@ -161,7 +161,7 @@ export const MOUTH = {
   },
   // Fangs — the mouth line plus two big white fangs below its ends (imps · a cat hissing)
   fangs: (m) => {
-    m.ink.stroke([[m.x - m.w, m.y + 0.002], [m.x + m.w, m.y - 0.002]], { color: m.ink0, width: 0.011 });
+    m.ink.line([[m.x - m.w, m.y + 0.002], [m.x + m.w, m.y - 0.002]], { color: m.ink0, weight: 1 });
     fangs(m, m.w, Math.max(0.022, Math.min(0.04, m.openH * 0.9)));
   },
   // Square open □ — a shouting mouth (reference imp): **upper and lower tooth strips** inside a big angular cavity. The upper lip straight
@@ -172,18 +172,18 @@ export const MOUTH = {
     const h = Math.max(0.01, Math.min(0.02, (top - bottom) * 0.3));
     teethStrip(m, m.x - hw * 0.85, m.x + hw * 0.85, top - 0.002, h, -1, 5);
     teethStrip(m, m.x - hw * 0.7, m.x + hw * 0.7, bottom + 0.002, h * 0.8, 1, 4);
-    m.ink.stroke([[m.x - hw * 1.08, top + 0.003], [m.x + hw * 1.08, top]], { color: m.ink0, width: 0.012 });
+    m.ink.line([[m.x - hw * 1.08, top + 0.003], [m.x + hw * 1.08, top]], { color: m.ink0, weight: 1 });
   },
   // Meow — a small filled vertical ellipse (a cat's open mouth)
   meow: (m) => paintPart(m.fills, m.spec, blobPath(m.x, m.y - 0.004, 0.013, Math.max(0.016, Math.min(0.024, m.openH * 0.55)), { lumps: 3, amount: 0.12, noise: null }), m.ink0, { own: true }),
   // Bracket mouth )-( — a short flat mouth with inward-bulging cheek-crease brackets. The Adventure Time "hmm…" (a closed mouth with the cheeks pressed in)
   bracket: (m) => {
     const hw = m.w * 0.55, bh = Math.max(0.012, Math.min(0.02, m.openH * 0.45));
-    m.ink.stroke([[m.x - hw, m.y], [m.x + hw, m.y + 0.002]], { color: m.ink0, width: 0.011 });
+    m.ink.line([[m.x - hw, m.y], [m.x + hw, m.y + 0.002]], { color: m.ink0, weight: 1 });
     for (const s of [-1, 1]) {
       // ) and ( — the bulge faces the mouth
       const cx = m.x + s * (hw + 0.012);
-      m.ink.stroke(arcPath(cx, m.y, 0.009, bh, s > 0 ? Math.PI * 0.5 : -Math.PI * 0.5, s > 0 ? Math.PI * 1.5 : Math.PI * 0.5, 8), { color: m.ink0, width: 0.01 });
+      m.ink.mark(arcPath(cx, m.y, 0.009, bh, s > 0 ? Math.PI * 0.5 : -Math.PI * 0.5, s > 0 ? Math.PI * 1.5 : Math.PI * 0.5, 8), { color: m.ink0, weight: 1 });
     }
   },
   // Peeking tongue, blep — just the tip of the tongue below an ω (cats)
@@ -191,7 +191,7 @@ export const MOUTH = {
     MOUTH.omega(m);
     const t = blobPath(m.x, m.y - 0.012, 0.011, 0.012, { lumps: 3, amount: 0.1, noise: null });
     paintPart(m.fills, m.spec, t, PINK, { own: true });
-    m.ink.contour(t, "RIBBON", { color: m.ink0, closed: true, weight: 0.7 });
+    m.ink.contour(t, { color: m.ink0, weight: 0.7 });
   }
 };
 

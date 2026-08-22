@@ -40,7 +40,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const decals = bodyDecals(spec, path, noise);
     fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the goofy material (the material slot; flat when absent) at the creature's value step; the pattern and the decals in its base
     // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
-    ink.contour(path, "PENCIL", { color: spec.palette.ink, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
+    ink.contour(path, { color: spec.palette.ink });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     decalEdges(ink, spec, decals);
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
   }
@@ -68,7 +68,7 @@ export function drawBody(ink, fills, spec, box, noise) {
 
   fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, value: surfaceValue(spec, spec.palette.cloth) });   // the goofy material (the material slot; flat when absent) at the creature's value step; the pattern and the decals in its base
   // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
-  ink.contour(path, "PENCIL", { color: ink0, closed: true });   // the goofy outline (stroke.js GOOFY_OUTLINES)
+  ink.contour(path, { color: ink0 });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   decalEdges(ink, spec, decals);
   return { path, top, bottom, w, cx: 0 };
 }
@@ -139,7 +139,7 @@ export function headDecals(spec, headPath, noise) {
 
 // A decal's only line — its inner edge (the outer edge already has the contour). Drawn after the contour, in the host's ink
 export function decalEdges(ink, spec, decals) {
-  for (const d of decals) ink.stroke(d.inner, { color: spec.palette.ink, width: 0.007, jitter: 0.004 });
+  for (const d of decals) ink.line(d.inner, { color: spec.palette.ink, weight: 0.6 });
 }
 
 

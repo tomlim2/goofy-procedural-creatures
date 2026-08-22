@@ -50,7 +50,7 @@ export function limbSketches(spec) {
   const make = () => new Sketch(noise, p.wobble);
   const dot = (s, x, y, r, color) => {
     paintPart(s, spec, blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color);   // a hand — the creature's goofy material
-    s.contour(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), "RIBBON", { color: ink0, closed: true });
+    s.contour(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), { color: ink0 });
   };
 
   const legKind = spec.parts.legs;
@@ -70,20 +70,20 @@ export function limbSketches(spec) {
         // Floating feet — just the feet, with no leg line. Joint jitter makes them bob about
         dot(s, lean + 0.006, -len + 0.014, 0.024, skin);
       } else if (kind === "stick") {
-        s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.01 });
+        s.line([[0, 0], [lean, -len]], { color: ink0, weight: 1 });
         dot(s, lean + 0.006, -len + 0.012, 0.02, skin);
       } else if (kind === "boots") {
         // Socks — a small boot filled to the ankle
-        s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.012 });
+        s.line([[0, 0], [lean, -len]], { color: ink0, weight: 1 });
         const boot = crumple([[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]], 0.003, lean * 90);
         paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
-        s.contour(boot, "RIBBON", { color: ink0, closed: true });
+        s.contour(boot, { color: ink0 });
       } else {
         // A thick stub leg plus a round toe tip poking slightly forward plus two toe lines (the reference)
-        s.stroke([[0, 0], [lean, -len]], { color: ink0, width: 0.016 });
-        s.stroke([[lean - 0.02, -len], [lean + 0.03, -len + 0.003]], { color: ink0, width: 0.012 });
-        s.stroke([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, width: 0.006 });
-        s.stroke([[lean + 0.018, -len + 0.002], [lean + 0.021, -len + 0.014]], { color: ink0, width: 0.006 });
+        s.line([[0, 0], [lean, -len]], { color: ink0, weight: 1.3 });
+        s.line([[lean - 0.02, -len], [lean + 0.03, -len + 0.003]], { color: ink0, weight: 1 });
+        s.mark([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, weight: 0.6 });
+        s.mark([[lean + 0.018, -len + 0.002], [lean + 0.021, -len + 0.014]], { color: ink0, weight: 0.6 });
       }
       limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side: i < 2 ? -1 : 1, index: i, behind: false });
     });
@@ -107,18 +107,18 @@ export function limbSketches(spec) {
       continue;
     }
     if (legKind === "bent") {
-      s.stroke([[0, 0], [side * 0.04, -len * 0.5], [side * 0.01, -len]], { color: ink0, width: 0.011 });
+      s.line([[0, 0], [side * 0.04, -len * 0.5], [side * 0.01, -len]], { color: ink0, weight: 1 });
       footX = side * 0.01;
     } else if (legKind === "stub") {
-      s.stroke([[0, 0], [0, -len]], { color: ink0, width: 0.019 });
+      s.line([[0, 0], [0, -len]], { color: ink0, weight: 1.6 });
     } else if (legKind === "tiptoe") {
       // A thin leg standing on its toes — the foot points downward
-      s.stroke([[0, 0], [side * 0.008, -len]], { color: ink0, width: 0.009 });
-      s.stroke([[side * 0.008 - 0.012, -len + 0.012], [side * 0.008, -len], [side * 0.008 + 0.012, -len + 0.012]], { color: ink0, width: 0.009 });
+      s.line([[0, 0], [side * 0.008, -len]], { color: ink0, weight: 0.7 });
+      s.line([[side * 0.008 - 0.012, -len + 0.012], [side * 0.008, -len], [side * 0.008 + 0.012, -len + 0.012]], { color: ink0, weight: 0.7 });
       limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
       continue;
     } else {
-      s.stroke([[0, 0], [noise(side * 3.3) * 0.02, -len]], { color: ink0, width: 0.011 });
+      s.line([[0, 0], [noise(side * 3.3) * 0.02, -len]], { color: ink0, weight: 1 });
       footX = noise(side * 3.3) * 0.02;
     }
     // The foot
@@ -126,7 +126,7 @@ export function limbSketches(spec) {
       // Boots — a mass filled to the ankle
       const boot = crumple([[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]], 0.003, footX * 90);
       paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
-      s.contour(boot, "RIBBON", { color: ink0, closed: true });
+      s.contour(boot, { color: ink0 });
     } else {
       // A round foot — the reference default
       dot(s, footX + side * 0.008, -len + 0.012, 0.022, skin);
@@ -154,32 +154,32 @@ export function limbSketches(spec) {
 
     const upper = make();
     const lower = make();
-    const w = armKind === "stubby" ? 0.017 : 0.01;
+    const w = armKind === "stubby" ? 1.3 : 1;   // the arm line's weight
 
     if (armKind === "sleeve") {
       // The upper arm is a cloth-colored sleeve. The forearm is a bare arm plus a hand.
       const sl = crumple([[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]], 0.0025, side * 3);
       paintPart(upper, spec, sl, cloth);   // a sleeve — the creature's goofy material
-      upper.contour(sl, "RIBBON", { color: ink0, closed: true });
-      lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: 0.01 });
+      upper.contour(sl, { color: ink0 });
+      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, weight: 1 });
       dot(lower, side * 0.006, -lowerLen - 0.006, 0.022, skin);
     } else if (armKind === "stubby") {
       // Two short thick bones plus a fist
-      upper.stroke([[0, 0], [side * 0.004, -upperLen]], { color: ink0, width: w });
-      lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: w });
+      upper.line([[0, 0], [side * 0.004, -upperLen]], { color: ink0, weight: w });
+      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, weight: w });
       dot(lower, side * 0.006, -lowerLen - 0.004, 0.02, skin);
     } else {
       // stick / mitten — two thin bones. There is no joint marking at a bone's end (it is hand-drawn).
-      upper.stroke([[0, 0], [side * 0.006, -upperLen]], { color: ink0, width: w });
-      lower.stroke([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, width: w });
+      upper.line([[0, 0], [side * 0.006, -upperLen]], { color: ink0, weight: w });
+      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, weight: w });
       if (armKind === "mitten") dot(lower, side * 0.006, -lowerLen - 0.006, 0.024, skin);
-      else lower.stroke([[side * 0.006 - 0.016, -lowerLen], [side * 0.006 + 0.016, -lowerLen + 0.004]], { color: ink0, width: w });
+      else lower.line([[side * 0.006 - 0.016, -lowerLen], [side * 0.006 + 0.016, -lowerLen + 0.004]], { color: ink0, weight: w });
     }
 
     // back — hands behind the back. Only the elbow pokes out at the side. Only the thickness differs by form
     const back = make();
-    const bw = armKind === "stubby" ? 0.017 : armKind === "sleeve" ? 0.014 : 0.011;
-    back.stroke([[0, 0], [side * 0.03, -0.045], [side * 0.05, -0.08]], { color: ink0, width: bw });
+    const bw = armKind === "stubby" || armKind === "sleeve" ? 1.3 : 1;   // the back arm line's weight
+    back.line([[0, 0], [side * 0.03, -0.045], [side * 0.05, -0.08]], { color: ink0, weight: bw });
 
     limbs.push({
       sketch: upper, lowerSketch: lower, backSketch: back,
@@ -348,9 +348,9 @@ export function tailSketch(spec) {
       const { left, right } = tubeSides(part.spine, widthAt, tMap);
       const sk = sketches[i];
       paintPart(sk, spec, [...left, ...right.slice().reverse()], fur);   // the tail is fur — the creature's goofy material
-      sk.stroke(left, { color: ink0, width: 0.011, passes: 2 });
-      sk.stroke(right, { color: ink0, width: 0.011, passes: 2 });
-      if (i === parts.length - 1) sk.stroke([left[left.length - 1], right[right.length - 1]], { color: ink0, width: 0.011 });   // closing off the tip
+      sk.line(left, { color: ink0, weight: 1 });
+      sk.line(right, { color: ink0, weight: 1 });
+      if (i === parts.length - 1) sk.line([left[left.length - 1], right[right.length - 1]], { color: ink0, weight: 1 });   // closing off the tip
     });
   };
   // The point at a whole-tail t and the piece it falls in — for placing fur strokes, beads, bands and tufts
@@ -363,7 +363,7 @@ export function tailSketch(spec) {
 
   if (skin === "line") {
     // A thin line — one hand-drawn tail stroke (thick on a stub). Drawn continuously across the bones
-    for (const [i, part] of parts.entries()) sketches[i].stroke(part.spine, { color: ink0, width: stub ? 0.02 : 0.011, jitter: 0.003 });
+    for (const [i, part] of parts.entries()) sketches[i].line(part.spine, { color: ink0, weight: stub ? 1.6 : 1 });
   } else if (skin === "thick" || skin === "block" || skin === "wedge") {
     tube(widthOf[skin]);
   } else if (skin === "plume") {
@@ -376,28 +376,28 @@ export function tailSketch(spec) {
       const side = i % 2 ? 1 : -1;
       const nx = -a.dy * side, ny = a.dx * side;
       const w = stub ? 0.03 : 0.028;
-      a.sk.stroke([[a.x + nx * w * 0.7, a.y + ny * w * 0.7], [a.x + nx * (w + 0.02) + a.dx * 0.01, a.y + ny * (w + 0.02) + a.dy * 0.01]], { color: ink0, width: 0.007, jitter: 0.004 });
+      a.sk.line([[a.x + nx * w * 0.7, a.y + ny * w * 0.7], [a.x + nx * (w + 0.02) + a.dx * 0.01, a.y + ny * (w + 0.02) + a.dy * 0.01]], { color: ink0, weight: 0.6 });
     }
   } else if (skin === "tuft") {
     // A tuft at the tip — a thin line plus a filled tuft at the end (a lion's tail)
-    for (const [i, part] of parts.entries()) sketches[i].stroke(part.spine, { color: ink0, width: 0.011, jitter: 0.003 });
+    for (const [i, part] of parts.entries()) sketches[i].line(part.spine, { color: ink0, weight: 1 });
     const tipPart = parts[parts.length - 1];
     const tip = tipPart.spine[tipPart.spine.length - 1];
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
     const tipSk = sketches[sketches.length - 1];
     paintPart(tipSk, spec, ball, shade(fur, 0.82));
-    tipSk.contour(ball, "RIBBON", { color: ink0, closed: true });
+    tipSk.contour(ball, { color: ink0 });
   } else if (skin === "puff") {
     // A pom — a rabbit tail. Regardless of the skeleton's length, one bushy tuft near the rump (at spine 0.3) plus fur strokes around it (the root piece)
     const a = at(0.3);
     const r = 0.04;
     const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
     paintPart(a.sk, spec, pom, fur);
-    a.sk.contour(pom, "RIBBON", { color: ink0, closed: true });
+    a.sk.contour(pom, { color: ink0 });
     for (let i = 0; i < 6; i += 1) {
       const ang = -1.0 + i * 0.66;   // around the top and outside
       const x0 = a.x + Math.cos(ang) * r * 0.9, y0 = a.y + 0.004 + Math.sin(ang) * r * 0.85;
-      a.sk.stroke([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, width: 0.007, jitter: 0.004 });
+      a.sk.mark([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, weight: 0.6 });
     }
   } else if (skin === "ball") {
     // Beads — a tail strung with beads along the spine. One pom on a stub (a rabbit)
@@ -405,7 +405,7 @@ export function tailSketch(spec) {
       const a = at(0.6);
       const ball = blobPath(a.x, a.y + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
       paintPart(a.sk, spec, ball, fur);
-      a.sk.contour(ball, "RIBBON", { color: ink0, closed: true });
+      a.sk.contour(ball, { color: ink0 });
     } else {
       const n = 4;
       for (let i = 0; i < n; i += 1) {
@@ -414,7 +414,7 @@ export function tailSketch(spec) {
         const r = 0.024 - i * 0.004;
         const ball = blobPath(a.x, a.y, r, r, { lumps: 3, amount: 0.12, noise: null });
         paintPart(a.sk, spec, ball, fur);
-        a.sk.contour(ball, "RIBBON", { color: ink0, closed: true });
+        a.sk.contour(ball, { color: ink0 });
       }
     }
   } else {
@@ -423,7 +423,7 @@ export function tailSketch(spec) {
     for (const t of stub ? [0.5] : [0.3, 0.55, 0.8]) {
       const a = at(t);
       const w = widthOf.ringed(t) * 1.15;
-      a.sk.stroke([[a.x + a.dy * w, a.y - a.dx * w], [a.x - a.dy * w, a.y + a.dx * w]], { color: shade(fur, 0.55), width: 0.014 });
+      a.sk.line([[a.x + a.dy * w, a.y - a.dx * w], [a.x - a.dy * w, a.y + a.dx * w]], { color: shade(fur, 0.55), weight: 1.3 });
     }
   }
   return { sketches, bones: parts.map((p) => ({ origin: p.origin, angle: p.angle })), pivot };

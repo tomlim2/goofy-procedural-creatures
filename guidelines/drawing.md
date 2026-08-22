@@ -64,17 +64,33 @@ The head and body contours draw with it, as the PENCIL goofy outline (below); th
 § the goofy outline) shows it next to `stroke()`. Switching another part onto it is a drawing change like any other —
 `drawdiff` will show it, and the audit has to stay at 0.
 
-## The outline — what a contour is drawn with
+## The outline — what a line is drawn with
 
-Every closed line on a creature is drawn with one **goofy outline**, named from `GOOFY_OUTLINES` in `medium/outlines.js`:
-`ink.contour(path, "PENCIL", { color, closed, weight })`. `weight` is a multiplier on the outline's width (the head
-contour runs at 1.15 of the body's); a part never picks a line function or a width itself. An unknown name
-throws; `outline()` is never called by a part. The outline is its own concept — not part of a goofy material: a contour is not a way of filling.
+Every line on a creature is drawn with a **goofy outline** — a **kind** from `GOOFY_OUTLINES` in `medium/outlines.js`.
+A part never names a kind, a line function or a width. It names its line's **role** and hands over the path and the
+color, with at most a `weight` on the kind's width:
 
-| Outline | Line | On the board |
-| --- | --- | --- |
-| `RIBBON` | `stroke()` 0.010 once, jitter 0.006 — one width, scaled by a part's weight (fine 0.7 · 1 · heavy 1.2) | every closed shape that is not a head or a body: ears, hats, hands, boots, sleeves, the tail's ends, hair loops, eye rings and eyewear, the nose, the mouth's parts, the static and effect eyes — 41 sites |
-| `PENCIL` | `pencil()` 0.012 — one seamless loop: wander, breathing width, the shed | the head (weight 1.15), the body — **today** |
+| Role | Call | What it is | Weights in use |
+| --- | --- | --- | --- |
+| contour | `ink.contour(path, { color, weight })` | the closed line of a shape — the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts | fine 0.7 · 1 · the head 1.15 · heavy 1.2 |
+| line | `ink.line(path, { color, weight })` | an open line — a brow, a lid, a whisker, a limb, a strand, a horn, the floor | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
+| mark | `ink.mark(path, { color, weight })` | a dot or a dash a few widths long — a freckle, a tooth's edge, a claw, a glyph's dot | 0.6 · 0.7 · 1 |
+
+Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL", line: "PENCIL", mark: "RIBBON" }`.
+Change a name there and every line of that role on the board changes; a new kind of line is a new entry in
+`GOOFY_OUTLINES` and a name in the switch. An unknown role or kind throws. `stroke()`, `outline()` and `pencil()` are
+the kinds' primitives and no part calls them — the only strokes outside the table are the two **bands** (a hat's color
+laid as a thick stroke along a brim or a crown: a fill in disguise, `draw/headgear.js`). The outline is its own concept —
+not part of a goofy material: a line is not a way of filling.
+
+| Kind | Line |
+| --- | --- |
+| `PENCIL` | `pencil()` 0.012 — the reference's line: it wanders, breathes, runs past its ends and sheds; closed, one seamless loop |
+| `RIBBON` | `stroke()` 0.010 once, jitter 0.006 — the board's original line, a tapered ribbon pushed by noise. A short one is a bean, which is what a mark wants; the pencil's overshoot would lengthen it |
+
+On the board today: 44 contours and 104 open lines are the pencil, 14 marks the ribbon. The medium page names the kinds
+outright (`{ outline: "RIBBON" }`) to show each on its own — the one place a kind is named — and draws the three roles
+off the switch, so it cannot drift from the board.
 
 ## The goofy fur — how hair is grown
 

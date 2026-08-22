@@ -9,7 +9,7 @@ import * as THREE from "three";
 import { Sketch } from "./stroke.js";
 import { blobPath, arcPath } from "./shape.js";
 import { GOOFY_MATERIALS, VALUES } from "./medium/materials.js";
-import { GOOFY_OUTLINES } from "./medium/outlines.js";
+import { GOOFY_OUTLINES, BOARD_LINES } from "./medium/outlines.js";
 import { GOOFY_FUR } from "./medium/fur.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise, seedFromString } from "./rng.js";
@@ -169,27 +169,29 @@ Object.keys(GOOFY_OUTLINES).forEach((name, i) => {
   document.getElementById("outlineBalls").appendChild(el);
   fig(`outline:${name}`, [-0.7, -0.09, 0.7, 0.09], (sk) => {
     const ink = sk();
-    ink.contour([[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]], name, { color: INK, paper: CARD });
+    ink.line([[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]], { outline: name, color: INK, paper: CARD });   // the kind named outright — the page shows each, as an open line
   });
 });
 // Fur balls — one per entry of GOOFY_FUR: the same FLAT ball, PENCIL contour, the fur grown along its crown as hair is
 Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("furBalls"), `fur:${name}`, name.toLowerCase(), 131 + i * 3, (fills, ink, ball) => {
   fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
-  ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
+  ink.contour(ball, { color: INK, paper: CARD });   // the board's contour, whatever the switch says
   ink.fur(arcPath(0, 0.02, 0.17, 0.17, Math.PI * 0.15, Math.PI * 0.85, 12), name, { color: INK });
 }));
-// What the board actually draws its closed lines with today — three kinds, only the first through the table. The same open path
-// drawn each way, at the widths the parts use. The counts in the captions are read off the code (how.html), not computed here
+// What the board draws each role with today — read live off the switch (BOARD_LINES), so the page cannot drift from the board.
+// The same path drawn by each role's procedure: a contour closes it, a line runs it open, a mark is a dash of it. The counts in the captions are read off the code (how.html)
+const USE_PATH = [[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]];
 const IN_USE = [
-  { key: "use:pencil", label: "pencil · contour(PENCIL) · the head ×1.15, the body", draw: (ink, pts) => ink.contour(pts, "PENCIL", { color: INK, paper: CARD }) },
-  { key: "use:ribbon", label: "ribbon · contour(RIBBON) · weight 0.7 / 1 / 1.2", draw: (ink, pts) => ink.contour(pts, "RIBBON", { color: INK }) }
+  { key: "use:contour", label: `contour → ${BOARD_LINES.contour} · weight 0.7 / 1 / 1.15 / 1.2`, box: [-0.7, -0.14, 0.7, 0.14], draw: (ink) => ink.contour([[-0.5, -0.09], [0, -0.1], [0.5, -0.08], [0.52, 0.09], [0, 0.1], [-0.5, 0.08]], { color: INK, paper: CARD }) },
+  { key: "use:line", label: `line → ${BOARD_LINES.line} · weight 0.6 / 0.7 / 1 / 1.3 / 1.6`, box: [-0.7, -0.09, 0.7, 0.09], draw: (ink) => ink.line(USE_PATH, { color: INK, paper: CARD }) },
+  { key: "use:mark", label: `mark → ${BOARD_LINES.mark} · a dot, a dash`, box: [-0.7, -0.09, 0.7, 0.09], draw: (ink) => { for (const x of [-0.45, -0.15, 0.15, 0.45]) ink.mark([[x - 0.012, 0], [x + 0.012, 0.002]], { color: INK, weight: 0.7 }); } }
 ];
-IN_USE.forEach(({ key, label, draw }) => {
+IN_USE.forEach(({ key, label, box, draw }) => {
   const el = document.createElement("figure");
   el.dataset.fig = key;
   el.innerHTML = `<canvas></canvas><div class="subs"><span>${label}</span></div>`;
   document.getElementById("outlineUse").appendChild(el);
-  fig(key, [-0.7, -0.09, 0.7, 0.09], (sk) => draw(sk(), [[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]]));
+  fig(key, box, (sk) => draw(sk()));
 });
 
 // Shader balls — one row per entry of GOOFY_MATERIALS, like a 3D material preview: the same ball in the same color at the five value
@@ -210,7 +212,7 @@ Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
       const x = (j - (steps.length - 1) / 2) * 0.5;
       const ball = blobPath(x, 0, 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 + j });
       fills.paint(ball, name, { color: FILLS[2], offset: [0.012, -0.01], value: k });
-      ink.contour(ball, "PENCIL", { color: INK, closed: true, paper: CARD });
+      ink.contour(ball, { color: INK, paper: CARD });   // the board's contour, whatever the switch says
     });
   });
 });

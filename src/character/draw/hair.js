@@ -21,7 +21,7 @@ const cap = (h, depth, steps, passes, spread, width = 0.01) => {
 // Hanging hair (curtains) — each stroke starts **on the head outline** and flows down: the middle strokes start near the crown, the side strokes at ear height,
 // so it reads as a mass laid on the head and flowing down. Start every stroke at the same height (a straight horizontal top edge, constant width) and it becomes **a folding screen**.
 //   hem the hem's y · grow the multiplier for spreading outward on the way down (against the head half-width) · inner strokes starting inside this (× rx) are skipped (to leave the chest clear) · count strokes per side
-function curtain(h, hem, { grow = 1.14, inner = 0, count = 15, width = 0.009 }) {
+function curtain(h, hem, { grow = 1.14, inner = 0, count = 15, weight = 0.7 }) {
   const { back, ink0, rx, ry, cy, noise, spec } = h;
   const shape = headShape(spec);
   const n = 2 + shape.square;
@@ -45,11 +45,11 @@ function curtain(h, hem, { grow = 1.14, inner = 0, count = 15, width = 0.009 }) 
       // Outward on the way down — the further to the side the more (the tip is x·grow). The middle strokes fall almost straight
       const endX = ox * grow;
       const midX = ox + (endX - ox) * 0.4;
-      back.stroke([[ox, top], [midX, (top + bottom) * 0.5], [endX, bottom]], { color: ink0, width, jitter: 0.004 });
+      back.line([[ox, top], [midX, (top + bottom) * 0.5], [endX, bottom]], { color: ink0, weight });
     }
     // The outer outline — from the side of the head (ear height) to the hem. It flows slightly away from the head
     const [ex, ey] = outline(side > 0 ? 0.06 : Math.PI - 0.06);
-    back.stroke([[ex, ey], [ex * (grow * 0.98), (ey + hem) * 0.5], [ex * grow, hem]], { color: ink0, width: width + 0.002, jitter: 0.006 });
+    back.line([[ex, ey], [ex * (grow * 0.98), (ey + hem) * 0.5], [ex * grow, hem]], { color: ink0, weight: weight + 0.3 });
   }
 }
 
@@ -72,12 +72,12 @@ const twintailsOf = (ball) => (h) => {
     const tx = side * rx * 0.95, ty = cy + ry * 0.35;
     const tail = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - 0.3]];
     back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, width: 0.009, spread: 0.028 });
-    back.stroke([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: ink0, width: 0.012 });   // the tie
+    back.line([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: ink0, weight: 1 });   // the tie
     if (ball) {
       // The end bunch — a round scribble mass at the end of the tail plus an outline
       const bx = tx + side * 0.05, by = ty - 0.34;
       back.fur(arcPath(bx, by, 0.05, 0.055, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 9, width: 0.009, spread: 0.032 });
-      back.contour(blobPath(bx, by, 0.057, 0.06, { lumps: 4, amount: 0.15, noise: null }), "RIBBON", { color: ink0, closed: true });
+      back.contour(blobPath(bx, by, 0.057, 0.06, { lumps: 4, amount: 0.15, noise: null }), { color: ink0 });
     }
   }
 };
@@ -89,7 +89,7 @@ function ponytail(h) {
   const px0 = s * rx * 0.25, py0 = cy + ry * 0.92;
   const tail = [[px0, py0], [px0 + s * 0.06, py0 + 0.06], [px0 + s * 0.13, py0 + 0.02], [px0 + s * 0.15, py0 - 0.14], [px0 + s * 0.11, py0 - 0.3]];
   back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, width: 0.009, spread: 0.026 });
-  back.stroke([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: ink0, width: 0.012 });   // the tie
+  back.line([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: ink0, weight: 1 });   // the tie
 }
 
 // Apple top — a bunch right in the middle of the crown rising like an apple stem. The hair is smooth, with one tie. size 1 the small one (four strands) · 1.7 the big one (six strands, long and thick)
@@ -99,14 +99,14 @@ const appleOf = (size) => (h) => {
   const count = size > 1 ? 6 : 4, spread = size > 1 ? 0.15 : 0.1;   // strand count and spread (× π)
   for (let i = 0; i < count; i += 1) {
     const a = Math.PI * (0.5 + spread * (i - (count - 1) / 2));
-    crown.stroke([[bx, by], [bx + Math.cos(a) * 0.05 * size, by + Math.sin(a) * 0.055 * size + 0.01]], { color: ink0, width: 0.01 * Math.sqrt(size) });
+    crown.line([[bx, by], [bx + Math.cos(a) * 0.05 * size, by + Math.sin(a) * 0.055 * size + 0.01]], { color: ink0, weight: Math.sqrt(size) });
   }
-  crown.stroke([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: ink0, width: 0.012 });   // the tie
+  crown.line([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: ink0, weight: 1 });   // the tie
 };
 
 // Spiky hair. hedgehog puts short spikes radially over **the whole** crown (an outline row plus an inner row) — it reads as a mass, like a hedgehog's back.
 // rings: [radius multiplier, count, spread (× π), base length, length variation]
-const spiky = (rings, width) => (h) => {
+const spiky = (rings, weight) => (h) => {
   const { crown, ink0, rx, ry, cy, noise, spec } = h;
   for (const [rad, count, span, len0, lenVar] of rings) {
     for (let i = 0; i < count; i += 1) {
@@ -115,7 +115,7 @@ const spiky = (rings, width) => (h) => {
       const bx = Math.cos(angle) * rx * rad;
       const by = cy + Math.sin(angle) * ry * rad;
       const len = len0 + Math.abs(noise(i * 3.1 + rad * 7 + spec.seed * 0.001)) * lenVar;
-      crown.stroke([[bx, by], [bx + Math.cos(angle) * len, by + Math.sin(angle) * len]], { color: ink0, width });
+      crown.line([[bx, by], [bx + Math.cos(angle) * len, by + Math.sin(angle) * len]], { color: ink0, weight });
     }
   }
 };
@@ -139,8 +139,8 @@ const voluminous = (kind) => (h) => {
   const upper = outer.filter(([x, y]) => y >= bottomAt(x));
   upper.sort((a, b) => Math.atan2(a[1] - cy, a[0]) - Math.atan2(b[1] - cy, b[0]));
   // The outer outline — the upper arc of a mass bigger than the head. **The back hair layer** (behind the head) — only what comes outside the head silhouette shows
-  if (kind === "cloud") back.stroke(upper, { color: ink0, width: 0.011, jitter: 0.008 });
-  else back.stroke(upper, { color: ink0, width: 0.01, jitter: 0.007 });
+  if (kind === "cloud") back.line(upper, { color: ink0, weight: 1 });
+  else back.line(upper, { color: ink0, weight: 1 });
   if (kind === "helmet") {
     // The hair's grain — dense strokes falling from the crown. From the upper boundary to the lower one (the brow line in the middle → below the ear at the sides),
     // with ragged tips (no straight line drawn along the hem — that would make it a helmet with a brim), spreading slightly outward toward the sides
@@ -157,7 +157,7 @@ const voluminous = (kind) => (h) => {
       const fan = x * 0.08;   // outward on the way down
       // The front (|x| < 0.8rx) is the bangs covering the forehead → the over-the-face layer; the sides are the scalp layer
       const target = Math.abs(x) < rx * 0.8 ? front : crown;
-      target.stroke([[x, top], [x + fan * 0.5, (top + bottom) / 2], [x + fan + noise(x * 17) * 0.004, bottom]], { color: ink0, width: 0.009, jitter: 0.003 });
+      target.line([[x, top], [x + fan * 0.5, (top + bottom) / 2], [x + fan + noise(x * 17) * 0.004, bottom]], { color: ink0, weight: 0.7 });
     }
   } else {
     // The cloud type — the inside filled with loop scribbles (curls) and small loops along the scalloped edge
@@ -170,7 +170,7 @@ const voluminous = (kind) => (h) => {
       const by = cy + Math.sin(angle) * ry * grow * 0.96;
       if (by < bottomAt(bx)) continue;
       const r = 0.03 + noise(i * 4.4 + spec.seed * 0.002) * 0.012;
-      back.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), "RIBBON", { color: ink0, closed: true });
+      back.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0 });
     }
   }
 };
@@ -182,7 +182,7 @@ function pigtails(h) {
     const bx = side * rx * 1.02;
     const by = cy + ry * 0.3;
     back.fur(arcPath(bx, by, 0.045, 0.06, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 7, width: 0.008, spread: 0.03 });
-    back.stroke([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: ink0, width: 0.012 });
+    back.line([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: ink0, weight: 1 });
   }
   // A light crown — an arc smaller than the cap (0.9)
   h.crown.fur(arcPath(0, cy, rx * 0.9, ry * 0.9, Math.PI * 0.72, Math.PI * 0.28, 10), "SCRIBBLE", { color: ink0, passes: 5, width: 0.008, spread: ry * 0.12 });
@@ -197,7 +197,7 @@ function curly(h) {
     const bx = Math.cos(angle) * rx * 0.88;
     const by = cy + Math.sin(angle) * ry * 0.92;
     const r = 0.03 + noise(i * 4.4) * 0.012;
-    crown.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), "RIBBON", { color: ink0, closed: true });
+    crown.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0 });
   }
 }
 
@@ -209,7 +209,7 @@ const strands = (count) => (h) => {
     const angle = Math.PI * (0.25 + 0.5 * t);
     const bx = Math.cos(angle) * rx * 0.8;
     const by = cy + Math.sin(angle) * ry * 0.9;
-    crown.stroke([[bx, by], [bx + noise(i * 5.5) * 0.07, by + 0.09 + t * 0.03]], { color: ink0, width: 0.008 });
+    crown.line([[bx, by], [bx + noise(i * 5.5) * 0.07, by + 0.09 + t * 0.03]], { color: ink0, weight: 0.7 });
   }
 };
 
@@ -246,8 +246,8 @@ function bun(h) {
   cap(h, 0.32, 16, 7, ry * 0.14, 0.009);
   const bx = 0.01, by = cy + ry * 1.05;
   crown.fur(arcPath(bx, by, 0.045, 0.04, 0, Math.PI * 2, 14), "SCRIBBLE", { color: ink0, passes: 8, width: 0.009, spread: 0.028 });
-  crown.contour(blobPath(bx, by, 0.048, 0.042, { lumps: 4, amount: 0.15, noise: null }), "RIBBON", { color: ink0, closed: true });
-  crown.stroke([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: ink0, width: 0.008 });
+  crown.contour(blobPath(bx, by, 0.048, 0.042, { lumps: 4, amount: 0.15, noise: null }), { color: ink0 });
+  crown.line([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: ink0, weight: 0.7 });
 }
 
 // bob / mop / scribble / sweep — a scribble covering the scalp. It has to have **volume**, like the reference: the arc comes down to the side of the head
@@ -269,9 +269,9 @@ export const HAIR = {
   mop: mopCap({ depth: 0.62, passes: 20, spread: 0.3 }),
   scribble: mopCap({ depth: 0.6, passes: 22, spread: 0.26, width: 0.008 }),
   sweep: mopCap({ depth: 0.4, passes: 14, spread: 0.18, backCap: false }),
-  spikes: spiky([[0.95, 11, 0.95, 0.06, 0.09]], 0.012),
-  mohawk: spiky([[0.95, 7, 0.35, 0.06, 0.09]], 0.012),
-  hedgehog: spiky([[0.96, 15, 0.9, 0.05, 0.07], [0.74, 10, 0.72, 0.045, 0.05]], 0.011),
+  spikes: spiky([[0.95, 11, 0.95, 0.06, 0.09]], 1),
+  mohawk: spiky([[0.95, 7, 0.35, 0.06, 0.09]], 1),
+  hedgehog: spiky([[0.96, 15, 0.9, 0.05, 0.07], [0.74, 10, 0.72, 0.045, 0.05]], 1),
   tuft: strands(4),
   wisp: strands(7),
   pigtails,

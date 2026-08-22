@@ -187,9 +187,7 @@ export function createScene(canvas) {
     const groundSketch = new Sketch(noise, 1.4);
     for (let row = 0; row < rows; row += 1) {
       const y = height / 2 - CELL_H * (row + 1) + 0.16;
-      groundSketch.stroke([[-width / 2 + 0.1, y], [width / 2 - 0.1, y]], {
-        color: "#4a423a", width: 0.012, jitter: 0.02, step: 0.08
-      });
+      groundSketch.line([[-width / 2 + 0.1, y], [width / 2 - 0.1, y]], { color: "#4a423a", weight: 1 });
     }
     // 0.88 — the 0.72 it was on the canvas, where blending happened in sRGB; on the target it blends in linear light, and this is the
     // opacity that gives the same grey over the paper (0.72 there would read a shade lighter)

@@ -29,15 +29,15 @@ export const DEPTH = {
 // Two sets of closed eyes — the shut line (shut: an arc bulging downward) and the ^^ smile arch (smile: bulging upward). Live eyes (the rig) and static eyes (staticLids) use the same shapes —
 // only the shut line differs slightly (a little higher and tidier on static eyes). In face ink (faceInk) — on an ink-black imp head, a black arch would be lost and invisible
 const LID_STYLE = {
-  rig: { shutY: 0.1, shutWobble: 0.5, shutWidth: 0.012 },
-  static: { shutY: 0.15, shutWobble: 0.4, shutWidth: 0.011 }
+  rig: { shutY: 0.1, shutWobble: 0.5, shutWeight: 1 },
+  static: { shutY: 0.15, shutWobble: 0.4, shutWeight: 1 }
 };
 function lidSketches(eye, ink, noise, style, spec) {
   const s = LID_STYLE[style];
   const shut = new Sketch(noise, s.shutWobble);
-  shut.stroke(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink, width: s.shutWidth });
+  shut.line(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink, weight: s.shutWeight });
   const smile = new Sketch(noise, 0.5);
-  smile.stroke(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink, width: 0.013 });
+  smile.line(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink, weight: 1 });
   // Anger — the fierce eye (an inward-down slanted lid plus a glaring dot). While angry, the open eye is switched off and this stands instead (character/draw/face.js angryEyeSketch)
   const angry = new Sketch(noise, 0.5);
   angryEyeSketch(angry, eye, ink, spec);
@@ -225,7 +225,7 @@ export function buildCreature(spec, noise, birth = 0) {
     const white = new Sketch(noise, 0.4);
     paintPart(white, spec, blobPath(0, 0, rx, ry, wob), "#f6f2e9", { flat: true });
     const rim = new Sketch(noise, 0.6);
-    rim.contour(blobPath(0, 0, rx, ry, { ...wob, lumps: 4, amount: 0.07 }), "RIBBON", { color: spec.palette.ink, closed: true });
+    rim.contour(blobPath(0, 0, rx, ry, { ...wob, lumps: 4, amount: 0.07 }), { color: spec.palette.ink });
     open.add(sketchMesh([white, rim], 1, o));
 
     const pupilSketch = new Sketch(noise, 0.4);
@@ -278,11 +278,11 @@ export function buildCreature(spec, noise, birth = 0) {
     const starSketch = new Sketch(noise, 0.5);
     const star = starPath(0, 0, eye.r * 1.1);
     paintPart(starSketch, spec, star, "#f6f2e9", { flat: true });
-    starSketch.contour(star, "RIBBON", { color: spec.palette.ink, closed: true, step: 0.006 });
+    starSketch.contour(star, { color: spec.palette.ink, step: 0.006 });
     const heartSketch = new Sketch(noise, 0.5);
     const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
     paintPart(heartSketch, spec, heart, "#c9666a", { own: true });
-    heartSketch.contour(heart, "RIBBON", { color: spec.palette.ink, closed: true, step: 0.006 });
+    heartSketch.contour(heart, { color: spec.palette.ink, step: 0.006 });
     const starMesh = sketchMesh(starSketch, 1, 6.32);
     const heartMesh = sketchMesh(heartSketch, 1, 6.32);
     for (const m of [starMesh, heartMesh]) {

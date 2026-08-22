@@ -40,25 +40,30 @@ lines boiling at the board's own pace.</p>
 <!-- ================================================================ -->
 <section>
 <h2>THE GOOFY OUTLINE</h2>
-<p>A creature's contour is drawn with one <b>goofy outline</b>, named from <code>GOOFY_OUTLINES</code> in
-<code>src/medium/outlines.js</code> — <code>ink.contour(path, "PENCIL", { color, closed, weight })</code>. A part never picks
-a line function or a width; at most a weight (the head's contour runs at 1.15 of the body's). Two outlines exist:
-<b>PENCIL</b>, the contour of the head and the body, and <b>RIBBON</b>, the line of every other closed shape — ears, hats,
-hands, eyes, noses, mouths — at one width, scaled by a part's weight. One line each, the same path:</p>
+<p>Every line on a creature is drawn with a <b>goofy outline</b> — a <b>kind</b> from <code>GOOFY_OUTLINES</code> in
+<code>src/medium/outlines.js</code>. A part never names a kind, a line function or a width: it names its line's <b>role</b> —
+<code>ink.contour(path, { color, weight })</code> for the closed line of a shape, <code>ink.line(…)</code> for an open line,
+<code>ink.mark(…)</code> for a dot or a dash a few widths long — with at most a weight on the kind's width (the head's contour
+runs at 1.15 of the body's). Which kind each role is drawn with is one switch, <code>BOARD_LINES</code>: change a name there
+and every line of that role on the board changes; a new kind is a new entry in the table and a name in the switch. Two
+kinds exist today — the <b>PENCIL</b> and the <b>RIBBON</b>. One line each, the same path:</p>
 
 <div class="figs" id="outlineBalls"></div>
 
 <h3>in use on the board</h3>
-<p>What the board's closed lines are actually drawn with today — two kinds, both through the table. Forty-one
-<code>outline()</code> calls at eight widths, eleven of them laid twice, became one RIBBON at one width with three
-weights (fine 0.7 · 1 · heavy 1.2); a creature no longer wears two-line ears beside one-line eyes. What is left to
-decide is which of those shapes should move from RIBBON to PENCIL.</p>
+<p>What the board draws each role with today — the three rows read the switch live. Every line on a creature goes
+through it: 44 contours, 104 open lines and 14 marks, at quantized weights (a creature does not wear a two-line ear
+beside a one-line eye). Nothing names a width any more; the only strokes outside the table are the two <b>bands</b> — a hat's
+color laid as a thick stroke, a fill in disguise.</p>
 
 <div class="figs" id="outlineUse"></div>
-<p class="note"><b>pencil</b> — 3 parts: the head (weight 1.15), the biped body, the quad body.
-<b>ribbon</b> — 41: the ears (all kinds, and the cat's and dog's), the helmet, cap and brim, beret and pot, the horn tip, the hands, boots and
-sleeves, the tail's tuft, pom and beads, the hair loops, bun and twintail balls, the eye rings and eyewear, the nose, the mouth's grid,
-tongue and fangs, the static eyes, the star and heart eyes — fine (0.7) for the eyes and the mouth's small parts, heavy (1.2) for the hats.</p>
+<p class="note"><b>contour</b> — 44: the head (weight 1.15), the bodies, the ears (all kinds, and the cat's and dog's), the helmet, cap and brim, beret and pot,
+the horn tip, the hands, boots and sleeves, the tail's tuft, pom and beads, the hair loops, bun and twintail balls, the eye rings and eyewear, the nose,
+the mouth's grid, tongue and fangs, the static eyes, the star and heart eyes — fine (0.7) for the eyes and the mouth's small parts, heavy (1.2) for the hats.
+<b>line</b> — 104: lids, brows, lashes and the eyes' marks, whiskers, tears, the nose's lines, eyewear arms, lips, teeth rows and tongues, limbs and feet,
+tail spines and rings, hair strands, ties and spikes, hat seams and brims' ink, horns, side ears and the folded ear's root and crease, decal edges, the floor, the ? glyph,
+the rig's shut and smiling lids — fine 0.6 for the thinnest, 1.3 for lids, muzzle lines and horns, 1.6 for a stub tail.
+<b>mark</b> — 14: freckles, the philtrum, the dot mouth, teeth's edges and fang bumps, toes and claws, a hat's knob, the ! glyph.</p>
 
 <h3>RIBBON — the ribbon</h3>
 <p>WebGL cannot draw a thick line, so there are no lines here at all — every stroke is a <b>triangle ribbon</b>.
