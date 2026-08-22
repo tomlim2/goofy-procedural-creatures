@@ -95,12 +95,15 @@ export const PENCIL = {
   grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
 };
 
-// Materials — what a mark is made of. A part names a material and hands over the path and the color; the material decides the line
-// function, its width and its habits (passes, the shed). Parts never pick widths — at most a weight, a multiplier on the material's.
-// One so far: GRAPHITE, the pencil, which the head and body contours are drawn with. Docs: guidelines/drawing.md § materials.
-// (Not the GPU materials — those live in scene/mesh.js.)
+// Materials — what a surface is made of, the way a 3D material is: a bundle of channels. fill is how its area is filled (paint),
+// line is how its contour is drawn (mark); a material may have either or both. A part names a material and hands over the path and
+// the color — it never picks a width or a fill method itself (at most a weight, a multiplier on the line's width). The medium page
+// draws one shader ball per entry. Docs: guidelines/drawing.md § materials. (Not the GPU materials — those live in scene/mesh.js.)
 export const MATERIALS = {
-  GRAPHITE: { line: "pencil", width: 0.012, passes: 1 }
+  // Graphite — what the head and the body are made of: the fill-up printed out of register, a pencil contour over it
+  GRAPHITE: { fill: { kind: "flat" }, line: { kind: "pencil", width: 0.012, passes: 1 } },
+  // Flat — the fill-up alone, a cutout with no line of its own: patches and the like
+  FLAT: { fill: { kind: "flat" } }
 };
 
 export class Sketch {
@@ -171,16 +174,23 @@ export class Sketch {
     this.stroke([...points, points[0]], options);
   }
 
-  // Draws with a named material (MATERIALS). weight scales the material's width (a head contour is a little heavier than a body's);
-  // closed draws a loop. An unknown name throws — a part that misspells its material must not silently draw nothing
+  // The line channel of a named material (MATERIALS). weight scales the line's width (a head contour is a little heavier than a
+  // body's); closed draws a loop. A name without a line channel throws — a part that misspells its material must not silently draw nothing
   mark(points, name, { color = "#2b2724", closed = false, weight = 1, paper } = {}) {
-    const m = MATERIALS[name];
-    if (!m) throw new Error(`unknown material: ${name}`);
-    const options = { color, width: m.width * weight, passes: m.passes };
+    const line = (MATERIALS[name] || {}).line;
+    if (!line) throw new Error(`material ${name} has no line`);
+    const options = { color, width: line.width * weight, passes: line.passes };
     if (paper) options.paper = paper;
-    if (m.line === "pencil") this.pencil(points, { ...options, closed });
+    if (line.kind === "pencil") this.pencil(points, { ...options, closed });
     else if (closed) this.outline(points, options);
     else this.stroke(points, options);
+  }
+
+  // The fill channel of a named material — the fill-up. offset prints it out of register (a creature's fillOffset)
+  paint(points, name, { color, offset = [0, 0] } = {}) {
+    const fill = (MATERIALS[name] || {}).fill;
+    if (!fill) throw new Error(`material ${name} has no fill`);
+    this.fill(points, color, offset);   // "flat" is the only fill kind so far — the fan from the centre below
   }
 
   // A small axis-aligned square — the pencil's crumbs and bites

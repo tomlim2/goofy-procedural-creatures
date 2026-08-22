@@ -52,21 +52,31 @@ The head and body contours draw with it, through the GRAPHITE material (below); 
 § the line) shows it next to `stroke()`. Switching another part onto it is a drawing change like any other —
 `drawdiff` will show it, and the audit has to stay at 0.
 
-## Materials — what a mark is made of
+## Materials — what a surface is made of
 
-A material is a named bundle of *what a mark is made of*: which line function, its width, its habits. A part
-names a material and hands over the path and the color — `ink.mark(path, "GRAPHITE", { color, closed })` —
-and never picks a width itself; at most a `weight`, a multiplier on the material's width (the head contour
-runs at 1.15 of the body's). The table is `MATERIALS` in `stroke.js`; an unknown name throws, so a misspelt
-material cannot silently draw nothing.
+A material is what a surface is made of, the way a 3D material is: a named bundle of **channels**. `fill` is
+how its area is filled, `line` is how its contour is drawn; a material may have either or both (a shade
+channel is the obvious next one). A part names a material and hands over the path and the color:
 
-| Material | Line | Width | Used by |
+- `fills.paint(path, "GRAPHITE", { color, offset })` — the fill channel. The fill-up: the fan from the centre,
+  printed out of register by the creature's `fillOffset`
+- `ink.mark(path, "GRAPHITE", { color, closed, weight })` — the line channel. `weight` is a multiplier on the
+  line's width (the head contour runs at 1.15 of the body's); a part never picks a width or a fill method itself
+
+The table is `MATERIALS` in `stroke.js`. A name without the channel asked for throws, so a misspelt material
+cannot silently draw nothing. The medium page draws one **shader ball** per entry — the same ball painted
+through the material's channels in order — so the table cannot drift from what is seen.
+
+| Material | fill | line | Used by |
 | --- | --- | --- | --- |
-| `GRAPHITE` | `pencil()` — wander, breathing width, overshoot, the shed; seamless when closed | 0.012 | the head contour (weight 1.15), the body contour |
+| `GRAPHITE` | flat, out of register | `pencil()` 0.012 — wander, breathing width, overshoot, the shed; seamless when closed | the head (weight 1.15) and the body |
+| `FLAT` | flat | — | the calico patches (a cutout with no line of its own) |
 
-Candidates not built yet: NIB (the ribbon, for details), SOFT (a wide pencil for shading), WASH (the fill
-that misses its line), CHALK (light ink on a dark face). Adding one is an entry in the table plus the parts
-that name it — the medium page draws a sample per entry by itself.
+`Sketch.fill()` is the flat fill channel itself; parts that still call it directly (ears, eyes, teeth…) are
+drawing FLAT without naming it — naming the material is the direction, one part at a time, with `drawdiff`
+proving the picture did not move. Candidates not built yet: NIB (the ribbon line, for details), SOFT (a
+wide pencil plus a scribble shade), CHALK (light ink on a dark face). Adding one is an entry in the table plus
+the parts that name it.
 
 (The GPU materials — one `MeshBasicMaterial` per opacity level — are a different thing and live in
 `scene/mesh.js`.)

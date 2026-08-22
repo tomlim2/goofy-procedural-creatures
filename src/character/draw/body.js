@@ -12,7 +12,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
-    fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
+    fills.paint(path, "GRAPHITE", { color: spec.palette.cloth, offset: spec.palette.fillOffset });
     fills.scribbleFill(cx, cy, box.bodyW * 0.8, (box.bodyTop - box.legTop) * 0.4, {
       color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
       angle: Math.PI * 0.22, gap: 0.026, width: 0.006
@@ -40,7 +40,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
   }
 
-  fills.fill(path, spec.palette.cloth, spec.palette.fillOffset);
+  fills.paint(path, "GRAPHITE", { color: spec.palette.cloth, offset: spec.palette.fillOffset });
   fills.scribbleFill(0, (top + bottom) / 2, w * 0.72, (top - bottom) * 0.4, {
     color: shade(spec.palette.cloth, isDark(spec.palette.cloth) ? 1.5 : 0.9),
     angle: Math.PI * 0.28, gap: 0.03, width: 0.006
@@ -84,7 +84,7 @@ export function outlinePatch(outline, fromDeg, spanDeg, depth, noise, phase) {
 // One patch — the fill plus a thin line on the inner edge only (the outer edge already has the outline)
 function patch(ink, fills, outline, fromDeg, spanDeg, depth, color, inkColor, noise, phase) {
   const { path, inner } = outlinePatch(outline, fromDeg, spanDeg, depth, noise, phase);
-  fills.fill(path, color);
+  fills.paint(path, "FLAT", { color });   // a cutout with no line of its own
   ink.stroke(inner, { color: inkColor, width: 0.007, jitter: 0.004 });
 }
 

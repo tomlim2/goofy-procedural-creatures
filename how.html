@@ -132,17 +132,19 @@ and anything that means <em>shading</em> is not a fill at all, it is the pen goi
 <!-- ================================================================ -->
 <section>
 <h2>THE MATERIAL</h2>
-<p>A material is what a mark is made of. A part names one and hands over the path and the color —
-the material decides the line, its width and its habits. Parts never pick widths, at most a weight.
-One so far: <b>GRAPHITE</b>, the pencil above, which the head and body contours are drawn with.
-The table is <code>MATERIALS</code> in <code>src/stroke.js</code>, and every entry draws its own sample here.</p>
+<p>A material is what a surface is made of — the way a 3D material is: a bundle of channels. <b>fill</b> is
+how its area is filled (the fill-up, printed out of register), <b>line</b> is how its contour is drawn; a material
+may have either or both. A part names one and hands over the path and the color — it never picks a width or a
+fill method itself. <b>GRAPHITE</b> is the fill-up under a pencil contour: the head and the body. <b>FLAT</b> is the
+fill-up alone, a cutout with no line of its own: the patches. The table is <code>MATERIALS</code> in
+<code>src/stroke.js</code>, and every entry gets a shader ball here.</p>
 
 <div class="figs">
   <figure data-fig="materials" class="wide">
     <canvas></canvas>
     <div class="subs"></div>
-    <figcaption><b>the materials</b> — a loop and a stroke per material, drawn through <code>mark()</code>
-    exactly as a part would. Add an entry to the table and a sample appears.</figcaption>
+    <figcaption><b>shader balls</b> — the same ball per material, painted through its channels in order
+    (<code>paint</code>, then <code>mark</code>) exactly as a part would. Add an entry to the table and a ball appears.</figcaption>
   </figure>
 </div>
 

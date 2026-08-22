@@ -18,7 +18,7 @@ export function drawHead(ink, fills, spec, box, noise) {
     taper: shape.taper
   });
 
-  fills.fill(path, spec.palette.skin, spec.palette.fillOffset);
+  fills.paint(path, "GRAPHITE", { color: spec.palette.skin, offset: spec.palette.fillOffset });   // the fill channel — out of register
 
   // Pencil scribble. Covers the flat fill with a single zigzag stroke in a darker tone
   // of the same family, leaving the stroke direction behind. On imps it scratches a slightly lighter tone over the ink-black.

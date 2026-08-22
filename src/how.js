@@ -171,14 +171,17 @@ swatches("darks", DARKS);
 swatches("furs", [...FURS, CALICO_MID]);
 swatches("accents", ACCENTS);
 
-// The materials — a loop and a stroke per entry of MATERIALS, drawn through mark() exactly as a part would. Labels come from the table
+// Shader balls — one per entry of MATERIALS, like a 3D material preview: the same ball, painted through whatever channels the
+// material has (paint, then mark), exactly as a part would. Labels come from the table
 const MATERIAL_NAMES = Object.keys(MATERIALS);
 fig("materials", [-0.75, -0.22, 0.75, 0.22], (sk) => {
-  const ink = sk();
+  const fills = sk(), ink = sk();
   MATERIAL_NAMES.forEach((name, i) => {
     const x = (i - (MATERIAL_NAMES.length - 1) / 2) * 0.5;
-    ink.mark(blobPath(x, 0.04, 0.15, 0.11, { lumps: 5, amount: 0.08, noise, phase: 97 + i * 3 }), name, { color: INK, closed: true, paper: CARD });
-    ink.mark([[x - 0.2, -0.15], [x - 0.07, -0.125], [x + 0.07, -0.16], [x + 0.2, -0.14]], name, { color: INK, paper: CARD });
+    const ball = blobPath(x, 0, 0.17, 0.17, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 });
+    const m = MATERIALS[name];
+    if (m.fill) fills.paint(ball, name, { color: FILLS[2], offset: [0.016, -0.013] });
+    if (m.line) ink.mark(ball, name, { color: INK, closed: true, paper: CARD });
   });
 });
 FIGS.materials.labels = MATERIAL_NAMES;
