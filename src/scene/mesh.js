@@ -41,7 +41,8 @@ function makeInkMaterial(opacity) {
 // Boil variants → one mesh. variants is a list (one per boil frame) of sketch lists; every variant's triangles go into **one geometry**, one after
 // another, and the frame is chosen by the geometry's drawRange (animate: item.boilRanges) — so a part boils without one mesh per frame
 // (the tail's bones and the limbs: a draw call each, not three). Returns the mesh and the [start, count] vertex range of each frame
-export function sketchMeshBoil(variants, opacity, renderOrder, dy = 0) {
+// skin: { weightsOf } makes it a SkinnedMesh — the tail: every vertex weighted to two bones by skin.weightsOf(x, y) → [i, wi, j, wj]; the caller binds the skeleton
+export function sketchMeshBoil(variants, opacity, renderOrder, dy = 0, { skin = null } = {}) {
   const ranges = [];
   let start = 0;
   const all = [];
@@ -52,9 +53,28 @@ export function sketchMeshBoil(variants, opacity, renderOrder, dy = 0) {
     start += count;
     all.push(...list);
   }
-  const mesh = sketchMesh(all, opacity, renderOrder, dy);
+  const mesh = skin ? skinnedMesh(all, opacity, renderOrder, skin) : sketchMesh(all, opacity, renderOrder, dy);
   mesh.geometry.setDrawRange(ranges[0][0], ranges[0][1]);
   return { mesh, ranges };
+}
+
+// A skinned mesh — the geometry is in the bones' parent space, every vertex weighted to two bones (skin.weightsOf), and the bones bend it on the
+// GPU. The shared ink material serves it as it is (three.js compiles a skinning variant of the same material — no new material object)
+function skinnedMesh(sketches, opacity, renderOrder, skin) {
+  const geometry = buildGeometry(sketches);
+  const pos = geometry.attributes.position;
+  const n = pos.count;
+  const index = new Uint16Array(n * 4), weight = new Float32Array(n * 4);
+  for (let v = 0; v < n; v += 1) {
+    const [i, wi, j, wj] = skin.weightsOf(pos.getX(v), pos.getY(v));
+    index[v * 4] = i; index[v * 4 + 1] = j;
+    weight[v * 4] = wi; weight[v * 4 + 1] = wj;
+  }
+  geometry.setAttribute("skinIndex", new THREE.BufferAttribute(index, 4));
+  geometry.setAttribute("skinWeight", new THREE.BufferAttribute(weight, 4));
+  const mesh = new THREE.SkinnedMesh(geometry, inkMaterial(opacity));
+  mesh.renderOrder = renderOrder;
+  return mesh;
 }
 
 // Sketch(es) → mesh. Given several, they are joined into one geometry — earlier ones end up underneath (fills → ink). Used to bake a layer's fills and ink into one mesh.
@@ -72,6 +92,7 @@ export function disposeGroup(root) {
   root.traverse((node) => {
     if (node.isMesh) {
       node.geometry.dispose();
+      if (node.isSkinnedMesh && node.skeleton) node.skeleton.dispose();   // the bone texture
       if (!node.material.userData.shared) node.material.dispose();
     }
   });

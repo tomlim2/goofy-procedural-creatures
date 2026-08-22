@@ -73,7 +73,7 @@ color, with at most a `weight` on the kind's width:
 | Role | Call | What it is | Weights in use |
 | --- | --- | --- | --- |
 | contour | `ink.contour(path, { color, weight })` | the closed line of a shape — the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts | fine 0.7 · 1 · the head 1.15 · heavy 1.2 |
-| line | `ink.line(path, { color, weight, joint })` | an open line — a brow, a lid, a whisker, a limb, a strand, a horn, the floor. `joint = [start, end]` marks an end that meets another line (a tail bone's seam): no overshoot, no thinning there | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
+| line | `ink.line(path, { color, weight, joint })` | an open line — a brow, a lid, a whisker, a limb, a strand, a horn, the floor. `joint = [start, end]` marks an end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
 | mark | `ink.mark(path, { color, weight })` | a dot or a dash a few widths long — a freckle, a tooth's edge, a claw, a glyph's dot | 0.6 · 0.7 · 1 |
 
 Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL", line: "PENCIL", mark: "RIBBON" }`.

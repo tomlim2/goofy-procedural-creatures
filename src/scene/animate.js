@@ -67,7 +67,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
 
   // Tail — a four-bone chain. Root angle (tailAngle) + the tip bone's relative angle (tailTip) + raise (tailRaise: each joint blends from its rest pose toward a target pose) + bristle (tailPuff)
   if (item.tailGroup) {
-    // Bristle — **thickness only**, 1 → 1.6× (length unchanged): each bone scales perpendicular to its rest-pose spine direction (the rig's thick group — R(θ)·S(1,p)·R(−θ)). The same envelope as the eyes (pupils)
+    // Bristle — **thickness only**, 1 → 1.6× (length unchanged): each bone scales perpendicular to its own axis (scale.y; the bones are siblings, so no child is sheared). The same envelope as the eyes (pupils)
     const puff = 1 + 0.6 * (state.tailPuff || 0);
     const bones = item.tailBones;
     const n = bones.length;
@@ -87,6 +87,10 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     const arch = state.tailArch || 0;
     const pose = state.tailPose;
     let cumUp = 0, cumArch = 0;   // the cumulative target rotation so far (relative to rest)
+    // Forward kinematics — the bones are siblings under the pivot: a bone's position is the end of the bone before it (the rest offset turned by the
+    // joint rotations so far), its rotation the rest angle plus those rotations — the same pose the nested chain would give, without a chain
+    let cum = 0;
+    let px = 0, py = 0;
     for (let i = 0; i < n; i += 1) {
       const b = bones[i];
       const wantUp = UP - b.restAngle;   // the cumulative rotation this bone needs to reach vertical
@@ -99,8 +103,17 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       }
       if (i === 0) rot += state.tailAngle;
       if (i === n - 1) rot += state.tailTip || 0;
-      b.group.rotation.z = rot;
-      if (b.thick) b.thick.scale.y = puff;
+      if (i > 0) {
+        const prev = bones[i - 1];
+        const ox = b.origin[0] - prev.origin[0], oy = b.origin[1] - prev.origin[1];
+        const c = Math.cos(cum), s = Math.sin(cum);
+        px += ox * c - oy * s;
+        py += ox * s + oy * c;
+      }
+      cum += rot;
+      b.bone.position.set(px, py, 0);
+      b.bone.rotation.z = b.restAngle + cum;
+      b.bone.scale.y = puff;
     }
   }
 

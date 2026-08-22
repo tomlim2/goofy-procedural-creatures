@@ -112,44 +112,33 @@ export function buildCreature(spec, noise, birth = 0) {
   // The face group's origin = the centre of the head. A turn shifts and squashes about this point. Children are baked pre-lowered by -faceCy.
   faceGroup.position.y = faceCy - neckY;
 
-  // Tail — a four-bone chain (limbs.js TAIL_BONES). Bone groups nest joint by joint inside tailGroup (the root pivot): bone[i] is a child of bone[i-1],
-  // with its origin at the joint (on the rest-pose spine). **Behind** the torso and head (0.8) — the part lying over the body (a loop or curl) is hidden.
-  // animate: tailAngle on bone[0] (swish, wag, walking, sleep), tailTip on the tip bone (tapping, tremble, follow-through), and raise (tailRaise) blends each joint's target angle from rest toward straight.
-  // Bristle (tailPuff) is **thickness only** — each bone's mesh is wrapped in three groups, R(θ)·S(1,p)·R(−θ) (along, thick, back), scaling only perpendicular to the rest-pose spine direction (θ).
-  // The joint's (g) rotation and its child bones sit outside that, so length and position are unchanged
+  // Tail — a four-bone chain under one skin (limbs.js TAIL_BONES). The bones are **siblings** under tailGroup (the root pivot) at their rest
+  // transforms; animate places each by forward kinematics (position = the end of the bone before it, rotation = the rest angle + the joint
+  // rotations so far) — so a bone's perpendicular scale (bristle, tailPuff) never shears its children. The skin is one SkinnedMesh in the
+  // pivot's space, every vertex weighted to two bones (limbs.js weightsOf): a bend curves it as one piece. **Behind** the torso and head (0.8) —
+  // the part lying over the body (a loop or curl) is hidden; raised it goes above (2.08, animate).
   // The tail and the limbs boil too — every frame's sketches in one mesh, the frame picked by drawRange (mesh.js sketchMeshBoil, animate: boilRanges)
   const boilRanges = [];
   let tailGroup = null;
   const tailBones = [];
   const tails = Array.from({ length: BOIL_FRAMES }, (_, k) => tailSketch(spec, k));
   const tail = tails[0];
-  if (tail.sketches.some((s) => !s.empty)) {
+  if (!tail.sketch.empty) {
     tailGroup = new THREE.Group();
     tailGroup.position.set(tail.pivot[0], tail.pivot[1], 0);
-    let parent = tailGroup;
-    let prev = [0, 0];
-    tail.bones.forEach((bone, i) => {
-      const g = new THREE.Group();
-      g.position.set(bone.origin[0] - prev[0], bone.origin[1] - prev[1], 0);
-      let thick = null;
-      if (!tail.sketches[i].empty) {
-        const along = new THREE.Group();
-        along.rotation.z = bone.angle;
-        thick = new THREE.Group();
-        const back = new THREE.Group();
-        back.rotation.z = -bone.angle;
-        const boiled = sketchMeshBoil(tails.map((t) => [t.sketches[i]]), 1, 0.8);
-        back.add(boiled.mesh);
-        boilRanges.push({ geometry: boiled.mesh.geometry, ranges: boiled.ranges });
-        thick.add(back);
-        along.add(thick);
-        g.add(along);
-      }
-      parent.add(g);
-      tailBones.push({ group: g, restAngle: bone.angle, thick });
-      parent = g;
-      prev = bone.origin;
+    const bones = tail.bones.map((bone) => {
+      const b = new THREE.Bone();
+      b.position.set(bone.origin[0], bone.origin[1], 0);
+      b.rotation.z = bone.angle;
+      tailGroup.add(b);
+      return b;
     });
+    const boiled = sketchMeshBoil(tails.map((t) => [t.sketch]), 1, 0.8, 0, { skin: { weightsOf: tail.weightsOf } });
+    tailGroup.add(boiled.mesh);
+    tailGroup.updateMatrixWorld(true);           // the bind reads the bones' and the mesh's world matrices — the rest pose, in the same space
+    boiled.mesh.bind(new THREE.Skeleton(bones));
+    boilRanges.push({ geometry: boiled.mesh.geometry, ranges: boiled.ranges });
+    tail.bones.forEach((bone, i) => tailBones.push({ bone: bones[i], restAngle: bone.angle, origin: bone.origin }));
     bodyGroup.add(tailGroup);
   }
 

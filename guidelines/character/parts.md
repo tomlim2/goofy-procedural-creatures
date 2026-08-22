@@ -362,12 +362,13 @@ kink 1.5 · stubtail 1 (kink is cats only, ring dogs only). Skin: pup thick 3 ·
 tuft 1 · block 0.5 · ball 0.5 · puff 0.3 (wedge is disabled; ringed was dropped — rings are the pattern's job now). Length: pup long 2 · medium 2 · short 2 / cat long 3 · medium 2 · short 1.
 tailSkin and tailLength are late slots (`LATE_SLOTS`). Bipeds draw them but never render them.
 The tail is drawn **behind** the torso and head (renderOrder 0.8) — the part curling over the back or lying on the body is hidden.
-The tail is baked as **a four-bone chain** — the spine is split into 4 (`TAIL_BONES`) with a joint origin and rest-pose direction per bone, and the scene rotates each joint separately (the swish,
+The tail is **a four-bone chain under one skin** — the spine is split into 4 (`TAIL_BONES`) with a joint origin and rest-pose direction per bone, and the scene bends each joint separately (the swish,
 the tip tapping, follow-through, and the raise as a straight target angle per joint — it shoots up whatever the skeleton, [../motion/catalog.md](../motion/catalog.md) § the tail).
-The skin's thickness function is computed on the whole tail's t, so the thickness carries across the seams, and the outline strokes only the two side lines so no crossbar appears at a seam.
-**Joints and tips.** Every joint gets a **cap** — a disc of the tube's width on the parent bone — so when the child bends, the wedge that would open on the outside of the bend is covered (the
-overlap on the inside hides under the fills). The side lines end at the joints and at the root as **joints** (`line(…, { joint })`: no overshoot, no thinning), so two bones read as one line;
-a thin-line tail runs past its tip (the pencil's flick). A tube's tip is **round** — a disc and an arc — except block, which stays square.
+**One skin.** The skin is drawn **once along the whole spine** in the pivot's space — one tube, two side lines, the tip, the pattern — and every vertex is weighted to two of the
+bones (`weightsOf`: its t along the rest spine picks the bone, blended linearly over ±0.06 of the tail around each joint, about one tube width). The scene bends it as a
+`SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side
+lines' root end and the tip's arc are **joints** (`line(…, { joint })`: no overshoot, no thinning); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick).
+A tube's tip is **round** — a disc and an arc — except block, which stays square.
 **Color and pattern.** The tail is the body's color (a quad's `cloth` — the head color or a tone of it), at the head's value step like the rest of the mass. A tube carries the creature's
 **pattern** (the `pattern` slot, [../drawing.md](../drawing.md) § what takes the goofy material) along itself — stripes as **rings**, dots and spots along the spine, hatch across it — in the
 body's pattern ink (light on dark fur). A thin line, a tuft, beads and a pom have no area for it; the calico's patches stay on the head and the body.

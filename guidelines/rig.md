@@ -13,8 +13,9 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
 │   │                           rotation plus a position correction that leaves the axis in place (animate). Leg pivots and the tail are children and tilt with it; headGroup is a sibling and does not move (the axis is right below the head)
 │   ├── bodyFrame ×3         ← boil variants. Body fills+ink, one mesh (1.5)
 │   ├── tailGroup            ← a pivot at the tail root (quad). 0.8 — behind the torso and head
-│   │   └── bone[0] ⊃ bone[1] ⊃ bone[2] ⊃ bone[3]  ← a four-bone chain (joints = the quarter points of the spine). tailAngle on bone[0], tailTip on bone[3], tailRaise a target angle per joint (the raise)
-│   │       └── along(θ) ⊃ thick ⊃ back(−θ) ⊃ the bone's mesh  ← bristle (tailPuff): thick.scale.y — it thickens **only perpendicular** to the rest-pose spine direction θ (length and joint positions unchanged)
+│   │   ├── Bone ×4              ← siblings at the quarter points of the spine (joints), placed by forward kinematics each frame (animate): tailAngle on bone 0, tailTip on bone 3, tailRaise a target angle per joint (the raise).
+│   │   │                           Bristle (tailPuff): bone.scale.y — thickness only, perpendicular to the bone's own axis; a sibling bone shears no child
+│   │   └── SkinnedMesh ×1       ← the whole skin in the pivot's space, every vertex weighted to two bones (limbs.js weightsOf); all three boil frames in it, switched by drawRange
 │   └── limb pivot ×N        ← shoulder and hip pivots
 │       ├── front             ← the upper arm (or the leg). renderOrder 2.5
 │       │   └── elbow         ← the elbow pivot plus the forearm (arms only). Shoulder and elbow angles separately
@@ -88,7 +89,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 - **depth groups** (`item.parallax`) — the same origin as headGroup (the neck). On a face turn, position only = depth × the features' shift (§ fake 3D depth). scale is never touched — an attachment moves position and does not change size
 - **limb pivot** — the shoulder (22% below bodyTop, on the torso's left/right outline — half-width per form: box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / the hip (0.02 above the hem) / a quad's root (25% of bodyH up). A limb is baked hanging from the pivot's origin. Arms are stood up with `bindArm(side)` (the T-pose) and the clock's `state.arms` supplies the joint angles
 - **elbow** — the end of the upper arm. The forearm is baked hanging from the elbow's origin. Upper:lower arm = 0.48:0.52. `armRig(spec)` passes the same dimensions to the clock so it can solve actions by IK
-- **tailGroup** — the tail root (the back end of the body). Inside it, **a four-bone chain** (`tailSketch().bones` — joint origins and rest-pose directions). The skin is baked continuously across the bones — in every boil frame, all three in one mesh per bone, switched by drawRange ([performance.md](performance.md)) — with a **cap** (a disc of the tube's width) at every joint on the parent bone, so a bend opens no wedge ([character/parts.md](character/parts.md) § tail). A bone's mesh sits inside three groups, along(θ)·thick·back(−θ) — bristle is thick.scale.y only (perpendicular to the spine)
+- **tailGroup** — the tail root (the back end of the body). Inside it, **four bones as siblings** (`tailSketch().bones` — joint origins and rest-pose directions) and **one SkinnedMesh**: the skin drawn once along the whole spine, every vertex weighted to two bones (`weightsOf`), all three boil frames in it switched by drawRange ([performance.md](performance.md)). animate places the bones by forward kinematics, so the skin bends as one piece ([character/parts.md](character/parts.md) § tail); bristle is bone.scale.y — thickness only, perpendicular to the bone's own axis
 - **eyeRig** — the eye's centre. pupil.scale is the startle (1 → 0.5), pupil.position the gaze, lid.scale.y the lid. The rig itself never grows
 
 ## fake 3D depth — the parallax of a face turn
@@ -114,9 +115,9 @@ When attaching a new layer to the head, settle on one depth in this table and wr
 
 | Baked once (per individual) | Changed every frame |
 | --- | --- |
-| 13 layers (body, back hair, side ears, head, horns, hair on the scalp, dog/cat ears, hat, face, static eyes ×2 (one per eye), the front of the face, bangs) × 3 boil sets — one mesh per layer; the tail's bones and the limbs boil too, all three frames in one mesh each (drawRange) (two for the face and static eyes: fills and ink) | Toggling visible (static eyes per eye — for sleep, ^^, a wink and startle variants only that eye is switched off) |
+| 13 layers (body, back hair, side ears, head, horns, hair on the scalp, dog/cat ears, hat, face, static eyes ×2 (one per eye), the front of the face, bangs) × 3 boil sets — one mesh per layer; the tail (one skinned mesh) and the limbs boil too, all three frames in one mesh each (drawRange) (two for the face and static eyes: fills and ink) | Toggling visible (static eyes per eye — for sleep, ^^, a wink and startle variants only that eye is switched off) |
 | Limb pieces (front, back) | pivot.rotation.z, elbow.rotation.z (the eased target angle plus un-eased oscillation), front/back visible |
-| The tail | Joint rotation.z · a bone's thick.scale.y (bristle — thickness only) |
+| The tail | The bones' position and rotation.z (forward kinematics from the joint rotations) · bone.scale.y (bristle — thickness only) |
 | Brow and mouth rest/alt | visible |
 | The eye rig | pupil.scale (startle — the pupil 1 → 0.5×), pupil.position (gaze), visible (open the open eye / shut the shut line / smile ^^) |
 | — | The position/rotation/scale of group, headGroup, the depth groups and faceGroup — group.position.x carries the distance walked (walkX) and group.scale.x carries a quad's walking direction (facing ±1) |

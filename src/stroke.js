@@ -117,7 +117,7 @@ export class Sketch {
   }
 
   // One stroke. width is the maximum, and it thins toward the ends — except at a joint: joint = [start, end] marks an end that meets
-  // another line (a tail bone's seam), and that end keeps its width so the two lines read as one
+  // another line or a fill's edge (the tail's root, its side lines meeting the tip's arc), and that end keeps its width
   stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03, joint = null } = {}) {
     const rgb = hexToRgb(color);
     width *= this.inkScale;
@@ -193,7 +193,7 @@ export class Sketch {
   // The pencil — every number in PENCIL (above). closed draws a seamless loop: no overshoot, and the sines snapped to whole cycles
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
-  // joint = [start, end]: an end that meets another line (a tail bone's seam) gets no overshoot and no thinning, so the two read as one line
+  // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
   pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, paper = PAPER, joint = null } = {}) {
     const P = PENCIL;
     const rgb = hexToRgb(color);

@@ -44,7 +44,7 @@ If you changed the scene structure (layers, rig, meshes), measure these numbers 
 
 ### A part that boils without a mesh per frame — `sketchMeshBoil`
 
-The thirteen layers boil as three meshes each, switched by `visible`. The tail's four bones and the limbs boil
+The thirteen layers boil as three meshes each, switched by `visible`. The tail (one skinned mesh) and the limbs boil
 differently: every frame's triangles sit in **one geometry**, one after another, and the frame is chosen by
 `geometry.setDrawRange` (`scene/mesh.js sketchMeshBoil`, `animate.js` over `item.boilRanges`). Three frames cost
 three times the geometry — a few thousand vertices per quad — and **no draw call**. Use it for any new part

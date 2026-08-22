@@ -24,7 +24,7 @@ export function markWith(sketch, points, options) { return draw(sketch, points, 
 
 // weight scales the kind's width (a head's contour runs a little heavier than a body's; open lines are fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6).
 // paper is the color the pencil's bites take when the line runs over a fill. step re-samples a tiny ribbon finer (the star eye).
-// joint = [start, end] marks a line end that meets another line (a tail bone's seam): no overshoot, no thinning there.
+// joint = [start, end] marks a line end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there.
 // An unknown name throws — a misspelt role or kind must not silently draw nothing
 function draw(sketch, points, role, closed, { color = "#2b2724", weight = 1, paper, step, outline, joint } = {}) {
   const name = outline || BOARD_LINES[role];
