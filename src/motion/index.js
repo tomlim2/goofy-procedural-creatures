@@ -290,7 +290,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       for (let i = 0; i < 4; i += 1) legOffset[i] += R.legJitter(t, i);
 
       // Tail · jelly — the tail's default is the idle angle (tailIdle), with the swish and flick on top. The tip bone (tailTip) is a relative angle against the root
-      let tailAngle = (M.tailIdle || 0) + R.stepTailSwish(tailSwish, t);
+      const swish = R.stepTailSwish(tailSwish, t);
+      let tailAngle = (M.tailIdle || 0) + swish;
       let tailTip = 0;
       const flick = E.stepTailFlick(tailFlick, t, rng, M);
       // A cat's flick is **the tip alone tapping** (twitch — the root stays put); a dog flicks the whole tail
@@ -347,7 +348,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // The tail tilts with the body and drops a little further, to lie on the floor
       if (sitK > 0 && sit) {
         for (let i = 0; i < 4; i += 1) if (!(qact && qact.index === i)) legOffset[i] = legOffset[i] * (1 - sitK) + sit.legs[i] * sitK;
-        tailAngle -= 0.3 * sitK;
+        // Seated, the tail lies on the floor and **stills** — the swish goes out by 90% (a tail sweeping the floor back and forth read as
+        // a tail moving down); the tip's taps and flicks carry on, and so does a dog's wag (it is added after the swish, not scaled here)
+        tailAngle -= (0.3 + swish * 0.9) * sitK * (1 - tailRaise);   // a raised tail stays dead vertical even while seated
       }
       // The sleeping pose — the legs fold under the body (front legs back, hind legs forward), the tail lowers and the head rests on the front paws.
       // sleepK blends it so lying down and getting up are smooth
