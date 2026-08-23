@@ -109,6 +109,9 @@ export const PENCIL = {
   stub: 0.05,                          // a line this short keeps its ends and sheds nothing — the overshoot would run it half again
                                        // to twice as long, and a crumb or a bite is the size of the whole mark. Every dot and dash is one
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
+  ghost: 0.62,                         // **the ghost** — a pass after the first is laid at this share of the width: the same line
+                                       // again, thinner, wandering and breathing on its own. Lay enough of them and the line comes
+                                       // out doubled and offset, which is the BROKEN hold (medium/outlines.js)
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
   // An ink crumb sits on the edge, its centre scatter × the half width out — never past the edge, so it frays the line instead of
   // floating loose beside it; a bite (the bite share of crumbs) is a paper-coloured square
@@ -271,7 +274,7 @@ export class Sketch {
       const noise = this.noise;
       const r = (k) => noise(ph * 0.37 + k * 2.71) * 0.5 + 0.5;             // a per-stroke number in [0, 1], from the drawing noise
       const jr = (k, [a, b]) => a + (b - a) * r(k);
-      const w = width * jr(1, P.jr);
+      const w = width * jr(1, P.jr) * (pass > 0 ? P.ghost : 1);   // a repeat is a ghost — thinner than the line it follows
 
       // The spine — re-sampled, and on an open line run past both ends along the end tangents
       let spine = resample(closed ? [...points, points[0]] : points, P.step);

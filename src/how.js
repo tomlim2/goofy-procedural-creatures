@@ -185,8 +185,7 @@ const ANATOMY = {
     ["the breath", "the width, on two more", { wander: true, breathe: true }],
     ["the flick", "past both ends, blunt", { wander: true, breathe: true, over: true }],
     ["the shed", "crumbs on the edge, bites inside", { wander: true, breathe: true, over: true, shed: true }],
-    ["the lift", "the pen comes up — SLINE", { wander: true, breathe: true, over: true, shed: true }, { lift: GOOFY_OUTLINES.PENCIL_SLINE.lift }],
-    ["the pass", "laid three times — BROKEN", { wander: true, breathe: true, over: true, shed: true }, { passes: 3 }]
+    ["the ghost", "the same line again, thinner", { wander: true, breathe: true, over: true, shed: true }, { passes: 2 }]
   ],
   ribbonpen: [
     ["the points", "what you hand it", null],
