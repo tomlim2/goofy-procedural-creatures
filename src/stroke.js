@@ -106,6 +106,8 @@ export const PENCIL = {
   breathe: [[0.38, 6], [0.14, 16]],    // the width breathing — [amplitude, rad per world unit], summed
   jr: [0.88, 1.14],                    // per-stroke width jitter
   over: [0.35, 1.1],                   // the overshoot past each end, in widths
+  stub: 0.05,                          // a line this short keeps its ends and sheds nothing — the overshoot would run it half again
+                                       // to twice as long, and a crumb or a bite is the size of the whole mark. Every dot and dash is one
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
   // An ink crumb sits on the edge, its centre scatter × the half width out — never past the edge, so it frays the line instead of
@@ -172,7 +174,7 @@ export class Sketch {
       this.phase += 13.37;
       const sampled = resample(points, step);
       // Two samples is both ends and nothing between, and the end taper takes both to width 0 — a stroke shorter than step draws
-      // nothing. Nothing on the board hands one over: short lines are the pencil's (medium/outlines.js PENCIL_DAB), and what is
+      // nothing. Nothing on the board hands one over: short lines are the pencil's (it keeps a stub's ends, PENCIL.stub), and what is
       // left here — a hat's band, an emoji's glyph — is long
       if (sampled.length < 3) continue;
       const path = perturb(sampled, this.noise, jitter * this.wobble, this.phase);
@@ -250,7 +252,7 @@ export class Sketch {
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
   // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
-  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, shed = true, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
+  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
     const P = PENCIL;
     const A = anatomy || ALL_HABITS;
     const rgb = hexToRgb(color);
@@ -277,9 +279,14 @@ export class Sketch {
       if (closed) spine.pop();
       // Two samples draw as one quad: the pencil's width does not taper to nothing at an end, so a stub is a stub, not a gap
       if (spine.length < 2) continue;
+      // A stub — measured before the overshoot could lengthen it (PENCIL.stub)
+      let raw = 0;
+      for (let i = 1; i < spine.length; i += 1) raw += Math.hypot(spine[i][0] - spine[i - 1][0], spine[i][1] - spine[i - 1][1]);
+      if (closed) raw += Math.hypot(spine[0][0] - spine[spine.length - 1][0], spine[0][1] - spine[spine.length - 1][1]);
+      const stub = raw < P.stub;
       let tail0 = 0;
       let tail1 = 0;
-      if (!closed && A.over) {
+      if (!closed && A.over && !stub) {
         tail0 = joint && joint[0] ? 0 : w * jr(2, P.over);
         tail1 = joint && joint[1] ? 0 : w * jr(3, P.over);
         spine = [
@@ -354,7 +361,7 @@ export class Sketch {
       }
 
       // The shed — after the ribbon, so a bite covers ink and a crumb sits on the paper
-      if (!shed || !A.shed || w < P.grit.minWidth) continue;
+      if (stub || !A.shed || w < P.grit.minWidth) continue;
       const density = jr(10, P.grit.density);
       const G = P.grit;
       for (let i = 0; i < n; i += 1) {
