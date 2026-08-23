@@ -159,9 +159,13 @@ dots, spots, hatching — a third slot) is drawn inside the base colour. The tab
 <code>src/medium/materials.js</code>; every entry gets a row of shader balls — the same ball in the same color at the five
 <b>value</b> steps, <b>black · hatch · scribble · stipple · light</b> (the reference's scale, named for the way graphite
 makes each): a goofy material renders darkness its own way, graphite changing technique step by step, ink, oil and charcoal
-laying down more or less of their texture. On the board the step comes from the part's color — a dark cloth draws black,
-a pale skin light — moved one step by the creature's <b>density</b>, its hand. A mark has to be lighter than what it is drawn on
-or it is not a mark, so on a <b>dark ground</b> every technique turns around and lays its marks light — the last ball of each row.</p>
+laying down more or less of their texture. A step is in the <b>colour first and the marks second</b> — it pulls the base toward the
+technique's own tone (graphite and charcoal darken it, ink lightens it: its scratches take the ink away) and lays the marks on top,
+because a mark fine enough to be pretty up close falls under a device pixel on a board and takes the whole scale with it. On the
+board the step comes from the part's color — a dark cloth draws black, a pale skin light — moved one step by the creature's
+<b>density</b>, its hand. A mark has to be lighter than what it is drawn on or it is not a mark, so on a <b>dark ground</b> every
+technique turns around and lays its marks light and the step pulls the colour the other way — the <b>lower row</b> of each pair is
+the same five steps on a dark ground.</p>
 
 <div class="figs" id="materialBalls"></div>
 

@@ -197,27 +197,31 @@ IN_USE.forEach(({ key, label, box, draw }) => {
 // Shader balls — one row per entry of GOOFY_MATERIALS, like a 3D material preview: the same ball in the same color at the five value
 // steps (black · hatch · scribble · stipple · light), filled the goofy material's way at each — the contour is the board's outline,
 // PENCIL; a goofy material is only the filling. FLAT has no texture, so one ball.
-// The **last ball of a textured row is a dark ground** at the step its own darkness asks for: a mark has to be lighter than what it
-// is drawn on, so on a dark ground every technique turns its marks around and lays them light (materials.js contrast)
+// A textured entry gets **the same five steps again underneath, on a dark ground**: a mark has to be lighter than what it is drawn
+// on, so there every technique turns around and lays its marks light, and the step pulls the colour the other way (materials.js
+// contrast, pull). One dark ball at the end of the row could only show it at one step; the scale is the point
 const DARK_GROUND = DARKS[2];
 Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
   const m = GOOFY_MATERIALS[name];
   const steps = m.texture ? VALUES.map((_, k) => k) : [2];
-  const balls = m.texture ? [...steps.map((k) => [FILLS[2], k]), [DARK_GROUND, undefined]] : [[FILLS[2], 2]];
-  const label = (j) => (!m.texture ? name.toLowerCase() : j < steps.length ? `${VALUES[steps[j]].name} · ${VALUES[steps[j]].v}` : "on a dark ground");
+  const grounds = m.texture ? [FILLS[2], DARK_GROUND] : [FILLS[2]];
   const el = document.createElement("figure");
   el.dataset.fig = `material:${name}`;
   if (m.texture) el.className = "wide";
-  el.innerHTML = `<canvas></canvas><div class="subs">${balls.map((_, j) => `<span>${label(j)}</span>`).join("")}</div>`;
+  const label = (k) => (m.texture ? `${VALUES[k].name} · ${VALUES[k].v}` : name.toLowerCase());
+  el.innerHTML = `<canvas></canvas><div class="subs">${steps.map((k) => `<span>${label(k)}</span>`).join("")}</div>`;
   document.getElementById("materialBalls").appendChild(el);
-  const half = balls.length * 0.25;
-  fig(`material:${name}`, [-half, -0.25, half, 0.25], (sk) => {
+  const half = steps.length * 0.25;
+  const rowY = (r) => (grounds.length === 1 ? 0 : (grounds.length - 1) / 2 * 0.5 - r * 0.5);
+  fig(`material:${name}`, [-half, -0.25 * grounds.length, half, 0.25 * grounds.length], (sk) => {
     const fills = sk(), ink = sk();
-    balls.forEach(([color, k], j) => {
-      const x = (j - (balls.length - 1) / 2) * 0.5;
-      const ball = blobPath(x, 0, 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 + j });
-      fills.paint(ball, name, { color, offset: [0.012, -0.01], value: k });   // value undefined: the step the colour's own darkness asks for
-      ink.contour(ball, { color: INK, paper: CARD });   // the board's contour, whatever the switch says
+    grounds.forEach((color, r) => {
+      steps.forEach((k, j) => {
+        const x = (j - (steps.length - 1) / 2) * 0.5;
+        const ball = blobPath(x, rowY(r), 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 + j + r * 17 });
+        fills.paint(ball, name, { color, offset: [0.012, -0.01], value: k });
+        ink.contour(ball, { color: INK, paper: CARD });   // the board's contour, whatever the switch says
+      });
     });
   });
 });
