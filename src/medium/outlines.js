@@ -10,9 +10,9 @@
 export const GOOFY_OUTLINES = {
   // The pencil's stroke — full width, laid once. Mass: what every line on the board is
   PENCIL_STROKE: { pen: "pencil", width: 0.012, passes: 1 },
-  // The pencil's sline — held light: thin, laid once, and **the pen lifts** now and then, leaving the line open (lift, in pencil()).
-  // Detail. A line shorter than lift.min never breaks, so a dot or a dash keeps its whole extent
-  PENCIL_SLINE: { pen: "pencil", width: 0.008, passes: 1, lift: { per: 0.26, gap: [0.006, 0.016], min: 0.07, edge: 0.025 } },
+  // The pencil's sline — held light: a hairline, laid once, and **the pen lifts** now and then, leaving it open for a width or two
+  // (PENCIL.lift). Detail. A line too short to be a detail never breaks, so a dot or a dash keeps its whole extent
+  PENCIL_SLINE: { pen: "pencil", width: 0.005, passes: 1, lift: true },
   // The pencil's broken — the **ghost** habit stacked: the line, then two more of it at PENCIL.ghost of the width, each wandering
   // and breathing on its own, so it comes out doubled and offset the way a hand going round twice leaves it. Contour. Built, and
   // on nothing yet (BOARD_LINES, below)

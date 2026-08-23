@@ -109,6 +109,10 @@ export const PENCIL = {
   stub: 0.05,                          // a line this short keeps its ends and sheds nothing — the overshoot would run it half again
                                        // to twice as long, and a crumb or a bite is the size of the whole mark. Every dot and dash is one
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
+  // **the lift** — the pen comes up. In **widths**, the way the overshoot is: a skip is a couple of line-widths long and they fall
+  // some sixteen apart, so they scale with the line instead of turning a hairline into a dashed one. min: the shortest line that
+  // lifts at all; edge: how close to an end a skip may fall. A hold asks for it (medium/outlines.js: SLINE), the pencil knows how
+  lift: { per: 16, gap: [1.2, 3], min: 8, edge: 3 },
   ghost: 0.62,                         // **the ghost** — a pass after the first is laid at this share of the width: the same line
                                        // again, thinner, wandering and breathing on its own. Lay enough of them and the line comes
                                        // out doubled and offset, which is the BROKEN hold (medium/outlines.js)
@@ -309,15 +313,17 @@ export class Sketch {
       const p2 = r(7) * TAU;
       const breathe = A.breathe ? P.breathe.map(([amp, om], k) => [amp, snap(om), r(8 + k) * TAU]) : [];
       const wander = A.wander ? P.wander * this.wobble : 0;
-      // The pen lifts — SLINE's gaps (the numbers belong to the kind, medium/outlines.js, not to the pencil). About one lift every
-      // `per` world units, `gap` of them long, never within `edge` of either end and none at all on a line shorter than `min`: a dot
-      // or a dash keeps its whole extent, and only a line long enough to be a detail breaks. A closed loop has no ends to spare
-      const gapAt = lift && L >= lift.min ? (at) => {
-        const cell = Math.floor(at / lift.per);
-        const g = jr(20 + cell * 2, lift.gap);
-        const from = cell * lift.per + r(21 + cell * 2) * (lift.per - g);
+      // The pen lifts (PENCIL.lift, in widths). One skip every `per` widths, `gap` widths long, never within `edge` widths of
+      // either end and none at all on a line shorter than `min` of them: a dot or a dash keeps its whole extent, and only a line
+      // long enough to be a detail breaks. A closed loop has no ends to spare
+      const F = P.lift;
+      const per = F.per * w, edge = F.edge * w;
+      const gapAt = lift && L >= F.min * w ? (at) => {
+        const cell = Math.floor(at / per);
+        const g = jr(20 + cell * 2, F.gap) * w;
+        const from = cell * per + r(21 + cell * 2) * (per - g);
         if (at <= from || at >= from + g) return false;
-        return closed || (from > lift.edge && from + g < L - lift.edge);
+        return closed || (from > edge && from + g < L - edge);
       } : null;
 
       // Per-point normals (cyclic on a loop), shared by the quads on either side

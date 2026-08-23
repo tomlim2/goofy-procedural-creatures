@@ -94,7 +94,7 @@ a 240-creature sample are stubs.
 | Kind | Line |
 | --- | --- |
 | `PENCIL_STROKE` | `pencil()` 0.012 once — the reference's line at full width: it wanders, breathes, runs past its ends and sheds; closed, one seamless loop. **Mass** |
-| `PENCIL_SLINE` | `pencil()` 0.008 once, and **the pen lifts** — about one gap every 0.26 of a unit, 0.006~0.016 long, never within 0.025 of an end and none at all below 0.07 of length, so a dot or a dash keeps its whole extent. **Detail** |
+| `PENCIL_SLINE` | `pencil()` 0.005 once — a hairline — and **the pen lifts** (`PENCIL.lift`): a skip every 16 widths, 1.2~3 widths long, never within 3 of an end and none at all on a line under 8 of them, so a dot or a dash keeps its whole extent. **Detail** |
 | `PENCIL_BROKEN` | `pencil()` 0.011 with the **ghost** habit stacked — three passes, the two after the first at `PENCIL.ghost` (0.62) of the width, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
 
 On the board today: every contour and every open line is PENCIL_STROKE — 45 and 119 call sites. The **ribbon pen** (`stroke()`) is
