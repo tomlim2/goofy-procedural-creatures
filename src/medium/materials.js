@@ -22,16 +22,19 @@ export const GOOFY_MATERIALS = {
   // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
   FLAT:        { base: { kind: "flat" } },
   // Graphite — the part's color hatched with the pencil (the reference's ground is paper because its color is paper; ours keeps the
-  // part's color — a lightened ground bleached pale parts and left them a different color from their decals and neighbours): thin grey lines, nearly upright and a little slanted, each one drawn as
-  // a few strokes — the pencil lifts and comes down again (lift: the strokes' lengths and the gaps between), now and then doubled
-  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
-  // Ink — solid, scratched: a few long light lines dragged across the dark
-  INK:         { base: { kind: "flat" }, texture: { kind: "scratch", lines: 6, width: 0.005, tone: 1.35 } },
+  // part's color — a lightened ground bleached pale parts and left them a different color from their decals and neighbours): grey rules
+  // laid with the **side of the lead**, nearly upright and a little slanted, each one drawn as a few strokes — the pencil lifts and comes
+  // down again (lift: the strokes' lengths and the gaps between), now and then doubled. Their spacing is the step's
+  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", pull: 0.5, angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
+  // Ink — solid, scratched **open**: a few long light lines dragged across it, taking the ink away. The darkest step is the least
+  // scratched (the ink still covers it), the lightest the most. It used to run the other way — the black step laid the most light
+  // lines and came out the palest of the five
+  INK:         { base: { kind: "flat" }, texture: { kind: "scratch", pull: 0.42, lines: 6, width: 0.005, tone: 1.35 } },
   // Oil — thick paint laid in blunt strokes: round-ended capsules of one width and many lengths, all along one diagonal, scattered
   // and overlapping, in four tones close to the ground (the reference's ball: calm, dense, a knife's work), cut flat by the contour
   OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, tones: [0.86, 0.94, 1.06, 1.16] } },
-  // Charcoal — a ground dusted with dark specks
-  CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
+  // Charcoal — a ground dusted with dark specks, each a short stroke at its own angle rather than a square
+  CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", pull: 0.5, per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
 };
 
 
@@ -42,7 +45,10 @@ const LIGHT_INK = "#e9e3d5";
 // Values — how dark a surface is drawn, in five steps, named for the way graphite makes each (the reference's scale): black,
 // hatch, scribble, stipple, light. A goofy material renders a step its own way — graphite changes technique step by step (cross-hatch →
 // hatch → a wavy scribble → stipple → a bare ground), ink, oil and charcoal change how much of their texture they lay down.
-// The step a part gets comes from its color's darkness (valueStep), nudged one step by the hand — the `density` slot
+// The step a part gets comes from its color's darkness (valueStep), nudged one step by the hand — the `density` slot.
+// A step is in the **colour** first and the marks second: it pulls the base toward the technique's own tone (texture.pull) and then
+// lays the marks on top. Carried by marks alone it did not survive the board — the fine ones fall under a device pixel there and the
+// five steps came out 0.7~4.4 of luminance apart on three of the four materials, one flat colour to the eye
 export const VALUES = [
   { name: "black", v: 1 },
   { name: "hatch", v: 0.72 },
@@ -167,15 +173,28 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   // *darker* than the ground they were scratched into, and a dark cat's tail went black on black
   const contrast = (factor) => (dark ? tone(1 + Math.abs(1 - factor) * 1.6) : shade(color, factor));
   const b = bounds(points);
+  const f = m.texture;
+
+  // **The value step is in the base colour, and the marks are the medium.** A step pulls the ground toward the technique's own tone —
+  // graphite and charcoal darken it, ink lightens it (its scratches take the ink away) — by `pull` × how far the step goes.
+  // Value carried by marks alone cannot survive the board: at a 7×5 cell a world unit is 144 device pixels, the fine marks came out
+  // under one of them, and the five steps measured 0.7~4.4 of luminance apart on three of the four materials — one flat colour to the
+  // eye. Marks big enough to carry a value on their own turn a small part into blotches instead. A flat fill never falls under a pixel.
+  // On a dark ground the pull is halved: there the technique's tone is a **lighter** one (contrast), and pulling a dark part as far
+  // toward it as a light part goes toward its shade washes the part out — a black cat came back grey. Oil has no single tone (it
+  // paints a spread of them) and so carries its step in the paint itself, in the dab case below, not here
+  const weight = f ? Math.max(0, Math.min(1, (V.v - 0.28) * 1.15)) : 0;   // black 0.83 · hatch 0.51 · scribble 0.39 · stipple 0.25 · light 0.07
+  const pulled = f && f.pull && f.tone !== undefined
+    ? mix(color, contrast(f.tone), f.pull * (dark ? 0.5 : 1) * (f.tone < 1 ? weight : 1 - weight))
+    : color;
 
   if (wantBase) {
-    if (m.base.kind === "flat") base(m.base.tone === undefined ? color : shade(color, dark ? 0.92 : m.base.tone));
+    if (m.base.kind === "flat") base(m.base.tone === undefined ? pulled : shade(pulled, dark ? 0.92 : m.base.tone));
     else throw new Error(`goofy material ${name}: unknown base kind ${m.base.kind}`);
     if (pattern) patternOn(sketch, points, pattern);
     for (const d of decals) sketch.fill(d.path, d.color, [0, 0], skinT);   // the decals — part of the base color; the texture goes over them
   }
 
-  const f = m.texture;
   if (!f || (only !== undefined && only !== "texture")) return;
   {
     // The skin tag for the texture's marks. A fill at **one t** — a bead, a tuft, a pom on a bent part — carries its texture with it, so every
@@ -186,6 +205,10 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
     const holdTag = () => { sketch.skinT = markTag ? skinT : NaN; };
     const u = (k) => noise(ph * 0.29 + k * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
     const h = (k) => hash01(Math.round(ph * 997) + k * 7919);   // a scattered one — neighbours unrelated
+    // How much of the surface the marks cover. The **base colour already carries the value** (above), so this is the medium's grain
+    // and not its tone — which is what lets the marks stay as fine as the hand would draw them. Marks coarse enough to carry a value
+    // on their own were tried and dropped: they turn a small part into blotches, and a face into camouflage
+    const cover = Math.max(0.06, weight * 0.62);   // black 0.51 · hatch 0.31 · scribble 0.24 · stipple 0.15 · light 0.06
     switch (f.kind) {
       case "hatch": {
         // Graphite, step by step: black — cross-hatching, two sets of rules, close and dark · hatch — one set · scribble — wavy
@@ -243,18 +266,24 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
         break;
       }
       case "scratch": {
-        const tone = contrast(f.tone);
-        for (let i = 0; i < Math.round(f.lines * (0.3 + V.v * 0.9)); i += 1) {   // black: all the scratches and more · light: a few
+        // Ink is solid and the scratches take it **away**, so the surface lightens as it is opened up: the darkest step is barely
+        // scratched, the lightest scratched most. It used to run the other way — the black step laid the most light lines and came out
+        // the palest of the five. A scratch stays a **line**: widened into a wedge, a few of them tile the surface into camouflage, so
+        // here the step moves the count and the tone rather than the width
+        const open = 1 - cover;   // black 0.17 · hatch 0.49 · scribble 0.61 · stipple 0.75 · light 0.93
+        const tone = contrast(f.tone * (0.9 + open * 0.3));   // an open step scratches lighter as well as more often
+        const width = f.width * (0.6 + open * 0.5);
+        for (let i = 0; i < Math.round(f.lines * open); i += 1) {
           const angle = u(i) * Math.PI;
           const o = (u(i + 50) - 0.5) * b.r * 1.4;
           const dx = Math.cos(angle), dy = Math.sin(angle);
           const a = [b.cx - dy * o - dx * b.r, b.cy + dx * o - dy * b.r];
           const c = [b.cx - dy * o + dx * b.r, b.cy + dx * o + dy * b.r];
-          for (const piece of clipSegment(a, c, points)) sketch.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.03, skinT: markTag });
+          for (const piece of clipSegment(a, c, points)) sketch.stroke(piece, { color: tone, width: width * (0.7 + 0.6 * u(i + 300)), jitter: 0.002, step: 0.03, skinT: markTag });
         }
-        if (V.name === "black") {   // the darkest ink is worked over once more — a faint upright hatch under the scratches
+        if (V.name === "black") {   // the darkest ink is worked over once more — a faint band across, under the scratches
           const faint = contrast(1.12);
-          for (const [p, q] of rules(points, 1.5, 0.014, (i) => (u(i + 900) - 0.5) * 0.4)) sketch.stroke([p, q], { color: faint, width: 0.002, jitter: 0.002, step: 0.03, skinT: markTag });
+          for (const [p, q] of rules(points, 1.5, 0.055, (i) => (u(i + 900) - 0.5) * 0.4)) sketch.stroke([p, q], { color: faint, width: 0.009, jitter: 0.002, step: 0.03, skinT: markTag });
         }
         break;
       }
@@ -264,9 +293,13 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
         // On a dark ground the whole set is lifted so its darkest stroke sits on the ground and the rest go lighter — the same rule as
         // contrast(), kept as a **spread** rather than one tone so paint still varies stroke to stroke. Left as they are, the two tones
         // below the ground painted dark on dark and half of the strokes simply vanished
-        const lift = dark ? 1 - Math.min(...f.tones) : 0;
-        const tones = f.tones.map((t) => hexToRgb(dark ? tone(1 + (t + lift - 1) * 1.6) : tone(t)));
-        const count = Math.round(f.per * (0.45 + V.v * 0.7) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
+        // The step moves the whole set off the ground — darker paint at black, all but the ground at light — so the value is in the
+        // paint's colour and not only in how much of it there is. Symmetrical tones would leave the mean on the ground whatever the step
+        const shift = (0.72 - V.v) * 0.9;   // black −0.25 · hatch 0 · light +0.34
+        const stepTones = f.tones.map((t) => t + shift);
+        const lift = dark ? 1 - Math.min(...stepTones) : 0;
+        const tones = stepTones.map((t) => hexToRgb(dark ? tone(1 + (t + lift - 1) * 1.6) : tone(t)));
+        const count = Math.round(f.per * (0.35 + weight * 1.0) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
         const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
         for (let i = 0; i < count; i += 1) {
           const cx = b.x0 + (b.x1 - b.x0) * h(i * 4);
@@ -339,15 +372,21 @@ export function patternOn(sketch, points, { kind, color }) {
 
 
 // Dust inside a shape — specks of a fixed size at a density per unit area, hashed so they never string into curves
-// holdTag (optional) sets the sketch's skin tag before each speck — a square is one point, so one tag is right for it
-export function dust(sketch, points, b, { per, size, tone }, h, color, holdTag = null) {
+// Crumbs scattered over a surface — a grain of charcoal, a dab of the pencil's point: each one a **short stroke at its own angle**,
+// round-ended. Squares were fine while a speck was under a pixel; the moment a value step is carried by area they have to be big
+// enough to see, and a square that size reads as a pixel, not as charcoal.
+// holdTag (optional) sets the sketch's skin tag before each crumb — a crumb sits at one point, so one tag is right for it
+export function dust(sketch, points, b, { per, size }, h, color, holdTag = null) {
   const rgb = hexToRgb(color);
   const count = Math.round(per * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
   for (let i = 0; i < count; i += 1) {
     const p = [b.x0 + (b.x1 - b.x0) * h(i * 2), b.y0 + (b.y1 - b.y0) * h(i * 2 + 1)];
     if (!insidePath(p, points)) continue;
+    const len = size[0] + (size[1] - size[0]) * h(i + 7000);
+    const ang = h(i + 3100) * Math.PI;
+    const dx = Math.cos(ang) * len * 0.5, dy = Math.sin(ang) * len * 0.5;
     if (holdTag) holdTag();
-    sketch.square(p[0], p[1], size[0] + (size[1] - size[0]) * h(i + 7000), rgb);
+    capsule(sketch, [p[0] - dx, p[1] - dy], [p[0] + dx, p[1] + dy], len * 0.6, rgb);
   }
 }
 

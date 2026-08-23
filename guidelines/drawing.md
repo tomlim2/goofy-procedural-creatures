@@ -178,7 +178,9 @@ adds is a shade of the part's color. On a light color a technique's own directio
 lighter. On a **dark** color every mark goes lighter (`contrast` in `materials.js`), by as much as the technique asked for either
 way: there is nothing below a dark ground to draw with. Only the amount is mirrored, never the direction — mirroring the direction
 turned ink's light scratches into marks *darker* than the ground they were scratched into, and oil's darker half of the spread
-vanished into a black body, so a dark creature with a textured material read as a solid blob. A part names a
+vanished into a black body, so a dark creature with a textured material read as a solid blob. On a dark color the base is pulled
+only **half** as far as on a light one: a mark's tone there is a light one, and pulling a dark part as far toward it as a light part
+goes toward its shade washes the part out. A part names a
 goofy material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
 The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt goofy material cannot silently draw
@@ -191,15 +193,24 @@ material on a **dark ground**, which is where the rule above is visible.
 | `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
 | `GRAPHITE` | `flat` | `hatch` — thin grey pencil strokes, nearly upright, each rule drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
-| `INK` | `flat` | `scratch` — a few long light lines dragged across | the `material` slot (0.8) |
+| `INK` | `flat` | `scratch` — long light lines dragged across, taking the ink away: the darker the step the fewer and the tighter | the `material` slot (0.8) |
 | `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, four tones close to the ground, cut flat by the contour | the `material` slot (1) |
-| `CHARCOAL` | `flat` | `speckle` — dark specks | the `material` slot (1) |
+| `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | the `material` slot (1) |
 
 The head and the body take the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)
 § surface), one tool per creature — at a **value step**. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
 the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34. A goofy material renders a
-step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → stipple → a bare ground),
-ink, oil and charcoal lay down more or less of their texture. The step comes from the part's color's darkness
+step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → coarse dabs → a bare ground),
+ink, oil and charcoal lay down more or less of their texture.
+
+**A step is in the colour first and the marks second.** It pulls the base toward the technique's own tone — graphite and charcoal
+darken it, ink lightens it (its scratches take the ink away), oil paints it — by the texture's `pull` × how far the step goes, and
+*then* lays its marks on top. Value carried by marks alone cannot survive the board: a 7×5 cell puts 144 device pixels in a world
+unit, the fine marks come out at half of one there, and the five steps measured **0.7~4.4 of luminance apart on three of the four
+materials** — one flat colour to the eye, indistinguishable from FLAT. Coarsening the marks until they could carry a value on their
+own was tried and dropped: it turns a small part into blotches and a face into camouflage. A flat fill never falls under a pixel,
+so the colour carries the value and the marks stay **as fine as the hand would draw them** — the medium, not the tone. The steps
+measure 18~40 apart on a light ground now. The step comes from the part's color's darkness
 (`valueStep`: a dark cloth draws black, a pale skin light), moved one step by the creature's `density` — its hand,
 another late slot (light: one step lighter · dense: one step darker; nothing on flat). A dog, a cat or an imp is
 **one mass** — its body is the head's color or a close tone of it — so head and body take the head color's step
