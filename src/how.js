@@ -172,6 +172,54 @@ Object.keys(GOOFY_OUTLINES).forEach((name, i) => {
     ink.line([[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]], { outline: name, color: INK, paper: CARD });   // the kind named outright — the page shows each, as an open line
   });
 });
+// The anatomy — each pen built up **one habit at a time**, a row per habit, the way the reference's legend does it
+// (reference/README.md § 3). The same path in every row; each row is the row above plus one habit. Drawn by the very
+// pencil() and stroke() the board draws with, told which habits to leave out (stroke.js: the anatomy switch) — a row is
+// not an illustration of the line, it is the line, short a habit. Docs: how.html § the goofy outline
+// A **straight** path — the control. Hand the pens a curve and its own bend hides the habits: the wander is a pixel and a half at
+// this scale and the breath is a fifth of the width, both lost inside a 20 px bow. Handed a straight line, everything you see in a
+// row was put there by the habit that row adds
+const ANATOMY_PATH = Array.from({ length: 9 }, (_, i) => [-0.58 + i * 0.145, 0]);
+const DOT = POPS[2];   // the brick red of the palette — the handed points, so they never read as ink
+const ANATOMY = {
+  pencil: [
+    ["the points", "what you hand it", null],
+    ["the ribbon", "two rails, filled", {}],
+    ["the wander", "the spine, on two sines", { wander: true }],
+    ["the breath", "the width, on two more", { wander: true, breathe: true }],
+    ["the flick", "past both ends, blunt", { wander: true, breathe: true, over: true }],
+    ["the shed", "crumbs on the edge, bites inside", { wander: true, breathe: true, over: true, shed: true }]
+  ],
+  ribbonpen: [
+    ["the points", "what you hand it", null],
+    ["the ribbon", "one width, no noise", { jitter: 0, anatomy: {} }],
+    ["the wander", "noise along the normal", { jitter: 0.006, anatomy: {} }],
+    ["the taper", "thin at both ends", { jitter: 0.006, anatomy: { taper: true } }],
+    ["the press", "the pressure wavers", { jitter: 0.006, anatomy: { taper: true, press: true } }]
+  ]
+};
+// The points row — the path as it is handed over: a dot at each point (a blob, like everything else here) on a hairline
+function handedPoints(fills, ink) {
+  ink.stroke(ANATOMY_PATH, { color: DOT, width: 0.0022, jitter: 0, anatomy: {} });
+  ANATOMY_PATH.forEach(([x, y], i) => fills.fill(blobPath(x, y, 0.0075, 0.0075, { lumps: 3, amount: 0.12, noise, phase: 211 + i }), DOT));
+}
+Object.entries(ANATOMY).forEach(([pen, rows]) => {
+  const box = document.getElementById(`${pen}Anatomy`);
+  rows.forEach(([name, sub, habits], r) => {
+    const key = `anatomy:${pen}:${r}`;
+    const el = document.createElement("figure");
+    el.dataset.fig = key;
+    el.innerHTML = `<div class="who"><b>${name}</b><span>${sub}</span></div><div class="ln"><canvas></canvas></div>`;
+    box.appendChild(el);
+    fig(key, [-0.66, -0.05, 0.66, 0.05], (sk) => {
+      const fills = sk(), ink = sk();
+      if (!habits) return handedPoints(fills, ink);
+      if (pen === "pencil") ink.pencil(ANATOMY_PATH, { color: INK, width: 0.015, anatomy: habits, paper: CARD });
+      else ink.stroke(ANATOMY_PATH, { color: INK, width: 0.015, jitter: habits.jitter, anatomy: habits.anatomy });
+    });
+  });
+});
+
 // Fur balls — one per entry of GOOFY_FUR: the same FLAT ball, the board's contour, the fur grown along its crown as hair is
 Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("furBalls"), `fur:${name}`, name.toLowerCase(), 131 + i * 3, (fills, ink, ball) => {
   fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
@@ -294,7 +342,9 @@ document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
 
 const dpr = renderer.getPixelRatio();
 function paint(f) {
-  const w = Math.min(f.el.clientWidth - 24, f.maxW);   // 24 — the card's horizontal padding
+  // 24 — the card's horizontal padding. An anatomy row holds its canvas in a column beside the label, so measure that column instead
+  const holder = f.canvas.parentElement;
+  const w = Math.min(holder === f.el ? holder.clientWidth - 24 : holder.clientWidth, f.maxW);
   if (w <= 0) return;
   const h = Math.max(36, Math.round(w * f.aspect));
   if (w !== f.width) {

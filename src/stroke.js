@@ -123,6 +123,12 @@ export const PENCIL = {
 export const TOOTH = 0.3;
 
 
+// The anatomy switch — which of a line's habits are on. **Only the medium page passes it** (how.js: the rows that build a line up one
+// habit at a time, how.html § the pencil / § the ribbon pen); everything else leaves it out and draws with all of them, so nothing on
+// the board can lose a habit by accident. A habit left out here is left out of the drawing, not faked
+const ALL_HABITS = { wander: true, breathe: true, over: true, shed: true, taper: true, press: true };
+
+
 export class Sketch {
   // inkScale is the global multiplier for stroke thickness. Change the cell size and this is the only thing to touch.
   constructor(noise, wobble = 1, inkScale = 1.5) {
@@ -156,7 +162,8 @@ export class Sketch {
 
   // One stroke. width is the maximum, and it thins toward the ends — except at a joint: joint = [start, end] marks an end that meets
   // another line or a fill's edge (the tail's root, its side lines meeting the tip's arc), and that end keeps its width
-  stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03, joint = null, skinT = null } = {}) {
+  stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03, joint = null, skinT = null, anatomy = null } = {}) {
+    const A = anatomy || ALL_HABITS;
     const rgb = hexToRgb(color);
     width *= this.inkScale;
     this.skinT = NaN;   // the tags go on per vertex below — nothing here inherits a tag, and nothing drawn after this call does either
@@ -173,10 +180,12 @@ export class Sketch {
       const phase = this.phase;
       const noise = this.noise;
       const ramp = (u) => Math.pow(Math.sin((Math.PI / 2) * Math.min(1, Math.max(0, u))), 0.35);
-      const taper = joint
-        ? (t) => (joint[0] ? 1 : ramp(t * 2)) * (joint[1] ? 1 : ramp((1 - t) * 2))
-        : (t) => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 0.35);
-      const press = (t, k) => 0.75 + 0.45 * noise(phase * 0.5 + t * 6 + k);
+      const taper = !A.taper
+        ? () => 1
+        : joint
+          ? (t) => (joint[0] ? 1 : ramp(t * 2)) * (joint[1] ? 1 : ramp((1 - t) * 2))
+          : (t) => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 0.35);
+      const press = A.press ? (t, k) => 0.75 + 0.45 * noise(phase * 0.5 + t * 6 + k) : () => 1;
       const last = path.length - 1;
 
       // The skin tag per **sample point** — the arc length to it along the line. Both corners of a segment's near end take the near point's tag and
@@ -241,8 +250,9 @@ export class Sketch {
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
   // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
-  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, paper = PAPER, joint = null, skinT = null } = {}) {
+  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
     const P = PENCIL;
+    const A = anatomy || ALL_HABITS;
     const rgb = hexToRgb(color);
     const biteRgb = hexToRgb(paper);
     width *= this.inkScale;
@@ -269,7 +279,7 @@ export class Sketch {
       if (spine.length < 3) continue;
       let tail0 = 0;
       let tail1 = 0;
-      if (!closed) {
+      if (!closed && A.over) {
         tail0 = joint && joint[0] ? 0 : w * jr(2, P.over);
         tail1 = joint && joint[1] ? 0 : w * jr(3, P.over);
         spine = [
@@ -288,8 +298,8 @@ export class Sketch {
       const p1 = r(5) * TAU;
       const f2 = snap(jr(6, P.waver.f));
       const p2 = r(7) * TAU;
-      const breathe = P.breathe.map(([amp, om], k) => [amp, snap(om), r(8 + k) * TAU]);
-      const wander = P.wander * this.wobble;
+      const breathe = A.breathe ? P.breathe.map(([amp, om], k) => [amp, snap(om), r(8 + k) * TAU]) : [];
+      const wander = A.wander ? P.wander * this.wobble : 0;
       // The pen lifts — SLINE's gaps (the numbers belong to the kind, medium/outlines.js, not to the pencil). About one lift every
       // `per` world units, `gap` of them long, never within `edge` of either end and none at all on a line shorter than `min`: a dot
       // or a dash keeps its whole extent, and only a line long enough to be a detail breaks. A closed loop has no ends to spare
@@ -344,7 +354,7 @@ export class Sketch {
       }
 
       // The shed — after the ribbon, so a bite covers ink and a crumb sits on the paper
-      if (w < P.grit.minWidth) continue;
+      if (!A.shed || w < P.grit.minWidth) continue;
       const density = jr(10, P.grit.density);
       const G = P.grit;
       for (let i = 0; i < n; i += 1) {

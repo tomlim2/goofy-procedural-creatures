@@ -73,6 +73,11 @@ Four things have to be present together to read as a pencil: re-sampling at an e
 (a slow bend plus a fine tremor), an end taper, and uneven pressure through the middle. Leave out any one and it
 becomes vector clip art. RIBBONPEN_STROKE is this stroke, once — the board's first line, and still what every mark is drawn with.</p>
 
+<p>Built up one habit at a time — every row is the row above plus one, drawn by the same <code>stroke()</code> the board uses,
+told which habits to leave out:</p>
+
+<div class="anatomy" id="ribbonpenAnatomy"></div>
+
 <div class="figs">
   <figure data-fig="ribbon">
     <canvas></canvas>
@@ -125,6 +130,10 @@ the contour and the open line of everything on the board. <b>PENCIL_SLINE</b> is
 dot or a dash keeps its whole extent. <b>PENCIL_BROKEN</b> is it laid <b>three times over itself</b>, each pass wandering and breathing on its
 own, the way a hand going round twice leaves a contour. PENCIL_SLINE and PENCIL_BROKEN are built and on nothing yet — the switch above says
 what the board actually draws.</p>
+
+<p>The same, habit by habit. The last row is the whole pencil, which is what the board's contours and open lines are:</p>
+
+<div class="anatomy" id="pencilAnatomy"></div>
 
 <div class="figs">
   <figure data-fig="pencil">

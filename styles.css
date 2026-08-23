@@ -218,6 +218,30 @@ body.how { height: auto; }
   .how .subs span { font-size: 8px; letter-spacing: 0; }   /* nine hex codes have to fit one phone row */
 }
 
+/* The anatomy — one card holding a row per habit: a label on the left, the line on the right (how.js) */
+.how .anatomy {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  background: #f2ecdf;
+  padding: 6px 14px;
+}
+.how .anatomy figure {
+  border: 0;
+  background: none;
+  padding: 10px 0;
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  align-items: center;
+  gap: 14px;
+}
+.how .anatomy figure + figure { border-top: 1px solid rgba(43, 39, 36, 0.08); }
+.how .anatomy .who b { font-weight: 600; letter-spacing: 0.06em; }
+.how .anatomy .who span { display: block; margin-top: 2px; font-size: 10px; letter-spacing: 0.04em; opacity: 0.5; }
+.how .anatomy .ln { min-width: 0; }
+@media (max-width: 700px) {
+  .how .anatomy figure { grid-template-columns: 1fr; gap: 4px; }
+}
+
 /* Face part audit — the deck is wide (it holds the report) and the canvas is pushed over by that much */
 .audit .deck { width: 360px; }
 .audit #stage { left: 0; width: 100%; }   /* Canvas takes the whole screen — individuals have to be big for the pixel check to be accurate. The deck floats above it */

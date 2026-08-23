@@ -99,6 +99,13 @@ PENCIL_BROKEN are built and on nothing** — they exist in the table and on the 
 medium page names the kinds outright (`{ outline: "PENCIL_SLINE" }`) to show each on its own — the one place a kind is named —
 and draws the three roles off the switch, so it cannot drift from the board.
 
+**The anatomy rows.** Each pen is also shown built up **one habit at a time** — a row per habit, each row the row above plus
+one: the points · the ribbon · the wander · the breath · the flick · the shed for the pencil, and the points · the ribbon ·
+the wander · the taper · the press for the ribbon pen. They are drawn by the same `pencil()` and `stroke()` the board draws
+with, told which habits to leave out (`anatomy`, `stroke.js` — **only the medium page ever passes it**; a habit left out is
+left out of the drawing, never faked). The path handed to them is **straight** on purpose: handed a curve, its own bend hides
+the habits (the wander is a pixel and a half at that scale), so everything a row shows was put there by the habit it adds.
+
 ## The goofy fur — how hair is grown
 
 Hair and fur are neither a contour nor a filling — in 3D they are a groom; here they are the **goofy fur**,
