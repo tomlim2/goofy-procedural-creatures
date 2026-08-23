@@ -83,12 +83,12 @@ instead of pinching, and a line thick enough sheds: ink crumbs on the edge, pape
 line is seamless — its sines snap to whole cycles and it never overshoots. Every number is in <code>PENCIL</code> in
 <code>src/stroke.js</code>. The ink is opaque, which is what lets the creature in front hide the one behind.</p>
 <p>Three kinds are this one pencil, told apart by the hold. <b>PENCIL_STROKE</b> is full width, laid once: every contour and
-every open line on the board. <b>PENCIL_SLINE</b> is a hairline, and <b>the pen lifts</b>: a skip every twenty-eight
+every open line on the board. <b>PENCIL_SLINE</b> is a hairline, and <b>the pen lifts</b>: a skip every forty-eight
 widths, one to three widths long — measured in widths, like the overshoot, so a fine line skips finely instead of turning into a
 dashed one. Never within three widths of an end, and none at all on a line under eight of them, so a dot or a dash keeps its whole
 extent.
-<b>PENCIL_BROKEN</b> is the <b>ghost</b> habit stacked — the line, then two more of it at 0.62 of the width, each wandering and
-breathing on its own. SLINE and BROKEN are built and on nothing; the switch above says what the board draws.</p>
+<b>PENCIL_BROKEN</b> is the <b>ghost</b> habit stacked — the line, then two more of it at 0.62 of the width and a fifth of the ink,
+each wandering and breathing on its own. SLINE and BROKEN are built and on nothing; the switch above says what the board draws.</p>
 <p>A dot or a dash needs no kind of its own. The pencil <b>keeps the ends of anything shorter than 0.05 and sheds nothing there</b>:
 an overshoot would run a dot half again to twice as long, and a crumb is the size of the dot. A dot is a line that came out
 short, and nothing else.</p>

@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 // Vertex colors go through hexToRgb (linear space) — color.js. Never bypassed (guidelines/drawing.md § colors go in as linear)
-import { hexToRgb } from "./color.js";
+import { hexToRgb, mix } from "./color.js";
 import { PAPER } from "./character/vocabulary/palette.js";   // the pencil's bites take the paper color (palette.js imports nothing — no cycle)
 // The three concepts a sketch draws by name. They take the sketch in; they never import this file
 import { contourWith, lineWith } from "./medium/outlines.js";
@@ -110,12 +110,14 @@ export const PENCIL = {
                                        // to twice as long, and a crumb or a bite is the size of the whole mark. Every dot and dash is one
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
   // **the lift** — the pen comes up. In **widths**, the way the overshoot is: a skip is a couple of line-widths long and they fall
-  // some twenty-eight apart, so they scale with the line instead of turning a hairline into a dashed one. min: the shortest line
+  // some forty-eight apart, so they scale with the line instead of turning a hairline into a dashed one. min: the shortest line
   // that lifts at all; edge: how close to an end a skip may fall. A hold asks for it (medium/outlines.js: SLINE), the pencil knows how
-  lift: { per: 28, gap: [1.2, 3], min: 8, edge: 3 },
-  ghost: 0.62,                         // **the ghost** — a pass after the first is laid at this share of the width: the same line
-                                       // again, thinner, wandering and breathing on its own. Lay enough of them and the line comes
-                                       // out doubled and offset, which is the BROKEN hold (medium/outlines.js)
+  lift: { per: 48, gap: [1.2, 3], min: 8, edge: 3 },
+  // **the ghost** — a pass after the first is laid at `width` of the line's width and `ink` of its ink: the same line again,
+  // thinner and faint, wandering and breathing on its own. The ink is not opacity — the board's ink is opaque, so the colour is
+  // mixed that far toward the paper it is drawn on, which is what a fifth of a pass looks like. Lay enough of them and the line
+  // comes out doubled and offset, which is the BROKEN hold (medium/outlines.js)
+  ghost: { width: 0.62, ink: 0.2 },
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
   // An ink crumb sits on the edge, its centre scatter × the half width out — never past the edge, so it frays the line instead of
   // floating loose beside it; a bite (the bite share of crumbs) is a paper-coloured square
@@ -262,6 +264,7 @@ export class Sketch {
     const P = PENCIL;
     const A = anatomy || ALL_HABITS;
     const rgb = hexToRgb(color);
+    const ghostRgb = hexToRgb(mix(color, paper, 1 - P.ghost.ink));   // the ghost's faintness, as a colour: the board's ink is opaque
     const biteRgb = hexToRgb(paper);
     width *= this.inkScale;
     this.skinT = NaN;   // per-vertex tags below — nothing inherits a tag from this call
@@ -278,7 +281,8 @@ export class Sketch {
       const noise = this.noise;
       const r = (k) => noise(ph * 0.37 + k * 2.71) * 0.5 + 0.5;             // a per-stroke number in [0, 1], from the drawing noise
       const jr = (k, [a, b]) => a + (b - a) * r(k);
-      const w = width * jr(1, P.jr) * (pass > 0 ? P.ghost : 1);   // a repeat is a ghost — thinner than the line it follows
+      const w = width * jr(1, P.jr) * (pass > 0 ? P.ghost.width : 1);   // a repeat is a ghost — thinner and fainter than the line it follows
+      const passRgb = pass > 0 ? ghostRgb : rgb;
 
       // The spine — re-sampled, and on an open line run past both ends along the end tangents
       let spine = resample(closed ? [...points, points[0]] : points, P.step);
@@ -364,8 +368,8 @@ export class Sketch {
         const [nbx, nby] = normals[j];
         const ha = halves[i];
         const hb = halves[j];
-        this.triangle(ax + nax * ha, ay + nay * ha, ax - nax * ha, ay - nay * ha, bx + nbx * hb, by + nby * hb, rgb, [ti, ti, tj]);
-        this.triangle(ax - nax * ha, ay - nay * ha, bx - nbx * hb, by - nby * hb, bx + nbx * hb, by + nby * hb, rgb, [ti, tj, tj]);
+        this.triangle(ax + nax * ha, ay + nay * ha, ax - nax * ha, ay - nay * ha, bx + nbx * hb, by + nby * hb, passRgb, [ti, ti, tj]);
+        this.triangle(ax - nax * ha, ay - nay * ha, bx - nbx * hb, by - nby * hb, bx + nbx * hb, by + nby * hb, passRgb, [ti, tj, tj]);
       }
 
       // The shed — after the ribbon, so a bite covers ink and a crumb sits on the paper
@@ -382,7 +386,7 @@ export class Sketch {
         const d = isBite ? v * G.inside * h : Math.sign(v || 1) * (G.scatter[0] + (G.scatter[1] - G.scatter[0]) * Math.abs(v)) * h;
         const size = G.size[0] + (G.size[1] - G.size[0]) * Math.abs(noise(ph * 0.17 + i * 7.13));
         this.skinT = tagAt(i);   // a crumb is one point — one tag is right for it
-        this.square(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, isBite ? biteRgb : rgb);
+        this.square(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, isBite ? biteRgb : passRgb);
       }
       this.skinT = NaN;
     }
