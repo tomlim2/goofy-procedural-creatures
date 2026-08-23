@@ -210,12 +210,12 @@ function edgesOf(sketch, from, out, color) {
 }
 // One period of a sine, handed over smooth (33 points): the pens part company wherever the line turns, and a line is what they
 // draw. Each pen then samples it at its own step — the coarse one cuts the curve into chords, the fine one follows it
-const CORNER = Array.from({ length: 33 }, (_, i) => [-0.078 + (i / 32) * 0.156, Math.sin((i / 32) * TAU) * 0.017]);
+const CORNER = Array.from({ length: 49 }, (_, i) => [-0.12 + (i / 48) * 0.24, Math.sin((i / 48) * TAU * 1.5) * 0.017]);
 const MESH = FILLS[2];   // the shape in a pale tone, so the edges on top of it are what you read
-fig("quads", [-0.185, -0.05, 0.185, 0.05], (sk) => {
+fig("quads", [-0.275, -0.048, 0.275, 0.048], (sk) => {
   const shape = sk(), lines = sk();
   [-1, 1].forEach((side) => {
-    const path = CORNER.map(([x, y]) => [x + side * 0.095, y]);
+    const path = CORNER.map(([x, y]) => [x + side * 0.14, y]);
     const from = shape.positions.length;
     // Every habit off on both sides: same path, same width, so the only thing left to tell them apart is the normal
     if (side < 0) shape.stroke(path, { color: MESH, width: 0.014, jitter: 0, anatomy: {} });
