@@ -203,6 +203,31 @@ function handedPoints(fills, ink) {
   ink.stroke(ANATOMY_PATH, { color: DOT, width: 0.0022, jitter: 0, anatomy: {} });
   ANATOMY_PATH.forEach(([x, y], i) => fills.fill(blobPath(x, y, 0.0075, 0.0075, { lumps: 3, amount: 0.12, noise, phase: 211 + i }), DOT));
 }
+// The quads — what a stroke is actually made of. Each pair of samples becomes four corners (each sample pushed to both sides along
+// its normal by the half width) and those four are cut into two triangles. The rungs drawn here are **read back out of the triangles
+// the pen just wrote** (a Sketch keeps them in positions: 9 floats a triangle, a1 a2 b1 then a2 b2 b1), so they are the geometry, not
+// a picture of it. Magnified past the board's scale on purpose — at the board's scale a rung falls every 3 px.
+function rungsOf(sketch, from, out, color) {
+  const p = sketch.positions;
+  const rung = (ax, ay, bx, by) => out.stroke([[ax, ay], [bx, by]], { color, width: 0.0014, jitter: 0, anatomy: {} });
+  for (let i = from; i + 18 <= p.length; i += 18) rung(p[i], p[i + 1], p[i + 3], p[i + 4]);   // a1 → a2, the near end of each quad
+  const last = p.length - 18;
+  if (last >= from) rung(p[last + 15], p[last + 16], p[last + 12], p[last + 13]);             // b1 → b2, the far end of the last one
+}
+const CORNER = [[-0.1, -0.035], [-0.02, 0.03], [0.06, -0.035]];   // a sharp corner — where the two pens part company
+fig("quads", [-0.16, -0.062, 0.16, 0.062], (sk) => {
+  const ink = sk(), rungs = sk();
+  [-1, 1].forEach((side) => {
+    const path = CORNER.map(([x, y]) => [x + side * 0.075, y]);
+    const from = ink.positions.length;
+    // Every habit off on both sides: same path, same width, so the only thing left to tell them apart is the normal
+    if (side < 0) ink.stroke(path, { color: INK, width: 0.02, jitter: 0, anatomy: {} });
+    else ink.pencil(path, { color: INK, width: 0.02, anatomy: {}, paper: CARD });
+    rungsOf(ink, from, rungs, DOT);
+  });
+});
+FIGS.quads.zoom = 1500;   // px per world unit — the seams are the subject here, so this one is allowed past the 300 the rest keep to
+
 Object.entries(ANATOMY).forEach(([pen, rows]) => {
   const box = document.getElementById(`${pen}Anatomy`);
   rows.forEach(([name, sub, habits], r) => {
@@ -332,7 +357,7 @@ document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
     // The medium is tuned for the board's scale (about 230 px per world unit). Blown up much past it,
     // the ribbon shows its seams — the closed loop's taper pinch, the press fins — so a figure never
     // magnifies beyond 300 px per world unit; the canvas centres in its card instead of stretching
-    maxW: Math.round(300 * (x1 - x0)),
+    maxW: Math.round((entry.zoom || 300) * (x1 - x0)),
     // The board's own cadence (rig.js) — staggered so the page never flips all at once
     boilFps: (8 + (index % 5) * 0.5) / 15,
     boilOffset: index % BOIL_FRAMES,
