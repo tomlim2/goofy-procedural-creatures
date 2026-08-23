@@ -511,7 +511,9 @@ export function tailSketch(spec, variant = 0) {
   // Skin weights by t along the rest spine — the bone is the quarter t falls in, blended with the neighbour over ±BAND of the tail around each
   // joint by a smoothstep (no kink where the band starts), so a bend curves the skin. weightsAt(t) serves the skin tags (every triangle the tail
   // draws carries its t); weightsOf(x, y) is the fallback for an untagged vertex — its nearest point on the spine — and is wrong beside a tight curl
-  const BAND = 0.09;
+  // BAND is **half a bone** (a quarter of the tail is 0.25), so the bands meet and a bend is spread over the whole tail: at 0.09 the turn was
+  // squeezed into three or four rungs and a bent tail read as a hinged hose, kinked at a point instead of curved
+  const BAND = 0.125;
   const blend = (u) => { const c = Math.max(-1, Math.min(1, u)); return 0.5 + 0.5 * c * (1.5 - 0.5 * c * c); };   // −1..1 → 0..1, flat at both ends
   const weightsAt = (t) => {
     const k = Math.min(TAIL_BONES - 1, Math.max(0, Math.floor(t * TAIL_BONES)));

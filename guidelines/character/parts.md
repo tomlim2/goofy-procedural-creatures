@@ -368,8 +368,11 @@ the tip tapping, follow-through, and the raise as a straight target angle per jo
 smoothed (a fan from the centre of a coarse spine throws long triangles across the bones and folds like a paddle when bent), its width **clamped by the bend** (at most
 0.85 × the radius of curvature, so a tube is never thicker than its curl), two **fine** side lines (weight 0.7 — at 1 the two lines ate a thin tail's width and its tip was
 a black knob), the tip, the pattern. Every triangle the tail draws carries its t along the spine as a **skin tag** (`Sketch.tags`, set by `skinT` / `stripT`) and the skinned
-mesh reads its two bones from the tag (`weightsAt`: the quarter t falls in, blended by a smoothstep over ±0.09 of the tail around each joint) — never from the vertex's
-position, which beside a tight curl picks the curl's other arm and tears the skin (`weightsOf` stays as the fallback for untagged triangles). The scene bends it as a
+mesh reads its two bones from the tag (`weightsAt`: the quarter t falls in, blended by a smoothstep over ±0.125 of the tail — **half a bone** — around each joint, so the
+bands meet and a bend is spread along the whole tail instead of being squeezed into the three or four rungs beside the joint, which read as a hinged hose) — never from the vertex's
+position, which beside a tight curl picks the curl's other arm and tears the skin (`weightsOf` stays as the fallback for untagged triangles). A tag goes on **per vertex, not per
+quad** (`Sketch.triangle(…, tags)`): a rung's point belongs to two quads, and one tag for the whole quad handed that point two different bone blends — the fill split open in
+white wedges and the side lines broke into dashes at every bend (0.014 units on a 0.04-wide plume, a third of its width). The scene bends it as a
 `SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side lines'
 ends are **joints** (`line(…, { joint })`: no overshoot, no thinning); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick). A tube's tip
 **tapers to a point** under the lines over 1.6 end-widths (a brush end — a disc and an arc of line were ink on ink) except block, which stays square.

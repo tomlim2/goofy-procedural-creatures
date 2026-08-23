@@ -132,10 +132,14 @@ export class Sketch {
     this.phase = 0;
   }
 
-  triangle(ax, ay, bx, by, cx, cy, rgb) {
+  // tags [ta, tb, tc] tags the three corners **one by one** — a quad that spans two rungs of a bent part gives each corner the t of the rung it
+  // sits on. Without it all three take this.skinT, which tears the skin: a rung's vertex belongs to two quads, and one tag per quad hands the
+  // same point two different bone blends, so the fill splits open and the side lines break into dashes wherever a joint bends
+  triangle(ax, ay, bx, by, cx, cy, rgb, tags = null) {
     this.positions.push(ax, ay, 0, bx, by, 0, cx, cy, 0);
     for (let i = 0; i < 3; i += 1) this.colors.push(rgb[0], rgb[1], rgb[2]);
-    this.tags.push(this.skinT, this.skinT, this.skinT);
+    if (tags) this.tags.push(tags[0], tags[1], tags[2]);
+    else this.tags.push(this.skinT, this.skinT, this.skinT);
   }
 
   // One stroke. width is the maximum, and it thins toward the ends — except at a joint: joint = [start, end] marks an end that meets
@@ -143,7 +147,7 @@ export class Sketch {
   stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03, joint = null, skinT = null } = {}) {
     const rgb = hexToRgb(color);
     width *= this.inkScale;
-    if (!skinT) this.skinT = NaN;
+    this.skinT = NaN;   // the tags go on per vertex below — nothing here inherits a tag, and nothing drawn after this call does either
 
     for (let pass = 0; pass < passes; pass += 1) {
       this.phase += 13.37;
@@ -163,10 +167,14 @@ export class Sketch {
       const press = (t, k) => 0.75 + 0.45 * noise(phase * 0.5 + t * 6 + k);
       const last = path.length - 1;
 
-      let arc = 0;
-      const arcTotal = sampled.reduce((acc, q, k) => (k ? acc + Math.hypot(q[0] - sampled[k - 1][0], q[1] - sampled[k - 1][1]) : 0), 0);
+      // The skin tag per **sample point** — the arc length to it along the line. Both corners of a segment's near end take the near point's tag and
+      // both of the far end the far point's, so the two quads that share a point agree on it and the line bends without breaking apart
+      const arcs = [0];
+      for (let k = 1; k < sampled.length; k += 1) arcs.push(arcs[k - 1] + Math.hypot(sampled[k][0] - sampled[k - 1][0], sampled[k][1] - sampled[k - 1][1]));
+      const arcTotal = arcs[arcs.length - 1];
+      const tagAt = (k) => (skinT ? tagAlong(points, skinT, arcs[Math.min(k, arcs.length - 1)], arcTotal) : NaN);
       for (let i = 1; i < path.length; i += 1) {
-        if (skinT) { this.skinT = tagAlong(points, skinT, arc, arcTotal); arc += Math.hypot(sampled[i][0] - sampled[i - 1][0], sampled[i][1] - sampled[i - 1][1]); }
+        const ta = tagAt(i - 1), tb = tagAt(i);
         const [ax, ay] = path[i - 1];
         const [bx, by] = path[i];
         let dx = bx - ax;
@@ -187,8 +195,8 @@ export class Sketch {
         const b1 = [bx + nx * w1, by + ny * w1];
         const b2 = [bx - nx * w1, by - ny * w1];
 
-        this.triangle(a1[0], a1[1], a2[0], a2[1], b1[0], b1[1], rgb);
-        this.triangle(a2[0], a2[1], b2[0], b2[1], b1[0], b1[1], rgb);
+        this.triangle(a1[0], a1[1], a2[0], a2[1], b1[0], b1[1], rgb, [ta, ta, tb]);
+        this.triangle(a2[0], a2[1], b2[0], b2[1], b1[0], b1[1], rgb, [ta, tb, tb]);
       }
     }
   }
@@ -226,7 +234,7 @@ export class Sketch {
     const rgb = hexToRgb(color);
     const biteRgb = hexToRgb(paper);
     width *= this.inkScale;
-    if (!skinT) this.skinT = NaN;
+    this.skinT = NaN;   // per-vertex tags below — nothing inherits a tag from this call
     if (closed && points.length > 2) {
       const [ax, ay] = points[0];
       const [bx, by] = points[points.length - 1];
@@ -300,7 +308,7 @@ export class Sketch {
       const tagAt = (i) => (skinT ? tagAlong(points, skinT, Math.max(0, Math.min(L - tail0 - tail1, s[i] - tail0)), L - tail0 - tail1) : NaN);
       const quads = closed ? n : n - 1;
       for (let i = 0; i < quads; i += 1) {
-        if (skinT) this.skinT = tagAt(i);
+        const ti = tagAt(i), tj = tagAt((i + 1) % n);   // per point, not per quad — the two quads meeting at a point must give it the same tag
         const j = (i + 1) % n;
         const [ax, ay] = path[i];
         const [bx, by] = path[j];
@@ -308,8 +316,8 @@ export class Sketch {
         const [nbx, nby] = normals[j];
         const ha = halves[i];
         const hb = halves[j];
-        this.triangle(ax + nax * ha, ay + nay * ha, ax - nax * ha, ay - nay * ha, bx + nbx * hb, by + nby * hb, rgb);
-        this.triangle(ax - nax * ha, ay - nay * ha, bx - nbx * hb, by - nby * hb, bx + nbx * hb, by + nby * hb, rgb);
+        this.triangle(ax + nax * ha, ay + nay * ha, ax - nax * ha, ay - nay * ha, bx + nbx * hb, by + nby * hb, rgb, [ti, ti, tj]);
+        this.triangle(ax - nax * ha, ay - nay * ha, bx - nbx * hb, by - nby * hb, bx + nbx * hb, by + nby * hb, rgb, [ti, tj, tj]);
       }
 
       // The shed — after the ribbon, so a bite covers ink and a crumb sits on the paper
@@ -324,9 +332,10 @@ export class Sketch {
         const h = halves[i];
         const d = isBite ? v * G.inside * h : Math.sign(v || 1) * (G.scatter[0] + (G.scatter[1] - G.scatter[0]) * Math.abs(v)) * h;
         const size = G.size[0] + (G.size[1] - G.size[0]) * Math.abs(noise(ph * 0.17 + i * 7.13));
-        if (skinT) this.skinT = tagAt(i);
+        this.skinT = tagAt(i);   // a crumb is one point — one tag is right for it
         this.square(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, isBite ? biteRgb : rgb);
       }
+      this.skinT = NaN;
     }
   }
 
@@ -337,12 +346,14 @@ export class Sketch {
   fillStrip(left, right, color, offset = [0, 0], tOf = null) {
     const rgb = hexToRgb(color);
     const [ox, oy] = offset;
-    if (!tOf) this.skinT = NaN;
+    this.skinT = NaN;
     for (let i = 0; i + 1 < Math.min(left.length, right.length); i += 1) {
-      if (tOf) this.skinT = tOf(i);
       const a = left[i], b = right[i], c = left[i + 1], d = right[i + 1];
-      this.triangle(a[0] + ox, a[1] + oy, b[0] + ox, b[1] + oy, c[0] + ox, c[1] + oy, rgb);
-      this.triangle(b[0] + ox, b[1] + oy, d[0] + ox, d[1] + oy, c[0] + ox, c[1] + oy, rgb);
+      // Each corner takes the t of **its own rung** — a and b sit on rung i, c and d on rung i + 1. One tag for the whole quad would give
+      // rung i + 1's two points a different bone blend in this quad than in the next one, and the strip would tear open at every bend
+      const ta = tOf ? tOf(i) : NaN, tb = tOf ? tOf(i + 1) : NaN;
+      this.triangle(a[0] + ox, a[1] + oy, b[0] + ox, b[1] + oy, c[0] + ox, c[1] + oy, rgb, [ta, ta, tb]);
+      this.triangle(b[0] + ox, b[1] + oy, d[0] + ox, d[1] + oy, c[0] + ox, c[1] + oy, rgb, [ta, tb, tb]);
     }
   }
 
