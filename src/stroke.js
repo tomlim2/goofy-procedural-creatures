@@ -118,7 +118,8 @@ export const PENCIL = {
   // one you read (within a mesh, vertex order is the stacking — guidelines/rig.md). The ink is not opacity: the board's ink is
   // opaque, so the colour is mixed that far toward the paper it is drawn on, which is what a fifth of a pass looks like. Lay
   // enough of them and the line comes out doubled and offset, which is the BROKEN hold (medium/outlines.js)
-  ghost: { width: 0.62, ink: 0.2 },
+  // slip: how far a ghost is pushed sideways off the line, in widths — a hand going round twice does not land on its own line
+  ghost: { width: 0.62, ink: 0.2, slip: [0.5, 1.6] },
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
   // An ink crumb sits on the edge, its centre scatter × the half width out — never past the edge, so it frays the line instead of
   // floating loose beside it; a bite (the bite share of crumbs) is a paper-coloured square
@@ -319,6 +320,8 @@ export class Sketch {
       const p2 = r(7) * TAU;
       const breathe = A.breathe ? P.breathe.map(([amp, om], k) => [amp, snap(om), r(8 + k) * TAU]) : [];
       const wander = A.wander ? P.wander * this.wobble : 0;
+      // A ghost misses the line: pushed off along the normal by slip widths, to one side or the other, the whole pass together
+      const slip = isGhost ? (r(101) < 0.5 ? -1 : 1) * jr(103, P.ghost.slip) * w : 0;
       // The pen lifts (PENCIL.lift, in widths). One skip every `per` widths, `gap` widths long, never within `edge` widths of
       // either end and none at all on a line shorter than `min` of them: a dot or a dash keeps its whole extent, and only a line
       // long enough to be a detail breaks. A closed loop has no ends to spare
@@ -344,7 +347,7 @@ export class Sketch {
       }
       // The spine wanders along its normals on two sines per length
       const path = spine.map(([x, y], i) => {
-        const off = wander * (P.drift.amp * Math.sin(s[i] * f1 + p1) + P.waver.amp * Math.sin(s[i] * f2 + p2));
+        const off = slip + wander * (P.drift.amp * Math.sin(s[i] * f1 + p1) + P.waver.amp * Math.sin(s[i] * f2 + p2));
         return [x + normals[i][0] * off, y + normals[i][1] * off];
       });
       // The half width — breathing, and thinning only inside the overshoot tails
