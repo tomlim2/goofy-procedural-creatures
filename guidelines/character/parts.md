@@ -370,7 +370,8 @@ smoothed (a fan from the centre of a coarse spine throws long triangles across t
 a black knob), the tip, the pattern. Every triangle the tail draws carries its t along the spine as a **skin tag** (`Sketch.tags`, set by `skinT` / `stripT`) and the skinned
 mesh reads its two bones from the tag (`weightsAt`: the quarter t falls in, blended by a smoothstep over ±0.125 of the tail — **half a bone** — around each joint, so the
 bands meet and a bend is spread along the whole tail instead of being squeezed into the three or four rungs beside the joint, which read as a hinged hose) — never from the vertex's
-position, which beside a tight curl picks the curl's other arm and tears the skin (`weightsOf` stays as the fallback for untagged triangles). A tag goes on **per vertex, not per
+position, which beside a tight curl picks the curl's other arm and tears the skin (`weightsOf` stays as the fallback for untagged triangles — the goofy material's own
+marks over a tube, which sit inside it and so land on the right bone anyway; over a bead they take the bead's t and turn with it). A tag goes on **per vertex, not per
 quad** (`Sketch.triangle(…, tags)`): a rung's point belongs to two quads, and one tag for the whole quad handed that point two different bone blends — the fill split open in
 white wedges and the side lines broke into dashes at every bend (0.014 units on a 0.04-wide plume, a third of its width). The scene bends it as a
 `SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side lines'

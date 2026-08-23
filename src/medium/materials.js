@@ -174,6 +174,12 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   const f = m.texture;
   if (!f || (only !== undefined && only !== "texture")) return;
   {
+    // The skin tag for the texture's marks. A fill at **one t** — a bead, a tuft, a pom on a bent part — carries its texture with it, so every
+    // mark takes that same t and turns with the bead. A strip's marks are left untagged and the skinned mesh reads them from their position
+    // (inside a tube that is its own t anyway). Untagged means untagged: without setting it here a mark would inherit the tag of whatever
+    // was drawn before it — the tail's dabs and dust all took the tip's t and flew off the tail when it bent
+    const markTag = typeof skinT === "number" ? [skinT, skinT] : null;
+    const holdTag = () => { sketch.skinT = markTag ? skinT : NaN; };
     const u = (k) => noise(ph * 0.29 + k * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
     const h = (k) => hash01(Math.round(ph * 997) + k * 7919);   // a scattered one — neighbours unrelated
     switch (f.kind) {
@@ -200,8 +206,8 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
               for (let q = t; q < end; q += 0.008) run.push(at(q));
               run.push(at(end));
               const w = width * (0.8 + 0.4 * r(1));
-              sketch.pencil(run, { color: tone, width: w });
-              if (f.double && r(2) < f.double) sketch.pencil(run.map(([x, y]) => [x + 0.0025, y]), { color: tone, width: w * 0.8 });
+              sketch.pencil(run, { color: tone, width: w, skinT: markTag });
+              if (f.double && r(2) < f.double) sketch.pencil(run.map(([x, y]) => [x + 0.0025, y]), { color: tone, width: w * 0.8, skinT: markTag });
             }
             t = f.lift ? end + f.lift.gap[0] + (f.lift.gap[1] - f.lift.gap[0]) * r(4) : total;
           }
@@ -227,7 +233,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
             liftedRule(pts, i + 500, f.width);
           });
         } else if (V.name === "stipple") {
-          dust(sketch, points, b, { per: 1500, size: [0.0018, 0.003] }, h, contrast(f.tone * 0.85));
+          dust(sketch, points, b, { per: 1500, size: [0.0018, 0.003] }, h, contrast(f.tone * 0.85), holdTag);
         }
         // light — the bare ground
         break;
@@ -240,11 +246,11 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
           const dx = Math.cos(angle), dy = Math.sin(angle);
           const a = [b.cx - dy * o - dx * b.r, b.cy + dx * o - dy * b.r];
           const c = [b.cx - dy * o + dx * b.r, b.cy + dx * o + dy * b.r];
-          for (const piece of clipSegment(a, c, points)) sketch.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.03 });
+          for (const piece of clipSegment(a, c, points)) sketch.stroke(piece, { color: tone, width: f.width, jitter: 0.002, step: 0.03, skinT: markTag });
         }
         if (V.name === "black") {   // the darkest ink is worked over once more — a faint upright hatch under the scratches
           const faint = contrast(1.12);
-          for (const [p, q] of rules(points, 1.5, 0.014, (i) => (u(i + 900) - 0.5) * 0.4)) sketch.stroke([p, q], { color: faint, width: 0.002, jitter: 0.002, step: 0.03 });
+          for (const [p, q] of rules(points, 1.5, 0.014, (i) => (u(i + 900) - 0.5) * 0.4)) sketch.stroke([p, q], { color: faint, width: 0.002, jitter: 0.002, step: 0.03, skinT: markTag });
         }
         break;
       }
@@ -264,12 +270,13 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
           const a = [cx - (dx * len) / 2, cy - (dy * len) / 2];
           const c = [cx + (dx * len) / 2, cy + (dy * len) / 2];
           const rgb = tones[Math.floor(h(i + 50000) * tones.length) % tones.length];
+          holdTag();
           for (const [p, q] of clipSegment(a, c, points)) capsule(sketch, p, q, f.width, rgb, near(p, a), near(q, c));
         }
         break;
       }
       case "speckle": {
-        dust(sketch, points, b, { ...f, per: f.per * (0.4 + V.v * 0.8) }, h, contrast(f.tone));   // black: thick dust · light: a few specks
+        dust(sketch, points, b, { ...f, per: f.per * (0.4 + V.v * 0.8) }, h, contrast(f.tone), holdTag);   // black: thick dust · light: a few specks
         break;
       }
       default:
@@ -324,12 +331,14 @@ export function patternOn(sketch, points, { kind, color }) {
 
 
 // Dust inside a shape — specks of a fixed size at a density per unit area, hashed so they never string into curves
-export function dust(sketch, points, b, { per, size, tone }, h, color) {
+// holdTag (optional) sets the sketch's skin tag before each speck — a square is one point, so one tag is right for it
+export function dust(sketch, points, b, { per, size, tone }, h, color, holdTag = null) {
   const rgb = hexToRgb(color);
   const count = Math.round(per * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
   for (let i = 0; i < count; i += 1) {
     const p = [b.x0 + (b.x1 - b.x0) * h(i * 2), b.y0 + (b.y1 - b.y0) * h(i * 2 + 1)];
     if (!insidePath(p, points)) continue;
+    if (holdTag) holdTag();
     sketch.square(p[0], p[1], size[0] + (size[1] - size[0]) * h(i + 7000), rgb);
   }
 }

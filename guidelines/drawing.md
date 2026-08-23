@@ -165,7 +165,8 @@ inside it and clipped to the contour, the way a pattern is part of an albedo (`p
 along the tube instead — stripes as rings, [character/parts.md](character/parts.md) § tail — and the tube's base is cut as a
 **strip** between its rails, `paint(…, { strip, stripT })`, tagged per rung with its t along the spine so the bones can bend it — the **skin tag**, `Sketch.tags`,
 which every drawing call can set (`skinT`) and a skinned mesh reads its bones from. A tag is **per vertex**: a point two quads share takes one t, or the part tears where
-it bends); and its
+it bends. The `texture`'s marks take the tag too when the base is a fill at one t — a bead, a tuft, a pom turns with its hatching on it; over a strip they are left untagged
+and the mesh reads them from where they sit, which inside a tube is the same t); and its
 `texture` — `hatch`, `scratch`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
 contour (`clipSegment`, `insidePath` in `medium/materials.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
