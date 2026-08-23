@@ -110,9 +110,9 @@ export const PENCIL = {
                                        // to twice as long, and a crumb or a bite is the size of the whole mark. Every dot and dash is one
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
   // **the lift** — the pen comes up. In **widths**, the way the overshoot is: a skip is a couple of line-widths long and they fall
-  // some sixteen apart, so they scale with the line instead of turning a hairline into a dashed one. min: the shortest line that
-  // lifts at all; edge: how close to an end a skip may fall. A hold asks for it (medium/outlines.js: SLINE), the pencil knows how
-  lift: { per: 16, gap: [1.2, 3], min: 8, edge: 3 },
+  // some twenty-eight apart, so they scale with the line instead of turning a hairline into a dashed one. min: the shortest line
+  // that lifts at all; edge: how close to an end a skip may fall. A hold asks for it (medium/outlines.js: SLINE), the pencil knows how
+  lift: { per: 28, gap: [1.2, 3], min: 8, edge: 3 },
   ghost: 0.62,                         // **the ghost** — a pass after the first is laid at this share of the width: the same line
                                        // again, thinner, wandering and breathing on its own. Lay enough of them and the line comes
                                        // out doubled and offset, which is the BROKEN hold (medium/outlines.js)

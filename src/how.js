@@ -12,7 +12,7 @@ import { GOOFY_MATERIALS, VALUES } from "./medium/materials.js";
 import { GOOFY_OUTLINES, BOARD_LINES } from "./medium/outlines.js";
 import { GOOFY_FUR } from "./medium/fur.js";
 import { sketchMesh } from "./scene/mesh.js";
-import { makeRng, makeNoise, seedFromString } from "./rng.js";
+import { makeRng, makeNoise } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
 import { runLoop, bindSeg } from "./ui.js";
 import { PAPER, INKS, FILLS, POPS, DARKS } from "./character/index.js";
@@ -23,8 +23,9 @@ const INK = INKS[0];
 const BLUSH = "#d9968a";   // the blush/tongue pink (mouth.js PINK)
 const CARD = "#f2ecdf";    // the figure card's back (styles.css .how figure) — the pencil's bites take it here, paper on the board
 
-// The page draws the same picture on every load — one fixed noise, like a creature's wobbleSeed
-const noise = makeNoise(makeRng(seedFromString("HOW")));
+// A different hand on every load — the page rolls its own noise the way a creature rolls its wobbleSeed, so a reload draws the
+// same figures again in another hand. Nothing here is compared against anything, so nothing needs it pinned
+const noise = makeNoise(makeRng((Math.random() * 0xffffffff) >>> 0));
 
 // ---------------------------------------------------------------- figures
 // A figure: world [x0, y0, x1, y1] (left, bottom, right, top) and draw(sk), called once per boil variant.
