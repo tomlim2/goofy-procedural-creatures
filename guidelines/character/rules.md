@@ -88,7 +88,7 @@ sets, and it turns in 8 directions. "Drawn" and "visible" are different. There a
 nose over a black pupil, black brows over a black hat), and **covered** (a widened white, the muzzle or an open
 mouth laid on top). The rules:
 
-- A dot mouth, a dot nose and a vertical pupil are **marks**. The pencil keeps the ends of anything shorter than `PENCIL.stub` and sheds nothing there, so a mark stays its own length ([../drawing.md](../drawing.md) § the outline). `Sketch.stroke` draws nothing shorter than its re-sample step: its taper takes both ends to nothing
+- A dot mouth, a dot nose and a vertical pupil are **open lines that came out short**. The pencil keeps the ends of anything shorter than `PENCIL.stub` and sheds nothing there, so they stay their own length ([../drawing.md](../drawing.md) § the outline). `Sketch.stroke` draws nothing shorter than its re-sample step: its taper takes both ends to nothing
 - The nose, mouth and cheeks sit **below the eye's (white's) lower edge** (`eyeFloor` — only when the eye actually reaches that x, as with a big eye or a cyclops). A startle does not grow the eye, only shrinks the pupil, so the white's size is always unchanged
 - A dog's mouth follows not the face proportion but **above the muzzle, below the nose** (`muzzleGeometry`) — overlapping the nose mass makes it invisible
 - An open mouth's height is proportional to the head and **ends below the nose**. Brows go 1.9× the eye above it (1.35× on a cyclops) but **inside the head** (headCy + 0.84·ry)

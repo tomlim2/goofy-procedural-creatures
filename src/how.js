@@ -243,12 +243,11 @@ Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("
   ink.fur(arcPath(0, 0.02, 0.17, 0.17, Math.PI * 0.15, Math.PI * 0.85, 12), name, { color: INK });
 }));
 // What the board draws each role with today — read live off the switch (BOARD_LINES), so the page cannot drift from the board.
-// The same path drawn by each role's procedure: a contour closes it, a line runs it open, a mark is a dash of it. The counts in the captions are read off the code (how.html)
+// The same path drawn by each role's procedure: a contour closes it, a line runs it open — down to a dot. The counts in the captions are read off the code (how.html)
 const USE_PATH = [[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]];
 const IN_USE = [
   { key: "use:contour", label: `contour → ${BOARD_LINES.contour} · weight 0.7 / 1 / 1.15 / 1.2`, box: [-0.7, -0.14, 0.7, 0.14], draw: (ink) => ink.contour([[-0.5, -0.09], [0, -0.1], [0.5, -0.08], [0.52, 0.09], [0, 0.1], [-0.5, 0.08]], { color: INK, paper: CARD }) },
-  { key: "use:line", label: `line → ${BOARD_LINES.line} · weight 0.6 / 0.7 / 1 / 1.3 / 1.6`, box: [-0.7, -0.09, 0.7, 0.09], draw: (ink) => ink.line(USE_PATH, { color: INK, paper: CARD }) },
-  { key: "use:mark", label: `mark → ${BOARD_LINES.mark} · a dot, a dash`, box: [-0.7, -0.09, 0.7, 0.09], draw: (ink) => { for (const x of [-0.45, -0.15, 0.15, 0.45]) ink.mark([[x - 0.012, 0], [x + 0.012, 0.002]], { color: INK, weight: 0.7 }); } }
+  { key: "use:line", label: `line → ${BOARD_LINES.line} · weight 0.6 / 0.7 / 1 / 1.3 / 1.6 · down to a dot`, box: [-0.7, -0.09, 0.7, 0.09], draw: (ink) => { ink.line(USE_PATH, { color: INK, paper: CARD }); for (const x of [-0.45, -0.15, 0.15, 0.45]) ink.line([[x - 0.012, -0.06], [x + 0.012, -0.058]], { color: INK, weight: 0.7, paper: CARD }); } },
 ];
 IN_USE.forEach(({ key, label, box, draw }) => {
   const el = document.createElement("figure");

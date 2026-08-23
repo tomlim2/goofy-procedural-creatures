@@ -83,8 +83,8 @@ export function limbSketches(spec, variant = 0) {
         // A thick stub leg plus a round toe tip poking slightly forward plus two toe lines (the reference)
         s.line([[0, 0], [lean, -len]], { color: ink0, weight: 1.3 });
         s.line([[lean - 0.02, -len], [lean + 0.03, -len + 0.003]], { color: ink0, weight: 1 });
-        s.mark([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, weight: 0.6 });
-        s.mark([[lean + 0.018, -len + 0.002], [lean + 0.021, -len + 0.014]], { color: ink0, weight: 0.6 });
+        s.line([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, weight: 0.6 });
+        s.line([[lean + 0.018, -len + 0.002], [lean + 0.021, -len + 0.014]], { color: ink0, weight: 0.6 });
       }
       limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side: i < 2 ? -1 : 1, index: i, behind: false });
     });
@@ -364,14 +364,14 @@ export function tailSketch(spec, variant = 0) {
     if (pattern.kind === "stripes") {
       for (let d = 0.06; d < total - 0.025; d += 0.05) {
         const t = d / total, a = at(t), w = widthAt(t) * 0.98;
-        sketch.mark([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color, weight: 1, skinT: [t, t] });   // a ring
+        sketch.line([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color, weight: 1, skinT: [t, t] });   // a ring
       }
     } else if (pattern.kind === "dots") {
       let side = 1;
       for (let d = 0.05; d < total - 0.02; d += 0.045, side = -side) {
         const t = d / total, a = at(t), w = widthAt(t) * 0.45;
         const x = a.x - a.dy * w * side, y = a.y + a.dx * w * side;
-        sketch.mark([[x - a.dx * 0.006, y - a.dy * 0.006], [x + a.dx * 0.006, y + a.dy * 0.006]], { color, weight: 1, skinT: [t, t] });
+        sketch.line([[x - a.dx * 0.006, y - a.dy * 0.006], [x + a.dx * 0.006, y + a.dy * 0.006]], { color, weight: 1, skinT: [t, t] });
       }
     } else if (pattern.kind === "spots") {
       for (let d = 0.07; d < total - 0.03; d += 0.075) {
@@ -381,7 +381,7 @@ export function tailSketch(spec, variant = 0) {
     } else if (pattern.kind === "hatch") {
       for (let d = 0.05; d < total - 0.02; d += 0.035) {
         const t = d / total, a = at(t), w = widthAt(t) * 0.9;
-        sketch.mark([[a.x - a.dy * w - a.dx * w * 0.5, a.y + a.dx * w - a.dy * w * 0.5], [a.x + a.dy * w + a.dx * w * 0.5, a.y - a.dx * w + a.dy * w * 0.5]], { color, weight: 0.6, skinT: [t, t] });
+        sketch.line([[a.x - a.dy * w - a.dx * w * 0.5, a.y + a.dx * w - a.dy * w * 0.5], [a.x + a.dy * w + a.dx * w * 0.5, a.y - a.dx * w + a.dy * w * 0.5]], { color, weight: 0.6, skinT: [t, t] });
       }
     }
     // the calico's patch — not on the tail: its patches are decals on the head and the body
@@ -487,7 +487,7 @@ export function tailSketch(spec, variant = 0) {
     for (let i = 0; i < 6; i += 1) {
       const ang = -1.0 + i * 0.66;   // around the top and outside
       const x0 = a.x + Math.cos(ang) * r * 0.9, y0 = a.y + 0.004 + Math.sin(ang) * r * 0.85;
-      sketch.mark([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, weight: 0.6, skinT: [0.3, 0.3] });
+      sketch.line([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, weight: 0.6, skinT: [0.3, 0.3] });
     }
   } else if (skin === "ball") {
     // Beads — a tail strung with beads along the spine, **on a thin spine line** (without it the beads float behind the rump). One pom on a stub (a rabbit)

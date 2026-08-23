@@ -78,7 +78,7 @@ export function drawHeadgear(ink, fills, spec, box) {
       .map(([x, y]) => [bx + x * cos - y * sin, by + x * sin + y * cos]);
     paintPart(fills, spec, disc, accent, { own: true });
     ink.contour(disc, { color: ink0, weight: 1.2 });
-    ink.mark([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0, weight: 1 });
+    ink.line([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0, weight: 1 });
     return;
   }
 

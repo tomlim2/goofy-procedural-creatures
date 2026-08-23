@@ -57,7 +57,7 @@ function teethStrip(m, x0, x1, edgeY, h, dir, count) {
   m.ink.line([[x0, inner], [x1, inner]], { color: m.edge, weight: 0.6 });
   for (let i = 1; i < count; i += 1) {
     const x = x0 + ((x1 - x0) * i) / count;
-    m.ink.mark([[x, edgeY], [x + 0.001, inner]], { color: m.edge, weight: 0.6 });
+    m.ink.line([[x, edgeY], [x + 0.001, inner]], { color: m.edge, weight: 0.6 });
   }
 }
 // The open mouth — not a round hole but **a bowl with a straight upper lip and a rounded bottom** (a D on its side). The cavity + an upper tooth strip + the upper lip line
@@ -80,7 +80,7 @@ function grid(m, hw, hh, bars) {
   m.ink.contour(box, { color: m.edge });
   for (let i = 1; i <= bars; i += 1) {
     const x = m.x - hw + (2 * hw * i) / (bars + 1);
-    m.ink.mark([[x, m.y + hh * 0.9], [x + 0.001, m.y - hh * 0.9]], { color: m.edge, weight: 0.7 });
+    m.ink.line([[x, m.y + hh * 0.9], [x + 0.001, m.y - hh * 0.9]], { color: m.edge, weight: 0.7 });
   }
 }
 // Tongue — a pink mass hanging below the mouth plus a centre line
@@ -88,7 +88,7 @@ function tongueBlob(m, cx, top, rx, ry) {
   const t = blobPath(cx, top - ry, rx, ry, { lumps: 3, amount: 0.1, noise: null });
   paintPart(m.fills, m.spec, t, PINK, { own: true });
   m.ink.contour(t, { color: m.ink0, weight: 0.7 });
-  m.ink.mark([[cx, top - ry * 0.3], [cx + 0.001, top - ry * 1.6]], { color: m.ink0, weight: 0.6 });
+  m.ink.line([[cx, top - ry * 0.3], [cx + 0.001, top - ry * 1.6]], { color: m.ink0, weight: 0.6 });
 }
 // Two fangs — **big** white triangles (outlined) below the mouth line. Teeth have to read big
 function fangs(m, hw, drop) {
@@ -104,7 +104,7 @@ function fangs(m, hw, drop) {
 // Kind → drawing function. 1:1 with the names in slots.js SLOTS.mouth
 export const MOUTH = {
   // Dot mouth — one dab, longer and thicker than the other marks so it reads as a mouth
-  dot: (m) => m.ink.mark([[m.x - 0.015, m.y], [m.x + 0.015, m.y]], { color: m.ink0, weight: 1.3 }),
+  dot: (m) => m.ink.line([[m.x - 0.015, m.y], [m.x + 0.015, m.y]], { color: m.ink0, weight: 1.3 }),
   line: (m) => m.ink.line([[m.x - m.w, m.y], [m.x + m.w, m.y + 0.004]], { color: m.ink0, weight: 1 }),
   smile: (m) => m.ink.line(arcPath(m.x, m.y + 0.03, m.w, 0.045, Math.PI, TAU), { color: m.ink0, weight: 1 }),
   // Frowning mouth ⌢ — the opposite of a smile. Small
@@ -150,7 +150,7 @@ export const MOUTH = {
     paintPart(m.fills, m.spec, seg, TOOTH, { own: true });
     m.ink.line(seg, { color: m.edge, weight: 1 });
     m.ink.line([[m.x - hw, top], [m.x + hw, top + 0.002]], { color: m.edge, weight: 1 });
-    for (const k of [-0.33, 0.33]) m.ink.mark([[m.x + hw * k, top], [m.x + hw * k + 0.001, top - depth * 0.7]], { color: m.edge, weight: 0.6 });
+    for (const k of [-0.33, 0.33]) m.ink.line([[m.x + hw * k, top], [m.x + hw * k + 0.001, top - depth * 0.7]], { color: m.edge, weight: 0.6 });
   },
   // Hatched mouth — covers the mouth position with a mass of horizontal hatching (reference human row 2, 4th, and imps). Reads as clenched teeth, or as a moustache
   scribble: (m) => m.ink.hatch(m.x, m.y, m.w * 0.9, Math.max(0.012, Math.min(0.02, m.openH * 0.45)), 0.08, { color: m.ink0, lines: 5, width: 0.007 }),
@@ -183,7 +183,7 @@ export const MOUTH = {
     for (const s of [-1, 1]) {
       // ) and ( — the bulge faces the mouth
       const cx = m.x + s * (hw + 0.012);
-      m.ink.mark(arcPath(cx, m.y, 0.009, bh, s > 0 ? Math.PI * 0.5 : -Math.PI * 0.5, s > 0 ? Math.PI * 1.5 : Math.PI * 0.5, 8), { color: m.ink0, weight: 1 });
+      m.ink.line(arcPath(cx, m.y, 0.009, bh, s > 0 ? Math.PI * 0.5 : -Math.PI * 0.5, s > 0 ? Math.PI * 1.5 : Math.PI * 0.5, 8), { color: m.ink0, weight: 1 });
     }
   },
   // Peeking tongue, blep — just the tip of the tongue below an ω (cats)

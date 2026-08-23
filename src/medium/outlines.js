@@ -1,10 +1,10 @@
 // The goofy outline — what a creature's lines are drawn with: the kinds, the switch and the procedures. A Sketch delegates
-// contour(), line() and mark() here. Docs: guidelines/drawing.md § the outline; how.html § the goofy outline
+// contour() and line() here. Docs: guidelines/drawing.md § the outline; how.html § the goofy outline
 
 // The kinds — what a line is made of. A separate concept from the goofy materials (a line is not a way of filling).
 // A kind is named **the pen, then the hold**: STROKE (once, at full width — mass) · SLINE (thin, and the pen lifts — detail) ·
 // BROKEN (laid three times over itself — contour). A dot or a dash needs no hold of its own: the pencil keeps the ends of
-// anything shorter than PENCIL.stub and sheds nothing there (stroke.js), so a mark drawn with STROKE stays its own length.
+// anything shorter than PENCIL.stub and sheds nothing there (stroke.js), so a dot drawn as a line stays its own length.
 // One pen draws them all: stroke.js pencil() — it wanders, breathes, runs past its ends and sheds; closed, one seamless loop.
 // `pen` names the hand that draws a kind, for when a second pen comes back
 export const GOOFY_OUTLINES = {
@@ -20,16 +20,15 @@ export const GOOFY_OUTLINES = {
 
 // The switch — what the board draws each **role** with. A role is what a line is on the board, not what it is made of:
 //   contour — the closed line of a shape (the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts…)
-//   line — an open line (a brow, a lid, a whisker, a limb, a strand, a horn, the floor)
-//   mark — a dot or a dash a few widths long (a tooth's edge, a claw, the dot mouth, a glyph's dot) — an overshoot would lengthen it
+//   line — an open line, down to a dot or a dash (a brow, a lid, a whisker, a limb, a strand, a horn, the floor, a tooth's edge,
+//          a claw, the dot mouth). A stub keeps its ends and sheds nothing — that is its length's doing, not a role of its own
 // Change a name here and every line of that role changes on the board; a new kind is a new entry above and a name here.
 // A part names its role and hands over the path and the color — at most a weight on the width. A part never names a kind; the medium
 // page does (outline), to show each kind on its own
-export const BOARD_LINES = { contour: "PENCIL_STROKE", line: "PENCIL_STROKE", mark: "PENCIL_STROKE" };
+export const BOARD_LINES = { contour: "PENCIL_STROKE", line: "PENCIL_STROKE" };
 
 export function contourWith(sketch, points, options) { return draw(sketch, points, "contour", true, options); }
 export function lineWith(sketch, points, options) { return draw(sketch, points, "line", false, options); }
-export function markWith(sketch, points, options) { return draw(sketch, points, "mark", false, options); }
 
 // weight scales the kind's width (a head's contour runs a little heavier than a body's; open lines are fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6).
 // paper is the color the pencil's bites take when the line runs over a fill. step re-samples a tiny ribbon finer (the star eye).

@@ -384,7 +384,7 @@ function catNose(ink, fills, spec, box, eyes) {
   ink.contour(path, { color: ink0 });
   // The philtrum — from under the nose toward the mouth. Short on hook, long on long (a Y-shaped face)
   const drop = kind === "hook" ? h * 1.1 : kind === "long" ? h * 2 : 0;
-  if (drop) ink.mark([[0, y - h * 0.7], [0.001, y - h * 0.7 - drop]], { color: ink0, weight: 0.7 });
+  if (drop) ink.line([[0, y - h * 0.7], [0.001, y - h * 0.7 - drop]], { color: ink0, weight: 0.7 });
 }
 
 export function drawNose(ink, fills, spec, box, eyes) {

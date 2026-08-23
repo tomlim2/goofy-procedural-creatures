@@ -9,7 +9,7 @@ import * as THREE from "three";
 import { hexToRgb } from "./color.js";
 import { PAPER } from "./character/vocabulary/palette.js";   // the pencil's bites take the paper color (palette.js imports nothing — no cycle)
 // The three concepts a sketch draws by name. They take the sketch in; they never import this file
-import { contourWith, lineWith, markWith } from "./medium/outlines.js";
+import { contourWith, lineWith } from "./medium/outlines.js";
 import { paintWith } from "./medium/materials.js";
 import { furWith } from "./medium/fur.js";
 
@@ -230,10 +230,9 @@ export class Sketch {
     this.stroke([...points, points[0]], options);
   }
 
-  // The goofy outline (medium/outlines.js) — the closed line of a shape, an open line, a mark. What each is drawn with is the board's switch (BOARD_LINES)
+  // The goofy outline (medium/outlines.js) — the closed line of a shape, or an open line (down to a dot). What each is drawn with is the board's switch (BOARD_LINES)
   contour(points, options) { return contourWith(this, points, options); }
   line(points, options) { return lineWith(this, points, options); }
-  mark(points, options) { return markWith(this, points, options); }
 
   // The goofy material (medium/materials.js) — how an area is filled, by name
   paint(points, name, options) { return paintWith(this, points, name, options); }

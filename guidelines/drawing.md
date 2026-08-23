@@ -73,10 +73,9 @@ color, with at most a `weight` on the kind's width:
 | Role | Call | What it is | Weights in use |
 | --- | --- | --- | --- |
 | contour | `ink.contour(path, { color, weight })` | the closed line of a shape — the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts | fine 0.7 · 1 · the head 1.15 · heavy 1.2 |
-| line | `ink.line(path, { color, weight, joint })` | an open line — a brow, a lid, a whisker, a limb, a strand, a horn, the floor. `joint = [start, end]` marks an end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
-| mark | `ink.mark(path, { color, weight })` | a dot or a dash a few widths long — a tooth's edge, a claw, the dot mouth, a glyph's dot | 0.6 · 0.7 · 1 |
+| line | `ink.line(path, { color, weight, joint })` | an open line, **down to a dot or a dash** — a brow, a lid, a whisker, a limb, a strand, a horn, the floor, a tooth's edge, a claw, the dot mouth. `joint = [start, end]` marks an end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
 
-Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL_STROKE", line: "PENCIL_STROKE", mark: "PENCIL_STROKE" }`.
+Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL_STROKE", line: "PENCIL_STROKE" }`.
 Change a name there and every line of that role on the board changes; a new kind of line is a new entry in
 `GOOFY_OUTLINES` and a name in the switch. An unknown role or kind throws. `stroke()`, `outline()` and `pencil()` are
 the kinds' primitives and no part calls them — the only strokes outside the table are the two **bands** (a hat's color
@@ -89,8 +88,8 @@ draws a kind, for when a second one comes back.
 
 A dot or a dash needs no hold of its own. **The pencil keeps the ends of anything shorter than `PENCIL.stub` (0.05) and sheds
 nothing there**: an overshoot would run a mark half again to twice as long, and a crumb or a bite is the size of the mark. The
-rule is the pencil's, not a kind's, because it is about the line's length and nothing else — 22 marks and the 48 shortest open
-lines on a 240-creature sample are stubs.
+rule is the pencil's, not a kind's or a role's, because it is about the line's length and nothing else — the 70 shortest lines on
+a 240-creature sample are stubs.
 
 | Kind | Line |
 | --- | --- |
@@ -98,7 +97,7 @@ lines on a 240-creature sample are stubs.
 | `PENCIL_SLINE` | `pencil()` 0.008 once, and **the pen lifts** — about one gap every 0.26 of a unit, 0.006~0.016 long, never within 0.025 of an end and none at all below 0.07 of length, so a dot or a dash keeps its whole extent. **Detail** |
 | `PENCIL_BROKEN` | `pencil()` 0.011 **three times over itself**, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
 
-On the board today: every contour, open line and mark is PENCIL_STROKE — 45, 103 and 16 call sites. The **ribbon pen** (`stroke()`) is
+On the board today: every contour and every open line is PENCIL_STROKE — 45 and 119 call sites. The **ribbon pen** (`stroke()`) is
 no kind and no role draws with it; two things call it directly — a hat's band and an emoji's glyph outline. **PENCIL_SLINE and
 PENCIL_BROKEN are built and on nothing** — they exist in the table and on the medium page, and a role picks one up by a single name in the switch. The
 medium page names the kinds outright (`{ outline: "PENCIL_SLINE" }`) to show each on its own — the one place a kind is named —
