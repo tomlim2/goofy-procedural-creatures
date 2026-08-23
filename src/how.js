@@ -36,17 +36,25 @@ function fig(name, world, draw) { FIGS[name] = { name, world, draw }; }
 // Three columns, one drawing each — the comparison figures (widths, wobble, blob knobs)
 const col = (i) => (i - 1) * 0.5;
 
+// **The sample line.** One shape for every figure that shows a line, so the figures can be read against each other: a sine, handed
+// over smooth at 4 points per tenth of a unit. Each pen then samples it at its own step. Shallow on purpose — a deep bow hides the
+// habits it is meant to show (the wander is a pixel and a half at these scales)
+const sine = (x0, x1, amp, cycles = 1.5) => {
+  const n = Math.max(9, Math.round((x1 - x0) * 40));
+  return Array.from({ length: n + 1 }, (_, i) => [x0 + ((x1 - x0) * i) / n, Math.sin((i / n) * TAU * cycles) * amp]);
+};
+
 fig("ribbon", [-0.8, -0.12, 0.8, 0.12], (sk) => {
   const ink = sk();
   [0.007, 0.012, 0.022].forEach((width, i) => {
     const x = col(i);
-    ink.stroke([[x - 0.21, 0], [x - 0.07, 0.02], [x + 0.07, -0.015], [x + 0.21, 0.01]], { color: INK, width });
+    ink.stroke(sine(x - 0.21, x + 0.21, 0.022), { color: INK, width });
   });
 });
 
 fig("clipart", [-0.85, -0.1, 0.85, 0.1], (sk) => {
   const ink = sk();
-  const wave = (x) => [[x - 0.3, 0], [x - 0.1, 0.035], [x + 0.1, -0.025], [x + 0.3, 0.01]];
+  const wave = (x) => sine(x - 0.3, x + 0.3, 0.028);
   ink.stroke(wave(-0.42), { color: INK, width: 0.012, jitter: 0 });   // the noise alone turned off — clip art
   ink.stroke(wave(0.42), { color: INK, width: 0.012 });
 });
@@ -66,7 +74,7 @@ fig("pencil", [-0.8, -0.12, 0.8, 0.12], (sk) => {
   const ink = sk();
   [0.007, 0.012, 0.022].forEach((width, i) => {
     const x = col(i);
-    ink.pencil([[x - 0.21, 0], [x - 0.07, 0.02], [x + 0.07, -0.015], [x + 0.21, 0.01]], { color: INK, width, paper: CARD });
+    ink.pencil(sine(x - 0.21, x + 0.21, 0.022), { color: INK, width, paper: CARD });
   });
 });
 
@@ -160,17 +168,14 @@ Object.keys(GOOFY_OUTLINES).forEach((name, i) => {
   document.getElementById("outlineBalls").appendChild(el);
   fig(`outline:${name}`, [-0.7, -0.09, 0.7, 0.09], (sk) => {
     const ink = sk();
-    ink.line([[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]], { outline: name, color: INK, paper: CARD });   // the kind named outright — the page shows each, as an open line
+    ink.line(sine(-0.58, 0.58, 0.03), { outline: name, color: INK, paper: CARD });   // the kind named outright — the page shows each, as an open line
   });
 });
 // The anatomy — each pen built up **one habit at a time**, a row per habit. The same path in every row; each row is the
 // row above plus one habit. Drawn by the very
 // pencil() and stroke() the board draws with, told which habits to leave out (stroke.js: the anatomy switch) — a row is
 // not an illustration of the line, it is the line, short a habit. Docs: how.html § the goofy outline
-// A **straight** path — the control. Hand the pens a curve and its own bend hides the habits: the wander is a pixel and a half at
-// this scale and the breath is a fifth of the width, both lost inside a 20 px bow. Handed a straight line, everything you see in a
-// row was put there by the habit that row adds
-const ANATOMY_PATH = Array.from({ length: 9 }, (_, i) => [-0.58 + i * 0.145, 0]);
+const ANATOMY_PATH = sine(-0.58, 0.58, 0.018);
 const DOT = POPS[2];   // the brick red of the palette — the handed points, so they never read as ink
 const ANATOMY = {
   pencil: [
@@ -179,7 +184,9 @@ const ANATOMY = {
     ["the wander", "the spine, on two sines", { wander: true }],
     ["the breath", "the width, on two more", { wander: true, breathe: true }],
     ["the flick", "past both ends, blunt", { wander: true, breathe: true, over: true }],
-    ["the shed", "crumbs on the edge, bites inside", { wander: true, breathe: true, over: true, shed: true }]
+    ["the shed", "crumbs on the edge, bites inside", { wander: true, breathe: true, over: true, shed: true }],
+    ["the lift", "the pen comes up — SLINE", { wander: true, breathe: true, over: true, shed: true }, { lift: GOOFY_OUTLINES.PENCIL_SLINE.lift }],
+    ["the pass", "laid three times — BROKEN", { wander: true, breathe: true, over: true, shed: true }, { passes: 3 }]
   ],
   ribbonpen: [
     ["the points", "what you hand it", null],
@@ -227,7 +234,7 @@ FIGS.quads.zoom = 1500;   // px per world unit — the seams are the subject her
 
 Object.entries(ANATOMY).forEach(([pen, rows]) => {
   const box = document.getElementById(`${pen}Anatomy`);
-  rows.forEach(([name, sub, habits], r) => {
+  rows.forEach(([name, sub, habits, extra], r) => {
     const key = `anatomy:${pen}:${r}`;
     const el = document.createElement("figure");
     el.dataset.fig = key;
@@ -236,7 +243,7 @@ Object.entries(ANATOMY).forEach(([pen, rows]) => {
     fig(key, [-0.66, -0.05, 0.66, 0.05], (sk) => {
       const fills = sk(), ink = sk();
       if (!habits) return handedPoints(fills, ink);
-      if (pen === "pencil") ink.pencil(ANATOMY_PATH, { color: INK, width: 0.015, anatomy: habits, paper: CARD });
+      if (pen === "pencil") ink.pencil(ANATOMY_PATH, { color: INK, width: 0.015, anatomy: habits, paper: CARD, ...extra });
       else ink.stroke(ANATOMY_PATH, { color: INK, width: 0.015, jitter: habits.jitter, anatomy: habits.anatomy });
     });
   });
@@ -250,7 +257,7 @@ Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("
 }));
 // What the board draws each role with today — read live off the switch (BOARD_LINES), so the page cannot drift from the board.
 // The same path drawn by each role's procedure: a contour closes it, a line runs it open — down to a dot. The counts in the captions are read off the code (how.html)
-const USE_PATH = [[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]];
+const USE_PATH = sine(-0.58, 0.58, 0.03);
 const IN_USE = [
   { key: "use:contour", label: `contour → ${BOARD_LINES.contour} · weight 0.7 / 1 / 1.15 / 1.2`, box: [-0.7, -0.14, 0.7, 0.14], draw: (ink) => ink.contour([[-0.5, -0.09], [0, -0.1], [0.5, -0.08], [0.52, 0.09], [0, 0.1], [-0.5, 0.08]], { color: INK, paper: CARD }) },
   { key: "use:line", label: `line → ${BOARD_LINES.line} · weight 0.6 / 0.7 / 1 / 1.3 / 1.6 · down to a dot`, box: [-0.7, -0.09, 0.7, 0.09], draw: (ink) => { ink.line(USE_PATH, { color: INK, paper: CARD }); for (const x of [-0.45, -0.15, 0.15, 0.45]) ink.line([[x - 0.012, -0.06], [x + 0.012, -0.058]], { color: INK, weight: 0.7, paper: CARD }); } },

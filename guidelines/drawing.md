@@ -104,11 +104,13 @@ medium page names the kinds outright (`{ outline: "PENCIL_SLINE" }`) to show eac
 and draws the three roles off the switch, so it cannot drift from the board.
 
 **The anatomy rows.** Each pen is also shown built up **one habit at a time** — a row per habit, each row the row above plus
-one: the points · the ribbon · the wander · the breath · the flick · the shed for the pencil, and the points · the ribbon ·
-the wander · the taper · the press for the ribbon pen. They are drawn by the same `pencil()` and `stroke()` the board draws
-with, told which habits to leave out (`anatomy`, `stroke.js` — **only the medium page ever passes it**; a habit left out is
-left out of the drawing, never faked). The path handed to them is **straight** on purpose: handed a curve, its own bend hides
-the habits (the wander is a pixel and a half at that scale), so everything a row shows was put there by the habit it adds.
+one: the points · the ribbon · the wander · the breath · the flick · the shed for the pencil, then its other two holds (the
+lift, PENCIL_SLINE; the pass, PENCIL_BROKEN), and the points · the ribbon · the wander · the taper · the press for the ribbon
+pen. They are drawn by the same `pencil()` and `stroke()` the board draws with, told which habits to leave out (`anatomy`,
+`stroke.js` — **only the medium page ever passes it**; a habit left out is left out of the drawing, never faked). Every line
+figure on the page is handed the **same sample line**, a sine (`sine()` in `how.js`), so the figures can be read against each
+other; it is kept **shallow** because a deep bow hides the habits it is there to show — the wander is a pixel and a half at
+that scale.
 
 ## The goofy fur — how hair is grown
 
