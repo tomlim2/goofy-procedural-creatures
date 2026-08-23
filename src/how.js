@@ -195,28 +195,30 @@ function handedPoints(fills, ink) {
   ANATOMY_PATH.forEach(([x, y], i) => fills.fill(blobPath(x, y, 0.0075, 0.0075, { lumps: 3, amount: 0.12, noise, phase: 211 + i }), DOT));
 }
 // The quads — what a stroke is actually made of. Each pair of samples becomes four corners (each sample pushed to both sides along
-// its normal by the half width) and those four are cut into two triangles. The rungs drawn here are **read back out of the triangles
-// the pen just wrote** (a Sketch keeps them in positions: 9 floats a triangle, a1 a2 b1 then a2 b2 b1), so they are the geometry, not
-// a picture of it. Magnified past the board's scale on purpose — at the board's scale a rung falls every 3 px.
-function rungsOf(sketch, from, out, color) {
+// its normal by the half width) and those four are cut into two triangles. Drawn as a wireframe: the pen lays the shape in a pale
+// tone and every triangle edge is then **read back out of the triangles it just wrote** (a Sketch keeps them in positions: 9 floats
+// a triangle) and drawn as a hairline. The lines are the geometry, not a picture of it. Magnified past the board's scale on
+// purpose — at the board's scale a pencil's quad is 3 px long
+function edgesOf(sketch, from, out, color) {
   const p = sketch.positions;
-  // Drawn with the pencil: a rung is as long as the line is wide, which is shorter than stroke()'s re-sample step — stroke() draws
-  // nothing that short (stroke.js), the pencil draws it as one quad
-  const rung = (ax, ay, bx, by) => out.pencil([[ax, ay], [bx, by]], { color, width: 0.0014, anatomy: {} });
-  for (let i = from; i + 18 <= p.length; i += 18) rung(p[i], p[i + 1], p[i + 3], p[i + 4]);   // a1 → a2, the near end of each quad
-  const last = p.length - 18;
-  if (last >= from) rung(p[last + 15], p[last + 16], p[last + 12], p[last + 13]);             // b1 → b2, the far end of the last one
+  const edge = (ax, ay, bx, by) => out.pencil([[ax, ay], [bx, by]], { color, width: 0.0011, anatomy: {} });
+  for (let i = from; i + 9 <= p.length; i += 9) {
+    edge(p[i], p[i + 1], p[i + 3], p[i + 4]);
+    edge(p[i + 3], p[i + 4], p[i + 6], p[i + 7]);
+    edge(p[i + 6], p[i + 7], p[i], p[i + 1]);
+  }
 }
-const CORNER = [[-0.075, -0.022], [0, 0.026], [0.075, -0.022]];   // a corner — where the two pens part company
+const CORNER = [[-0.075, -0.02], [0, 0.026], [0.075, -0.02]];   // a corner — where the two pens part company
+const MESH = FILLS[2];   // the shape in a pale tone, so the edges on top of it are what you read
 fig("quads", [-0.185, -0.05, 0.185, 0.05], (sk) => {
-  const ink = sk(), rungs = sk();
+  const shape = sk(), lines = sk();
   [-1, 1].forEach((side) => {
     const path = CORNER.map(([x, y]) => [x + side * 0.095, y]);
-    const from = ink.positions.length;
+    const from = shape.positions.length;
     // Every habit off on both sides: same path, same width, so the only thing left to tell them apart is the normal
-    if (side < 0) ink.stroke(path, { color: INK, width: 0.02, jitter: 0, anatomy: {} });
-    else ink.pencil(path, { color: INK, width: 0.02, anatomy: {}, paper: CARD });
-    rungsOf(ink, from, rungs, DOT);
+    if (side < 0) shape.stroke(path, { color: MESH, width: 0.02, jitter: 0, anatomy: {} });
+    else shape.pencil(path, { color: MESH, width: 0.02, anatomy: {}, paper: CARD });
+    edgesOf(shape, from, lines, INK);
   });
 });
 FIGS.quads.zoom = 1500;   // px per world unit — the seams are the subject here, so this one is allowed past the 300 the rest keep to
