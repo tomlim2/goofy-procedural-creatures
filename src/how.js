@@ -70,7 +70,7 @@ fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
   });
 });
 
-// The pencil — the reference's line next to ours (its numbers in stroke.js PENCIL). Same widths as the ribbon pen's figure, for the comparison
+// The pencil at three widths (its numbers in stroke.js PENCIL) — the same three the ribbon pen's figure shows
 fig("pencil", [-0.8, -0.12, 0.8, 0.12], (sk) => {
   const ink = sk();
   [0.007, 0.012, 0.022].forEach((width, i) => {
@@ -160,8 +160,8 @@ function ballFigure(box, key, label, phase, draw) {
   box.appendChild(el);
   fig(key, [-0.33, -0.26, 0.33, 0.26], (sk) => draw(sk(), sk(), blobPath(0, 0, 0.2, 0.2, { lumps: 5, amount: 0.05, noise, phase })));
 }
-// The goofy outlines — one line per entry of GOOFY_OUTLINES, the way the reference's legend shows its kinds: the same gentle
-// path drawn open with that outline, at the board's width. A line shows what a contour is made of better than a ball does
+// The goofy outlines — one line per entry of GOOFY_OUTLINES: the same gentle path drawn open with that kind, at the board's
+// width. A line shows what a contour is made of better than a ball does
 Object.keys(GOOFY_OUTLINES).forEach((name, i) => {
   const el = document.createElement("figure");
   el.dataset.fig = `outline:${name}`;
@@ -172,8 +172,8 @@ Object.keys(GOOFY_OUTLINES).forEach((name, i) => {
     ink.line([[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]], { outline: name, color: INK, paper: CARD });   // the kind named outright — the page shows each, as an open line
   });
 });
-// The anatomy — each pen built up **one habit at a time**, a row per habit, the way the reference's legend does it
-// (reference/README.md § 3). The same path in every row; each row is the row above plus one habit. Drawn by the very
+// The anatomy — each pen built up **one habit at a time**, a row per habit. The same path in every row; each row is the
+// row above plus one habit. Drawn by the very
 // pencil() and stroke() the board draws with, told which habits to leave out (stroke.js: the anatomy switch) — a row is
 // not an illustration of the line, it is the line, short a habit. Docs: how.html § the goofy outline
 // A **straight** path — the control. Hand the pens a curve and its own bend hides the habits: the wander is a pixel and a half at
