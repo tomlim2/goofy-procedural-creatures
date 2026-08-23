@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Sketch } from "../stroke.js";
 import { makeCreature } from "../character/index.js";
 import { makeNoise, makeRng } from "../rng.js";
-import { makePaperMaterial } from "./paper.js";
+import { makePaperMaterial, setGrainScale } from "./paper.js";
 import { inkMaterial, disposeGroup } from "./mesh.js";
 import { buildCreature } from "./rig.js";
 import { applyState } from "./animate.js";
@@ -110,9 +110,8 @@ export function createScene(canvas) {
       // Derived from the current view, the grain would grow relative to the screen as the view narrows: at 1×1 it would
       // come out as blotches instead of grain. The shader gets the 9×6 view as its grain space
       const [grainW, grainH] = viewSize(PAPER_GRID[0], PAPER_GRID[1], aspect);
-      paper.material.uniforms.grain.value.set(grainW, grainH);
+      setGrainScale(grainW / viewW, grainH / viewH);   // grain units per world unit — one number for the sheet and for every mark's bite
       sheet.scale.set(viewW, viewH, 1);
-      sheet.material.uniforms.grain.value.set(grainW, grainH);
     }
   }
 
@@ -166,13 +165,13 @@ export function createScene(canvas) {
       // The sheet — the board's one shader (paper.js). Seed 7, fixed: the paper does not change with the board's seed.
       // The plain one stays in the scene as its background — hidden while the board is drawn on the target, seen by the audit's
       // direct renders; the one in the overlay carries the board (the same numbers, so the two sheets are one sheet)
-      paper = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), makePaperMaterial(7));
+      paper = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), makePaperMaterial());
       paper.renderOrder = 0;
       paper.position.z = -1;
       scene.add(paper);
       // 4 samples: the target is where the lines get their anti-aliasing now, not the canvas. No depth — nothing on the board tests it
       board = new THREE.WebGLRenderTarget(Math.max(1, canvas.width), Math.max(1, canvas.height), { samples: 4, depthBuffer: false, stencilBuffer: false });
-      sheet = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), makePaperMaterial(7, { board: board.texture }));
+      sheet = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), makePaperMaterial({ board: board.texture }));
       overlay.add(sheet);
     }
 

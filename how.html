@@ -155,7 +155,9 @@ shade of that color. A part names one and hands over the path and the color —
 creature's head and body take the creature's <b>goofy material</b> (the <code>material</code> slot: FLAT for most, GRAPHITE, INK, OIL or CHARCOAL
 for the rest) — and so does everything it fills, ears and tail, eyes and nose, teeth and hat: one tool per creature,
 the details at their own colour's step — at its <b>density</b> (another slot: a light hand, a normal one, a heavy one); its <b>pattern</b> (stripes,
-dots, spots, hatching — a third slot) is drawn inside the base colour. The table is <code>GOOFY_MATERIALS</code> in
+dots, spots, hatching — a third slot) is drawn inside the base colour. A material also carries its <b>tooth</b> — how the paper bites it:
+graphite rides the paper's grain and skips it (0.45), charcoal dusts it (0.4), flat 0.3, ink soaks in (0.12), oil buries it (0.06), scaled by
+how hard the hand pressed. The table is <code>GOOFY_MATERIALS</code> in
 <code>src/medium/materials.js</code>; every entry gets a row of shader balls — the same ball in the same color at the five
 <b>value</b> steps, <b>black · hatch · scribble · stipple · light</b> (the reference's scale, named for the way graphite
 makes each): a goofy material renders darkness its own way, graphite changing technique step by step, ink, oil and charcoal
@@ -173,9 +175,10 @@ the same five steps on a dark ground.</p>
 <p>Underneath there is exactly one GPU material — a flat <code>MeshBasicMaterial</code> with vertex colors,
 shared per opacity level by every mesh on the board. The paper under it is the board's one shader — a procedural
 GLSL grain on a single plane, no texture and no tile (<code>src/scene/paper.js</code>, drawing.md § the paper) — and the
-frame is two passes: the board on a transparent target, then the sheet over the canvas with the board as a texture,
-thinned on the grain's peaks, so the paper shows through the drawing, fills included. The board stays opaque within
-itself; only the finished board meets the sheet. No depth test, so stacking is decided
+frame is two passes: the board on a transparent target, then the sheet over the canvas with the board on it. The paper shows
+<b>through</b> the drawing, fills included — not in that composite but in every mark: each one carries its own bite (its material's
+tooth at its value's press) and the ink shader mixes it toward the sheet's colour where the grain peaks. A colour mix, not a hole,
+so the board stays opaque within itself and the creature in front still hides the one behind. No depth test, so stacking is decided
 entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
 (fills first, ink after — within a mesh, vertex order is the stacking), one draw call per layer.</p>
 

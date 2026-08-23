@@ -419,7 +419,9 @@ tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.
 
 The hand — **normal** (weight 3) · **light** (1.5) · **dense** (1.5): one step lighter or darker on the goofy material's value scale
 (`medium/materials.js` `VALUES`: black · hatch · scribble · stipple · light — the step itself comes from the part's color's darkness, so a
-dark cloth draws black and a pale skin light; a light hand moves one step lighter, a heavy one darker). Nothing on flat. Both the
+dark cloth draws black and a pale skin light; a light hand moves one step lighter, a heavy one darker). It is also how hard the hand
+pressed, so it decides how much of the paper is left showing through the fill — a heavy hand fills the paper's valleys, a light one only
+grazes its peaks ([../drawing.md](../drawing.md) § the paper). Nothing else on flat. Both the
 head and the body take the creature's density, like its goofy material — and on a dog, a cat or an imp both take the **head color's**
 step, one mass ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
 opaque, so neighbours still hide each other. Everything the creature fills takes the same goofy material — the head, the body, the ears and their insides, the muzzle, the

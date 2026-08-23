@@ -183,23 +183,29 @@ only **half** as far as on a light one: a mark's tone there is a light one, and 
 goes toward its shade washes the part out. A part names a
 goofy material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
+A third key, **`tooth`**, is not a channel but how the paper bites it — how much of the fill the sheet's grain takes
+back (§ the paper). It belongs to the material because it is what the tool does to paper: graphite 0.45 rides the
+tooth and skips it, charcoal 0.4 dusts it, flat 0.3, ink 0.12 soaks in, oil 0.06 buries it. The value step's `press`
+scales it (black ×0.7 … light ×1.3).
+
 The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt goofy material cannot silently draw
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
 way, its contour the board's PENCIL — so the table cannot drift from what is seen. The last ball of every textured row is the same
 material on a **dark ground**, which is where the rule above is visible.
 
-| Goofy material | base | texture | On the board |
-| --- | --- | --- | --- |
-| `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
-| `GRAPHITE` | `flat` | `hatch` — thin grey pencil strokes, nearly upright, each rule drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled | the `material` slot (1.5) |
-| (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
-| `INK` | `flat` | `scratch` — long light lines dragged across, taking the ink away: the darker the step the fewer and the tighter | the `material` slot (0.8) |
-| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, four tones close to the ground, cut flat by the contour | the `material` slot (1) |
-| `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | the `material` slot (1) |
+| Goofy material | base | texture | tooth | On the board |
+| --- | --- | --- | --- | --- |
+| `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | 0.3 | the default of the `material` slot (weight 5); the calico patches always |
+| `GRAPHITE` | `flat` | `hatch` — thin grey pencil strokes, nearly upright, each rule drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled | 0.45 | the `material` slot (1.5) |
+| (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | | |
+| `INK` | `flat` | `scratch` — long light lines dragged across, taking the ink away: the darker the step the fewer and the tighter | 0.12 | the `material` slot (0.8) |
+| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, four tones close to the ground, cut flat by the contour | 0.06 | the `material` slot (1) |
+| `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | 0.4 | the `material` slot (1) |
 
 The head and the body take the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)
 § surface), one tool per creature — at a **value step**. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
-the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34. A goofy material renders a
+the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34 (each with a `press`,
+how hard the hand leaned — it scales the material's tooth, § the paper). A goofy material renders a
 step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → coarse dabs → a bare ground),
 ink, oil and charcoal lay down more or less of their texture.
 
@@ -280,17 +286,36 @@ its repeat as a diagonal weave. The fragment has no resolution, so the grain is 
   the renderer's output pass (§ colors go in as linear). It is the one place a color is handled in sRGB, and it
   never meets `hexToRgb`.
 
+**The bite — the paper shows through the drawing.** The light cells of the grain are the peaks of the paper's
+tooth: a pencil rides over them and skips them, a pen soaks into them, thick paint fills them in. So the bite is
+**the mark's**, not the sheet's. Every triangle carries its own as a vertex tag (`teeth`, `stroke.js`), and the ink
+material mixes it toward the sheet's color there (`biteThePaper`, `scene/mesh.js`, patched into three.js's basic
+material so vertex colors, opacity, the tail's skinning and the color space all keep working):
+
+    outgoing = mix(outgoing, sheetColor(world), tooth · smoothstep(0.55, 1, cell))
+
+- It is a **color mix, not a hole in the alpha**. The board stays opaque within itself, so the creature in front
+  still hides the one behind completely ([rig.md](rig.md)) — a hole would show that creature through the grain.
+- `TOOTH` (`stroke.js`) is the default, 0.3: a contour, a fur stroke, the floor line, an emoji — everything that is
+  not a goofy material. A goofy material names its own `tooth` (§ the goofy material) and `paint()` tags the whole
+  surface it fills with it — base, pattern, decals and texture — putting the tag back when it returns.
+- The value step scales it by its `press`: pressed black the mark fills the paper's valleys and little sheet is
+  left showing (×0.7), a light touch only grazes the peaks (×1.3). A dark surface comes out richer, a pale one airier.
+- The grain a mark is bitten by is cell for cell the grain the sheet shows: one chunk (`GRAIN_GLSL`) and one set of
+  uniforms (`GRAIN`), both keyed on the **world** position, `grainScale` grain units per world unit. `(0, 0)` means
+  no sheet and no bite — what the medium page's figures get, drawn on a card rather than on the board.
+
 **Two passes.** The board is drawn on a transparent render target (4 samples — the lines get their anti-aliasing
 there now), and then the sheet is drawn over the canvas with the board as a texture (`render()` in
 `scene/index.js`; the plain sheet stays in the scene as its background, hidden for the board pass, and is what
-the audit's direct renders see). The sheet composites premultiplied: `out = board·t + sheet·(1 − a·t)`, with
-`t = 1 − TOOTH·peak` — the light cells of the grain are the peaks of the tooth, and graphite skips them, so up
-to 30% of the ink comes off there (`TOOTH`, `paper.js`) and **the paper shows through the drawing, fills
-included**. That is the `grain` channel of § the goofy material, and it is the sheet's, not a material's: the board
-stays opaque within itself — the front creature hides the one behind completely — and only the finished board
-meets the paper. The one thing the target changes: it blends in linear light where the canvas blended in sRGB,
-so the two steady translucencies keep their old grey by new numbers — the floor line 0.72 → 0.88, the pupil
-0.95 → 0.985 (the emoji fade is left alone). The PNG export reads the canvas after `draw()`, the composite. `drawdiff` cannot see any of this — `/pixeldiff.html`
+the audit's direct renders see). The composite is a plain premultiplied `over` — nothing is taken off the drawing
+there, because every mark already carries the paper in its own color. The one thing the target changes: it blends
+in linear light where the canvas blended in sRGB, so the two steady translucencies keep their old grey by new
+numbers — the floor line 0.72 → 0.88, the pupil 0.95 → 0.985 (the emoji fade is left alone). The PNG export reads
+the canvas after `draw()`, the composite.
+
+`drawdiff` hashes the bite along with the positions and colors, so a tooth that moves is a drawing difference like
+any other. What it cannot see is the shader itself — that is judged by eye, and by the medium page's rows. `drawdiff` cannot see any of this — `/pixeldiff.html`
 ([determinism.md](determinism.md) § how to check) is the gate for the sheet and every other shader.
 
 ## The boil

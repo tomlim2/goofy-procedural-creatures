@@ -38,7 +38,10 @@ try {
   const newM = await import(pathToFileURL(join(root, "src/character/index.js")).href);
   const oldSlots = (await import(pathToFileURL(join(oldRoot, "src/character/vocabulary/slots.js")).href)).SLOTS;
 
-  const hash = (s) => createHash("sha1").update(JSON.stringify([Array.from(s.positions, (v) => Math.round(v * 1e6)), Array.from(s.colors, (v) => Math.round(v * 1e6))])).digest("hex").slice(0, 10);
+  // Positions, colors and the paper's bite (teeth — the tag that decides how much of a mark the sheet takes back, guidelines/drawing.md
+  // § the paper). A ref older than the bite has no teeth at all: it reads as an empty list, so every painted sketch shows as different
+  // once — that is the tooth landing, not the drawing moving
+  const hash = (s) => createHash("sha1").update(JSON.stringify([Array.from(s.positions, (v) => Math.round(v * 1e6)), Array.from(s.colors, (v) => Math.round(v * 1e6)), Array.from(s.teeth || [], (v) => Math.round(v * 1e4))])).digest("hex").slice(0, 10);
   // A layer is an { ink, fills } pair out of drawCreature. Names can differ between the two trees (a commit that split or merged layers) — only layers present on both sides are compared, the rest are noted once
   const layerKeys = (d) => Object.keys(d).filter((k) => d[k] && d[k].ink && d[k].fills);
   const onlyOne = new Set();
