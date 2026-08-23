@@ -45,9 +45,9 @@ boiling at the board's own pace.</p>
 <code>ink.contour(path, { color, weight })</code> closes a shape, <code>ink.line(…)</code> runs open, <code>ink.mark(…)</code>
 is a dot or a dash a few widths long — with at most a weight on the kind's width (a head's contour runs at 1.15 of a body's).
 One switch, <code>BOARD_LINES</code>, says which kind draws each role; change a name there and every line of that role changes.</p>
-<p>A kind is named <b>the pen, then the hold</b>. Two pens — the <b>pencil</b> and the <b>ribbon pen</b> — and three holds:
-<b>STROKE</b> (once, full width — mass) · <b>SLINE</b> (thin, the pen lifts — detail) · <b>BROKEN</b> (three times over itself —
-contour). Four kinds stand in the table. One line each, the same path:</p>
+<p>A kind is named <b>the pen, then the hold</b>. One pen is on the table, the <b>pencil</b>, in four holds: <b>STROKE</b>
+(once, full width — mass) · <b>SLINE</b> (thin, the pen lifts — detail) · <b>BROKEN</b> (three times over itself — contour) ·
+<b>DAB</b> (a blunt stub that does not shed — a dot, a dash). One line each, the same path:</p>
 
 <div class="figs" id="outlineBalls"></div>
 
@@ -74,8 +74,10 @@ line is seamless — its sines snap to whole cycles and it never overshoots. Eve
 <p>Three kinds are this one pencil, told apart by the hold. <b>PENCIL_STROKE</b> is full width, laid once: every contour and
 every open line on the board. <b>PENCIL_SLINE</b> is thinner, and <b>the pen lifts</b> about once every 0.26 of a unit for a hair
 — never within 0.025 of an end, and not at all below 0.07 of length, so a dot or a dash keeps its whole extent.
-<b>PENCIL_BROKEN</b> is laid <b>three times over itself</b>, each pass wandering and breathing on its own. SLINE and BROKEN are
-built and on nothing; the switch above says what the board draws.</p>
+<b>PENCIL_BROKEN</b> is laid <b>three times over itself</b>, each pass wandering and breathing on its own. <b>PENCIL_DAB</b> is a
+stub: blunt at both ends, because an overshoot runs two or three times the length of a 0.01 freckle, and it does not shed, because
+a crumb is the size of the dot. Every mark on the board is a dab. SLINE and BROKEN are built and on nothing; the switch above says
+what the board draws.</p>
 
 <p>One habit per row, each row the row above plus one. The path handed in is straight, so everything a row shows is the
 habit it adds. The last row is the whole pencil:</p>
@@ -91,11 +93,12 @@ habit it adds. The last row is the whole pencil:</p>
 </div>
 
 <!-- ---------------- the ribbon pen ---------------- -->
-<h3>the ribbon pen — RIBBONPEN_STROKE</h3>
+<h3>the ribbon pen — off the table</h3>
 <p>WebGL draws no thick line, so nothing here is a line: every stroke is a <b>filled triangle ribbon</b>. Four habits have to
-be present together — even re-sampling, noise along the normal (a slow bend and a fine tremor), an end taper, uneven
-pressure through the middle. Drop one and it reads as clip art. RIBBONPEN_STROKE is this stroke laid once, and it draws
-every mark: short, it comes out a bean, which is what a mark wants.</p>
+be present together — even re-sampling, noise along the normal (a slow bend and a fine tremor), an end taper, uneven pressure
+through the middle. Drop one and it reads as clip art. The ribbon pen is no kind and no role draws with it; two things still
+call it directly — a hat's <b>band</b> and an emoji's glyph outline. Its taper goes to nothing at both ends, so it draws nothing
+shorter than its 0.03 re-sample step; stubs are the pencil's.</p>
 
 <p>The same, one habit per row:</p>
 
@@ -114,13 +117,6 @@ every mark: short, it comes out a bean, which is what a mark wants.</p>
     <div class="subs"><span>jitter 0 — clip art</span><span>the hand</span></div>
     <figcaption><b>the four habits</b> — the same stroke with its noise off, on the left. Taper and pressure alone are
     not enough: without the wobble the line is dead.</figcaption>
-  </figure>
-
-  <figure data-fig="beans">
-    <canvas></canvas>
-    <div class="subs"><span>shorter than the re-sample step</span></div>
-    <figcaption><b>the bean rule</b> — a stroke shorter than 0.03 samples only at its two ends, where the taper
-    would erase it. It gets one sample in the middle, so a dot mouth or a freckle stays a small bean.</figcaption>
   </figure>
 
   <figure data-fig="outline" class="wide">
@@ -159,7 +155,7 @@ first, which is why it has no seam.</p>
 
   <figure data-fig="twoLines">
     <canvas></canvas>
-    <div class="subs"><span>RIBBONPEN_STROKE</span><span>PENCIL_STROKE</span></div>
+    <div class="subs"><span>the ribbon pen</span><span>the pencil</span></div>
     <figcaption><b>the same face twice</b> — the ribbon pen laid twice on the left, the pencil on the right. The
     pencil's loop has no seam, and its quads share one normal per point, so it cannot crack at a corner.</figcaption>
   </figure>

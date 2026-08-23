@@ -51,15 +51,6 @@ fig("clipart", [-0.85, -0.1, 0.85, 0.1], (sk) => {
   ink.stroke(wave(0.42), { color: INK, width: 0.012 });
 });
 
-fig("beans", [-0.5, -0.07, 0.5, 0.07], (sk) => {
-  const ink = sk();
-  for (let i = 0; i < 6; i += 1) {
-    const x = -0.375 + i * 0.15;
-    const half = i % 2 ? 0.005 : 0.015;                               // a freckle and a dot mouth
-    ink.stroke([[x - half, 0], [x + half, 0]], { color: INK, width: i % 2 ? 0.012 : 0.017 });
-  }
-});
-
 fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
   [0.45, 1, 1.9].forEach((wobble, i) => {
     const s = sk(wobble);                                             // one sketch per column — its own hand
@@ -79,7 +70,7 @@ fig("pencil", [-0.8, -0.12, 0.8, 0.12], (sk) => {
   });
 });
 
-// The same face twice — contour and smile in our ribbon, then in the pencil. The eyes stay beans on both (the pencil is not for dots)
+// The same face twice — contour and smile in the ribbon pen, then in the pencil
 fig("twoLines", [-0.75, -0.2, 0.75, 0.2], (sk) => {
   const s = sk();
   [false, true].forEach((pen, i) => {

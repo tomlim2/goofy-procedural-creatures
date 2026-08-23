@@ -171,10 +171,10 @@ export class Sketch {
     for (let pass = 0; pass < passes; pass += 1) {
       this.phase += 13.37;
       const sampled = resample(points, step);
-      if (sampled.length < 2) continue;
-      // A short stroke sampled only at its two ends (dots, freckles and vertical pupils shorter than step) goes to width 0 from the end taper and disappears.
-      // One sample in the middle gives it its own width there — a short stroke stays as a small bean.
-      if (sampled.length === 2) sampled.splice(1, 0, [(sampled[0][0] + sampled[1][0]) / 2, (sampled[0][1] + sampled[1][1]) / 2]);
+      // Two samples is both ends and nothing between, and the end taper takes both to width 0 — a stroke shorter than step draws
+      // nothing. Nothing on the board hands one over: short lines are the pencil's (medium/outlines.js PENCIL_DAB), and what is
+      // left here — a hat's band, an emoji's glyph — is long
+      if (sampled.length < 3) continue;
       const path = perturb(sampled, this.noise, jitter * this.wobble, this.phase);
       // Thin at the ends, thick in the middle (taper). Pressure variation is laid on top with noise (press).
       const phase = this.phase;
@@ -250,7 +250,7 @@ export class Sketch {
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
   // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
-  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
+  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, shed = true, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
     const P = PENCIL;
     const A = anatomy || ALL_HABITS;
     const rgb = hexToRgb(color);
@@ -275,8 +275,8 @@ export class Sketch {
       // The spine — re-sampled, and on an open line run past both ends along the end tangents
       let spine = resample(closed ? [...points, points[0]] : points, P.step);
       if (closed) spine.pop();
-      if (spine.length === 2) spine.splice(1, 0, [(spine[0][0] + spine[1][0]) / 2, (spine[0][1] + spine[1][1]) / 2]);
-      if (spine.length < 3) continue;
+      // Two samples draw as one quad: the pencil's width does not taper to nothing at an end, so a stub is a stub, not a gap
+      if (spine.length < 2) continue;
       let tail0 = 0;
       let tail1 = 0;
       if (!closed && A.over) {
@@ -354,7 +354,7 @@ export class Sketch {
       }
 
       // The shed — after the ribbon, so a bite covers ink and a crumb sits on the paper
-      if (!A.shed || w < P.grit.minWidth) continue;
+      if (!shed || !A.shed || w < P.grit.minWidth) continue;
       const density = jr(10, P.grit.density);
       const G = P.grit;
       for (let i = 0; i < n; i += 1) {

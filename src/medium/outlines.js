@@ -2,10 +2,10 @@
 // contour(), line() and mark() here. Docs: guidelines/drawing.md § the outline; how.html § the goofy outline
 
 // The kinds — what a line is made of. A separate concept from the goofy materials (a line is not a way of filling).
-// A kind is named **the pen, then how it is held**: PENCIL_ or RIBBONPEN_, and STROKE (once, at full width — mass) · SLINE (thin,
-// and the pen lifts — detail) · BROKEN (laid three times over itself — contour), the three the reference holds its line in.
-// The pencil is stroke.js pencil() — it wanders, breathes, runs past its ends and sheds; closed, one seamless loop. The ribbon pen
-// is stroke.js stroke(), the board's older line. `pen` names which of the two draws it, and the rest of the entry is the hold
+// A kind is named **the pen, then the hold**: STROKE (once, at full width — mass) · SLINE (thin, and the pen lifts — detail) ·
+// BROKEN (laid three times over itself — contour) · DAB (a blunt stub that does not shed — a dot, a dash).
+// One pen draws them all: stroke.js pencil() — it wanders, breathes, runs past its ends and sheds; closed, one seamless loop.
+// `pen` names the hand that draws a kind, for when a second pen comes back
 export const GOOFY_OUTLINES = {
   // The pencil's stroke — full width, laid once. Mass: what every line on the board is
   PENCIL_STROKE: { pen: "pencil", width: 0.012, passes: 1 },
@@ -15,9 +15,9 @@ export const GOOFY_OUTLINES = {
   // The pencil's broken — laid **three times over itself**, each pass wandering and breathing on its own, so the line comes out
   // doubled and offset the way a hand going round twice leaves it. Contour. Built, and on nothing yet (BOARD_LINES, below)
   PENCIL_BROKEN: { pen: "pencil", width: 0.011, passes: 3 },
-  // The ribbon pen's stroke — once: the board's original line, a tapered ribbon pushed by noise, thin at both ends. A short one is
-  // a bean, which is what a mark wants; the pencil's overshoot would lengthen it
-  RIBBONPEN_STROKE: { pen: "ribbon", width: 0.01, passes: 1, jitter: 0.006 }
+  // The pencil's dab — a stub: **blunt at both ends** (an overshoot would run two or three times the length of a freckle) and it
+  // does not shed (a crumb or a bite is the size of the whole dot). Every mark on the board
+  PENCIL_DAB: { pen: "pencil", width: 0.01, passes: 1, blunt: true, shed: false }
 };
 
 // The switch — what the board draws each **role** with. A role is what a line is on the board, not what it is made of:
@@ -27,7 +27,7 @@ export const GOOFY_OUTLINES = {
 // Change a name here and every line of that role changes on the board; a new kind is a new entry above and a name here.
 // A part names its role and hands over the path and the color — at most a weight on the width. A part never names a kind; the medium
 // page does (outline), to show each kind on its own
-export const BOARD_LINES = { contour: "PENCIL_STROKE", line: "PENCIL_STROKE", mark: "RIBBONPEN_STROKE" };
+export const BOARD_LINES = { contour: "PENCIL_STROKE", line: "PENCIL_STROKE", mark: "PENCIL_DAB" };
 
 export function contourWith(sketch, points, options) { return draw(sketch, points, "contour", true, options); }
 export function lineWith(sketch, points, options) { return draw(sketch, points, "line", false, options); }
@@ -49,6 +49,8 @@ function draw(sketch, points, role, closed, { color = "#2b2724", weight = 1, pap
   if (joint) options.joint = joint;
   if (skinT) options.skinT = skinT;   // the skin tag along the line — [t0, t1] on a bent part's spine (the tail)
   if (o.lift) options.lift = o.lift;
+  if (o.shed === false) options.shed = false;
+  if (o.blunt) options.joint = [true, true];   // both ends meet nothing and run past nothing — a stub keeps its own length
   if (o.pen === "pencil") sketch.pencil(points, { ...options, closed });
   else if (closed) sketch.outline(points, options);
   else sketch.stroke(points, options);
