@@ -233,19 +233,18 @@ Interval pup 8~22 s / cat 10~28 s. Which leg is drawn within the pair at the sta
 The oscillation goes onto `legOsc` (legs) and `tailAngle` (the tail) without easing, faded by a 0.35 s envelope. There is no raise-a-front-paw-and-wave action — it looks human.
 The ACTION card's SCRATCH/WAG only bite on quads. Hopping in place is on the body layer (above), so quads do it too.
 
-## The tail (quads) — a four-bone chain
+## The tail (quads) — an eight-bone chain
 
-The tail is **a four-bone chain under one skin** splitting the spine into 4 (`TAIL_BONES` in `limbs.js`) — four sibling bones placed by forward kinematics and one skinned mesh bent by them ([../rig.md](../rig.md)). The root bone takes
+The tail is **an eight-bone chain under one skin** splitting the spine into 8 (`TAIL_BONES` in `limbs.js`) — eight sibling bones placed by forward kinematics and one skinned mesh bent by them ([../rig.md](../rig.md)). The root bone takes
 `tailAngle` (swish, wag, walking, sleep), the tip bone `tailTip` (tapping, tremble, follow-through), and **the raise `tailRaise` (0~1)** blends each joint from the rest pose (the spine direction)
 toward vertical — whether the skeleton curls or reaches back, it **shoots straight up** (every joint at π/2, with no bent variant). A joint's share of either blend is taken
-**the short way round and capped** — 100° at the root, 90° at the joints along the tail — the rest cascading to the next joint (`animate.js`): a hook's tip sat at −131° and the arch asked it for −20° — a 171° twist at one
-joint, which folded the skin onto itself. A curled skeleton stays curled under the arch and the raise, as a real tail does — it cannot hinge through half a turn at one joint.
-A joint the cap stops is measured against the pose once more: how far off is its bend once it has turned as far as it can? Up to 30° it takes the turn; past 70° it **lets go**
-and keeps the bend it was drawn with, easing between the two (`MISS` in `animate.js`) so a pose blending in never snaps. A hook's tip is drawn folded 113° toward the head while
-the arch asks for 46° the other way — capped it landed at +23°, a 69° miss: neither the hook nor the arch, and the tail drew an S. Let go, the tail arches on the joints that
-can reach and ends in its own hook: a question mark. (At 60° the cap alone was the problem — a curl, a longtail, a flag and a kink all ran out of joint before the arch and
-stood in a half-arch: the bones did not draw an arch at all. 90° puts every skeleton but the hook exactly on the pose.) The easing is not decoration: as a hard switch it fired
-the moment a ♥ bent the raise pose off vertical and threw the tip 89° in one tick.
+**the short way round** (wrapped to ±180°), the rest cascading to the next joint (`animate.js`), and that is the whole of it — over every skeleton × length × tailLift × pose,
+the biggest turn a joint is ever asked for is 110° and the biggest bend the skin ends up with is 27°, which it bends through cleanly.
+
+A pose is a **shape, not a list of bones**: the table writes it as a few angles root→tip and `animate.js` reads it off at however many bones the tail has, so the bone count
+stays the rig's own business. **Eight** is what makes the plain solve enough. At four the arch asked 49° of every joint and a hook's tip had to swing 170° — a curl, a
+longtail, a flag and a kink all ran out of joint and stood in a half-arch (the bones did not draw an arch at all), and the hook folded its skin onto itself: the black knob
+at the tip. A joint cap of 90° and a rule letting a hopeless joint keep its own bend were built to hold that together; twice the bones took both of them away.
 `tailTip` in `table.js` holds the tip bone and raise parameters. Dogs and cats read it **oppositely** — for a dog fast wagging is joy, while for a cat fast movement is irritation or excitement and
 joy is **holding it up** (research: raised/a question mark = greeting, a trembling tip = a very glad greeting, a slow swish = focus or mild irritation, tip tapping = interest, lashing = anger,
 puffed = a startle, wrapped round the body = at ease, and nearly fixed while walking).
@@ -260,7 +259,7 @@ puffed = a startle, wrapped round the body = at ease, and nearly fixed while wal
 | **tuck** | event (a startle) | On a plain or ☆ startle (not a ♥ — that one wags) the whole tail tucks under, −1.0 rad, for 1.2 s (`tuck`: in 0.15 s, held, out in 0.4 s) — fear. Its one motion below the body while awake | — |
 | Lashing | — | — | **there is none** — a cat lashing its tail is forbidden as a motion (there is no code for it. A dog's wag is wag) |
 | Wrapped round the body | — | — | **not a motion** — awake, a cat's tail points up and swings; the tail folds against the body only in sleep |
-| **idle pose** arch | state | The skeleton as-is (the root +0.25) | **the arch** — joint world angles [103°, 74°, 26°, −20°] × 85% (`tailIdlePose`, an open question mark: rising with a lean toward the head, the tip curling forward and a little down — it was an ∩ with the tip straight down, which folded a thick tail onto itself), the top two bones ±0.12 by the individual's tailLift. While awake and not raised; seated it keeps 70%. Every skeleton reaches it (a hook keeps its own hook at the tip — the joint cap and the drop rule above) |
+| **idle pose** arch | state | The skeleton as-is (the root +0.25) | **the arch** — the shape [103°, 74°, 26°, −20°] read off at the tail's eight joints, × 85% (`tailIdlePose`, an open question mark: rising with a lean toward the head, the tip curling forward and a little down — it was an ∩ with the tip straight down, which folded a thick tail onto itself), the top two control angles ±0.12 by the individual's tailLift. While awake and not raised; seated it keeps 70%. **Every skeleton reaches it**, the hook included |
 | **raise** | tied to a good mood (^^) | — | **while smiling ^^** (a ^^ blink 22%, the ♥ emoji, a ♥ startle — 3 s or more) `tailRaise` goes 0→1 (0.4 s), holds for the whole smile and drops in 0.6 s; the swish, taps and follow-through are killed by it (stiff). Two shapes: for a ^^ **every joint exactly vertical** (π/2); when the mood is a **♥** (the emoji floating, a ♥ startle) the **question mark** — `raisePose` [90°, 90°, 72°, 14°], the tip hooked toward the head — the greeting. `h` blends between the shapes at the raise's own rates, so a ♥ arriving mid-raise bends the tip over smoothly |
 | **tremble** (the tip) | tied to a ♥ | — | While raised by a ♥ the tip quivers 0.08 rad at 4Hz (`tremble`; 6 ticks a cycle) — a very glad greeting |
 | **bristle** puff | tied to **anger**, and a startle | — | Fur stands up when scared or angry — while angry, only the tail's **thickness** goes 1 → 1.6× (`tailPuff`, the length unchanged), the envelope following anger as it is: bristling in 0.1 s, held for the 3~5 s of anger, subsiding in 0.1 s. On a **startle** a short bristle — 1.4× over 0.6 s (`startlePuff`, a bump at the startle's start) — whichever is bigger |

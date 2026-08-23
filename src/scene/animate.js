@@ -65,7 +65,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     p.group.position.y = shiftY * p.depth;
   }
 
-  // Tail — a four-bone chain. Root angle (tailAngle) + the tip bone's relative angle (tailTip) + raise (tailRaise: each joint blends from its rest pose toward a target pose) + bristle (tailPuff)
+  // Tail — an eight-bone chain. Root angle (tailAngle) + the tip bone's relative angle (tailTip) + raise (tailRaise: each joint blends from its rest pose toward a target pose) + bristle (tailPuff)
   if (item.tailGroup) {
     // Bristle — **thickness only**, 1 → 1.6× (length unchanged): each bone scales perpendicular to its own axis (scale.y; the bones are siblings, so no child is sheared). The same envelope as the eyes (pupils)
     const puff = 1 + 0.6 * (state.tailPuff || 0);
@@ -83,37 +83,26 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     // Two sets of joint target angles — bone directions (world angles). Raise (tailRaise): every joint up (π/2), or the raise pose (a ♥'s question mark).
     // The idle pose (tailArch, the cat arch): state.tailPose[i]. Both take the rotation from the skeleton's rest angle (restAngle) to that world angle, split it into joint
     // shares, and blend by the weight (the sum never passes 1, so the remainder is the skeleton as it is). Root tailAngle and tip tailTip go on top of that.
-    // A share is taken **the short way round** (wrapped to ±180°) and **capped per joint** (100° at the root, 90° along the tail), the rest cascading to the next joint: a hook's tip sat at −131°
-    // and the arch asked it for −20° — a 171° twist at one joint, which folded the skin onto itself (the black knob at the tip). A curled skeleton stays
-    // curled under the arch and the raise, which is what a real tail does: it cannot hinge through half a turn at one joint
+    // A share is taken **the short way round** (wrapped to ±180°), the rest cascading to the next joint. With eight bones that is all it takes:
+    // the biggest turn any joint is ever asked for is 110° and the biggest bend the skin ends up with is 27°, which it bends through cleanly.
+    // At four bones a joint had to swing up to 170° — a hook's tip sat at −131° while the arch asked for −20° — and the skin folded onto itself
+    // (the black knob at the tip), so a cap and a rule for letting a hopeless joint keep its own bend stood here. Twice the bones did their work
     const UP = Math.PI * 0.5;
-    // The cap per joint: the root may swing 100° (a tail lifts from flat to up at its base), the joints along it 90°. At 60° the pose was out of reach for
-    // most skeletons — a curl, a longtail, a flag and a kink all ran out of joint before the arch and stood in a half-arch, hinged rather than curved
-    const capOf = (i) => (i === 0 ? Math.PI * 0.556 : Math.PI / 2);
     const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-    // A joint's share: the short way round, capped — and **let go** when the capped turn would still miss the pose by a long way. The miss is
-    // measured as a bend: how far off the pose this joint's bend still is once it has turned as far as it can. Up to 30° it takes the turn (it
-    // very nearly gets there); past 70° it keeps the bend it was drawn with instead, easing between the two so a pose blending in never snaps.
-    // A hook's tip is drawn folded 113° toward the head and the arch asks it to fold 46° the other way: capped it lands at +23°, a 69° miss —
-    // neither the hook nor the arch, the S the tail used to draw. Let go, the tail arches on the joints that can reach and ends in its own hook,
-    // which is a question mark. A joint that can reach its target misses by nothing and is untouched
-    const MISS = [Math.PI / 6, Math.PI * 0.39];   // 30°: still worth turning · 70°: hopeless, keep the skeleton
-    const share = (want, cum, i, bend = null) => {
-      const raw = wrap(want - cum);
-      const capped = Math.max(-capOf(i), Math.min(capOf(i), raw));
-      if (!bend || capped === raw) return capped;
-      const [restBend, poseBend] = bend;   // how far this joint is bent as drawn, and how far the pose wants it bent
-      const miss = Math.abs(wrap(poseBend - restBend - capped));
-      const u = Math.max(0, Math.min(1, (miss - MISS[0]) / (MISS[1] - MISS[0])));
-      return capped * (1 - u * u * (3 - 2 * u));
-    };
-    // The bend at joint i — as drawn, and as the pose asks for it (the root has no joint before it, so it has no bend)
-    const bendAt = (target, i) => (i === 0 ? null : [wrap(bones[i].restAngle - bones[i - 1].restAngle), wrap(target(i) - target(i - 1))]);
+    const share = (want, cum) => wrap(want - cum);
     const rp = state.tailRaisePose;   // the raise's target pose — joint world angles (a ♥'s question mark), or null: every joint vertical
     const arch = state.tailArch || 0;
     const pose = state.tailPose;
-    const upAt = (i) => (rp ? rp[Math.min(i, rp.length - 1)] : UP);
-    const archAt = (i) => pose[Math.min(i, pose.length - 1)];
+    // A pose is a **shape**, not a list of bones: the table writes it as a few angles root→tip (motion/table.js tailIdlePose, raisePose) and it is
+    // read off at however many bones this tail has, so the bone count is the rig's business alone. Straight down the list would leave the extra
+    // bones all sitting on the tip's angle and flatten the last third of the tail
+    const sample = (list, i) => {
+      if (list.length < 2 || n < 2) return list[list.length - 1];
+      const u = (i / (n - 1)) * (list.length - 1), k = Math.min(list.length - 2, Math.floor(u));
+      return list[k] + (list[k + 1] - list[k]) * (u - k);
+    };
+    const upAt = (i) => (rp ? sample(rp, i) : UP);
+    const archAt = (i) => sample(pose, i);
     let cumUp = 0, cumArch = 0;   // the cumulative target rotation so far (relative to rest)
     // Forward kinematics — the bones are siblings under the pivot: a bone's position is the end of the bone before it (the rest offset turned by the
     // joint rotations so far), its rotation the rest angle plus those rotations — the same pose the nested chain would give, without a chain
@@ -122,11 +111,11 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     for (let i = 0; i < n; i += 1) {
       const b = bones[i];
       const wantUp = upAt(i) - b.restAngle;   // the rotation this bone needs to reach its raise target
-      const sUp = share(wantUp, cumUp, i, bendAt(upAt, i));   // this joint's share, with the rotation up to its parent taken off — short way round, capped
+      const sUp = share(wantUp, cumUp);   // this joint's share, with the rotation up to its parent taken off — the short way round
       let rot = sUp * raise;
       cumUp += sUp;
       if (arch > 0 && pose) {
-        const sArch = share(archAt(i) - b.restAngle, cumArch, i, bendAt(archAt, i));
+        const sArch = share(archAt(i) - b.restAngle, cumArch);
         rot += sArch * arch;
         cumArch += sArch;
       }

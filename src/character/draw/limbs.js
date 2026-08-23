@@ -246,7 +246,7 @@ function armRigOf(spec, box) {
 // A tail is three slots. The **skeleton** (curl, flag, longtail, stubtail, hook, kink, ring) is the spine's shape (a point list, origin at the pivot),
 // the **skin** (line, thick, plume, tuft, block, ball, puff, plus the disabled wedge) is what goes on that spine — a thin line, a filled thick tail, a bushy plume,
 // a tuft at the tip, a block, beads, a pom — and the **length** (tailLength) shrinks the whole skeleton.
-// Any skin goes on any skeleton (a plume skin on a stub skeleton = a pom). The scene stands it up as a four-bone chain and rotates each bone (tailSketch below).
+// Any skin goes on any skeleton (a plume skin on a stub skeleton = a pom). The scene stands it up as an eight-bone chain and rotates each bone (tailSketch below).
 
 // The skeleton — the spine point list. tailLift (a ratio) raises or lowers the tip a little
 function tailSpine(kind, lift) {
@@ -311,12 +311,14 @@ function splitSpineN(spine, n) {
   return parts;
 }
 
-// A tail is **a four-bone chain under one skin** — the spine is split into 4, a joint (origin) sits at each bone, and the scene bends the bones
-// separately: the root (0) takes the swish, wag, walking and sleep; the tip (3) takes the tapping, tremble and follow-through; and **raise** blends each
-// joint's angle from the rest pose toward standing straight. The skin is drawn **once along the whole spine** — one tube, two side lines, the tip,
-// the pattern — in the pivot's space, and every vertex is weighted to the bones (weightsOf) so the scene's SkinnedMesh bends it as one piece:
-// no seams, no caps, a bend curves instead of breaking (the four rigid bone meshes it replaced opened wedges at every joint)
-export const TAIL_BONES = 4;
+// A tail is **an eight-bone chain under one skin** — the spine is split into 8, a joint (origin) sits at each bone, and the scene bends the bones
+// separately: the root (0) takes the swish, wag, walking and sleep; the tip (the last) takes the tapping, tremble and follow-through; and **raise** blends each
+// joint's angle from the rest pose toward standing straight. Eight rather than four: a pose is the same curve either way, so twice the joints
+// each turn half as far — the arch comes out at 15~27° a joint instead of 24~51°, the range linear blend skinning bends cleanly in.
+// The skin is drawn **once along the whole spine** — one tube, two side lines, the tip, the pattern — in the pivot's space, and every vertex is
+// weighted to two or three bones (weightsAt) so the scene's SkinnedMesh bends it as one piece: no seams, no caps, a bend curves instead of
+// breaking (the four rigid bone meshes it replaced opened wedges at every joint)
+export const TAIL_BONES = 8;
 // variant is the boil frame — only the drawing noise differs; the bones, the pivot and the weights are the same in every frame.
 // Returns the skin (sketch — in the pivot's space; sketches is the same as a one-item list, for the check scripts), the bones and weightsOf
 export function tailSketch(spec, variant = 0) {
@@ -324,7 +326,7 @@ export function tailSketch(spec, variant = 0) {
   const noise = makeNoise(rng);
   const box = layout(spec);
   const sketch = new Sketch(noise, spec.proportions.wobble);
-  const none = { sketches: [sketch], sketch, bones: [], pivot: [0, 0], weightsAt: () => [0, 1, 0, 0], weightsOf: () => [0, 1, 0, 0] };
+  const none = { sketches: [sketch], sketch, bones: [], pivot: [0, 0], weightsAt: () => [0, 1, 0, 0, 0, 0, 0, 0], weightsOf: () => [0, 1, 0, 0, 0, 0, 0, 0] };
   if (!box.quad) return none;
 
   const p = spec.proportions;
@@ -508,19 +510,27 @@ export function tailSketch(spec, variant = 0) {
     }
   } else throw new Error(`unknown tail skin: ${skin}`);   // a misspelt skin must not silently draw another
 
-  // Skin weights by t along the rest spine — the bone is the quarter t falls in, blended with the neighbour over ±BAND of the tail around each
-  // joint by a smoothstep (no kink where the band starts), so a bend curves the skin. weightsAt(t) serves the skin tags (every triangle the tail
-  // draws carries its t); weightsOf(x, y) is the fallback for an untagged vertex — its nearest point on the spine — and is wrong beside a tight curl
-  // BAND is **half a bone** (a quarter of the tail is 0.25), so the bands meet and a bend is spread over the whole tail: at 0.09 the turn was
-  // squeezed into three or four rungs and a bent tail read as a hinged hose, kinked at a point instead of curved
+  // Skin weights by t along the rest spine. A bone's influence covers its own stretch and reaches BAND of the **tail** past each end, fading out by a
+  // smoothstep, so a vertex is carried by two or three bones and a turn at one joint is spread along a stretch of tail rather than gathered at a seam.
+  // BAND is held in tail units on purpose: tie it to the bone's own span and adding bones makes every bend *sharper* rather than smoother — twice as
+  // many joints, each with half the reach. Held as it is, twice the joints each turn half as far over the same reach, which is the point of adding them.
+  // weightsAt(t) serves the skin tags (every triangle the tail draws carries its t); weightsOf(x, y) is the fallback for an untagged vertex — its
+  // nearest point on the spine — and is wrong beside a tight curl. Whatever the weights, the bind pose is exact: they always add up to 1
   const BAND = 0.125;
-  const blend = (u) => { const c = Math.max(-1, Math.min(1, u)); return 0.5 + 0.5 * c * (1.5 - 0.5 * c * c); };   // −1..1 → 0..1, flat at both ends
+  const SLOTS = 4;   // the skinIndex / skinWeight attributes hold four bones a vertex; this band reaches three
+  const smooth = (u) => u * u * (3 - 2 * u);
   const weightsAt = (t) => {
-    const k = Math.min(TAIL_BONES - 1, Math.max(0, Math.floor(t * TAIL_BONES)));
-    const root = k / TAIL_BONES, ahead = (k + 1) / TAIL_BONES;   // the joints behind and ahead of this bone
-    if (k > 0 && t < root + BAND) { const w = blend((t - root) / BAND); return [k, w, k - 1, 1 - w]; }
-    if (k < TAIL_BONES - 1 && t > ahead - BAND) { const w = blend((ahead - t) / BAND); return [k, w, k + 1, 1 - w]; }
-    return [k, 1, k, 0];
+    const near = [];
+    for (let k = 0; k < TAIL_BONES; k += 1) {
+      const d = Math.max(0, k / TAIL_BONES - t, t - (k + 1) / TAIL_BONES);   // how far t lies outside this bone's own stretch
+      if (d < BAND) near.push([k, smooth(1 - d / BAND)]);
+    }
+    near.sort((a, b) => b[1] - a[1]);
+    near.length = Math.min(near.length, SLOTS);
+    const sum = near.reduce((acc, q) => acc + q[1], 0) || 1;
+    const flat = [];
+    for (let s = 0; s < SLOTS; s += 1) flat.push(near[s] ? near[s][0] : 0, near[s] ? near[s][1] / sum : 0);
+    return flat;   // [bone, weight] × 4, heaviest first, adding up to 1
   };
   const weightsOf = (x, y) => {
     let best = Infinity, t = 0;

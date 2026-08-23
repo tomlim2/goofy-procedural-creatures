@@ -112,10 +112,10 @@ export function buildCreature(spec, noise, birth = 0) {
   // The face group's origin = the centre of the head. A turn shifts and squashes about this point. Children are baked pre-lowered by -faceCy.
   faceGroup.position.y = faceCy - neckY;
 
-  // Tail — a four-bone chain under one skin (limbs.js TAIL_BONES). The bones are **siblings** under tailGroup (the root pivot) at their rest
+  // Tail — an eight-bone chain under one skin (limbs.js TAIL_BONES). The bones are **siblings** under tailGroup (the root pivot) at their rest
   // transforms; animate places each by forward kinematics (position = the end of the bone before it, rotation = the rest angle + the joint
   // rotations so far) — so a bone's perpendicular scale (bristle, tailPuff) never shears its children. The skin is one SkinnedMesh in the
-  // pivot's space, every vertex weighted to two bones (limbs.js weightsOf): a bend curves it as one piece. **Behind** the torso and head (0.8) —
+  // pivot's space, every vertex weighted to two or three bones (limbs.js weightsAt): a bend curves it as one piece. **Behind** the torso and head (0.8) —
   // the part lying over the body (a loop or curl) is hidden; raised it goes above (2.08, animate).
   // The tail and the limbs boil too — every frame's sketches in one mesh, the frame picked by drawRange (mesh.js sketchMeshBoil, animate: boilRanges)
   const boilRanges = [];

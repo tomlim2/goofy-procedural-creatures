@@ -362,18 +362,22 @@ kink 1.5 · stubtail 1 (kink is cats only, ring dogs only). Skin: pup thick 3 ·
 tuft 1 · block 0.5 · ball 0.5 · puff 0.3 (wedge is disabled; ringed was dropped — rings are the pattern's job now). Length: pup long 2 · medium 2 · short 2 / cat long 3 · medium 2 · short 1.
 tailSkin and tailLength are late slots (`LATE_SLOTS`). Bipeds draw them but never render them.
 The tail is drawn **behind** the torso and head (renderOrder 0.8) — the part curling over the back or lying on the body is hidden.
-The tail is **a four-bone chain under one skin** — the spine is split into 4 (`TAIL_BONES`) with a joint origin and rest-pose direction per bone, and the scene bends each joint separately (the swish,
+The tail is **an eight-bone chain under one skin** — the spine is split into 8 (`TAIL_BONES`) with a joint origin and rest-pose direction per bone, and the scene bends each joint separately (the swish,
 the tip tapping, follow-through, and the raise as a straight target angle per joint — it shoots up whatever the skeleton, [../motion/catalog.md](../motion/catalog.md) § the tail).
+Eight rather than four: a pose is the same curve either way, so twice the joints each turn half as far, and the arch comes out at 15~27° a joint instead of 24~51° — the range
+linear blend skinning bends cleanly in. It is what let the joint cap and the rule for a joint that could not reach its pose go: with eight bones no joint needs either.
 **One skin.** The skin is drawn **once along the whole spine** in the pivot's space — the tube as a **strip** between its rails on a spine re-sampled every 0.012 and
 smoothed (a fan from the centre of a coarse spine throws long triangles across the bones and folds like a paddle when bent), its width **clamped by the bend** (at most
 0.85 × the radius of curvature, so a tube is never thicker than its curl), two **fine** side lines (weight 0.7 — at 1 the two lines ate a thin tail's width and its tip was
 a black knob), the tip, the pattern. Every triangle the tail draws carries its t along the spine as a **skin tag** (`Sketch.tags`, set by `skinT` / `stripT`) and the skinned
-mesh reads its two bones from the tag (`weightsAt`: the quarter t falls in, blended by a smoothstep over ±0.125 of the tail — **half a bone** — around each joint, so the
-bands meet and a bend is spread along the whole tail instead of being squeezed into the three or four rungs beside the joint, which read as a hinged hose) — never from the vertex's
+mesh reads its **two or three** bones from the tag (`weightsAt`: a bone covers its own eighth of the tail and reaches ±0.125 of the **tail** past each end, fading out by a
+smoothstep, so a turn at one joint is spread along a stretch of tail rather than gathered at a seam) — never from the vertex's
 position, which beside a tight curl picks the curl's other arm and tears the skin (`weightsOf` stays as the fallback for untagged triangles — the goofy material's own
 marks over a tube, which sit inside it and so land on the right bone anyway; over a bead they take the bead's t and turn with it). A tag goes on **per vertex, not per
 quad** (`Sketch.triangle(…, tags)`): a rung's point belongs to two quads, and one tag for the whole quad handed that point two different bone blends — the fill split open in
-white wedges and the side lines broke into dashes at every bend (0.014 units on a 0.04-wide plume, a third of its width). The scene bends it as a
+white wedges and the side lines broke into dashes at every bend (0.014 units on a 0.04-wide plume, a third of its width). The band is held in **tail units, not bone units**:
+tie it to a bone's own span and adding bones makes every bend sharper rather than smoother — twice as many joints, each with half the reach (a hook went from 1270 to 1556
+degrees of turn per unit of tail). The scene bends it as a
 `SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side lines'
 ends are **joints** (`line(…, { joint })`: no overshoot, no thinning); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick). A tube's tip
 **tapers to a point** under the lines over 1.6 end-widths (a brush end — a disc and an arc of line were ink on ink) except block, which stays square.
