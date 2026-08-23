@@ -109,8 +109,8 @@ lift, PENCIL_SLINE; the pass, PENCIL_BROKEN), and the points · the ribbon · th
 pen. They are drawn by the same `pencil()` and `stroke()` the board draws with, told which habits to leave out (`anatomy`,
 `stroke.js` — **only the medium page ever passes it**; a habit left out is left out of the drawing, never faked). Every line
 figure on the page is handed the **same sample line**, a sine (`sine()` in `how.js`), so the figures can be read against each
-other; it is kept **shallow** because a deep bow hides the habits it is there to show — the wander is a pixel and a half at
-that scale.
+other, and every figure that takes it is given the height for it. The habits are read along the line's **own edge** — the
+wander ripples it, the breath swells it, the shed frays it — not off how tall the row is.
 
 ## The goofy fur — how hair is grown
 
