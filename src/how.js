@@ -56,7 +56,7 @@ fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
     const s = sk(wobble);                                             // one sketch per column — its own hand
     const x = col(i);
     s.outline(blobPath(x, 0, 0.14, 0.12, { lumps: 5, amount: 0.08, noise, phase: 2 + i }), { color: INK, width: 0.011 });
-    for (const side of [-1, 1]) s.stroke([[x + side * 0.05 - 0.012, 0.03], [x + side * 0.05 + 0.012, 0.03]], { color: INK, width: 0.016 });
+    for (const side of [-1, 1]) s.stroke([[x + side * 0.05 - 0.012, 0.03], [x + side * 0.05 + 0.012, 0.03]], { color: INK, width: 0.016, step: 0.008 });   // an eye is shorter than the 0.03 step — sample it finer or the taper takes it
     s.stroke(arcPath(x, -0.03, 0.05, 0.035, Math.PI, TAU), { color: INK, width: 0.011 });
   });
 });
@@ -84,7 +84,7 @@ fig("twoLines", [-0.75, -0.2, 0.75, 0.2], (sk) => {
       s.outline(head, { color: INK, width: 0.012 });
       s.stroke(smile, { color: INK, width: 0.011 });
     }
-    for (const side of [-1, 1]) s.stroke([[x + side * 0.06 - 0.012, 0.035], [x + side * 0.06 + 0.012, 0.035]], { color: INK, width: 0.016 });
+    for (const side of [-1, 1]) s.stroke([[x + side * 0.06 - 0.012, 0.035], [x + side * 0.06 + 0.012, 0.035]], { color: INK, width: 0.016, step: 0.008 });
   });
 });
 
@@ -200,16 +200,18 @@ function handedPoints(fills, ink) {
 // a picture of it. Magnified past the board's scale on purpose — at the board's scale a rung falls every 3 px.
 function rungsOf(sketch, from, out, color) {
   const p = sketch.positions;
-  const rung = (ax, ay, bx, by) => out.stroke([[ax, ay], [bx, by]], { color, width: 0.0014, jitter: 0, anatomy: {} });
+  // Drawn with the pencil: a rung is as long as the line is wide, which is shorter than stroke()'s re-sample step — stroke() draws
+  // nothing that short (stroke.js), the pencil draws it as one quad
+  const rung = (ax, ay, bx, by) => out.pencil([[ax, ay], [bx, by]], { color, width: 0.0014, anatomy: {} });
   for (let i = from; i + 18 <= p.length; i += 18) rung(p[i], p[i + 1], p[i + 3], p[i + 4]);   // a1 → a2, the near end of each quad
   const last = p.length - 18;
   if (last >= from) rung(p[last + 15], p[last + 16], p[last + 12], p[last + 13]);             // b1 → b2, the far end of the last one
 }
-const CORNER = [[-0.1, -0.035], [-0.02, 0.03], [0.06, -0.035]];   // a sharp corner — where the two pens part company
-fig("quads", [-0.16, -0.062, 0.16, 0.062], (sk) => {
+const CORNER = [[-0.075, -0.022], [0, 0.026], [0.075, -0.022]];   // a corner — where the two pens part company
+fig("quads", [-0.185, -0.05, 0.185, 0.05], (sk) => {
   const ink = sk(), rungs = sk();
   [-1, 1].forEach((side) => {
-    const path = CORNER.map(([x, y]) => [x + side * 0.075, y]);
+    const path = CORNER.map(([x, y]) => [x + side * 0.095, y]);
     const from = ink.positions.length;
     // Every habit off on both sides: same path, same width, so the only thing left to tell them apart is the normal
     if (side < 0) ink.stroke(path, { color: INK, width: 0.02, jitter: 0, anatomy: {} });
@@ -295,7 +297,7 @@ fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {   // the demonstration of the 
   fills.fill(head, FILLS[2], [0.022, -0.018]);
   for (const side of [-1, 1]) fills.fill(blobPath(side * 0.17, -0.05, 0.04, 0.026, { lumps: 3, amount: 0.15, noise, phase: 5 + side }), BLUSH);   // the blush — a flat blob, as on the board
   ink.outline(head, { color: INK, width: 0.012, passes: 2 });
-  for (const side of [-1, 1]) ink.stroke([[side * 0.09 - 0.015, 0.05], [side * 0.09 + 0.015, 0.05]], { color: INK, width: 0.017 });
+  for (const side of [-1, 1]) ink.stroke([[side * 0.09 - 0.015, 0.05], [side * 0.09 + 0.015, 0.05]], { color: INK, width: 0.017, step: 0.008 });
   ink.stroke(arcPath(0, -0.05, 0.06, 0.045, Math.PI, TAU), { color: INK, width: 0.011 });
 });
 FIGS.boilface.always = true;
