@@ -201,14 +201,15 @@ function handedPoints(fills, ink) {
 // purpose — at the board's scale a pencil's quad is 3 px long
 function edgesOf(sketch, from, out, color) {
   const p = sketch.positions;
-  const edge = (ax, ay, bx, by) => out.pencil([[ax, ay], [bx, by]], { color, width: 0.0011, anatomy: {} });
+  const edge = (ax, ay, bx, by) => out.pencil([[ax, ay], [bx, by]], { color, width: 0.0009, anatomy: {} });
   for (let i = from; i + 9 <= p.length; i += 9) {
     edge(p[i], p[i + 1], p[i + 3], p[i + 4]);
     edge(p[i + 3], p[i + 4], p[i + 6], p[i + 7]);
     edge(p[i + 6], p[i + 7], p[i], p[i + 1]);
   }
 }
-const CORNER = [[-0.075, -0.02], [0, 0.026], [0.075, -0.02]];   // a corner — where the two pens part company
+// A wave, not a chevron: the pens part company wherever the line turns, and a line is what they draw
+const CORNER = [[-0.078, -0.008], [-0.039, 0.019], [0, -0.008], [0.039, 0.019], [0.078, -0.008]];
 const MESH = FILLS[2];   // the shape in a pale tone, so the edges on top of it are what you read
 fig("quads", [-0.185, -0.05, 0.185, 0.05], (sk) => {
   const shape = sk(), lines = sk();
@@ -216,8 +217,8 @@ fig("quads", [-0.185, -0.05, 0.185, 0.05], (sk) => {
     const path = CORNER.map(([x, y]) => [x + side * 0.095, y]);
     const from = shape.positions.length;
     // Every habit off on both sides: same path, same width, so the only thing left to tell them apart is the normal
-    if (side < 0) shape.stroke(path, { color: MESH, width: 0.02, jitter: 0, anatomy: {} });
-    else shape.pencil(path, { color: MESH, width: 0.02, anatomy: {}, paper: CARD });
+    if (side < 0) shape.stroke(path, { color: MESH, width: 0.014, jitter: 0, anatomy: {} });
+    else shape.pencil(path, { color: MESH, width: 0.014, anatomy: {}, paper: CARD });
     edgesOf(shape, from, lines, INK);
   });
 });
