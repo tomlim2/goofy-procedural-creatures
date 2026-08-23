@@ -98,7 +98,7 @@ lines on a 240-creature sample are stubs.
 | `PENCIL_SLINE` | `pencil()` 0.008 once, and **the pen lifts** — about one gap every 0.26 of a unit, 0.006~0.016 long, never within 0.025 of an end and none at all below 0.07 of length, so a dot or a dash keeps its whole extent. **Detail** |
 | `PENCIL_BROKEN` | `pencil()` 0.011 **three times over itself**, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
 
-On the board today: every contour, open line and mark is PENCIL_STROKE — 44, 104 and 13 of them. The **ribbon pen** (`stroke()`) is
+On the board today: every contour, open line and mark is PENCIL_STROKE — 45, 103 and 16 call sites. The **ribbon pen** (`stroke()`) is
 no kind and no role draws with it; two things call it directly — a hat's band and an emoji's glyph outline. **PENCIL_SLINE and
 PENCIL_BROKEN are built and on nothing** — they exist in the table and on the medium page, and a role picks one up by a single name in the switch. The
 medium page names the kinds outright (`{ outline: "PENCIL_SLINE" }`) to show each on its own — the one place a kind is named —
