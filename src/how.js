@@ -196,22 +196,27 @@ IN_USE.forEach(({ key, label, box, draw }) => {
 
 // Shader balls — one row per entry of GOOFY_MATERIALS, like a 3D material preview: the same ball in the same color at the five value
 // steps (black · hatch · scribble · stipple · light), filled the goofy material's way at each — the contour is the board's outline,
-// PENCIL; a goofy material is only the filling. FLAT has no texture, so one ball
+// PENCIL; a goofy material is only the filling. FLAT has no texture, so one ball.
+// The **last ball of a textured row is a dark ground** at the step its own darkness asks for: a mark has to be lighter than what it
+// is drawn on, so on a dark ground every technique turns its marks around and lays them light (materials.js contrast)
+const DARK_GROUND = DARKS[2];
 Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
   const m = GOOFY_MATERIALS[name];
   const steps = m.texture ? VALUES.map((_, k) => k) : [2];
+  const balls = m.texture ? [...steps.map((k) => [FILLS[2], k]), [DARK_GROUND, undefined]] : [[FILLS[2], 2]];
+  const label = (j) => (!m.texture ? name.toLowerCase() : j < steps.length ? `${VALUES[steps[j]].name} · ${VALUES[steps[j]].v}` : "on a dark ground");
   const el = document.createElement("figure");
   el.dataset.fig = `material:${name}`;
   if (m.texture) el.className = "wide";
-  el.innerHTML = `<canvas></canvas><div class="subs">${steps.map((k) => `<span>${m.texture ? `${VALUES[k].name} · ${VALUES[k].v}` : name.toLowerCase()}</span>`).join("")}</div>`;
+  el.innerHTML = `<canvas></canvas><div class="subs">${balls.map((_, j) => `<span>${label(j)}</span>`).join("")}</div>`;
   document.getElementById("materialBalls").appendChild(el);
-  const half = steps.length * 0.25;
+  const half = balls.length * 0.25;
   fig(`material:${name}`, [-half, -0.25, half, 0.25], (sk) => {
     const fills = sk(), ink = sk();
-    steps.forEach((k, j) => {
-      const x = (j - (steps.length - 1) / 2) * 0.5;
+    balls.forEach(([color, k], j) => {
+      const x = (j - (balls.length - 1) / 2) * 0.5;
       const ball = blobPath(x, 0, 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 + j });
-      fills.paint(ball, name, { color: FILLS[2], offset: [0.012, -0.01], value: k });
+      fills.paint(ball, name, { color, offset: [0.012, -0.01], value: k });   // value undefined: the step the colour's own darkness asks for
       ink.contour(ball, { color: INK, paper: CARD });   // the board's contour, whatever the switch says
     });
   });

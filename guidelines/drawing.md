@@ -174,12 +174,17 @@ base color and its map, in 3D terms. A channel that would be a *different* thing
 second texture (two patterns on one surface are one texture's composition). `grain` — the paper showing through —
 is not a channel at all: the sheet does it for the whole board in its own pass (§ the paper). That is the goofy material,
 and nothing else. The color always comes from the part; a goofy material knows no colors of its own, and every tone the texture
-adds is a shade of the part's color (`shade` — deeper on a light color, lighter on a dark one). A part names a
+adds is a shade of the part's color. On a light color a technique's own direction stands — graphite hatches deeper, ink scratches
+lighter. On a **dark** color every mark goes lighter (`contrast` in `materials.js`), by as much as the technique asked for either
+way: there is nothing below a dark ground to draw with. Only the amount is mirrored, never the direction — mirroring the direction
+turned ink's light scratches into marks *darker* than the ground they were scratched into, and oil's darker half of the spread
+vanished into a black body, so a dark creature with a textured material read as a solid blob. A part names a
 goofy material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
 The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt goofy material cannot silently draw
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
-way, its contour the board's PENCIL — so the table cannot drift from what is seen.
+way, its contour the board's PENCIL — so the table cannot drift from what is seen. The last ball of every textured row is the same
+material on a **dark ground**, which is where the rule above is visible.
 
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |

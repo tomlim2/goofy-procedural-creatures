@@ -161,7 +161,11 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   // A tone of the part's color. Deeper is shade; lighter is a mix toward the light ink — white pigment, never a multiply that clips a
   // saturated color (a pop red × 1.6 came out neon). contrast(f): a deeper tone on a light color, a lighter one on a dark color
   const tone = (factor) => (factor >= 1 ? mix(color, LIGHT_INK, Math.min(0.6, (factor - 1) * 0.45)) : shade(color, factor));   // × 1.6 ≈ a quarter of the way to the light ink
-  const contrast = (factor) => (dark ? tone(1 + (1 - factor) * 1.6) : shade(color, factor));
+  // contrast(f): the mark's tone. On a light ground the technique's own factor stands — graphite hatches darker, ink scratches lighter.
+  // On a **dark** ground every mark goes lighter, by as much as the factor asked for either way: there is nothing below a dark ground to
+  // draw with. Only the amount is mirrored, never the direction — mirroring the direction turned ink's light scratches (1.35) into marks
+  // *darker* than the ground they were scratched into, and a dark cat's tail went black on black
+  const contrast = (factor) => (dark ? tone(1 + Math.abs(1 - factor) * 1.6) : shade(color, factor));
   const b = bounds(points);
 
   if (wantBase) {
@@ -257,7 +261,11 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
       case "dab": {
         // Thick paint: capsules scattered over the surface (their centres inside it), all along one diagonal give or take a little,
         // of one width and many lengths, in tones close to the ground, overlapping as they fall. An end the contour cuts stays flat
-        const tones = f.tones.map((t) => hexToRgb(tone(t)));
+        // On a dark ground the whole set is lifted so its darkest stroke sits on the ground and the rest go lighter — the same rule as
+        // contrast(), kept as a **spread** rather than one tone so paint still varies stroke to stroke. Left as they are, the two tones
+        // below the ground painted dark on dark and half of the strokes simply vanished
+        const lift = dark ? 1 - Math.min(...f.tones) : 0;
+        const tones = f.tones.map((t) => hexToRgb(dark ? tone(1 + (t + lift - 1) * 1.6) : tone(t)));
         const count = Math.round(f.per * (0.45 + V.v * 0.7) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
         const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
         for (let i = 0; i < count; i += 1) {
