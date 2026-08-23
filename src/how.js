@@ -208,8 +208,9 @@ function edgesOf(sketch, from, out, color) {
     edge(p[i + 6], p[i + 7], p[i], p[i + 1]);
   }
 }
-// A wave, not a chevron: the pens part company wherever the line turns, and a line is what they draw
-const CORNER = [[-0.078, -0.008], [-0.039, 0.019], [0, -0.008], [0.039, 0.019], [0.078, -0.008]];
+// One period of a sine, handed over smooth (33 points): the pens part company wherever the line turns, and a line is what they
+// draw. Each pen then samples it at its own step — the coarse one cuts the curve into chords, the fine one follows it
+const CORNER = Array.from({ length: 33 }, (_, i) => [-0.078 + (i / 32) * 0.156, Math.sin((i / 32) * TAU) * 0.017]);
 const MESH = FILLS[2];   // the shape in a pale tone, so the edges on top of it are what you read
 fig("quads", [-0.185, -0.05, 0.185, 0.05], (sk) => {
   const shape = sk(), lines = sk();
