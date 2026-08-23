@@ -186,7 +186,7 @@ const ANATOMY = {
     ["the breath", "the width, on two more", { wander: true, breathe: true }],
     ["the flick", "past both ends, blunt", { wander: true, breathe: true, over: true }],
     ["the shed", "crumbs on the edge, bites inside", { wander: true, breathe: true, over: true, shed: true }],
-    ["the ghost", "again, thinner and faint", { wander: true, breathe: true, over: true, shed: true }, { passes: 2 }]
+    ["the ghost", "again underneath, thinner and faint", { wander: true, breathe: true, over: true, shed: true }, { passes: 2 }]
   ],
   ribbonpen: [
     ["the points", "what you hand it", null],

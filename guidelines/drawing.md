@@ -95,7 +95,7 @@ a 240-creature sample are stubs.
 | --- | --- |
 | `PENCIL_STROKE` | `pencil()` 0.012 once — the reference's line at full width: it wanders, breathes, runs past its ends and sheds; closed, one seamless loop. **Mass** |
 | `PENCIL_SLINE` | `pencil()` 0.005 once — a hairline — and **the pen lifts** (`PENCIL.lift`): a skip every 48 widths, 1.2~3 widths long, never within 3 of an end and none at all on a line under 8 of them, so a dot or a dash keeps its whole extent. **Detail** |
-| `PENCIL_BROKEN` | `pencil()` 0.011 with the **ghost** habit stacked — three passes, the two after the first at `PENCIL.ghost` — 0.62 of the width and 0.2 of the ink (mixed that far toward the paper: the board's ink is opaque), each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
+| `PENCIL_BROKEN` | `pencil()` 0.011 with the **ghost** habit stacked — three passes, the two **under** the line at `PENCIL.ghost` — 0.62 of the width and 0.2 of the ink (mixed that far toward the paper: the board's ink is opaque). The line is laid last, so it stays the one you read, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
 
 On the board today: every contour and every open line is PENCIL_STROKE — 45 and 119 call sites. The **ribbon pen** (`stroke()`) is
 no kind and no role draws with it; two things call it directly — a hat's band and an emoji's glyph outline. **PENCIL_SLINE and
