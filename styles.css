@@ -161,9 +161,12 @@ select.wide { width: 100%; }
   }
   /* Cards shrink-wrap their controls; the strip scrolls instead of squeezing them */
   body:not(.gallery):not(.audit) .card { flex: 0 0 auto; }
-  .sub { display: none; }   /* the tagline does not fit next to the title */
+  .sub .tag { display: none; }   /* the tagline does not fit beside the title on a phone — the links next to it stay */
 }
 
+
+.how h1 { margin: 0 0 14px; font-size: 15px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 700; }
+.how .foot p { margin: 0 0 4px; }
 
 /* The medium page (how.html) — the only screen that scrolls: a document, not a board.
    Every figure is a card holding one canvas; the bar gets a paper back so the text passes under it */

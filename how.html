@@ -19,7 +19,7 @@
 
 <header class="bar">
   <a class="mark" href="./index.html">MENAGERIE</a>
-  <span class="sub">HOW IT IS DRAWN · <a href="./index.html">← GRID</a></span>
+  <span class="sub"><span class="tag">HOW IT IS DRAWN · </span><a href="./index.html">← GRID</a></span>
   <span class="status" id="status">BOOT</span>
   <div class="seg ink" id="inkSeg" role="group" aria-label="Ink">
     <button data-ink="still" class="on">STILL</button>
@@ -29,13 +29,22 @@
 
 <main class="page">
 
-<p class="lede">Everything on the board is made of what is on this page, on three axes: the <b>goofy outline</b> —
+<h1>how it is drawn</h1>
+<p class="lede"><b>MENAGERIE</b> is a board of thirty-odd creatures grown from one seed — human, cat, dog and imp, each breathing
+on its own clock, drawn as if by hand. The same seed gives the same board every time, and it runs in the browser with no build
+step: <a href="./index.html">the board is here</a>, <a href="https://github.com/tomlim2/goofy-procedural-creatures">the code is
+here</a>.</p>
+
+<p class="lede">This page is the <b>medium</b> — what the creatures are drawn <i>with</i>, on three axes: the <b>goofy outline</b> —
 what a creature's lines are drawn with — the <b>goofy material</b> — how its surfaces are filled — and the <b>goofy fur</b> —
-how its hair is grown. No textures, no brush images: the hand comes from rules. It is all <b>three.js</b> (WebGL) and there is
-no 2D canvas anywhere — every stroke and every fill is triangles, one geometry per layer, and the boil is a set of pre-drawn
-variants shown in turn. Every figure here is drawn live by <code>src/stroke.js</code> and <code>src/medium/</code>, the same
-code that draws the creatures. The figures hold still; <b>INK BOIL</b> in the header (or <code>I</code>) sets their lines
-boiling at the board's own pace.</p>
+how its hair is grown — and the shapes and colours it is all made of. No textures, no brush images: the hand comes from rules.
+It is all <b>three.js</b> (WebGL) and there is no 2D canvas anywhere — every stroke and every fill is triangles, one geometry per
+layer, and the boil is a set of pre-drawn variants shown in turn.</p>
+
+<p class="lede"><b>Every figure below is drawn live by the code that draws the creatures</b> — the same
+<a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/stroke.js"><code>src/stroke.js</code></a> and <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/"><code>src/medium/</code></a>, at
+the board's own scale — so nothing here can drift from what the board does. The figures hold still; <b>INK BOIL</b> in the header
+(or <code>I</code>) sets their lines boiling at the board's own pace.</p>
 
 <!-- ================================================================ -->
 <section>
@@ -167,47 +176,55 @@ first, which is why it has no seam.</p>
 <!-- ================================================================ -->
 <section>
 <h2>THE GOOFY MATERIAL</h2>
-<p>A goofy material is what a surface is made of — the way a 3D material is (goofy, like the outline and the
-fur, to keep it apart from the GPU material underneath): <b>how its area is filled</b>, as channels.
-The <b>base</b> colour — the fill-up — always opaque and printed out of register, in the part's color,
-carrying the creature's pattern (stripes, dots, spots, hatching) inside it, clipped to the contour, the way a pattern
-is part of an albedo — and its <b>decals</b>, colour regions that take their edge from the host's own outline (the
-calico's patches), painted in the base too, so the texture passes over them; and its <b>texture</b> — hatch, scratch, dab or speckle — the medium's pattern laid over it,
-clipped to the contour. Both paint the same thing, the colour of the surface. There is no opacity channel; grain — the
-paper showing through — is not a channel at all but the sheet's, done for the whole board in the paper's pass (below).
-That is the goofy material, and nothing else: the contour is the goofy outline, above. The color always comes from the part, and every tone the texture adds is a
-shade of that color. A part names one and hands over the path and the color —
-<code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself. On the board each
-creature's head and body take the creature's <b>goofy material</b> (the <code>material</code> slot: FLAT for most, GRAPHITE, INK, OIL or CHARCOAL
-for the rest) — and so does everything it fills, ears and tail, eyes and nose, teeth and hat: one tool per creature,
-the details at their own colour's step — at its <b>density</b> (another slot: a light hand, a normal one, a heavy one); its <b>pattern</b> (stripes,
-dots, spots, hatching — a third slot) is drawn inside the base colour. A material also carries its <b>tooth</b> — how the paper bites it:
-graphite rides the paper's grain and skips it (0.45), charcoal dusts it (0.4), flat 0.3, ink soaks in (0.12), oil buries it (0.06), scaled by
-how hard the hand pressed. The balls below are drawn on a card rather than on the paper, so they show each fill with <i>no</i> bite taken out of it;
-the board is where you see the paper come through. The table is <code>GOOFY_MATERIALS</code> in
-<code>src/medium/materials.js</code>; every entry gets a row of shader balls — the same ball in the same color at the five
-<b>value</b> steps, <b>black · hatch · scribble · stipple · light</b>, named for the way graphite makes each: a goofy
-material renders darkness its own way, graphite changing technique step by step, ink, oil and charcoal
-laying down more or less of their texture. A step is in the <b>colour first and the marks second</b> — it pulls the base toward the
-technique's own tone (graphite and charcoal darken it, ink lightens it: its scratches take the ink away) and lays the marks on top,
-because a mark fine enough to be pretty up close falls under a device pixel on a board and takes the whole scale with it. On the
-board the step comes from the part's color — a dark cloth draws black, a pale skin light — moved one step by the creature's
-<b>density</b>, its hand. A mark has to be lighter than what it is drawn on or it is not a mark, so on a <b>dark ground</b> every
-technique turns around and lays its marks light and the step pulls the colour the other way — the <b>lower row</b> of each pair is
-the same five steps on a dark ground.</p>
+<p>A goofy material is what a surface is made of, the way a 3D material is — <b>how its area is filled</b>, as channels. (Goofy,
+like the outline and the fur, to keep it apart from the GPU material underneath.) There are two channels and they paint the same
+thing, the colour of the surface:</p>
+
+<p class="note"><b>base</b> — the fill-up: always opaque, printed out of register, in the part's colour. It carries the creature's
+<b>pattern</b> (stripes, dots, spots, hatching) inside it, clipped to the contour, the way a pattern is part of an albedo, and its
+<b>decals</b> — colour regions that take their edge from the host's own outline, like a calico's patches — so the texture passes
+over them.<br>
+<b>texture</b> — hatch, scratch, dab or speckle, laid over the base and clipped to the contour.</p>
+
+<p>That is the whole of it. There is no opacity channel; grain — the paper showing through — is not a channel at all but the
+sheet's, done for the whole board in the paper's pass (below); and the contour is the goofy outline, above. The colour always comes
+from the part, and every tone the texture adds is a shade of that colour. A part names a material and hands over the path and the
+colour — <code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself.</p>
+
+<p>On the board a creature has <b>one</b>: its <code>material</code> slot (FLAT for most; GRAPHITE, INK, OIL or CHARCOAL for the
+rest) fills its head, its body and everything else it fills — ears and tail, eyes and nose, teeth and hat — each at its own
+colour's step. Two more slots ride along: <b>density</b>, the hand (light, normal, heavy), and <b>pattern</b>, drawn inside the
+base colour. A material also carries its <b>tooth</b> — how the paper bites it: graphite rides the grain and skips it (0.45),
+charcoal dusts it (0.4), flat 0.3, ink soaks in (0.12), oil buries it (0.06) — scaled by how hard the hand pressed.</p>
+
+<p>The table is <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/materials.js"><code>GOOFY_MATERIALS</code></a>, and every entry below gets a row of
+shader balls: the same ball in the same colour at the five <b>value</b> steps — <b>black · hatch · scribble · stipple · light</b>,
+named for the way graphite makes each. A material renders darkness its own way: graphite changes technique step by step, ink, oil
+and charcoal lay down more or less of their texture. A step is in the <b>colour first and the marks second</b> — it pulls the base
+toward the technique's own tone (graphite and charcoal darken it, ink lightens it: its scratches take the ink away) and lays the
+marks on top, because a mark fine enough to be pretty up close falls under a device pixel on a board and takes the whole scale with
+it. On the board the step comes from the part's colour — a dark cloth draws black, a pale skin light — moved one step by the
+creature's density.</p>
+
+<p>A mark has to be lighter than what it is drawn on or it is not a mark, so on a <b>dark ground</b> every technique turns around,
+lays its marks light and pulls the colour the other way. That is the <b>lower row</b> of each pair. The balls are drawn on a card
+rather than on the paper, so they show each fill with <i>no</i> bite taken out of it; the board is where the paper comes through.</p>
 
 <div class="figs" id="materialBalls"></div>
 
-<h3>the GPU material underneath, and the boil</h3>
-<p>Underneath there is exactly one GPU material — a flat <code>MeshBasicMaterial</code> with vertex colors,
-shared per opacity level by every mesh on the board. The paper under it is the board's one shader — a procedural
-GLSL grain on a single plane, no texture and no tile (<code>src/scene/paper.js</code>, drawing.md § the paper) — and the
-frame is two passes: the board on a transparent target, then the sheet over the canvas with the board on it. The paper shows
-<b>through</b> the drawing, fills included — not in that composite but in every mark: each one carries its own bite (its material's
-tooth at its value's press) and the ink shader mixes it toward the sheet's colour where the grain peaks. A colour mix, not a hole,
-so the board stays opaque within itself and the creature in front still hides the one behind. No depth test, so stacking is decided
-entirely by <code>renderOrder</code>; a layer's fills and ink are baked into <b>one geometry</b>
-(fills first, ink after — within a mesh, vertex order is the stacking), one draw call per layer.</p>
+<h3>the paper, the GPU material and the boil</h3>
+<p>Underneath there is exactly <b>one</b> GPU material — a flat <code>MeshBasicMaterial</code> with vertex colours, shared per
+opacity level by every mesh on the board. No depth test, so stacking is decided entirely by <code>renderOrder</code>, and a layer's
+fills and ink are baked into <b>one geometry</b> (fills first, ink after — inside a mesh, vertex order is the stacking): one draw
+call per layer.</p>
+
+<p>The paper is the board's one shader — a procedural GLSL grain on a single plane, no texture and no tile
+(<a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/paper.js"><code>src/scene/paper.js</code></a>). The frame is two passes: the board on a transparent
+target, then the sheet over the canvas with the board on it.</p>
+
+<p>The paper shows <b>through</b> the drawing, fills included — not in that composite but in every mark. Each one carries its own
+bite (its material's tooth at its value's press) and the ink shader mixes it toward the sheet's colour where the grain peaks. A
+colour mix, not a hole, so the board stays opaque within itself and the creature in front still hides the one behind.</p>
 
 <div class="figs">
   <figure data-fig="boilface" class="wide">
@@ -328,15 +345,21 @@ a superellipse bent by noise, squared and tapered by two knobs.</p>
   <figure data-fig="arcs">
     <canvas></canvas>
     <div class="subs"><span>smile</span><span>frown</span><span>a shut lid</span></div>
-    <figcaption><b>arcPath</b> — mouths, brows and lids are sections of an ellipse, handed to
-    <code>stroke</code> like any other path, so they wobble like everything else.</figcaption>
+    <figcaption><b>arcPath</b> — mouths, brows and lids are sections of an ellipse, handed
+    over as a line like any other path, so they wobble like everything else.</figcaption>
   </figure>
 </div>
 </section>
 
 <footer class="foot">
-  <p>the code: <code>src/stroke.js</code> · <code>src/shape.js</code> · <code>src/medium/</code> · <code>src/scene/mesh.js</code> · the words:
-  <code>guidelines/drawing.md</code> · the board: <a href="./index.html">← grid</a></p>
+  <p><b>the code</b> — <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/stroke.js"><code>src/stroke.js</code></a> the two pens ·
+  <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/"><code>src/medium/</code></a> the outlines, the materials, the fur ·
+  <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/shape.js"><code>src/shape.js</code></a> the shapes ·
+  <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/paper.js"><code>src/scene/paper.js</code></a> the paper ·
+  <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/mesh.js"><code>src/scene/mesh.js</code></a> the meshes</p>
+  <p><b>the words</b> — <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/guidelines/drawing.md"><code>guidelines/drawing.md</code></a> ·
+  <b>the repository</b> — <a href="https://github.com/tomlim2/goofy-procedural-creatures">github.com/tomlim2/goofy-procedural-creatures</a> ·
+  <b>the board</b> — <a href="./index.html">← grid</a></p>
 </footer>
 
 </main>
