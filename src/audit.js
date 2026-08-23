@@ -41,7 +41,7 @@ const STATES = {
   starEyes: { startle: 1, eyeFx: { kind: "star", k: 1 } }, heartEyes: { startle: 1, eyeFx: { kind: "heart", k: 1 } },
   angry: { angry: 1 }, angryTurn: { angry: 1, faceTurn: [-1, 0.5] }
 };
-// The threshold for "visible" — 4% of the head width (pixels). About the size of a dot mouth, a dot nose, one freckle or one small brow. A smaller screen lowers the threshold too
+// The threshold for "visible" — 4% of the head width (pixels). About the size of a dot mouth, a dot nose or one small brow. A smaller screen lowers the threshold too
 const minPixels = (headPx) => Math.max(3, Math.round(headPx * 0.04));
 
 function run() {

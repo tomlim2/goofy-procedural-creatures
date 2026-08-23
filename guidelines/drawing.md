@@ -37,7 +37,7 @@ Four things have to be present together to look hand-drawn. Leave out any one an
    segments
 2. **Noise along the normal** — low frequency (the whole thing bending) overlaid with high frequency (fine
    tremor)
-3. **End taper** — the start and end are pinched. A short stroke with only two samples (dots and freckles
+3. **End taper** — the start and end are pinched. A short stroke with only two samples (dots and dashes
    shorter than the 0.03 re-sample spacing) gets one sample in the middle so its width never reaches 0 —
    otherwise a dot mouth or dot nose disappears
 4. **Pressure modulation** — the thickness in the middle is not constant
@@ -74,7 +74,7 @@ color, with at most a `weight` on the kind's width:
 | --- | --- | --- | --- |
 | contour | `ink.contour(path, { color, weight })` | the closed line of a shape — the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts | fine 0.7 · 1 · the head 1.15 · heavy 1.2 |
 | line | `ink.line(path, { color, weight, joint })` | an open line — a brow, a lid, a whisker, a limb, a strand, a horn, the floor. `joint = [start, end]` marks an end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
-| mark | `ink.mark(path, { color, weight })` | a dot or a dash a few widths long — a freckle, a tooth's edge, a claw, a glyph's dot | 0.6 · 0.7 · 1 |
+| mark | `ink.mark(path, { color, weight })` | a dot or a dash a few widths long — a tooth's edge, a claw, the dot mouth, a glyph's dot | 0.6 · 0.7 · 1 |
 
 Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL_STROKE", line: "PENCIL_STROKE", mark: "PENCIL_DAB" }`.
 Change a name there and every line of that role on the board changes; a new kind of line is a new entry in
@@ -92,7 +92,7 @@ One pen is on the table, the pencil; `pen` names the hand that draws a kind, for
 | `PENCIL_STROKE` | `pencil()` 0.012 once — the reference's line at full width: it wanders, breathes, runs past its ends and sheds; closed, one seamless loop. **Mass** |
 | `PENCIL_SLINE` | `pencil()` 0.008 once, and **the pen lifts** — about one gap every 0.26 of a unit, 0.006~0.016 long, never within 0.025 of an end and none at all below 0.07 of length, so a dot or a dash keeps its whole extent. **Detail** |
 | `PENCIL_BROKEN` | `pencil()` 0.011 **three times over itself**, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
-| `PENCIL_DAB` | `pencil()` 0.010 once, **blunt** at both ends and **no shed** — an overshoot runs two or three times the length of a 0.01 freckle, and a crumb is the size of the dot. **Marks** |
+| `PENCIL_DAB` | `pencil()` 0.010 once, **blunt** at both ends and **no shed** — an overshoot runs two or three times the length of a 0.01 dot, and a crumb is the size of the dot itself. **Marks** |
 
 On the board today: 44 contours and 104 open lines are PENCIL_STROKE, 14 marks PENCIL_DAB. The **ribbon pen** (`stroke()`) is
 no kind and no role draws with it; two things call it directly — a hat's band and an emoji's glyph outline. **PENCIL_SLINE and
@@ -139,7 +139,7 @@ the body directly, everything else through `paintPart` in `draw/body.js`. A skin
 ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes the creature's value step — one
 mass on a dog, a cat or an imp (`surfaceValue`), its own color's on a human. A detail or an object — the hats,
 the inner ear, the eyes (whites, pupils, irises, highlights, the static eyes, the star and heart eyes, the angry
-eye), the nose, the mouth's inside, teeth and tongue, the blush, the freckles, the eye patch, the cheek and
+eye), the nose, the mouth's inside, teeth and tongue, the blush, the eye patch, the cheek and
 forehead shade patches, the horn tip — takes its **own color's** step (`own`): a black nose black, whatever the creature's hand. Two things stay FLAT
 by rule: the **whites of the eyes** (the sclera, the static eyes' white, the star eye — `flat`: a white of the
 eye is not a surface the pencil touches) and the emoji, which are not a creature's part.

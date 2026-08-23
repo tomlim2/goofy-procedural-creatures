@@ -15,7 +15,7 @@ export const GOOFY_OUTLINES = {
   // The pencil's broken — laid **three times over itself**, each pass wandering and breathing on its own, so the line comes out
   // doubled and offset the way a hand going round twice leaves it. Contour. Built, and on nothing yet (BOARD_LINES, below)
   PENCIL_BROKEN: { pen: "pencil", width: 0.011, passes: 3 },
-  // The pencil's dab — a stub: **blunt at both ends** (an overshoot would run two or three times the length of a freckle) and it
+  // The pencil's dab — a stub: **blunt at both ends** (an overshoot would run two or three times the length of a 0.01 dot) and it
   // does not shed (a crumb or a bite is the size of the whole dot). Every mark on the board
   PENCIL_DAB: { pen: "pencil", width: 0.01, passes: 1, blunt: true, shed: false }
 };
@@ -23,7 +23,7 @@ export const GOOFY_OUTLINES = {
 // The switch — what the board draws each **role** with. A role is what a line is on the board, not what it is made of:
 //   contour — the closed line of a shape (the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts…)
 //   line — an open line (a brow, a lid, a whisker, a limb, a strand, a horn, the floor)
-//   mark — a dot or a dash a few widths long (a freckle, a tooth's edge, a claw, a glyph's dot) — the pencil's overshoot would lengthen it
+//   mark — a dot or a dash a few widths long (a tooth's edge, a claw, the dot mouth, a glyph's dot) — an overshoot would lengthen it
 // Change a name here and every line of that role changes on the board; a new kind is a new entry above and a name here.
 // A part names its role and hands over the path and the color — at most a weight on the width. A part never names a kind; the medium
 // page does (outline), to show each kind on its own

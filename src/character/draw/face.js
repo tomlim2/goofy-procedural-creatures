@@ -219,16 +219,7 @@ export function drawFace2(ink, fills, spec, box, eyes) {
     const cx = side * box.headRx * 0.58;
     // The cheeks are below the eyes — with a big eye they drop below the (startle-widened) eye. So they are not covered whole by the white
     const cheekY = Math.min(box.headCy - box.headRy * 0.28, eyeFloor(spec, eyes, cx) - 0.02);
-    if (kind === "blush") {
-      paintPart(fills, spec, blobPath(cx, cheekY, 0.042, 0.026, { lumps: 3, amount: 0.15, noise: null }), "#d9968a", { own: true });
-    } else {
-      // freckles — three dots per cheek
-      for (let i = 0; i < 3; i += 1) {
-        const fx = cx + (i - 1) * 0.022;
-        const fy = cheekY + (i % 2 ? 0.012 : -0.008);
-        ink.mark([[fx - 0.005, fy], [fx + 0.005, fy]], { color: ink0, weight: 0.7 });
-      }
-    }
+    paintPart(fills, spec, blobPath(cx, cheekY, 0.042, 0.026, { lumps: 3, amount: 0.15, noise: null }), "#d9968a", { own: true });
   }
 }
 

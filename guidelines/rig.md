@@ -69,7 +69,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 2.06 | Horns (depth 0.45) · hair on the scalp (depth 0.12, above the horns) — above the outline |
 | 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth 0.2) |
 | 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) |
-| 2.4 | Face ink (whiskers, freckles, tears) · static eye ink (one layer per eye) |
+| 2.4 | Face ink (whiskers, tears) · static eye ink (one layer per eye) |
 | 2.5 | Limbs, upper arm and forearm (above the body ink — the sleeve covers the outline) |
 | 3.0~3.35 | The back (smaller) eye's rig — white+rim 3 · pupil 3.2 · ^^/shut line 3.35 (on closing, the white, rim and pupil are switched off and only the line remains) |
 | 3.5~3.85 | The front (larger) eye's rig — the same order, +0.5. When two eyes overlap the front eye's white covers the back eye's rim and pupil (no crossing line) |

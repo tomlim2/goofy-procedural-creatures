@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 25 slots, 187 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 25 slots, 186 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -218,8 +218,8 @@ A cat nose is a **pink** fill (the same color as the blush and tongue) plus a fa
 **It is color only, with no outline** — an outline makes it look like a board tacked onto the face. The mouth ink over the muzzle is split by the muzzle's luminance (black if light, light ink if dark), and
 the nose, being an object, is always black but gets a light rim over a dark muzzle (the same rule as the eyepatch, [rules.md](rules.md)).
 
-### face2 — cheeks and the eye area (4)
-none / tears (two lines below the eye — **humans do not have them**, forbid → none; they belong to imps) / blush (a pink ellipse on the cheek) / freckles (3 dots per cheek). The cheeks sit below the (startle-widened) eye.
+### face2 — cheeks and the eye area (3)
+none / tears (two lines below the eye — **humans do not have them**, forbid → none; they belong to imps) / blush (a pink ellipse on the cheek). The cheeks sit below the (startle-widened) eye.
 
 Cat **whiskers** are not a slot but fixed per species (`drawWhiskers`) — three strands per side in a slightly drooping fan. The length is per individual (0.42~0.92× the head's half-width), so
 over half of all cats have whiskers **poking out through the head outline** (being on the face layer at 2.4, they sit above the outline and ears and reach onto the paper).

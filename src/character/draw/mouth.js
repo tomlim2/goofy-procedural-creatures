@@ -103,7 +103,7 @@ function fangs(m, hw, drop) {
 
 // Kind → drawing function. 1:1 with the names in slots.js SLOTS.mouth
 export const MOUTH = {
-  // Dot mouth — one dab, a little longer and thicker than a freckle so it reads as a mouth
+  // Dot mouth — one dab, longer and thicker than the other marks so it reads as a mouth
   dot: (m) => m.ink.mark([[m.x - 0.015, m.y], [m.x + 0.015, m.y]], { color: m.ink0, weight: 1.3 }),
   line: (m) => m.ink.line([[m.x - m.w, m.y], [m.x + m.w, m.y + 0.004]], { color: m.ink0, weight: 1 }),
   smile: (m) => m.ink.line(arcPath(m.x, m.y + 0.03, m.w, 0.045, Math.PI, TAU), { color: m.ink0, weight: 1 }),

@@ -117,7 +117,7 @@ export const SPECIES = [
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
       tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. wedge disabled
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
-      face2: [["none", 5], ["blush", 1], ["freckles", 1]]
+      face2: [["none", 5], ["blush", 1]]
     }
   },
   {
