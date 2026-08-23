@@ -91,15 +91,21 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     // most skeletons — a curl, a longtail, a flag and a kink all ran out of joint before the arch and stood in a half-arch, hinged rather than curved
     const capOf = (i) => (i === 0 ? Math.PI * 0.556 : Math.PI / 2);
     const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-    // A joint's share: the short way round, capped — and **dropped to nothing** when even the capped turn would leave the joint still bent
-    // *against* the pose. A hook's tip is drawn folded 113° toward the head and the arch asks it to fold 46° the other way; capped it lands at +23°,
-    // which is neither the hook nor the arch — the S the tail used to draw. Dropped, the tail arches on the joints that can reach and keeps the hook it
-    // was drawn with at the end: a question mark. It only ever fires on a joint the cap already stopped, so a skeleton that can reach the pose is untouched
+    // A joint's share: the short way round, capped — and **let go** when the capped turn would still miss the pose by a long way. The miss is
+    // measured as a bend: how far off the pose this joint's bend still is once it has turned as far as it can. Up to 30° it takes the turn (it
+    // very nearly gets there); past 70° it keeps the bend it was drawn with instead, easing between the two so a pose blending in never snaps.
+    // A hook's tip is drawn folded 113° toward the head and the arch asks it to fold 46° the other way: capped it lands at +23°, a 69° miss —
+    // neither the hook nor the arch, the S the tail used to draw. Let go, the tail arches on the joints that can reach and ends in its own hook,
+    // which is a question mark. A joint that can reach its target misses by nothing and is untouched
+    const MISS = [Math.PI / 6, Math.PI * 0.39];   // 30°: still worth turning · 70°: hopeless, keep the skeleton
     const share = (want, cum, i, bend = null) => {
-      const capped = Math.max(-capOf(i), Math.min(capOf(i), wrap(want - cum)));
-      if (!bend || capped === wrap(want - cum)) return capped;
+      const raw = wrap(want - cum);
+      const capped = Math.max(-capOf(i), Math.min(capOf(i), raw));
+      if (!bend || capped === raw) return capped;
       const [restBend, poseBend] = bend;   // how far this joint is bent as drawn, and how far the pose wants it bent
-      return Math.abs(poseBend) > 0.1 && (restBend + capped) * poseBend < 0 ? 0 : capped;
+      const miss = Math.abs(wrap(poseBend - restBend - capped));
+      const u = Math.max(0, Math.min(1, (miss - MISS[0]) / (MISS[1] - MISS[0])));
+      return capped * (1 - u * u * (3 - 2 * u));
     };
     // The bend at joint i — as drawn, and as the pose asks for it (the root has no joint before it, so it has no bend)
     const bendAt = (target, i) => (i === 0 ? null : [wrap(bones[i].restAngle - bones[i - 1].restAngle), wrap(target(i) - target(i - 1))]);

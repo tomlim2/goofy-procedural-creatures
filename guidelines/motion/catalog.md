@@ -240,10 +240,12 @@ The tail is **a four-bone chain under one skin** splitting the spine into 4 (`TA
 toward vertical — whether the skeleton curls or reaches back, it **shoots straight up** (every joint at π/2, with no bent variant). A joint's share of either blend is taken
 **the short way round and capped** — 100° at the root, 90° at the joints along the tail — the rest cascading to the next joint (`animate.js`): a hook's tip sat at −131° and the arch asked it for −20° — a 171° twist at one
 joint, which folded the skin onto itself. A curled skeleton stays curled under the arch and the raise, as a real tail does — it cannot hinge through half a turn at one joint.
-A joint the cap stops is checked once more: if even the capped turn would leave it bent **against** the pose, it is **not turned at all** and keeps the bend it was drawn with.
-A hook's tip is drawn folded 113° toward the head while the arch asks for 46° the other way — capped it landed at +23°, neither the hook nor the arch, and the tail drew an S.
-Dropped, the tail arches on the joints that can reach and ends in its own hook: a question mark. (At 60° the cap alone was the problem — a curl, a longtail, a flag and a kink
-all ran out of joint before the arch and stood in a half-arch: the bones did not draw an arch at all. 90° puts every skeleton but the hook exactly on the pose.)
+A joint the cap stops is measured against the pose once more: how far off is its bend once it has turned as far as it can? Up to 30° it takes the turn; past 70° it **lets go**
+and keeps the bend it was drawn with, easing between the two (`MISS` in `animate.js`) so a pose blending in never snaps. A hook's tip is drawn folded 113° toward the head while
+the arch asks for 46° the other way — capped it landed at +23°, a 69° miss: neither the hook nor the arch, and the tail drew an S. Let go, the tail arches on the joints that
+can reach and ends in its own hook: a question mark. (At 60° the cap alone was the problem — a curl, a longtail, a flag and a kink all ran out of joint before the arch and
+stood in a half-arch: the bones did not draw an arch at all. 90° puts every skeleton but the hook exactly on the pose.) The easing is not decoration: as a hard switch it fired
+the moment a ♥ bent the raise pose off vertical and threw the tip 89° in one tick.
 `tailTip` in `table.js` holds the tip bone and raise parameters. Dogs and cats read it **oppositely** — for a dog fast wagging is joy, while for a cat fast movement is irritation or excitement and
 joy is **holding it up** (research: raised/a question mark = greeting, a trembling tip = a very glad greeting, a slow swish = focus or mild irritation, tip tapping = interest, lashing = anger,
 puffed = a startle, wrapped round the body = at ease, and nearly fixed while walking).
