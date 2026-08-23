@@ -241,7 +241,7 @@ export class Sketch {
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
   // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
-  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, paper = PAPER, joint = null, skinT = null } = {}) {
+  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, paper = PAPER, joint = null, skinT = null } = {}) {
     const P = PENCIL;
     const rgb = hexToRgb(color);
     const biteRgb = hexToRgb(paper);
@@ -290,6 +290,16 @@ export class Sketch {
       const p2 = r(7) * TAU;
       const breathe = P.breathe.map(([amp, om], k) => [amp, snap(om), r(8 + k) * TAU]);
       const wander = P.wander * this.wobble;
+      // The pen lifts — SLINE's gaps (the numbers belong to the kind, medium/outlines.js, not to the pencil). About one lift every
+      // `per` world units, `gap` of them long, never within `edge` of either end and none at all on a line shorter than `min`: a dot
+      // or a dash keeps its whole extent, and only a line long enough to be a detail breaks. A closed loop has no ends to spare
+      const gapAt = lift && L >= lift.min ? (at) => {
+        const cell = Math.floor(at / lift.per);
+        const g = jr(20 + cell * 2, lift.gap);
+        const from = cell * lift.per + r(21 + cell * 2) * (lift.per - g);
+        if (at <= from || at >= from + g) return false;
+        return closed || (from > lift.edge && from + g < L - lift.edge);
+      } : null;
 
       // Per-point normals (cyclic on a loop), shared by the quads on either side
       const normals = [];
@@ -320,6 +330,7 @@ export class Sketch {
       const tagAt = (i) => (skinT ? tagAlong(points, skinT, Math.max(0, Math.min(L - tail0 - tail1, s[i] - tail0)), L - tail0 - tail1) : NaN);
       const quads = closed ? n : n - 1;
       for (let i = 0; i < quads; i += 1) {
+        if (gapAt && gapAt((s[i] + s[(i + 1) % n]) / 2)) continue;   // the pen is off the paper here
         const ti = tagAt(i), tj = tagAt((i + 1) % n);   // per point, not per quad — the two quads meeting at a point must give it the same tag
         const j = (i + 1) % n;
         const [ax, ay] = path[i];
@@ -338,6 +349,7 @@ export class Sketch {
       const G = P.grit;
       for (let i = 0; i < n; i += 1) {
         if (!closed && (s[i] < tail0 || L - s[i] < tail1)) continue;
+        if (gapAt && gapAt(s[i])) continue;   // nothing sheds where the pen is off the paper
         if (noise(ph * 0.11 + i * 1.93) * 0.5 + 0.5 > density) continue;
         const v = noise(ph * 0.23 + i * 3.17);                                 // [-1, 1] — which side, and how far
         const isBite = noise(ph * 0.31 + i * 5.39) * 0.5 + 0.5 < G.bite;

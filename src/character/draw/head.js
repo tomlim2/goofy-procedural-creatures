@@ -25,7 +25,7 @@ export function drawHead(ink, fills, spec, box, noise) {
   // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
 
   // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
-  // The goofy outline — PENCIL (stroke.js GOOFY_OUTLINES); the head's contour runs a little heavier than the body's (weight)
+  // The goofy outline — the contour role, PENCIL_STROKE today (medium/outlines.js); the head's contour runs a little heavier than the body's (weight)
   ink.contour(path, { color: spec.palette.ink, weight: 1.15 });
   decalEdges(ink, spec, decals);
   return path;

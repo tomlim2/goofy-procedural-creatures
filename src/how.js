@@ -70,7 +70,7 @@ fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
   });
 });
 
-// The pencil — the reference's line next to ours (stroke.js PENCIL). Same widths as the ribbon figure, for the comparison
+// The pencil — the reference's line next to ours (its numbers in stroke.js PENCIL). Same widths as the ribbon pen's figure, for the comparison
 fig("pencil", [-0.8, -0.12, 0.8, 0.12], (sk) => {
   const ink = sk();
   [0.007, 0.012, 0.022].forEach((width, i) => {
@@ -172,7 +172,7 @@ Object.keys(GOOFY_OUTLINES).forEach((name, i) => {
     ink.line([[-0.58, -0.01], [-0.2, 0.03], [0.2, -0.025], [0.58, 0.015]], { outline: name, color: INK, paper: CARD });   // the kind named outright — the page shows each, as an open line
   });
 });
-// Fur balls — one per entry of GOOFY_FUR: the same FLAT ball, PENCIL contour, the fur grown along its crown as hair is
+// Fur balls — one per entry of GOOFY_FUR: the same FLAT ball, the board's contour, the fur grown along its crown as hair is
 Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("furBalls"), `fur:${name}`, name.toLowerCase(), 131 + i * 3, (fills, ink, ball) => {
   fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
   ink.contour(ball, { color: INK, paper: CARD });   // the board's contour, whatever the switch says
@@ -196,7 +196,7 @@ IN_USE.forEach(({ key, label, box, draw }) => {
 
 // Shader balls — one row per entry of GOOFY_MATERIALS, like a 3D material preview: the same ball in the same color at the five value
 // steps (black · hatch · scribble · stipple · light), filled the goofy material's way at each — the contour is the board's outline,
-// PENCIL; a goofy material is only the filling. FLAT has no texture, so one ball.
+// the board's contour; a goofy material is only the filling. FLAT has no texture, so one ball.
 // A textured entry gets **the same five steps again underneath, on a dark ground**: a mark has to be lighter than what it is drawn
 // on, so there every technique turns around and lays its marks light, and the step pulls the colour the other way (materials.js
 // contrast, pull). One dark ball at the end of the row could only show it at one step; the scale is the point

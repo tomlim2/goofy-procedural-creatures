@@ -60,7 +60,7 @@ Every number lives in the `PENCIL` table at the top of `stroke.js` and nowhere e
 normal per point, so it never cracks at a corner. `paper` is the color the bites take — pass the fill's
 color when the line runs over a fill. Not for dots: the overshoot lengthens them.
 
-The head and body contours draw with it, as the PENCIL goofy outline (below); the medium page (`/how.html`
+The head and body contours draw with it, as the PENCIL_STROKE goofy outline (below); the medium page (`/how.html`
 § the goofy outline) shows it next to `stroke()`. Switching another part onto it is a drawing change like any other —
 `drawdiff` will show it, and the audit has to stay at 0.
 
@@ -76,21 +76,28 @@ color, with at most a `weight` on the kind's width:
 | line | `ink.line(path, { color, weight, joint })` | an open line — a brow, a lid, a whisker, a limb, a strand, a horn, the floor. `joint = [start, end]` marks an end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
 | mark | `ink.mark(path, { color, weight })` | a dot or a dash a few widths long — a freckle, a tooth's edge, a claw, a glyph's dot | 0.6 · 0.7 · 1 |
 
-Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL", line: "PENCIL", mark: "RIBBON" }`.
+Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL_STROKE", line: "PENCIL_STROKE", mark: "RIBBONPEN_STROKE" }`.
 Change a name there and every line of that role on the board changes; a new kind of line is a new entry in
 `GOOFY_OUTLINES` and a name in the switch. An unknown role or kind throws. `stroke()`, `outline()` and `pencil()` are
 the kinds' primitives and no part calls them — the only strokes outside the table are the two **bands** (a hat's color
 laid as a thick stroke along a brim or a crown: a fill in disguise, `draw/headgear.js`). The outline is its own concept —
 not part of a goofy material: a line is not a way of filling.
 
+A kind is named **the pen, then how it is held**: `PENCIL_` or `RIBBONPEN_`, and **STROKE** (once, at full width — mass) ·
+**SLINE** (thin, and the pen lifts — detail) · **BROKEN** (laid three times over itself — contour), the three holds the
+reference keeps its line in ([../reference/README.md](../reference/README.md) § 3).
+
 | Kind | Line |
 | --- | --- |
-| `PENCIL` | `pencil()` 0.012 — the reference's line: it wanders, breathes, runs past its ends and sheds; closed, one seamless loop |
-| `RIBBON` | `stroke()` 0.010 once, jitter 0.006 — the board's original line, a tapered ribbon pushed by noise. A short one is a bean, which is what a mark wants; the pencil's overshoot would lengthen it |
+| `PENCIL_STROKE` | `pencil()` 0.012 once — the reference's line at full width: it wanders, breathes, runs past its ends and sheds; closed, one seamless loop. **Mass** |
+| `PENCIL_SLINE` | `pencil()` 0.008 once, and **the pen lifts** — about one gap every 0.26 of a unit, 0.006~0.016 long, never within 0.025 of an end and none at all below 0.07 of length, so a dot or a dash keeps its whole extent. **Detail** |
+| `PENCIL_BROKEN` | `pencil()` 0.011 **three times over itself**, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
+| `RIBBONPEN_STROKE` | `stroke()` 0.010 once, jitter 0.006 — the board's original line, a tapered ribbon pushed by noise. A short one is a bean, which is what a mark wants; the pencil's overshoot would lengthen it |
 
-On the board today: 44 contours and 104 open lines are the pencil, 14 marks the ribbon. The medium page names the kinds
-outright (`{ outline: "RIBBON" }`) to show each on its own — the one place a kind is named — and draws the three roles
-off the switch, so it cannot drift from the board.
+On the board today: 44 contours and 104 open lines are PENCIL_STROKE, 14 marks RIBBONPEN_STROKE. **PENCIL_SLINE and
+PENCIL_BROKEN are built and on nothing** — they exist in the table and on the medium page, and a role picks one up by a single name in the switch. The
+medium page names the kinds outright (`{ outline: "PENCIL_SLINE" }`) to show each on its own — the one place a kind is named —
+and draws the three roles off the switch, so it cannot drift from the board.
 
 ## The goofy fur — how hair is grown
 
@@ -190,7 +197,7 @@ scales it (black ×0.7 … light ×1.3).
 
 The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt goofy material cannot silently draw
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
-way, its contour the board's PENCIL — so the table cannot drift from what is seen. The last ball of every textured row is the same
+way, its contour the board's PENCIL_STROKE — so the table cannot drift from what is seen. The last ball of every textured row is the same
 material on a **dark ground**, which is where the rule above is visible.
 
 | Goofy material | base | texture | tooth | On the board |
