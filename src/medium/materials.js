@@ -257,7 +257,10 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
     // lighter than what it is laid on whatever the step has done underneath — and in the ground's own hue, so a blue part's marks are
     // blue. A **negative** amount is the other way — the ground laid on deeper — which only oil's spread asks for: paint is opaque and
     // some of it goes on darker than what is under it
-    const opened = (amount) => (amount >= 0 ? tint(pulled, amount) : deepen(pulled, Math.min(0.55, -amount * 1.8)));
+    // On a **dark** ground the light is damped: there the ground is deep and the same tint carries a mark far further up than it does
+    // on a light one — graphite's rules came out bright grey on a near-black part, a stripe rather than a pencil line. The same reason
+    // the ground's pull is halved on dark. The deeper side (oil's darkest paint) is not damped: there is room below either way
+    const opened = (amount) => (amount >= 0 ? tint(pulled, amount * (dark ? 0.55 : 1)) : deepen(pulled, Math.min(0.55, -amount * 1.8)));
     // How much of the surface the marks cover. The **base colour already carries the value** (above), so this is the medium's grain
     // and not its tone — which is what lets the marks stay as fine as the hand would draw them. Marks coarse enough to carry a value
     // on their own were tried and dropped: they turn a small part into blotches, and a face into camouflage
@@ -357,7 +360,10 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         // and the lowest strokes fall back toward the part's own deep colour. Without the drop every dab came out lighter than what it
         // sat on and a dark part read as one bright weave — paint that only ever lightens is not paint
         const spread = dark ? -0.22 : 0;
-        const tones = f.washes.map((t) => hexToRgb(opened(Math.max(-0.4, Math.min(0.7, t + shift + spread)))));
+        // And on a **light** ground the spread is pulled back in: there the ground is already pale and the top of the spread ran all the
+        // way to a cream white, which is a bleach, not thinned paint. The palest stroke stops well short of it and stays the colour
+        const reach = dark ? 1 : 0.68;
+        const tones = f.washes.map((t) => hexToRgb(opened(Math.max(-0.4, Math.min(0.7, (t + shift + spread) * reach)))));
         const count = Math.round(f.per * (0.35 + weight * 1.0) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
         const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
         for (let i = 0; i < count; i += 1) {

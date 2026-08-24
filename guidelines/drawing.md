@@ -195,7 +195,11 @@ marks came out grey and a red part's pink-beige, and a mark stopped belonging to
 (`shade` × >1) keeps the hue but clips a saturated color into neon, which is why neither is used for the light side.
 **A mark is a light**: ink's scratches, graphite's rules and oil's paint are all drawn in the
 same tint of the ground, so they come *up* out of the surface, and the step's work goes into the ground
-underneath them (`opened` and `pull` in `materials.js`). Charcoal alone keeps dark marks — its specks are the grain of a dark
+underneath them (`opened` and `pull` in `materials.js`). How far the tint reaches depends on what it is laid on: on a **dark** ground
+it is damped to 0.55 — a deep ground carries the same tint much further up, and graphite's rules came out bright grey on a near-black
+part, a stripe rather than a pencil line — and oil's spread of paint is pulled back to 0.68 on a **light** one, where the ground is
+already pale and the top of the spread ran all the way to a cream white (a bleach rather than thinned paint).
+Charcoal alone keeps dark marks — its specks are the grain of a dark
 crumb, and one technique that goes the other way is what keeps the four apart. Where a technique's own direction still stands it is
 its ground's: graphite and charcoal deepen theirs, ink lightens its own (its scratches take the ink away). On a **dark** color every mark goes lighter (`contrast` in `materials.js`), by as much as the technique asked for either
 way: there is nothing below a dark ground to draw with. Only the amount is mirrored, never the direction — mirroring the direction
