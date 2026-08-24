@@ -118,10 +118,13 @@ wander ripples it, the breath swells it, the shed frays it — not off how tall 
 ## The goofy fur — how hair is grown
 
 Hair and fur are neither a contour nor a filling — in 3D they are a groom; here they are the **goofy fur**,
-named from `GOOFY_FUR` in `medium/fur.js`: `ink.fur(path, "SCRIBBLE", { color, passes, width, spread })`. A part
-hands over the path (the crown arc, a tail, a bang) and the color; `passes`, `width` and `spread` may be
-overridden — a style's volume — and everything else (root, reach, scatter, wave, lean) is the fur's own. An
-unknown name throws. `Sketch.scribble()` is the engine underneath; `fur()` is the named way in.
+named from `GOOFY_FUR` in `medium/fur.js`: `ink.fur(path, "SCRIBBLE", { color, passes, size, spread })`. A part
+hands over the path (the crown arc, a tail, a bang) and the color; `passes`, `size` and `spread` may be
+overridden — a style's volume — and everything else (root, reach, scatter, wave, lean) is the fur's own. A
+stroke's thickness is a **name**, never a number, off the fur's own ladder (`FUR_SIZES` — S 0.008 · M 0.009 ·
+L 0.01), and an unknown one throws. **Hair is drawn at L**, all of it: the crown caps, the tails, the buns and
+the bangs alike. It used to run S~L by kind and the thin ones read as a smudge beside the head's own line
+rather than as strands. `Sketch.scribble()` is the engine underneath; `fur()` is the named way in.
 
 | Fur | How it grows | On the board |
 | --- | --- | --- |
