@@ -17,7 +17,7 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
 │   │   │                           Bristle (tailPuff): bone.scale.y — thickness only, perpendicular to the bone's own axis; a sibling bone shears no child
 │   │   └── SkinnedMesh ×1       ← the whole skin in the pivot's space, every vertex weighted to two or three bones (limbs.js weightsAt); all three boil frames in it, switched by drawRange
 │   └── limb pivot ×N        ← shoulder and hip pivots
-│       ├── front             ← the upper arm (or the leg). renderOrder 2.5
+│       ├── front             ← the upper arm (2.5) or the leg (1.2 — behind the body)
 │       │   └── elbow         ← the elbow pivot plus the forearm (arms only). Shoulder and elbow angles separately
 │       └── back              ← hands behind the back (arms only, 0.5)
 └── headGroup                ← origin = the neck (neckY = bodyTop). Tilt, roll, nod, dip. Only the outline sits here directly
@@ -70,7 +70,8 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth 0.2) |
 | 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) |
 | 2.4 | Face ink (whiskers, tears) · static eye ink (one layer per eye) |
-| 2.5 | Limbs, upper arm and forearm (above the body ink — the sleeve covers the outline) |
+| 1.2 | **Legs** — behind the body (above the floor line at 1, below the body at 1.5). A leg's root is inside the body outline and the foot reaches back up to the hem; in front, both lay on top of the torso |
+| 2.5 | Arms, upper and forearm (above the body ink — the sleeve covers the outline so the shoulder reads as embedded) |
 | 3.0~3.35 | The back (smaller) eye's rig — white+rim 3 · pupil 3.2 · ^^/shut line 3.35 (on closing, the white, rim and pupil are switched off and only the line remains) |
 | 3.5~3.85 | The front (larger) eye's rig — the same order, +0.5. When two eyes overlap the front eye's white covers the back eye's rim and pupil (no crossing line) |
 | 3.6 | A static eye's shut line and smile arch — the static eye frame is switched off then (no cover) |

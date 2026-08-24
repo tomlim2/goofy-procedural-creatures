@@ -158,7 +158,10 @@ export function buildCreature(spec, noise, birth = 0) {
     const pivot = new THREE.Group();
     pivot.position.set(limb.pivot[0], limb.pivot[1], 0);
     const front = new THREE.Group();
-    front.add(boiledMesh((fl) => fl[li].sketch, 1, 2.5));
+    // A **leg goes behind the body** (1.2 — above the floor line at 1, below the body at 1.5). Its root sits inside the body outline
+    // and the foot reaches back up to the hem, so drawn in front the root's line and the foot's fill lay on top of the torso.
+    // An **arm** stays in front (2.5): its sleeve and hand have to cover the body outline for the shoulder to look embedded
+    front.add(boiledMesh((fl) => fl[li].sketch, 1, limb.kind === "leg" ? 1.2 : 2.5));
     pivot.add(front);
 
     let elbow = null;
