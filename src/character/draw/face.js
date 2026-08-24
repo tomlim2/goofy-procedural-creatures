@@ -43,6 +43,14 @@ export function heartPath(cx, cy, w, h) {
 // The eye's lower edge, consulted when placing the nose, mouth and cheeks — laid over a white they are either the same color (an imp's light ink) or covered, and disappear.
 // (A startle does not grow the eye, only shrinks the pupil, so the white's size is unchanged)
 // Gives that lower edge (y) if an eye (its white) reaches this x, otherwise Infinity. A part sits at min(its own y, the edge − clearance)
+// The lowest edge of **any** eye, wherever it sits. eyeFloor asks "does an eye reach this x", which is right for a part that has to
+// clear the eye it stands under; the mouth needs the other question — is it below the eyes at all — because two big eyes set wide
+// apart leave the middle empty and a mouth placed there lands between them, over both
+export function eyeBottom(spec, eyes) {
+  const { sy } = eyeShape(spec);
+  return eyes.length ? Math.min(...eyes.map((e) => e.y - e.r * sy * 1.05)) : Infinity;
+}
+
 export function eyeFloor(spec, eyes, x) {
   const { sx, sy } = eyeShape(spec);
   const hit = eyes.filter((e) => e.r * sx * 1.05 > Math.abs(x - e.x));

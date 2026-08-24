@@ -7,7 +7,7 @@
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { TAU, eyeGeometry } from "./layout.js";
-import { eyeFloor, noseBottomY, muzzleGeometry } from "./face.js";
+import { eyeBottom, noseBottomY, muzzleGeometry } from "./face.js";
 import { MARKS } from "../vocabulary/palette.js";
 
 // Mouth width multiplier — the mouthSize slot (a late slot). In the reference, very small mouths and very wide mouths split at the extremes
@@ -20,12 +20,14 @@ const PINK = MARKS.blush;   // tongue — the same pink as the blush
 // Mouth position, width and ink. Solved from species, slots and proportions at once
 export function mouthPlacement(spec, box) {
   const eyes = eyeGeometry(spec, box);
-  // Mouth position — between the bottom of the nose (noseBottomY) and above the chin (headCy − 0.86·ry), placed by mouthPos: high 0.22 · mid 0.5 · low 0.76.
-  // And below the (startle-widened) eyes — laid over the white of a cyclops or a big eye, it disappears
-  const top = noseBottomY(spec, box, eyes) - 0.006;
+  // Mouth position — under the nose (noseBottomY) and above the chin (headCy − 0.86·ry), placed by mouthPos: high 0.22 · mid 0.5 · low 0.76.
+  // **And under the eyes**: when the nose sits above them — a high nose, or none — the eyes' lowest edge is the ceiling instead, or
+  // the mouth lands in the gap between two big eyes and is drawn over both (eyeBottom, not eyeFloor: the gap has no eye at its x)
   const chin = box.headCy - box.headRy * 0.86;
+  const floor = eyeBottom(spec, eyes);
+  const top = Math.max(Math.min(noseBottomY(spec, box, eyes), floor) - 0.006, chin + 0.012);
   const tPos = spec.parts.mouthPos === "high" ? 0.22 : spec.parts.mouthPos === "low" ? 0.76 : 0.5;
-  let y = Math.min(top + (chin - top) * tPos, eyeFloor(spec, eyes, 0) - 0.03);
+  let y = Math.min(top + (chin - top) * tPos, floor - 0.03);
   // A dog's mouth sits **above the muzzle**, so its ink follows the muzzle's luminance too (black on a light muzzle, light ink on a black one) — separate from the face (head color) ink
   const ink0 = spec.species === "pup" ? muzzleGeometry(spec, box).ink : (spec.faceInk || spec.palette.ink);
   let w = box.headRx * 0.38 * (MOUTH_SIZE[spec.parts.mouthSize] || 1) * (SPECIES_WIDTH[spec.species] || 1);
