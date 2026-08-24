@@ -415,15 +415,12 @@ The creature's **goofy material** — what the head and the body are made of, ho
 upright pencil strokes) · **ink** (solid, a few light scratches) · **oil** (thick dabs in three
 tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.)
 
-### density (3) — a late slot
+### density (5) — a late slot
 
-The hand — **normal** (weight 3) · **light** (1.5) · **dense** (1.5): one step lighter or darker on the goofy material's value scale
-(`medium/materials.js` `VALUES`: black · hatch · scribble · stipple · light — the step itself comes from the part's color's darkness, so a
-dark cloth draws black and a pale skin light; a light hand moves one step lighter, a heavy one darker). It is also how hard the hand
-pressed, so it decides how much of the paper is left showing through the fill — a heavy hand fills the paper's valleys, a light one only
-grazes its peaks ([../drawing.md](../drawing.md) § the paper). Nothing else on flat. Both the
-head and the body take the creature's density, like its goofy material — and on a dog, a cat or an imp both take the **head color's**
-step, one mass ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
+How dark the goofy material draws this creature — **the value step itself**, one of the five, evenly weighted:
+**black · hatch · scribble · stipple · light** (`medium/materials.js` `VALUES`). The seed picks it, so every step turns up on every
+species — a pale skin can be hatched black and a black one grazed light. Nothing on flat. Everything the creature fills draws at
+that one step, head and body alike ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
 opaque, so neighbours still hide each other. Everything the creature fills takes the same goofy material — the head, the body, the ears and their insides, the muzzle, the
 hands, boots and sleeves, the tail, the hats, the eyes, the nose, the mouth — one hand, one tool per creature ([../drawing.md](../drawing.md)
 § what takes the goofy material). The contour is not part of it (the goofy outline, PENCIL_STROKE). The calico's patches are decals in the base.

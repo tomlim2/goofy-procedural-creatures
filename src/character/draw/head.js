@@ -21,7 +21,7 @@ export function drawHead(ink, fills, spec, box, noise) {
 
   // The material slot — the creature's goofy material: how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
   const decals = headDecals(spec, path, noise);   // the calico's cap and cheek — in the base, under the goofy material's texture
-  fills.paint(path, materialOf(spec), { color: spec.palette.skin, offset: spec.palette.fillOffset, decals, ...surfaceHand(spec, spec.palette.skin) });
+  fills.paint(path, materialOf(spec), { color: spec.palette.skin, offset: spec.palette.fillOffset, decals, ...surfaceHand(spec) });
 
   // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
 

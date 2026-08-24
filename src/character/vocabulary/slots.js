@@ -67,9 +67,11 @@ export const SLOTS = {
   // The **material** — the creature's goofy material: what the head and the body are made of, how their areas are filled (medium/materials.js GOOFY_MATERIALS — a base color and its
   // texture). flat is the fill-up alone; the rest lay a pattern over it in a tone of the part's own color. A late slot — the look, not the form
   material: ["flat", "graphite", "ink", "oil", "charcoal"],
-  // The **density** — the hand: how dark the goofy material draws a surface, one step lighter or darker on the value scale (medium/materials.js
-  // VALUES: black · hatch · scribble · stipple · light — the step itself comes from the part's color). Nothing on flat. A late slot
-  density: ["normal", "light", "dense"],
+  // The **density** — how dark the goofy material draws this creature: **the value step itself**, picked by the seed from the five
+  // (medium/materials.js VALUES: black · hatch · scribble · stipple · light). It used to be a hand (lighter/normal/darker) that moved
+  // a step read off the part's colour, which meant a pale creature could never draw black and a black one never light — half the
+  // ladder was unreachable. The colour still decides the marks' **tone** (contrast), the step decides how many. Nothing on flat
+  density: ["black", "hatch", "scribble", "stipple", "light"],
   // Arm form. Posture (hanging, open, raised, behind the back) is not here — that is motion, in clocks.js. none is armless (some imps) — the arm action layer rests
   arms: ["stick", "sleeve", "stubby", "mitten", "none"],
   // Arm length. Independent of form, so short sleeved arms and very long gloved arms both come out.
@@ -118,7 +120,7 @@ export const DEFAULT_BIAS = {
   mouthSize: [["normal", 3], ["small", 2], ["wide", 1]],
   // Goofy materials — the plain fill-up for most; the textured ones as seasoning, so a board reads as one hand with a few different tools
   material: [["flat", 5], ["graphite", 1.5], ["charcoal", 1], ["oil", 1], ["ink", 0.8]],
-  density: [["normal", 3], ["light", 1.5], ["dense", 1.5]],
+  density: [["black", 1], ["hatch", 1], ["scribble", 1], ["stipple", 1], ["light", 1]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],

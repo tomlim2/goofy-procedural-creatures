@@ -232,16 +232,14 @@ unit, the fine marks come out at half of one there, and the five steps measured 
 materials** — one flat colour to the eye, indistinguishable from FLAT. Coarsening the marks until they could carry a value on their
 own was tried and dropped: it turns a small part into blotches and a face into camouflage. A flat fill never falls under a pixel,
 so the colour carries the value and the marks stay **as fine as the hand would draw them** — the medium, not the tone. The steps
-measure 18~40 apart on a light ground now. The step comes from the part's color's darkness
-(`valueStep`: a dark cloth draws black, a pale skin light), moved one step by the creature's `density` — its hand,
-another late slot (light: one step lighter · dense: one step darker; nothing on flat). **A hand that cannot move a step spends
-it on the amount instead** (`valueHand` → `hardness`): a light hand on an already-pale surface lays 0.72 of the marks, a heavy
-one on an already-black surface 1.35 of them. Without it a third of the density slot drew exactly like normal — the scale had
-no step left to give. A dog, a cat or an imp is
-**one mass** — its body is the head's color or a close tone of it — so head and body take the head color's step
-(`surfaceHand` in `draw/body.js` — the one place a surface's step is worked out, and `materialOf` the one place its material
-is named; a tone that crosses a step would otherwise hatch the body differently from the
-head). A human is two surfaces, skin and clothes, each at its own step. The medium page draws each textured
+measure 18~40 apart on a light ground now. **The step is the creature's own**: the `density` slot holds one of the five outright and the seed picks it (`stepOf`), so every
+step is reachable on every creature — a pale skin can be hatched black and a black one grazed light. It used to be read off the
+part's colour and nudged a step by a three-value hand, which meant half the ladder was unreachable: 59% of humans landed on light,
+76% of imps on black, and a third of the hand did nothing at all because the scale had no step left to give. The colour still
+decides the marks' **tone** (`contrast` — light marks on a dark ground), and the step decides how many.
+
+One step for the whole creature, head and body and ears and hat alike: one hand, one pressure (`surfaceHand` in `draw/body.js` —
+the one place a surface's step is worked out, and `materialOf` the one place its material is named). The medium page draws each textured
 goofy material as a row of the five steps. Every other fill is FLAT.
 
 The medium page shows each ball's channels under it — the base colour alone, then the texture alone

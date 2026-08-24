@@ -47,7 +47,7 @@ const LIGHT_INK = MARKS.light;
 // hatch, scribble, stipple, light. A goofy material renders a step its own way — graphite changes technique step by step (cross-hatch →
 // hatch → a wavy scribble → stipple → one thin set three gaps apart), ink, oil and charcoal change how much of their texture they
 // lay down. **No step lays nothing**: half the board's surfaces are pale, and a material invisible there is a material unused.
-// The step a part gets comes from its color's darkness (valueStep), nudged one step by the hand — the `density` slot.
+// A part draws at the step its creature's `density` slot names (stepOf); the medium page names one outright per ball.
 // A step is in the **colour** first and the marks second: it pulls the base toward the technique's own tone (texture.pull) and then
 // lays the marks on top. Carried by marks alone it did not survive the board — the fine ones fall under a device pixel there and the
 // five steps came out 0.7~4.4 of luminance apart on three of the four materials, one flat colour to the eye
@@ -58,21 +58,19 @@ export const VALUES = [
   { name: "stipple", v: 0.5 },
   { name: "light", v: 0.34 }
 ];
-// The step a color lands on **and what the hand could not spend on it**. A light hand on an already-pale surface, or a heavy one on
-// an already-black surface, asks for a step the scale does not have and is clamped — a third of the density slot drew exactly like
-// normal. What the hand cannot move it spends on the **amount** instead: hardness, which every texture multiplies its marks by
-export function valueHand(color, hand = "normal") {
-  const wanted = valueStep(color, "normal") + (hand === "light" ? 1 : hand === "dense" ? -1 : 0);
-  const step = Math.max(0, Math.min(VALUES.length - 1, wanted));
-  return { value: step, hardness: wanted === step ? 1 : wanted > step ? 0.72 : 1.35 };
+// The step a name asks for. The `density` slot holds one of the five outright (character/vocabulary/slots.js), so every step is
+// reachable on any creature — a pale skin can be hatched black and a black one grazed light, and the colour decides the marks'
+// tone rather than how many there are. An unknown name is the middle rung
+export function stepOf(name) {
+  const i = VALUES.findIndex((v) => v.name === name);
+  return i < 0 ? 2 : i;
 }
 
-// The value step a color asks for — its darkness — moved one step by the hand: a light hand one step lighter, a heavy one darker
-export function valueStep(color, hand = "normal") {
+// The step a color would ask for on its own — its darkness. Only the fallback for a caller that names no step (the medium page's
+// untextured ball); on the board the step is the creature's, from its density slot (stepOf, above)
+function valueStep(color) {
   const lum = luminance(color);
   let i = lum < 70 ? 0 : lum < 120 ? 1 : lum < 160 ? 2 : lum < 200 ? 3 : 4;
-  if (hand === "dense") i -= 1;
-  if (hand === "light") i += 1;
   return Math.max(0, Math.min(VALUES.length - 1, i));
 }
 
@@ -150,17 +148,17 @@ function rules(points, angle, gap, jitter) {
 // Fills with a named goofy material — its base color (with the part's pattern, if any), then its texture at a value step, every mark
 // clipped to the contour. offset prints the base out of register (a creature's fillOffset). pattern: { kind, color } — the creature's
 // pattern, part of the base color. decals: [{ path, color }] — color regions that take their edge from the host's outline (the
-// calico; guidelines/drawing.md § decals), painted in the base too, so the texture passes over them. hand: the creature's density
-// slot, one step lighter or darker on the value scale; value: a step index given outright (the medium page's rows). only: "base" or
+// calico; guidelines/drawing.md § decals), painted in the base too, so the texture passes over them. value: the step to draw at
+// (draw/body.js reads the creature's density slot; the medium page's rows name one). only: "base" or
 // "texture" draws that channel alone. strip: [left, right] — the base is cut as a strip between the two rails instead of a fan from the
 // centre (a tube that bones will bend: the tail); the contour (points) still clips the texture. Every tone is a shade of the part's color —
 // the goofy material knows no colors of its own
-export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, decals = [], hand = "normal", value, hardness = 1, strip, stripT, skinT } = {}) {
+export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, decals = [], value, strip, stripT, skinT } = {}) {
   // stripT(i) / skinT: the skin tags of the base — per rung of a strip, or one t for a fill (a bead on the tail); the texture's marks stay untagged
   const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, offset, stripT) : sketch.fill(points, c, offset, skinT));
   const m = GOOFY_MATERIALS[name];
   if (!m) throw new Error(`unknown goofy material: ${name}`);
-  const step = value === undefined ? valueStep(color, hand) : value;
+  const step = value === undefined ? valueStep(color) : value;
   const V = VALUES[step];
   const wantBase = only === undefined || only === "base";
   if (m.base.kind === "flat" && !m.texture) {   // the fill-up alone — no randomness, the phase untouched (the pattern strokes advance it as any stroke does)
@@ -250,7 +248,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
             t = f.lift ? end + f.lift.gap[0] + (f.lift.gap[1] - f.lift.gap[0]) * r(4) : total;
           }
         };
-        const hatchAt = (angle, gap, width) => rules(points, angle, gap / hardness, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => liftedRule([p, q], i, width));
+        const hatchAt = (angle, gap, width) => rules(points, angle, gap, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => liftedRule([p, q], i, width));
         if (V.name === "black") {
           hatchAt(f.angle, f.gap * 0.75, f.width * 1.1);
           hatchAt(f.angle - 0.95, f.gap * 0.8, f.width);
@@ -271,7 +269,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
             liftedRule(pts, i + 500, f.width);
           });
         } else if (V.name === "stipple") {
-          dust(sketch, points, b, { per: 1500 * hardness, size: [0.0018, 0.003] }, h, contrast(f.tone * 0.85), holdTag);
+          dust(sketch, points, b, { per: 1500, size: [0.0018, 0.003] }, h, contrast(f.tone * 0.85), holdTag);
         } else {
           // light — the pencil barely touches: one set of rules three gaps apart, thin and pale. Not a bare ground: half the
           // board's surfaces land on this step, and a material that lays nothing there is a material you cannot see
@@ -287,7 +285,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
         const open = 1 - cover;   // black 0.17 · hatch 0.49 · scribble 0.61 · stipple 0.75 · light 0.93
         const tone = contrast(f.tone * (0.9 + open * 0.3));   // an open step scratches lighter as well as more often
         const width = f.width * (0.6 + open * 0.5);
-        for (let i = 0; i < Math.round((f.lines * open) / hardness); i += 1) {   // a heavy hand leaves more ink on, so it opens it less
+        for (let i = 0; i < Math.round(f.lines * open); i += 1) {
           const angle = u(i) * Math.PI;
           const o = (u(i + 50) - 0.5) * b.r * 1.4;
           const dx = Math.cos(angle), dy = Math.sin(angle);
@@ -313,7 +311,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
         const stepTones = f.tones.map((t) => t + shift);
         const lift = dark ? 1 - Math.min(...stepTones) : 0;
         const tones = stepTones.map((t) => hexToRgb(dark ? tone(1 + (t + lift - 1) * 1.6) : tone(t)));
-        const count = Math.round(f.per * (0.35 + weight * 1.0) * hardness * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
+        const count = Math.round(f.per * (0.35 + weight * 1.0) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
         const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
         for (let i = 0; i < count; i += 1) {
           const cx = b.x0 + (b.x1 - b.x0) * h(i * 4);
@@ -331,7 +329,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
         break;
       }
       case "speckle": {
-        dust(sketch, points, b, { ...f, per: f.per * (0.4 + V.v * 0.8) * hardness }, h, contrast(f.tone), holdTag);   // black: thick dust · light: a few specks
+        dust(sketch, points, b, { ...f, per: f.per * (0.4 + V.v * 0.8) }, h, contrast(f.tone), holdTag);   // black: thick dust · light: a few specks
         break;
       }
       default:
