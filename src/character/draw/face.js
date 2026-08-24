@@ -200,16 +200,18 @@ export function drawFace2(ink, fills, spec, box, eyes) {
   const ink0 = spec.faceInk || spec.palette.ink;
 
   if (kind === "tears") {
-    // Two lines running down below the eye. A detail seen often in the reference.
+    // Two waves running down below the eye — a trickle, not a straight fall. A detail seen often in the reference.
+    // Handed over as nine points so the pen's own re-sample (PENCIL.step) has a curve to follow rather than three corners
+    const drop = box.headRy * 0.52;
     for (const eye of eyes) {
       if (patched(spec, eye)) continue;
       for (const off of [-0.35, 0.35]) {
         const x = eye.x + eye.r * off;
-        ink.line([
-          [x, eye.y - eye.r * 0.9],
-          [x + 0.008, eye.y - eye.r * 0.9 - box.headRy * 0.3],
-          [x - 0.004, eye.y - eye.r * 0.9 - box.headRy * 0.52]
-        ], { color: ink0, size: "S" });
+        const top = eye.y - eye.r * 0.9;
+        ink.line(Array.from({ length: 9 }, (_, i) => {
+          const t = i / 8;
+          return [x + Math.sin(t * Math.PI * 1.5) * 0.007, top - drop * t];   // starts on the eye, swings twice on the way down
+        }), { color: ink0, size: "S" });
       }
     }
     return;

@@ -219,7 +219,7 @@ A cat nose is a **pink** fill (the same color as the blush and tongue) plus a fa
 the nose, being an object, is always black but gets a light rim over a dark muzzle (the same rule as the eyepatch, [rules.md](rules.md)).
 
 ### face2 — cheeks and the eye area (3)
-none / tears (two lines below the eye — **humans do not have them**, forbid → none; they belong to imps) / blush (a pink ellipse on the cheek). The cheeks sit below the (startle-widened) eye.
+none / tears (two **waves** running down below the eye, a trickle rather than a straight fall — **humans do not have them**, forbid → none; they belong to imps) / blush (a pink ellipse on the cheek). The cheeks sit below the (startle-widened) eye.
 
 Cat **whiskers** are not a slot but fixed per species (`drawWhiskers`) — three strands per side in a slightly drooping fan. The length is per individual (0.42~0.92× the head's half-width), so
 over half of all cats have whiskers **poking out through the head outline** (being on the face layer at 2.4, they sit above the outline and ears and reach onto the paper).
