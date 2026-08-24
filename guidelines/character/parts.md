@@ -280,28 +280,12 @@ and a narrow body draws the legs together. The shoulder position (on the torso o
 `BUILD` (biped) and `QUAD_BUILD` (quad) in `layout()`. `LATE_SLOTS`. Default weights medium 4 · narrow 1.5 · wide 1.5 · skinny 1 · small 1.
 Gallery: `gallery.html?slot=build&fix=legLength:long`.
 
-### pattern (7) — the surface, not a part. **The line patterns are the imps'**
-The five line kinds — stripes (3 horizontal lines) / dots (4 dots) / patch (hatching on the left) / hatch (diagonals over the whole
+### pattern (6) — the surface, not a part. **The patterns are the imps'**
+The five kinds — stripes (3 horizontal lines) / dots (4 dots) / patch (hatching on the left) / hatch (diagonals over the whole
 thing) / spots (3 dalmatian spots) — are **forbidden outside imps** (species.js: they fall to none for humans, cats and dogs), so a
-pattern on the board reads as an imp's marking. **calico is not one of them** and keeps its own rule below: it is decals, colour
-regions in the base, and it stays with the cats and the dogs. none / **calico** (the tricolor patch — below).
-The five line kinds are drawn **over** the goofy material, last of all and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `medium/materials.js`; light ink when the body color's luminance < 120), under the goofy material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
-
-**calico — the tricolor patch (dogs and cats only, filled).** Not lines but **color patches**, and they are on the body, head and ear alike. Every color is inside the palette (`calicoColors`, wobbleSeed, no rng):
-the base is the skin as-is (when it is calico, spec.js withholds black fur to guarantee **a light base**), the black patch is one of FURS, and the middle tone is `CALICO_MID` (a warm tan, luminance 139 —
-where a real calico's orange goes. Not a saturated accent, so it does not count against the per-board cap). A cat gets three (base + tan + black) and a dog two (base + black = piebald).
-
-| Place | Cat | Dog |
-| --- | --- | --- |
-| Body | Black wrapping the rump (the tail end) plus tan on the front of the belly | One big black at the rump |
-| Head | Black on the side, **a cap shape from the crown leaning that way**, plus a small tan on the opposite cheek | The black cap shape |
-| Ear | The ear on that side black (the inner mark in light ink) | The same |
-
-A patch is a **decal** ([../drawing.md](../drawing.md) § decals) — it **sits along the outline** (`decalAlong` — one stretch of the outline's point list is used as the outer edge and the inner side is pulled toward the centre and closed): the outer edge is exactly
-the outline, so nothing sticks out, and only the inner edge gets a thin line. The fill is a fan from the centre, so one patch is at most 130°. The front top of the body is hidden by the big head, so the patches go at
-the back end and the front of the belly. **A black patch must never reach the eyes or brows** — line eyes and brows are black ink and vanish on black. The placement coming down the side (100°~185°)
-caught the eyes on 158 of 600 creatures; the crown placement (left 75°~150° / right 30°~105°, depth 0.4) catches 0 — hence the cap shape. Tan keeps its contrast against ink, so the cheek is fine.
-It is in no human or imp bias (a color patch on a human body becomes a stain on clothes) — the gallery does not draw it either (`calicoColors` returns null).
+pattern on the board reads as an imp's marking. The sixth value is none. (A **calico** — the tricolor patch, colour regions painted
+into a cat's or a dog's base as decals — was here and was removed: the whole decal machinery went with it.)
+The five kinds are drawn **over** the goofy material, last of all and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `medium/materials.js`; light ink when the body color's luminance < 120), under the goofy material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
 
 ### legs (6)
 | Value | Biped | Quad (cat, dog) |
@@ -386,7 +370,7 @@ ends are **joints** (`line(…, { joint })`: no overshoot, no thinning); a thin-
 **tapers to a point** under the lines over 1.6 end-widths (a brush end — a disc and an arc of line were ink on ink) except block, which stays square.
 **Color and pattern.** The tail is the body's color (a quad's `cloth` — the head color or a tone of it), at the head's value step like the rest of the mass. A tube carries the creature's
 **pattern** (the `pattern` slot, [../drawing.md](../drawing.md) § what takes the goofy material) along itself — stripes as **rings**, dots and spots along the spine, hatch across it — in the
-body's pattern ink (light on dark fur). A thin line, a tuft, beads and a pom have no area for it; the calico's patches stay on the head and the body.
+body's pattern ink (light on dark fur). A thin line, a tuft, beads and a pom have no area for it.
 
 ### arms — form (5) — bipeds only
 | Value | Drawing |
@@ -434,7 +418,7 @@ species — a pale skin can be hatched black and a black one grazed light. Nothi
 that one step, head and body alike ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
 opaque, so neighbours still hide each other. Everything the creature fills takes a goofy material — the head, the body, the ears and their insides, the muzzle, the
 hands, boots and sleeves, the tail, the hats, the eyes, the nose, the mouth — the head's or, where `bodyMaterial` splits them, the
-body's ([../drawing.md](../drawing.md) § what takes the goofy material). The contour is not part of it (the goofy outline, PENCIL_STROKE). The calico's patches are decals in the base.
+body's ([../drawing.md](../drawing.md) § what takes the goofy material). The contour is not part of it (the goofy outline, PENCIL_STROKE).
 
 ## Render order
 

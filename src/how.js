@@ -16,7 +16,7 @@ import { makeRng, makeNoise } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
 import { runLoop, bindSeg } from "./ui.js";
 import { PAPER, INKS, FILLS, POPS, DARKS } from "./character/index.js";
-import { FURS, CALICO_MID, ACCENTS, MARKS } from "./character/vocabulary/palette.js";
+import { FURS, ACCENTS, MARKS } from "./character/vocabulary/palette.js";
 
 const TAU = Math.PI * 2;
 const INK = INKS[0];
@@ -107,7 +107,7 @@ swatches("paperink", [PAPER, ...INKS]);
 swatches("fillsRow", FILLS);
 swatches("pops", POPS);
 swatches("darks", DARKS);
-swatches("furs", [...FURS, CALICO_MID]);
+swatches("furs", FURS);
 swatches("accents", ACCENTS);
 swatches("marks", Object.values(MARKS));
 

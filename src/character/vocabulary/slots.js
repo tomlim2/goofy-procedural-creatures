@@ -41,8 +41,8 @@ export const SLOTS = {
   mouth: ["dot", "line", "open", "wave", "smile", "pout", "omega", "zigzag",
     "frown", "three", "grimace", "grin", "scribble", "tongue", "fangs", "shout", "meow", "blep", "bracket", "smug"],
   body: ["bean", "box", "dress", "tube"],
-  // Markings — five in line (stripes · dots · patch hatching · hatch · spots outlined) + one filled (calico, the tricolor patch — color patches on the body, head and ear; dogs and cats only)
-  pattern: ["none", "stripes", "dots", "patch", "hatch", "spots", "calico"],
+  // Markings — five, and all of them lines (stripes · dots · patch hatching · hatch · spots outlined), laid over the material. The imps' alone. Docs: character/parts.md § pattern
+  pattern: ["none", "stripes", "dots", "patch", "hatch", "spots"],
   // Leg types (form only). Reference: all of them end in a round foot and come out from under the body.
   // float is Rayman style — no legs, just floating feet. How far they open (the stance) is not here —
   // the torso build decides that. Quads only draw stub, stick, boots and float, and read the rest as stick.

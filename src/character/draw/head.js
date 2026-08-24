@@ -4,7 +4,7 @@ import { blobPath, arcPath } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark, mix } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
-import { calicoColors, materialOf, surfaceHand, headDecals, decalEdges, paintPart } from "./body.js";
+import { materialOf, surfaceHand, paintPart } from "./body.js";
 import { MARKS } from "../vocabulary/palette.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
@@ -20,15 +20,13 @@ export function drawHead(ink, fills, spec, box, noise) {
   });
 
   // The material slot — the creature's goofy material: how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
-  const decals = headDecals(spec, path, noise);   // the calico's cap and cheek — in the base, under the goofy material's texture
-  fills.paint(path, materialOf(spec), { color: spec.palette.skin, offset: spec.palette.fillOffset, decals, ...surfaceHand(spec) });
+  fills.paint(path, materialOf(spec), { color: spec.palette.skin, offset: spec.palette.fillOffset, ...surfaceHand(spec) });
 
   // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
 
   // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
   // The goofy outline — the contour role, PENCIL_STROKE today (medium/outlines.js), at the board's size M like the body's
   ink.contour(path, { color: spec.palette.ink });
-  decalEdges(ink, spec, decals);
   return path;
 }
 
@@ -145,13 +143,11 @@ export function drawCatEars(ink, fills, spec, box) {
   const innerFill = (seed >> 7) % 2 ? MARKS.blush : shade(skin, isDark(skin) ? 1.5 : 0.62);
   // The inner line is **a mark drawn on fur**, so it uses face ink — a black line on black fur is lost and invisible (the outline meets the background, so it stays black)
   const innerInk = spec.faceInk || ink0;
-  const cal = calicoColors(spec);   // on a calico, the ear on the side is black (the same side as the head decal — body.js headDecals)
   const boxy = headShape(spec).square >= 1.4;   // square and block — slightly inside the corner
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
   for (const side of [-1, 1]) {
-    const earDark = !!cal && cal.side === side;
-    const earFill = earDark ? cal.dark : skin;
-    const earInnerInk = earDark ? MARKS.light : innerInk;   // a mark on a black ear uses light ink (the face ink rule)
+    const earFill = skin;
+    const earInnerInk = innerInk;
     // The root on the outline (the real head shape) and, at that point, the outward normal n and tangent t (outward positive)
     const anchor = headAnchor(spec, box, theta, side);
     const bx = anchor.x, by = anchor.y, nx = anchor.nx, ny = anchor.ny;
@@ -203,7 +199,6 @@ export function drawPupEars(ink, fills, spec, box) {
   // Which face shows is the ear's pose: a standing ear (pointy, round, perk) shows its front with the inner patch on it, a hanging ear (flap, long)
   // shows its back, and the folded ear shows all three — the standing root (front, the inner patch on it) and the flap bent over it (back).
   // The folded ear always has its inner patch — the three colors are its design — so its "none" falls to pink or the tone
-  const cal = calicoColors(spec);   // on a piebald (calico), the ear on the side is black (the same side as the head patch)
   const earInk = { color: spec.palette.ink };   // the ears' line — the contour and the folded root's open line alike, at M
   const innerRoll = spec.proportions.wobbleSeed % 100;
   const innerTone = (fur) => (innerRoll < 45 || (innerRoll >= 75 && innerRoll % 2) ? mix(fur, "#f3ece0", 0.45) : MARKS.blush);
@@ -312,7 +307,7 @@ export function drawPupEars(ink, fills, spec, box) {
       const cy = by - Math.cos(tilt) * (len * 0.5 - 0.005);
       path = rotate(blobPath(cx, cy, 0.045, len * 0.5 + 0.02, { lumps: 3, amount: 0.12, noise: null }), cx, cy, -side * tilt);
     }
-    const fur = cal && cal.side === side ? cal.dark : spec.palette.skin;   // the front face — the dog's own color (a piebald's black on the patch side)
+    const fur = spec.palette.skin;   // the front face — the dog's own color
     const back = shade(fur, 0.86);                                          // the back face — a shade darker
     paintPart(fills, spec, path, hanging ? back : fur);   // the ear is fur — the creature's goofy material; a hanging ear shows its back
     // The inner ear — the ear shape scaled **about its root (where it meets the face)**. Its base attaches right at the root and it narrows going up

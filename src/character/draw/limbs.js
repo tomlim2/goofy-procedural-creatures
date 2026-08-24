@@ -382,7 +382,6 @@ export function tailSketch(spec, variant = 0) {
         sketch.line([[a.x - a.dy * w - a.dx * w * 0.5, a.y + a.dx * w - a.dy * w * 0.5], [a.x + a.dy * w + a.dx * w * 0.5, a.y - a.dx * w + a.dy * w * 0.5]], { color, size: "S", skinT: [t, t] });
       }
     }
-    // the calico's patch — not on the tail: its patches are decals on the head and the body
   };
   // The filled body along the whole spine — the fill, the pattern, then the two side lines. The lines run **fine** (0.7): a tube is a small part,
   // and at weight 1 the two lines ate a thin tail's width and its tip turned into a black knob. The root end of the lines is a joint (no overshoot

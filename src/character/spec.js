@@ -176,9 +176,8 @@ export function makeCreature(seed, speciesName = "human") {
     // The ink goes darker than the head — so the outline is not lost in it
     palette.ink = "#1c1917";
   } else if (species.name === "pup" || species.name === "cat") {
-    // Black-ish fur (about 1/3) — individuals with a color accent on the skin are left alone (the accent winning stands out more on the board).
-    // A calico (pattern calico) needs **a light base** for the patches to read, so it gets no black fur (the decision only — the rng calls are unchanged)
-    if (darkFur && !(palette.pop && palette.pop.target === "skin") && parts.pattern !== "calico") palette.skin = darkFur;
+    // Black-ish fur (about 1/3) — individuals with a color accent on the skin are left alone (the accent winning stands out more on the board)
+    if (darkFur && !(palette.pop && palette.pop.target === "skin")) palette.skin = darkFur;
     // Dogs and cats: half the time the body is exactly the head (fur) color; otherwise a tone in the same family
     if (bodyRoll < 0.5) palette.cloth = palette.skin;
     else if (bodyRoll < 0.8) palette.cloth = shade(palette.skin, 0.9);   // a slightly darker tone

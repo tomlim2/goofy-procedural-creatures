@@ -1,6 +1,6 @@
 // The goofy materials — what a surface is made of: how its area is filled. The tables (GOOFY_MATERIALS, VALUES) and the procedures that paint a
 // sketch with them. A Sketch delegates paint() here; nothing here imports stroke.js — the sketch is handed in.
-// Docs: guidelines/drawing.md § the goofy material, § values, § decals; how.html § the goofy material
+// Docs: guidelines/drawing.md § the goofy material, § values; how.html § the goofy material
 
 import { hexToRgb, shade, isDark, luminance, mix } from "../color.js";
 import { blobPath } from "../shape.js";
@@ -23,7 +23,7 @@ export const GOOFY_MATERIALS = {
   // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
   FLAT:        { base: { kind: "flat" } },
   // Graphite — the part's color hatched with the pencil (the reference's ground is paper because its color is paper; ours keeps the
-  // part's color — a lightened ground bleached pale parts and left them a different color from their decals and neighbours): rules
+  // part's color — a lightened ground bleached pale parts and left them a different color from their neighbours): rules
   // laid with the **side of the lead**, nearly upright and a little slanted, each one drawn as a few strokes — the pencil lifts and comes
   // down again (lift: the strokes' lengths and the gaps between), now and then doubled. Their spacing is the step's.
   // `tone` deepens the **ground** as the step works it; `mark` is what the rules themselves are drawn in — the same watering of the
@@ -154,13 +154,12 @@ function rules(points, angle, gap, jitter) {
 
 // Fills with a named goofy material — its base color (with the part's pattern, if any), then its texture at a value step, every mark
 // clipped to the contour. offset prints the base out of register (a creature's fillOffset). pattern: { kind, color } — the creature's
-// pattern, part of the base color. decals: [{ path, color }] — color regions that take their edge from the host's outline (the
-// calico; guidelines/drawing.md § decals), painted in the base too, so the texture passes over them. value: the step to draw at
+// pattern, part of the base color. value: the step to draw at
 // (draw/body.js reads the creature's density slot; the medium page's rows name one). only: "base" or
 // "texture" draws that channel alone. strip: [left, right] — the base is cut as a strip between the two rails instead of a fan from the
 // centre (a tube that bones will bend: the tail); the contour (points) still clips the texture. Every tone is a shade of the part's color —
 // the goofy material knows no colors of its own
-export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, decals = [], value, strip, stripT, skinT } = {}) {
+export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, value, strip, stripT, skinT } = {}) {
   // stripT(i) / skinT: the skin tags of the base — per rung of a strip, or one t for a fill (a bead on the tail); the texture's marks stay untagged
   const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, offset, stripT) : sketch.fill(points, c, offset, skinT));
   const m = GOOFY_MATERIALS[name];
@@ -171,7 +170,6 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   if (m.base.kind === "flat" && !m.texture) {   // the fill-up alone — no randomness, the phase untouched (the pattern strokes advance it as any stroke does)
     if (wantBase) {
       base(color);
-      for (const d of decals) sketch.fill(d.path, d.color, [0, 0], skinT);
       if (pattern) patternOn(sketch, points, pattern);   // over the fill, as it goes over a texture on the other materials
     }
     return;
@@ -233,7 +231,6 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   if (wantBase) {
     if (m.base.kind === "flat") base(m.base.tone === undefined ? pulled : shade(pulled, dark ? 0.92 : m.base.tone));
     else throw new Error(`goofy material ${name}: unknown base kind ${m.base.kind}`);
-    for (const d of decals) sketch.fill(d.path, d.color, [0, 0], skinT);   // the decals — part of the base color; the texture goes over them
   }
 
   // The pattern goes on **over** the material: it is the creature's own mark, not part of the surface, and under a hatched or

@@ -46,9 +46,6 @@ export const FURS = [
 ];
 export const FUR_POOL = [null, null, null, null, null, null, null, null, ...FURS];   // 4/12 ≈ 33%
 
-// The middle tone of a calico (the calico marking) — where a real calico's orange goes. The board is monotone, so instead of a saturated color it is **a warm tan** (luminance 139): it sits between the base
-// (FILLS 187~217, body tones ≥170) and the black fur (FURS 75~85), which keeps the three apart. It is not a color accent (POPS), so it does not count against the per-board cap
-export const CALICO_MID = "#a3866a";
 
 // **The fixed few** — colours that are not drawn from a pool. Every other colour on the board is picked by the seed; these five are
 // always themselves, because the thing they paint is always itself: a blush is pink, a tooth is white, a mark on a black part is

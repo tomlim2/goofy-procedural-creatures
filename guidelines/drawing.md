@@ -159,26 +159,12 @@ eye is not a surface the pencil touches) and the emoji, which are not a creature
 Adding a filled part means painting it through `paintPart`, never `fill` — a `fill` on a creature is a bug
 (it stands flat beside a hatched head).
 
-## Decals — what sits on a surface
+## Anchors — what stands on an outline
 
-A **decal** is a color region that takes its edge from its host's own outline — the way a decal is projected onto
-a surface and bounded by it. The calico's patches are decals (`decalAlong`, `bodyDecals`, `headDecals` in
-`draw/body.js`). The contract:
-
-1. The outer edge is **one stretch of the host outline's own points** (an angle and a span) — never a free curve,
-   so nothing sticks out and the decal wears the host's lumps
-2. The inner edge is **derived** from those points — pulled toward the centre by a depth that is 0 at both ends
-   and deepest in the middle, bumpy with noise — and the two close into one polygon (a fan fill, so the span
-   stays at or below 130°)
-3. It is painted **in the host's base color**, after the fill-up and the pattern and before the texture
-   (`paint(…, { decals })`) — so the goofy material's texture passes over it, as over the rest of the surface
-4. Its only line is its inner edge, drawn after the contour in the host's ink (`decalEdges`)
-5. It is placed by angle on the outline; on a head a dark decal stays out of the eye and brow zone
-   ([character/parts.md](character/parts.md) § pattern — the calico)
-
-The inner ear (the ear shape scaled about its root) and the roots of ears, horns and hair on the outline
-(`headAnchor`) are the same idea's neighbours — an **anchor** is a point on the real outline plus its normal —
-and are not under this contract yet.
+An **anchor** is a point on the real outline plus its normal there: the roots of ears, horns and hair are placed
+by one (`headAnchor`), so a part stands out of the head's own lumps rather than off an ellipse that only
+approximates it. The inner ear (the ear shape scaled about its root) follows the same idea. There is no written
+contract for them yet.
 
 ## The goofy material — how a surface is filled
 
@@ -229,7 +215,7 @@ material on a **dark ground**, which is where the rule above is visible.
 
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |
-| `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
+| `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5) |
 | `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, **in the light ink scratches with** (`mark`) over a ground the step deepens (`tone`) | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
 | `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter. On a color too pale to water it runs the other way — the ground laid on deeper, the scratch opening back to the color | the `material` slot (0.8) |

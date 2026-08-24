@@ -10,8 +10,7 @@ export const SPECIES = [
     // forbid means "if this value comes up for this slot, swap it for this". applyConstraints reads it and
     // overwrites deterministically — the archetype's disposition (a scholar's dot eyes and so on) survives.
     forbid: {
-      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material.
-      // A calico is not one of those: it is decals, colour regions in the base, and it stays where it belongs (cat, pup)
+      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       arms: { none: "stick" },   // humans have arms (armless belongs to imps)
       face2: { tears: "none" },  // tear marks are not given to humans (they belong to imps)
@@ -38,8 +37,7 @@ export const SPECIES = [
   {
     name: "pup",
     forbid: {
-      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material.
-      // A calico is not one of those: it is decals, colour regions in the base, and it stays where it belongs (cat, pup)
+      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid", perkBig: "perkMid" },
       // Dog ear boundary — none and the huge ear become dog ears
@@ -72,7 +70,6 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
-      pattern: [["none", 3], ["stripes", 2], ["patch", 2], ["spots", 2], ["dots", 1], ["calico", 1.5]],   // calico = piebald (a white base plus black patches)
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
       tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // dogs are thick or bushy (a spitz), and a rabbit-like pom too. wedge disabled
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
@@ -85,8 +82,7 @@ export const SPECIES = [
   {
     name: "cat",
     forbid: {
-      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material.
-      // A calico is not one of those: it is decals, colour regions in the base, and it stays where it belongs (cat, pup)
+      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
       // Cat ear boundary — floppy ears and none become crown ears
@@ -122,7 +118,6 @@ export const SPECIES = [
       // Mouth — ω dominates, then the flipped ω (smug), a pursed 3, line and dot, a meowing o (meow), a peeking tongue (blep). No wave and no smile (4 reference rows)
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
-      pattern: [["none", 3], ["patch", 3], ["stripes", 2], ["spots", 1], ["calico", 2]],   // calico = tricolor (base + tan + black patches, reaching the head and one ear)
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
       tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. wedge disabled
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
