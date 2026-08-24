@@ -9,7 +9,7 @@ import * as THREE from "three";
 import { Sketch } from "./stroke.js";
 import { blobPath, arcPath } from "./shape.js";
 import { GOOFY_MATERIALS, VALUES } from "./medium/materials.js";
-import { GOOFY_OUTLINES, BOARD_LINES } from "./medium/outlines.js";
+import { GOOFY_OUTLINES, BOARD_LINES, PEN_SIZES } from "./medium/outlines.js";
 import { GOOFY_FUR } from "./medium/fur.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise } from "./rng.js";
@@ -38,20 +38,27 @@ function fig(name, world, draw) { FIGS[name] = { name, world, draw }; }
 const col = (i) => (i - 1) * 0.5;
 
 // **The sample line.** One shape for every figure that shows a line, so the figures can be read against each other: a sine, handed
-// over smooth at 4 points per tenth of a unit. Each pen then samples it at its own step. It runs deep, and every figure that takes
-// it is given the height for it — the habits are read along the line's own edge, not off how tall the row is
+// over smooth at 6 points per tenth of a unit — a shade denser than a head contour (blobPath lays 48 round one) and well under
+// a mouth arc, so the row shows the density a part really hands over. Each pen then samples it at its own step. It runs deep,
+// and every figure that takes it is given the height for it — the habits are read along the line's own edge, not off how tall
+// the row is
 const sine = (x0, x1, amp, cycles = 1.5) => {
   const n = Math.max(9, Math.round((x1 - x0) * 60));
   return Array.from({ length: n + 1 }, (_, i) => [x0 + ((x1 - x0) * i) / n, Math.sin((i / n) * TAU * cycles) * amp]);
 };
 
+// Both pens at the whole ladder (medium/outlines.js PEN_SIZES) — S · M · L, the labels straight off it
+const SIZES = Object.entries(PEN_SIZES);
+const sizeLabels = SIZES.map(([name, width]) => `${name} · ${width}`);
+
 fig("ribbon", [-0.8, -0.16, 0.8, 0.16], (sk) => {
   const ink = sk();
-  [0.007, 0.012, 0.022].forEach((width, i) => {
+  SIZES.forEach(([, width], i) => {
     const x = col(i);
     ink.stroke(sine(x - 0.21, x + 0.21, 0.052), { color: INK, width });
   });
 });
+FIGS.ribbon.labels = sizeLabels;
 
 fig("clipart", [-0.85, -0.15, 0.85, 0.15], (sk) => {
   const ink = sk();
@@ -60,42 +67,26 @@ fig("clipart", [-0.85, -0.15, 0.85, 0.15], (sk) => {
   ink.stroke(wave(0.42), { color: INK, width: 0.012 });
 });
 
+// The hand — drawn with the pencil, which is what every line on the board is drawn with
 fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
   [0.45, 1, 1.9].forEach((wobble, i) => {
     const s = sk(wobble);                                             // one sketch per column — its own hand
     const x = col(i);
-    s.outline(blobPath(x, 0, 0.14, 0.12, { lumps: 5, amount: 0.08, noise, phase: 2 + i }), { color: INK, width: 0.011 });
-    for (const side of [-1, 1]) s.stroke([[x + side * 0.05 - 0.012, 0.03], [x + side * 0.05 + 0.012, 0.03]], { color: INK, width: 0.016, step: 0.008 });   // an eye is shorter than the 0.03 step — sample it finer or the taper takes it
-    s.stroke(arcPath(x, -0.03, 0.05, 0.035, Math.PI, TAU), { color: INK, width: 0.011 });
+    s.pencil(blobPath(x, 0, 0.14, 0.12, { lumps: 5, amount: 0.08, noise, phase: 2 + i }), { color: INK, width: 0.011, closed: true, paper: CARD });
+    for (const side of [-1, 1]) s.pencil([[x + side * 0.05 - 0.012, 0.03], [x + side * 0.05 + 0.012, 0.03]], { color: INK, width: 0.016, paper: CARD });   // shorter than 0.05 — the pencil keeps its ends and sheds nothing
+    s.pencil(arcPath(x, -0.03, 0.05, 0.035, Math.PI, TAU), { color: INK, width: 0.011, paper: CARD });
   });
 });
 
-// The pencil at three widths (its numbers in stroke.js PENCIL) — the same three the ribbon pen's figure shows
+// The pencil at the same ladder — the two pens are read against each other size for size
 fig("pencil", [-0.8, -0.16, 0.8, 0.16], (sk) => {
   const ink = sk();
-  [0.007, 0.012, 0.022].forEach((width, i) => {
+  SIZES.forEach(([, width], i) => {
     const x = col(i);
     ink.pencil(sine(x - 0.21, x + 0.21, 0.052), { color: INK, width, paper: CARD });
   });
 });
-
-// The same face twice — contour and smile in the ribbon pen, then in the pencil
-fig("twoLines", [-0.75, -0.2, 0.75, 0.2], (sk) => {
-  const s = sk();
-  [false, true].forEach((pen, i) => {
-    const x = (i - 0.5) * 0.72;
-    const head = blobPath(x, 0, 0.17, 0.15, { lumps: 5, amount: 0.08, noise, phase: 83 });
-    const smile = arcPath(x, -0.035, 0.06, 0.04, Math.PI, TAU);
-    if (pen) {
-      s.pencil(head, { color: INK, width: 0.012, closed: true, paper: CARD });
-      s.pencil(smile, { color: INK, width: 0.011, paper: CARD });
-    } else {
-      s.outline(head, { color: INK, width: 0.012 });
-      s.stroke(smile, { color: INK, width: 0.011 });
-    }
-    for (const side of [-1, 1]) s.stroke([[x + side * 0.06 - 0.012, 0.035], [x + side * 0.06 + 0.012, 0.035]], { color: INK, width: 0.016, step: 0.008 });
-  });
-});
+FIGS.pencil.labels = sizeLabels;
 
 fig("outline", [-0.75, -0.27, 0.75, 0.27], (sk) => {
   sk().outline(blobPath(0, 0, 0.42, 0.2, { lumps: 4, amount: 0.09, noise, phase: 7, square: 0.3 }), { color: INK, width: 0.012, passes: 2 });
@@ -208,7 +199,7 @@ function handedPoints(fills, ink) {
 // purpose — at the board's scale a pencil's quad is 3 px long
 function edgesOf(sketch, from, out, color) {
   const p = sketch.positions;
-  const edge = (ax, ay, bx, by) => out.pencil([[ax, ay], [bx, by]], { color, width: 0.0009, anatomy: {} });
+  const edge = (ax, ay, bx, by) => out.pencil([[ax, ay], [bx, by]], { color, width: 0.00045, anatomy: {} });
   for (let i = from; i + 9 <= p.length; i += 9) {
     edge(p[i], p[i + 1], p[i + 3], p[i + 4]);
     edge(p[i + 3], p[i + 4], p[i + 6], p[i + 7]);
@@ -219,18 +210,17 @@ function edgesOf(sketch, from, out, color) {
 // draw. Each pen then samples it at its own step — the coarse one cuts the curve into chords, the fine one follows it
 const CORNER = Array.from({ length: 49 }, (_, i) => [-0.12 + (i / 48) * 0.24, Math.sin((i / 48) * TAU * 1.5) * 0.028]);
 const MESH = FILLS[2];   // the shape in a pale tone, so the edges on top of it are what you read
-fig("quads", [-0.275, -0.062, 0.275, 0.062], (sk) => {
-  const shape = sk(), lines = sk();
-  [-1, 1].forEach((side) => {
-    const path = CORNER.map(([x, y]) => [x + side * 0.14, y]);
-    const from = shape.positions.length;
-    // Every habit off on both sides: same path, same width, so the only thing left to tell them apart is the normal
-    if (side < 0) shape.stroke(path, { color: MESH, width: 0.014, jitter: 0, anatomy: {} });
-    else shape.pencil(path, { color: MESH, width: 0.014, anatomy: {}, paper: CARD });
-    edgesOf(shape, from, lines, INK);
+// One per pen, one to a tab (how.html § the two pens). Every habit off on both: the same path at the same width,
+// so the only thing left to tell them apart is the normal
+["ribbonpen", "pencil"].forEach((pen) => {
+  fig(`quads:${pen}`, [-0.135, -0.05, 0.135, 0.05], (sk) => {
+    const shape = sk(), lines = sk();
+    if (pen === "ribbonpen") shape.stroke(CORNER, { color: MESH, width: 0.014, jitter: 0, anatomy: {} });
+    else shape.pencil(CORNER, { color: MESH, width: 0.014, anatomy: {}, paper: CARD });
+    edgesOf(shape, 0, lines, INK);
   });
+  FIGS[`quads:${pen}`].zoom = 2800;   // px per world unit — the seams are the subject here, so these two go past the 300 the rest keep to
 });
-FIGS.quads.zoom = 1500;   // px per world unit — the seams are the subject here, so this one is allowed past the 300 the rest keep to
 
 Object.entries(ANATOMY).forEach(([pen, rows]) => {
   const box = document.getElementById(`${pen}Anatomy`);
@@ -393,6 +383,18 @@ function paint(f) {
 for (const f of figures) paint(f);
 window.addEventListener("resize", () => { for (const f of figures) { f.width = 0; paint(f); } });
 statusLabel.textContent = `${figures.length} FIGURES`;
+
+// The two pens are tabs (how.html § the two pens). A hidden panel measures 0 wide, so paint() skips its
+// figures until it is shown — reveal one and its figures are repainted, their cached width dropped so the
+// canvas sizes against the panel that is now actually laid out. Which panel starts open is the markup's
+// (`hidden` on the other, `.on` on its button), so nothing has to run here on load.
+const PENS = ["pencil", "ribbonpen"];
+const penPanel = (name) => document.getElementById(`pen-${name}`);
+bindSeg(document.getElementById("penSeg"), "pen", (value) => {
+  for (const name of PENS) penPanel(name).hidden = name !== value;
+  const shown = penPanel(value);
+  for (const f of figures) if (shown.contains(f.el)) { f.width = 0; paint(f); }
+});
 
 // Ink — the board's own axis (rig.md § pose and ink): STILL pins boil frame 0, BOIL cycles. Still by default —
 // a legend is read, not watched — except the boil's own figure, which is the demonstration and always cycles

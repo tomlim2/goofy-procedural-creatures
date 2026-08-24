@@ -7,6 +7,11 @@
 // anything shorter than PENCIL.stub and sheds nothing there (stroke.js), so a dot drawn as a line stays its own length.
 // One pen draws them all: stroke.js pencil() — it wanders, breathes, runs past its ends and sheds; closed, one seamless loop.
 // `pen` names the hand that draws a kind, for when a second pen comes back
+// The pen sizes — the width ladder, small · medium · large, for either pen. The board's own line is **M**
+// (PENCIL_STROKE below); S and L are the same pen held finer or fatter. The medium page draws each pen at all
+// three, so the figure and the ladder cannot drift apart
+export const PEN_SIZES = { S: 0.007, M: 0.012, L: 0.022 };
+
 export const GOOFY_OUTLINES = {
   // The pencil's stroke — full width, laid once. Mass: what every line on the board is
   PENCIL_STROKE: { pen: "pencil", width: 0.012, passes: 1 },

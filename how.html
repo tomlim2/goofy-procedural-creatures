@@ -76,107 +76,119 @@ the rig's shut and smiling lids, and the dots and dashes — the teeth strip's e
 dot mouth, the boot's toe lines, a tail's rings and spines, a pom's claw, a beret's nub, the philtrum, the sleeping <b>z z</b> —
 fine 0.6 for the thinnest, 1.3 for lids, muzzle lines and horns, 1.6 for a stub tail.</p>
 
-<!-- ---------------- the pencil ---------------- -->
-<h3>the pencil — PENCIL_STROKE · PENCIL_SLINE · PENCIL_BROKEN</h3>
-<p>The spine wanders on two sines per world length, the width breathes on two more, the ends run past where they stop
-instead of pinching, and a line thick enough sheds: ink crumbs on the edge, paper-coloured bites inside. A closed pencil
-line is seamless — its sines snap to whole cycles and it never overshoots. Every number is in <code>PENCIL</code> in
-<code>src/stroke.js</code>. The ink is opaque, which is what lets the creature in front hide the one behind.</p>
-<p>Three kinds are this one pencil, told apart by the hold. <b>PENCIL_STROKE</b> is full width, laid once: every contour and
-every open line on the board. <b>PENCIL_SLINE</b> is a hairline, and <b>the pen lifts</b>: a skip every forty-eight
-widths, one to three widths long — measured in widths, like the overshoot, so a fine line skips finely instead of turning into a
-dashed one. Never within three widths of an end, and none at all on a line under eight of them, so a dot or a dash keeps its whole
-extent.
-<b>PENCIL_BROKEN</b> is the <b>ghost</b> habit stacked — two of them at 0.62 of the width and a fifth of the ink, each wandering,
-breathing and slipping half a width to a width and a half off the line, which is laid last on top of them. SLINE and BROKEN are built and on nothing; the switch above says what the board draws.</p>
-<p>A dot or a dash needs no kind of its own. The pencil <b>keeps the ends of anything shorter than 0.05 and sheds nothing there</b>:
-an overshoot would run a dot half again to twice as long, and a crumb is the size of the dot. A dot is a line that came out
-short, and nothing else.</p>
-
-<p>One habit per row, each row the row above plus one, all of them on the same sine every line figure on this page is handed.
-The sixth row is the whole pencil, which is what <b>PENCIL_STROKE</b> is; the seventh adds the <b>ghost</b>, and stacking that one
-is what makes <b>PENCIL_BROKEN</b>.</p>
-
-<div class="anatomy" id="pencilAnatomy"></div>
-
-<div class="figs">
-  <figure data-fig="pencil">
-    <canvas></canvas>
-    <div class="subs"><span>width 0.007</span><span>0.012</span><span>0.022</span></div>
-    <figcaption><b>s.pencil</b> — three widths. Width is the maximum: the breath and the end taper take it down from there.</figcaption>
-  </figure>
+<!-- ---------------- the two pens ---------------- -->
+<h3>the two pens</h3>
+<div class="seg pens" id="penSeg" role="group" aria-label="Pen">
+  <button data-pen="pencil" class="on">PENCIL</button>
+  <button data-pen="ribbonpen">RIBBON PEN</button>
 </div>
 
-<!-- ---------------- the ribbon pen ---------------- -->
-<h3>the ribbon pen — off the table</h3>
-<p>WebGL draws no thick line, so nothing here is a line: every stroke is a <b>filled triangle ribbon</b>. Four habits have to
-be present together — even re-sampling, noise along the normal (a slow bend and a fine tremor), an end taper, uneven pressure
-through the middle. Drop one and it reads as clip art. The ribbon pen is no kind and no role draws with it; two things still
-call it directly — a hat's <b>band</b> and an emoji's glyph outline. Its taper goes to nothing at both ends, so it draws nothing
-shorter than its 0.03 re-sample step; stubs are the pencil's.</p>
+<div class="pen" id="pen-pencil">
+  <p>A stroke is no line — WebGL draws none thick enough. It is a chain of <b>quads</b>: two samples make four
+  corners, each pushed to both sides along its <b>normal</b> by the half width, cut into two triangles. The pencil takes
+  one normal <b>per point</b> and hands it to the quads on both sides, so a corner closes; on a closed line the last
+  quad joins the first, which is the seam it does not have.</p>
 
-<p>The same line, one habit per row:</p>
+  <div class="figs">
+    <figure data-fig="quads:pencil" class="wide">
+      <canvas></canvas>
+      <div class="subs"><span>a normal per point — the corners close</span></div>
+      <figcaption><b>the quads</b> — every habit switched off, magnified far past the board's scale. Each hairline is
+      one triangle edge, read back out of the triangles the pen just wrote: the rungs are where two quads meet, the
+      diagonals where each quad is cut in two.</figcaption>
+    </figure>
+  </div>
 
-<div class="anatomy" id="ribbonpenAnatomy"></div>
+  <p><b>PENCIL_STROKE · PENCIL_SLINE · PENCIL_BROKEN</b> — one pencil, three holds. Its sines run per world length rather
+  than per line, so the wander comes out the same size wherever it lands; a closed line snaps them to whole cycles and never
+  overshoots, which is the rest of why it has no seam. Every number is in <code>PENCIL</code> in <code>src/stroke.js</code>.
+  The ink is opaque, which is what lets the creature in front hide the one behind.</p>
 
-<div class="figs">
-  <figure data-fig="ribbon">
-    <canvas></canvas>
-    <div class="subs"><span>width 0.007</span><span>0.012</span><span>0.022</span></div>
-    <figcaption><b>s.stroke</b> — three widths. Re-sampled every 0.03, bent by two noises, pinched at both ends,
-    pressed unevenly in the middle.</figcaption>
-  </figure>
+  <p><b>PENCIL_STROKE</b> is full width, laid once: every contour and every open line on the board. <b>PENCIL_SLINE</b> is a
+  hairline, and <b>the pen lifts</b> — the skips are measured in widths, like the overshoot, so a fine line skips finely
+  instead of turning into a dashed one, and none falls near an end or on a line too short to spare it. <b>PENCIL_BROKEN</b>
+  is the <b>ghost</b> habit stacked: two of them thinner and fainter, each slipping sideways off the line, which goes down
+  last on top. SLINE and BROKEN are built and on nothing; the switch above says what the board draws.</p>
 
-  <figure data-fig="clipart">
-    <canvas></canvas>
-    <div class="subs"><span>jitter 0 — clip art</span><span>the hand</span></div>
-    <figcaption><b>the four habits</b> — the same stroke with its noise off, on the left. Taper and pressure alone are
-    not enough: without the wobble the line is dead.</figcaption>
-  </figure>
+  <p>A dot or a dash needs no kind of its own: the pencil <b>keeps the ends of anything shorter than 0.05 and sheds nothing
+  there</b>, because an overshoot would run a dot half again to twice as long and a crumb is the size of the dot.</p>
 
-  <figure data-fig="outline" class="wide">
-    <canvas></canvas>
-    <div class="subs"><span>passes 2 — the two never quite agree</span></div>
-    <figcaption><b>s.outline</b> — the closed stroke laid twice. Each pass re-rolls its jitter phase, so the doubled
-    line is the contour's texture. PENCIL_BROKEN is the same idea in the pencil, at three passes.</figcaption>
-  </figure>
+  <p>One habit per row, each row the row above plus one. The sixth is the whole pencil — that is <b>PENCIL_STROKE</b>; the
+  seventh adds the <b>ghost</b>, and stacking that is <b>PENCIL_BROKEN</b>.</p>
+
+  <div class="anatomy" id="pencilAnatomy"></div>
+
+  <div class="figs">
+    <figure data-fig="pencil">
+      <canvas></canvas>
+      <div class="subs"></div>
+      <figcaption><b>s.pencil</b> — the pen at each size of <code>PEN_SIZES</code>. The board draws at <b>M</b>. Width is
+      the maximum: the breath and the end taper take it down from there.</figcaption>
+    </figure>
+  </div>
+
+  <div class="figs">
+    <figure data-fig="hands" class="wide">
+      <canvas></canvas>
+      <div class="subs"><span>wobble 0.45</span><span>1.0</span><span>1.9</span></div>
+      <figcaption><b>every individual has a different hand</b> — <code>proportions.wobble</code> multiplies the jitter
+      per creature. Some come out neat and some a mess; on one constant the whole board falls into the same
+      handwriting.</figcaption>
+    </figure>
+  </div>
+
 </div>
 
-<!-- ---------------- both pens ---------------- -->
-<h3>both pens</h3>
-<p>Both take their noise from the individual's own hand, and both come out of the same triangle buffer: a stroke is a chain of
-<b>quads</b>. Two samples make four corners — each sample pushed to both sides along its <b>normal</b> by the half width — and the
-four are cut into two triangles. A 350 px line is about 117 of them. Where the two pens part company is the normal: the ribbon pen
-takes one <b>per segment</b>, so at a corner the two quads meet at different angles and the outside opens a wedge; the pencil takes
-one <b>per point</b> and hands it to the quads on both sides, so the corner closes. On a closed pencil line the last quad joins the
-first, which is why it has no seam.</p>
+<div class="pen" id="pen-ribbonpen" hidden>
+  <p>A stroke is no line — WebGL draws none thick enough. It is a chain of <b>quads</b>, two triangles each. The ribbon
+  pen takes one normal <b>per segment</b>, so at a corner the two quads arrive at different angles: the outside of a
+  bend opens a wedge and the inside laps over itself.</p>
 
-<div class="figs">
-  <figure data-fig="quads" class="wide">
-    <canvas></canvas>
-    <div class="subs"><span>ribbon pen · a normal per segment</span><span>pencil · a normal per point</span></div>
-    <figcaption><b>the quads</b> — the same line, the same width, every habit switched off, magnified far past the board's
-    scale. Each hairline is one triangle edge, read back out of the triangles the pen just wrote: the rungs are where two quads
-    meet, the diagonals are where each quad is cut into its two triangles. Watch the turns — on the left the quads arrive at
-    different angles, so the outside of a bend opens a wedge and the inside laps over itself; on the right they share the point's
-    normal and stay closed. Nine quads against twenty-seven: the pencil re-samples three times as often, so the coarse one cuts the
-    curve into chords while the fine one follows it.</figcaption>
-  </figure>
+  <div class="figs">
+    <figure data-fig="quads:ribbonpen" class="wide">
+      <canvas></canvas>
+      <div class="subs"><span>a normal per segment — the bends open</span></div>
+      <figcaption><b>the quads</b> — the same line at the same width as the pencil's, every habit off, magnified the
+      same. Nine quads against the pencil's twenty-seven: it re-samples a third as often, so it cuts the curve into
+      chords where the pencil follows it.</figcaption>
+    </figure>
+  </div>
 
-  <figure data-fig="hands">
-    <canvas></canvas>
-    <div class="subs"><span>wobble 0.45</span><span>1.0</span><span>1.9</span></div>
-    <figcaption><b>every individual has a different hand</b> — <code>proportions.wobble</code> multiplies the jitter
-    per creature. Some come out neat and some a mess; on one constant the whole board falls into the same handwriting.</figcaption>
-  </figure>
+  <p><b>Off the table.</b> Four habits have to
+  be present together — even re-sampling, noise along the normal (a slow bend and a fine tremor), an end taper, uneven pressure
+  through the middle. Drop one and it reads as clip art. The ribbon pen is no kind and no role draws with it; two things still
+  call it directly — a hat's <b>band</b> and an emoji's glyph outline. Its taper goes to nothing at both ends, so it draws nothing
+  shorter than its 0.03 re-sample step; stubs are the pencil's.</p>
 
-  <figure data-fig="twoLines">
-    <canvas></canvas>
-    <div class="subs"><span>the ribbon pen</span><span>the pencil</span></div>
-    <figcaption><b>the same face twice</b> — the ribbon pen laid twice on the left, the pencil on the right. The
-    pencil's loop has no seam, and its quads share one normal per point, so it cannot crack at a corner.</figcaption>
-  </figure>
+  <p>The same line, one habit per row:</p>
+
+  <div class="anatomy" id="ribbonpenAnatomy"></div>
+
+  <div class="figs">
+    <figure data-fig="ribbon">
+      <canvas></canvas>
+      <div class="subs"></div>
+      <figcaption><b>s.stroke</b> — the same three sizes as the pencil's, so the two pens read against each other size for
+      size. Re-sampled every 0.03, bent by two noises, pinched at both ends, pressed unevenly in the middle.</figcaption>
+    </figure>
+
+    <figure data-fig="clipart">
+      <canvas></canvas>
+      <div class="subs"><span>jitter 0 — clip art</span><span>the hand</span></div>
+      <figcaption><b>the four habits</b> — the same stroke with its noise off, on the left. Taper and pressure alone are
+      not enough: without the wobble the line is dead.</figcaption>
+    </figure>
+
+    <figure data-fig="outline" class="wide">
+      <canvas></canvas>
+      <div class="subs"><span>passes 2 — the two never quite agree</span></div>
+      <figcaption><b>s.outline</b> — the closed stroke laid twice. Each pass re-rolls its jitter phase, so the doubled
+      line is the contour's texture. PENCIL_BROKEN is the same idea in the pencil, at three passes.</figcaption>
+    </figure>
+  </div>
+
 </div>
+
 </section>
 
 <!-- ================================================================ -->

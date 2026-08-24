@@ -61,7 +61,7 @@ normal per point, so it never cracks at a corner. `paper` is the color the bites
 color when the line runs over a fill. Not for dots: the overshoot lengthens them.
 
 The head and body contours draw with it, as the PENCIL_STROKE goofy outline (below); the medium page (`/how.html`
-§ the goofy outline) shows it next to `stroke()`. Switching another part onto it is a drawing change like any other —
+§ the two pens) holds it and `stroke()` a tab apart. Switching another part onto it is a drawing change like any other —
 `drawdiff` will show it, and the audit has to stay at 0.
 
 ## The outline — what a line is drawn with

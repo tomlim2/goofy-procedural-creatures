@@ -137,7 +137,7 @@ export const TOOTH = 0.3;
 
 
 // The anatomy switch — which of a line's habits are on. **Only the medium page passes it** (how.js: the rows that build a line up one
-// habit at a time, how.html § the pencil / § the ribbon pen); everything else leaves it out and draws with all of them, so nothing on
+// habit at a time, how.html § the two pens); everything else leaves it out and draws with all of them, so nothing on
 // the board can lose a habit by accident. A habit left out here is left out of the drawing, not faked
 const ALL_HABITS = { wander: true, breathe: true, over: true, shed: true, taper: true, press: true };
 
