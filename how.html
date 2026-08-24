@@ -35,17 +35,15 @@ on its own clock, drawn as if by hand. The same seed gives the same board every 
 step: <a href="./index.html">the board is here</a>, <a href="https://github.com/tomlim2/goofy-procedural-creatures">the code is
 here</a>.</p>
 
-<p class="lede">This page is the <b>medium</b> — what the creatures are drawn <i>with</i>, on three axes: the <b>goofy outline</b> —
-what a creature's lines are drawn with — the <b>goofy material</b> — how its surfaces are filled — and the <b>goofy fur</b> —
-how its hair is grown — and the shapes and colours it is all made of. No textures, no brush images: the hand comes from rules.
-It is all <b>three.js</b> (WebGL) and there is no 2D canvas anywhere — every stroke and every fill is triangles, one geometry per
-layer, and the boil is a set of pre-drawn variants shown in turn.</p>
+<p class="lede">This page is the <b>medium</b> — what they are drawn <i>with</i>, on three axes: the <b>goofy outline</b>, the
+<b>goofy material</b> and the <b>goofy fur</b>, plus the shapes and colours. No textures and no brush images; the hand comes from
+rules. It is all three.js, every stroke and fill a triangle.</p>
 
 <p class="lede"><b>Every figure below is drawn live by the code that draws the creatures</b> — the same
-<a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/stroke.js"><code>src/stroke.js</code></a> and <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/"><code>src/medium/</code></a>, at
-the board's own scale — so nothing here can drift from what the board does. The figures hold still; <b>INK BOIL</b> in the header
-(or <code>I</code>) sets their lines boiling at the board's own pace, and a <b>reload</b> draws every one of them again in another
-hand.</p>
+<a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/stroke.js"><code>src/stroke.js</code></a> and
+<a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/"><code>src/medium/</code></a>, at the board's
+own scale, so nothing here can drift from what the board does. <b>INK BOIL</b> (or <code>I</code>) sets them boiling; a reload
+draws them all in another hand.</p>
 
 <!-- ================================================================ -->
 <section>
@@ -70,14 +68,12 @@ One line each, the same path:</p>
   <button id="again">AGAIN</button>
 </div>
 
-<p class="note">A kind also draws at a <b>size</b> — <b>S · M · L</b>, and <b>every kind names its own three</b>
-(<code>medium/outlines.js</code>): STROKE 0.007 · 0.012 · 0.022, SLINE 0.003 · 0.005 · 0.008, BROKEN 0.006 · 0.011 ·
-0.020. A ladder is the kind's own rather than a multiple of one width, because SLINE is a hairline and a hairline blown
-up to STROKE's L stops being one. <b>A size is the only way a width is said</b> — there is no multiplier on top, so a width
-that is not on a kind's ladder cannot be drawn and the board's line weights stay countable. Most lines are M; fine detail asks
-for S, and one line on the board asks for L. The hold does not change with the size, only the width: SLINE still lifts at L,
-BROKEN still stacks its ghosts at S.
-<b>AGAIN</b> draws all three in another hand.</p>
+<p class="note">A kind also draws at a <b>size</b> — S · M · L, <b>each kind naming its own three</b>: STROKE 0.007 · 0.012 ·
+0.022, SLINE 0.003 · 0.005 · 0.008, BROKEN 0.006 · 0.011 · 0.020. A ladder is the kind's own rather than a multiple of one width,
+because a hairline blown up to STROKE's L stops being a hairline. <b>A size is the only way a width is said</b> — no multiplier on
+top, so a width that is not on a ladder cannot be drawn. Most lines are M, fine detail S, and two lines on the whole board L. The
+hold does not change with the size: SLINE still lifts at L, BROKEN still stacks its ghosts at S. <b>AGAIN</b> redraws in another
+hand.</p>
 
 <h3>in use on the board</h3>
 <p>The two rows read the switch live: 45 contours and 119 open lines, at three widths and no others, so no creature
@@ -86,15 +82,9 @@ as a thick stroke, a fill in disguise), the emoji glyphs, and the marks a goofy 
 the medium's own, not a creature's lines. All of them the same pencil.</p>
 
 <div class="figs" id="outlineUse"></div>
-<p class="note"><b>contour</b> — 45: the head, the bodies, the ears (all kinds, and the cat's and dog's), the helmet, cap and brim, beret and pot,
-the horn tip, the hands, boots and sleeves, the tail's tuft, pom and beads, the hair loops, bun and twintail balls, the eye rings and eyewear, the nose,
-the mouth's grid, tongue and fangs, the static eyes, the star and heart eyes — <b>S</b> for the eyes and the mouth's small parts, <b>M</b> for the rest.
-<b>line</b> — 119: lids, brows, lashes and the eyes' marks, whiskers, tears, the nose's lines, eyewear arms, lips, teeth rows and tongues, limbs and feet,
-tail spines and rings, hair strands, ties and spikes, hat seams and brims' ink, horns, side ears and the folded ear's root and crease, decal edges, the floor, the ? glyph,
-the rig's shut and smiling lids, and the dots and dashes — the teeth strip's edges, the mouth grid's bars, the grin's fangs, the
-dot mouth, the boot's toe lines, a tail's rings and spines, a pom's claw, a beret's nub, the philtrum, the sleeping <b>z z</b> —
-<b>S</b> for the finest (hair strands, whiskers, a tail's hairs, the dots and dashes), <b>M</b> for the rest, and <b>L</b> for
-exactly two: an imp's horn and a stub tail.</p>
+<p class="note"><b>contour</b> — 45 of them: the head and bodies, the ears, hats and hands, the eyes and eyewear, the nose, the
+mouth's parts. <b>line</b> — 119: lids, brows and lashes, whiskers, limbs and feet, hair strands, horns, the floor, and every dot
+and dash. S for the finest, M for the rest, L for an imp's horn and a stub tail.</p>
 
 <!-- ---------------- the pencil ---------------- -->
 <h3>the pencil</h3>
@@ -107,9 +97,8 @@ quad joins the first, which is the seam it does not have.</p>
   <figure data-fig="quads" class="wide">
     <canvas></canvas>
     <div class="subs"><span>a normal per point — the corners close</span></div>
-    <figcaption><b>the quads</b> — every habit switched off, magnified far past the board's scale. Each hairline is
-    one triangle edge, read back out of the triangles the pen just wrote: the rungs are where two quads meet, the
-    diagonals where each quad is cut in two.</figcaption>
+    <figcaption><b>the quads</b> — every habit off, magnified far past the board's scale. Each hairline is one triangle edge,
+    read back out of the triangles the pen just wrote: rungs where two quads meet, diagonals where each is cut in two.</figcaption>
   </figure>
 </div>
 
@@ -118,11 +107,11 @@ than per line, so the wander comes out the same size wherever it lands; a closed
 overshoots, which is the rest of why it has no seam. Every number is in <code>PENCIL</code> in <code>src/stroke.js</code>.
 The ink is opaque, which is what lets the creature in front hide the one behind.</p>
 
-<p><b>PENCIL_STROKE</b> is full width, laid once: every contour and every open line on the board. <b>PENCIL_SLINE</b> is a
-hairline, and <b>the pen lifts</b> — the skips are measured in <b>world units</b>, along the path as it was handed over,
-so the same kind skips in the same places at S, M and L; none falls near an end or on a line too short to spare it. <b>PENCIL_BROKEN</b>
-is the <b>ghost</b> habit stacked: two of them thinner, one at a fifth of the ink and one at half, each slipping sideways off the line — to one side
-or the other, so they land together as often as they split — and the line goes down last on top. SLINE and BROKEN are built and on nothing; the switch above says what the board draws.</p>
+<p><b>PENCIL_STROKE</b> is full width, laid once — every line on the board. <b>PENCIL_SLINE</b> is a hairline whose <b>pen
+lifts</b>: the skips are in world units along the path as handed over, so the kind breaks in the same places at every size, and
+none falls near an end or on a line too short to spare it. <b>PENCIL_BROKEN</b> stacks the <b>ghost</b>: two thinner passes, one
+at a fifth of the ink and one at half, each slipping to one side or the other, with the line laid last on top. SLINE and BROKEN
+are built and on nothing — the switch says what the board draws.</p>
 
 <p>A dot or a dash needs no kind of its own: the pencil <b>keeps the ends of anything shorter than 0.05 and sheds nothing
 there</b>, because an overshoot would run a dot half again to twice as long and a crumb is the size of the dot.</p>
@@ -136,9 +125,8 @@ seventh adds the <b>ghost</b>, and stacking that is <b>PENCIL_BROKEN</b>.</p>
   <figure data-fig="hands" class="wide">
     <canvas></canvas>
     <div class="subs"><span>wobble 0.45</span><span>1.0</span><span>1.9</span></div>
-    <figcaption><b>every individual has a different hand</b> — <code>proportions.wobble</code> multiplies the jitter
-    per creature. Some come out neat and some a mess; on one constant the whole board falls into the same
-    handwriting.</figcaption>
+    <figcaption><b>every individual has a different hand</b> — <code>proportions.wobble</code> multiplies the jitter per
+    creature. On one constant the whole board falls into the same handwriting.</figcaption>
   </figure>
 </div>
 
@@ -157,54 +145,43 @@ thing, the colour of the surface:</p>
 over them.<br>
 <b>texture</b> — hatch, scratch, dab or speckle, laid over the base and clipped to the contour.</p>
 
-<p>That is the whole of it. There is no opacity channel; grain — the paper showing through — is not a channel at all but the
-sheet's, done for the whole board in the paper's pass (below); and the contour is the goofy outline, above. The colour always comes
-from the part, and every tone the texture adds is a shade of that colour. A part names a material and hands over the path and the
-colour — <code>fills.paint(path, "FLAT", { color, offset })</code> — and never picks a technique itself.</p>
+<p>That is the whole of it — no opacity channel, and grain is the sheet's job, not a material's. A part names a material and
+hands over the path and the colour (<code>fills.paint(path, "FLAT", { color, offset })</code>); it never picks a technique, and
+every tone the texture adds is a shade of the part's colour.</p>
 
-<p>On the board a creature has <b>one</b>: its <code>material</code> slot (FLAT for most; GRAPHITE, INK, OIL or CHARCOAL for the
-rest) fills its head, its body and everything else it fills — ears and tail, eyes and nose, teeth and hat — each at its own
-colour's step. Two more slots ride along: <b>density</b>, the hand (light, normal, heavy), and <b>pattern</b>, drawn inside the
-base colour. A material also carries its <b>tooth</b> — how the paper bites it: graphite rides the grain and skips it (0.45),
-charcoal dusts it (0.4), flat 0.3, ink soaks in (0.12), oil buries it (0.06) — scaled by how hard the hand pressed.</p>
+<p>A creature has <b>one</b>, its <code>material</code> slot — FLAT for most, GRAPHITE, INK, OIL or CHARCOAL for the rest — and it
+fills everything the creature fills. Two slots ride along: <b>density</b>, the hand, and <b>pattern</b>. A material also carries a
+<b>tooth</b>, how deep the paper bites it: graphite rides the grain and skips it, oil buries it.</p>
 
-<p>The table is <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/materials.js"><code>GOOFY_MATERIALS</code></a>, and every entry below gets a row of
-shader balls: the same ball in the same colour at the five <b>value</b> steps — <b>black · hatch · scribble · stipple · light</b>,
-named for the way graphite makes each. A material renders darkness its own way: graphite changes technique step by step, ink, oil
-and charcoal lay down more or less of their texture. A step is in the <b>colour first and the marks second</b> — it pulls the base
-toward the technique's own tone (graphite and charcoal darken it, ink lightens it: its scratches take the ink away) and lays the
-marks on top, because a mark fine enough to be pretty up close falls under a device pixel on a board and takes the whole scale with
-it. On the board the step comes from the part's colour — a dark cloth draws black, a pale skin light — moved one step by the
-creature's density.</p>
+<p>Every entry in <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/materials.js"><code>GOOFY_MATERIALS</code></a>
+gets a row of shader balls — the same ball at the five <b>value</b> steps, <b>black · hatch · scribble · stipple · light</b>, named
+for the way graphite makes each. <b>A step is in the colour first and the marks second</b>: it pulls the base toward the
+technique's own tone and lays the marks on top, because a mark fine enough to be pretty up close falls under a device pixel on a
+board. The step comes from the part's colour, moved one by the creature's density.</p>
 
-<p>A mark has to be lighter than what it is drawn on or it is not a mark, so on a <b>dark ground</b> every technique turns around,
-lays its marks light and pulls the colour the other way. That is the <b>lower row</b> of each pair. The balls are drawn on a card
-rather than on the paper, so they show each fill with <i>no</i> bite taken out of it; the board is where the paper comes through.</p>
+<p>A mark has to be lighter than what it is drawn on, so on a <b>dark ground</b> every technique turns around — the <b>lower
+row</b> of each pair. The balls sit on a card rather than on the paper, so no bite is taken out of them.</p>
 
 <div class="figs" id="materialBalls"></div>
 
 <h3>the paper, the GPU material and the boil</h3>
-<p>Underneath there is exactly <b>one</b> GPU material — a flat <code>MeshBasicMaterial</code> with vertex colours, shared per
-opacity level by every mesh on the board. No depth test, so stacking is decided entirely by <code>renderOrder</code>, and a layer's
-fills and ink are baked into <b>one geometry</b> (fills first, ink after — inside a mesh, vertex order is the stacking): one draw
-call per layer.</p>
+<p>Underneath there is exactly <b>one</b> GPU material, a flat <code>MeshBasicMaterial</code> with vertex colours shared by every
+mesh. No depth test, so <code>renderOrder</code> decides all the stacking, and a layer's fills and ink bake into one geometry — one
+draw call per layer.</p>
 
-<p>The paper is the board's one shader — a procedural GLSL grain on a single plane, no texture and no tile
-(<a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/paper.js"><code>src/scene/paper.js</code></a>). The frame is two passes: the board on a transparent
-target, then the sheet over the canvas with the board on it.</p>
-
-<p>The paper shows <b>through</b> the drawing, fills included — not in that composite but in every mark. Each one carries its own
-bite (its material's tooth at its value's press) and the ink shader mixes it toward the sheet's colour where the grain peaks. A
-colour mix, not a hole, so the board stays opaque within itself and the creature in front still hides the one behind.</p>
+<p>The paper is the board's one shader
+(<a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/paper.js"><code>src/scene/paper.js</code></a>):
+procedural GLSL grain on a single plane, no texture and no tile. It shows <b>through</b> the drawing, and the bite belongs to the
+<b>mark</b> — each carries its material's tooth at its value's press, and the ink shader mixes it toward the sheet where the grain
+peaks. A colour mix, not a hole, so the creature in front still hides the one behind.</p>
 
 <div class="figs">
   <figure data-fig="boilface" class="wide">
     <canvas></canvas>
     <div class="subs"><span>three bakes of the same drawing, cycling — this figure never holds still</span></div>
-    <figcaption><b>the boil</b> — nothing is redrawn at runtime. The same drawing is baked
-    3 times, differing only in jitter phase, and <code>visible</code> cycles once every
-    1.5–1.9 s per individual. The boil belongs to the medium, not to motion: the lines shiver even
-    while the character is frozen in the bind pose.</figcaption>
+    <figcaption><b>the boil</b> — nothing is redrawn at runtime: the same drawing is baked 3 times, differing only in jitter
+    phase, and <code>visible</code> cycles once every 1.5–1.9 s. It belongs to the medium, not to motion — the lines shiver even
+    in the bind pose.</figcaption>
   </figure>
 </div>
 
@@ -246,9 +223,8 @@ Every hex passes through <code>hexToRgb → srgbToLinear</code> in <code>src/col
   <figure data-fig="furs" class="wide">
     <canvas></canvas>
     <div class="subs"></div>
-    <figcaption><b>furs + the calico mid</b> — black fur is only moderately black, far lighter
-    than an imp, so a black cat stays a drawing instead of a blob of ink. The calico's middle
-    tone is a warm tan where a real calico's orange would go.</figcaption>
+    <figcaption><b>furs + the calico mid</b> — black fur is only moderately black, so a black cat stays a drawing instead of a
+    blob of ink. The calico's middle tone is a warm tan where the orange would go.</figcaption>
   </figure>
 
   <figure data-fig="accents" class="wide">
@@ -262,18 +238,16 @@ Every hex passes through <code>hexToRgb → srgbToLinear</code> in <code>src/col
 <!-- ================================================================ -->
 <section>
 <h2>THE GOOFY FUR</h2>
-<p>Hair and fur are neither a contour nor a filling — in 3D they are a <em>groom</em>, and here they are the
-<b>goofy fur</b>: how hair is grown along a path, named from <code>GOOFY_FUR</code> in <code>src/medium/fur.js</code> —
-<code>ink.fur(path, "SCRIBBLE", { color, passes, spread })</code>. A part hands over the path (the crown arc, a tail,
-a bang) and the color; passes, width and spread ride as a style's volume, everything else is the fur's own. One fur
-stands in the table: <b>SCRIBBLE</b>, and every hairstyle is grown with it. The same ball, fur grown along its crown:</p>
+<p>Hair is neither a contour nor a filling — in 3D it is a <em>groom</em>, here the <b>goofy fur</b>:
+<code>ink.fur(path, "SCRIBBLE", { color, passes, spread })</code>, named from <code>GOOFY_FUR</code>. A part hands over the path
+and the colour; passes, width and spread ride as a style's volume and the rest is the fur's own. One fur stands in the table,
+<b>SCRIBBLE</b>, and every hairstyle is grown with it:</p>
 
 <div class="figs" id="furBalls"></div>
 
 <h3>SCRIBBLE — the scribble</h3>
-<p>The same path drawn over and over. Each pass is pushed outward from the root (<code>root</code> −0.25 →
-<code>reach</code> 0.6 spreads, so the mass fans away from the face), every point waves on its own, and a share of
-each push leans sideways.</p>
+<p>The same path drawn over and over, each pass pushed further out from the root so the mass fans away from the face, every
+point waving on its own and a share of each push leaning sideways.</p>
 
 <div class="figs">
   <figure data-fig="hair">
@@ -295,8 +269,8 @@ a superellipse bent by noise, squared and tapered by two knobs.</p>
   <figure data-fig="lumps">
     <canvas></canvas>
     <div class="subs"><span>amount 0 — a circle</span><span>0.08</span><span>0.2</span></div>
-    <figcaption><b>lumps</b> — noise pushes the radius in and out. At amount 0 it is a perfect
-    ellipse, which is exactly why amount 0 never appears on the board.</figcaption>
+    <figcaption><b>lumps</b> — noise pushes the radius in and out. At amount 0 it is a perfect ellipse, which is exactly why
+    amount 0 never appears on the board.</figcaption>
   </figure>
 
   <figure data-fig="square">
