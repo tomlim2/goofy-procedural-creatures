@@ -58,7 +58,8 @@ export const MARKS = {
   white: "#f6f2e9",    // teeth and the mouth's grid, the eye's white, a star eye
   light: "#e9e3d5",    // light ink — a mark on a part too dark to take the palette's ink
   muzzle: "#f0ebdf",   // the palest muzzle
-  heart: "#c9666a"     // a heart eye
+  heart: "#c9666a",    // a heart eye
+  sweat: "#b9cbd6"     // the sweat drop's pale blue (scene/emoji.js)
 };
 
 // (shade, which makes a tone in the same family, is in src/color.js — spec.js uses it to give dogs, cats and imps a body "close to" the head color)

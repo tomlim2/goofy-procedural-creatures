@@ -307,8 +307,8 @@ its repeat as a diagonal weave. The fragment has no resolution, so the grain is 
   never meets `hexToRgb`.
 
 **The fixed few.** Every colour on the board is picked by the seed from a pool, except five: the blush and the tongue's pink,
-the white of a tooth and an eye, the light ink a mark takes on a part too dark for the palette's ink, the palest muzzle and a
-heart eye. They are `MARKS` in `character/vocabulary/palette.js` — they lived as string literals in four files each, so a
+the white of a tooth and an eye, the light ink a mark takes on a part too dark for the palette's ink, the palest muzzle, a
+heart eye and the sweat drop's blue. They are `MARKS` in `character/vocabulary/palette.js` — they lived as string literals in four files each, so a
 change had four places to miss. The medium page shows them beside the pools.
 
 ## The boil
