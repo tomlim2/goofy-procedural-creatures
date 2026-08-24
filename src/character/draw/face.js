@@ -5,6 +5,7 @@ import { paintPart } from "./body.js";
 import { blobPath, arcPath } from "../../shape.js";
 import { TAU } from "./layout.js";
 import { shade, luminance } from "../../color.js";
+import { MARKS } from "../vocabulary/palette.js";
 
 // Is this eye hidden by a patch — patchSide is only consulted when there is a patch (so the eye does not disappear along with a patch dropped by a gallery fix or a late constraint)
 export function patched(spec, eye) { return spec.parts.eyewear === "patch" && spec.parts.patchSide === eye.side; }
@@ -17,7 +18,7 @@ export const RIG_EYES = ["ring", "wide", "cyclops", "oval"];
 // The angle the heavy-lidded eye (lidded) is tilted by — sharp is the same eye rotated this much toward the nose, soft the other way (rad)
 const TILTED_LID = 0.34;
 // The white — paper white (the same value as scene/rig.js's live eyes and mouth.js's teeth)
-const SCLERA = "#f6f2e9";
+const SCLERA = MARKS.white;
 
 // The star's (☆) vertex list — outer r, inner r·inner, point up. Used by the startle ☆_☆ eye cover (scene/rig.js)
 export function starPath(cx, cy, r, inner = 0.45) {
@@ -221,7 +222,7 @@ export function drawFace2(ink, fills, spec, box, eyes) {
     const cx = side * box.headRx * 0.58;
     // The cheeks are below the eyes — with a big eye they drop below the (startle-widened) eye. So they are not covered whole by the white
     const cheekY = Math.min(box.headCy - box.headRy * 0.28, eyeFloor(spec, eyes, cx) - 0.02);
-    paintPart(fills, spec, blobPath(cx, cheekY, 0.042, 0.026, { lumps: 3, amount: 0.15, noise: null }), "#d9968a", { own: true });
+    paintPart(fills, spec, blobPath(cx, cheekY, 0.042, 0.026, { lumps: 3, amount: 0.15, noise: null }), MARKS.blush, { own: true });
   }
 }
 
@@ -315,7 +316,7 @@ export function muzzleGeometry(spec, box) {
   const my = box.headCy - box.headRy * (kind === "long" ? 0.48 : 0.42);
   const nr = kind === "hook" ? 0.05 : kind === "dot" ? 0.032 : 0.04;
   const roll = spec.proportions.wobbleSeed % 100;
-  const fill = roll < 45 ? "#f0ebdf" : roll < 75 ? shade(spec.palette.skin, 1.12) : shade(spec.palette.skin, 0.55);
+  const fill = roll < 45 ? MARKS.muzzle : roll < 75 ? shade(spec.palette.skin, 1.12) : shade(spec.palette.skin, 0.55);
   const dark = luminance(fill) < 120;
   return { my, rx: box.headRx * mw, ry: box.headRy * mh, noseY: my + box.headRy * 0.16, noseR: nr, fill, dark, ink: dark ? "#e9e3d5" : spec.palette.ink };
 }
@@ -382,7 +383,7 @@ function catNose(ink, fills, spec, box, eyes) {
     // Triangular nose — wide at the top, pointed below, corners slightly rounded
     path = [[-w, y + h * 0.55], [-w * 0.55, y + h * 0.8], [w * 0.55, y + h * 0.8], [w, y + h * 0.55], [w * 0.4, y - h * 0.35], [0, y - h * 0.8], [-w * 0.4, y - h * 0.35]];
   }
-  paintPart(fills, spec, path, "#d9968a", { own: true });
+  paintPart(fills, spec, path, MARKS.blush, { own: true });
   ink.contour(path, { color: ink0 });
   // The philtrum — from under the nose toward the mouth. Short on hook, long on long (a Y-shaped face)
   const drop = kind === "hook" ? h * 1.1 : kind === "long" ? h * 2 : 0;

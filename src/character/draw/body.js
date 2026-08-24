@@ -3,7 +3,7 @@
 import { blobPath } from "../../shape.js";
 import { valueHand } from "../../medium/materials.js";
 import { shade, isDark, luminance } from "../../color.js";
-import { FURS, CALICO_MID } from "../vocabulary/palette.js";
+import { FURS, CALICO_MID, MARKS } from "../vocabulary/palette.js";
 
 // The creature's goofy material, by name. A spec without the slot — an older tree's, in drawdiff — is flat, like every late slot's default
 export function materialOf(spec) {
@@ -40,7 +40,7 @@ export function paintPart(fills, spec, path, color, { own = false, flat = false,
 export function patternOf(spec) {
   const kind = spec.parts.pattern;
   if (!kind || kind === "none" || kind === "calico") return undefined;   // a spec without the slot (an older tree's, in drawdiff) has no pattern
-  return { kind, color: luminance(spec.palette.cloth) < 120 ? "#e9e3d5" : spec.palette.ink };
+  return { kind, color: luminance(spec.palette.cloth) < 120 ? MARKS.light : spec.palette.ink };
 }
 
 export function drawBody(ink, fills, spec, box, noise) {

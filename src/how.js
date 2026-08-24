@@ -16,11 +16,11 @@ import { makeRng, makeNoise } from "./rng.js";
 import { BOIL_FRAMES } from "./scene/rig.js";
 import { runLoop, bindSeg } from "./ui.js";
 import { PAPER, INKS, FILLS, POPS, DARKS } from "./character/index.js";
-import { FURS, CALICO_MID, ACCENTS } from "./character/vocabulary/palette.js";
+import { FURS, CALICO_MID, ACCENTS, MARKS } from "./character/vocabulary/palette.js";
 
 const TAU = Math.PI * 2;
 const INK = INKS[0];
-const BLUSH = "#d9968a";   // the blush/tongue pink (mouth.js PINK)
+const BLUSH = MARKS.blush;   // the blush/tongue pink
 const CARD = "#f2ecdf";    // the figure card's back (styles.css .how figure) — the pencil's bites take it here, paper on the board
 
 // A different hand on every load — the page rolls its own noise the way a creature rolls its wobbleSeed, so a reload draws the
@@ -109,6 +109,7 @@ swatches("pops", POPS);
 swatches("darks", DARKS);
 swatches("furs", [...FURS, CALICO_MID]);
 swatches("accents", ACCENTS);
+swatches("marks", Object.values(MARKS));
 
 // A ball figure made from a table entry — the figures are created here, from the tables, so an entry cannot go unshown
 function ballFigure(box, key, label, phase, draw) {

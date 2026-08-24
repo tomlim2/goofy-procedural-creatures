@@ -344,6 +344,11 @@ the canvas after `draw()`, the composite.
 any other. What it cannot see is the shader itself — that is judged by eye, and by the medium page's rows. `drawdiff` cannot see any of this — `/pixeldiff.html`
 ([determinism.md](determinism.md) § how to check) is the gate for the sheet and every other shader.
 
+**The fixed few.** Every colour on the board is picked by the seed from a pool, except five: the blush and the tongue's pink,
+the white of a tooth and an eye, the light ink a mark takes on a part too dark for the palette's ink, the palest muzzle and a
+heart eye. They are `MARKS` in `character/vocabulary/palette.js` — they lived as string literals in four files each, so a
+change had four places to miss. The medium page shows them beside the pools.
+
 ## The boil
 
 The same drawing is baked in 3 sets differing only in jitter phase (`drawCreature(spec, variant)`) and visible

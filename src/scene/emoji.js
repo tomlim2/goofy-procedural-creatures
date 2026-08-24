@@ -4,6 +4,7 @@
 import { Sketch } from "../stroke.js";
 import { arcPath, blobPath } from "../shape.js";
 import { sketchMesh } from "./mesh.js";
+import { POPS } from "../character/vocabulary/palette.js";
 
 // Emoji sit above every individual — a value larger than any individual's block (index × 10 + layer)
 export const EMOJI_ORDER = 100000;
@@ -19,7 +20,7 @@ export function buildEmoji(kind, noise) {
       const y = 0.038 * (Math.cos(a) - 0.35 * Math.cos(2 * a) - 0.18 * Math.cos(3 * a) - 0.06 * Math.cos(4 * a)) + 0.01;
       pts.push([x, y]);
     }
-    sketch.fill(pts, "#b0432e");
+    sketch.fill(pts, POPS[2]);   // the palette's brick red
     sketch.pencil(pts, { color: "#7d2f20", width: 0.007, closed: true, paper: "#b0432e" });
   } else if (kind === "bang") {
     // "!" — a short stroke turns into a diamond or a thread because of the end taper. Drawn as filled shapes instead: a bar thick at the top plus a round dot

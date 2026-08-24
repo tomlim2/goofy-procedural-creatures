@@ -8,13 +8,14 @@ import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { TAU, eyeGeometry } from "./layout.js";
 import { eyeFloor, noseBottomY, muzzleGeometry } from "./face.js";
+import { MARKS } from "../vocabulary/palette.js";
 
 // Mouth width multiplier — the mouthSize slot (a late slot). In the reference, very small mouths and very wide mouths split at the extremes
 export const MOUTH_SIZE = { small: 0.7, normal: 1, wide: 1.4 };
 // Species width multiplier — an imp mouth is wider than half the face (the reference)
 const SPECIES_WIDTH = { imp: 1.3 };
-const TOOTH = "#f6f2e9";   // tooth and grid fill — the same paper white as the eye whites
-const PINK = "#d9968a";    // tongue — the same pink as the blush
+const TOOTH = MARKS.white;   // tooth and grid fill — the same white as the eye whites
+const PINK = MARKS.blush;   // tongue — the same pink as the blush
 
 // Mouth position, width and ink. Solved from species, slots and proportions at once
 export function mouthPlacement(spec, box) {

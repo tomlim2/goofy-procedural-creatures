@@ -5,6 +5,7 @@ import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark, mix } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
 import { calicoColors, materialOf, surfaceHand, headDecals, decalEdges, paintPart } from "./body.js";
+import { MARKS } from "../vocabulary/palette.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -141,7 +142,7 @@ export function drawCatEars(ink, fills, spec, box) {
   const roll = seed % 100;
   // The inner ear — line (a double line) 45% · fill 30% · crease 15% · none 10%. The fill color is per individual, either pink (the same as the nose and blush) or a tone in the same family
   const inner = roll < 45 ? "line" : roll < 75 ? "dark" : roll < 90 ? "notch" : "none";
-  const innerFill = (seed >> 7) % 2 ? "#d9968a" : shade(skin, isDark(skin) ? 1.5 : 0.62);
+  const innerFill = (seed >> 7) % 2 ? MARKS.blush : shade(skin, isDark(skin) ? 1.5 : 0.62);
   // The inner line is **a mark drawn on fur**, so it uses face ink — a black line on black fur is lost and invisible (the outline meets the background, so it stays black)
   const innerInk = spec.faceInk || ink0;
   const cal = calicoColors(spec);   // on a calico, the ear on the side is black (the same side as the head decal — body.js headDecals)
@@ -150,7 +151,7 @@ export function drawCatEars(ink, fills, spec, box) {
   for (const side of [-1, 1]) {
     const earDark = !!cal && cal.side === side;
     const earFill = earDark ? cal.dark : skin;
-    const earInnerInk = earDark ? "#e9e3d5" : innerInk;   // a mark on a black ear uses light ink (the face ink rule)
+    const earInnerInk = earDark ? MARKS.light : innerInk;   // a mark on a black ear uses light ink (the face ink rule)
     // The root on the outline (the real head shape) and, at that point, the outward normal n and tangent t (outward positive)
     const anchor = headAnchor(spec, box, theta, side);
     const bx = anchor.x, by = anchor.y, nx = anchor.nx, ny = anchor.ny;
@@ -205,7 +206,7 @@ export function drawPupEars(ink, fills, spec, box) {
   const cal = calicoColors(spec);   // on a piebald (calico), the ear on the side is black (the same side as the head patch)
   const earInk = { color: spec.palette.ink };   // the ears' line — the contour and the folded root's open line alike, at M
   const innerRoll = spec.proportions.wobbleSeed % 100;
-  const innerTone = (fur) => (innerRoll < 45 || (innerRoll >= 75 && innerRoll % 2) ? mix(fur, "#f3ece0", 0.45) : "#d9968a");
+  const innerTone = (fur) => (innerRoll < 45 || (innerRoll >= 75 && innerRoll % 2) ? mix(fur, "#f3ece0", 0.45) : MARKS.blush);
   const innerShown = innerRoll < 75;
   const upper = kind === "pointy" || kind === "round" || kind === "fold" || kind === "perk";
   // The upper position starts at θ≈50° on a round head and at **the vertex** (θ = 45°) on a square head (square, block) — so the triangular ear reaches out from the corner

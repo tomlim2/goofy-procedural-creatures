@@ -50,6 +50,17 @@ export const FUR_POOL = [null, null, null, null, null, null, null, null, ...FURS
 // (FILLS 187~217, body tones ≥170) and the black fur (FURS 75~85), which keeps the three apart. It is not a color accent (POPS), so it does not count against the per-board cap
 export const CALICO_MID = "#a3866a";
 
+// **The fixed few** — colours that are not drawn from a pool. Every other colour on the board is picked by the seed; these five are
+// always themselves, because the thing they paint is always itself: a blush is pink, a tooth is white, a mark on a black part is
+// light. They lived as string literals in four files each until they were gathered here
+export const MARKS = {
+  blush: "#d9968a",    // the blush, the tongue, an inner ear
+  white: "#f6f2e9",    // teeth and the mouth's grid, the eye's white, a star eye
+  light: "#e9e3d5",    // light ink — a mark on a part too dark to take the palette's ink
+  muzzle: "#f0ebdf",   // the palest muzzle
+  heart: "#c9666a"     // a heart eye
+};
+
 // (shade, which makes a tone in the same family, is in src/color.js — spec.js uses it to give dogs, cats and imps a body "close to" the head color)
 
 export const ACCENTS = [

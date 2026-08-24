@@ -4,6 +4,7 @@
 
 import { hexToRgb, shade, isDark, luminance, mix } from "../color.js";
 import { blobPath } from "../shape.js";
+import { MARKS } from "../character/vocabulary/palette.js";
 
 const TAU = Math.PI * 2;
 
@@ -42,7 +43,7 @@ export const GOOFY_MATERIALS = {
 
 
 // The light ink — what a mark on a dark part is drawn in (the face-ink rule), and what a lighter tone mixes toward
-const LIGHT_INK = "#e9e3d5";
+const LIGHT_INK = MARKS.light;
 
 
 // Values — how dark a surface is drawn, in five steps, named for the way graphite makes each (the reference's scale): black,

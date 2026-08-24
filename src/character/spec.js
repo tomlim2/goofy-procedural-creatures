@@ -11,6 +11,7 @@ import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCE
 import { shade, luminance } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
+import { MARKS } from "./vocabulary/palette.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -220,7 +221,7 @@ export function makeCreature(seed, speciesName = "human") {
     palette,
     // Face ink — when the head color is dark (imp ink-black, or blue, green and red-brown accent skins: luminance < 120) the features are drawn in light ink instead of black.
     // Otherwise a black line is lost on a deep color and the eyes and mouth do not read
-    faceInk: species.name === "imp" || luminance(palette.skin) < 120 ? "#e9e3d5" : null
+    faceInk: species.name === "imp" || luminance(palette.skin) < 120 ? MARKS.light : null
   };
 }
 

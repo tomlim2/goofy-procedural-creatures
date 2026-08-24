@@ -7,6 +7,7 @@ import { Sketch } from "../stroke.js";
 import { blobPath, arcPath } from "../shape.js";
 import { makeClock, bindArm } from "../motion/index.js";
 import { sketchMesh, sketchMeshBoil } from "./mesh.js";
+import { MARKS } from "../character/vocabulary/palette.js";
 
 export const BOIL_FRAMES = 3;
 
@@ -223,7 +224,7 @@ export function buildCreature(spec, noise, birth = 0) {
     // Not a perfect circle but a slightly crumpled hand-drawn one — given noise (a different phase per eye). The white and rim are one mesh (fill below, rim above)
     const wob = { lumps: 3, amount: 0.06, noise, phase: eye.side * 3.7 + spec.seed * 0.001 };
     const white = new Sketch(noise, 0.4);
-    paintPart(white, spec, blobPath(0, 0, rx, ry, wob), "#f6f2e9", { flat: true });
+    paintPart(white, spec, blobPath(0, 0, rx, ry, wob), MARKS.white, { flat: true });
     const rim = new Sketch(noise, 0.6);
     rim.contour(blobPath(0, 0, rx, ry, { ...wob, lumps: 4, amount: 0.07 }), { color: spec.palette.ink });
     open.add(sketchMesh([white, rim], 1, o));
@@ -277,11 +278,11 @@ export function buildCreature(spec, noise, birth = 0) {
   for (const eye of allEyes) {
     const starSketch = new Sketch(noise, 0.5);
     const star = starPath(0, 0, eye.r * 1.1);
-    paintPart(starSketch, spec, star, "#f6f2e9", { flat: true });
+    paintPart(starSketch, spec, star, MARKS.white, { flat: true });
     starSketch.contour(star, { color: spec.palette.ink, step: 0.006 });
     const heartSketch = new Sketch(noise, 0.5);
     const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
-    paintPart(heartSketch, spec, heart, "#c9666a", { own: true });
+    paintPart(heartSketch, spec, heart, MARKS.heart, { own: true });
     heartSketch.contour(heart, { color: spec.palette.ink, step: 0.006 });
     const starMesh = sketchMesh(starSketch, 1, 6.32);
     const heartMesh = sketchMesh(heartSketch, 1, 6.32);
