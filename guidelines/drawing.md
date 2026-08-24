@@ -141,8 +141,13 @@ shading. The cheek and forehead hatch are the same thing (an occlusion). Until i
 
 ## What takes the goofy material
 
-One tool per creature: **everything a creature fills takes its goofy material** (the `material` slot), through `paint` — the head and
-the body directly, everything else through `paintPart` in `draw/body.js`. A skin, fur or cloth surface (the
+One tool per creature, or two: **everything a creature fills takes its goofy material** (the `material` slot), through `paint` — the head and
+the body directly, everything else through `paintPart` in `draw/body.js`. A creature may have a **second** for its body — the
+`bodyMaterial` slot, `same` on three quarters of them. A face and a torso are two surfaces (skin and cloth are already two colors),
+and one hand may well reach for a second tool between them. The head's side is the head, the ears and their insides, the horns, the
+hair, the hat, the muzzle, the nose and the face; the body's is the torso, the arms and hands, the sleeves, the legs and boots, and
+the tail with its ends (`paintPart(…, { body: true })`). `materialOf(spec, where)` in `draw/body.js` is the one place either is
+named. The **density is not split**: one hand, one pressure, whichever tool it holds. A skin, fur or cloth surface (the
 ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes the creature's value step — one
 mass on a dog, a cat or an imp (`surfaceHand`), its own color's on a human. A detail or an object — the hats,
 the inner ear, the eyes (whites, pupils, irises, highlights, the static eyes, the star and heart eyes, the angry
@@ -197,8 +202,11 @@ base color and its map, in 3D terms. A channel that would be a *different* thing
 second texture (two patterns on one surface are one texture's composition). `grain` — the paper showing through —
 is not a channel at all: the sheet does it for the whole board in its own pass (§ the paper). That is the goofy material,
 and nothing else. The color always comes from the part; a goofy material knows no colors of its own, and every tone the texture
-adds is a shade of the part's color. On a light color a technique's own direction stands — graphite hatches deeper, ink scratches
-lighter. On a **dark** color every mark goes lighter (`contrast` in `materials.js`), by as much as the technique asked for either
+adds is a shade of the part's color. **A mark is a light**: ink's scratches, graphite's rules and oil's paint are all drawn in the
+same watering of the ground toward the light ink, so they come *up* out of the surface, and the step's work goes into the ground
+underneath them (`opened` and `pull` in `materials.js`). Charcoal alone keeps dark marks — its specks are the grain of a dark
+crumb, and one technique that goes the other way is what keeps the four apart. Where a technique's own direction still stands it is
+its ground's: graphite and charcoal deepen theirs, ink lightens its own (its scratches take the ink away). On a **dark** color every mark goes lighter (`contrast` in `materials.js`), by as much as the technique asked for either
 way: there is nothing below a dark ground to draw with. Only the amount is mirrored, never the direction — mirroring the direction
 turned ink's light scratches into marks *darker* than the ground they were scratched into, and oil's darker half of the spread
 vanished into a black body, so a dark creature with a textured material read as a solid blob. On a dark color the base is pulled
@@ -222,14 +230,14 @@ material on a **dark ground**, which is where the rule above is visible.
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |
 | `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
-| `GRAPHITE` | `flat` | `hatch` — thin grey pencil strokes, nearly upright, each rule drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled | the `material` slot (1.5) |
+| `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, **in the light ink scratches with** (`mark`) over a ground the step deepens (`tone`) | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
 | `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter. On a color too pale to water it runs the other way — the ground laid on deeper, the scratch opening back to the color | the `material` slot (0.8) |
-| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, four tones close to the ground, cut flat by the contour | the `material` slot (1) |
+| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, cut flat by the contour, in a spread of four **waterings of the ground** (`washes`) — the same light | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | the `material` slot (1) |
 
-The head and the body take the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)
-§ surface), one tool per creature — at a **value step**. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
+The head takes the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)
+§ surface) — and the body takes it too unless `bodyMaterial` names another (§ what takes the goofy material), both at one **value step**. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
 the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34. A goofy material renders a
 step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → coarse dabs → one thin set three gaps apart),
 ink, oil and charcoal lay down more or less of their texture.
@@ -247,8 +255,9 @@ part's colour and nudged a step by a three-value hand, which meant half the ladd
 76% of imps on black, and a third of the hand did nothing at all because the scale had no step left to give. The colour still
 decides the marks' **tone** (`contrast` — light marks on a dark ground), and the step decides how many.
 
-One step for the whole creature, head and body and ears and hat alike: one hand, one pressure (`surfaceHand` in `draw/body.js` —
-the one place a surface's step is worked out, and `materialOf` the one place its material is named). The medium page draws each textured
+One step for the whole creature, head and body and ears and hat alike: one hand, one pressure — the tool may change between the head
+and the body, the pressure does not (`surfaceHand` in `draw/body.js` — the one place a surface's step is worked out, and `materialOf`
+the one place a material is named). The medium page draws each textured
 goofy material as a row of the five steps. Every other fill is FLAT.
 
 One hand, but not one throw of the dice: **a texture's seed is the part's own**, its place and size on the board folded into the

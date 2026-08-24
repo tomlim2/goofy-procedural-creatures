@@ -151,7 +151,11 @@ hands over the path and the colour (<code>fills.paint(path, "FLAT", { color, off
 every tone the texture adds is a shade of the part's colour.</p>
 
 <p>A creature has <b>one</b>, its <code>material</code> slot — FLAT for most, GRAPHITE, INK, OIL or CHARCOAL for the rest — and it
-fills everything the creature fills. Two slots ride along: <b>density</b>, the hand, and <b>pattern</b>.</p>
+fills everything the creature fills. Or <b>two</b>: <code>bodyMaterial</code> gives the body one of its own on about a quarter of
+them — a face and a torso are two surfaces, and one hand may reach for a second tool between them. The head's side is the head, the
+ears, the horns, the hair, the hat, the muzzle and the face; the body's is the torso, the arms and hands, the sleeves, the legs and
+boots, and the tail. The <b>density</b> is not split: one hand, one pressure, whichever tool it holds. <b>pattern</b> rides along
+too.</p>
 
 <p>Every entry in <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/materials.js"><code>GOOFY_MATERIALS</code></a>
 gets a row of shader balls — the same ball at the five <b>value</b> steps, <b>black · hatch · scribble · stipple · light</b>, named
@@ -162,6 +166,10 @@ species; the colour decides the marks' tone, the step how many.</p>
 
 <p>A mark has to be lighter than what it is drawn on, so on a <b>dark ground</b> every technique turns around — the <b>lower
 row</b> of each pair.</p>
+
+<p><b>A mark is a light.</b> Ink's scratches, graphite's rules and oil's paint are all drawn in the same tone — the ground watered
+toward the light ink — so they come <i>up</i> out of the surface, and the step's work goes into the ground underneath them. Charcoal
+alone keeps dark marks; one technique going the other way is what keeps the four apart.</p>
 
 <p>And no mark is ever <b>white</b>. A lighter tone is the colour <b>watered</b> — mixed toward the light ink — never a multiply,
 which clips: ink's scratches on a pale part came out <code>#ffffff</code> and ran across a cream creature as hard white lines. A

@@ -23,10 +23,12 @@ export const GOOFY_MATERIALS = {
   // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
   FLAT:        { base: { kind: "flat" } },
   // Graphite — the part's color hatched with the pencil (the reference's ground is paper because its color is paper; ours keeps the
-  // part's color — a lightened ground bleached pale parts and left them a different color from their decals and neighbours): grey rules
+  // part's color — a lightened ground bleached pale parts and left them a different color from their decals and neighbours): rules
   // laid with the **side of the lead**, nearly upright and a little slanted, each one drawn as a few strokes — the pencil lifts and comes
-  // down again (lift: the strokes' lengths and the gaps between), now and then doubled. Their spacing is the step's
-  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", pull: 0.5, angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
+  // down again (lift: the strokes' lengths and the gaps between), now and then doubled. Their spacing is the step's.
+  // `tone` deepens the **ground** as the step works it; `mark` is what the rules themselves are drawn in — the same watering of the
+  // ground that ink scratches with, so the pencil's lines come **up** out of the surface instead of pressing further down into it
+  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", pull: 0.5, angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, mark: 0.34, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
   // Ink — solid, scratched **open**: a few long light lines dragged across it, taking the ink away. The darkest step is the least
   // scratched (the ink still covers it), the lightest the most. It used to run the other way — the black step laid the most light
   // lines and came out the palest of the five
@@ -35,8 +37,10 @@ export const GOOFY_MATERIALS = {
   // five steps landed within four shades of each other
   INK:         { base: { kind: "flat" }, texture: { kind: "scratch", pull: 0.42, lines: 6, width: 0.005, tone: 1.35, wash: 0.5 } },
   // Oil — thick paint laid in blunt strokes: round-ended capsules of one width and many lengths, all along one diagonal, scattered
-  // and overlapping, in four tones close to the ground (the reference's ball: calm, dense, a knife's work), cut flat by the contour
-  OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, tones: [0.86, 0.94, 1.06, 1.16] } },
+  // and overlapping, cut flat by the contour (the reference's ball: calm, dense, a knife's work). `washes` is the spread the paint is
+  // laid in — four **waterings of the ground**, the same light ink scratches with, so every stroke reads as paint sitting on the
+  // surface. They used to straddle the ground, two above and two below, and the two below simply vanished into a dark part
+  OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, pull: 0.45, tone: 0.82, washes: [0.06, 0.16, 0.28, 0.42] } },
   // Charcoal — a ground dusted with dark specks, each a short stroke at its own angle rather than a square
   CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", pull: 0.5, per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
 };
@@ -205,13 +209,14 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   // under one of them, and the five steps measured 0.7~4.4 of luminance apart on three of the four materials — one flat colour to the
   // eye. Marks big enough to carry a value on their own turn a small part into blotches instead. A flat fill never falls under a pixel.
   // On a dark ground the pull is halved: there the technique's tone is a **lighter** one (contrast), and pulling a dark part as far
-  // toward it as a light part goes toward its shade washes the part out — a black cat came back grey. Oil has no single tone (it
-  // paints a spread of them) and so carries its step in the paint itself, in the dab case below, not here
+  // toward it as a light part goes toward its shade washes the part out — a black cat came back grey. Oil pulls its ground too, and
+  // less far than the others: its paint is a spread of lights laid over the ground, and the ground has to sit under them
   const weight = f ? Math.max(0, Math.min(1, (V.v - 0.28) * 1.15)) : 0;   // black 0.83 · hatch 0.51 · scribble 0.39 · stipple 0.25 · light 0.07
   // Ink on a colour it cannot water runs **downward** instead: the solid steps lay it on deeper and the open steps stand near the part's
   // own colour, so the five still tell apart — watered, they had landed within one shade of each other. The floor keeps the lightest
   // step off the bare colour: a rung that lays nothing is a rung you cannot see
   const inkDeep = f && f.kind === "scratch" && !waters;
+  const opensLight = f && (f.mark !== undefined || f.washes !== undefined);   // graphite and oil — their marks are the ink's light too
   // Where the step is pulling the ground. A technique that darkens goes to its own tone; ink goes to `wash` — how pale a fully scratched
   // ground is — and on a colour it cannot water, downward to the ink laid on thick instead. On a **dark** ground the old reach stands:
   // there a part washes out fast, which is why the pull is halved there too
@@ -219,9 +224,11 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
     : inkDeep ? laidOn((f.tone - 1) * 0.95)
     : !dark && f.wash !== undefined ? mix(color, LIGHT_INK, f.wash)
     : contrast(f.tone);
-  const pulled = f && f.pull && f.tone !== undefined
-    ? mix(color, far, f.pull * (dark ? 0.5 : 1) * (inkDeep ? 0.18 + 0.82 * weight : f.tone < 1 ? weight : 1 - weight))
-    : color;
+  // How far along that pull the step stands. A technique that darkens the ground goes **with** the step; ink, which lightens it, goes
+  // against. A ground that carries **light marks** — ink's own where it runs downward, graphite's rules, oil's paint — keeps a floor
+  // under its lightest step: with nothing laid down there the light has nothing to show against and the rung draws nothing
+  const reach = inkDeep || opensLight ? 0.15 + 0.85 * weight : f && f.tone < 1 ? weight : 1 - weight;
+  const pulled = f && f.pull && f.tone !== undefined ? mix(color, far, f.pull * (dark ? 0.5 : 1) * reach) : color;
 
   if (wantBase) {
     if (m.base.kind === "flat") base(m.base.tone === undefined ? pulled : shade(pulled, dark ? 0.92 : m.base.tone));
@@ -248,6 +255,11 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
     // different side than at a back — and with the angle fixed in the table every part of a creature was ruled in exactly the same
     // direction, which is half of why they read as one stamp repeated. A small swing, off the part's seed and not the rng
     const swing = (u(9000) - 0.5) * 0.34;   // ±10°
+    // **The light the ink opens with** — the ground watered toward the light ink, which is the tone ink drags its scratches in and now
+    // the tone graphite rules and oil dabs in too. Watered from the **ground** rather than from the part's colour, so a mark stays
+    // lighter than what it is laid on whatever the step has done underneath — including on a dark part, where the light ink is the
+    // only place left to go
+    const opened = (amount) => mix(pulled, LIGHT_INK, amount);
     // How much of the surface the marks cover. The **base colour already carries the value** (above), so this is the medium's grain
     // and not its tone — which is what lets the marks stay as fine as the hand would draw them. Marks coarse enough to carry a value
     // on their own were tried and dropped: they turn a small part into blotches, and a face into camouflage
@@ -256,7 +268,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
       case "hatch": {
         // Graphite, step by step: black — cross-hatching, two sets of rules, close and dark · hatch — one set · scribble — wavy
         // rules, nearly level · stipple — dots · light — one set three gaps apart, thin and pale. Every rule is pencil strokes with gaps, the hand lifting
-        const tone = contrast(f.tone);
+        const tone = opened(f.mark);
         const liftedRule = (pts, i, width) => {   // the polyline drawn as a few pencil strokes with small gaps — the hand lifts and comes down again
           const lens = [0];
           for (let k = 1; k < pts.length; k += 1) lens.push(lens[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
@@ -303,7 +315,7 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
             liftedRule(pts, i + 500, f.width);
           });
         } else if (V.name === "stipple") {
-          dust(sketch, points, b, { per: 1500, size: [0.0018, 0.003] }, h, contrast(f.tone * 0.85), holdTag);
+          dust(sketch, points, b, { per: 1500, size: [0.0018, 0.003] }, h, opened(f.mark * 0.85), holdTag);
         } else {
           // light — the pencil barely touches: one set of rules three gaps apart, thin and pale. Not a bare ground: half the
           // board's surfaces land on this step, and a material that lays nothing there is a material you cannot see
@@ -338,15 +350,12 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
       case "dab": {
         // Thick paint: capsules scattered over the surface (their centres inside it), all along one diagonal give or take a little,
         // of one width and many lengths, in tones close to the ground, overlapping as they fall. An end the contour cuts stays flat
-        // On a dark ground the whole set is lifted so its darkest stroke sits on the ground and the rest go lighter — the same rule as
-        // contrast(), kept as a **spread** rather than one tone so paint still varies stroke to stroke. Left as they are, the two tones
-        // below the ground painted dark on dark and half of the strokes simply vanished
-        // The step moves the whole set off the ground — darker paint at black, all but the ground at light — so the value is in the
-        // paint's colour and not only in how much of it there is. Symmetrical tones would leave the mean on the ground whatever the step
-        const shift = (0.72 - V.v) * 0.9;   // black −0.25 · hatch 0 · light +0.34
-        const stepTones = f.tones.map((t) => t + shift);
-        const lift = dark ? 1 - Math.min(...stepTones) : 0;
-        const tones = stepTones.map((t) => hexToRgb(dark ? tone(1 + (t + lift - 1) * 1.6) : tone(t)));
+        // The spread is four **waterings of the ground** — the light ink scratches with, laid as a spread rather than one tone so paint
+        // still varies stroke to stroke. They used to straddle the ground, two above it and two below, and the two below painted dark on
+        // dark: half the strokes vanished into a dark part. The step moves the whole set — paint close to the ground at black, standing
+        // well off it at light — so the value is in the paint's colour and not only in how much of it there is
+        const shift = (0.72 - V.v) * 0.45;   // black −0.13 · hatch 0 · light +0.17
+        const tones = f.washes.map((t) => hexToRgb(opened(Math.max(0, Math.min(0.7, t + shift)))));
         const count = Math.round(f.per * (0.35 + weight * 1.0) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
         const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
         for (let i = 0; i < count; i += 1) {
