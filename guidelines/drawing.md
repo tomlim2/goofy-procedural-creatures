@@ -172,7 +172,7 @@ A goofy material is what a surface is made of, the way a 3D material is — **ho
 (Goofy, like the outline and the fur, to keep it apart from the GPU material in `scene/mesh.js` — one flat
 `MeshBasicMaterial` for the whole board.)
 The `base` colour — the fill-up (`flat`, optionally a tone of the color) — always opaque (on the
-board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
+board the one in front has to hide the one behind);
 — and the creature's **pattern** (stripes, dots, spots, hatching: the `pattern` slot), clipped to the contour and drawn
 **last of all, over the texture**: it is a mark on the animal rather than part of its surface, and under a hatched or dusted
 material it was being buried (`paint(…, { pattern })`; on a tail it runs
@@ -215,7 +215,7 @@ material on a **dark ground**, which is where the rule above is visible.
 
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |
-| `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5) |
+| `FLAT` | `flat` — the fill-up, the fan from the centre | — | the default of the `material` slot (weight 5) |
 | `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, **in the light ink scratches with** (`mark`) over a ground the step deepens (`tone`) | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
 | `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter. On a color too pale to water it runs the other way — the ground laid on deeper, the scratch opening back to the color | the `material` slot (0.8) |

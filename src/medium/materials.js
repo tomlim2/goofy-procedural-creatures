@@ -20,7 +20,7 @@ const TAU = Math.PI * 2;
 // draws one shader ball per entry, and its channels under it. Docs: guidelines/drawing.md § the goofy material.
 // (Goofy, to keep them apart from the GPU materials — those live in scene/mesh.js.)
 export const GOOFY_MATERIALS = {
-  // Flat — the fill-up alone: the fan from the centre, printed out of register. What every creature is made of today
+  // Flat — the fill-up alone: the fan from the centre. What every creature is made of today
   FLAT:        { base: { kind: "flat" } },
   // Graphite — the part's color hatched with the pencil (the reference's ground is paper because its color is paper; ours keeps the
   // part's color — a lightened ground bleached pale parts and left them a different color from their neighbours): rules
@@ -153,15 +153,15 @@ function rules(points, angle, gap, jitter) {
 
 
 // Fills with a named goofy material — its base color (with the part's pattern, if any), then its texture at a value step, every mark
-// clipped to the contour. offset prints the base out of register (a creature's fillOffset). pattern: { kind, color } — the creature's
+// clipped to the contour. pattern: { kind, color } — the creature's
 // pattern, part of the base color. value: the step to draw at
 // (draw/body.js reads the creature's density slot; the medium page's rows name one). only: "base" or
 // "texture" draws that channel alone. strip: [left, right] — the base is cut as a strip between the two rails instead of a fan from the
 // centre (a tube that bones will bend: the tail); the contour (points) still clips the texture. Every tone is a shade of the part's color —
 // the goofy material knows no colors of its own
-export function paintWith(sketch, points, name, { color, offset = [0, 0], only, pattern, value, strip, stripT, skinT } = {}) {
+export function paintWith(sketch, points, name, { color, only, pattern, value, strip, stripT, skinT } = {}) {
   // stripT(i) / skinT: the skin tags of the base — per rung of a strip, or one t for a fill (a bead on the tail); the texture's marks stay untagged
-  const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, offset, stripT) : sketch.fill(points, c, offset, skinT));
+  const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, stripT) : sketch.fill(points, c, skinT));
   const m = GOOFY_MATERIALS[name];
   if (!m) throw new Error(`unknown goofy material: ${name}`);
   const step = value === undefined ? valueStep(color) : value;

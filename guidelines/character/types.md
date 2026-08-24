@@ -88,7 +88,6 @@ the range. Most of the silhouette variety comes from here.
 | ink | 1 of the 4 INKS | All dark brown-black. Imps are pinned to #1c1917 (darker than the head) |
 | **DARKS** | 9 colors | The dark palette for imp heads only. Ink · brown-black · brown-grey · light brown-grey · grey-blue · blue-grey · grey · purple-black · green-black. The body only shifts tone from here (`shade`) |
 | accent | 1 of the 4 ACCENTS | Hat and band colors |
-| fillOffset | ±0.035 | The fill goes off outside the lines (misregistered printing) |
 | **pop** | 5 POPS, at 14% probability, targeting hair/headgear/skin | A saturated color accent. **Capped at 3 per board** (`makeGrid` switches off the excess). Landing on the skin with luminance < 120, the face ink switches to the light color (`faceInk`) |
 
 **Light ink on a dark surface.** At luminance < 120, the lines on that surface go to light ink (#e9e3d5) — the

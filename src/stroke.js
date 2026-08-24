@@ -320,24 +320,23 @@ export class Sketch {
   // bent by bones (the tail): a fan from the centre would throw long triangles across the bones and fold like a paddle, a strip keeps
   // every triangle between neighbouring rungs, so the skin bends where the bones bend
   // tOf(i) tags rung i's quads with its t along the spine (the skin tag)
-  fillStrip(left, right, color, offset = [0, 0], tOf = null) {
+  fillStrip(left, right, color, tOf = null) {
     const rgb = hexToRgb(color);
-    const [ox, oy] = offset;
     this.skinT = NaN;
     for (let i = 0; i + 1 < Math.min(left.length, right.length); i += 1) {
       const a = left[i], b = right[i], c = left[i + 1], d = right[i + 1];
       // Each corner takes the t of **its own rung** — a and b sit on rung i, c and d on rung i + 1. One tag for the whole quad would give
       // rung i + 1's two points a different bone blend in this quad than in the next one, and the strip would tear open at every bend
       const ta = tOf ? tOf(i) : NaN, tb = tOf ? tOf(i + 1) : NaN;
-      this.triangle(a[0] + ox, a[1] + oy, b[0] + ox, b[1] + oy, c[0] + ox, c[1] + oy, rgb, [ta, ta, tb]);
-      this.triangle(b[0] + ox, b[1] + oy, d[0] + ox, d[1] + oy, c[0] + ox, c[1] + oy, rgb, [ta, tb, tb]);
+      this.triangle(a[0], a[1], b[0], b[1], c[0], c[1], rgb, [ta, ta, tb]);
+      this.triangle(b[0], b[1], d[0], d[1], c[0], c[1], rgb, [ta, tb, tb]);
     }
   }
 
   // Area fill. Cut as a fan from the centre.
   // Every shape we use is visible from its centre, so this is enough.
   // skinT tags the fan with one t (the skin tag) — a bead, a tuft, a pom sitting at one place on a bent part
-  fill(points, color, offset = [0, 0], skinT = NaN) {
+  fill(points, color, skinT = NaN) {
     this.skinT = skinT;
     const rgb = hexToRgb(color);
     let cx = 0;
@@ -352,12 +351,7 @@ export class Sketch {
     for (let i = 0; i < points.length; i += 1) {
       const a = points[i];
       const b = points[(i + 1) % points.length];
-      this.triangle(
-        cx + offset[0], cy + offset[1],
-        a[0] + offset[0], a[1] + offset[1],
-        b[0] + offset[0], b[1] + offset[1],
-        rgb
-      );
+      this.triangle(cx, cy, a[0], a[1], b[0], b[1], rgb);
     }
   }
 

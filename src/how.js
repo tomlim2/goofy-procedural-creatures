@@ -71,7 +71,7 @@ function blobRow(sk, phase, make) {
   const fills = sk(), ink = sk();
   for (let i = 0; i < 3; i += 1) {
     const path = make(i, col(i), phase + i * 3);
-    fills.fill(path, FILLS[1], [0.012, -0.01]);
+    fills.fill(path, FILLS[1]);
     ink.pencil(path, { color: INK, width: 0.011, closed: true, paper: FILLS[1] });
   }
 }
@@ -97,7 +97,7 @@ function swatches(name, list) {
     list.forEach((hex, i) => {
       const x = (i - (n - 1) / 2) * 0.22;
       const path = blobPath(x, 0, 0.075, 0.075, { lumps: 4, amount: 0.12, noise, phase: 53 + i * 2.6 });
-      fills.fill(path, hex, [0.007, -0.006]);
+      fills.fill(path, hex);
       ink.pencil(path, { color: INK, width: 0.006, closed: true, paper: hex });
     });
   });
@@ -209,7 +209,7 @@ Object.entries(ANATOMY).forEach(([pen, rows]) => {
 
 // Fur balls — one per entry of GOOFY_FUR: the same FLAT ball, the board's contour, the fur grown along its crown as hair is
 Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("furBalls"), `fur:${name}`, name.toLowerCase(), 131 + i * 3, (fills, ink, ball) => {
-  fills.paint(ball, "FLAT", { color: FILLS[2], offset: [0.012, -0.01] });
+  fills.paint(ball, "FLAT", { color: FILLS[2] });
   ink.contour(ball, { color: INK, paper: CARD });   // the board's contour, whatever the switch says
   ink.fur(arcPath(0, 0.02, 0.17, 0.17, Math.PI * 0.15, Math.PI * 0.85, 12), name, { color: INK });
 }));
@@ -253,7 +253,7 @@ Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
       steps.forEach((k, j) => {
         const x = (j - (steps.length - 1) / 2) * 0.5;
         const ball = blobPath(x, rowY(r), 0.19, 0.19, { lumps: 5, amount: 0.05, noise, phase: 97 + i * 3 + j + r * 17 });
-        fills.paint(ball, name, { color, offset: [0.012, -0.01], value: k });
+        fills.paint(ball, name, { color, value: k });
         ink.contour(ball, { color: INK, paper: CARD });   // the board's contour, whatever the switch says
       });
     });
@@ -263,7 +263,7 @@ Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
 fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {   // the demonstration of the boil — the one figure that never holds still (always, below)
   const fills = sk(), ink = sk();
   const head = blobPath(0, 0, 0.27, 0.24, { lumps: 5, amount: 0.07, noise, phase: 71, square: 0.4, taper: 0.08 });
-  fills.fill(head, FILLS[2], [0.022, -0.018]);
+  fills.fill(head, FILLS[2]);
   for (const side of [-1, 1]) fills.fill(blobPath(side * 0.17, -0.05, 0.04, 0.026, { lumps: 3, amount: 0.15, noise, phase: 5 + side }), BLUSH);   // the blush — a flat blob, as on the board
   ink.contour(head, { color: INK, paper: CARD });
   for (const side of [-1, 1]) ink.pencil([[side * 0.09 - 0.015, 0.05], [side * 0.09 + 0.015, 0.05]], { color: INK, width: 0.017, paper: CARD });

@@ -144,9 +144,7 @@ export function makeCreature(seed, speciesName = "human") {
     skin,
     // Clothes have to be a different color from the skin or the body does not read.
     cloth: rng.pick(FILLS.filter((c) => c !== skin)),
-    accent: rng.pick(ACCENTS),
-    // The fill sticks out past the line. As if the printing were misregistered.
-    fillOffset: [rng.around(0, 0.035), rng.around(0, 0.035)]
+    accent: rng.pick(ACCENTS)
   };
 
   // Drawing the imp head and body colors. The number of rng calls is fixed regardless of species (the decision is below).
