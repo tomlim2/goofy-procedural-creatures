@@ -50,7 +50,7 @@ export function limbSketches(spec, variant = 0) {
 
   const make = () => new Sketch(noise, p.wobble);
   const dot = (s, x, y, r, color) => {
-    paintPart(s, spec, blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color);   // a hand — the creature's goofy material
+    paintPart(s, spec, blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color, { body: true });   // a hand — the body's goofy material
     s.contour(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), { color: ink0 });
   };
 
@@ -77,7 +77,7 @@ export function limbSketches(spec, variant = 0) {
         // Socks — a small boot filled to the ankle
         s.line([[0, 0], [lean, -len]], { color: ink0 });
         const boot = crumple([[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]], 0.003, lean * 90);
-        paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
+        paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
         s.contour(boot, { color: ink0 });
       } else {
         // A thick stub leg plus a round toe tip poking slightly forward plus two toe lines (the reference)
@@ -126,7 +126,7 @@ export function limbSketches(spec, variant = 0) {
     if (legKind === "boots") {
       // Boots — a mass filled to the ankle
       const boot = crumple([[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]], 0.003, footX * 90);
-      paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75));
+      paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
       s.contour(boot, { color: ink0 });
     } else {
       // A round foot — the reference default
@@ -159,7 +159,7 @@ export function limbSketches(spec, variant = 0) {
     if (armKind === "sleeve") {
       // The upper arm is a cloth-colored sleeve. The forearm is a bare arm plus a hand.
       const sl = crumple([[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]], 0.0025, side * 3);
-      paintPart(upper, spec, sl, cloth);   // a sleeve — the creature's goofy material
+      paintPart(upper, spec, sl, cloth, { body: true });   // a sleeve — the body's goofy material
       upper.contour(sl, { color: ink0 });
       lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0 });
       dot(lower, side * 0.006, -lowerLen - 0.006, 0.022, skin);
@@ -427,7 +427,7 @@ export function tailSketch(spec, variant = 0) {
     // construction, never guessed from a vertex's position (beside a tight curl a guess picks the curl's other arm, and the skin tears)
     const tsFine = spineT(fine);
     const tRung = (i) => Math.min(1, (tsFine[i] * whole) / body);
-    paintPart(sketch, spec, [...left, ...right.slice().reverse()], fur, { strip: [left, right], stripT: tRung });   // the tail is fur — the creature's goofy material
+    paintPart(sketch, spec, [...left, ...right.slice().reverse()], fur, { body: true, strip: [left, right], stripT: tRung });   // the tail is fur — the body's goofy material
     tubePattern(widthAt);
     const railT = left.map((_, i) => tRung(i));   // the rails' tags follow the spine's t rung by rung — a rail's own length runs short on the inside of a curl
     sketch.line(left, { color: ink0, size: "S", joint: [true, true], skinT: railT });    // both ends joints — at the point two flicks would double into a spike
@@ -473,14 +473,14 @@ export function tailSketch(spec, variant = 0) {
     spineLine("M");
     const tip = spine[spine.length - 1];
     const ball = blobPath(tip[0], tip[1], stub ? 0.02 : 0.024, stub ? 0.018 : 0.02, { lumps: 4, amount: 0.25, noise: null });
-    paintPart(sketch, spec, ball, shade(fur, 0.82), { skinT: 1 });
+    paintPart(sketch, spec, ball, shade(fur, 0.82), { body: true, skinT: 1 });
     sketch.contour(ball, { color: ink0, skinT: [1, 1] });
   } else if (skin === "puff") {
     // A pom — a rabbit tail. Regardless of the skeleton's length, one bushy tuft near the rump (at spine 0.3) plus fur strokes around it
     const a = at(0.3);
     const r = 0.04;
     const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
-    paintPart(sketch, spec, pom, fur, { skinT: 0.3 });
+    paintPart(sketch, spec, pom, fur, { body: true, skinT: 0.3 });
     sketch.contour(pom, { color: ink0, skinT: [0.3, 0.3] });
     for (let i = 0; i < 6; i += 1) {
       const ang = -1.0 + i * 0.66;   // around the top and outside
@@ -492,7 +492,7 @@ export function tailSketch(spec, variant = 0) {
     if (stub) {
       const a = at(0.6);
       const ball = blobPath(a.x, a.y + 0.005, 0.03, 0.028, { lumps: 4, amount: 0.15, noise: null });
-      paintPart(sketch, spec, ball, fur, { skinT: 0.6 });
+      paintPart(sketch, spec, ball, fur, { body: true, skinT: 0.6 });
       sketch.contour(ball, { color: ink0, skinT: [0.6, 0.6] });
     } else {
       spineLine("S");
@@ -502,7 +502,7 @@ export function tailSketch(spec, variant = 0) {
         const a = at(t);
         const r = 0.024 - i * 0.004;
         const ball = blobPath(a.x, a.y, r, r, { lumps: 3, amount: 0.12, noise: null });
-        paintPart(sketch, spec, ball, fur, { skinT: t });
+        paintPart(sketch, spec, ball, fur, { body: true, skinT: t });
         sketch.contour(ball, { color: ink0, skinT: [t, t] });
       }
     }

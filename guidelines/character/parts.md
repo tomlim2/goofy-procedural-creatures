@@ -418,15 +418,23 @@ The creature's **goofy material** — what the head and the body are made of, ho
 upright pencil strokes) · **ink** (solid, a few light scratches) · **oil** (thick dabs in three
 tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.)
 
+### bodyMaterial (6) — a late slot
+
+The **body's** goofy material when it is not the head's: **same** (weight 9 — three quarters of the board, one tool through) or one
+of the five. A face and a torso are two surfaces and one hand may reach for a second tool between them. The head's side of the line
+is the head, the ears, the horns, the hair, the hat, the muzzle, the nose and the face; the body's is the torso, the arms and hands,
+the sleeves, the legs and boots, and the tail. Around a quarter of creatures come out split, and one in twelve with two *textured*
+materials. The **density** is not split — one hand, one pressure ([../drawing.md](../drawing.md) § what takes the goofy material).
+
 ### density (5) — a late slot
 
 How dark the goofy material draws this creature — **the value step itself**, one of the five, evenly weighted:
 **black · hatch · scribble · stipple · light** (`medium/materials.js` `VALUES`). The seed picks it, so every step turns up on every
 species — a pale skin can be hatched black and a black one grazed light. Nothing on flat. Everything the creature fills draws at
 that one step, head and body alike ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
-opaque, so neighbours still hide each other. Everything the creature fills takes the same goofy material — the head, the body, the ears and their insides, the muzzle, the
-hands, boots and sleeves, the tail, the hats, the eyes, the nose, the mouth — one hand, one tool per creature ([../drawing.md](../drawing.md)
-§ what takes the goofy material). The contour is not part of it (the goofy outline, PENCIL_STROKE). The calico's patches are decals in the base.
+opaque, so neighbours still hide each other. Everything the creature fills takes a goofy material — the head, the body, the ears and their insides, the muzzle, the
+hands, boots and sleeves, the tail, the hats, the eyes, the nose, the mouth — the head's or, where `bodyMaterial` splits them, the
+body's ([../drawing.md](../drawing.md) § what takes the goofy material). The contour is not part of it (the goofy outline, PENCIL_STROKE). The calico's patches are decals in the base.
 
 ## Render order
 

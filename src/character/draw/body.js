@@ -5,9 +5,13 @@ import { stepOf } from "../../medium/materials.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { FURS, CALICO_MID, MARKS } from "../vocabulary/palette.js";
 
-// The creature's goofy material, by name. A spec without the slot — an older tree's, in drawdiff — is flat, like every late slot's default
-export function materialOf(spec) {
-  return (spec.parts.material || "flat").toUpperCase();
+// The creature's goofy material, by name — **the one place a material is named**. `where` is the half of the creature asking: the
+// head's is the `material` slot, the body's is `bodyMaterial` unless that says `same` (most of them). Everything standing on the head
+// counts as the head — ears, horns, hair, a hat, the muzzle, the face — and everything hanging off the body as the body — limbs,
+// hands, boots, sleeves, the tail. A spec without either slot — an older tree's, in drawdiff — is flat, like every late slot's default
+export function materialOf(spec, where = "head") {
+  const body = where === "body" && spec.parts.bodyMaterial && spec.parts.bodyMaterial !== "same" ? spec.parts.bodyMaterial : null;
+  return (body || spec.parts.material || "flat").toUpperCase();
 }
 
 // **The one place a surface's step is worked out** — and it is the creature's own, the `density` slot, so everything it fills draws
@@ -19,13 +23,13 @@ export function surfaceHand(spec) {
 // Paints a part's surface with the creature's goofy material — the one way in for every skin, fur and cloth surface that is not the head or
 // the body (ears, the muzzle, hands, boots, sleeves, the tail, hats): guidelines/drawing.md § what takes the goofy material. The value step
 // is the creature's (one mass on a dog, a cat or an imp), or the part's own color's when `own` — a hat is an object, not the fur
-export function paintPart(fills, spec, path, color, { own = false, flat = false, offset, strip, stripT, skinT } = {}) {
+export function paintPart(fills, spec, path, color, { own = false, flat = false, body = false, offset, strip, stripT, skinT } = {}) {
   const options = { color, ...surfaceHand(spec) };
   if (offset) options.offset = offset;
   if (strip) options.strip = strip;   // a tube's base cut as a strip between its rails (the tail — bones bend it)
   if (stripT) options.stripT = stripT;   // …tagged per rung with its t along the spine (the skin reads its bones from the tag)
   if (skinT !== undefined) options.skinT = skinT;   // a fill at one t of the spine (a bead, a tuft, a pom)
-  fills.paint(path, flat ? "FLAT" : materialOf(spec), options);   // flat: the whites of the eyes — never textured
+  fills.paint(path, flat ? "FLAT" : materialOf(spec, body ? "body" : "head"), options);   // flat: the whites of the eyes — never textured. body: it hangs off the torso, so it takes the body's material
 }
 
 // The creature's pattern — the `pattern` slot as part of the goofy material's base color (medium/materials.js patternOn). Light ink on a dark body,
@@ -45,7 +49,7 @@ export function drawBody(ink, fills, spec, box, noise) {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
     const decals = bodyDecals(spec, path, noise);
-    fills.paint(path, materialOf(spec), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step; the pattern and the decals in its base
+    fills.paint(path, materialOf(spec, "body"), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step; the pattern and the decals in its base
     // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
     ink.contour(path, { color: spec.palette.ink });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     decalEdges(ink, spec, decals);
@@ -73,7 +77,7 @@ export function drawBody(ink, fills, spec, box, noise) {
 
   const decals = bodyDecals(spec, path, noise);
 
-  fills.paint(path, materialOf(spec), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step; the pattern and the decals in its base
+  fills.paint(path, materialOf(spec, "body"), { color: spec.palette.cloth, offset: spec.palette.fillOffset, pattern: patternOf(spec), decals, ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step; the pattern and the decals in its base
   // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
   ink.contour(path, { color: ink0 });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   decalEdges(ink, spec, decals);
