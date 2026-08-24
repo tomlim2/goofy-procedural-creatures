@@ -36,7 +36,6 @@ export const ARCHETYPES = [
       eyewear: [["patch", 3], ["goggles", 3], ["none", 3]],
       head: [["square", 3], ["block", 2], ["round", 2], ["wide", 1]],
       hair: [["scribble", 3], ["mohawk", 1.5], ["spikes", 2], ["hedgehog", 1.5], ["none", 2]],
-      pattern: [["stripes", 3], ["patch", 2], ["hatch", 2], ["none", 2]],
       arms: [["sleeve", 3], ["stick", 2]],
       legs: [["boots", 4], ["stick", 2], ["stub", 1]]
     }
@@ -77,7 +76,6 @@ export const ARCHETYPES = [
       headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5]],
       hair: [["scribble", 3], ["mop", 2], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["bun", 1.5], ["appleBig", 0.8], ["ponytail", 1], ["verylong", 0.8], ["none", 2], ["wisp", 1]],
       eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
-      pattern: [["hatch", 3], ["stripes", 2], ["patch", 2], ["none", 2]],
       mouth: [["wave", 3], ["line", 2], ["dot", 2], ["frown", 1.5], ["scribble", 1]],
       body: [["dress", 3], ["bean", 2]]
     }

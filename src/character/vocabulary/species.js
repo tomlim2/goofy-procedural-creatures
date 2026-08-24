@@ -10,6 +10,9 @@ export const SPECIES = [
     // forbid means "if this value comes up for this slot, swap it for this". applyConstraints reads it and
     // overwrites deterministically — the archetype's disposition (a scholar's dot eyes and so on) survives.
     forbid: {
+      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material.
+      // A calico is not one of those: it is decals, colour regions in the base, and it stays where it belongs (cat, pup)
+      pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       arms: { none: "stick" },   // humans have arms (armless belongs to imps)
       face2: { tears: "none" },  // tear marks are not given to humans (they belong to imps)
       // A human ear is only a human ear — a small round ear (round) or none. Animal ears (pointy, floppy, folded, long) are not given to humans
@@ -35,6 +38,9 @@ export const SPECIES = [
   {
     name: "pup",
     forbid: {
+      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material.
+      // A calico is not one of those: it is decals, colour regions in the base, and it stays where it belongs (cat, pup)
+      pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid", perkBig: "perkMid" },
       // Dog ear boundary — none and the huge ear become dog ears
       eyes: { cyclops: "dot" },
@@ -79,6 +85,9 @@ export const SPECIES = [
   {
     name: "cat",
     forbid: {
+      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material.
+      // A calico is not one of those: it is decals, colour regions in the base, and it stays where it belongs (cat, pup)
+      pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
       // Cat ear boundary — floppy ears and none become crown ears
       eyes: { cyclops: "slit" },
@@ -143,7 +152,8 @@ export const SPECIES = [
       // Mouth — wide (a species multiplier of 1.3 plus wide). The tooth grid, a hatched mass, zigzag, big fangs, and shout/open with two tooth strips (5 reference rows)
       mouth: [["grimace", 3], ["scribble", 2], ["zigzag", 2], ["fangs", 3], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["smug", 1], ["line", 0.5]],
       mouthSize: [["normal", 2], ["wide", 2], ["small", 0.5]],
-      pattern: [["stripes", 3], ["none", 2], ["hatch", 1]],
+      // The patterns are the imps' alone (the other three species forbid them), so all five live here
+      pattern: [["stripes", 3], ["hatch", 2], ["none", 2], ["dots", 1.5], ["spots", 1.5], ["patch", 1.5]],
       face2: [["none", 6], ["tears", 1]],
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]],

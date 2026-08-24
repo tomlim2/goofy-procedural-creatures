@@ -280,9 +280,12 @@ and a narrow body draws the legs together. The shoulder position (on the torso o
 `BUILD` (biped) and `QUAD_BUILD` (quad) in `layout()`. `LATE_SLOTS`. Default weights medium 4 · narrow 1.5 · wide 1.5 · skinny 1 · small 1.
 Gallery: `gallery.html?slot=build&fix=legLength:long`.
 
-### pattern (7) — the surface, not a part
-none / stripes (3 horizontal lines) / dots (4 dots) / patch (hatching on the left) / hatch (diagonals over the whole thing) / spots (3 dalmatian spots) / **calico** (the tricolor patch — below).
-The five line kinds are part of the body's **goofy material's base color** — drawn inside the fill and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `medium/materials.js`; light ink when the body color's luminance < 120), under the goofy material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
+### pattern (7) — the surface, not a part. **The line patterns are the imps'**
+The five line kinds — stripes (3 horizontal lines) / dots (4 dots) / patch (hatching on the left) / hatch (diagonals over the whole
+thing) / spots (3 dalmatian spots) — are **forbidden outside imps** (species.js: they fall to none for humans, cats and dogs), so a
+pattern on the board reads as an imp's marking. **calico is not one of them** and keeps its own rule below: it is decals, colour
+regions in the base, and it stays with the cats and the dogs. none / **calico** (the tricolor patch — below).
+The five line kinds are drawn **over** the goofy material, last of all and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `medium/materials.js`; light ink when the body color's luminance < 120), under the goofy material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
 
 **calico — the tricolor patch (dogs and cats only, filled).** Not lines but **color patches**, and they are on the body, head and ear alike. Every color is inside the palette (`calicoColors`, wobbleSeed, no rng):
 the base is the skin as-is (when it is calico, spec.js withholds black fur to guarantee **a light base**), the black patch is one of FURS, and the middle tone is `CALICO_MID` (a warm tan, luminance 139 —
