@@ -6,6 +6,11 @@ import { paintPart } from "./body.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
 
+// **The bands** — the only widths a part still names, because they are not lines: a hat's colour laid as a thick pencil stroke, a
+// fill in disguise (a band across the crown, and the brim's rim). Everything that *is* a line asks for a size instead
+// (medium/outlines.js PEN_SIZES)
+const BANDS = { hat: 0.03, brim: 0.055 };
+
 export function drawHeadgear(ink, fills, spec, box) {
   const kind = spec.parts.headgear;
   if (kind === "none") return;
@@ -39,7 +44,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const y = brow + ry * 0.08;
     const w = halfW(y) * 1.05;
     // The band — the hat's color laid as a thick pencil stroke: a fill in disguise, not a line, so it stays outside the goofy outline
-    ink.pencil([[-w, y], [w, y + 0.006]], { color: accent, width: 0.03 });
+    ink.pencil([[-w, y], [w, y + 0.006]], { color: accent, width: BANDS.hat });
     ink.line([[-w, y + 0.014], [w, y + 0.02]], { color: ink0, size: "S" });
     return;
   }
@@ -86,7 +91,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     // Bonnet — a thick band wrapping the head. It crosses over the crown from eye level on both sides
     const rim = arcPath(0, cy, rx * 1.2, ry * 1.14, Math.PI * 1.02, -Math.PI * 0.02, 26);
     // The brim — the hat's color as a thick pencil stroke along the rim: a band, not a line (see the band above)
-    ink.pencil(rim, { color: accent, width: 0.055 });
+    ink.pencil(rim, { color: accent, width: BANDS.brim });
     ink.line(rim, { color: ink0 });
     // Knot dots at both ends instead of a ribbon under the chin
     for (const side of [-1, 1]) {

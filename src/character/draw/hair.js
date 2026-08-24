@@ -13,9 +13,9 @@ import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
 
 // A scribble cap covering the crown — several kinds share the same shape. depth is how far down the sides it comes (0.5 = ear height)
-const cap = (h, depth, steps, passes, spread, width = 0.01) => {
+const cap = (h, depth, steps, passes, spread, size = "L") => {
   const arc = arcPath(0, h.cy, h.rx * 0.98, h.ry * 0.98, Math.PI * (0.5 + depth), Math.PI * (0.5 - depth), steps);
-  h.crown.fur(arc, "SCRIBBLE", { color: h.ink0, passes, width, spread });
+  h.crown.fur(arc, "SCRIBBLE", { color: h.ink0, passes, size, spread });
 };
 
 // Hanging hair (curtains) — each stroke starts **on the head outline** and flows down: the middle strokes start near the crown, the side strokes at ear height,
@@ -71,12 +71,12 @@ const twintailsOf = (ball) => (h) => {
   for (const side of [-1, 1]) {
     const tx = side * rx * 0.95, ty = cy + ry * 0.35;
     const tail = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - 0.3]];
-    back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, width: 0.009, spread: 0.028 });
+    back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, size: "M", spread: 0.028 });
     back.line([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: ink0 });   // the tie
     if (ball) {
       // The end bunch — a round scribble mass at the end of the tail plus an outline
       const bx = tx + side * 0.05, by = ty - 0.34;
-      back.fur(arcPath(bx, by, 0.05, 0.055, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 9, width: 0.009, spread: 0.032 });
+      back.fur(arcPath(bx, by, 0.05, 0.055, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 9, size: "M", spread: 0.032 });
       back.contour(blobPath(bx, by, 0.057, 0.06, { lumps: 4, amount: 0.15, noise: null }), { color: ink0 });
     }
   }
@@ -88,7 +88,7 @@ function ponytail(h) {
   const s = spec.seed % 2 ? 1 : -1;
   const px0 = s * rx * 0.25, py0 = cy + ry * 0.92;
   const tail = [[px0, py0], [px0 + s * 0.06, py0 + 0.06], [px0 + s * 0.13, py0 + 0.02], [px0 + s * 0.15, py0 - 0.14], [px0 + s * 0.11, py0 - 0.3]];
-  back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, width: 0.009, spread: 0.026 });
+  back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, size: "M", spread: 0.026 });
   back.line([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: ink0 });   // the tie
 }
 
@@ -162,7 +162,7 @@ const voluminous = (kind) => (h) => {
   } else {
     // The cloud type — the inside filled with loop scribbles (curls) and small loops along the scalloped edge
     const arc = arcPath(0, cy, rx * 1.02, ry * 1.0, Math.PI * 1.04, -Math.PI * 0.04, 24);
-    crown.fur(arc, "SCRIBBLE", { color: ink0, passes: 20, width: 0.009, spread: ry * 0.36 });
+    crown.fur(arc, "SCRIBBLE", { color: ink0, passes: 20, size: "M", spread: ry * 0.36 });
     for (let i = 0; i < 11; i += 1) {
       const k = i / 10;
       const angle = Math.PI * (1.0 - 1.0 * k);
@@ -181,11 +181,11 @@ function pigtails(h) {
   for (const side of [-1, 1]) {
     const bx = side * rx * 1.02;
     const by = cy + ry * 0.3;
-    back.fur(arcPath(bx, by, 0.045, 0.06, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 7, width: 0.008, spread: 0.03 });
+    back.fur(arcPath(bx, by, 0.045, 0.06, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 7, size: "S", spread: 0.03 });
     back.line([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: ink0 });
   }
   // A light crown — an arc smaller than the cap (0.9)
-  h.crown.fur(arcPath(0, cy, rx * 0.9, ry * 0.9, Math.PI * 0.72, Math.PI * 0.28, 10), "SCRIBBLE", { color: ink0, passes: 5, width: 0.008, spread: ry * 0.12 });
+  h.crown.fur(arcPath(0, cy, rx * 0.9, ry * 0.9, Math.PI * 0.72, Math.PI * 0.28, 10), "SCRIBBLE", { color: ink0, passes: 5, size: "S", spread: ry * 0.12 });
 }
 
 // Curly — small circular bunches along the crown
@@ -229,13 +229,13 @@ const fringe = (kind) => (h) => {
     const bottom = fringeBottom + Math.abs(noise(i * 2.7 + spec.seed * 0.002)) * ry * 0.09;
     zig.push([x, i % 2 === 0 ? top : bottom]);
   }
-  front.fur(zig, "SCRIBBLE", { color: ink0, passes: 6, width: 0.01, spread: 0.014 });   // bangs — over the face
+  front.fur(zig, "SCRIBBLE", { color: ink0, passes: 6, size: "L", spread: 0.014 });   // bangs — over the face
   if (kind === "longbob") {
     // A bob coming down the sides to the jaw line — thick vertical scribbles wrapping both sides of the face (the bangs layer — over the cheeks and ears)
     for (const side of [-1, 1]) {
       const x = side * rx * 0.9;
       const col = [[x - side * 0.03, cy + ry * 0.62], [x + side * 0.02, cy + ry * 0.1], [x + side * 0.03, cy - ry * 0.7]];
-      front.fur(col, "SCRIBBLE", { color: ink0, passes: 14, width: 0.01, spread: 0.045 });
+      front.fur(col, "SCRIBBLE", { color: ink0, passes: 14, size: "L", spread: 0.045 });
     }
   }
 };
@@ -243,23 +243,23 @@ const fringe = (kind) => (h) => {
 // Bun — thinly covers the crown with one bunch on top plus a hairpin stroke
 function bun(h) {
   const { crown, ink0, ry, cy } = h;
-  cap(h, 0.32, 16, 7, ry * 0.14, 0.009);
+  cap(h, 0.32, 16, 7, ry * 0.14, "M");
   const bx = 0.01, by = cy + ry * 1.05;
-  crown.fur(arcPath(bx, by, 0.045, 0.04, 0, Math.PI * 2, 14), "SCRIBBLE", { color: ink0, passes: 8, width: 0.009, spread: 0.028 });
+  crown.fur(arcPath(bx, by, 0.045, 0.04, 0, Math.PI * 2, 14), "SCRIBBLE", { color: ink0, passes: 8, size: "M", spread: 0.028 });
   crown.contour(blobPath(bx, by, 0.048, 0.042, { lumps: 4, amount: 0.15, noise: null }), { color: ink0 });
   crown.line([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: ink0, size: "S" });
 }
 
 // bob / mop / scribble / sweep — a scribble covering the scalp. It has to have **volume**, like the reference: the arc comes down to the side of the head
 // (ear height, depth 0.6) and the scribble spreads wide. The end coming down the side covers the ear without reaching the eyes (the eyes are within x ±0.4rx), and the spread toward the crown is above the brow line.
-// depth how far down the sides it comes · passes the number of back-and-forths · spread the spread (× ry) · width the stroke thickness · backCap one more layer behind the head (volume outside the silhouette)
-const mopCap = ({ depth, passes, spread, width = 0.01, backCap = true }) => (h) => {
+// depth how far down the sides it comes · passes the number of back-and-forths · spread the spread (× ry) · size the strand's size (medium/fur.js FUR_SIZES) · backCap one more layer behind the head (volume outside the silhouette)
+const mopCap = ({ depth, passes, spread, size = "L", backCap = true }) => (h) => {
   const { back, ink0, rx, ry, cy } = h;
-  cap(h, depth, 22, passes, ry * spread, width);
+  cap(h, depth, 22, passes, ry * spread, size);
   // Back hair — one more arc, slightly bigger than the head, **behind** it (volume poking outside the silhouette). sweep has none
   if (backCap) {
     const arc = arcPath(0, cy, rx * 1.1, ry * 1.08, Math.PI * (0.5 + depth + 0.05), Math.PI * (0.5 - depth - 0.05), 22);
-    back.fur(arc, "SCRIBBLE", { color: ink0, passes: 8, width: 0.009, spread: ry * 0.16 });
+    back.fur(arc, "SCRIBBLE", { color: ink0, passes: 8, size: "M", spread: ry * 0.16 });
   }
 };
 
@@ -267,7 +267,7 @@ const mopCap = ({ depth, passes, spread, width = 0.01, backCap = true }) => (h) 
 export const HAIR = {
   bob: mopCap({ depth: 0.56, passes: 14, spread: 0.26 }),
   mop: mopCap({ depth: 0.62, passes: 20, spread: 0.3 }),
-  scribble: mopCap({ depth: 0.6, passes: 22, spread: 0.26, width: 0.008 }),
+  scribble: mopCap({ depth: 0.6, passes: 22, spread: 0.26, size: "S" }),
   sweep: mopCap({ depth: 0.4, passes: 14, spread: 0.18, backCap: false }),
   spikes: spiky([[0.95, 11, 0.95, 0.06, 0.09]]),
   mohawk: spiky([[0.95, 7, 0.35, 0.06, 0.09]]),

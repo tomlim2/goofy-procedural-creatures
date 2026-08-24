@@ -154,7 +154,7 @@ export const MOUTH = {
     for (const k of [-0.33, 0.33]) m.ink.line([[m.x + hw * k, top], [m.x + hw * k + 0.001, top - depth * 0.7]], { color: m.edge, size: "S" });
   },
   // Hatched mouth — covers the mouth position with a mass of horizontal hatching (reference human row 2, 4th, and imps). Reads as clenched teeth, or as a moustache
-  scribble: (m) => m.ink.hatch(m.x, m.y, m.w * 0.9, Math.max(0.012, Math.min(0.02, m.openH * 0.45)), 0.08, { color: m.ink0, lines: 5, width: 0.007 }),
+  scribble: (m) => m.ink.hatch(m.x, m.y, m.w * 0.9, Math.max(0.012, Math.min(0.02, m.openH * 0.45)), 0.08, { color: m.ink0, lines: 5 }),
   // Tongue — the tongue hangs below a slightly open mouth (a small bowl, no teeth). Dogs pant (the ^^ alt mouth), imps stick it out
   tongue: (m) => {
     const b = bowl(m, m.w * 0.7, 0.55, false);

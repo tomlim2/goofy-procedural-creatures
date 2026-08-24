@@ -22,7 +22,7 @@ export function buildEmoji(kind, noise) {
       pts.push([x, y]);
     }
     sketch.fill(pts, POPS[2]);   // the palette's brick red
-    sketch.pencil(pts, { color: shade(POPS[2], 0.7), width: 0.007, closed: true, paper: POPS[2] });   // its own outline, a shade darker
+    sketch.contour(pts, { color: shade(POPS[2], 0.7), size: "S", paper: POPS[2] });   // its own outline, a shade darker
   } else if (kind === "bang") {
     // "!" — a short stroke turns into a diamond or a thread because of the end taper. Drawn as filled shapes instead: a bar thick at the top plus a round dot
     const bar = [[-0.011, 0.085], [0.011, 0.085], [0.006, 0.02], [-0.006, 0.02]];
@@ -41,7 +41,7 @@ export function buildEmoji(kind, noise) {
       pts.push([Math.cos(a) * r * 0.85, Math.sin(a) * r * 1.25 + (Math.sin(a) > 0 ? Math.sin(a) * 0.012 : 0)]);
     }
     sketch.fill(pts, MARKS.sweat);
-    sketch.pencil(pts, { color: INKS[0], width: 0.007, closed: true, paper: MARKS.sweat });
+    sketch.contour(pts, { color: INKS[0], size: "S", paper: MARKS.sweat });
   } else if (kind === "dots") {
     // "..." — muttering. Three dots as filled circles
     for (let i = 0; i < 3; i += 1) {

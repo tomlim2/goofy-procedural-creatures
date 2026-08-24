@@ -378,7 +378,7 @@ export class Sketch {
   }
 
   // Hatched shading. Used for shadow on a cheek or forehead.
-  hatch(cx, cy, rx, ry, angle, { color = "#3a3430", lines = 6, width = 0.006, paper = PAPER } = {}) {
+  hatch(cx, cy, rx, ry, angle, { color = "#3a3430", lines = 6, size = "S", paper = PAPER } = {}) {
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     for (let i = 0; i < lines; i += 1) {
@@ -389,7 +389,7 @@ export class Sketch {
       const ay = cy + (-half * rx) * sin + u * cos;
       const bx = cx + half * rx * cos - u * sin;
       const by = cy + half * rx * sin + u * cos;
-      this.pencil([[ax, ay], [bx, by]], { color, width, paper });
+      this.line([[ax, ay], [bx, by]], { color, size, paper });
     }
   }
 
