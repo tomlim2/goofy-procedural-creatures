@@ -20,7 +20,7 @@ export function buildEmoji(kind, noise) {
       pts.push([x, y]);
     }
     sketch.fill(pts, "#b0432e");
-    sketch.outline(pts, { color: "#7d2f20", width: 0.007 });
+    sketch.pencil(pts, { color: "#7d2f20", width: 0.007, closed: true, paper: "#b0432e" });
   } else if (kind === "bang") {
     // "!" — a short stroke turns into a diamond or a thread because of the end taper. Drawn as filled shapes instead: a bar thick at the top plus a round dot
     const bar = [[-0.011, 0.085], [0.011, 0.085], [0.006, 0.02], [-0.006, 0.02]];
@@ -28,8 +28,8 @@ export function buildEmoji(kind, noise) {
     sketch.fill(blobPath(0, -0.012, 0.011, 0.011, { lumps: 3, amount: 0.15, noise: null }), "#2b2724");
   } else if (kind === "zzz") {
     // "z z" — sleep. One big z with a small z up and to the right. Short strokes are sampled densely to get past the end taper
-    sketch.line([[-0.026, 0.028], [0.014, 0.028], [-0.026, -0.006], [0.014, -0.006]], { color: "#2b2724", weight: 1 });
-    sketch.line([[0.02, 0.06], [0.044, 0.06], [0.02, 0.04], [0.044, 0.04]], { color: "#2b2724", weight: 0.7 });
+    sketch.line([[-0.026, 0.028], [0.014, 0.028], [-0.026, -0.006], [0.014, -0.006]], { color: "#2b2724" });
+    sketch.line([[0.02, 0.06], [0.044, 0.06], [0.02, 0.04], [0.044, 0.04]], { color: "#2b2724", size: "S" });
   } else if (kind === "sweat") {
     // Sweat drop — a teardrop with a point at the top. Pale blue fill plus an outline
     const pts = [];
@@ -39,7 +39,7 @@ export function buildEmoji(kind, noise) {
       pts.push([Math.cos(a) * r * 0.85, Math.sin(a) * r * 1.25 + (Math.sin(a) > 0 ? Math.sin(a) * 0.012 : 0)]);
     }
     sketch.fill(pts, "#b9cbd6");
-    sketch.outline(pts, { color: "#2b2724", width: 0.007, step: 0.006 });
+    sketch.pencil(pts, { color: "#2b2724", width: 0.007, closed: true, paper: "#b9cbd6" });
   } else if (kind === "dots") {
     // "..." — muttering. Three dots as filled circles
     for (let i = 0; i < 3; i += 1) {
@@ -48,7 +48,7 @@ export function buildEmoji(kind, noise) {
     }
   } else {
     // "?" — the arc is long enough to stroke (sampled densely); the stem and dot are filled shapes (short strokes vanish into the end taper)
-    sketch.line(arcPath(0, 0.045, 0.03, 0.03, Math.PI, -Math.PI * 0.35, 16), { color: "#2b2724", weight: 1 });
+    sketch.line(arcPath(0, 0.045, 0.03, 0.03, Math.PI, -Math.PI * 0.35, 16), { color: "#2b2724" });
     sketch.fill([[0.004, 0.016], [0.018, 0.014], [0.013, -0.01], [0.001, -0.008]], "#2b2724");
     sketch.fill(blobPath(0.007, -0.03, 0.011, 0.011, { lumps: 3, amount: 0.15, noise: null }), "#2b2724");
   }

@@ -52,141 +52,94 @@ hand.</p>
 <h2>THE GOOFY OUTLINE</h2>
 <p>Every line on a creature is a <b>goofy outline</b> — a <b>kind</b> from <code>GOOFY_OUTLINES</code> in
 <code>src/medium/outlines.js</code>. A part names no kind, no line function and no width. It names its line's <b>role</b>:
-<code>ink.contour(path, { color, weight })</code> closes a shape and <code>ink.line(…)</code> runs open, down to a dot — with at
-most a weight on the kind's width (a head's contour runs at 1.15 of a body's). One switch, <code>BOARD_LINES</code>, says which
-kind draws each role; change a name there and every line of that role changes.</p>
+<code>ink.contour(path, { color, size })</code> closes a shape and <code>ink.line(…)</code> runs open, down to a dot — with at
+most a <b>size</b> on it. One switch, <code>BOARD_LINES</code>, says which kind draws each role; change a name there and every
+line of that role changes.</p>
 <p>A kind is named <b>the pen, then the hold</b>. One pen is on the table, the <b>pencil</b>, in three holds: <b>STROKE</b>
 (once, full width — mass) · <b>SLINE</b> (thin, the pen lifts — detail) · <b>BROKEN</b> (three times over itself — contour).
 One line each, the same path:</p>
 
 <div class="figs" id="outlineBalls"></div>
 
+<div class="row kinds">
+  <div class="seg" id="sizeSeg" role="group" aria-label="Pen size">
+    <button data-size="S">S</button>
+    <button data-size="M" class="on">M</button>
+    <button data-size="L">L</button>
+  </div>
+  <button id="again">AGAIN</button>
+</div>
+
+<p class="note">A kind also draws at a <b>size</b> — <b>S · M · L</b>, and <b>every kind names its own three</b>
+(<code>medium/outlines.js</code>): STROKE 0.007 · 0.012 · 0.022, SLINE 0.003 · 0.005 · 0.008, BROKEN 0.006 · 0.011 ·
+0.020. A ladder is the kind's own rather than a multiple of one width, because SLINE is a hairline and a hairline blown
+up to STROKE's L stops being one. <b>A size is the only way a width is said</b> — there is no multiplier on top, so a width
+that is not on a kind's ladder cannot be drawn and the board's line weights stay countable. Most lines are M; fine detail asks
+for S, and one line on the board asks for L. The hold does not change with the size, only the width: SLINE still lifts at L,
+BROKEN still stacks its ghosts at S.
+<b>AGAIN</b> draws all three in another hand.</p>
+
 <h3>in use on the board</h3>
-<p>The two rows read the switch live: 45 contours and 119 open lines, at quantized weights, so no creature
-wears a two-line ear beside a one-line eye. The only strokes outside the table are the two <b>bands</b> — a hat's colour laid
-as a thick stroke, a fill in disguise.</p>
+<p>The two rows read the switch live: 45 contours and 119 open lines, at three widths and no others, so no creature
+wears a two-line ear beside a one-line eye. What the table does not cover: the two <b>bands</b> (a hat's colour laid
+as a thick stroke, a fill in disguise), the emoji glyphs, and the marks a goofy material and the goofy fur lay down —
+the medium's own, not a creature's lines. All of them the same pencil.</p>
 
 <div class="figs" id="outlineUse"></div>
-<p class="note"><b>contour</b> — 45: the head (weight 1.15), the bodies, the ears (all kinds, and the cat's and dog's), the helmet, cap and brim, beret and pot,
+<p class="note"><b>contour</b> — 45: the head, the bodies, the ears (all kinds, and the cat's and dog's), the helmet, cap and brim, beret and pot,
 the horn tip, the hands, boots and sleeves, the tail's tuft, pom and beads, the hair loops, bun and twintail balls, the eye rings and eyewear, the nose,
-the mouth's grid, tongue and fangs, the static eyes, the star and heart eyes — fine (0.7) for the eyes and the mouth's small parts, heavy (1.2) for the hats.
+the mouth's grid, tongue and fangs, the static eyes, the star and heart eyes — <b>S</b> for the eyes and the mouth's small parts, <b>M</b> for the rest.
 <b>line</b> — 119: lids, brows, lashes and the eyes' marks, whiskers, tears, the nose's lines, eyewear arms, lips, teeth rows and tongues, limbs and feet,
 tail spines and rings, hair strands, ties and spikes, hat seams and brims' ink, horns, side ears and the folded ear's root and crease, decal edges, the floor, the ? glyph,
 the rig's shut and smiling lids, and the dots and dashes — the teeth strip's edges, the mouth grid's bars, the grin's fangs, the
 dot mouth, the boot's toe lines, a tail's rings and spines, a pom's claw, a beret's nub, the philtrum, the sleeping <b>z z</b> —
-fine 0.6 for the thinnest, 1.3 for lids, muzzle lines and horns, 1.6 for a stub tail.</p>
+<b>S</b> for the finest (hair strands, whiskers, a tail's hairs, the dots and dashes), <b>M</b> for the rest, and <b>L</b> for
+exactly two: an imp's horn and a stub tail.</p>
 
-<!-- ---------------- the two pens ---------------- -->
-<h3>the two pens</h3>
-<div class="seg pens" id="penSeg" role="group" aria-label="Pen">
-  <button data-pen="pencil" class="on">PENCIL</button>
-  <button data-pen="ribbonpen">RIBBON PEN</button>
+<!-- ---------------- the pencil ---------------- -->
+<h3>the pencil</h3>
+<p>A stroke is no line — WebGL draws none thick enough. It is a chain of <b>quads</b>: two samples make four
+corners, each pushed to both sides along its <b>normal</b> by the half width, cut into two triangles. The pencil takes
+one normal <b>per point</b> and hands it to the quads on both sides, so a corner closes; on a closed line the last
+quad joins the first, which is the seam it does not have.</p>
+
+<div class="figs">
+  <figure data-fig="quads" class="wide">
+    <canvas></canvas>
+    <div class="subs"><span>a normal per point — the corners close</span></div>
+    <figcaption><b>the quads</b> — every habit switched off, magnified far past the board's scale. Each hairline is
+    one triangle edge, read back out of the triangles the pen just wrote: the rungs are where two quads meet, the
+    diagonals where each quad is cut in two.</figcaption>
+  </figure>
 </div>
 
-<div class="pen" id="pen-pencil">
-  <p>A stroke is no line — WebGL draws none thick enough. It is a chain of <b>quads</b>: two samples make four
-  corners, each pushed to both sides along its <b>normal</b> by the half width, cut into two triangles. The pencil takes
-  one normal <b>per point</b> and hands it to the quads on both sides, so a corner closes; on a closed line the last
-  quad joins the first, which is the seam it does not have.</p>
+<p><b>PENCIL_STROKE · PENCIL_SLINE · PENCIL_BROKEN</b> — one pencil, three holds. Its sines run per world length rather
+than per line, so the wander comes out the same size wherever it lands; a closed line snaps them to whole cycles and never
+overshoots, which is the rest of why it has no seam. Every number is in <code>PENCIL</code> in <code>src/stroke.js</code>.
+The ink is opaque, which is what lets the creature in front hide the one behind.</p>
 
-  <div class="figs">
-    <figure data-fig="quads:pencil" class="wide">
-      <canvas></canvas>
-      <div class="subs"><span>a normal per point — the corners close</span></div>
-      <figcaption><b>the quads</b> — every habit switched off, magnified far past the board's scale. Each hairline is
-      one triangle edge, read back out of the triangles the pen just wrote: the rungs are where two quads meet, the
-      diagonals where each quad is cut in two.</figcaption>
-    </figure>
-  </div>
+<p><b>PENCIL_STROKE</b> is full width, laid once: every contour and every open line on the board. <b>PENCIL_SLINE</b> is a
+hairline, and <b>the pen lifts</b> — the skips are measured in <b>world units</b>, along the path as it was handed over,
+so the same kind skips in the same places at S, M and L; none falls near an end or on a line too short to spare it. <b>PENCIL_BROKEN</b>
+is the <b>ghost</b> habit stacked: two of them thinner, one at a fifth of the ink and one at half, each slipping sideways off the line — to one side
+or the other, so they land together as often as they split — and the line goes down last on top. SLINE and BROKEN are built and on nothing; the switch above says what the board draws.</p>
 
-  <p><b>PENCIL_STROKE · PENCIL_SLINE · PENCIL_BROKEN</b> — one pencil, three holds. Its sines run per world length rather
-  than per line, so the wander comes out the same size wherever it lands; a closed line snaps them to whole cycles and never
-  overshoots, which is the rest of why it has no seam. Every number is in <code>PENCIL</code> in <code>src/stroke.js</code>.
-  The ink is opaque, which is what lets the creature in front hide the one behind.</p>
+<p>A dot or a dash needs no kind of its own: the pencil <b>keeps the ends of anything shorter than 0.05 and sheds nothing
+there</b>, because an overshoot would run a dot half again to twice as long and a crumb is the size of the dot.</p>
 
-  <p><b>PENCIL_STROKE</b> is full width, laid once: every contour and every open line on the board. <b>PENCIL_SLINE</b> is a
-  hairline, and <b>the pen lifts</b> — the skips are measured in widths, like the overshoot, so a fine line skips finely
-  instead of turning into a dashed one, and none falls near an end or on a line too short to spare it. <b>PENCIL_BROKEN</b>
-  is the <b>ghost</b> habit stacked: two of them thinner and fainter, each slipping sideways off the line, which goes down
-  last on top. SLINE and BROKEN are built and on nothing; the switch above says what the board draws.</p>
+<p>One habit per row, each row the row above plus one. The sixth is the whole pencil — that is <b>PENCIL_STROKE</b>; the
+seventh adds the <b>ghost</b>, and stacking that is <b>PENCIL_BROKEN</b>.</p>
 
-  <p>A dot or a dash needs no kind of its own: the pencil <b>keeps the ends of anything shorter than 0.05 and sheds nothing
-  there</b>, because an overshoot would run a dot half again to twice as long and a crumb is the size of the dot.</p>
+<div class="anatomy" id="pencilAnatomy"></div>
 
-  <p>One habit per row, each row the row above plus one. The sixth is the whole pencil — that is <b>PENCIL_STROKE</b>; the
-  seventh adds the <b>ghost</b>, and stacking that is <b>PENCIL_BROKEN</b>.</p>
-
-  <div class="anatomy" id="pencilAnatomy"></div>
-
-  <div class="figs">
-    <figure data-fig="pencil">
-      <canvas></canvas>
-      <div class="subs"></div>
-      <figcaption><b>s.pencil</b> — the pen at each size of <code>PEN_SIZES</code>. The board draws at <b>M</b>. Width is
-      the maximum: the breath and the end taper take it down from there.</figcaption>
-    </figure>
-  </div>
-
-  <div class="figs">
-    <figure data-fig="hands" class="wide">
-      <canvas></canvas>
-      <div class="subs"><span>wobble 0.45</span><span>1.0</span><span>1.9</span></div>
-      <figcaption><b>every individual has a different hand</b> — <code>proportions.wobble</code> multiplies the jitter
-      per creature. Some come out neat and some a mess; on one constant the whole board falls into the same
-      handwriting.</figcaption>
-    </figure>
-  </div>
-
-</div>
-
-<div class="pen" id="pen-ribbonpen" hidden>
-  <p>A stroke is no line — WebGL draws none thick enough. It is a chain of <b>quads</b>, two triangles each. The ribbon
-  pen takes one normal <b>per segment</b>, so at a corner the two quads arrive at different angles: the outside of a
-  bend opens a wedge and the inside laps over itself.</p>
-
-  <div class="figs">
-    <figure data-fig="quads:ribbonpen" class="wide">
-      <canvas></canvas>
-      <div class="subs"><span>a normal per segment — the bends open</span></div>
-      <figcaption><b>the quads</b> — the same line at the same width as the pencil's, every habit off, magnified the
-      same. Nine quads against the pencil's twenty-seven: it re-samples a third as often, so it cuts the curve into
-      chords where the pencil follows it.</figcaption>
-    </figure>
-  </div>
-
-  <p><b>Off the table.</b> Four habits have to
-  be present together — even re-sampling, noise along the normal (a slow bend and a fine tremor), an end taper, uneven pressure
-  through the middle. Drop one and it reads as clip art. The ribbon pen is no kind and no role draws with it; two things still
-  call it directly — a hat's <b>band</b> and an emoji's glyph outline. Its taper goes to nothing at both ends, so it draws nothing
-  shorter than its 0.03 re-sample step; stubs are the pencil's.</p>
-
-  <p>The same line, one habit per row:</p>
-
-  <div class="anatomy" id="ribbonpenAnatomy"></div>
-
-  <div class="figs">
-    <figure data-fig="ribbon">
-      <canvas></canvas>
-      <div class="subs"></div>
-      <figcaption><b>s.stroke</b> — the same three sizes as the pencil's, so the two pens read against each other size for
-      size. Re-sampled every 0.03, bent by two noises, pinched at both ends, pressed unevenly in the middle.</figcaption>
-    </figure>
-
-    <figure data-fig="clipart">
-      <canvas></canvas>
-      <div class="subs"><span>jitter 0 — clip art</span><span>the hand</span></div>
-      <figcaption><b>the four habits</b> — the same stroke with its noise off, on the left. Taper and pressure alone are
-      not enough: without the wobble the line is dead.</figcaption>
-    </figure>
-
-    <figure data-fig="outline" class="wide">
-      <canvas></canvas>
-      <div class="subs"><span>passes 2 — the two never quite agree</span></div>
-      <figcaption><b>s.outline</b> — the closed stroke laid twice. Each pass re-rolls its jitter phase, so the doubled
-      line is the contour's texture. PENCIL_BROKEN is the same idea in the pencil, at three passes.</figcaption>
-    </figure>
-  </div>
-
+<div class="figs">
+  <figure data-fig="hands" class="wide">
+    <canvas></canvas>
+    <div class="subs"><span>wobble 0.45</span><span>1.0</span><span>1.9</span></div>
+    <figcaption><b>every individual has a different hand</b> — <code>proportions.wobble</code> multiplies the jitter
+    per creature. Some come out neat and some a mess; on one constant the whole board falls into the same
+    handwriting.</figcaption>
+  </figure>
 </div>
 
 </section>
@@ -370,7 +323,7 @@ a superellipse bent by noise, squared and tapered by two knobs.</p>
 </section>
 
 <footer class="foot">
-  <p><b>the code</b> — <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/stroke.js"><code>src/stroke.js</code></a> the two pens ·
+  <p><b>the code</b> — <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/stroke.js"><code>src/stroke.js</code></a> the pencil ·
   <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/"><code>src/medium/</code></a> the outlines, the materials, the fur ·
   <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/shape.js"><code>src/shape.js</code></a> the shapes ·
   <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/paper.js"><code>src/scene/paper.js</code></a> the paper ·

@@ -7,7 +7,7 @@
 export const GOOFY_FUR = {
   // The scribble — today's hair. root/reach: where the passes start and how far they fan, in spreads (−0.25 → 0.6, outward);
   // scatter: a pass's own push; wave: a point's own push; lean/waveLean: how much of each goes sideways
-  SCRIBBLE: { passes: 14, width: 0.009, spread: 0.05, root: -0.25, reach: 0.85, scatter: 0.4, wave: 0.4, lean: 0.4, waveLean: 0.3, jitter: 0.012, step: 0.045 }
+  SCRIBBLE: { passes: 14, width: 0.009, spread: 0.05, root: -0.25, reach: 0.85, scatter: 0.4, wave: 0.4, lean: 0.4, waveLean: 0.3 }
 };
 
 

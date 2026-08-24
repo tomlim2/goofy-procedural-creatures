@@ -38,9 +38,9 @@ export function drawHeadgear(ink, fills, spec, box) {
     // Headband — just above the brows, poking slightly outside the outline
     const y = brow + ry * 0.08;
     const w = halfW(y) * 1.05;
-    // The band — the hat's color laid as a thick stroke: a fill in disguise, not a line, so it stays a plain stroke outside the goofy outline
-    ink.stroke([[-w, y], [w, y + 0.006]], { color: accent, width: 0.03 });
-    ink.line([[-w, y + 0.014], [w, y + 0.02]], { color: ink0, weight: 0.6 });
+    // The band — the hat's color laid as a thick pencil stroke: a fill in disguise, not a line, so it stays outside the goofy outline
+    ink.pencil([[-w, y], [w, y + 0.006]], { color: accent, width: 0.03 });
+    ink.line([[-w, y + 0.014], [w, y + 0.02]], { color: ink0, size: "S" });
     return;
   }
 
@@ -49,9 +49,9 @@ export function drawHeadgear(ink, fills, spec, box) {
     const bottom = brow;
     const { path, w } = cover(1.1, bottom);
     paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's goofy material at its own color's step
-    ink.contour(path, { color: ink0, weight: 1.2 });
-    ink.line([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0, weight: 1 });
-    ink.line([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, weight: 0.7 });
+    ink.contour(path, { color: ink0 });
+    ink.line([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0 });
+    ink.line([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, size: "S" });
     return;
   }
 
@@ -60,10 +60,10 @@ export function drawHeadgear(ink, fills, spec, box) {
     const bottom = brow + ry * 0.05;
     const { path, w } = cover(1.04, bottom);
     paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's goofy material at its own color's step
-    ink.contour(path, { color: ink0, weight: 1.2 });
+    ink.contour(path, { color: ink0 });
     const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
     paintPart(fills, spec, brim, accent, { own: true });
-    ink.contour(brim, { color: ink0, weight: 1.2 });
+    ink.contour(brim, { color: ink0 });
     return;
   }
 
@@ -77,20 +77,20 @@ export function drawHeadgear(ink, fills, spec, box) {
     const disc = blobPath(0, 0, rx * 0.95, ry * 0.3, { lumps: 4, amount: 0.12, noise: null })
       .map(([x, y]) => [bx + x * cos - y * sin, by + x * sin + y * cos]);
     paintPart(fills, spec, disc, accent, { own: true });
-    ink.contour(disc, { color: ink0, weight: 1.2 });
-    ink.line([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0, weight: 1 });
+    ink.contour(disc, { color: ink0 });
+    ink.line([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0 });
     return;
   }
 
   if (kind === "bonnet") {
     // Bonnet — a thick band wrapping the head. It crosses over the crown from eye level on both sides
     const rim = arcPath(0, cy, rx * 1.2, ry * 1.14, Math.PI * 1.02, -Math.PI * 0.02, 26);
-    // The brim — the hat's color as a thick stroke along the rim: a band, not a line (see the band above)
-    ink.stroke(rim, { color: accent, width: 0.055, jitter: 0.012 });
-    ink.line(rim, { color: ink0, weight: 1 });
+    // The brim — the hat's color as a thick pencil stroke along the rim: a band, not a line (see the band above)
+    ink.pencil(rim, { color: accent, width: 0.055 });
+    ink.line(rim, { color: ink0 });
     // Knot dots at both ends instead of a ribbon under the chin
     for (const side of [-1, 1]) {
-      ink.line([[side * rx * 1.2, cy - 0.01], [side * rx * 1.15, cy - 0.05]], { color: ink0, weight: 1 });
+      ink.line([[side * rx * 1.2, cy - 0.01], [side * rx * 1.15, cy - 0.05]], { color: ink0 });
     }
     return;
   }
@@ -101,8 +101,8 @@ export function drawHeadgear(ink, fills, spec, box) {
   const top = crown + ry * 0.28;
   const pot = crumple([[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]], 0.004, 5);
   paintPart(fills, spec, pot, accent, { own: true });
-  ink.contour(pot, { color: ink0, weight: 1.2 });
-  ink.line([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, weight: 0.7 });
+  ink.contour(pot, { color: ink0 });
+  ink.line([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, size: "S" });
 }
 
 export function drawHorns(ink, fills, spec, box, noise) {
@@ -114,6 +114,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
   const cy = box.headCy;
   // Imp horns are long, like the reference. They expand the silhouette upward considerably.
   const scale = spec.species === "imp" ? 1.8 : 1;
+  const horn = spec.species === "imp" ? "L" : "M";   // an imp's horn is the one line on the board drawn at L
 
   for (const side of [-1, 1]) {
     const bx = side * rx * 0.6;
@@ -125,13 +126,13 @@ export function drawHorns(ink, fills, spec, box, noise) {
         [bx, by],
         [bx + side * 0.07 * scale, by + 0.09 * scale],
         [bx + side * 0.01 + lean, by + 0.17 * scale]
-      ], { color: ink0, weight: 1.3 * scale });
+      ], { color: ink0, size: horn });
     } else if (kind === "straight") {
-      ink.line([[bx, by], [bx + side * 0.05 + lean, by + 0.2 * scale]], { color: ink0, weight: 1.3 * scale });
+      ink.line([[bx, by], [bx + side * 0.05 + lean, by + 0.2 * scale]], { color: ink0, size: horn });
     } else if (kind === "antenna") {
       const tipX = bx + side * 0.05 + lean;
       const tipY = by + 0.24 * scale;
-      ink.line([[bx, by], [tipX, tipY]], { color: ink0, weight: 0.7 });
+      ink.line([[bx, by], [tipX, tipY]], { color: ink0, size: "S" });
       paintPart(fills, spec, blobPath(tipX, tipY, 0.022 * scale, 0.022 * scale, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
     } else if (kind === "ram") {
       // Ram horn curled into a spiral
@@ -142,7 +143,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
         const r = (0.055 + 0.02 * scale) * (1 - k * 0.72);
         spiral.push([bx + side * 0.02 + Math.cos(angle) * r * side, by + 0.02 + Math.sin(angle) * r]);
       }
-      ink.line(spiral, { color: ink0, weight: 1.3 });
+      ink.line(spiral, { color: ink0 });
     } else if (kind === "crown") {
       // A row of spikes crossing the crown — going once per side would duplicate them, so only when side<0
       if (side < 0) {
@@ -152,7 +153,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
           const sx = Math.cos(angle) * rx * 0.9;
           const sy = cy + Math.sin(angle) * ry * 0.92;
           const len = 0.05 + 0.03 * Math.sin(k * Math.PI);
-          ink.line([[sx, sy], [sx + Math.cos(angle) * len * 1.6, sy + Math.sin(angle) * len * 1.6]], { color: ink0, weight: 1.3 });
+          ink.line([[sx, sy], [sx + Math.cos(angle) * len * 1.6, sy + Math.sin(angle) * len * 1.6]], { color: ink0 });
         }
       }
     } else {

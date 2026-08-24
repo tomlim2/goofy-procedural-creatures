@@ -7,21 +7,28 @@
 // anything shorter than PENCIL.stub and sheds nothing there (stroke.js), so a dot drawn as a line stays its own length.
 // One pen draws them all: stroke.js pencil() — it wanders, breathes, runs past its ends and sheds; closed, one seamless loop.
 // `pen` names the hand that draws a kind, for when a second pen comes back
-// The pen sizes — the width ladder, small · medium · large, for either pen. The board's own line is **M**
-// (PENCIL_STROKE below); S and L are the same pen held finer or fatter. The medium page draws each pen at all
-// three, so the figure and the ladder cannot drift apart
-export const PEN_SIZES = { S: 0.007, M: 0.012, L: 0.022 };
+// The pen sizes — every kind names its own ladder of three: **S · M · L**. The board draws at **M**, so a kind's M
+// is its width on the board and the other two are the same hold held finer or fatter. A ladder is the kind's own
+// rather than a multiple of one width: SLINE is a hairline, and a hairline scaled to STROKE's L stops being one.
+// The medium page draws each kind at all three off this table, so the figures and the ladder cannot drift apart
+export const PEN_SIZES = { S: 0.007, M: 0.012, L: 0.022 };   // the default ladder — STROKE's own
+export const SIZE_NAMES = Object.keys(PEN_SIZES);
 
 export const GOOFY_OUTLINES = {
   // The pencil's stroke — full width, laid once. Mass: what every line on the board is
-  PENCIL_STROKE: { pen: "pencil", width: 0.012, passes: 1 },
+  PENCIL_STROKE: { pen: "pencil", sizes: PEN_SIZES, passes: 1 },
   // The pencil's sline — held light: a hairline, laid once, and **the pen lifts** now and then, leaving it open for a width or two
   // (PENCIL.lift). Detail. A line too short to be a detail never breaks, so a dot or a dash keeps its whole extent
-  PENCIL_SLINE: { pen: "pencil", width: 0.005, passes: 1, lift: true },
+  // A hairline at every size — its ladder is tight (0.6 · 1 · 1.6 against STROKE's 0.58 · 1 · 1.83) because a hairline
+  // blown up to STROKE's L is no longer detail, and the width's breath, which is a share of the width, comes with it
+  // ...and it holds its width: `breathe` 0.5 halves the width's sines and the per-stroke jitter. At the full share a
+  // hairline's swing reads as lumps in the line rather than as a hand — the breath is a share of the width, and there is
+  // little width to spend it on
+  PENCIL_SLINE: { pen: "pencil", sizes: { S: 0.003, M: 0.005, L: 0.008 }, passes: 1, lift: true, breathe: 0.5 },
   // The pencil's broken — the **ghost** habit stacked: the line, then two more of it at PENCIL.ghost of the width, each wandering
   // and breathing on its own, so it comes out doubled and offset the way a hand going round twice leaves it. Contour. Built, and
   // on nothing yet (BOARD_LINES, below)
-  PENCIL_BROKEN: { pen: "pencil", width: 0.011, passes: 3 }
+  PENCIL_BROKEN: { pen: "pencil", sizes: { S: 0.006, M: 0.011, L: 0.020 }, passes: 3 }
 };
 
 // The switch — what the board draws each **role** with. A role is what a line is on the board, not what it is made of:
@@ -36,23 +43,26 @@ export const BOARD_LINES = { contour: "PENCIL_STROKE", line: "PENCIL_STROKE" };
 export function contourWith(sketch, points, options) { return draw(sketch, points, "contour", true, options); }
 export function lineWith(sketch, points, options) { return draw(sketch, points, "line", false, options); }
 
-// weight scales the kind's width (a head's contour runs a little heavier than a body's; open lines are fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6).
+// size picks one of the kind's three widths — **the only way a width is said**. M unless asked: fine detail asks for S, the
+// one heavy line on the board (an imp's horn, a stub tail) for L. There is no free multiplier; a width that is not on a
+// kind's ladder cannot be drawn, which is what keeps the board's line weights countable.
 // paper is the color the pencil's bites take when the line runs over a fill. step re-samples a tiny ribbon finer (the star eye).
 // joint = [start, end] marks a line end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there.
 // skinT = [t0, t1] tags the line's triangles with their t along a bent part's spine (stroke.js — the tail's skin reads its bones from it).
 // An unknown name throws — a misspelt role or kind must not silently draw nothing
-function draw(sketch, points, role, closed, { color = "#2b2724", weight = 1, paper, step, outline, joint, skinT } = {}) {
+function draw(sketch, points, role, closed, { color = "#2b2724", size = "M", paper, step, outline, joint, skinT } = {}) {
   const name = outline || BOARD_LINES[role];
   const o = GOOFY_OUTLINES[name];
   if (!o) throw new Error(`unknown outline: ${name} (${role})`);
-  const options = { color, width: o.width * weight, passes: o.passes };
+  const width = o.sizes[size];
+  if (width === undefined) throw new Error(`outline ${name}: unknown size ${size}`);
+  const options = { color, width, passes: o.passes };
   if (o.jitter !== undefined) options.jitter = o.jitter;
   if (paper) options.paper = paper;
   if (step) options.step = step;
   if (joint) options.joint = joint;
   if (skinT) options.skinT = skinT;   // the skin tag along the line — [t0, t1] on a bent part's spine (the tail)
   if (o.lift) options.lift = o.lift;
-  if (o.pen === "pencil") sketch.pencil(points, { ...options, closed });
-  else if (closed) sketch.outline(points, options);
-  else sketch.stroke(points, options);
+  if (o.breathe !== undefined) options.breathe = o.breathe;
+  sketch.pencil(points, { ...options, closed });
 }

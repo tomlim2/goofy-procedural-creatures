@@ -42,7 +42,7 @@ To go back, press **MENAGERIE** in the header.
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
 `/how.html` — **the medium page**. The legend of how everything is drawn, on three axes: the goofy outlines (what a contour is drawn
-with — the ribbon and the pencil, with their anatomy), the goofy materials (how a surface is filled — five of them as shader balls) and the goofy fur
+with — the pencil, with its anatomy and its sizes), the goofy materials (how a surface is filled — five of them as shader balls) and the goofy fur
 (how hair is grown — fur balls), then the shapes, the colors and the boil. Every figure is drawn live by the same `src/stroke.js` and `src/medium/` that draw the creatures, at the board's own scale, and the
 balls are generated from the tables themselves. The figures hold still; INK BOIL (`I`) sets their lines boiling at the board's own cadence.
 The page cannot drift from the code, because it runs the code.
@@ -90,7 +90,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | Where | What it does | Docs |
 | --- | --- | --- |
 | `src/rng.js` | The seeded PRNG (mulberry32), weighted draws, 1D value noise | [determinism](guidelines/determinism.md) |
-| `src/stroke.js` | The lines — strokes → ribbon geometry: `stroke()` (wobble, pressure, taper), `pencil()` (the reference's line, its numbers in `PENCIL`), the fill-up, the scribble, hatching; `buildGeometry` (several sketches → one geometry). A `Sketch` draws the three concepts — the lines by role (`contour()`, `line()`, `mark()`), `paint()`, `fur()` — delegating to `medium/` | [drawing](guidelines/drawing.md) |
+| `src/stroke.js` | The lines — strokes → ribbon geometry: `pencil()` (the board's one pen, the reference's line, its numbers in `PENCIL`), the fill-up, the scribble, hatching; `buildGeometry` (several sketches → one geometry). A `Sketch` draws the three concepts — the lines by role (`contour()`, `line()`, `mark()`), `paint()`, `fur()` — delegating to `medium/` | [drawing](guidelines/drawing.md) |
 | `src/shape.js` | The shapes — `blobPath` (a lumpy closed curve: superellipse, taper, noise or two sines — never a perfect ellipse), `arcPath`, `crumple` (a hand-written polygon with the ruler taken out) | [drawing](guidelines/drawing.md) § nothing raw |
 | **`src/medium/`** | The three concepts, each a table and a procedure over a sketch. `outlines.js` — `GOOFY_OUTLINES` (the kinds, named pen + hold: PENCIL_STROKE, PENCIL_SLINE, PENCIL_BROKEN), `BOARD_LINES` (the switch: what each role — contour, line, mark — is drawn with) + `contourWith`/`lineWith`/`markWith`. `materials.js` — `GOOFY_MATERIALS` (FLAT, GRAPHITE, INK, OIL, CHARCOAL: a base color and its texture), `VALUES` (black · hatch · scribble · stipple · light) + `paintWith` (the pattern and the decals in the base, the texture at a value step, every mark clipped to the contour). `fur.js` — `GOOFY_FUR` (SCRIBBLE) + `furWith`. A part names them (the board: FLAT, PENCIL, SCRIBBLE) instead of picking techniques and widths; everything a creature fills goes through `paintPart` (`draw/body.js`) | [drawing](guidelines/drawing.md) |
 | `src/color.js` | Hex color utilities — linear conversion (`hexToRgb`), luminance (`luminance`, `isDark`), tones (`shade`). Character and drawing share them | [drawing](guidelines/drawing.md) § colors |
@@ -142,11 +142,12 @@ The board is three.js, and there is no 2D canvas: every stroke and every fill is
 layer (WebGL's `linewidth` is fixed at 1 nearly everywhere, so `Line` gives no control over thickness). A stroke
 becomes a ribbon mesh.
 
-- The stroke is re-sampled at an even spacing and pushed along the normal. Low frequency (the whole thing bending) and
-  high frequency (fine tremor) are overlaid
-- It thins toward the ends and the pressure wavers in the middle
-- Every line goes through one switch — today the contours and the open lines are the pencil (it wanders, breathes, runs past
-  its ends and sheds) and the marks the ribbon ([guidelines/drawing.md](guidelines/drawing.md) § the outline)
+- The stroke is re-sampled at an even spacing and its spine wanders on two sines per world length; the width breathes
+  on two more
+- The ends run past where they stop instead of pinching, and a line thick enough sheds — crumbs outside the edge,
+  paper-coloured bites inside
+- One pen draws all of it, the pencil, and every line goes through one switch
+  ([guidelines/drawing.md](guidelines/drawing.md) § the outline)
 - The head is not a circle but a closed curve crumpled with noise
 - Hair is not filled as an area but scribbled back and forth. Fills are covered with a scribble too, so the stroke direction shows
 - Fills are offset off the lines

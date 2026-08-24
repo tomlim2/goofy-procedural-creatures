@@ -9,7 +9,7 @@ import * as THREE from "three";
 import { Sketch } from "./stroke.js";
 import { blobPath, arcPath } from "./shape.js";
 import { GOOFY_MATERIALS, VALUES } from "./medium/materials.js";
-import { GOOFY_OUTLINES, BOARD_LINES, PEN_SIZES } from "./medium/outlines.js";
+import { GOOFY_OUTLINES, BOARD_LINES, SIZE_NAMES } from "./medium/outlines.js";
 import { GOOFY_FUR } from "./medium/fur.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise } from "./rng.js";
@@ -47,25 +47,6 @@ const sine = (x0, x1, amp, cycles = 1.5) => {
   return Array.from({ length: n + 1 }, (_, i) => [x0 + ((x1 - x0) * i) / n, Math.sin((i / n) * TAU * cycles) * amp]);
 };
 
-// Both pens at the whole ladder (medium/outlines.js PEN_SIZES) — S · M · L, the labels straight off it
-const SIZES = Object.entries(PEN_SIZES);
-const sizeLabels = SIZES.map(([name, width]) => `${name} · ${width}`);
-
-fig("ribbon", [-0.8, -0.16, 0.8, 0.16], (sk) => {
-  const ink = sk();
-  SIZES.forEach(([, width], i) => {
-    const x = col(i);
-    ink.stroke(sine(x - 0.21, x + 0.21, 0.052), { color: INK, width });
-  });
-});
-FIGS.ribbon.labels = sizeLabels;
-
-fig("clipart", [-0.85, -0.15, 0.85, 0.15], (sk) => {
-  const ink = sk();
-  const wave = (x) => sine(x - 0.3, x + 0.3, 0.062);
-  ink.stroke(wave(-0.42), { color: INK, width: 0.012, jitter: 0 });   // the noise alone turned off — clip art
-  ink.stroke(wave(0.42), { color: INK, width: 0.012 });
-});
 
 // The hand — drawn with the pencil, which is what every line on the board is drawn with
 fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
@@ -78,24 +59,10 @@ fig("hands", [-0.75, -0.2, 0.75, 0.2], (sk) => {
   });
 });
 
-// The pencil at the same ladder — the two pens are read against each other size for size
-fig("pencil", [-0.8, -0.16, 0.8, 0.16], (sk) => {
-  const ink = sk();
-  SIZES.forEach(([, width], i) => {
-    const x = col(i);
-    ink.pencil(sine(x - 0.21, x + 0.21, 0.052), { color: INK, width, paper: CARD });
-  });
-});
-FIGS.pencil.labels = sizeLabels;
-
-fig("outline", [-0.75, -0.27, 0.75, 0.27], (sk) => {
-  sk().outline(blobPath(0, 0, 0.42, 0.2, { lumps: 4, amount: 0.09, noise, phase: 7, square: 0.3 }), { color: INK, width: 0.012, passes: 2 });
-});
-
 
 fig("hair", [-0.45, -0.26, 0.45, 0.26], (sk) => {
   const ink = sk();
-  ink.outline(blobPath(0, -0.06, 0.24, 0.18, { lumps: 5, amount: 0.07, noise, phase: 17 }), { color: INK, width: 0.01 });
+  ink.pencil(blobPath(0, -0.06, 0.24, 0.18, { lumps: 5, amount: 0.07, noise, phase: 17 }), { color: INK, width: 0.01, closed: true, paper: CARD });
   ink.fur(arcPath(0, 0.06, 0.16, 0.09, Math.PI * 0.15, Math.PI * 0.85, 12), "SCRIBBLE", { color: INK, width: 0.008, spread: 0.045 });
 });
 
@@ -105,7 +72,7 @@ function blobRow(sk, phase, make) {
   for (let i = 0; i < 3; i += 1) {
     const path = make(i, col(i), phase + i * 3);
     fills.fill(path, FILLS[1], [0.012, -0.01]);
-    ink.outline(path, { color: INK, width: 0.011 });
+    ink.pencil(path, { color: INK, width: 0.011, closed: true, paper: FILLS[1] });
   }
 }
 fig("lumps", [-0.75, -0.19, 0.75, 0.19], (sk) => blobRow(sk, 23, (i, x, phase) =>
@@ -117,9 +84,9 @@ fig("taper", [-0.75, -0.19, 0.75, 0.19], (sk) => blobRow(sk, 41, (i, x, phase) =
 
 fig("arcs", [-0.75, -0.14, 0.75, 0.14], (sk) => {
   const ink = sk();
-  ink.stroke(arcPath(col(0), 0.02, 0.12, 0.08, Math.PI, TAU), { color: INK, width: 0.012 });         // smile
-  ink.stroke(arcPath(col(1), -0.04, 0.1, 0.07, 0, Math.PI), { color: INK, width: 0.012 });           // frown
-  ink.stroke(arcPath(col(2), 0.02, 0.1, 0.06, Math.PI * 1.1, Math.PI * 1.9, 10), { color: INK, width: 0.012 });   // a shut lid (rig.js LID_STYLE)
+  ink.pencil(arcPath(col(0), 0.02, 0.12, 0.08, Math.PI, TAU), { color: INK, width: 0.012, paper: CARD });         // smile
+  ink.pencil(arcPath(col(1), -0.04, 0.1, 0.07, 0, Math.PI), { color: INK, width: 0.012, paper: CARD });           // frown
+  ink.pencil(arcPath(col(2), 0.02, 0.1, 0.06, Math.PI * 1.1, Math.PI * 1.9, 10), { color: INK, width: 0.012, paper: CARD });   // a shut lid (rig.js LID_STYLE)
 });
 
 // Swatch strips — the palette groups, each color a small lumpy mass (a circle would break this page's own rules)
@@ -131,7 +98,7 @@ function swatches(name, list) {
       const x = (i - (n - 1) / 2) * 0.22;
       const path = blobPath(x, 0, 0.075, 0.075, { lumps: 4, amount: 0.12, noise, phase: 53 + i * 2.6 });
       fills.fill(path, hex, [0.007, -0.006]);
-      ink.outline(path, { color: INK, width: 0.006 });
+      ink.pencil(path, { color: INK, width: 0.006, closed: true, paper: hex });
     });
   });
   FIGS[name].labels = list;
@@ -151,17 +118,29 @@ function ballFigure(box, key, label, phase, draw) {
   box.appendChild(el);
   fig(key, [-0.33, -0.26, 0.33, 0.26], (sk) => draw(sk(), sk(), blobPath(0, 0, 0.2, 0.2, { lumps: 5, amount: 0.05, noise, phase })));
 }
-// The goofy outlines — one line per entry of GOOFY_OUTLINES: the same gentle path drawn open with that kind, at the board's
-// width. A line shows what a contour is made of better than a ball does
+// The size the kinds' row draws at — read by the three figures below, set by the control under the row
+// (how.html § the goofy outline). M is the board's own line
+let kindSize = "M";
+const KIND_FIGS = [];
+
+// The goofy outlines — one line per entry of GOOFY_OUTLINES: the same gentle path drawn open with that kind, at
+// whatever size the control is on. A line shows what a contour is made of better than a ball does
 Object.keys(GOOFY_OUTLINES).forEach((name, i) => {
   const el = document.createElement("figure");
   el.dataset.fig = `outline:${name}`;
+  el.className = "wide";   // one kind to a row, whatever the width: three in a two-column grid leaves the third alone
   el.innerHTML = `<canvas></canvas><div class="subs"><span>${name.toLowerCase()}</span></div>`;
   document.getElementById("outlineBalls").appendChild(el);
   fig(`outline:${name}`, [-0.7, -0.13, 0.7, 0.13], (sk) => {
     const ink = sk();
-    ink.line(sine(-0.58, 0.58, 0.075), { outline: name, color: INK, paper: CARD });   // the kind named outright — the page shows each, as an open line
+    // The kind and the size named outright — the one place either is. The kind's own ladder decides the width, so the
+    // figure is the kind itself rather than a copy of it: the hold does not change with the size, only the width
+    ink.line(sine(-0.58, 0.58, 0.075), { outline: name, color: INK, paper: CARD, size: kindSize });
   });
+  // A row to itself, so it may fill it: 620 px per world unit against the page's 300 cap. The anatomy rows already
+  // run near this and it is the same pen — the cap is there for the board's own scale, and these are one line each
+  FIGS[`outline:${name}`].zoom = 620;
+  KIND_FIGS.push(`outline:${name}`);
 });
 // The anatomy — each pen built up **one habit at a time**, a row per habit. The same path in every row; each row is the
 // row above plus one habit. Drawn by the very
@@ -178,18 +157,11 @@ const ANATOMY = {
     ["the flick", "past both ends, blunt", { wander: true, breathe: true, over: true }],
     ["the shed", "crumbs on the edge, bites inside", { wander: true, breathe: true, over: true, shed: true }],
     ["the ghost", "again underneath, thinner and faint", { wander: true, breathe: true, over: true, shed: true }, { passes: 2 }]
-  ],
-  ribbonpen: [
-    ["the points", "what you hand it", null],
-    ["the ribbon", "one width, no noise", { jitter: 0, anatomy: {} }],
-    ["the wander", "noise along the normal", { jitter: 0.006, anatomy: {} }],
-    ["the taper", "thin at both ends", { jitter: 0.006, anatomy: { taper: true } }],
-    ["the press", "the pressure wavers", { jitter: 0.006, anatomy: { taper: true, press: true } }]
   ]
 };
 // The points row — the path as it is handed over: a dot at each point (a blob, like everything else here) on a hairline
 function handedPoints(fills, ink) {
-  ink.stroke(ANATOMY_PATH, { color: DOT, width: 0.0022, jitter: 0, anatomy: {} });
+  ink.pencil(ANATOMY_PATH, { color: DOT, width: 0.0022, anatomy: {} });
   ANATOMY_PATH.forEach(([x, y], i) => fills.fill(blobPath(x, y, 0.0075, 0.0075, { lumps: 3, amount: 0.12, noise, phase: 211 + i }), DOT));
 }
 // The quads — what a stroke is actually made of. Each pair of samples becomes four corners (each sample pushed to both sides along
@@ -210,17 +182,13 @@ function edgesOf(sketch, from, out, color) {
 // draw. Each pen then samples it at its own step — the coarse one cuts the curve into chords, the fine one follows it
 const CORNER = Array.from({ length: 49 }, (_, i) => [-0.12 + (i / 48) * 0.24, Math.sin((i / 48) * TAU * 1.5) * 0.028]);
 const MESH = FILLS[2];   // the shape in a pale tone, so the edges on top of it are what you read
-// One per pen, one to a tab (how.html § the two pens). Every habit off on both: the same path at the same width,
-// so the only thing left to tell them apart is the normal
-["ribbonpen", "pencil"].forEach((pen) => {
-  fig(`quads:${pen}`, [-0.135, -0.05, 0.135, 0.05], (sk) => {
-    const shape = sk(), lines = sk();
-    if (pen === "ribbonpen") shape.stroke(CORNER, { color: MESH, width: 0.014, jitter: 0, anatomy: {} });
-    else shape.pencil(CORNER, { color: MESH, width: 0.014, anatomy: {}, paper: CARD });
-    edgesOf(shape, 0, lines, INK);
-  });
-  FIGS[`quads:${pen}`].zoom = 2800;   // px per world unit — the seams are the subject here, so these two go past the 300 the rest keep to
+// Every habit off: the pen's quads and nothing else
+fig("quads", [-0.135, -0.05, 0.135, 0.05], (sk) => {
+  const shape = sk(), lines = sk();
+  shape.pencil(CORNER, { color: MESH, width: 0.014, anatomy: {}, paper: CARD });
+  edgesOf(shape, 0, lines, INK);
 });
+FIGS.quads.zoom = 2800;   // px per world unit — the seams are the subject here, so this one goes past the 300 the rest keep to
 
 Object.entries(ANATOMY).forEach(([pen, rows]) => {
   const box = document.getElementById(`${pen}Anatomy`);
@@ -233,8 +201,7 @@ Object.entries(ANATOMY).forEach(([pen, rows]) => {
     fig(key, [-0.66, -0.088, 0.66, 0.088], (sk) => {
       const fills = sk(), ink = sk();
       if (!habits) return handedPoints(fills, ink);
-      if (pen === "pencil") ink.pencil(ANATOMY_PATH, { color: INK, width: 0.015, anatomy: habits, paper: CARD, ...extra });
-      else ink.stroke(ANATOMY_PATH, { color: INK, width: 0.015, jitter: habits.jitter, anatomy: habits.anatomy });
+      ink.pencil(ANATOMY_PATH, { color: INK, width: 0.015, anatomy: habits, paper: CARD, ...extra });
     });
   });
 });
@@ -249,8 +216,8 @@ Object.keys(GOOFY_FUR).forEach((name, i) => ballFigure(document.getElementById("
 // The same path drawn by each role's procedure: a contour closes it, a line runs it open — down to a dot. The counts in the captions are read off the code (how.html)
 const USE_PATH = sine(-0.58, 0.58, 0.075);
 const IN_USE = [
-  { key: "use:contour", label: `contour → ${BOARD_LINES.contour} · weight 0.7 / 1 / 1.15 / 1.2`, box: [-0.7, -0.14, 0.7, 0.14], draw: (ink) => ink.contour([[-0.5, -0.09], [0, -0.1], [0.5, -0.08], [0.52, 0.09], [0, 0.1], [-0.5, 0.08]], { color: INK, paper: CARD }) },
-  { key: "use:line", label: `line → ${BOARD_LINES.line} · weight 0.6 / 0.7 / 1 / 1.3 / 1.6 · down to a dot`, box: [-0.7, -0.13, 0.7, 0.13], draw: (ink) => { ink.line(USE_PATH, { color: INK, paper: CARD }); for (const x of [-0.45, -0.15, 0.15, 0.45]) ink.line([[x - 0.012, -0.105], [x + 0.012, -0.103]], { color: INK, weight: 0.7, paper: CARD }); } },
+  { key: "use:contour", label: `contour → ${BOARD_LINES.contour} · S / M`, box: [-0.7, -0.14, 0.7, 0.14], draw: (ink) => ink.contour([[-0.5, -0.09], [0, -0.1], [0.5, -0.08], [0.52, 0.09], [0, 0.1], [-0.5, 0.08]], { color: INK, paper: CARD }) },
+  { key: "use:line", label: `line → ${BOARD_LINES.line} · S / M / L · down to a dot`, box: [-0.7, -0.13, 0.7, 0.13], draw: (ink) => { ink.line(USE_PATH, { color: INK, paper: CARD }); for (const x of [-0.45, -0.15, 0.15, 0.45]) ink.line([[x - 0.012, -0.105], [x + 0.012, -0.103]], { color: INK, size: "S", paper: CARD }); } },
 ];
 IN_USE.forEach(({ key, label, box, draw }) => {
   const el = document.createElement("figure");
@@ -297,9 +264,9 @@ fig("boilface", [-0.9, -0.3, 0.9, 0.3], (sk) => {   // the demonstration of the 
   const head = blobPath(0, 0, 0.27, 0.24, { lumps: 5, amount: 0.07, noise, phase: 71, square: 0.4, taper: 0.08 });
   fills.fill(head, FILLS[2], [0.022, -0.018]);
   for (const side of [-1, 1]) fills.fill(blobPath(side * 0.17, -0.05, 0.04, 0.026, { lumps: 3, amount: 0.15, noise, phase: 5 + side }), BLUSH);   // the blush — a flat blob, as on the board
-  ink.outline(head, { color: INK, width: 0.012, passes: 2 });
-  for (const side of [-1, 1]) ink.stroke([[side * 0.09 - 0.015, 0.05], [side * 0.09 + 0.015, 0.05]], { color: INK, width: 0.017, step: 0.008 });
-  ink.stroke(arcPath(0, -0.05, 0.06, 0.045, Math.PI, TAU), { color: INK, width: 0.011 });
+  ink.contour(head, { color: INK, paper: CARD });
+  for (const side of [-1, 1]) ink.pencil([[side * 0.09 - 0.015, 0.05], [side * 0.09 + 0.015, 0.05]], { color: INK, width: 0.017, paper: CARD });
+  ink.pencil(arcPath(0, -0.05, 0.06, 0.045, Math.PI, TAU), { color: INK, width: 0.011, paper: CARD });
 });
 FIGS.boilface.always = true;
 
@@ -315,22 +282,6 @@ document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
   if (!entry) return;
   const [x0, y0, x1, y1] = entry.world;
   const scene = new THREE.Scene();
-  const frames = [];
-  for (let k = 0; k < BOIL_FRAMES; k += 1) {
-    const group = new THREE.Group();
-    const sketches = [];
-    const sk = (wobble = 1) => {
-      const s = new Sketch(noise, wobble);
-      s.phase = index * 131 + k * 997 + sketches.length * 17;   // the variant IS the phase — same drawing, different shiver
-      sketches.push(s);
-      return s;
-    };
-    entry.draw(sk);
-    group.add(sketchMesh(sketches, 1, 0));
-    group.visible = k === 0;
-    scene.add(group);
-    frames.push(group);
-  }
   if (entry.labels) {
     const subs = el.querySelector(".subs");
     for (const hex of entry.labels) {
@@ -344,7 +295,7 @@ document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
     canvas: el.querySelector("canvas"),
     subs: el.querySelector(".subs"),
     camera: new THREE.OrthographicCamera(x0, x1, y1, y0, -1, 1),
-    scene, frames, frame: 0,
+    entry, index, scene, frames: [], frame: 0, roll: 0,
     always: !!entry.always,
     aspect: (y1 - y0) / (x1 - x0),
     // The medium is tuned for the board's scale (about 230 px per world unit). Blown up much past it,
@@ -357,6 +308,34 @@ document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
     width: 0
   });
 });
+
+// Bakes a figure's BOIL_FRAMES variants into its scene. Called again whenever a control changes what a figure draws
+// (the kinds' size, AGAIN): the old groups are dropped and their geometries disposed — the materials are shared per
+// opacity (scene/mesh.js) and are not ours to free. `roll` moves every phase at once, which is another hand
+function bake(f) {
+  for (const group of f.frames) {
+    f.scene.remove(group);
+    group.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+  }
+  f.frames = [];
+  for (let k = 0; k < BOIL_FRAMES; k += 1) {
+    const group = new THREE.Group();
+    const sketches = [];
+    const sk = (wobble = 1) => {
+      const s = new Sketch(noise, wobble);
+      s.phase = f.index * 131 + k * 997 + sketches.length * 17 + f.roll * 7919;   // the variant IS the phase — same drawing, different shiver
+      sketches.push(s);
+      return s;
+    };
+    f.entry.draw(sk);
+    group.add(sketchMesh(sketches, 1, 0));
+    group.visible = k === 0;
+    f.scene.add(group);
+    f.frames.push(group);
+  }
+  f.frame = 0;
+}
+for (const f of figures) bake(f);
 
 const dpr = renderer.getPixelRatio();
 function paint(f) {
@@ -384,16 +363,14 @@ for (const f of figures) paint(f);
 window.addEventListener("resize", () => { for (const f of figures) { f.width = 0; paint(f); } });
 statusLabel.textContent = `${figures.length} FIGURES`;
 
-// The two pens are tabs (how.html § the two pens). A hidden panel measures 0 wide, so paint() skips its
-// figures until it is shown — reveal one and its figures are repainted, their cached width dropped so the
-// canvas sizes against the panel that is now actually laid out. Which panel starts open is the markup's
-// (`hidden` on the other, `.on` on its button), so nothing has to run here on load.
-const PENS = ["pencil", "ribbonpen"];
-const penPanel = (name) => document.getElementById(`pen-${name}`);
-bindSeg(document.getElementById("penSeg"), "pen", (value) => {
-  for (const name of PENS) penPanel(name).hidden = name !== value;
-  const shown = penPanel(value);
-  for (const f of figures) if (shown.contains(f.el)) { f.width = 0; paint(f); }
+// The kinds' row — the size the three draw at, and AGAIN for another hand. Both bake just those three again:
+// a size is a different drawing, not a different camera, so it cannot be done by repainting
+const kindFigures = figures.filter((f) => KIND_FIGS.includes(f.el.dataset.fig));
+function redrawKinds() { for (const f of kindFigures) { bake(f); paint(f); } }
+bindSeg(document.getElementById("sizeSeg"), "size", (value) => { kindSize = value; redrawKinds(); });
+document.getElementById("again").addEventListener("click", () => {
+  for (const f of kindFigures) f.roll += 1;
+  redrawKinds();
 });
 
 // Ink — the board's own axis (rig.md § pose and ink): STILL pins boil frame 0, BOIL cycles. Still by default —

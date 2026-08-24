@@ -142,7 +142,7 @@ export function headDecals(spec, headPath, noise) {
 
 // A decal's only line — its inner edge (the outer edge already has the contour). Drawn after the contour, in the host's ink
 export function decalEdges(ink, spec, decals) {
-  for (const d of decals) ink.line(d.inner, { color: spec.palette.ink, weight: 0.6 });
+  for (const d of decals) ink.line(d.inner, { color: spec.palette.ink, size: "S" });
 }
 
 

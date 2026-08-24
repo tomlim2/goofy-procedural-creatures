@@ -25,8 +25,8 @@ export function drawHead(ink, fills, spec, box, noise) {
   // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
 
   // Outline jitter is halved on humans too — a smooth skull (the line's own wobble stays)
-  // The goofy outline — the contour role, PENCIL_STROKE today (medium/outlines.js); the head's contour runs a little heavier than the body's (weight)
-  ink.contour(path, { color: spec.palette.ink, weight: 1.15 });
+  // The goofy outline — the contour role, PENCIL_STROKE today (medium/outlines.js), at the board's size M like the body's
+  ink.contour(path, { color: spec.palette.ink });
   decalEdges(ink, spec, decals);
   return path;
 }
@@ -58,7 +58,7 @@ export function drawEars(ink, fills, spec, box) {
       // A pointy ear to the side — the size multipliers (pointyMid, pointyBig) make it longer and wider
       const ear = [[x - 0.01, y + 0.05 * size], [x + side * 0.075 * size, y + 0.02], [x - 0.01, y - 0.05 * size]];
       paintPart(fills, spec, ear, skin);
-      ink.line(ear, { color: spec.palette.ink, weight: 1 });
+      ink.line(ear, { color: spec.palette.ink });
     } else if (kind === "long") {
       // A long hanging ear — it can go on something other than a dog
       const lobe = blobPath(x + side * 0.012, y - box.headRy * 0.32, 0.035, box.headRy * 0.45, {
@@ -81,18 +81,18 @@ export function drawEars(ink, fills, spec, box) {
         [x + side * 0.055 * size, y + 0.055 * size],
         [x + side * 0.05 * size, y - 0.01 * size],
         [x + side * 0.015 * size, y - 0.03 * size]
-      ], { color: spec.palette.ink, weight: 1 });
+      ], { color: spec.palette.ink });
     } else {
       // flap — an ear hanging downward
       const flap = arcPath(x, y, 0.05, 0.09, -Math.PI * 0.6, Math.PI * 0.6);
       paintPart(fills, spec, flap, skin);
-      ink.line(flap, { color: spec.palette.ink, weight: 1 });
+      ink.line(flap, { color: spec.palette.ink });
     }
   }
 }
 
 // Cat ears — **bumps** in the head silhouette. Filled triangles stand at the two corners of the crown (~35° from the crown) with the base tucked inside the outline
-// so they attach to the head as one mass (the reference: the outline continues into the ear and a colored head has the ear in the same color). The outline is the same weight as the head's, drawn twice.
+// so they attach to the head as one mass (the reference: the outline continues into the ear and a colored head has the ear in the same color). The outline is the same size as the head's, drawn twice.
 // Drawn on the layer in front of the head (front) so the fill covers the head outline. Three proportions — pointy the default · pointyMid narrow and tall · pointyBig wide and big.
 // The inner ear is per individual: 60% a small inner triangle (a double line), 15% a dark fill, the rest none (tufts read as an owl and were dropped).
 // It follows the **normal** at the attachment point: the base is laid along the outline's tangent there (inset by 0.02), and the ear's axis is halfway between the normal and vertical
@@ -174,14 +174,14 @@ export function drawCatEars(ink, fills, spec, box) {
     paintPart(fills, spec, path, earFill);   // the ear is skin — the creature's goofy material
     ink.line([
       baseAt(-def.w * 1.02, 0.024), sideAt(-def.w, -def.tip, 0.5), tipAt(-def.tip), tipAt(def.tip), sideAt(def.w, def.tip, 0.5), baseAt(def.w * 1.02, 0.024)
-    ], { color: ink0, weight: 1.3 });
+    ], { color: ink0 });
     // The inner ear — **its base attaches to the ear's root** (float it above the root and it becomes a patch hanging mid-ear). Width 0.62× the ear, tip 0.7× the height
     const innerTip = [bx + ax * def.h * 0.7, by + ay * def.h * 0.7];
     const innerBase = [baseAt(-def.w * 0.62, 0.012), innerTip, baseAt(def.w * 0.62, 0.012)];
-    if (inner === "line") ink.line(innerBase, { color: earInnerInk, weight: 0.7 });
+    if (inner === "line") ink.line(innerBase, { color: earInnerInk, size: "S" });
     else if (inner === "dark") paintPart(fills, spec, innerBase, innerFill, { own: true });
     // The crease — one line from the middle of the root to half the ear's height (it reads as a fold mark)
-    else if (inner === "notch") ink.line([baseAt(0, 0.012), [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: earInnerInk, weight: 0.7 });
+    else if (inner === "notch") ink.line([baseAt(0, 0.012), [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: earInnerInk, size: "S" });
   }
 }
 
@@ -203,7 +203,7 @@ export function drawPupEars(ink, fills, spec, box) {
   // shows its back, and the folded ear shows all three — the standing root (front, the inner patch on it) and the flap bent over it (back).
   // The folded ear always has its inner patch — the three colors are its design — so its "none" falls to pink or the tone
   const cal = calicoColors(spec);   // on a piebald (calico), the ear on the side is black (the same side as the head patch)
-  const earInk = { color: spec.palette.ink };   // the ears' line — the contour and the folded root's open line alike, at weight 1
+  const earInk = { color: spec.palette.ink };   // the ears' line — the contour and the folded root's open line alike, at M
   const innerRoll = spec.proportions.wobbleSeed % 100;
   const innerTone = (fur) => (innerRoll < 45 || (innerRoll >= 75 && innerRoll % 2) ? mix(fur, "#f3ece0", 0.45) : "#d9968a");
   const innerShown = innerRoll < 75;
@@ -328,7 +328,7 @@ export function drawPupEars(ink, fills, spec, box) {
       // The inner face (pink or a tone) is drawn on the standing part **under** the flap, from the root up, and the flap covers it
       paintPart(fills, spec, flap, back);
       ink.contour(flap, earInk);
-      ink.line(crease, { color: spec.palette.ink, weight: 0.7 });
+      ink.line(crease, { color: spec.palette.ink, size: "S" });
     }
   }
 }

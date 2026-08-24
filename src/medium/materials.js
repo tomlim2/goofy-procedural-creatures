@@ -297,11 +297,11 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
             const dx = Math.cos(angle), dy = Math.sin(angle);
             const a = [b.cx - dy * o - dx * b.r, b.cy + dx * o - dy * b.r];
             const c = [b.cx - dy * o + dx * b.r, b.cy + dx * o + dy * b.r];
-            for (const piece of clipSegment(a, c, points)) sketch.stroke(piece, { color: tone, width: width * (0.7 + 0.6 * u(i + 300)), jitter: 0.002, step: 0.03, skinT: markTag });
+            for (const piece of clipSegment(a, c, points)) sketch.pencil(piece, { color: tone, width: width * (0.7 + 0.6 * u(i + 300)), skinT: markTag });
           }
           if (V.name === "black") {   // the darkest ink is worked over once more — a faint band across, under the scratches
             const faint = contrast(1.12);
-            for (const [p, q] of rules(points, 1.5, 0.055, (i) => (u(i + 900) - 0.5) * 0.4)) sketch.stroke([p, q], { color: faint, width: 0.009, jitter: 0.002, step: 0.03, skinT: markTag });
+            for (const [p, q] of rules(points, 1.5, 0.055, (i) => (u(i + 900) - 0.5) * 0.4)) sketch.pencil([p, q], { color: faint, width: 0.009, skinT: markTag });
           }
           break;
         }
@@ -360,19 +360,19 @@ export function patternOn(sketch, points, { kind, color }) {
       const u = t * ry;
       const a = [cx + (-half * rx) * cos - u * sin, cy + (-half * rx) * sin + u * cos];
       const c = [cx + half * rx * cos - u * sin, cy + half * rx * sin + u * cos];
-      for (const piece of clipSegment(a, c, points)) sketch.stroke(piece, { color, width, jitter: 0.01, step: 0.05 });
+      for (const piece of clipSegment(a, c, points)) sketch.pencil(piece, { color, width });
     }
   };
   if (kind === "stripes") {
     for (let i = 1; i <= 3; i += 1) {
       const y = b.y0 + (h * i) / 4;
-      for (const piece of clipSegment([b.x0 - 0.02, y], [b.x1 + 0.02, y + 0.004], points)) sketch.stroke(piece, { color, width: 0.011 });
+      for (const piece of clipSegment([b.x0 - 0.02, y], [b.x1 + 0.02, y + 0.004], points)) sketch.pencil(piece, { color, width: 0.011 });
     }
   } else if (kind === "dots") {
     for (let i = 0; i < 4; i += 1) {
       const x = b.cx - w * 0.5 + (i % 2) * w;
       const y = b.y0 + h * (0.3 + Math.floor(i / 2) * 0.35);
-      if (insidePath([x - 0.01, y], points) && insidePath([x + 0.01, y], points)) sketch.stroke([[x - 0.008, y], [x + 0.008, y]], { color, width: 0.012 });
+      if (insidePath([x - 0.01, y], points) && insidePath([x + 0.01, y], points)) sketch.pencil([[x - 0.008, y], [x + 0.008, y]], { color, width: 0.012 });
     }
   } else if (kind === "hatch") {
     hatchLines(b.cx, b.cy, w * 0.8, h * 0.35, Math.PI * 0.25, 5, 0.007);
@@ -382,7 +382,7 @@ export function patternOn(sketch, points, { kind, color }) {
       const sy = b.y0 + h * (0.35 + (i % 2) * 0.3);
       let spot = blobPath(sx, sy, 0.025 + (i % 2) * 0.01, 0.02, { lumps: 4, amount: 0.25, noise: null });
       if (spot.some((p) => !insidePath(p, points))) spot = spot.map(([x, y]) => [sx + (x - sx) * 0.6, sy + (y - sy) * 0.6]);   // a spot on the edge shrinks in
-      if (spot.every((p) => insidePath(p, points))) sketch.outline(spot, { color, width: 0.008 });
+      if (spot.every((p) => insidePath(p, points))) sketch.pencil(spot, { color, width: 0.008, closed: true });
     }
   } else if (kind === "patch") {
     hatchLines(b.cx - w * 0.35, b.cy, w * 0.4, h * 0.25, 0, 4, 0.008);

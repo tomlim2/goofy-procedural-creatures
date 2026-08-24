@@ -61,10 +61,10 @@ export function drawEyes(ink, fills, spec, box, eyes) {
     if (kind === "dot") {
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
     } else if (kind === "sleepy") {
-      ink.line(arcPath(eye.x, eye.y, eye.r, eye.r * 0.7, Math.PI, TAU), { color: ink0, weight: 1 });
+      ink.line(arcPath(eye.x, eye.y, eye.r, eye.r * 0.7, Math.PI, TAU), { color: ink0 });
     } else if (kind === "cross") {
-      ink.line([[eye.x - eye.r, eye.y - eye.r], [eye.x + eye.r, eye.y + eye.r]], { color: ink0, weight: 1 });
-      ink.line([[eye.x + eye.r, eye.y - eye.r], [eye.x - eye.r, eye.y + eye.r]], { color: ink0, weight: 1 });
+      ink.line([[eye.x - eye.r, eye.y - eye.r], [eye.x + eye.r, eye.y + eye.r]], { color: ink0 });
+      ink.line([[eye.x + eye.r, eye.y - eye.r], [eye.x - eye.r, eye.y + eye.r]], { color: ink0 });
     } else if (kind === "scrawl") {
       // A circle scribbled with a crayon — three and a half turns in one stroke, the radius and centre wavering each turn so the lines cross and overshoot.
       // Unlike the neat spiral: the start and end do not meet and the strokes pass over each other (an eye a child drew with a crayon)
@@ -89,7 +89,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
           const x = Math.cos(a) * rx, y = Math.sin(a) * ry;
           pts.push([cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]);
         }
-        ink.line(pts, { color: ink0, weight: 1 });
+        ink.line(pts, { color: ink0 });
       }
     } else if (kind === "spiral") {
       const spiral = [];
@@ -99,7 +99,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         const r = eye.r * (1 - t * 0.85);
         spiral.push([eye.x + Math.cos(angle) * r, eye.y + Math.sin(angle) * r]);
       }
-      ink.line(spiral, { color: ink0, weight: 0.7 });
+      ink.line(spiral, { color: ink0, size: "S" });
     } else if (kind === "slit") {
       // An almond outline plus a **filled** vertical pupil (a spindle). With a thin stroke, on a small eye the outline's two lines merge into a smear and the pupil does not read —
       // the almond is raised a little (0.7r) and the pupil filled as an area, so it reads as a cat eye from a distance.
@@ -110,14 +110,14 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), dark, { own: true });
     } else if (kind === "line") {
       // A flat two-dash eye — an expressionless dash. It droops slightly on the outside
-      ink.line([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0, weight: 1 });
+      ink.line([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0 });
     } else if (kind === "happy") {
       // An always-smiling eye ^^ — an arch bulging upward (the same shape as the happy state's smile arch, always on here)
-      ink.line(arcPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0, weight: 1 });
+      ink.line(arcPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0 });
     } else if (kind === "squeeze") {
       // >_< — eyes screwed shut. A bracket pointing toward the nose (left eye >, right eye <)
       const inward = -eye.side;
-      ink.line([[eye.x - inward * eye.r * 0.7, eye.y + eye.r * 0.7], [eye.x + inward * eye.r * 0.45, eye.y], [eye.x - inward * eye.r * 0.7, eye.y - eye.r * 0.7]], { color: ink0, weight: 1 });
+      ink.line([[eye.x - inward * eye.r * 0.7, eye.y + eye.r * 0.7], [eye.x + inward * eye.r * 0.45, eye.y], [eye.x - inward * eye.r * 0.7, eye.y - eye.r * 0.7]], { color: ink0 });
     } else if (kind === "side") {
       // ¬_¬ — a sideways glance. Half-lidded (a lower arc plus a lid line) but with the pupil pushed to one side (which side is per individual)
       const dir = spec.proportions.wobbleSeed % 2 ? 1 : -1;
@@ -127,13 +127,13 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // Above the line (the lid) is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
       paintPart(fills, spec, arc, SCLERA, { flat: true });
-      fills.line(arc, { color: dark, weight: 1 });
-      fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark, weight: 1 });
+      fills.line(arc, { color: dark });
+      fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark, { own: true });
     } else if (kind === "droop") {
       // ´･ω･` — drooping outer corners. A lid stroke falling outward over a dot eye (glum)
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
-      ink.line([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0, weight: 1 });
+      ink.line([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0 });
     } else if (kind === "hollow") {
       // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket).
       // The fill and outline are drawn per eye into **the same sketch (fills)** — when two eyes overlap the later eye (the larger) covers the front eye's outline (no crossing line).
@@ -176,7 +176,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const gaze = (spec.proportions.wobbleSeed % 5 - 2) * 0.06;
       paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true });
       // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
-      fills.line(lidLine, { color: dark, weight: Math.max(1, Math.min(1.3, eye.r * 17)) });
+      fills.line(lidLine, { color: dark });
     } else if (kind === "half") {
       // A half-closed eye — no line is drawn across the whole circle (a circle plus a line smears into "a circle with a line through it").
       // Only the **lower arc** of the lid line is drawn, with the pupil below that line → the shape of a heavy lid covering the eye
@@ -185,8 +185,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // What the arc encloses (below the line) is the white. Above the line is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
       paintPart(fills, spec, arc, SCLERA, { flat: true });
-      fills.line(arc, { color: dark, weight: 1 });
-      fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark, weight: 1 });
+      fills.line(arc, { color: dark });
+      fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark, { own: true });
     }
     // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
@@ -209,7 +209,7 @@ export function drawFace2(ink, fills, spec, box, eyes) {
           [x, eye.y - eye.r * 0.9],
           [x + 0.008, eye.y - eye.r * 0.9 - box.headRy * 0.3],
           [x - 0.004, eye.y - eye.r * 0.9 - box.headRy * 0.52]
-        ], { color: ink0, weight: 0.6 });
+        ], { color: ink0, size: "S" });
       }
     }
     return;
@@ -235,7 +235,7 @@ export function drawWhiskers(ink, spec, box) {
       const y0 = wy + (i - 1) * 0.028;
       const x0 = side * box.headRx * 0.3;
       // A slightly drooping fan — the longer the whisker, the more its tip spreads
-      ink.line([[x0, y0], [x0 + side * len * 0.55, y0 + (i - 1) * 0.008 * (len / 0.09)], [x0 + side * len, y0 + (i - 1) * 0.02 * (len / 0.09) - 0.004]], { color: spec.faceInk || spec.palette.ink, weight: 0.6 });
+      ink.line([[x0, y0], [x0 + side * len * 0.55, y0 + (i - 1) * 0.008 * (len / 0.09)], [x0 + side * len, y0 + (i - 1) * 0.02 * (len / 0.09) - 0.004]], { color: spec.faceInk || spec.palette.ink, size: "S" });
     }
   }
 }
@@ -259,7 +259,7 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
       left = y + eye.r * 0.3 * (eye.side > 0 ? 1 : 0);
       right = y + eye.r * 0.3 * (eye.side > 0 ? 0 : 1);
     }
-    ink.line([[eye.x - half, left], [eye.x + half, right]], { color: ink0, weight: 1 });
+    ink.line([[eye.x - half, left], [eye.x + half, right]], { color: ink0 });
   }
 }
 
@@ -279,14 +279,14 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
     paintPart(fills, spec, patch, spec.palette.ink, { own: true });
     if (spec.faceInk) ink.contour(patch, { color: spec.faceInk });
     // The strap crosses the head
-    ink.line([[eye.x, eye.y + eye.r * 1.3], [-eye.side * box.headRx, box.headCy + box.headRy * 0.45]], { color: ink0, weight: 0.7 });
+    ink.line([[eye.x, eye.y + eye.r * 1.3], [-eye.side * box.headRx, box.headCy + box.headRy * 0.45]], { color: ink0, size: "S" });
     return;
   }
 
   if (kind === "monocle") {
     const eye = eyes[eyes.length - 1];
     ink.contour(blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.5, { lumps: 4, amount: 0.06, noise: null }), { color: ink0 });
-    ink.line([[eye.x + eye.r * 1.4, eye.y - eye.r], [eye.x + eye.r * 1.9, eye.y - eye.r * 2.6]], { color: ink0, weight: 0.7 });
+    ink.line([[eye.x + eye.r * 1.4, eye.y - eye.r], [eye.x + eye.r * 1.9, eye.y - eye.r * 2.6]], { color: ink0, size: "S" });
     return;
   }
 
@@ -294,10 +294,10 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
   for (const eye of eyes) {
     ink.contour(blobPath(eye.x, eye.y, eye.r * scale, eye.r * scale * 0.92, { lumps: 4, amount: 0.06, noise: null }), { color: ink0 });
   }
-  ink.line([[eyes[0].x + eyes[0].r * scale, eyes[0].y], [eyes[1].x - eyes[1].r * scale, eyes[1].y]], { color: ink0, weight: 0.7 });
+  ink.line([[eyes[0].x + eyes[0].r * scale, eyes[0].y], [eyes[1].x - eyes[1].r * scale, eyes[1].y]], { color: ink0, size: "S" });
   if (kind === "goggles") {
     for (const eye of eyes) {
-      ink.line([[eye.x + eye.side * eye.r * scale, eye.y], [eye.side * box.headRx * 1.02, eye.y + 0.02]], { color: ink0, weight: 1 });
+      ink.line([[eye.x + eye.side * eye.r * scale, eye.y], [eye.side * box.headRx * 1.02, eye.y + 0.02]], { color: ink0 });
     }
   }
 }
@@ -384,7 +384,7 @@ function catNose(ink, fills, spec, box, eyes) {
   ink.contour(path, { color: ink0 });
   // The philtrum — from under the nose toward the mouth. Short on hook, long on long (a Y-shaped face)
   const drop = kind === "hook" ? h * 1.1 : kind === "long" ? h * 2 : 0;
-  if (drop) ink.line([[0, y - h * 0.7], [0.001, y - h * 0.7 - drop]], { color: ink0, weight: 0.7 });
+  if (drop) ink.line([[0, y - h * 0.7], [0.001, y - h * 0.7 - drop]], { color: ink0, size: "S" });
 }
 
 export function drawNose(ink, fills, spec, box, eyes) {
@@ -396,7 +396,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
     paintPart(fills, spec, muzzle, m.fill);   // the muzzle is fur — the creature's goofy material
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
     paintPart(fills, spec, nose, spec.palette.ink, { own: true });   // the nose is an object — always black
-    if (m.dark) ink.contour(nose, { color: m.ink, weight: 0.7 });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)
+    if (m.dark) ink.contour(nose, { color: m.ink, size: "S" });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)
     return;
   }
 
@@ -409,13 +409,13 @@ export function drawNose(ink, fills, spec, box, eyes) {
   if (kind === "dot") {
     // Dot nose — **proportional to the head**. At a fixed size it ends up smaller than a speck on a huge or wide head and disappears on a face turn (the audit catches it)
     const half = Math.max(0.014, box.headRx * 0.055);
-    ink.line([[-half, y], [half, y]], { color: ink0, weight: Math.max(1.3, box.headRy * 5) });
+    ink.line([[-half, y], [half, y]], { color: ink0 });
   } else if (kind === "hook") {
     // Hook — comes down from between the brows and bends to the left (the reference's one-stroke nose)
-    ink.line([[0.004 * k, y + 0.07 * k], [0.01 * k, y], [-0.035 * k, y - 0.012 * k]], { color: ink0, weight: 1 });
+    ink.line([[0.004 * k, y + 0.07 * k], [0.01 * k, y], [-0.035 * k, y - 0.012 * k]], { color: ink0 });
   } else if (kind === "wedge") {
     // Wedge — a ∧ pointing up
-    ink.line([[-0.03 * k, y - 0.02 * k], [0.006 * k, y + 0.055 * k], [0.032 * k, y - 0.02 * k]], { color: ink0, weight: 1 });
+    ink.line([[-0.03 * k, y - 0.02 * k], [0.006 * k, y + 0.055 * k], [0.032 * k, y - 0.02 * k]], { color: ink0 });
   } else if (kind === "bulb") {
     // Bulb — a round **area**. Filled a little deeper than the skin tone with a face-ink rim (on an ink-black face only the rim is left and reads as a light ring).
     // Having a different silhouette from the four line noses is this nose's whole reason — at grid distance it separates as "the mass nose"
@@ -448,7 +448,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
     }
   } else {
     // long — a long nose coming down from the forehead
-    ink.line([[0.006 * k, y + 0.14 * k], [0.014 * k, y - 0.03 * k], [-0.03 * k, y - 0.045 * k]], { color: ink0, weight: 1 });
+    ink.line([[0.006 * k, y + 0.14 * k], [0.014 * k, y - 0.03 * k], [-0.03 * k, y - 0.045 * k]], { color: ink0 });
   }
 }
 
@@ -474,6 +474,6 @@ export function angryEyeSketch(sketch, eye, ink, spec) {
   const r = eye.r;
   const inward = -eye.side;   // the nose side (0 on a cyclops)
   const lid = inward === 0 ? [[-r * 0.95, r * 0.45], [r * 0.95, r * 0.45]] : [[-inward * r * 0.95, r * 0.55], [inward * r * 0.95, r * 0.05]];
-  sketch.line(lid, { color: ink, weight: 1.3 });
+  sketch.line(lid, { color: ink });
   paintPart(sketch, spec, blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink, { own: true });
 }

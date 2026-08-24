@@ -27,8 +27,8 @@ their own; this is for the fills under them and the shapes that are only a fill.
 
 The board is three.js, and nothing is drawn on a 2D canvas (the only 2D contexts are the PNG
 export and the medium page copying its renders into its cards). WebGL's `linewidth` is fixed at 1 in most
-environments and `THREE.Line` gives you no control over thickness, so every stroke goes through `Sketch.stroke()`
-or `Sketch.pencil()` and becomes a triangle ribbon; every fill is a fan of triangles; a layer's ink and fills go
+environments and `THREE.Line` gives you no control over thickness, so every stroke goes through `Sketch.pencil()`
+and becomes a triangle ribbon; every fill is a fan of triangles; a layer's ink and fills go
 into one `BufferGeometry` with vertex colors.
 
 Four things have to be present together to look hand-drawn. Leave out any one and it becomes vector clip art.
@@ -45,10 +45,11 @@ Four things have to be present together to look hand-drawn. Leave out any one an
 When the thickness needs changing globally, adjust `Sketch`'s `inkScale` rather than the individual `width`
 values.
 
-## The pencil — a second line
+## The pencil — the one line
 
-`Sketch.pencil()` is the reference's line ([reference/README.md](../reference/README.md) § 3) kept next to
-`stroke()`, not in place of it. It differs in four ways: the spine wanders on two sines **per world length**
+`Sketch.pencil()` is the reference's line ([reference/README.md](../reference/README.md) § 3), and since the
+ribbon pen was taken out it is the only pen: every line, every hair stroke, every texture mark and every band on
+the board goes through it. It has four habits: the spine wanders on two sines **per world length**
 (a slow drift and a waver — a tiny stroke gets a gentle bend, a head contour one or two cycles), the width
 **breathes** on two more sines plus a per-stroke jitter, the ends **run past** where they should stop
 instead of pinching to a point, and a thick line **sheds** — ink crumbs outside the edge, paper-coloured
@@ -60,31 +61,34 @@ Every number lives in the `PENCIL` table at the top of `stroke.js` and nowhere e
 normal per point, so it never cracks at a corner. `paper` is the color the bites take — pass the fill's
 color when the line runs over a fill. Not for dots: the overshoot lengthens them.
 
-The head and body contours draw with it, as the PENCIL_STROKE goofy outline (below); the medium page (`/how.html`
-§ the two pens) holds it and `stroke()` a tab apart. Switching another part onto it is a drawing change like any other —
-`drawdiff` will show it, and the audit has to stay at 0.
+The medium page shows it habit by habit (`/how.html` § the pencil). Changing what a part draws with is a drawing
+change like any other — `drawdiff` will show it, and the audit has to stay at 0.
 
 ## The outline — what a line is drawn with
 
 Every line on a creature is drawn with a **goofy outline** — a **kind** from `GOOFY_OUTLINES` in `medium/outlines.js`.
 A part never names a kind, a line function or a width. It names its line's **role** and hands over the path and the
-color, with at most a `weight` on the kind's width:
+color, with at most a **size** on it — S · M · L from the kind's own ladder, and nothing else. There is no multiplier:
+a width that is not on a ladder cannot be drawn, which is what keeps the board's line weights countable.
 
 | Role | Call | What it is | Weights in use |
 | --- | --- | --- | --- |
-| contour | `ink.contour(path, { color, weight })` | the closed line of a shape — the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts | fine 0.7 · 1 · the head 1.15 · heavy 1.2 |
-| line | `ink.line(path, { color, weight, joint })` | an open line, **down to a dot or a dash** — a brow, a lid, a whisker, a limb, a strand, a horn, the floor, a tooth's edge, a claw, the dot mouth. `joint = [start, end]` marks an end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there | fine 0.6 · 0.7 · 1 · heavy 1.3 · bold 1.6 |
+| contour | `ink.contour(path, { color, size })` | the closed line of a shape — the head, the body, ears, hats, hands, eyes, the nose, the mouth's parts | **S** the eyes and the mouth's small parts · **M** everything else |
+| line | `ink.line(path, { color, size, joint })` | an open line, **down to a dot or a dash** — a brow, a lid, a whisker, a limb, a strand, a horn, the floor, a tooth's edge, a claw, the dot mouth. `joint = [start, end]` marks an end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there | **S** the finest (hair strands, whiskers, a tail's hairs, the dots and dashes) · **M** the rest · **L** two lines only, an imp's horn and a stub tail |
 
 Which kind each role is drawn with is **one switch**, `BOARD_LINES` — today `{ contour: "PENCIL_STROKE", line: "PENCIL_STROKE" }`.
 Change a name there and every line of that role on the board changes; a new kind of line is a new entry in
-`GOOFY_OUTLINES` and a name in the switch. An unknown role or kind throws. `stroke()`, `outline()` and `pencil()` are
-the kinds' primitives and no part calls them — the only strokes outside the table are the two **bands** (a hat's color
-laid as a thick stroke along a brim or a crown: a fill in disguise, `draw/headgear.js`). The outline is its own concept —
+`GOOFY_OUTLINES` and a name in the switch. An unknown role or kind throws. `pencil()` is the kinds' primitive and
+almost no part calls it directly — the exceptions are the two **bands** (a hat's color laid as a thick stroke along a
+brim or a crown: a fill in disguise, `draw/headgear.js`), the emoji glyphs, and the marks a goofy material and the
+goofy fur lay down, which are the medium's own and not a creature's lines. The outline is its own concept —
 not part of a goofy material: a line is not a way of filling.
 
 A kind is named **the pen, then the hold**: **STROKE** (once, at full width — mass) · **SLINE** (thin, and the pen lifts —
 detail) · **BROKEN** (laid three times over itself — contour). One pen is on the table, the pencil; `pen` names the hand that
-draws a kind, for when a second one comes back.
+draws a kind, for when a second one arrives. A kind also names its own ladder of three **sizes** — S · M · L — and the
+board draws almost every line at **M** — S for fine detail, L for two lines in the whole board. The ladder is the kind's
+own and not a multiple of one width: a hairline scaled to STROKE's L stops being a hairline.
 
 A dot or a dash needs no hold of its own. **The pencil keeps the ends of anything shorter than `PENCIL.stub` (0.05) and sheds
 nothing there**: an overshoot would run a mark half again to twice as long, and a crumb or a bite is the size of the mark. The
@@ -93,19 +97,18 @@ a 240-creature sample are stubs.
 
 | Kind | Line |
 | --- | --- |
-| `PENCIL_STROKE` | `pencil()` 0.012 once — the reference's line at full width: it wanders, breathes, runs past its ends and sheds; closed, one seamless loop. **Mass** |
-| `PENCIL_SLINE` | `pencil()` 0.005 once — a hairline — and **the pen lifts** (`PENCIL.lift`): a skip every 48 widths, 1.2~3 widths long, never within 3 of an end and none at all on a line under 8 of them, so a dot or a dash keeps its whole extent. **Detail** |
-| `PENCIL_BROKEN` | `pencil()` 0.011 with the **ghost** habit stacked — three passes, the two **under** the line at `PENCIL.ghost` — 0.62 of the width, 0.2 of the ink (mixed that far toward the paper: the board's ink is opaque) and slipped 0.5~1.6 widths off it, to one side or the other. The line is laid last, so it stays the one you read, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
+| `PENCIL_STROKE` | `pencil()` **0.007 · 0.012 · 0.022** (the default ladder, `PEN_SIZES`), once — the reference's line at full width: it wanders, breathes, runs past its ends and sheds; closed, one seamless loop. **Mass** |
+| `PENCIL_SLINE` | `pencil()` **0.003 · 0.005 · 0.008** once — a hairline at every size, its ladder deliberately tight — and **the pen lifts** (`PENCIL.lift`): a skip every 0.45 **world units**, 0.006~0.015 long, never within 0.015 of an end and none at all on a line under 0.04, so a dot or a dash keeps its whole extent. The lift is in world units and measured along the path **as handed over**, not along the overshot spine — a hold does not change with the size, so the same kind at S, M and L skips in the same places for the same length; in widths the gaps grew with the line and the three sizes read as three different holds. It also holds its width: `breathe: 0.5` halves the width's sines and the per-stroke jitter, because the breath is a share of the width and a hairline has little to spend on it — the swing reads as lumps instead of a hand. **Detail** |
+| `PENCIL_BROKEN` | `pencil()` **0.006 · 0.011 · 0.020** with the **ghost** habit stacked — three passes, the two **under** the line at `PENCIL.ghost` — 0.62 of the width, and **one ink each, bottom-up**: 0.2 for the deepest, 0.5 for the one just under the line, the way a hand going round again leans a little harder. Faintness is a colour (mixed that far toward the paper), not an alpha: the board's ink is opaque and slipped 0.5~1.6 widths off it, to one side or the other. The line is laid last, so it stays the one you read, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
 
-On the board today: every contour and every open line is PENCIL_STROKE — 45 and 119 call sites. The **ribbon pen** (`stroke()`) is
-no kind and no role draws with it; two things call it directly — a hat's band and an emoji's glyph outline. **PENCIL_SLINE and
+On the board today: every contour and every open line is PENCIL_STROKE — 45 and 119 call sites. **PENCIL_SLINE and
 PENCIL_BROKEN are built and on nothing** — they exist in the table and on the medium page, and a role picks one up by a single name in the switch. The
 medium page names the kinds outright (`{ outline: "PENCIL_SLINE" }`) to show each on its own — the one place a kind is named —
 and draws the three roles off the switch, so it cannot drift from the board.
 
-**The anatomy rows.** Each pen is also shown built up **one habit at a time** — a row per habit, each row the row above plus
-one: the points · the ribbon · the wander · the breath · the flick · the shed · the ghost for the pencil, and the points · the ribbon · the wander · the taper · the press for the ribbon
-pen. They are drawn by the same `pencil()` and `stroke()` the board draws with, told which habits to leave out (`anatomy`,
+**The anatomy rows.** The pencil is also shown built up **one habit at a time** — a row per habit, each row the row above plus
+one: the points · the ribbon · the wander · the breath · the flick · the shed · the ghost. They are drawn by the same
+`pencil()` the board draws with, told which habits to leave out (`anatomy`,
 `stroke.js` — **only the medium page ever passes it**; a habit left out is left out of the drawing, never faked). Every line
 figure on the page is handed the **same sample line**, a sine (`sine()` in `how.js`), so the figures can be read against each
 other, and every figure that takes it is given the height for it. The habits are read along the line's **own edge** — the

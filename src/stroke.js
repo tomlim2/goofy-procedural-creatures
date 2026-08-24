@@ -42,27 +42,6 @@ export function resample(points, step) {
   return out;
 }
 
-// Pushed along the normal to make the hand shake.
-// Low frequency (the whole thing bending) and high frequency (fine tremor) have to overlap to look like a human hand.
-function perturb(points, noise, amount, phase) {
-  const out = [];
-  for (let i = 0; i < points.length; i += 1) {
-    const [x, y] = points[i];
-    const prev = points[Math.max(0, i - 1)];
-    const next = points[Math.min(points.length - 1, i + 1)];
-    let nx = -(next[1] - prev[1]);
-    let ny = next[0] - prev[0];
-    const length = Math.hypot(nx, ny) || 1;
-    nx /= length;
-    ny /= length;
-
-    const slow = noise(phase + i * 0.09);
-    const fast = noise(phase * 1.7 + i * 0.62) * 0.35;
-    const push = (slow + fast) * amount;
-    out.push([x + nx * push, y + ny * push]);
-  }
-  return out;
-}
 
 // Continues a polyline past `to` in the direction from → to, one point per step, ending exactly `length` out. The pencil's overshoot
 function extend(from, to, length, step) {
@@ -109,17 +88,19 @@ export const PENCIL = {
   stub: 0.05,                          // a line this short keeps its ends and sheds nothing — the overshoot would run it half again
                                        // to twice as long, and a crumb or a bite is the size of the whole mark. Every dot and dash is one
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
-  // **the lift** — the pen comes up. In **widths**, the way the overshoot is: a skip is a couple of line-widths long and they fall
-  // some forty-eight apart, so they scale with the line instead of turning a hairline into a dashed one. min: the shortest line
-  // that lifts at all; edge: how close to an end a skip may fall. A hold asks for it (medium/outlines.js: SLINE), the pencil knows how
-  lift: { per: 48, gap: [1.2, 3], min: 8, edge: 3 },
+  // **the lift** — the pen comes up. In **world units**, not in widths: a hold does not change with the size, so the same kind
+  // at S, M and L has to skip in the same places for the same length. Measured in widths the gaps grew with the line —
+  // a hairline came out finely dashed and a fat one broke twice — and the three sizes read as three different holds.
+  // The numbers are the old ones × SLINE's M (0.005), so the board's size is untouched. min: the shortest line that lifts at
+  // all; edge: how close to an end a skip may fall. A hold asks for it (medium/outlines.js: SLINE), the pencil knows how
+  lift: { per: 0.45, gap: [0.006, 0.015], min: 0.04, edge: 0.015 },
   // **the ghost** — every pass but the last is laid at `width` of the line's width and `ink` of its ink: the same line again,
   // thinner and faint, wandering and breathing on its own. The **line goes down last**, so the ghosts sit under it and it stays the
   // one you read (within a mesh, vertex order is the stacking — guidelines/rig.md). The ink is not opacity: the board's ink is
   // opaque, so the colour is mixed that far toward the paper it is drawn on, which is what a fifth of a pass looks like. Lay
   // enough of them and the line comes out doubled and offset, which is the BROKEN hold (medium/outlines.js)
   // slip: how far a ghost is pushed sideways off the line, in widths — a hand going round twice does not land on its own line
-  ghost: { width: 0.62, ink: 0.2, slip: [0.5, 1.6] },
+  ghost: { width: 0.62, ink: [0.2, 0.5], slip: [0.5, 1.6] },   // one per ghost, bottom-up: the deepest faintest, the one just under the line darkest
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
   // An ink crumb sits on the edge, its centre scatter × the half width out — never past the edge, so it frays the line instead of
   // floating loose beside it; a bite (the bite share of crumbs) is a paper-coloured square
@@ -139,7 +120,7 @@ export const TOOTH = 0.3;
 // The anatomy switch — which of a line's habits are on. **Only the medium page passes it** (how.js: the rows that build a line up one
 // habit at a time, how.html § the two pens); everything else leaves it out and draws with all of them, so nothing on
 // the board can lose a habit by accident. A habit left out here is left out of the drawing, not faked
-const ALL_HABITS = { wander: true, breathe: true, over: true, shed: true, taper: true, press: true };
+const ALL_HABITS = { wander: true, breathe: true, over: true, shed: true };
 
 
 export class Sketch {
@@ -173,74 +154,6 @@ export class Sketch {
     for (let i = 0; i < 3; i += 1) this.teeth.push(this.tooth);
   }
 
-  // One stroke. width is the maximum, and it thins toward the ends — except at a joint: joint = [start, end] marks an end that meets
-  // another line or a fill's edge (the tail's root, its side lines meeting the tip's arc), and that end keeps its width
-  stroke(points, { color = "#2b2724", width = 0.012, jitter = 0.006, passes = 1, step = 0.03, joint = null, skinT = null, anatomy = null } = {}) {
-    const A = anatomy || ALL_HABITS;
-    const rgb = hexToRgb(color);
-    width *= this.inkScale;
-    this.skinT = NaN;   // the tags go on per vertex below — nothing here inherits a tag, and nothing drawn after this call does either
-
-    for (let pass = 0; pass < passes; pass += 1) {
-      this.phase += 13.37;
-      const sampled = resample(points, step);
-      // Two samples is both ends and nothing between, and the end taper takes both to width 0 — a stroke shorter than step draws
-      // nothing. Nothing on the board hands one over: short lines are the pencil's (it keeps a stub's ends, PENCIL.stub), and what is
-      // left here — a hat's band, an emoji's glyph — is long
-      if (sampled.length < 3) continue;
-      const path = perturb(sampled, this.noise, jitter * this.wobble, this.phase);
-      // Thin at the ends, thick in the middle (taper). Pressure variation is laid on top with noise (press).
-      const phase = this.phase;
-      const noise = this.noise;
-      const ramp = (u) => Math.pow(Math.sin((Math.PI / 2) * Math.min(1, Math.max(0, u))), 0.35);
-      const taper = !A.taper
-        ? () => 1
-        : joint
-          ? (t) => (joint[0] ? 1 : ramp(t * 2)) * (joint[1] ? 1 : ramp((1 - t) * 2))
-          : (t) => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 0.35);
-      const press = A.press ? (t, k) => 0.75 + 0.45 * noise(phase * 0.5 + t * 6 + k) : () => 1;
-      const last = path.length - 1;
-
-      // The skin tag per **sample point** — the arc length to it along the line. Both corners of a segment's near end take the near point's tag and
-      // both of the far end the far point's, so the two quads that share a point agree on it and the line bends without breaking apart
-      const arcs = [0];
-      for (let k = 1; k < sampled.length; k += 1) arcs.push(arcs[k - 1] + Math.hypot(sampled[k][0] - sampled[k - 1][0], sampled[k][1] - sampled[k - 1][1]));
-      const arcTotal = arcs[arcs.length - 1];
-      const tagAt = (k) => (skinT ? tagAlong(points, skinT, arcs[Math.min(k, arcs.length - 1)], arcTotal) : NaN);
-      for (let i = 1; i < path.length; i += 1) {
-        const ta = tagAt(i - 1), tb = tagAt(i);
-        const [ax, ay] = path[i - 1];
-        const [bx, by] = path[i];
-        let dx = bx - ax;
-        let dy = by - ay;
-        const length = Math.hypot(dx, dy) || 1;
-        dx /= length;
-        dy /= length;
-
-        const t0 = (i - 1) / last;
-        const t1 = i / last;
-        const w0 = (width * taper(t0) * press(t0, 0)) / 2;
-        const w1 = (width * taper(t1) * press(t1, 1)) / 2;
-
-        const nx = -dy;
-        const ny = dx;
-        const a1 = [ax + nx * w0, ay + ny * w0];
-        const a2 = [ax - nx * w0, ay - ny * w0];
-        const b1 = [bx + nx * w1, by + ny * w1];
-        const b2 = [bx - nx * w1, by - ny * w1];
-
-        this.triangle(a1[0], a1[1], a2[0], a2[1], b1[0], b1[1], rgb, [ta, ta, tb]);
-        this.triangle(a2[0], a2[1], b2[0], b2[1], b1[0], b1[1], rgb, [ta, tb, tb]);
-      }
-    }
-  }
-
-  // (the tag is per call — every tagged call resets it at its end, so an untagged call draws NaN)
-  // A closed stroke. Used for the head and body outlines.
-  outline(points, options = {}) {
-    this.stroke([...points, points[0]], options);
-  }
-
   // The goofy outline (medium/outlines.js) — the closed line of a shape, or an open line (down to a dot). What each is drawn with is the board's switch (BOARD_LINES)
   contour(points, options) { return contourWith(this, points, options); }
   line(points, options) { return lineWith(this, points, options); }
@@ -262,11 +175,13 @@ export class Sketch {
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
   // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
-  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
+  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, breathe: breath = 1, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
     const P = PENCIL;
     const A = anatomy || ALL_HABITS;
     const rgb = hexToRgb(color);
-    const ghostRgb = hexToRgb(mix(color, paper, 1 - P.ghost.ink));   // the ghost's faintness, as a colour: the board's ink is opaque
+    // A colour per ghost, bottom-up — the deepest is the faintest and the one just under the line is the darkest, the
+    // way a hand going round again leans a little harder. Faintness is a **colour**, not an alpha: the board's ink is opaque
+    const ghostRgb = P.ghost.ink.map((k) => hexToRgb(mix(color, paper, 1 - k)));
     const biteRgb = hexToRgb(paper);
     width *= this.inkScale;
     this.skinT = NaN;   // per-vertex tags below — nothing inherits a tag from this call
@@ -284,8 +199,8 @@ export class Sketch {
       const r = (k) => noise(ph * 0.37 + k * 2.71) * 0.5 + 0.5;             // a per-stroke number in [0, 1], from the drawing noise
       const jr = (k, [a, b]) => a + (b - a) * r(k);
       const isGhost = pass < passes - 1;   // the line itself is laid last, so its ghosts end up underneath it
-      const w = width * jr(1, P.jr) * (isGhost ? P.ghost.width : 1);
-      const passRgb = isGhost ? ghostRgb : rgb;
+      const w = width * (1 + (jr(1, P.jr) - 1) * breath) * (isGhost ? P.ghost.width : 1);
+      const passRgb = isGhost ? ghostRgb[Math.min(pass, ghostRgb.length - 1)] : rgb;   // more ghosts than colours: the last repeats
 
       // The spine — re-sampled, and on an open line run past both ends along the end tangents
       let spine = resample(closed ? [...points, points[0]] : points, P.step);
@@ -318,21 +233,28 @@ export class Sketch {
       const p1 = r(5) * TAU;
       const f2 = snap(jr(6, P.waver.f));
       const p2 = r(7) * TAU;
-      const breathe = A.breathe ? P.breathe.map(([amp, om], k) => [amp, snap(om), r(8 + k) * TAU]) : [];
+      // breath scales both the width's sines and the per-stroke jitter: a detail line has to hold its width, or at a
+      // hairline the same share of swing reads as a lump rather than a hand (medium/outlines.js: PENCIL_SLINE)
+      const breathe = A.breathe ? P.breathe.map(([amp, om], k) => [amp * breath, snap(om), r(8 + k) * TAU]) : [];
       const wander = A.wander ? P.wander * this.wobble : 0;
       // A ghost misses the line: pushed off along the normal by slip widths, to one side or the other, the whole pass together
       const slip = isGhost ? (r(101) < 0.5 ? -1 : 1) * jr(103, P.ghost.slip) * w : 0;
-      // The pen lifts (PENCIL.lift, in widths). One skip every `per` widths, `gap` widths long, never within `edge` widths of
-      // either end and none at all on a line shorter than `min` of them: a dot or a dash keeps its whole extent, and only a line
-      // long enough to be a detail breaks. A closed loop has no ends to spare
+      // The pen lifts (PENCIL.lift, in world units). One skip every `per`, `gap` long, never within `edge` of either end and
+      // none at all on a line shorter than `min`: a dot or a dash keeps its whole extent, and only a line long enough to be a
+      // detail breaks. The same everywhere on the sheet whatever the width, so a kind skips the same way at every size.
+      // A closed loop has no ends to spare
+      // Measured along the path **as handed over**, not along the overshot spine: the tails scale with the width, so a
+      // skip counted from the spine's start would sit somewhere else at every size — which is the one thing a hold must not do
       const F = P.lift;
-      const per = F.per * w, edge = F.edge * w;
-      const gapAt = lift && L >= F.min * w ? (at) => {
-        const cell = Math.floor(at / per);
-        const g = jr(20 + cell * 2, F.gap) * w;
-        const from = cell * per + r(21 + cell * 2) * (per - g);
-        if (at <= from || at >= from + g) return false;
-        return closed || (from > edge && from + g < L - edge);
+      const span = L - tail0 - tail1;
+      const gapAt = lift && span >= F.min ? (at) => {
+        const u = at - tail0;
+        if (u < 0 || u > span) return false;
+        const cell = Math.floor(u / F.per);
+        const g = jr(20 + cell * 2, F.gap);
+        const from = cell * F.per + r(21 + cell * 2) * (F.per - g);
+        if (u <= from || u >= from + g) return false;
+        return closed || (from > F.edge && from + g < span - F.edge);
       } : null;
 
       // Per-point normals (cyclic on a loop), shared by the quads on either side
@@ -444,7 +366,7 @@ export class Sketch {
 
   // The scribble — hair is not filled as an area but drawn back and forth with the pen (the reference's hair works this way).
   // The growth constants are GOOFY_FUR.SCRIBBLE's; fur() is the named way in
-  scribble(points, { color = "#2b2724", passes = 14, width = 0.009, spread = 0.05, root = -0.25, reach = 0.85, scatter = 0.4, wave = 0.4, lean = 0.4, waveLean = 0.3, jitter = 0.012, step = 0.045 } = {}) {
+  scribble(points, { color = "#2b2724", passes = 14, width = 0.009, spread = 0.05, root = -0.25, reach = 0.85, scatter = 0.4, wave = 0.4, lean = 0.4, waveLean = 0.3, paper = PAPER } = {}) {
     for (let i = 0; i < passes; i += 1) {
       this.phase += 7.77;
       const t = i / Math.max(1, passes - 1);
@@ -454,12 +376,12 @@ export class Sketch {
         const w = this.noise(this.phase * 0.2 + index * 0.4) * spread * wave;
         return [x + drift * lean + w * waveLean, y + drift + w];
       });
-      this.stroke(shifted, { color, width, jitter, step });
+      this.pencil(shifted, { color, width, paper });
     }
   }
 
   // Hatched shading. Used for shadow on a cheek or forehead.
-  hatch(cx, cy, rx, ry, angle, { color = "#3a3430", lines = 6, width = 0.006 } = {}) {
+  hatch(cx, cy, rx, ry, angle, { color = "#3a3430", lines = 6, width = 0.006, paper = PAPER } = {}) {
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     for (let i = 0; i < lines; i += 1) {
@@ -470,7 +392,7 @@ export class Sketch {
       const ay = cy + (-half * rx) * sin + u * cos;
       const bx = cx + half * rx * cos - u * sin;
       const by = cy + half * rx * sin + u * cos;
-      this.stroke([[ax, ay], [bx, by]], { color, width, jitter: 0.01, step: 0.05 });
+      this.pencil([[ax, ay], [bx, by]], { color, width, paper });
     }
   }
 

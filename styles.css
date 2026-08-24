@@ -175,7 +175,7 @@ body.how { height: auto; }
 .how .bar .seg { flex: 0 0 auto; }
 .how .bar .seg button { flex: 0 0 auto; padding: 3px 9px; font-size: 10px; letter-spacing: 0.14em; }
 .how .page { max-width: 880px; margin: 0 auto; padding: 68px 20px 48px; }
-.how .lede, .how section > p, .how .pen > p { max-width: 660px; opacity: 0.8; }
+.how .lede, .how section > p { max-width: 660px; opacity: 0.8; }
 .how h2 {
   margin: 44px 0 6px;
   font-size: 11px;
@@ -190,11 +190,10 @@ body.how { height: auto; }
   text-transform: uppercase;
   color: rgba(43, 39, 36, 0.45);
 }
-/* The two pens are one block with a tab each — the buttons are a segment like any other (how.js binds it
-   with bindSeg) and each panel is shown by dropping its `hidden`. Tabs size to their label rather than
-   stretching, so the strip reads as a heading row */
-.how .pens { margin-top: 14px; }
-.how .pens button { flex: 0 0 auto; padding: 5px 14px; letter-spacing: 0.18em; }
+/* The kinds' controls — the size the three lines draw at, and AGAIN. Buttons size to their label rather than
+   stretching, so the row reads as a control strip and not as a segment spanning the page */
+.how .kinds { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.how .kinds button { flex: 0 0 auto; padding: 4px 12px; letter-spacing: 0.16em; }
 
 .how .figs {
   display: grid;

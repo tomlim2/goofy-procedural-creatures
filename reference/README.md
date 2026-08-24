@@ -57,14 +57,14 @@ internals are unknowable.
   sometimes lifts) · `stroke` (mass) · `broken` (contour, 2–3 overlapping passes). A mulberry32 reseeded per
   boil frame, so the same seed gives back the same stroke crumb for crumb
 
-**What was taken** — the line, as `Sketch.pencil()` next to `stroke()`: the two-sine wander per length, the
+**What was taken** — the line, as `Sketch.pencil()` — the board's only pen since: the two-sine wander per length, the
 breathing width, the overshoot and the shed, with every number in `PENCIL` (`src/stroke.js`,
 [drawing.md](../guidelines/drawing.md) § the pencil). And the idea of the page itself — `/how.html` is a
 legend drawn by the code it describes, like theirs.
 
 **What was not taken** — the 62% ink (a deliberate exclusion: our ink stays opaque), the tremor (the sizzle
 was tried and rejected — the lines here are quiet), the three-role split (`sline`/`stroke`/`broken` — ours is
-one `stroke()` for everything, plus the pencil), their shape recipe (the two fixed sines and the Chaikin pass;
+one pencil in three holds, and only PENCIL_STROKE is on anything), their shape recipe (the two fixed sines and the Chaikin pass;
 `blobPath` keeps its noise lumps), and the canvas, media and editor systems around it.
 
 ## Image files

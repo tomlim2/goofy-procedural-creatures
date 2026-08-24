@@ -29,15 +29,15 @@ export const DEPTH = {
 // Two sets of closed eyes — the shut line (shut: an arc bulging downward) and the ^^ smile arch (smile: bulging upward). Live eyes (the rig) and static eyes (staticLids) use the same shapes —
 // only the shut line differs slightly (a little higher and tidier on static eyes). In face ink (faceInk) — on an ink-black imp head, a black arch would be lost and invisible
 const LID_STYLE = {
-  rig: { shutY: 0.1, shutWobble: 0.5, shutWeight: 1 },
-  static: { shutY: 0.15, shutWobble: 0.4, shutWeight: 1 }
+  rig: { shutY: 0.1, shutWobble: 0.5 },
+  static: { shutY: 0.15, shutWobble: 0.4 }
 };
 function lidSketches(eye, ink, noise, style, spec) {
   const s = LID_STYLE[style];
   const shut = new Sketch(noise, s.shutWobble);
-  shut.line(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink, weight: s.shutWeight });
+  shut.line(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink });
   const smile = new Sketch(noise, 0.5);
-  smile.line(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink, weight: 1 });
+  smile.line(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink });
   // Anger — the fierce eye (an inward-down slanted lid plus a glaring dot). While angry, the open eye is switched off and this stands instead (character/draw/face.js angryEyeSketch)
   const angry = new Sketch(noise, 0.5);
   angryEyeSketch(angry, eye, ink, spec);
