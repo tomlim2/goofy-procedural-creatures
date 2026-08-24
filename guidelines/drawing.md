@@ -189,8 +189,12 @@ base color and its map, in 3D terms. A channel that would be a *different* thing
 second texture (two patterns on one surface are one texture's composition). `grain` — the paper showing through —
 is not a channel at all: the sheet does it for the whole board in its own pass (§ the paper). That is the goofy material,
 and nothing else. The color always comes from the part; a goofy material knows no colors of its own, and every tone the texture
-adds is a shade of the part's color. **A mark is a light**: ink's scratches, graphite's rules and oil's paint are all drawn in the
-same watering of the ground toward the light ink, so they come *up* out of the surface, and the step's work goes into the ground
+adds is a tone of the part's color **in its own family** — `tint` and `deepen` (`color.js`) move lightness and leave the hue where
+it is, so a blue part gets lighter and deeper blues. Lightening by mixing toward the light ink was tried and dropped: a blue part's
+marks came out grey and a red part's pink-beige, and a mark stopped belonging to the thing it was drawn on. Multiplying up
+(`shade` × >1) keeps the hue but clips a saturated color into neon, which is why neither is used for the light side.
+**A mark is a light**: ink's scratches, graphite's rules and oil's paint are all drawn in the
+same tint of the ground, so they come *up* out of the surface, and the step's work goes into the ground
 underneath them (`opened` and `pull` in `materials.js`). Charcoal alone keeps dark marks — its specks are the grain of a dark
 crumb, and one technique that goes the other way is what keeps the four apart. Where a technique's own direction still stands it is
 its ground's: graphite and charcoal deepen theirs, ink lightens its own (its scratches take the ink away). On a **dark** color every mark goes lighter (`contrast` in `materials.js`), by as much as the technique asked for either
@@ -200,7 +204,7 @@ vanished into a black body, so a dark creature with a textured material read as 
 only **half** as far as on a light one: a mark's tone there is a light one, and pulling a dark part as far toward it as a light part
 goes toward its shade washes the part out.
 
-**No mark is ever white.** A lighter tone is the color **watered** — mixed toward the light ink — never a multiply, which clips: on
+**No mark is ever white.** A lighter tone is the color **tinted** — its own hue carried toward white — never a multiply, which clips: on
 a pale part ink's scratches came out `#ffffff` and ran across a cream creature as hard white lines. And a color with no room left to
 water (within 45 of luminance of the light ink) is inked the other way round: its ground is laid on **deeper** the more solid the
 step, and the scratch opens back toward the part's own color. Ink is the one technique this touches — it is the one whose marks go

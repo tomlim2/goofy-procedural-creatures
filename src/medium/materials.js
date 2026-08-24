@@ -2,9 +2,8 @@
 // sketch with them. A Sketch delegates paint() here; nothing here imports stroke.js — the sketch is handed in.
 // Docs: guidelines/drawing.md § the goofy material, § values; how.html § the goofy material
 
-import { hexToRgb, shade, isDark, luminance, mix } from "../color.js";
+import { hexToRgb, shade, isDark, luminance, mix, tint, deepen, headroom } from "../color.js";
 import { blobPath } from "../shape.js";
-import { MARKS } from "../character/vocabulary/palette.js";
 
 const TAU = Math.PI * 2;
 
@@ -46,8 +45,9 @@ export const GOOFY_MATERIALS = {
 };
 
 
-// The light ink — what a mark on a dark part is drawn in (the face-ink rule), and what a lighter tone mixes toward
-const LIGHT_INK = MARKS.light;
+// Every tone a goofy material makes is **in the part's own family** — `tint` and `deepen` in color.js move lightness and leave the
+// hue alone, so a blue part gets lighter and deeper blues. Lightening by mixing toward the light ink was tried and dropped: a blue
+// part's marks came out grey, a red part's pink-beige, and the mark stopped belonging to the thing it was drawn on
 
 
 // Values — how dark a surface is drawn, in five steps, named for the way graphite makes each (the reference's scale): black,
@@ -184,21 +184,20 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
   const ph = sketch.phase + b.cx * 31.7 + b.cy * 57.3 + b.r * 13.1;
   const noise = sketch.noise;
   const dark = isDark(color);
-  // A tone of the part's color. Deeper is shade; lighter is a mix toward the light ink — white pigment, never a multiply that clips a
-  // saturated color (a pop red × 1.6 came out neon). contrast(f): a deeper tone on a light color, a lighter one on a dark color
-  const tone = (factor) => (factor >= 1 ? mix(color, LIGHT_INK, Math.min(0.6, (factor - 1) * 0.45)) : shade(color, factor));   // × 1.6 ≈ a quarter of the way to the light ink
+  // A tone of the part's color, in its own family. Deeper is shade; lighter is a **tint** — the same hue carried toward white — never
+  // a multiply, which clips a saturated color into neon (a pop red × 1.6), and never a mix toward a neutral, which greys it out
+  const tone = (factor) => (factor >= 1 ? tint(color, Math.min(0.6, (factor - 1) * 0.45)) : shade(color, factor));
   // contrast(f): the mark's tone. On a light ground the technique's own factor stands — graphite hatches darker, ink scratches lighter.
   // On a **dark** ground every mark goes lighter, by as much as the factor asked for either way: there is nothing below a dark ground to
   // draw with. Only the amount is mirrored, never the direction — mirroring the direction turned ink's light scratches (1.35) into marks
   // *darker* than the ground they were scratched into, and a dark cat's tail went black on black
   const contrast = (factor) => (dark ? tone(1 + Math.abs(1 - factor) * 1.6) : tone(factor));   // tone(), not shade(): a factor above 1 waters the colour, and a multiply clipped it to white
-  // How far this colour can be **watered** before it is the light ink itself. Ink is the one technique whose marks go lighter on a light
-  // ground (its scratches take the ink away), and a part already as pale as the paper has nowhere lighter to go: multiplied up there it
-  // clipped, and #ffffff lines ran across a cream creature. A colour with no room is inked the other way round — the ink laid on
-  // **deeper** at the solid steps, the scratch opening back toward the part's own colour. Either way every tone is the part's colour,
-  // watered or laid on thick; the medium still knows no colors of its own
-  const waters = dark || luminance(LIGHT_INK) - luminance(color) > 45;
-  const laidOn = (amount) => shade(color, 1 - Math.min(0.5, amount));
+  // How much lightness this colour has left. Ink is the one technique whose marks go lighter on a light ground (its scratches take the
+  // ink away), and a part already near white has nowhere to go: multiplied up there it clipped, and #ffffff lines ran across a cream
+  // creature. A colour with no room is inked the other way round — the ink laid on **deeper** at the solid steps, the scratch opening
+  // back toward the part's own colour. Either way every tone is the part's own, tinted or laid on thick
+  const waters = dark || headroom(color) > 0.36;
+  const laidOn = (amount) => deepen(color, Math.min(0.5, amount));
   const f = m.texture;
 
   // **The value step is in the base colour, and the marks are the medium.** A step pulls the ground toward the technique's own tone —
@@ -220,7 +219,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
   // there a part washes out fast, which is why the pull is halved there too
   const far = !f || f.tone === undefined ? color
     : inkDeep ? laidOn((f.tone - 1) * 0.95)
-    : !dark && f.wash !== undefined ? mix(color, LIGHT_INK, f.wash)
+    : !dark && f.wash !== undefined ? tint(color, f.wash)
     : contrast(f.tone);
   // How far along that pull the step stands. A technique that darkens the ground goes **with** the step; ink, which lightens it, goes
   // against. A ground that carries **light marks** — ink's own where it runs downward, graphite's rules, oil's paint — keeps a floor
@@ -253,10 +252,11 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
     // direction, which is half of why they read as one stamp repeated. A small swing, off the part's seed and not the rng
     const swing = (u(9000) - 0.5) * 0.34;   // ±10°
     // **The light the ink opens with** — the ground watered toward the light ink, which is the tone ink drags its scratches in and now
-    // the tone graphite rules and oil dabs in too. Watered from the **ground** rather than from the part's colour, so a mark stays
-    // lighter than what it is laid on whatever the step has done underneath. A **negative** amount is the other way — the ground laid
-    // on deeper — which only oil's spread asks for: paint is opaque and some of it goes on darker than what is under it
-    const opened = (amount) => (amount >= 0 ? mix(pulled, LIGHT_INK, amount) : shade(pulled, 1 + Math.max(-0.55, amount * 1.8)));
+    // the tone graphite rules and oil dabs in too. Tinted from the **ground** rather than from the part's colour, so a mark stays
+    // lighter than what it is laid on whatever the step has done underneath — and in the ground's own hue, so a blue part's marks are
+    // blue. A **negative** amount is the other way — the ground laid on deeper — which only oil's spread asks for: paint is opaque and
+    // some of it goes on darker than what is under it
+    const opened = (amount) => (amount >= 0 ? tint(pulled, amount) : deepen(pulled, Math.min(0.55, -amount * 1.8)));
     // How much of the surface the marks cover. The **base colour already carries the value** (above), so this is the medium's grain
     // and not its tone — which is what lets the marks stay as fine as the hand would draw them. Marks coarse enough to carry a value
     // on their own were tried and dropped: they turn a small part into blotches, and a face into camouflage
@@ -328,7 +328,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         const open = 1 - cover;   // black 0.17 · hatch 0.49 · scribble 0.61 · stipple 0.75 · light 0.93
         // The scratch is the colour **watered** — where the ground was laid on deeper instead (`waters` above), it opens back to the
         // part's own colour and a little past it as the step opens. Never a white line: that is the ink's colour taken away, not paint
-        const tone = waters ? contrast(f.tone * (0.9 + open * 0.3)) : mix(color, LIGHT_INK, 0.12 + open * 0.2);   // an open step scratches lighter as well as more often
+        const tone = waters ? contrast(f.tone * (0.9 + open * 0.3)) : tint(color, 0.12 + open * 0.2);   // an open step scratches lighter as well as more often
         const width = f.width * (0.6 + open * 0.5);
         for (let i = 0; i < Math.round(f.lines * open); i += 1) {
           const angle = u(i) * Math.PI;

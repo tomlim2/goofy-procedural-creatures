@@ -48,3 +48,43 @@ export function shade(hex, factor) {
   const ch = (x) => Math.round(Math.max(0, Math.min(255, x * factor))).toString(16).padStart(2, "0");
   return "#" + ch((v >> 16) & 255) + ch((v >> 8) & 255) + ch(v & 255);
 }
+
+// -- lighter and deeper **in the same family** ------------------------------------------------------------------
+// A mark has to belong to the part it is drawn on. Mixing toward a pale neutral (the light ink) to lighten turns a blue mark grey
+// and a red one pink-beige — the part's colour stops being in it — and multiplying up (shade × >1) keeps the hue but clips a
+// saturated colour into neon. So a lighter tone moves **lightness** and leaves the hue where it is: a blue part gets a lighter blue.
+// Saturation eases off a quarter of the amount as it rises, which is what a colour thinned with water does; it is not a bleach.
+function toHsl(hex) {
+  const v = parseInt(hex.slice(1), 16);
+  const r = ((v >> 16) & 255) / 255, g = ((v >> 8) & 255) / 255, b = (v & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+  if (!d) return [0, 0, l];
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4) / 6;
+  return [h, s, l];
+}
+function fromHsl(h, s, l) {
+  const f = (n) => {
+    const k = (n + h * 12) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const x = l - a * Math.max(-1, Math.min(Math.min(k - 3, 9 - k), 1));
+    return Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16).padStart(2, "0");
+  };
+  return "#" + f(0) + f(8) + f(4);
+}
+// `amount` of the way to white — 0 leaves the colour, 1 is white
+export function tint(hex, amount) {
+  const a = Math.max(0, Math.min(1, amount));
+  const [h, s, l] = toHsl(hex);
+  return fromHsl(h, s * (1 - a * 0.25), l + (1 - l) * a);
+}
+// The mirror: `amount` of the way to black
+export function deepen(hex, amount) {
+  const a = Math.max(0, Math.min(1, amount));
+  const [h, s, l] = toHsl(hex);
+  return fromHsl(h, s, l * (1 - a));
+}
+// How far this colour can still be lightened — what `tint` has left to work with
+export function headroom(hex) {
+  return 1 - toHsl(hex)[2];
+}
