@@ -20,6 +20,23 @@ const TILTED_LID = 0.34;
 // The white — paper white (the same value as scene/rig.js's live eyes and mouth.js's teeth)
 const SCLERA = MARKS.white;
 
+// **The crumple of a round eye, per individual.** A circle is the most repeated shape on the board — a ring, wide, oval or cyclops
+// white, a hollow, a lidded white, a dot pupil — and every one of them was drawn with the same three lumps at the same depth in the
+// same place, so the whole board's eyes came out stamped from one die. blobPath with no noise makes its lumps from two sines whose
+// only variable is `phase`, and that was left at 0 nearly everywhere. The creature's wobbleSeed picks all three now: how many lumps
+// (3~6, which only counts when a noise is passed), how deep they go (half to twice the base) and where they sit. `k` separates the
+// parts of one eye, so a white, its rim and its pupil each crumple their own way — a hand redrawing a circle never lands twice on the
+// same wobble. It is geometry, never the rng, so the seed still decides the drawing
+export function eyeWob(spec, eye, k = 0, { amount = 0.07, noise = null } = {}) {
+  const h = (n) => (Math.imul((spec.proportions.wobbleSeed ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+  return {
+    lumps: 3 + Math.floor(h(k * 5 + 1) * 4),
+    amount: amount * (0.5 + h(k * 5 + 2) * 1.5),
+    noise,
+    phase: eye.side * 3.7 + h(k * 5 + 3) * 40
+  };
+}
+
 // The star's (☆) vertex list — outer r, inner r·inner, point up. Used by the startle ☆_☆ eye cover (scene/rig.js)
 export function starPath(cx, cy, r, inner = 0.45) {
   const pts = [];
@@ -68,7 +85,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
     if (patched(spec, eye)) continue;
 
     if (kind === "dot") {
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 1, { amount: 0.2 })), ink0, { own: true });
     } else if (kind === "sleepy") {
       ink.line(arcPath(eye.x, eye.y, eye.r, eye.r * 0.7, Math.PI, TAU), { color: ink0 });
     } else if (kind === "cross") {
@@ -113,10 +130,10 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // An almond outline plus a **filled** vertical pupil (a spindle). With a thin stroke, on a small eye the outline's two lines merge into a smear and the pupil does not read —
       // the almond is raised a little (0.7r) and the pupil filled as an area, so it reads as a cat eye from a distance.
       // Inside the almond is the white — in skin tone it becomes a patch with a pupil floating in it, and on black fur or an imp the almond merges with the head
-      const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, { lumps: 3, amount: 0.1, noise: null });
+      const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, eyeWob(spec, eye, 2, { amount: 0.1 }));
       paintPart(fills, spec, path, SCLERA, { flat: true });
       fills.contour(path, { color: dark });
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, { lumps: 2, amount: 0.05, noise: null }), dark, { own: true });
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, eyeWob(spec, eye, 3, { amount: 0.05 })), dark, { own: true });
     } else if (kind === "line") {
       // A flat two-dash eye — an expressionless dash. It droops slightly on the outside
       ink.line([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0 });
@@ -138,16 +155,16 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, arc, SCLERA, { flat: true });
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
-      paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark, { own: true });
+      paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true });
     } else if (kind === "droop") {
       // ´･ω･` — drooping outer corners. A lid stroke falling outward over a dot eye (glum)
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 5, { amount: 0.2 })), ink0, { own: true });
       ink.line([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0 });
     } else if (kind === "hollow") {
       // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket).
       // The fill and outline are drawn per eye into **the same sketch (fills)** — when two eyes overlap the later eye (the larger) covers the front eye's outline (no crossing line).
       // For that, smallest first: the larger eye is drawn later and so ends up in front
-      const path = blobPath(eye.x, eye.y, eye.r, eye.r, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 });   // a slightly crumpled circle
+      const path = blobPath(eye.x, eye.y, eye.r, eye.r, eyeWob(spec, eye, 6, { noise: fills.noise }));   // a slightly crumpled circle, its crumple the creature's own
       paintPart(fills, spec, path, SCLERA, { flat: true });
       fills.contour(path, { color: dark });   // the white's rim is black — being on the white, it is always visible
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
@@ -165,7 +182,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         eye.x + (x - eye.x) * cos - (y - eye.y) * sin,
         eye.y + (x - eye.x) * sin + (y - eye.y) * cos
       ]);
-      const path = rot(blobPath(eye.x, eye.y, eye.r, eye.r * 1.05, { lumps: 3, amount: 0.07, noise: fills.noise, phase: eye.side * 3.7 }));
+      const path = rot(blobPath(eye.x, eye.y, eye.r, eye.r * 1.05, eyeWob(spec, eye, 7, { noise: fills.noise })));
       // The lid line — it crosses the white and sags in the middle (the brow ridge presses down on the eye). Stroked thick, twice, to make a "heavy" lid.
       // Its two ends are at ±a0 on the pre-tilt ellipse, so the outline's point array can be cut at that angle to close off the skin part
       const rel = 0.16, a0 = Math.asin(rel);
@@ -196,7 +213,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, arc, SCLERA, { flat: true });
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
-      paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, { lumps: 3, amount: 0.12, noise: null }), dark, { own: true });
+      paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true });
     }
     // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
     // as separate meshes to move the startle (pupil shrink), gaze and lids.

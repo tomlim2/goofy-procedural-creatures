@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { paintPart } from "../character/draw/body.js";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, patched, starPath, heartPath, angryEyeSketch, STATIC_EYE_KEYS } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, STATIC_EYE_KEYS } from "../character/index.js";
 import { Sketch } from "../stroke.js";
 import { blobPath, arcPath } from "../shape.js";
 import { makeClock, bindArm } from "../motion/index.js";
@@ -224,16 +224,18 @@ export function buildCreature(spec, noise, birth = 0) {
 
     // The open eye (white, rim, pupil) is the open group — closing **switches it off rather than covering it**. In its place either the shut line or the ^^ glyph stands
     const open = new THREE.Group();
-    // Not a perfect circle but a slightly crumpled hand-drawn one — given noise (a different phase per eye). The white and rim are one mesh (fill below, rim above)
-    const wob = { lumps: 3, amount: 0.06, noise, phase: eye.side * 3.7 + spec.seed * 0.001 };
+    // Not a perfect circle but a crumpled hand-drawn one, and **the crumple is this creature's own** (eyeWob in draw/face.js — how many
+    // lumps, how deep, where). The white and the rim take different ones, the way a hand redrawing a circle never lands on the same
+    // wobble twice. The white and rim are one mesh (fill below, rim above)
+    const flat = { side: eye.side };
     const white = new Sketch(noise, 0.4);
-    paintPart(white, spec, blobPath(0, 0, rx, ry, wob), MARKS.white, { flat: true });
+    paintPart(white, spec, blobPath(0, 0, rx, ry, eyeWob(spec, flat, 9, { amount: 0.06, noise })), MARKS.white, { flat: true });
     const rim = new Sketch(noise, 0.6);
-    rim.contour(blobPath(0, 0, rx, ry, { ...wob, lumps: 4, amount: 0.07 }), { color: spec.palette.ink });
+    rim.contour(blobPath(0, 0, rx, ry, eyeWob(spec, flat, 10, { amount: 0.07, noise })), { color: spec.palette.ink });
     open.add(sketchMesh([white, rim], 1, o));
 
     const pupilSketch = new Sketch(noise, 0.4);
-    paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, { lumps: 3, amount: 0.12, noise: null }), spec.palette.ink, { own: true });
+    paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, eyeWob(spec, flat, 11, { amount: 0.12 })), spec.palette.ink, { own: true });
     const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
     open.add(pupil);
     rig.add(open);
