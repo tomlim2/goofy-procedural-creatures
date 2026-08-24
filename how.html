@@ -139,11 +139,12 @@ seventh adds the <b>ghost</b>, and stacking that is <b>PENCIL_BROKEN</b>.</p>
 like the outline and the fur, to keep it apart from the GPU material underneath.) There are two channels and they paint the same
 thing, the colour of the surface:</p>
 
-<p class="note"><b>base</b> — the fill-up: always opaque, printed out of register, in the part's colour. It carries the creature's
-<b>pattern</b> (stripes, dots, spots, hatching) inside it, clipped to the contour, the way a pattern is part of an albedo, and its
+<p class="note"><b>base</b> — the fill-up: always opaque, printed out of register, in the part's colour. It carries the
 <b>decals</b> — colour regions that take their edge from the host's own outline, like a calico's patches — so the texture passes
 over them.<br>
-<b>texture</b> — hatch, scratch, dab or speckle, laid over the base and clipped to the contour.</p>
+<b>texture</b> — hatch, scratch, dab or speckle, laid over the base and clipped to the contour.<br>
+<b>pattern</b> — the creature's own mark (stripes, dots, spots, hatching), clipped to the contour and laid <b>last, over the
+material</b>: it is something on the animal, not part of the surface, and under a hatched or dusted texture it was being buried.</p>
 
 <p>That is the whole of it — no opacity channel, and grain is the sheet's job, not a material's. A part names a material and
 hands over the path and the colour (<code>fills.paint(path, "FLAT", { color, offset })</code>); it never picks a technique, and

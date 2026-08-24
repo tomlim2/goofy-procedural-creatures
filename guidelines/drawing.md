@@ -182,8 +182,9 @@ A goofy material is what a surface is made of, the way a 3D material is — **ho
 `MeshBasicMaterial` for the whole board.)
 The `base` colour — the fill-up (`flat`, optionally a tone of the color) — always opaque (on the
 board the one in front has to hide the one behind) and printed out of register by the creature's `fillOffset`;
-— carrying the part's **pattern**, the creature's pattern (stripes, dots, spots, hatching: the `pattern` slot), drawn
-inside it and clipped to the contour, the way a pattern is part of an albedo (`paint(…, { pattern })`; on a tail it runs
+— and the creature's **pattern** (stripes, dots, spots, hatching: the `pattern` slot), clipped to the contour and drawn
+**last of all, over the texture**: it is a mark on the animal rather than part of its surface, and under a hatched or dusted
+material it was being buried (`paint(…, { pattern })`; on a tail it runs
 along the tube instead — stripes as rings, [character/parts.md](character/parts.md) § tail — and the tube's base is cut as a
 **strip** between its rails, `paint(…, { strip, stripT })`, tagged per rung with its t along the spine so the bones can bend it — the **skin tag**, `Sketch.tags`,
 which every drawing call can set (`skinT`) and a skinned mesh reads its bones from. A tag is **per vertex**: a point two quads share takes one t, or the part tears where

@@ -164,8 +164,8 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   if (m.base.kind === "flat" && !m.texture) {   // the fill-up alone — no randomness, the phase untouched (the pattern strokes advance it as any stroke does)
     if (wantBase) {
       base(color);
-      if (pattern) patternOn(sketch, points, pattern);
       for (const d of decals) sketch.fill(d.path, d.color, [0, 0], skinT);
+      if (pattern) patternOn(sketch, points, pattern);   // over the fill, as it goes over a texture on the other materials
     }
     return;
   }
@@ -200,11 +200,15 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
   if (wantBase) {
     if (m.base.kind === "flat") base(m.base.tone === undefined ? pulled : shade(pulled, dark ? 0.92 : m.base.tone));
     else throw new Error(`goofy material ${name}: unknown base kind ${m.base.kind}`);
-    if (pattern) patternOn(sketch, points, pattern);
     for (const d of decals) sketch.fill(d.path, d.color, [0, 0], skinT);   // the decals — part of the base color; the texture goes over them
   }
 
-  if (!f || (only !== undefined && only !== "texture")) return;
+  // The pattern goes on **over** the material: it is the creature's own mark, not part of the surface, and under a hatched or
+  // dusted texture its stripes and spots were being buried. Drawn last so it reads as something on the animal
+  if (!f || (only !== undefined && only !== "texture")) {
+    if (pattern && wantBase) patternOn(sketch, points, pattern);
+    return;
+  }
   {
     // The skin tag for the texture's marks. A fill at **one t** — a bead, a tuft, a pom on a bent part — carries its texture with it, so every
     // mark takes that same t and turns with the bead. A strip's marks are left untagged and the skinned mesh reads them from their position
@@ -336,6 +340,8 @@ export function paintWith(sketch, points, name, { color, offset = [0, 0], only, 
         throw new Error(`goofy material ${name}: unknown texture kind ${f.kind}`);
     }
   }
+
+  if (pattern && wantBase) patternOn(sketch, points, pattern);   // last of all — over the texture (see above)
 }
 
 
