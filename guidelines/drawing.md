@@ -144,7 +144,7 @@ shading. The cheek and forehead hatch are the same thing (an occlusion). Until i
 One tool per creature: **everything a creature fills takes its goofy material** (the `material` slot), through `paint` — the head and
 the body directly, everything else through `paintPart` in `draw/body.js`. A skin, fur or cloth surface (the
 ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes the creature's value step — one
-mass on a dog, a cat or an imp (`surfaceValue`), its own color's on a human. A detail or an object — the hats,
+mass on a dog, a cat or an imp (`surfaceHand`), its own color's on a human. A detail or an object — the hats,
 the inner ear, the eyes (whites, pupils, irises, highlights, the static eyes, the star and heart eyes, the angry
 eye), the nose, the mouth's inside, teeth and tongue, the blush, the eye patch, the cheek and
 forehead shade patches, the horn tip — takes its **own color's** step (`own`): a black nose black, whatever the creature's hand. Two things stay FLAT
@@ -228,7 +228,7 @@ The head and the body take the creature's goofy material — the `material` slot
 § surface), one tool per creature — at a **value step**. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
 the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34 (each with a `press`,
 how hard the hand leaned — it scales the material's tooth, § the paper). A goofy material renders a
-step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → coarse dabs → a bare ground),
+step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → coarse dabs → one thin set three gaps apart),
 ink, oil and charcoal lay down more or less of their texture.
 
 **A step is in the colour first and the marks second.** It pulls the base toward the technique's own tone — graphite and charcoal
@@ -240,9 +240,13 @@ own was tried and dropped: it turns a small part into blotches and a face into c
 so the colour carries the value and the marks stay **as fine as the hand would draw them** — the medium, not the tone. The steps
 measure 18~40 apart on a light ground now. The step comes from the part's color's darkness
 (`valueStep`: a dark cloth draws black, a pale skin light), moved one step by the creature's `density` — its hand,
-another late slot (light: one step lighter · dense: one step darker; nothing on flat). A dog, a cat or an imp is
+another late slot (light: one step lighter · dense: one step darker; nothing on flat). **A hand that cannot move a step spends
+it on the amount instead** (`valueHand` → `hardness`): a light hand on an already-pale surface lays 0.72 of the marks, a heavy
+one on an already-black surface 1.35 of them. Without it a third of the density slot drew exactly like normal — the scale had
+no step left to give. A dog, a cat or an imp is
 **one mass** — its body is the head's color or a close tone of it — so head and body take the head color's step
-(`surfaceValue` in `draw/body.js`; a tone that crosses a step would otherwise hatch the body differently from the
+(`surfaceHand` in `draw/body.js` — the one place a surface's step is worked out, and `materialOf` the one place its material
+is named; a tone that crosses a step would otherwise hatch the body differently from the
 head). A human is two surfaces, skin and clothes, each at its own step. The medium page draws each textured
 goofy material as a row of the five steps. Every other fill is FLAT.
 

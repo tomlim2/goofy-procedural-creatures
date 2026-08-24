@@ -4,7 +4,7 @@ import { blobPath, arcPath } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark, mix } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
-import { calicoColors, surfaceValue, headDecals, decalEdges, paintPart } from "./body.js";
+import { calicoColors, materialOf, surfaceHand, headDecals, decalEdges, paintPart } from "./body.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -20,7 +20,7 @@ export function drawHead(ink, fills, spec, box, noise) {
 
   // The material slot — the creature's goofy material: how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
   const decals = headDecals(spec, path, noise);   // the calico's cap and cheek — in the base, under the goofy material's texture
-  fills.paint(path, (spec.parts.material || "flat").toUpperCase(), { color: spec.palette.skin, offset: spec.palette.fillOffset, decals, value: surfaceValue(spec, spec.palette.skin) });
+  fills.paint(path, materialOf(spec), { color: spec.palette.skin, offset: spec.palette.fillOffset, decals, ...surfaceHand(spec, spec.palette.skin) });
 
   // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
 
