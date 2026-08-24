@@ -1,6 +1,4 @@
-// The paper. Two things live here: **the sheet** — one plane behind the board, a procedural GLSL fragment with no texture and no
-// tile — and **the grain as a chunk** (GRAIN_GLSL), which the ink material (scene/mesh.js) mixes into every mark so the paper shows
-// *through* the drawing and not only around it. One grain, one set of uniforms, so the grain a mark is bitten by is cell for cell
+// The paper — one plane behind the board and the board's only shader: a procedural GLSL fragment with no texture and no
 // the grain the sheet shows. Docs: guidelines/drawing.md § the paper
 
 import * as THREE from "three";
@@ -16,9 +14,7 @@ function srgb(hex) {
   return new THREE.Vector3(((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255);
 }
 
-// The grain's uniforms — **one set, shared by the sheet and by every ink material** (the same objects, handed to each), so both draw
-// the same grain at the same place. grainScale is grain units per world unit; (0, 0) is no sheet at all and no bite, which is what
-// the medium page's figures get (they are drawn on a card, not on the board)
+// The sheet's uniforms. grainScale is grain units per world unit, set on every layout from the 9×6 board's view
 export const GRAIN = {
   paperTone: { value: srgb(PAPER) },
   paperBlotch: { value: srgb("#968468") },   // the tint the 2D canvas's discs had — rgba(150,132,104, 0.05)
@@ -39,7 +35,7 @@ export function setGrainScale(x, y) {
 export const GRAIN_GLSL = /* glsl */ `
 uniform vec3 paperTone;      // the paper color, sRGB 0..1
 uniform vec3 paperBlotch;    // the blotches' tint, sRGB 0..1
-uniform vec2 grainScale;     // grain units per world unit — (0, 0) means no sheet behind the drawing, and no bite
+uniform vec2 grainScale;     // grain units per world unit — set on every layout from the 9×6 board's view
 uniform float paperSeed;
 
 // An integer hash (pcg2d) — the same grain on every GPU; sin-based hashes fall apart far from the origin and differ by driver
@@ -68,8 +64,7 @@ float grainNoise(vec2 p) {
 vec3 paperToLinear(vec3 c) {
   return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
 }
-// The grain's cell at a point on the paper (world space), 0..1. A **light** cell is a peak of the paper's tooth — the ridge a pencil
-// rides over and skips. Nearest, never interpolated, so it stays grain and never smears
+// The grain's cell at a point on the paper (world space), 0..1. Nearest, never interpolated, so it stays grain and never smears
 float grainCell(vec2 world) {
   return grainHash(floor(world * grainScale * (512.0 / 3.0)));
 }
@@ -80,11 +75,6 @@ vec3 sheetColor(vec2 world, float cell) {
   vec3 c = paperTone + (cell - 0.5) * (26.0 / 255.0);
   float n = grainNoise(p * 1.1 + 17.0) * 0.6 + grainNoise(p * 2.3 + 41.0) * 0.3 + grainNoise(p * 4.7 + 83.0) * 0.1;
   return paperToLinear(mix(c, paperBlotch, 0.07 * smoothstep(0.5, 0.82, n)));
-}
-// How much of a mark the paper takes back there: the mark's own bite (stroke.js TOOTH — a goofy material names its own) on the
-// peaks of the tooth. Zero where there is no sheet
-float paperBite(vec2 world, float cell, float tooth) {
-  return grainScale.x > 0.0 ? tooth * smoothstep(0.55, 1.0, cell) : 0.0;
 }
 `;
 
@@ -100,33 +90,19 @@ void main() {
 
 const FRAGMENT = /* glsl */ `
 ${GRAIN_GLSL}
-#ifdef BOARD
-uniform sampler2D board;   // the board on a transparent target — premultiplied: its rgb is already × its alpha
-#endif
 varying vec2 vUv;
 varying vec2 vPaper;
 
 void main() {
   vec3 sheet = sheetColor(vPaper, grainCell(vPaper));
-#ifdef BOARD
-  // The board over the sheet, premultiplied. Nothing is taken off the drawing here — every mark already carries the paper in its own
-  // color (scene/mesh.js), which is what lets the board stay opaque within itself while the paper still shows through it
-  vec4 b = texture2D(board, vUv);
-  gl_FragColor = vec4(b.rgb + sheet * (1.0 - b.a), 1.0);
-#else
   gl_FragColor = vec4(sheet, 1.0);
-#endif
   #include <colorspace_fragment>
 }`;
 
-// The sheet's material. With board (a render target's texture) it draws the board over itself — the second pass of scene/index.js
-// render(); without, it is the plain sheet the scene keeps as its background
-export function makePaperMaterial({ board = null } = {}) {
-  const uniforms = { ...GRAIN };
-  if (board) uniforms.board = { value: board };
+// The sheet's material — the plane the scene keeps behind the board
+export function makePaperMaterial() {
   return new THREE.ShaderMaterial({
-    uniforms,
-    defines: board ? { BOARD: "" } : {},
+    uniforms: { ...GRAIN },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
     depthTest: false,

@@ -2,26 +2,6 @@
 
 import * as THREE from "three";
 import { buildGeometry } from "../stroke.js";
-import { GRAIN, GRAIN_GLSL } from "./paper.js";
-
-// Every mark carries **its own** bite as a vertex tag (stroke.js: teeth — the default, or the goofy material's tooth at the value's
-// press), and the ink material mixes it toward the sheet's color where the paper's grain peaks. So graphite skips the tooth and shows
-// a lot of paper, a pen soaks in and shows little, and the same material shows less of it the harder the hand pressed.
-// It is a **color mix, not a hole in the alpha**: the board stays opaque within itself, so the creature in front still hides the one
-// behind completely (guidelines/rig.md § stacking) — only the finished board meets the sheet, in the composite pass.
-// Patched into three.js's own basic material rather than replacing it: vertex colors, opacity, the tail's skinning and the color
-// space all keep working, and this only adds the tag and the mix. Docs: guidelines/drawing.md § the paper
-function biteThePaper(shader) {
-  Object.assign(shader.uniforms, GRAIN);
-  shader.vertexShader = shader.vertexShader
-    .replace("#include <common>", "#include <common>\nattribute float tooth;\nvarying float vTooth;\nvarying vec2 vPaper;")
-    // after project_vertex — `transformed` is the vertex as it is drawn, the tail's bones already applied
-    .replace("#include <project_vertex>", "#include <project_vertex>\n\tvTooth = tooth;\n\tvPaper = (modelMatrix * vec4(transformed, 1.0)).xy;");
-  shader.fragmentShader = shader.fragmentShader
-    .replace("#include <common>", `#include <common>\nvarying float vTooth;\nvarying vec2 vPaper;\n${GRAIN_GLSL}`)
-    .replace("#include <opaque_fragment>", "\tfloat paperCell = grainCell(vPaper);\n\toutgoingLight = mix(outgoingLight, sheetColor(vPaper, paperCell), paperBite(vPaper, paperCell, vTooth));\n#include <opaque_fragment>");
-}
-
 // Ink materials are made **one per opacity level** and shared by every mesh. If 35 individuals × dozens of meshes each held their own material,
 // the renderer would swap materials per mesh (updating uniforms) and bake new ones on every regen — sharing lets it skip while the same material runs on.
 // Nobody disposes a shared material (disposeGroup skips them) and nobody changes their opacity per frame — those meshes use ownInkMaterial.
@@ -42,7 +22,7 @@ export function ownInkMaterial(opacity) {
 }
 
 function makeInkMaterial(opacity) {
-  const material = new THREE.MeshBasicMaterial({
+  return new THREE.MeshBasicMaterial({
     vertexColors: true,
     transparent: true,
     opacity,
@@ -55,9 +35,6 @@ function makeInkMaterial(opacity) {
     // needing front-to-back ordering, and means nothing for 2D ribbons with no depthTest — draw once.
     forceSinglePass: true
   });
-  material.onBeforeCompile = biteThePaper;
-  material.customProgramCacheKey = () => "ink-bite";   // every ink material patches the same way — one program, whatever the opacity
-  return material;
 }
 
 // Boil variants → one mesh. variants is a list (one per boil frame) of sketch lists; every variant's triangles go into **one geometry**, one after

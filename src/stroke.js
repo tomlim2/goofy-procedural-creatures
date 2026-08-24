@@ -112,13 +112,6 @@ export const PENCIL = {
 };
 
 
-// The paper's bite — how much of a mark the sheet's grain takes off where its peaks are (scene/paper.js draws the sheet; the ink
-// material mixes every mark toward it). Each triangle carries its own as a vertex tag, so the bite belongs to the **mark**, not to
-// the sheet: a pencil skips the tooth, a pen soaks into it. This is the default — a line, a fur stroke, a plain fill. A goofy
-// material names its own (medium/materials.js: GOOFY_MATERIALS tooth × VALUES press). Docs: guidelines/drawing.md § the paper
-export const TOOTH = 0.3;
-
-
 // The anatomy switch — which of a line's habits are on. **Only the medium page passes it** (how.js: the rows that build a line up one
 // habit at a time, how.html § the two pens); everything else leaves it out and draws with all of them, so nothing on
 // the board can lose a habit by accident. A habit left out here is left out of the drawing, not faked
@@ -138,10 +131,6 @@ export class Sketch {
     // skinT is the tag the next triangles take; the drawing calls set it (stroke/pencil by arc fraction from a [t0, t1], fill by a constant)
     this.tags = [];
     this.skinT = NaN;
-    // The paper's bite (TOOTH, above) — one number per vertex (teeth), the share of this mark the sheet's grain takes off. tooth is
-    // what the next triangles take; paint() sets it to the goofy material's for the surface it fills and puts it back afterwards
-    this.teeth = [];
-    this.tooth = TOOTH;
     this.phase = 0;
   }
 
@@ -153,7 +142,6 @@ export class Sketch {
     for (let i = 0; i < 3; i += 1) this.colors.push(rgb[0], rgb[1], rgb[2]);
     if (tags) this.tags.push(tags[0], tags[1], tags[2]);
     else this.tags.push(this.skinT, this.skinT, this.skinT);
-    for (let i = 0; i < 3; i += 1) this.teeth.push(this.tooth);
   }
 
   // The goofy outline (medium/outlines.js) — the closed line of a shape, or an open line (down to a dot). What each is drawn with is the board's switch (BOARD_LINES)
@@ -422,20 +410,15 @@ export function buildGeometry(sketches) {
   const count = filled.reduce((n, s) => n + s.positions.length, 0);
   const positions = new Float32Array(count);
   const colors = new Float32Array(count);
-  const teeth = new Float32Array(count / 3);
   let offset = 0;
-  let vertex = 0;
   for (const s of filled) {
     positions.set(s.positions, offset);
     colors.set(s.colors, offset);
-    teeth.set(s.teeth, vertex);
     offset += s.positions.length;
-    vertex += s.teeth.length;
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  geometry.setAttribute("tooth", new THREE.BufferAttribute(teeth, 1));   // the paper's bite per vertex — scene/mesh.js mixes the mark toward the sheet by it
   return geometry;
 }
 
