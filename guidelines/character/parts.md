@@ -395,17 +395,20 @@ species bias of 3:2. The archetype does not take part.
 
 ## Surface
 
-### material (5) — a late slot
+### material (4) — a late slot
 
 The creature's **goofy material** — what the head and the body are made of, how their areas are filled ([../drawing.md](../drawing.md) § the goofy material, the
-`GOOFY_MATERIALS` table in `medium/materials.js`): **flat** (the fill-up alone — the default, weight 5) · **graphite** (the color hatched with thin
-upright pencil strokes) · **ink** (solid, a few light scratches) · **oil** (thick dabs in three
-tones) · **charcoal** (dusted with specks). (Watercolour was tried and dropped.)
+`GOOFY_MATERIALS` table in `medium/materials.js`): **graphite** (the color hatched with thin
+upright pencil strokes, weight 1.5) · **charcoal** (dusted with specks, 1) · **oil** (thick paint in a spread of
+lights, 1) · **ink** (solid, scratched open, 0.8). (Watercolour was tried and dropped.)
+**Every creature is made of one of them.** FLAT — the fill-up with nothing laid on it — was in this slot at weight 5 and left four
+creatures in five untextured; it is still a goofy material (the whites of the eyes are filled with it) but it is not something a
+creature can be made of. Measured over 40 boards: graphite 33% · oil 25% · charcoal 22% · ink 20%.
 
-### bodyMaterial (6) — a late slot
+### bodyMaterial (5) — a late slot
 
 The **body's** goofy material when it is not the head's: **same** (weight 9 — three quarters of the board, one tool through) or one
-of the five. A face and a torso are two surfaces and one hand may reach for a second tool between them. The head's side of the line
+of the four. A face and a torso are two surfaces and one hand may reach for a second tool between them. The head's side of the line
 is the head, the ears, the horns, the hair, the hat, the muzzle, the nose and the face; the body's is the torso, the arms and hands,
 the sleeves, the legs and boots, and the tail. Around a quarter of creatures come out split, and one in twelve with two *textured*
 materials. The **density** is not split — one hand, one pressure ([../drawing.md](../drawing.md) § what takes the goofy material).

@@ -220,7 +220,7 @@ material on a **dark ground**, which is where the rule above is visible.
 
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |
-| `FLAT` | `flat` — the fill-up, the fan from the centre | — | the default of the `material` slot (weight 5) |
+| `FLAT` | `flat` — the fill-up, the fan from the centre | — | not in the `material` slot: the whites of the eyes (`paintPart(…, { flat: true })`) and nothing else. A creature is always made of one of the four below |
 | `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, **in the light ink scratches with** (`mark`) over a ground the step deepens (`tone`) | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
 | `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter. On a color too pale to water it runs the other way — the ground laid on deeper, the scratch opening back to the color | the `material` slot (0.8) |
@@ -255,8 +255,10 @@ One hand, but not one throw of the dice: **a texture's seed is the part's own**,
 sketch's phase (`paintWith`). Without it the phase was just the sketch's stroke count, and a part is the *first* thing painted on
 nearly every layer — head, ears, muzzle, hat, body all reached the texture at the same number and scattered their scratches, dabs and
 dust to the same values in the same places, so a creature read as one stamp repeated down its parts. The part's seed also gives the
-hand a small **swing** of its own (±10°) off the technique's ruling angle: one pencil does not meet a leg from the same side it
-meets a back. It is geometry, never the rng, so the seed still decides the drawing and the boil's three frames still differ only in
+hand a **swing** of its own (±34°) off the technique's ruling angle, and it is the rotation every set the texture lays down turns
+by: the angle in the table is the technique's, not the hand's, and with it fixed the whole board came out combed one way. One pencil
+does not meet a leg from the side it meets a back. Oil turns twice over — the part's swing moves the whole knife, and each stroke
+has `spreadEach` of its own on top, because paint laid by hand does not come off a comb. It is geometry, never the rng, so the seed still decides the drawing and the boil's three frames still differ only in
 the noise's jitter.
 
 The medium page shows each ball's channels under it — the base colour alone, then the texture alone

@@ -65,13 +65,14 @@ export const SLOTS = {
   // For imps a species multiplier of 1.3 is applied on top
   mouthSize: ["normal", "small", "wide"],
   // The **material** — the creature's goofy material: what the head and the body are made of, how their areas are filled (medium/materials.js GOOFY_MATERIALS — a base color and its
-  // texture). flat is the fill-up alone; the rest lay a pattern over it in a tone of the part's own color. A late slot — the look, not the form
-  material: ["flat", "graphite", "ink", "oil", "charcoal"],
+  // texture). Each lays its marks over the base in a tone of the part's own color. FLAT, the fill-up with nothing on it, is not one of
+  // them: it is what the whites of the eyes are filled with, not something a creature is made of. A late slot — the look, not the form
+  material: ["graphite", "ink", "oil", "charcoal"],
   // The **body's** goofy material — `same` for one tool over the whole creature, or one of the five for a body made of something else
   // than the head. A face and a torso are two surfaces (skin and cloth already have two colors), and one hand may well reach for a
   // second tool between them. Everything on the head follows `material` — ears, horns, hair, a hat, the muzzle; everything on the body
   // follows this one — the limbs, the hands, the boots, the sleeves, the tail. The **density** is not split: one hand, one pressure
-  bodyMaterial: ["same", "flat", "graphite", "ink", "oil", "charcoal"],
+  bodyMaterial: ["same", "graphite", "ink", "oil", "charcoal"],
   // The **density** — how dark the goofy material draws this creature: **the value step itself**, picked by the seed from the five
   // (medium/materials.js VALUES: black · hatch · scribble · stipple · light). It used to be a hand (lighter/normal/darker) that moved
   // a step read off the part's colour, which meant a pale creature could never draw black and a black one never light — half the
@@ -123,10 +124,11 @@ export const DEFAULT_BIAS = {
   mouth: [["line", 3], ["dot", 2], ["smile", 2], ["frown", 1.5], ["smug", 1.5], ["three", 1.5], ["pout", 1], ["open", 1], ["wave", 1], ["grimace", 1], ["grin", 1], ["bracket", 1], ["scribble", 0.3]],
   mouthPos: [["mid", 2], ["high", 1.5], ["low", 1.5]],
   mouthSize: [["normal", 3], ["small", 2], ["wide", 1]],
-  // Goofy materials — the plain fill-up for most; the textured ones as seasoning, so a board reads as one hand with a few different tools
-  material: [["flat", 5], ["graphite", 1.5], ["charcoal", 1], ["oil", 1], ["ink", 0.8]],
+  // Goofy materials — every creature is made of one. FLAT, the fill-up alone, was in here at weight 5 and left four boards in five
+  // untextured; it is still a goofy material (the whites of the eyes are flat) but it is not something a creature can be made of
+  material: [["graphite", 1.5], ["charcoal", 1], ["oil", 1], ["ink", 0.8]],
   // Most creatures are one tool through; a body of its own is seasoning on top of seasoning
-  bodyMaterial: [["same", 9], ["flat", 2], ["graphite", 1], ["charcoal", 0.7], ["oil", 0.7], ["ink", 0.5]],
+  bodyMaterial: [["same", 9], ["graphite", 1], ["charcoal", 0.7], ["oil", 0.7], ["ink", 0.5]],
   density: [["black", 1], ["hatch", 1], ["scribble", 1], ["stipple", 1], ["light", 1]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],

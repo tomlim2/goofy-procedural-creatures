@@ -148,8 +148,9 @@ material</b>: it is something on the animal, not part of the surface, and under 
 hands over the path and the colour (<code>fills.paint(path, "FLAT", { color, offset })</code>); it never picks a technique, and
 every tone the texture adds is a shade of the part's colour.</p>
 
-<p>A creature has <b>one</b>, its <code>material</code> slot — FLAT for most, GRAPHITE, INK, OIL or CHARCOAL for the rest — and it
-fills everything the creature fills. Or <b>two</b>: <code>bodyMaterial</code> gives the body one of its own on about a quarter of
+<p>A creature has <b>one</b>, its <code>material</code> slot — GRAPHITE, CHARCOAL, OIL or INK — and it
+fills everything the creature fills. FLAT, the fill-up with nothing laid on it, is not one of them: it is what the whites of the eyes
+are filled with, not something a creature is made of. Or <b>two</b>: <code>bodyMaterial</code> gives the body one of its own on about a quarter of
 them — a face and a torso are two surfaces, and one hand may reach for a second tool between them. The head's side is the head, the
 ears, the horns, the hair, the hat, the muzzle and the face; the body's is the torso, the arms and hands, the sleeves, the legs and
 boots, and the tail. The <b>density</b> is not split: one hand, one pressure, whichever tool it holds. <b>pattern</b> rides along
