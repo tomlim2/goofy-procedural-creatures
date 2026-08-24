@@ -39,7 +39,7 @@ export const GOOFY_MATERIALS = {
   // and overlapping, cut flat by the contour (the reference's ball: calm, dense, a knife's work). `washes` is the spread the paint is
   // laid in — four **waterings of the ground**, the same light ink scratches with, so every stroke reads as paint sitting on the
   // surface. On a dark ground the whole spread drops so the first of them go on **darker** than the ground instead (the dab case below)
-  OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, pull: 0.45, tone: 0.82, washes: [0.06, 0.16, 0.28, 0.42] } },
+  OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, pull: 0.45, tone: 0.82, washes: [0.06, 0.16, 0.28, 0.42], spreadEach: 0.5 } },
   // Charcoal — a ground dusted with dark specks, each a short stroke at its own angle rather than a square
   CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", pull: 0.5, per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
 };
@@ -247,10 +247,11 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
     const holdTag = () => { sketch.skinT = markTag ? skinT : NaN; };
     const u = (k) => noise(ph * 0.29 + k * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
     const h = (k) => hash01(Math.round(ph * 997) + k * 7919);   // a scattered one — neighbours unrelated
-    // The hand's angle **on this part**. One pencil in one hand still does not meet two parts the same way — it comes at a leg from a
-    // different side than at a back — and with the angle fixed in the table every part of a creature was ruled in exactly the same
-    // direction, which is half of why they read as one stamp repeated. A small swing, off the part's seed and not the rng
-    const swing = (u(9000) - 0.5) * 0.34;   // ±10°
+    // **The hand's angle on this part** — a rotation seeded from the part itself, and the one every set the texture lays down turns by.
+    // The table's angle is the technique's, not the hand's: with it fixed, every part of every creature was ruled in exactly the same
+    // direction and the board came out combed. A leg is not met from the side a back is. ±34° is wide enough to see and narrow enough
+    // that graphite still reads as upright hatching. Off the part's seed, never the rng
+    const swing = (u(9000) - 0.5) * 1.2;   // ±34°
     // **The light the ink opens with** — the ground watered toward the light ink, which is the tone ink drags its scratches in and now
     // the tone graphite rules and oil dabs in too. Tinted from the **ground** rather than from the part's colour, so a mark stays
     // lighter than what it is laid on whatever the step has done underneath — and in the ground's own hue, so a blue part's marks are
@@ -364,7 +365,9 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
           const cy = b.y0 + (b.y1 - b.y0) * h(i * 4 + 1);
           if (!insidePath([cx, cy], points)) continue;
           const len = f.length[0] + (f.length[1] - f.length[0]) * h(i * 4 + 2);
-          const ang = f.angle + swing + (h(i * 4 + 3) - 0.5) * f.spread;
+          // Two rotations: the part's (swing) turns the whole knife, and each stroke has its own on top — paint laid by hand does not
+          // come off a comb. `spread` is how far the set leans as a set, `spreadEach` how far one stroke may go off it
+          const ang = f.angle + swing + (h(i * 4 + 3) - 0.5) * f.spread + (h(i * 9 + 811) - 0.5) * f.spreadEach;
           const dx = Math.cos(ang), dy = Math.sin(ang);
           const a = [cx - (dx * len) / 2, cy - (dy * len) / 2];
           const c = [cx + (dx * len) / 2, cy + (dy * len) / 2];
