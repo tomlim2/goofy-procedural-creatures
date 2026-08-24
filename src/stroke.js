@@ -14,6 +14,7 @@ import { paintWith } from "./medium/materials.js";
 import { furWith } from "./medium/fur.js";
 
 const TAU = Math.PI * 2;
+const END_CAP = 8;   // sides of the little disc that rounds an open line's two ends (pencil())
 
 // Re-samples the stroke at an even spacing. Without this, the noise only bites on long segments.
 export function resample(points, step) {
@@ -87,7 +88,7 @@ export const PENCIL = {
   over: [0.35, 1.1],                   // the overshoot past each end, in widths
   stub: 0.05,                          // a line this short keeps its ends and sheds nothing — the overshoot would run it half again
                                        // to twice as long, and a crumb or a bite is the size of the whole mark. Every dot and dash is one
-  tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
+  tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle. The end is capped round at that width (pencil())
   // **the lift** — the pen comes up. In **world units**, not in widths: a hold does not change with the size, so the same kind
   // at S, M and L has to skip in the same places for the same length. Measured in widths the gaps grew with the line —
   // a hairline came out finely dashed and a fat one broke twice — and the three sizes read as three different holds.
@@ -284,6 +285,21 @@ export class Sketch {
       }
       // The skin tag along the line — the arc fraction between the overshoot tails, so the tails take the ends' tags
       const tagAt = (i) => (skinT ? tagAlong(points, skinT, Math.max(0, Math.min(L - tail0 - tail1, s[i] - tail0)), L - tail0 - tail1) : NaN);
+      // The two ends are round. The ribbon stops on a quad boundary, so it is cut straight across its width and the corner
+      // reads as a chipped edge; a disc of the half-width there rounds it. The half that laps the ribbon is invisible — the ink
+      // is opaque and the same colour — so only the round outside shows. A closed line has no ends to cap
+      if (!closed) {
+        for (const i of [0, n - 1]) {
+          const h = halves[i];
+          if (h <= 0) continue;
+          const [cx, cy] = path[i];
+          const t = tagAt(i);
+          for (let q = 0; q < END_CAP; q += 1) {
+            const a0 = (q / END_CAP) * TAU, a1 = ((q + 1) / END_CAP) * TAU;
+            this.triangle(cx, cy, cx + Math.cos(a0) * h, cy + Math.sin(a0) * h, cx + Math.cos(a1) * h, cy + Math.sin(a1) * h, passRgb, [t, t, t]);
+          }
+        }
+      }
       const quads = closed ? n : n - 1;
       for (let i = 0; i < quads; i += 1) {
         if (gapAt && gapAt((s[i] + s[(i + 1) % n]) / 2)) continue;   // the pen is off the paper here
