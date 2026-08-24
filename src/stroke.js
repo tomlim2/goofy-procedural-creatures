@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 // Vertex colors go through hexToRgb (linear space) — color.js. Never bypassed (guidelines/drawing.md § colors go in as linear)
-import { hexToRgb, mix } from "./color.js";
+import { hexToRgb, mix, isDark, shade } from "./color.js";
 import { PAPER } from "./character/vocabulary/palette.js";   // the pencil's bites take the paper color (palette.js imports nothing — no cycle)
 // The three concepts a sketch draws by name. They take the sketch in; they never import this file
 import { contourWith, lineWith } from "./medium/outlines.js";
@@ -105,7 +105,8 @@ export const PENCIL = {
   ghost: { width: 0.62, ink: [0.2, 0.5], slip: [0.5, 1.6] },   // one per ghost, bottom-up: the deepest faintest, the one just under the line darkest
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
   // An ink crumb sits on the edge, its centre scatter × the half width out — never past the edge, so it frays the line instead of
-  // floating loose beside it; a bite (the bite share of crumbs) is a paper-coloured square
+  // floating loose beside it; a bite (the bite share of crumbs) is a square of what shows through the line — the paper under a dark
+  // line, a deep tone of its own colour under a light one (a light line is a mark on a dark surface)
   // inside, up to inside × the half width from the spine. A crumb's side is size (world) — fixed, not a share of the width:
   // graphite sheds the same grain whether the line is thin or thick, so a thick line does not shed boulders
   grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
@@ -172,7 +173,11 @@ export class Sketch {
     // A colour per ghost, bottom-up — the deepest is the faintest and the one just under the line is the darkest, the
     // way a hand going round again leans a little harder. Faintness is a **colour**, not an alpha: the board's ink is opaque
     const ghostRgb = P.ghost.ink.map((k) => hexToRgb(mix(color, paper, 1 - k)));
-    const biteRgb = hexToRgb(paper);
+    // A bite is what shows **through** the line, and under a dark line that is the paper. Under a **light** one it is not: a light line
+    // is a mark on a dark surface (the face-ink rule, and the light every material's marks are drawn in), so what shows through it is
+    // the dark underneath. A paper-coloured bite there only fattened the line with more of its own colour — the holes disappeared and
+    // a light line came out solid and furry. So a light line bites **dark**: a deep tone of its own colour
+    const biteRgb = hexToRgb(isDark(color) ? paper : shade(color, 0.45));
     width *= this.inkScale;
     this.skinT = NaN;   // per-vertex tags below — nothing inherits a tag from this call
     if (closed && points.length > 2) {

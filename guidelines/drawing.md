@@ -52,8 +52,9 @@ ribbon pen was taken out it is the only pen: every line, every hair stroke, ever
 the board goes through it. It has four habits: the spine wanders on two sines **per world length**
 (a slow drift and a waver — a tiny stroke gets a gentle bend, a head contour one or two cycles), the width
 **breathes** on two more sines plus a per-stroke jitter, the ends **run past** where they should stop
-instead of pinching to a point, and a thick line **sheds** — ink crumbs outside the edge, paper-coloured
-bites inside. Two parts of the reference are left out on purpose: its 62% ink (our ink stays opaque) and
+instead of pinching to a point, and a thick line **sheds** — ink crumbs outside the edge, and bites inside of
+whatever shows *through* the line: the paper under a dark one, and a deep tone of its own colour under a
+**light** one (a light line is a mark on a dark surface, and a paper-coloured bite there only fattened it). Two parts of the reference are left out on purpose: its 62% ink (our ink stays opaque) and
 its tremor (the sizzle).
 
 Every number lives in the `PENCIL` table at the top of `stroke.js` and nowhere else — tune there. A
@@ -219,7 +220,7 @@ material on a **dark ground**, which is where the rule above is visible.
 | `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, **in the light ink scratches with** (`mark`) over a ground the step deepens (`tone`) | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
 | `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter. On a color too pale to water it runs the other way — the ground laid on deeper, the scratch opening back to the color | the `material` slot (0.8) |
-| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, cut flat by the contour, in a spread of four **waterings of the ground** (`washes`) — the same light | the `material` slot (1) |
+| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, cut flat by the contour, in a spread of four **waterings of the ground** (`washes`) — the same light, and on a dark ground the whole spread drops so the first of them go on darker than the ground | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | the `material` slot (1) |
 
 The head takes the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)

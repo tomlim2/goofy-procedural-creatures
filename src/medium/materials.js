@@ -39,7 +39,7 @@ export const GOOFY_MATERIALS = {
   // Oil — thick paint laid in blunt strokes: round-ended capsules of one width and many lengths, all along one diagonal, scattered
   // and overlapping, cut flat by the contour (the reference's ball: calm, dense, a knife's work). `washes` is the spread the paint is
   // laid in — four **waterings of the ground**, the same light ink scratches with, so every stroke reads as paint sitting on the
-  // surface. They used to straddle the ground, two above and two below, and the two below simply vanished into a dark part
+  // surface. On a dark ground the whole spread drops so the first of them go on **darker** than the ground instead (the dab case below)
   OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, pull: 0.45, tone: 0.82, washes: [0.06, 0.16, 0.28, 0.42] } },
   // Charcoal — a ground dusted with dark specks, each a short stroke at its own angle rather than a square
   CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", pull: 0.5, per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
@@ -254,9 +254,9 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
     const swing = (u(9000) - 0.5) * 0.34;   // ±10°
     // **The light the ink opens with** — the ground watered toward the light ink, which is the tone ink drags its scratches in and now
     // the tone graphite rules and oil dabs in too. Watered from the **ground** rather than from the part's colour, so a mark stays
-    // lighter than what it is laid on whatever the step has done underneath — including on a dark part, where the light ink is the
-    // only place left to go
-    const opened = (amount) => mix(pulled, LIGHT_INK, amount);
+    // lighter than what it is laid on whatever the step has done underneath. A **negative** amount is the other way — the ground laid
+    // on deeper — which only oil's spread asks for: paint is opaque and some of it goes on darker than what is under it
+    const opened = (amount) => (amount >= 0 ? mix(pulled, LIGHT_INK, amount) : shade(pulled, 1 + Math.max(-0.55, amount * 1.8)));
     // How much of the surface the marks cover. The **base colour already carries the value** (above), so this is the medium's grain
     // and not its tone — which is what lets the marks stay as fine as the hand would draw them. Marks coarse enough to carry a value
     // on their own were tried and dropped: they turn a small part into blotches, and a face into camouflage
@@ -352,7 +352,11 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         // dark: half the strokes vanished into a dark part. The step moves the whole set — paint close to the ground at black, standing
         // well off it at light — so the value is in the paint's colour and not only in how much of it there is
         const shift = (0.72 - V.v) * 0.45;   // black −0.13 · hatch 0 · light +0.17
-        const tones = f.washes.map((t) => hexToRgb(opened(Math.max(0, Math.min(0.7, t + shift)))));
+        // On a **dark** ground the whole spread drops: the ground there is itself a lifted one (contrast), so there is room below it,
+        // and the lowest strokes fall back toward the part's own deep colour. Without the drop every dab came out lighter than what it
+        // sat on and a dark part read as one bright weave — paint that only ever lightens is not paint
+        const spread = dark ? -0.22 : 0;
+        const tones = f.washes.map((t) => hexToRgb(opened(Math.max(-0.4, Math.min(0.7, t + shift + spread)))));
         const count = Math.round(f.per * (0.35 + weight * 1.0) * (b.x1 - b.x0) * (b.y1 - b.y0));   // black: the ground covered · light: strokes with room between
         const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
         for (let i = 0; i < count; i += 1) {
