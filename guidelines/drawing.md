@@ -203,7 +203,15 @@ way: there is nothing below a dark ground to draw with. Only the amount is mirro
 turned ink's light scratches into marks *darker* than the ground they were scratched into, and oil's darker half of the spread
 vanished into a black body, so a dark creature with a textured material read as a solid blob. On a dark color the base is pulled
 only **half** as far as on a light one: a mark's tone there is a light one, and pulling a dark part as far toward it as a light part
-goes toward its shade washes the part out. A part names a
+goes toward its shade washes the part out.
+
+**No mark is ever white.** A lighter tone is the color **watered** — mixed toward the light ink — never a multiply, which clips: on
+a pale part ink's scratches came out `#ffffff` and ran across a cream creature as hard white lines. And a color with no room left to
+water (within 45 of luminance of the light ink) is inked the other way round: its ground is laid on **deeper** the more solid the
+step, and the scratch opens back toward the part's own color. Ink is the one technique this touches — it is the one whose marks go
+lighter on a light ground — and it names both tones in the table: `tone`, a scratch's own mild watering, and `wash`, how pale a
+**fully** scratched ground goes. They are two things and reading the second off the first left ink's five steps within four shades
+of each other. A part names a
 goofy material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
 The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt goofy material cannot silently draw
@@ -216,7 +224,7 @@ material on a **dark ground**, which is where the rule above is visible.
 | `FLAT` | `flat` — the fill-up, the fan from the centre, out of register | — | the default of the `material` slot (weight 5); the calico patches always |
 | `GRAPHITE` | `flat` | `hatch` — thin grey pencil strokes, nearly upright, each rule drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled | the `material` slot (1.5) |
 | (`WATERCOLOUR` was tried — blooms, edge darkening, granulation — and dropped: it did not look good on the board) | | | |
-| `INK` | `flat` | `scratch` — long light lines dragged across, taking the ink away: the darker the step the fewer and the tighter | the `material` slot (0.8) |
+| `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter. On a color too pale to water it runs the other way — the ground laid on deeper, the scratch opening back to the color | the `material` slot (0.8) |
 | `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, four tones close to the ground, cut flat by the contour | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | the `material` slot (1) |
 
@@ -242,6 +250,14 @@ decides the marks' **tone** (`contrast` — light marks on a dark ground), and t
 One step for the whole creature, head and body and ears and hat alike: one hand, one pressure (`surfaceHand` in `draw/body.js` —
 the one place a surface's step is worked out, and `materialOf` the one place its material is named). The medium page draws each textured
 goofy material as a row of the five steps. Every other fill is FLAT.
+
+One hand, but not one throw of the dice: **a texture's seed is the part's own**, its place and size on the board folded into the
+sketch's phase (`paintWith`). Without it the phase was just the sketch's stroke count, and a part is the *first* thing painted on
+nearly every layer — head, ears, muzzle, hat, body all reached the texture at the same number and scattered their scratches, dabs and
+dust to the same values in the same places, so a creature read as one stamp repeated down its parts. The part's seed also gives the
+hand a small **swing** of its own (±10°) off the technique's ruling angle: one pencil does not meet a leg from the same side it
+meets a back. It is geometry, never the rng, so the seed still decides the drawing and the boil's three frames still differ only in
+the noise's jitter.
 
 The medium page shows each ball's channels under it — the base colour alone, then the texture alone
 (`paint(…, { only })`). A new goofy material is a new row: a base and a texture; a new pattern is a new texture kind
