@@ -24,7 +24,7 @@ export const SLOTS = {
   hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep", "pigtails", "curly", "bangs", "longbob", "bun", "helmet", "cloud", "hedgehog",
     "long", "twintails", "ponytail", "apple", "verylong", "twintailsBall", "appleBig"],
   // bonnet (the frilly bonnet) is **disabled** — the asset stays but it is in no bias (it never gets drawn)
-  headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet"],
+  headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet", "crown", "halo"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
   // round, pointy and fold come in three sizes — default (small) · Mid (medium, 1.4×) · Big (large, 1.8×). Same shape, different size only.
   // Cat crown ears, dog ears and human/imp side ears all use the same multipliers
@@ -109,7 +109,7 @@ export const DEFAULT_BIAS = {
     ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
   hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1], ["helmet", 2], ["cloud", 1.5], ["hedgehog", 1.5], ["long", 1.5], ["twintails", 1], ["ponytail", 1.5], ["apple", 1],
     ["verylong", 1], ["twintailsBall", 0.8], ["appleBig", 0.7]],
-  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1]],   // bonnet disabled
+  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7]],   // bonnet disabled
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3], ["perk", 0.7], ["perkMid", 0.3]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1]],

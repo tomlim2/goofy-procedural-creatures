@@ -43,7 +43,8 @@ function applyConstraints(parts, rng, speciesName) {
   // A helmet or a pot covers the head. There is nowhere for hair to squeeze out.
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
     parts.hair = "none";
-  } else if (parts.headgear !== "none" && parts.hair !== "none") {
+  } else if (parts.headgear !== "none" && parts.headgear !== "halo" && parts.hair !== "none") {
+    // (not the halo — it floats above the head and covers nothing, so any hair keeps)
     // With a hat or a band, only short hair is kept (bangs, a side bob and the hood type may come out from under a hat). A band also suits the cloud and hedgehog types (the reference)
     const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob", "helmet", "long", "verylong", "twintails", "twintailsBall", "ponytail"];   // back hair comes out from under a hat
     if (parts.headgear === "band") short.push("cloud", "hedgehog");

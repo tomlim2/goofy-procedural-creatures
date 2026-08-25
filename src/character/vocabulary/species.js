@@ -66,7 +66,9 @@ export const SPECIES = [
       ears: [["flap", 4], ["long", 3], ["pointy", 1.2], ["pointyMid", 0.8], ["round", 1], ["roundMid", 0.5], ["fold", 1], ["foldMid", 0.6], ["perk", 1.2], ["perkMid", 0.6]],
       horns: [["none", 1]],
       hair: [["none", 1]],
-      headgear: [["none", 8], ["cap", 1]],
+      // Hats — a cap mostly, the odd beret, crown or halo. No helmet or pot (they cover the scalp whole and bury the
+      // standing ears) and no band (it crosses the ear roots)
+      headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3]],
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
@@ -110,7 +112,7 @@ export const SPECIES = [
       ears: [["pointy", 3], ["pointyMid", 2], ["pointyBig", 1.5]],
       horns: [["none", 1]],
       hair: [["none", 1]],
-      headgear: [["none", 1]],
+      headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3]],
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
       // Nose — cats read the slot as cat noses (face.js catNose): dot a small triangle · wedge a heart · hook triangle + philtrum · long a wide nose with a long philtrum · none nothing
       nose: [["dot", 3], ["wedge", 2], ["hook", 2], ["long", 1], ["none", 1.5]],

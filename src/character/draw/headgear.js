@@ -87,6 +87,45 @@ export function drawHeadgear(ink, fills, spec, box) {
     return;
   }
 
+  if (kind === "crown") {
+    // Crown — a band sitting on the crown of the head with a zigzag of points, the reference's scribbled paper crown.
+    // Hand-written polygon, so it goes through crumple (guidelines/drawing.md § nothing raw).
+    // **Filled in pieces** — the band and each spike on its own. fill() is a fan from the centre and assumes a shape
+    // visible from it; the V notches between the spikes are concave, and fanned as one polygon the fill crossed them
+    const by = Math.max(cy + ry * 0.7, brow + ry * 0.3);
+    const w = Math.max(halfW(by) * 0.98, rx * 0.55);
+    const bandH = ry * 0.14;
+    const peakH = ry * 0.62;   // top ≈ crown + 0.32·ry — under the 1.19 cell ceiling on the biggest head
+    const SPIKES = 4;
+    const vx = (i) => -w + (i * 2 * w) / SPIKES;                              // valley x — the spikes sit on the band's top edge
+    const peak = (i) => [-w + ((i + 0.5) * 2 * w) / SPIKES, by + peakH];
+    const phase = spec.seed * 0.001;
+    const band = crumple([[w, by], [-w, by], [-w, by + bandH], [w, by + bandH]], 0.004, phase);
+    const spikes = Array.from({ length: SPIKES }, (_, i) =>
+      crumple([[vx(i), by + bandH], peak(i), [vx(i + 1), by + bandH]], 0.004, phase + i));
+    paintPart(fills, spec, band, accent, { own: true });
+    for (const s of spikes) paintPart(fills, spec, s, accent, { own: true });
+    // One outline round the whole silhouette — the pieces are the filling's business, not the line's
+    const outline = [[w, by], [-w, by], [-w, by + bandH]];
+    for (let i = 0; i < SPIKES; i += 1) outline.push(peak(i), [vx(i + 1), by + bandH]);
+    outline[outline.length - 1] = [w, by + bandH];
+    ink.contour(crumple(outline, 0.004, phase), { color: ink0 });
+    return;
+  }
+
+  if (kind === "halo") {
+    // Halo — a thin ring floating above the head, nothing else. Ink only: it is a mark, not a thing with a colour.
+    // It covers nothing, which is why it is the one headgear that keeps every hairstyle (spec.js applyConstraints)
+    const tilt = tiltSide * 0.06;
+    const hy = crown + ry * 0.28;   // ring top ≈ crown + 0.38·ry — floats clear of the lumpiest scalp, under the ceiling
+    const cos = Math.cos(tilt);
+    const sin = Math.sin(tilt);
+    const ring = blobPath(0, 0, rx * 0.44, ry * 0.11, { lumps: 3, amount: 0.06, noise: null })
+      .map(([x, y]) => [x * cos - y * sin, hy + x * sin + y * cos]);
+    ink.contour(ring, { color: ink0 });
+    return;
+  }
+
   if (kind === "bonnet") {
     // Bonnet — a thick band wrapping the head. It crosses over the crown from eye level on both sides
     const rim = arcPath(0, cy, rx * 1.2, ry * 1.14, Math.PI * 1.02, -Math.PI * 0.02, 26);
