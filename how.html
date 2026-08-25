@@ -190,8 +190,10 @@ draw call per layer.</p>
 
 <p>The paper is the board's one shader
 (<a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/paper.js"><code>src/scene/paper.js</code></a>):
-procedural GLSL grain on a single plane, no texture and no tile, drawn behind everything in the same pass. It shows around the
-drawing, not through it: the ink and the fills are opaque, which is what lets the creature in front hide the one behind.</p>
+procedural GLSL grain on a single plane, no texture and no tile. It is drawn <b>twice</b> — once behind everything, and once
+over the whole board after the emoji, so the creatures come out under the paper rather than on it. The pass over the top is not a
+fade: its alpha follows how far a cell is off the sheet's mean, so flat sheet does nothing and only the speckle lands. The ink
+keeps its black, which is what lets the creature in front hide the one behind.</p>
 
 <div class="figs">
   <figure data-fig="boilface" class="wide">

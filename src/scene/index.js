@@ -6,6 +6,7 @@ import { Sketch } from "../stroke.js";
 import { makeCreature } from "../character/index.js";
 import { makeNoise, makeRng } from "../rng.js";
 import { makePaperMaterial, setGrainScale } from "./paper.js";
+import { attachPost } from "./post.js";
 import { inkMaterial, disposeGroup } from "./mesh.js";
 import { buildCreature } from "./rig.js";
 import { applyState } from "./animate.js";
@@ -31,6 +32,7 @@ export function createScene(canvas) {
   camera.position.z = 10;
 
   let paper = null;
+  let post = null;   // the passes drawn over the finished board (post.js)
   let ground = null;
   let creatures = [];
   let noise = null;
@@ -100,6 +102,7 @@ export function createScene(canvas) {
 
     if (paper) {
       paper.scale.set(viewW, viewH, 1);
+      if (post) post.layout(viewW, viewH);
       // Paper grain does not follow the grid — it is pinned to the size it appears at on the 9×6 board (PAPER_GRID).
       // Derived from the current view, the grain would grow relative to the screen as the view narrows: at 1×1 it would
       // come out as blotches instead of grain. The shader gets the 9×6 view as its grain space
@@ -160,6 +163,7 @@ export function createScene(canvas) {
       paper.renderOrder = 0;
       paper.position.z = -1;
       scene.add(paper);
+      post = attachPost(scene);   // and what goes over the finished board — the paper again, on top (post.js)
     }
 
     specs.forEach((spec, index) => {

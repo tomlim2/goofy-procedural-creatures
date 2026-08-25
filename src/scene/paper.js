@@ -78,7 +78,8 @@ vec3 sheetColor(vec2 world, float cell) {
 }
 `;
 
-const VERTEX = /* glsl */ `
+// The sheet's vertex shader — hands the fragment the world position the grain is keyed on. post.js draws with it too
+export const PAPER_VERTEX = /* glsl */ `
 varying vec2 vUv;
 varying vec2 vPaper;
 void main() {
@@ -103,7 +104,7 @@ void main() {
 export function makePaperMaterial() {
   return new THREE.ShaderMaterial({
     uniforms: { ...GRAIN },
-    vertexShader: VERTEX,
+    vertexShader: PAPER_VERTEX,
     fragmentShader: FRAGMENT,
     depthTest: false,
     depthWrite: false

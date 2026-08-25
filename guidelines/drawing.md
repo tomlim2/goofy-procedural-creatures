@@ -330,6 +330,21 @@ its repeat as a diagonal weave. The fragment has no resolution, so the grain is 
   the renderer's output pass (§ colors go in as linear). It is the one place a color is handled in sRGB, and it
   never meets `hexToRgb`.
 
+**The sheet is drawn twice — under the board and over it.** The second is a **post pass** (`scene/post.js`): the
+same shader on a full-screen quad at `renderOrder` 200000, after the emoji, with no depth test, so the creatures
+come out **under** the paper rather than on it. `post.js` is where anything drawn over the finished board goes;
+`attachPost` puts every pass in and the scene tells them the view's size on each layout. It is not a fade. Its alpha follows how far a cell is **off** the sheet's mean
+(`amount × |cell − 0.5| × 2`, `GRAIN_OVER` 0.55), so flat sheet does nothing at all, a cell darker than the mean
+sinks what is under it and a lighter one lifts it. The ink keeps its black — measured, 43 of 255 with the pass on
+or off — and what moves is the picture's contrast (the screen's standard deviation, 34 bare · 25 at 0.55 · 21 at 1).
+
+A flat alpha was tried first and is what not to do: it fades the whole board toward the paper and the ink goes
+grey (43 → 70 at 0.15). That is the same failure as the per-mark tooth this replaces — a `tooth` per goofy
+material, a `press` per value step and a `teeth` tag on every triangle, which ate the fills and was reverted
+(25ef748). A wash over the screen cannot eat a fill: it treats a filled head and a bare sheet alike, which is
+what a real sheet does. It costs one full-screen quad and needs no render target, so the frame stays one pass
+and the blending stays on the canvas.
+
 **The fixed few.** Every colour on the board is picked by the seed from a pool, except five: the blush and the tongue's pink,
 the white of a tooth and an eye, the light ink a mark takes on a part too dark for the palette's ink, the palest muzzle, a
 heart eye and the sweat drop's blue. They are `MARKS` in `character/vocabulary/palette.js` — they lived as string literals in four files each, so a
