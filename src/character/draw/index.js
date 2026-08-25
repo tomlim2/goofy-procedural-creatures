@@ -70,7 +70,7 @@ export function drawCreature(spec, variant = 0) {
   drawEyewear(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
   // Three hair layers — back hair (behind the head) · on the scalp (same depth as the horns) · bangs (over the face). Each layer has its own depth and shifts separately on a face turn (rig.js DEPTH). See hair.js
   drawHair({ back: L.hairBack.ink, crown: L.hairCrown.ink, front: L.hairFront.ink }, spec, box, noise);
-  drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // above a human's side ears; a dog's and a cat's crown ears ride above the hat (scene/rig.js)
+  drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // the hat layer is above the ears — it covers their roots
 
   // Only eyes whose pupil moves are passed along. A cyclops is alive too.
   const live = RIG_EYES.includes(spec.parts.eyes) ? eyes.filter((e) => !patched(spec, e)) : [];

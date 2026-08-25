@@ -69,7 +69,7 @@ export function buildCreature(spec, noise, birth = 0) {
   // **below** the face ink (whiskers) while its ink sits above, so the two layers' fills and ink interleave.
   // Static eyes being one layer per eye is because of the wink — turning one eye into an arch means switching off that eye's layer alone (animate).
   // Render order (guidelines/rig.md is the single source): body 1.5 → back hair 1.55 → side ears 1.7 → head 2 (the fill covers the body ink) → horns 2.06 → hair on the scalp 2.06 →
-  // dog/cat ears 2.12 (6.59 with headgear — above the hat) → face and static eyes 2.3/2.4 → frontmost face (nose, eyewear) 6.5 → bangs 6.55 → hat 6.58
+  // dog/cat ears 2.12 → face and static eyes 2.3/2.4 → frontmost face (nose, eyewear) 6.5 → bangs 6.55 → hat 6.58
   const firstDrawn = drawCreature(spec, 0);
   const mrig = motionRig(spec);
   const neckY = firstDrawn.neckY;
@@ -82,10 +82,7 @@ export function buildCreature(spec, noise, birth = 0) {
     { key: "head", group: headGroup, dy: -neckY, order: 2 },
     { key: "horns", depth: DEPTH.horns, dy: -neckY, order: 2.06 },           // horns — above the head ink
     { key: "hairCrown", depth: DEPTH.hairCrown, dy: -neckY, order: 2.06 },   // hair on the scalp — the same depth as the horns, above them
-    // Dog and cat ears — on the crown, so with the face. Bare-headed at 2.12, under the face (which is what guarantees
-    // they cannot cover the eyes); with any headgear they ride **above the hat** (6.59) — the cartoon way, ears poking
-    // through the cap — because at 2.12 a cap swallowed a cat's crown ears whole. The audit still holds the eye guarantee
-    { key: "front", depth: DEPTH.frontEars, dy: -neckY, order: spec.parts.headgear === "none" ? 2.12 : 6.59 },
+    { key: "front", depth: DEPTH.frontEars, dy: -neckY, order: 2.12 },       // in front of the head: dog and cat ears — on the crown, so with the face
     { key: "hat", depth: DEPTH.hat, dy: -neckY, order: 6.58 },               // hat — above the bangs (6.55): a hat sits on the hair, never under it; below the brows (6.6)
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },        // fills and ink kept apart (see above)
     // Static eyes — one layer per eye (the smaller eye Back → the larger Front; overlapping, the larger is in front). For sleep, ^^, a wink (that side) and startle variants, that eye's layer is switched off
