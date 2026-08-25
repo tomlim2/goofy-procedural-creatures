@@ -99,8 +99,8 @@ export function limbSketches(spec, variant = 0) {
   // The root is slightly above the body's hem (inside the outline). There is always a foot at the end.
   // A biped leg is **two bones** — the thigh (origin at the hip pivot) and the shin (origin at the knee
   // pivot, carrying the foot), split at 52%, exactly the arm's upper/forearm arrangement. The scene folds
-  // them like an elbow: seen head-on a bend reads as a plié — thighs out, shins back in (the jump's crouch
-  // and tuck, guidelines/motion/catalog.md § body actions). float keeps no knee — there is no leg to bend.
+  // them like an elbow: seen head-on a bend reads as a plié — thighs out, shins back in (the jump's crouch,
+  // guidelines/motion/catalog.md § body actions). float keeps no knee — there is no leg to bend.
   const hipY = box.legTop + 0.02;
   // The stance (how far they open) is set by the torso build, not the leg form — a wide body carries a wide stance.
   const spread = (BUILD[spec.parts.build] || BUILD.medium).stance;

@@ -52,7 +52,6 @@ What `clock.update(t)` returns, and where the scene applies it.
 | arms | {−1, 1} → {shoulder, elbow, behind, oscShoulder, oscElbow} | The arm joints' world angles (rotation.z). idle or an action solved by IK, plus the pendulum, jump and jitter. osc is oscillation laid on without easing (waving, flapping) |
 | legOffset | [4] rad | Leg pivot rotation (eased). On a quad the idle standing stance (legStance) is the base, with flicks, steps and actions on top |
 | legOsc | [4] rad | Oscillation laid on the legs without easing (a paw shake, scratching) |
-| legKnee | [4] rad | **The knees** — the shin's relative fold at the knee pivot (eased like an elbow). Bipeds only (indices 0·1, signed per side); a quad's one-bone legs have no knee. Only the mid-air tuck writes it — a grounded crouch never does (that is bodyDrop's, below) |
 | bodyDrop | units ≥ 0 | **The torso is the crouch's master** — how far the body sinks below standing (the jump's and the five's crouches). The scene eases this one scalar and **solves the knees off the displayed height every frame** (animate.js + solveLeg): move the torso and the legs bend by themselves, the feet held to the floor by construction |
 | action / actionSide | The action name of the arm layer (biped) or the leg and tail layer (quad), or null / the active arm's side or the leg index | For debugging and statistics. The scene only looks at arms and legOffset |
 | bodyAction | The body layer's action name, or null | "jump" while hopping in place. hopY and squash are its curve |
@@ -109,7 +108,7 @@ Big events appear nowhere across 4 individuals × 4 s. So the standing amplitude
 | Paw flick (0.09 rad, 0.9 s) | 12~30s | 14~34s | pup 14~32s / cat 16~36s |
 | Step in place (0.07 rad, diagonals alternating, 2.4 s) | — | — | pup 30~70s / cat 40~90s |
 | Leg joint jitter | 6.1Hz 0.006 | the same | the same |
-| On a jump | arms up (hopY×4), the knees crouching and tucking (§ body actions) | the same | legs folding (splay) |
+| On a jump | arms up (hopY×4), the knees crouching (§ body actions) | the same | legs folding (splay) |
 
 ### The bind pose and arm actions
 
@@ -175,7 +174,7 @@ Force one with the ACTION card and only that layer keeps going while the others 
 
 | Body action | What | human | pup | cat | imp |
 | --- | --- | --- | --- | --- | --- |
-| **jump** | **Crouch-and-spring, three times over** — every hop the same full cycle: a knee-bent crouch held a beat → the spring → the arc with the knees tucked → the landing folding straight into the next crouch, and one soft knee dip after the last (2.33 s all told). The arms are dragged up by the flight | 10~25s | 12~30s | 25~60s | 8~20s |
+| **jump** | **Crouch-and-spring, three times over** — every hop the same full cycle: a knee-bent crouch held a beat → the spring → the arc, the legs hanging with their rest bend → the landing folding straight into the next crouch, and one soft knee dip after the last (2.33 s all told). The arms are dragged up by the flight | 10~25s | 12~30s | 25~60s | 8~20s |
 
 **The jump is built on the twelve principles, and the deformation is the skeleton's — never the scale's** (no
 rubbery squash on the body; the earlier scale squash was taken out on purpose):
@@ -191,13 +190,14 @@ rubbery squash on the body; the earlier scale squash was taken out on purpose):
   legs splay what they can instead
 - **Arcs / timing** — the flight is a sine arc (position only, hopY to 0.044); the spring pops (the licensed
   exception) out of a slow crouch
-- **The feet tuck up toward the hips mid-air** (`tuckFoot` — a frog jump, the same solve) and let go before
+- **Mid-air the legs simply hang**, holding the standing rest bend — a frog tuck was drawn and removed
+  (folding the legs at the top of every hop read as a trick, not a hop) — and the crouch is back before
   the landing
 - **Follow-through** — the landing knees absorb, and after the last one a soft dip-and-recover (0.3 s); the
   arms lag the flight through their damping (overlapping action)
 
 `jumpCurve(tau, def)` in `actions.js` (the phase shape and every amplitude on `BODY_ACTIONS.jump`). The curve
-goes out as `hopY` and the envelopes `dropK`, `tuckK` and `splay`; the clock solves the legs onto them
+goes out as `hopY` and the envelopes `dropK` and `splay`; the clock solves the legs onto them
 (`solveLeg`), subtracts the crouch descent from `hopY`, and adds `hopY×4` to the shoulders for the arms.
 
 ### The base state (mode) — idle · sleep · walk · sit

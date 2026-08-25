@@ -87,15 +87,16 @@ export const ACTIONS = {
 //               (a plié seen head-on) because the solve bends them there
 //   splay       a quad's one-bone legs fold what they can instead
 //   amp         the flight's height (the arc — position, not scale)
-//   tuckFoot    the mid-air foot target — [outward, raised], fractions of the leg length: a frog tuck
 //   settle      FOLLOW-THROUGH — after the last landing, one soft knee dip and recover
+//   Mid-air the legs simply hang — the standing rest bend and nothing else. A frog tuck (tuckFoot) was
+//   drawn and removed: folding the legs at the top of every hop read as a trick, not a hop
 //   The landings ramp straight into the next crouch (timing: slow in, pop out), and the arms are dragged up
 //   by the flight (motion/index.js, hopY×4 — overlapping action through the joints' damping)
 export const BODY_ACTIONS = {
   jump: {
     hops: 3, dur: 0.56, amp: 0.8, label: "hopping in place (crouch and spring)",
     antic: 0.35,
-    crouchDrop: 0.16, tuckFoot: [0.3, 0.45], splay: 0.09,
+    crouchDrop: 0.16, splay: 0.09,
     settle: 0.3
   }
 };
@@ -106,17 +107,17 @@ export function jumpSpan(def) {
 }
 
 // The jump curve. tau = time elapsed since the action started (the anticipation included).
-// Returns { hopY, dropK, tuckK, splay } — envelopes, not angles: dropK (0~1) is how far into the crouch's
-// descent the body is (the clock turns it into a foot-planted leg solve), tuckK (0~1) how far into the
-// mid-air tuck. splay is a quad's one-bone fold. No scale channels.
+// Returns { hopY, dropK, splay } — envelopes, not angles: dropK (0~1) is how far into the crouch's
+// descent the body is (the clock turns it into a foot-planted leg solve). splay is a quad's one-bone fold,
+// riding the crouch. No scale channels.
 export function jumpCurve(tau, def) {
-  const zero = { hopY: 0, dropK: 0, tuckK: 0, splay: 0 };
+  const zero = { hopY: 0, dropK: 0, splay: 0 };
   if (tau < 0) return zero;
   const antic = def.antic || 0;
   // Anticipation — sink into the crouch (slow in). Held by the shape of ramp until the first spring takes it
   if (tau < antic) {
     const k = ramp(tau / antic);
-    return { hopY: 0, dropK: k, tuckK: 0, splay: (def.splay || 0) * k };
+    return { hopY: 0, dropK: k, splay: (def.splay || 0) * k };
   }
   const hopT = tau - antic;
   const hop = Math.floor(hopT / def.dur);
@@ -126,14 +127,14 @@ export function jumpCurve(tau, def) {
     const k = settle > 0 ? (hopT - def.hops * def.dur) / settle : 1;
     if (k >= 1) return zero;
     const b = bump(k) * 0.35;
-    return { hopY: 0, dropK: b, tuckK: 0, splay: (def.splay || 0) * b };
+    return { hopY: 0, dropK: b, splay: (def.splay || 0) * b };
   }
   const k = (hopT - hop * def.dur) / def.dur;
   // Every hop is the same full cycle — **crouch (a held beat) → spring → air → land into the next crouch** —
   // at the same depth each time: crouch-and-spring, crouch-and-spring, crouch-and-spring. The first crouch is
   // the anticipation above holding on; the last landing comes down clean and the settle does its soft dip
   const B = 0.24, SP = 0.14, LA = 0.12;   // the crouch beat · the spring · the landing (fractions of one hop; the air is the rest)
-  let hopY = 0, dropK = 0, tuckK = 0;
+  let hopY = 0, dropK = 0;
   if (k < B) {
     // The crouch, held — the breath and the boil keep it alive; the stillness IS the anticipation
     dropK = 1;
@@ -141,15 +142,14 @@ export function jumpCurve(tau, def) {
     // The spring — the legs snap straight and the body rides up off them. The moment the feet leave is meant to pop
     dropK = 1 - (k - B) / SP;
   } else if (k < 1 - LA) {
-    // Airborne — the arc (position, never scale), the feet tucked up toward the hips (a frog jump)
+    // Airborne — the arc (position, never scale). The legs just hang, holding their rest bend
     const j = (k - B - SP) / (1 - B - SP - LA);
     hopY = Math.sin(j * Math.PI) * 0.055 * def.amp;
-    tuckK = bump(j);
   } else {
     // Landing — the legs absorb, ramping straight into the next crouch's depth; the last lands clean
     dropK = ramp((k - (1 - LA)) / LA) * (hop === def.hops - 1 ? 0 : 1);
   }
-  return { hopY, dropK, tuckK, splay: (def.splay || 0) * Math.max(dropK, tuckK) };
+  return { hopY, dropK, splay: (def.splay || 0) * dropK };
 }
 
 // Quad actions — one leg or the tail doing something briefly. The quad rig is pivot rotation only, so these are angles, with no IK.
@@ -238,7 +238,7 @@ function twoBone(a, b, tx, ty, sign) {
 // table of joint angles): [x outward from the hip, y up from the hip], solved onto THIS individual's thigh and
 // shin (character motionRig().leg — null on a quad or a float leg, which returns straight). The knee always
 // bows outward — a plié seen head-on. Returns the world thigh angle and the relative knee fold for one side
-// (side −1 mirrors), ready for legOffset / legKnee.
+// (side −1 mirrors). The scene's crouch solve (animate.js) is its one caller.
 export function solveLeg(leg, side, tx, ty) {
   if (!leg) return { thigh: 0, knee: 0 };
   const ik = twoBone(leg.thigh, leg.shin, tx, ty, 1);

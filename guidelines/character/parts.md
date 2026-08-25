@@ -304,7 +304,7 @@ Form only. How far they open (the stance) is set by `build` and the length by `l
 float hangs off the hip pivot too, so joint jitter and a foot flick make the feet bob about.
 
 A biped leg is drawn as **two bones** — the thigh (from the hip pivot) and the shin (from the **knee** at 52%,
-carrying the foot) — the arm's upper/forearm arrangement, so motion can fold it (a jump's crouch and tuck, a
+carrying the foot) — the arm's upper/forearm arrangement, so motion can fold it (a jump's crouch, a
 high five's wind-up; [../motion/catalog.md](../motion/catalog.md) § body actions). The forms are unchanged;
 float has no leg and so no knee. A quad's legs stay one bone.
 

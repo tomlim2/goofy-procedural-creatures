@@ -30,7 +30,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   // The torso is the crouch's MASTER — the clock hands over one scalar (state.bodyDrop, how far the body
   // sinks) and it is eased here, on the item. The limb loop below solves the knees off it (IK: move the torso
   // and the knees bend by themselves), and the body's final height is then the FK of what the legs actually
-  // draw — so the feet hold the floor exactly, through every blend (a tuck's damped tail included)
+  // draw — so the feet hold the floor exactly, through every blend
   // The follow is **fast on purpose**. The clock's crouch is already an eased envelope (jumpCurve's ramp and
   // bump), so this one exists only to swallow a discontinuous target when one action cuts into another — not to
   // shape the move. At 0.18 it took 167 ms to reach half the crouch and 375 ms to reach 90% of it, against a
@@ -175,7 +175,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       }
     } else {
       target = state.legOffset[limb.index] || 0;
-      elbowTarget = state.legKnee ? state.legKnee[limb.index] || 0 : 0;   // the knee — the shin's relative fold (bipeds; a quad leg has no knee pivot)
+      elbowTarget = 0;   // the knee is the crouch solve's alone (crouchKnee below) — the clock writes no knee targets
       osc = state.legOsc ? state.legOsc[limb.index] || 0 : 0;
     }
     // Critically damped follow (ease in/out) — with an exponential lerp the first frame is the fastest and the arm jerks up
@@ -190,7 +190,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     }
     // The crouch — solved HERE, off the eased master height (bodyDrop above), never authored as angles:
     // wherever the torso is asked to sink, the knees bend to it by themselves. Laid on top of the damped
-    // targets (the walk's swing, a tuck's tail) and the un-eased oscillation. The onset fades the solve in
+    // targets (the walk's swing) and the un-eased oscillation. The onset fades the solve in
     // over the first 2% of leg length — dead straight is outside the solver's reachable band
     let crouchThigh = 0, crouchKnee = 0;
     if (limb.kind === "leg" && limb.elbow && bodyDrop > 1e-4 && item.motionRig && item.motionRig.leg) {
@@ -217,7 +217,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     }
   }
   // The floor holds the feet — grounded, the body descends by what the drawn legs lost. Released in the air
-  // (a tuck folds the legs up, it does not sink the body)
+  // — there is no floor under the feet to hold
   if (plantLegs > 0 && plantDrop > 0 && (state.hopY || 0) <= 0.001) item.group.position.y -= plantDrop / plantLegs;
 
   // Brow and mouth state sets — brows: angry (2) > alt (1) > rest (0). Mouth: angry (2) > ^^ (3, the tongue on dogs) > alt (1) > rest (0). The same kind shares a mesh, so only the chosen mesh is turned on

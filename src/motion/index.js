@@ -33,7 +33,7 @@ export const BIND_STATE = Object.freeze({
   happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0, tailRaisePose: null, tailArch: 0, tailPose: null,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
   mode: "idle", sleep: 0, walk: 0, sit: 0, bodyTilt: 0, walkX: 0, facing: 1,
-  legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0], legKnee: [0, 0, 0, 0], bodyDrop: 0
+  legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0], bodyDrop: 0
 });
 
 // rig: character/draw/limbs.js motionRig(spec) — { arm (a biped's arm IK dimensions | null), legTop, quad, body (a quad's torso and leg-root dimensions | null) }.
@@ -298,7 +298,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         return { action: forced, start, until: start + jumpSpan(def) };
       });
       if (asleep || walkK > 0.5 || sitK > 0.5 || five) bact = null;   // no body actions while asleep, walking, sitting or mid-five (the schedule already ran above; a jump would tear the palms apart)
-      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, dropK: 0, tuckK: 0, splay: 0 };
+      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, dropK: 0, splay: 0 };
       // The jump carries no scale — squash here belongs to sleep alone (below). The crouch's descent is
       // solved through the legs, at the legs section
       const hp = { hopY: jc.hopY, splay: jc.splay, squashX: 0, squashY: 0 };
@@ -417,11 +417,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (quad && hp.splay) { legOffset[0] -= hp.splay; legOffset[1] += hp.splay; }   // a quad's jump crouch — its one-bone front legs fold what they can
       // The legs are IK and **the torso is the master**: a crouch is nothing but bodyDrop — how far the body
       // sinks (crouchDrop of the leg's own length; the jump's dropK and the five's crouch are its sources).
-      // The clock does not touch the knees for it: the scene eases that one scalar and solves each leg from
-      // the DISPLAYED height every frame (animate.js — move the torso and the knees bend by themselves, the
-      // feet held to the floor by construction). Only the mid-air tuck writes joint targets here — there is
-      // no floor to solve against, a tuck is a pose (tuckFoot, a frog fold)
-      const legKnee = [0, 0, 0, 0];
+      // The clock never touches the knees: the scene eases that one scalar and solves each leg from the
+      // DISPLAYED height every frame (animate.js — move the torso and the knees bend by themselves, the feet
+      // held to the floor by construction). Mid-air the legs hang with their rest bend — a frog tuck was
+      // drawn and removed (actions.js BODY_ACTIONS)
       let bodyDrop = 0;
       if (!quad && rig && rig.leg) {
         const leg = rig.leg;
@@ -432,15 +431,6 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         const REST_BEND = 0.03;
         const dropFrac = REST_BEND + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
         bodyDrop = leg.y * Math.min(dropFrac, 0.4);
-        if (jc.tuckK > 0) {
-          const TF = BODY_ACTIONS.jump.tuckFoot;
-          const tx = leg.y * TF[0] * jc.tuckK;
-          const ty = -(leg.y - leg.y * TF[1] * jc.tuckK);
-          const s0 = solveLeg(leg, -1, tx, ty);
-          const s1 = solveLeg(leg, 1, tx, ty);
-          legOffset[0] += s0.thigh; legOffset[1] += s1.thigh;
-          legKnee[0] = s0.knee; legKnee[1] = s1.knee;
-        }
       }
       // Walk — a quad alternates its diagonal pairs (0·3 / 1·2) front and back; a biped's two legs alternately open and close (a walk seen head-on)
       if (walkK > 0 && W) {
@@ -584,7 +574,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailRaisePose, tailArch, tailPose,
-        arms, legOffset, legOsc, legKnee, bodyDrop,
+        arms, legOffset, legOsc, bodyDrop,
         mode: modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing,
         // The action running right now — the arm layer (biped) or the leg and tail layers (quad) plus which side (the active arm's side / the leg index), and the body layer. For debugging and statistics
         action: act ? act.action : qact ? qact.action : null,
