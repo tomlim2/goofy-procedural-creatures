@@ -107,17 +107,20 @@ export function jumpSpan(def) {
 }
 
 // The jump curve. tau = time elapsed since the action started (the anticipation included).
-// Returns { hopY, dropK, splay } — envelopes, not angles: dropK (0~1) is how far into the crouch's
-// descent the body is (the clock turns it into a foot-planted leg solve). splay is a quad's one-bone fold,
+// Returns { hopY, dropK, flight, splay } — envelopes, not angles: dropK (0~1) is how far into the crouch's
+// descent the body is (the clock turns it into a foot-planted leg solve). flight (0~1) is how far off the
+// ground the jump is — 0 planted, ramping through the spring, 1 in the air, back down through the landing.
+// The clock lets the standing rest bend go by it: a spring pushes through **straight**, and legs that kept
+// their bend read as dangling while the body teleported up at liftoff. splay is a quad's one-bone fold,
 // riding the crouch. No scale channels.
 export function jumpCurve(tau, def) {
-  const zero = { hopY: 0, dropK: 0, splay: 0 };
+  const zero = { hopY: 0, dropK: 0, flight: 0, splay: 0 };
   if (tau < 0) return zero;
   const antic = def.antic || 0;
   // Anticipation — sink into the crouch (slow in). Held by the shape of ramp until the first spring takes it
   if (tau < antic) {
     const k = ramp(tau / antic);
-    return { hopY: 0, dropK: k, splay: (def.splay || 0) * k };
+    return { hopY: 0, dropK: k, flight: 0, splay: (def.splay || 0) * k };
   }
   const hopT = tau - antic;
   const hop = Math.floor(hopT / def.dur);
@@ -127,29 +130,33 @@ export function jumpCurve(tau, def) {
     const k = settle > 0 ? (hopT - def.hops * def.dur) / settle : 1;
     if (k >= 1) return zero;
     const b = bump(k) * 0.35;
-    return { hopY: 0, dropK: b, splay: (def.splay || 0) * b };
+    return { hopY: 0, dropK: b, flight: 0, splay: (def.splay || 0) * b };
   }
   const k = (hopT - hop * def.dur) / def.dur;
   // Every hop is the same full cycle — **crouch (a held beat) → spring → air → land into the next crouch** —
   // at the same depth each time: crouch-and-spring, crouch-and-spring, crouch-and-spring. The first crouch is
   // the anticipation above holding on; the last landing comes down clean and the settle does its soft dip
   const B = 0.24, SP = 0.14, LA = 0.12;   // the crouch beat · the spring · the landing (fractions of one hop; the air is the rest)
-  let hopY = 0, dropK = 0;
+  let hopY = 0, dropK = 0, flight = 0;
   if (k < B) {
     // The crouch, held — the breath and the boil keep it alive; the stillness IS the anticipation
     dropK = 1;
   } else if (k < B + SP) {
-    // The spring — the legs snap straight and the body rides up off them. The moment the feet leave is meant to pop
+    // The spring — the legs push through **straight** (flight rises, taking the rest bend with the crouch)
+    // and the body rides up off them. The moment the feet leave is meant to pop
     dropK = 1 - (k - B) / SP;
+    flight = (k - B) / SP;
   } else if (k < 1 - LA) {
-    // Airborne — the arc (position, never scale). The legs just hang, holding their rest bend
+    // Airborne — the arc (position, never scale). The legs hang extended, the rest bend let go with the spring
     const j = (k - B - SP) / (1 - B - SP - LA);
     hopY = Math.sin(j * Math.PI) * 0.055 * def.amp;
+    flight = 1;
   } else {
-    // Landing — the legs absorb, ramping straight into the next crouch's depth; the last lands clean
+    // Landing — the legs reach for the floor and absorb, ramping straight into the next crouch's depth; the last lands clean
     dropK = ramp((k - (1 - LA)) / LA) * (hop === def.hops - 1 ? 0 : 1);
+    flight = 1 - (k - (1 - LA)) / LA;
   }
-  return { hopY, dropK, splay: (def.splay || 0) * dropK };
+  return { hopY, dropK, flight, splay: (def.splay || 0) * dropK };
 }
 
 // Quad actions — one leg or the tail doing something briefly. The quad rig is pivot rotation only, so these are angles, with no IK.

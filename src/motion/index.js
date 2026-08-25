@@ -298,7 +298,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         return { action: forced, start, until: start + jumpSpan(def) };
       });
       if (asleep || walkK > 0.5 || sitK > 0.5 || five) bact = null;   // no body actions while asleep, walking, sitting or mid-five (the schedule already ran above; a jump would tear the palms apart)
-      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, dropK: 0, splay: 0 };
+      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, dropK: 0, flight: 0, splay: 0 };
       // The jump carries no scale — squash here belongs to sleep alone (below). The crouch's descent is
       // solved through the legs, at the legs section
       const hp = { hopY: jc.hopY, splay: jc.splay, squashX: 0, squashY: 0 };
@@ -424,12 +424,14 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       let bodyDrop = 0;
       if (!quad && rig && rig.leg) {
         const leg = rig.leg;
-        // A biped never stands dead straight: the torso is carried a touch low **at all times** (REST_BEND of the leg)
+        // A biped never stands dead straight: the torso is carried a touch low **on the ground** (REST_BEND of the leg)
         // and the knees hold the slight fold that comes with it. A stick-straight leg reads as a post, and dead straight
         // is the edge of the solver's reachable band besides. The crouches stack on top; walking swings the bent legs,
-        // and the FK feedback in animate.js turns that into the small bob a walk on bent knees actually has
+        // and the FK feedback in animate.js turns that into the small bob a walk on bent knees actually has.
+        // A jump's spring takes the bend away (flight): the legs push through straight and hang extended in the air —
+        // held onto, the knees dangled bent and the released foot plant teleported the body at liftoff
         const REST_BEND = 0.03;
-        const dropFrac = REST_BEND + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
+        const dropFrac = REST_BEND * (1 - jc.flight) + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
         bodyDrop = leg.y * Math.min(dropFrac, 0.4);
       }
       // Walk — a quad alternates its diagonal pairs (0·3 / 1·2) front and back; a biped's two legs alternately open and close (a walk seen head-on)

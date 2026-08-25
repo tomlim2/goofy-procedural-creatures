@@ -219,9 +219,11 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       }
     }
   }
-  // The floor holds the feet — grounded, the body descends by what the drawn legs lost. Released in the air
-  // — there is no floor under the feet to hold
-  if (plantLegs > 0 && plantDrop > 0 && (state.hopY || 0) <= 0.001) item.group.position.y -= plantDrop / plantLegs;
+  // The floor holds the feet — grounded, the body descends by what the drawn legs lost. Released in the air —
+  // there is no floor under the feet to hold — and released **gradually**, faded on the hop's height: the old
+  // hard cutoff let the whole plant go in one tick and popped the body at liftoff
+  const grounded = Math.max(0, 1 - (state.hopY || 0) / 0.02);
+  if (plantLegs > 0 && plantDrop > 0 && grounded > 0) item.group.position.y -= (plantDrop / plantLegs) * grounded;
 
   // Brow and mouth state sets — brows: angry (2) > alt (1) > rest (0). Mouth: angry (2) > ^^ (3, the tongue on dogs) > alt (1) > rest (0). The same kind shares a mesh, so only the chosen mesh is turned on
   const angryOn = (state.angry || 0) > 0.5;

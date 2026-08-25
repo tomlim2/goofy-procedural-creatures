@@ -174,7 +174,7 @@ Force one with the ACTION card and only that layer keeps going while the others 
 
 | Body action | What | human | pup | cat | imp |
 | --- | --- | --- | --- | --- | --- |
-| **jump** | **Crouch-and-spring, three times over** — every hop the same full cycle: a knee-bent crouch held a beat → the spring → the arc, the legs hanging with their rest bend → the landing folding straight into the next crouch, and one soft knee dip after the last (2.33 s all told). The arms are dragged up by the flight | 10~25s | 12~30s | 25~60s | 8~20s |
+| **jump** | **Crouch-and-spring, three times over** — every hop the same full cycle: a knee-bent crouch held a beat → the spring, the legs pushing through straight → the arc, legs extended → the landing folding straight into the next crouch, and one soft knee dip after the last (2.33 s all told). The arms are dragged up by the flight | 10~25s | 12~30s | 25~60s | 8~20s |
 
 **The jump is built on the twelve principles, and the deformation is the skeleton's — never the scale's** (no
 rubbery squash on the body; the earlier scale squash was taken out on purpose):
@@ -190,14 +190,15 @@ rubbery squash on the body; the earlier scale squash was taken out on purpose):
   legs splay what they can instead
 - **Arcs / timing** — the flight is a sine arc (position only, hopY to 0.044); the spring pops (the licensed
   exception) out of a slow crouch
-- **Mid-air the legs simply hang**, holding the standing rest bend — a frog tuck was drawn and removed
-  (folding the legs at the top of every hop read as a trick, not a hop) — and the crouch is back before
-  the landing
+- **The spring pushes through straight and the legs hang extended mid-air** (`flight` lets the standing rest
+  bend go): held onto, the knees dangled bent all flight and the released foot plant teleported the body at
+  liftoff. A frog tuck was drawn and removed too — folding the legs at the top of every hop read as a trick,
+  not a hop. The landing folds them back, straight into the next crouch
 - **Follow-through** — the landing knees absorb, and after the last one a soft dip-and-recover (0.3 s); the
   arms lag the flight through their damping (overlapping action)
 
 `jumpCurve(tau, def)` in `actions.js` (the phase shape and every amplitude on `BODY_ACTIONS.jump`). The curve
-goes out as `hopY` and the envelopes `dropK` and `splay`; the clock solves the legs onto them
+goes out as `hopY` and the envelopes `dropK`, `flight` and `splay`; the clock solves the legs onto them
 (`solveLeg`), subtracts the crouch descent from `hopY`, and adds `hopY×4` to the shoulders for the arms.
 
 ### The base state (mode) — idle · sleep · walk · sit
