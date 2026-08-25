@@ -31,9 +31,14 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   // sinks) and it is eased here, on the item. The limb loop below solves the knees off it (IK: move the torso
   // and the knees bend by themselves), and the body's final height is then the FK of what the legs actually
   // draw — so the feet hold the floor exactly, through every blend (a tuck's damped tail included)
+  // The follow is **fast on purpose**. The clock's crouch is already an eased envelope (jumpCurve's ramp and
+  // bump), so this one exists only to swallow a discontinuous target when one action cuts into another — not to
+  // shape the move. At 0.18 it took 167 ms to reach half the crouch and 375 ms to reach 90% of it, against a
+  // landing ramp that is 67 ms long and a tick that is 42 ms: the body came down and the knees bent a fifth of
+  // a second later. It arrives inside two ticks now
   if (!item.dropEase) item.dropEase = { x: 0, v: 0 };
   if (snap) { item.dropEase.x = state.bodyDrop || 0; item.dropEase.v = 0; }
-  else damp(item.dropEase, state.bodyDrop || 0, 0.18);
+  else damp(item.dropEase, state.bodyDrop || 0, 1);
   const bodyDrop = Math.max(0, item.dropEase.x);
   item.group.position.y = item.baseY + state.hopY;
   item.group.scale.set(
