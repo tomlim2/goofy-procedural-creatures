@@ -148,17 +148,21 @@ export function limbSketches(spec, variant = 0) {
       footX = nx - kneeX;
       sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
     }
-    // The foot — it rides the shin
+    // The foot — its own sketch, hung from an **ankle pivot** at the shin's end. Baked into the shin it turned with the knee:
+    // the rest bend alone tilted every standing foot ~15°, one corner in the floor and the other in the air. The scene counter-
+    // rotates the ankle by what the hip and knee turned (animate.js), so the sole stays level with the floor at any fold.
+    // The tiptoe keeps its foot in the shin — a pointed foot is meant to swing with it
+    const ft = make();
     if (legKind === "boots") {
       // Boots — a mass filled to the ankle
-      const boot = crumple([[footX - 0.028, -shinLen], [footX - 0.024, -shinLen + 0.045], [footX + 0.012, -shinLen + 0.045], [footX + 0.036, -shinLen + 0.006], [footX + 0.036, -shinLen]], 0.003, footX * 90);
-      paintPart(sh, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
-      sh.contour(boot, { color: ink0 });
+      const boot = crumple([[-0.028, 0], [-0.024, 0.045], [0.012, 0.045], [0.036, 0.006], [0.036, 0]], 0.003, footX * 90);
+      paintPart(ft, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
+      ft.contour(boot, { color: ink0 });
     } else {
       // A round foot — the reference default
-      dot(sh, footX + side * 0.008, -shinLen + 0.012, 0.022, skin);
+      dot(ft, side * 0.008, 0.012, 0.022, skin);
     }
-    limbs.push({ sketch: s, lowerSketch: sh, pivot: [x, hipY], elbow: [kneeX, -kneeH], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
+    limbs.push({ sketch: s, lowerSketch: sh, footSketch: ft, pivot: [x, hipY], elbow: [kneeX, -kneeH], ankle: [footX, -shinLen], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
   }
 
   // -- biped arms --

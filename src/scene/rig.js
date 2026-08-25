@@ -174,6 +174,16 @@ export function buildCreature(spec, noise, birth = 0) {
       front.add(elbow);
     }
 
+    // The foot — an ankle pivot at the shin's end. The scene counter-rotates it by what the hip and knee
+    // turned (animate.js), so the sole stays level with the floor at any fold. Same layer as the leg (1.2)
+    let foot = null;
+    if (limb.footSketch && elbow) {
+      foot = new THREE.Group();
+      foot.position.set(limb.ankle[0], limb.ankle[1], 0);
+      foot.add(boiledMesh((fl) => fl[li].footSketch, 1, limb.kind === "leg" ? 1.2 : 2.5));
+      elbow.add(foot);
+    }
+
     let back = null;
     if (limb.backSketch) {
       back = boiledMesh((fl) => fl[li].backSketch, 1, 0.5);
@@ -187,7 +197,7 @@ export function buildCreature(spec, noise, birth = 0) {
     pivot.rotation.z = bind.shoulder;
     if (elbow) elbow.rotation.z = bind.elbow;
     return {
-      pivot, front, elbow, back,
+      pivot, front, elbow, foot, back,
       kind: limb.kind, side: limb.side, index: limb.index ?? 0,
       angle: bind.shoulder, elbowAngle: bind.elbow
     };

@@ -203,6 +203,9 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     }
     limb.pivot.rotation.z = limb.angle + osc + crouchThigh;
     if (limb.elbow) limb.elbow.rotation.z = limb.elbowAngle + oscElbow + crouchKnee;
+    // The sole stays level: the ankle counter-rotates what the hip and knee turned, so the foot aligns with
+    // the floor at any fold (baked into the shin, a bent knee tilted the whole foot with it)
+    if (limb.foot) limb.foot.rotation.z = -(limb.pivot.rotation.z + limb.elbow.rotation.z);
     // ...and the body's height comes back out of the legs as drawn (jitter aside): each knee-bent leg's FK
     // shortening, gated by the knee's fold so a straight-legged walk swing never bobs the body
     if (limb.kind === "leg" && limb.elbow && item.motionRig && item.motionRig.leg) {
