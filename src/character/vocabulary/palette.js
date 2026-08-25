@@ -18,8 +18,11 @@ export const FILLS = [
 // Color accents. Saturated colors that only one or two on a near-monotone board carry.
 // How many are allowed on one board is controlled by makeGrid in creature.js.
 // The green is a pale sage (#b5c2a5), not a leaf green — a raw green on this paper shouts louder than the other pops; it sits
-// pale and grey, almost a fill's luminance, a green you would mix from ochre, a little blue and a lot of white
-export const POPS = ["#4a6fa5", "#b5c2a5", "#b0432e", "#c8871e", "#8a4b2a"];
+// pale and grey, almost a fill's luminance, a green you would mix from ochre, a little blue and a lot of white.
+// The blue, the ochre and the clay went the same way (each at its old hue and lightness, the saturation pulled to
+// S27/48/36 from S38/74/53): raw, they shouted over the board the way the leaf green did. The brick red keeps its S59 —
+// it is the reference's red and the one pop that is allowed to shout
+export const POPS = ["#59749b", "#b5c2a5", "#b0432e", "#b1853e", "#80543c"];
 
 // Imp heads and bodies. Not one ink black but deep grey, blue-grey, brown-grey, even purple-black.
 // All dark enough to read as "black" on paper, yet different from each other when they stand side by side.
