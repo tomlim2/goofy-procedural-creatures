@@ -44,6 +44,14 @@ html, body {
 .bar a { pointer-events: auto; color: inherit; }
 .status { margin-left: auto; opacity: 0.6; }
 
+/* One nav, the same six screens on every page (the HTML carries it; the current one is a .here span, not a link).
+   Every screen judges a different thing and they are useless if you cannot get from one to the next — before this,
+   the grid linked to nothing at all and the other five each named a different subset */
+.nav { display: flex; gap: 10px; pointer-events: auto; font-size: 10px; letter-spacing: 0.14em; }
+.nav a { opacity: 0.45; text-decoration: none; }
+.nav a:hover { opacity: 0.9; text-decoration: underline; }
+.nav .here { opacity: 0.85; font-weight: 700; }
+
 .deck {
   position: fixed;
   z-index: 10;
@@ -62,7 +70,29 @@ html, body {
   padding: 8px 12px;
 }
 
-.card h2 {
+/* A folding card — one <details> holding several groups. The debug screen has nine cards' worth of controls and
+   at 1×1 they covered half the creature; folded, the judging ones are one line until wanted. A .group is a card's
+   contents without its frame (the fold is the frame) */
+.fold > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  opacity: 0.55;
+}
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::after { content: " ▾"; }
+.fold:not([open]) > summary::after { content: " ▸"; }
+.fold > summary:hover { opacity: 0.9; }
+/* Folded, the summary says what is on — otherwise a screen pinned to BIND looks like a bug */
+.foldNow { letter-spacing: 0.1em; opacity: 0.75; }
+.fold[open] .foldNow { display: none; }
+.foldBody { display: grid; gap: 8px; margin-top: 8px; }
+
+/* The deck may run past the screen (debug at a small window) — it scrolls instead of hiding its last card */
+.debug .deck { max-height: calc(100vh - 76px); overflow-y: auto; padding-right: 2px; }
+
+.card h2, .group h2 {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -161,7 +191,8 @@ select.wide { width: 100%; }
   }
   /* Cards shrink-wrap their controls; the strip scrolls instead of squeezing them */
   body:not(.gallery):not(.audit) .card { flex: 0 0 auto; }
-  .sub .tag { display: none; }   /* the tagline does not fit beside the title on a phone — the links next to it stay */
+  .sub .tag { display: none; }   /* the tagline does not fit beside the title on a phone — the nav next to it stays */
+  .nav { gap: 7px; letter-spacing: 0.06em; }
 }
 
 

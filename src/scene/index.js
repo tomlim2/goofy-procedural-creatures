@@ -25,7 +25,7 @@ const PAPER_GRID = [9, 6];
 const PAD = 1.08;
 const SOLO_PAD = PAD * 2;
 
-export function createScene(canvas) {
+export function createScene(canvas, { hifiveRush = 1 } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));   // (resize settles it again — moving monitors changes the pixel ratio)
 
@@ -38,7 +38,7 @@ export function createScene(canvas) {
   let ground = null;
   // The high five — the scene owns the pair logic (no clock knows another's position, scene/hifive.js) and
   // the stars that bounce out of a contact (scene/spark.js)
-  const hifives = makeHifives();
+  const hifives = makeHifives({ rush: hifiveRush });
   let sparks = null;
   let creatures = [];
   let noise = null;

@@ -12,7 +12,13 @@ const canvas = document.getElementById("stage");
 const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
 
-const scene = createScene(canvas);
+// The high five's schedule. RUSH divides its two waits by 60 — a board's first five lands within a second or
+// two instead of within five minutes, and the pairs keep going. **Only the waiting is shortened**: the pair
+// logic, the hurry over, the wind-up and the slap are the board's own, so what you watch is the real thing.
+// It is read here rather than through the control table because the scene is built with it (a five's schedule
+// belongs to makeHifives), so switching it re-reads the address and reloads.
+const hifiveRush = new URLSearchParams(window.location.search).get("five") === "rush" ? 60 : 1;
+const scene = createScene(canvas, { hifiveRush });
 // Debug handle — inspect individual rigs from the console with window.menagerie.scene.creatures()
 window.menagerie = { scene };
 
@@ -88,6 +94,22 @@ if (actionSel) {
   for (const [name, def] of Object.entries(QUAD_ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label} (quad)`);
 }
 
+// HIGH FIVE — the one control that is not a scene switch: the schedule is settled when the scene is built, so
+// this reloads with the value in the address rather than pretending to toggle live (the debug screen only)
+const fiveSeg = document.getElementById("fiveSeg");
+if (fiveSeg) {
+  fiveSeg.querySelector(`button[data-five="${hifiveRush > 1 ? "rush" : "auto"}"]`).classList.add("on");
+  for (const b of fiveSeg.querySelectorAll("button[data-five]")) {
+    if ((b.dataset.five === "rush") === (hifiveRush > 1)) continue;
+    b.classList.remove("on");
+    b.addEventListener("click", () => {
+      const params = new URLSearchParams(window.location.search);
+      if (b.dataset.five === "rush") params.set("five", "rush"); else params.delete("five");
+      window.location.search = params.toString();
+    });
+  }
+}
+
 // Screen controls — value, address and what that value does are this one table (control.js). The buttons carry no behaviour.
 // initial has to match the button carrying `.on` in the HTML (for ACTION, the first option).
 const controls = createControls({
@@ -121,7 +143,22 @@ const controls = createControls({
     el: actionSel, kind: "select", initial: "",
     apply: (value) => scene.setAction(value || null)
   }
-}, (def) => (def.rebuild ? render() : syncUrl()));
+}, (def) => { if (def.rebuild) render(); else syncUrl(); showJudging(); });
+
+// Folded, the JUDGING summary carries what is on — anything away from its default is named, so a screen left
+// on BIND or on a forced action never looks like a bug
+const judgeNow = document.getElementById("judgeNow");
+function showJudging() {
+  if (!judgeNow) return;
+  const on = [];
+  if (controls.value("pose") === "bind") on.push("BIND");
+  if (controls.value("ink") === "still") on.push("STILL");
+  if (controls.value("live") === "on") on.push("LIVE");
+  if (hifiveRush > 1) on.push("RUSH");
+  const action = controls.value("action");
+  if (action) on.push(action.toUpperCase());
+  judgeNow.textContent = on.length ? `· ${on.join(" · ")}` : "";
+}
 
 // Shortcuts — R seed · B pose · I ink · S regen. They go through the same path as the buttons (set)
 window.addEventListener("keydown", (event) => {
@@ -145,6 +182,7 @@ window.addEventListener("resize", () => scene.resize());
 
 // Puts the address's values into the screen, then bakes once
 controls.read(new URLSearchParams(window.location.search));
+showJudging();
 booted = true;
 render();
 scene.resize();

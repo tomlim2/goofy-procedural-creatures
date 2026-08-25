@@ -15,13 +15,13 @@
 }
 </script>
 </head>
-<body>
+<body class="debug">
 
 <canvas id="stage" aria-label="Procedurally drawn creature grid"></canvas>
 
 <header class="bar">
   <a class="mark" href="./index.html">MENAGERIE</a>
-  <span class="sub"><span class="tag">DEBUG · </span><a href="./index.html">← GRID</a></span>
+  <nav class="nav"><a href="./index.html">GRID</a><span class="here">DEBUG</span><a href="./gallery.html">GALLERY</a><a href="./audit.html">AUDIT</a><a href="./pixeldiff.html">DIFF</a><a href="./how.html">HOW</a></nav>
   <span class="status" id="status">BOOT</span>
 </header>
 
@@ -36,36 +36,49 @@
     <button id="exportPng" class="wide">PNG</button>
   </section>
 
-  <section class="card">
-    <h2>POSE</h2>
-    <div class="row seg" id="poseSeg" role="group" aria-label="Pose">
-      <button data-pose="motion" class="on">MOTION</button>
-      <button data-pose="bind">BIND</button>
-    </div>
-  </section>
+  <details class="card fold" id="judgeFold">
+    <summary>JUDGING <span class="foldNow" id="judgeNow"></span></summary>
+    <div class="foldBody">
+    <section class="group">
+      <h2>POSE</h2>
+      <div class="row seg" id="poseSeg" role="group" aria-label="Pose">
+        <button data-pose="motion" class="on">MOTION</button>
+        <button data-pose="bind">BIND</button>
+      </div>
+    </section>
 
-  <section class="card">
-    <h2>INK</h2>
-    <div class="row seg" id="inkSeg" role="group" aria-label="Ink">
-      <button data-ink="boil" class="on">BOIL</button>
-      <button data-ink="still">STILL</button>
-    </div>
-  </section>
+    <section class="group">
+      <h2>INK</h2>
+      <div class="row seg" id="inkSeg" role="group" aria-label="Ink">
+        <button data-ink="boil" class="on">BOIL</button>
+        <button data-ink="still">STILL</button>
+      </div>
+    </section>
 
-  <section class="card">
-    <h2>ACTION</h2>
-    <select id="actionSel" class="wide" aria-label="Force an action">
-      <option value="">AUTO</option>
-    </select>
-  </section>
+    <section class="group">
+      <h2>ACTION</h2>
+      <select id="actionSel" class="wide" aria-label="Force an action">
+        <option value="">AUTO</option>
+      </select>
+    </section>
 
-  <section class="card">
-    <h2>REGEN</h2>
-    <div class="row seg" id="liveSeg" role="group" aria-label="Regen toggle">
-      <button data-live="off" class="on">STILL</button>
-      <button data-live="on">LIVE</button>
+    <section class="group">
+      <h2>HIGH FIVE</h2>
+      <div class="row seg" id="fiveSeg" role="group" aria-label="High five schedule">
+        <button data-five="auto" class="on">AUTO</button>
+        <button data-five="rush">RUSH</button>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>REGEN</h2>
+      <div class="row seg" id="liveSeg" role="group" aria-label="Regen toggle">
+        <button data-live="off" class="on">STILL</button>
+        <button data-live="on">LIVE</button>
+      </div>
+    </section>
     </div>
-  </section>
+  </details>
 
   <section class="card">
     <h2>SPECIES</h2>
@@ -88,7 +101,7 @@
     </div>
   </section>
 
-  <p class="hint">R seed · B pose · I ink · S regen · ACTION forces one action · controls ride in the URL · <a href="./gallery.html">PARTS GALLERY →</a></p>
+  <p class="hint">R seed · B pose · I ink · S regen · ACTION forces one action (a forced action releases every running high five) · HIGH FIVE RUSH shortens only the waiting, so the swing is the real one · controls ride in the URL</p>
 </aside>
 
 <noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>

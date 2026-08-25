@@ -331,6 +331,12 @@ Three gold stars bounce out of the contact (`scene/spark.js` — the emoji's sca
 burst), the palms hold 0.55 s, both smile, and both go back to their schedules; the mover walks home on its own
 next walk.
 
+**Watching one.** At 300~720 s a pair, a screen sits quiet for minutes. The debug screen's HIGH FIVE **RUSH**
+(`/debug.html?five=rush`) divides that wait and the first-five wait by 60 and nothing else — the pair logic,
+the hurry over, the wind-up and the slap are the board's own, so the swing you watch is the real one. The
+schedule is settled when the scene is built (`makeHifives({ rush })`), so the button reloads with the value in
+the address. Off everywhere else, and `scripts/hifive-sim.mjs` counts at the real intervals.
+
 **The swing is built on the twelve principles, exaggeration on purpose** — the amplitudes sit 2~3× above the
 board's ordinary motion. All of it is on `ACTIONS.hifive` in `actions.js` (action content stays in the action
 table) and runs in the clock:

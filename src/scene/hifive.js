@@ -49,7 +49,11 @@ function plantPoint(item, side) {
   return [worldX(item) + side * (arm.x + hand[0] * reach), item.baseY + arm.y + hand[1] * reach];
 }
 
-export function makeHifives() {
+// rush divides the two waits — the wait for a board's first five and the wait between a pair's fives —
+// and nothing else. The pair logic, the approach, the swing and the seed-determinism are the board's own,
+// so what a rushed screen shows is the real thing, only sooner (main.js: the debug screen's ?five=rush)
+export function makeHifives({ rush = 1 } = {}) {
+  const wait = ([lo, hi], rng) => rng.float(lo, hi) / rush;
   let active = [];             // running fives
   const schedule = new Map();  // "i:j" → { rng, next, sa, sb } — the pair's own stream and its next five
   const pairUntil = new Map(); // "i:j" → when this pair may five again
@@ -64,7 +68,7 @@ export function makeHifives() {
     let s = schedule.get(key);
     if (!s || s.sa !== A.spec.seed || s.sb !== B.spec.seed) {
       const rng = makeRng(((A.spec.seed ^ (B.spec.seed * 2654435761)) >>> 0) ^ 0x51f7);
-      s = { rng, sa: A.spec.seed, sb: B.spec.seed, next: t + rng.float(HIFIVE.firstWithin[0], HIFIVE.firstWithin[1]) };
+      s = { rng, sa: A.spec.seed, sb: B.spec.seed, next: t + wait(HIFIVE.firstWithin, rng) };
       schedule.set(key, s);
     }
     return s;
@@ -186,7 +190,7 @@ export function makeHifives() {
         const p = plan(A, i, B, j);
         if (p.approach < HIFIVE.minApproach) skipped += 1;
         else { go(p, t); started += 1; }
-        s.next = t + s.rng.float(HIFIVE.interval[0], HIFIVE.interval[1]);
+        s.next = t + wait(HIFIVE.interval, s.rng);
       }
     },
     // Counters for the sim — how many fives began, and how many rounds were skipped for standing too close
