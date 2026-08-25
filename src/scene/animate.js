@@ -206,16 +206,22 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     // The sole stays level: the ankle counter-rotates what the hip and knee turned, so the foot aligns with
     // the floor at any fold (baked into the shin, a bent knee tilted the whole foot with it)
     if (limb.foot) limb.foot.rotation.z = -(limb.pivot.rotation.z + limb.elbow.rotation.z);
-    // ...and the body's height comes back out of the legs as drawn (jitter aside): each knee-bent leg's FK
-    // shortening, gated by the knee's fold so a straight-legged walk swing never bobs the body
+    // ...and the body's height comes back out of the legs **as drawn** (jitter aside): the thigh vector is the
+    // knee group's rest position and the shin's is the ankle's, so the very vectors the renderer rotates are the
+    // ones measured. A vertical-bone model was here and drifted on the drawn lean (a stick leg leans up to ~11°):
+    // in a deep crouch the real ankles rose past what it repaid and the feet lifted off the floor as the body
+    // sank. Gated by the knee's fold so a straight-legged walk swing never bobs the body
     if (limb.kind === "leg" && limb.elbow && item.motionRig && item.motionRig.leg) {
       plantLegs += 1;
       const th = limb.angle + crouchThigh;
       const kn = limb.elbowAngle + crouchKnee;
       const gate = Math.min(1, Math.abs(kn) / 0.15);
       if (gate > 0) {
-        const dims = item.motionRig.leg;
-        plantDrop += gate * (dims.thigh * (1 - Math.cos(th)) + dims.shin * (1 - Math.cos(th + kn)));
+        const tv = limb.elbow.position;
+        const av = limb.foot ? limb.foot.position : { x: 0, y: -item.motionRig.leg.shin };   // the tiptoe keeps no ankle group — its drawn lean is a hair
+        const rest = tv.y + av.y;
+        const posed = (tv.x * Math.sin(th) + tv.y * Math.cos(th)) + (av.x * Math.sin(th + kn) + av.y * Math.cos(th + kn));
+        plantDrop += gate * (posed - rest);   // how far this drawn ankle rose
       }
     }
   }
