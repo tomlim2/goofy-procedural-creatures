@@ -117,31 +117,36 @@ export function limbSketches(spec, variant = 0) {
       continue;
     }
     const sh = make();
+    // The knee is a **joint end** (stroke.js joint): the thigh's end and the shin's start land on the pivot with no
+    // overshoot and no thinning. Left free, each end overshot up to 1.1 widths its own way and the leg broke apart at the
+    // fold — a crouch bends the knee past 90°. The ankle end is a joint too (it meets the foot's fill); the hip end keeps
+    // its overshoot, hidden behind the body (renderOrder 1.2). The arm keeps raw ends — its fold is gentler and a hand
+    // or a sleeve covers the meeting
     let kneeX = 0;   // the knee's x in thigh space
     let footX = 0;   // the foot's x in shin space
     if (legKind === "bent") {
       // The drawn bend is the knee itself
       kneeX = side * 0.04;
-      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0 });
+      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
       footX = side * 0.01 - kneeX;
-      sh.line([[0, 0], [footX, -shinLen]], { color: ink0 });
+      sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
     } else if (legKind === "stub") {
-      s.line([[0, 0], [0, -kneeH]], { color: ink0, size: "L" });
-      sh.line([[0, 0], [0, -shinLen]], { color: ink0, size: "L" });
+      s.line([[0, 0], [0, -kneeH]], { color: ink0, size: "L", joint: [false, true] });
+      sh.line([[0, 0], [0, -shinLen]], { color: ink0, size: "L", joint: [true, true] });
     } else if (legKind === "tiptoe") {
       // A thin leg standing on its toes — the foot points downward
       kneeX = side * 0.004;
-      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, size: "S" });
-      sh.line([[0, 0], [side * 0.004, -shinLen]], { color: ink0, size: "S" });
+      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, size: "S", joint: [false, true] });
+      sh.line([[0, 0], [side * 0.004, -shinLen]], { color: ink0, size: "S", joint: [true, true] });
       sh.line([[side * 0.004 - 0.012, -shinLen + 0.012], [side * 0.004, -shinLen], [side * 0.004 + 0.012, -shinLen + 0.012]], { color: ink0, size: "S" });
       limbs.push({ sketch: s, lowerSketch: sh, pivot: [x, hipY], elbow: [kneeX, -kneeH], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
       continue;
     } else {
       const nx = noise(side * 3.3) * 0.02;
       kneeX = nx * KNEE_SPLIT;
-      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0 });
+      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
       footX = nx - kneeX;
-      sh.line([[0, 0], [footX, -shinLen]], { color: ink0 });
+      sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
     }
     // The foot — it rides the shin
     if (legKind === "boots") {
