@@ -3,6 +3,7 @@
 
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
+import { shade } from "../../color.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
 
@@ -110,6 +111,21 @@ export function drawHeadgear(ink, fills, spec, box) {
     for (let i = 0; i < SPIKES; i += 1) outline.push(peak(i), [vx(i + 1), by + bandH]);
     outline[outline.length - 1] = [w, by + bandH];
     ink.contour(crumple(outline, 0.004, phase), { color: ink0 });
+    return;
+  }
+
+  if (kind === "cone") {
+    // Party cone — a tall triangle sitting on the crown, leaning a little to one side, a pom at the tip.
+    // One convex triangle, so the fan fill is safe as it is; crumpled like every hand-written polygon
+    const by = Math.max(cy + ry * 0.68, brow + ry * 0.3);
+    const w = Math.max(halfW(by) * 0.42, rx * 0.26);   // narrow — a party cone, not a tent
+    const apex = [tiltSide * rx * 0.12, by + ry * 0.66];   // pom top ≈ crown + 0.34·ry — under the 1.19 cell ceiling
+    const body = crumple([[-w, by], [w, by], apex], 0.004, spec.seed * 0.0013);
+    paintPart(fills, spec, body, accent, { own: true });
+    ink.contour(body, { color: ink0 });
+    const pom = blobPath(apex[0], apex[1] + 0.012, 0.019, 0.019, { lumps: 3, amount: 0.18, noise: null });
+    paintPart(fills, spec, pom, shade(accent, 1.3), { own: true });   // the pom a step lighter, so it reads off the cone
+    ink.contour(pom, { color: ink0, size: "S" });
     return;
   }
 
