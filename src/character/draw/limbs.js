@@ -19,6 +19,10 @@ const ARM_LENGTH_SCALE = { medium: 1, long: 1.64 };
 // An arm has to come out of the torso's side — coming out further in, it looks like it sprouts from the middle of the chest.
 const SHOULDER_X = { bean: 0.85, box: 0.98, dress: 0.76, tube: 0.63 };
 
+// The knee — a biped leg splits into thigh and shin here (of the hip height). The drawing and the rig
+// description (motionRig — the leg IK's bone lengths) read the same number
+const KNEE_SPLIT = 0.52;
+
 function armDims(spec, box) {
   const reach = ARM_BASE * spec.proportions.armSpread * (ARM_LENGTH_SCALE[spec.parts.armLength] || 1);
   return {
@@ -93,6 +97,10 @@ export function limbSketches(spec, variant = 0) {
 
   // -- biped legs --
   // The root is slightly above the body's hem (inside the outline). There is always a foot at the end.
+  // A biped leg is **two bones** — the thigh (origin at the hip pivot) and the shin (origin at the knee
+  // pivot, carrying the foot), split at 52%, exactly the arm's upper/forearm arrangement. The scene folds
+  // them like an elbow: seen head-on a bend reads as a plié — thighs out, shins back in (the jump's crouch
+  // and tuck, guidelines/motion/catalog.md § body actions). float keeps no knee — there is no leg to bend.
   const hipY = box.legTop + 0.02;
   // The stance (how far they open) is set by the torso build, not the leg form — a wide body carries a wide stance.
   const spread = (BUILD[spec.parts.build] || BUILD.medium).stance;
@@ -100,39 +108,52 @@ export function limbSketches(spec, variant = 0) {
     const x = side * box.bodyW * spread;
     const s = make();
     const len = hipY;
-    let footX = 0;
+    const kneeH = len * KNEE_SPLIT;   // where the knee sits
+    const shinLen = len - kneeH;
     if (legKind === "float") {
       // Rayman style — no legs, just big feet floating. Joint jitter and a foot flick make them bob about
       dot(s, side * 0.008, -len + 0.016, 0.03, skin);
       limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
       continue;
     }
+    const sh = make();
+    let kneeX = 0;   // the knee's x in thigh space
+    let footX = 0;   // the foot's x in shin space
     if (legKind === "bent") {
-      s.line([[0, 0], [side * 0.04, -len * 0.5], [side * 0.01, -len]], { color: ink0 });
-      footX = side * 0.01;
+      // The drawn bend is the knee itself
+      kneeX = side * 0.04;
+      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0 });
+      footX = side * 0.01 - kneeX;
+      sh.line([[0, 0], [footX, -shinLen]], { color: ink0 });
     } else if (legKind === "stub") {
-      s.line([[0, 0], [0, -len]], { color: ink0, size: "L" });
+      s.line([[0, 0], [0, -kneeH]], { color: ink0, size: "L" });
+      sh.line([[0, 0], [0, -shinLen]], { color: ink0, size: "L" });
     } else if (legKind === "tiptoe") {
       // A thin leg standing on its toes — the foot points downward
-      s.line([[0, 0], [side * 0.008, -len]], { color: ink0, size: "S" });
-      s.line([[side * 0.008 - 0.012, -len + 0.012], [side * 0.008, -len], [side * 0.008 + 0.012, -len + 0.012]], { color: ink0, size: "S" });
-      limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
+      kneeX = side * 0.004;
+      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, size: "S" });
+      sh.line([[0, 0], [side * 0.004, -shinLen]], { color: ink0, size: "S" });
+      sh.line([[side * 0.004 - 0.012, -shinLen + 0.012], [side * 0.004, -shinLen], [side * 0.004 + 0.012, -shinLen + 0.012]], { color: ink0, size: "S" });
+      limbs.push({ sketch: s, lowerSketch: sh, pivot: [x, hipY], elbow: [kneeX, -kneeH], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
       continue;
     } else {
-      s.line([[0, 0], [noise(side * 3.3) * 0.02, -len]], { color: ink0 });
-      footX = noise(side * 3.3) * 0.02;
+      const nx = noise(side * 3.3) * 0.02;
+      kneeX = nx * KNEE_SPLIT;
+      s.line([[0, 0], [kneeX, -kneeH]], { color: ink0 });
+      footX = nx - kneeX;
+      sh.line([[0, 0], [footX, -shinLen]], { color: ink0 });
     }
-    // The foot
+    // The foot — it rides the shin
     if (legKind === "boots") {
       // Boots — a mass filled to the ankle
-      const boot = crumple([[footX - 0.028, -len], [footX - 0.024, -len + 0.045], [footX + 0.012, -len + 0.045], [footX + 0.036, -len + 0.006], [footX + 0.036, -len]], 0.003, footX * 90);
-      paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
-      s.contour(boot, { color: ink0 });
+      const boot = crumple([[footX - 0.028, -shinLen], [footX - 0.024, -shinLen + 0.045], [footX + 0.012, -shinLen + 0.045], [footX + 0.036, -shinLen + 0.006], [footX + 0.036, -shinLen]], 0.003, footX * 90);
+      paintPart(sh, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
+      sh.contour(boot, { color: ink0 });
     } else {
       // A round foot — the reference default
-      dot(s, footX + side * 0.008, -len + 0.012, 0.022, skin);
+      dot(sh, footX + side * 0.008, -shinLen + 0.012, 0.022, skin);
     }
-    limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
+    limbs.push({ sketch: s, lowerSketch: sh, pivot: [x, hipY], elbow: [kneeX, -kneeH], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
   }
 
   // -- biped arms --
@@ -211,6 +232,8 @@ export function quadHips(box) {
 
 // The rig description — the static dimensions motion needs to run on this individual. All of it comes from the spec.
 //   arm      a biped's arm (IK): shoulder position, upper and lower arm lengths, body anchors. Anchors are in body coordinates (origin at the soles, y up), for the right arm — the left mirrors x. null on a quad
+//   leg      a biped's leg (IK): hip position (the right leg — the left mirrors x) and the thigh and shin lengths (the knee at KNEE_SPLIT).
+//            The clock solves a crouch's foot target onto it (motion/actions.js solveLeg). null on a quad and on float legs (feet only — nothing to bend)
 //   legTop   the torso hem height — how far the body settles when a quad lies down to sleep
 //   body     a quad's torso and leg-root dimensions { frontHipX, hindHipX, hipY, legTop, bodyH, bodyW, bodyCx } — the sitting pose (motion/actions.js sitPose)
 //            is solved to fit this individual (tilting the body about the front legs' root to put the hips on the floor, folding the hind legs to put the feet on the floor). null on a biped
@@ -218,9 +241,14 @@ export function quadHips(box) {
 export function motionRig(spec) {
   const box = layout(spec);
   const hips = box.quad ? quadHips(box) : null;
+  const hipY = box.legTop + 0.02;
   // arm is only for bipeds with arms. An armless biped (an imp with arms none) has arm null but quad false too — only the arm action layer rests
   return {
     arm: box.quad || spec.parts.arms === "none" ? null : armRigOf(spec, box),
+    leg: box.quad || spec.parts.legs === "float" ? null : {
+      x: box.bodyW * (BUILD[spec.parts.build] || BUILD.medium).stance,
+      y: hipY, thigh: hipY * KNEE_SPLIT, shin: hipY * (1 - KNEE_SPLIT)
+    },
     legTop: box.legTop, quad: box.quad, tailLift: spec.proportions.tailLift,
     body: hips ? { frontHipX: hips.front, hindHipX: hips.back, hipY: hips.hipY, legTop: box.legTop, bodyH: box.bodyH, bodyW: box.bodyW, bodyCx: box.bodyCx } : null
   };

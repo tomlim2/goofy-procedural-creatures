@@ -11,6 +11,8 @@ import { inkMaterial, disposeGroup } from "./mesh.js";
 import { buildCreature } from "./rig.js";
 import { applyState } from "./animate.js";
 import { BIND_STATE } from "../motion/index.js";
+import { makeHifives } from "./hifive.js";
+import { makeSparks } from "./spark.js";
 
 // Cell size — the box one individual stands in. The floor line is 0.16 above the bottom of the box (slotPosition). The gallery uses it too, to work out label positions
 export const CELL_W = 1.0;
@@ -34,6 +36,10 @@ export function createScene(canvas) {
   let paper = null;
   let post = null;   // the passes drawn over the finished board (post.js)
   let ground = null;
+  // The high five — the scene owns the pair logic (no clock knows another's position, scene/hifive.js) and
+  // the stars that bounce out of a contact (scene/spark.js)
+  const hifives = makeHifives();
+  let sparks = null;
   let creatures = [];
   let noise = null;
   let columns = 7;
@@ -151,6 +157,8 @@ export function createScene(canvas) {
 
   function build(specs, cols) {
     clear();
+    hifives.reset();   // slots renumber — index-keyed cooldowns would mean other pairs
+    if (sparks) sparks.clear();
     columns = cols;
     rows = Math.ceil(specs.length / cols);
 
@@ -164,6 +172,7 @@ export function createScene(canvas) {
       paper.position.z = -1;
       scene.add(paper);
       post = attachPost(scene);   // and what goes over the finished board — the paper again, on top (post.js)
+      sparks = makeSparks(scene);
     }
 
     specs.forEach((spec, index) => {
@@ -216,17 +225,24 @@ export function createScene(canvas) {
       const item = creatures[index];
       if (bindView) {
         // The clock is let run (to prevent a runaway on return) while the rig is pinned to bind. Joint easing is immediate.
-        item.clock.update(t);
+        item.lastState = item.clock.update(t);
         applyState(item, BIND_STATE, t, noise, { snap: true, boil: boilOn });
         continue;
       }
       const state = item.clock.update(t);
+      item.lastState = state;   // the high five pairing reads every creature's position off this, after the loop
       if (state.regen && regenEnabled) {
         regenerate(index);
         continue;
       }
       applyState(item, state, t, noise, { boil: boilOn });
     }
+    // The high five — after every clock has moved, so both of a pair's positions are this tick's.
+    // Off while the rig is pinned (BIND — the picture and the clocks disagree) or the ACTION card is
+    // forcing (a forced arm would fight the five)
+    if (bindView || forcedAction) hifives.releaseAll();
+    else hifives.update(creatures, columns, clockNow, (x, y) => sparks.burst(x, y, clockNow, noise));
+    sparks.update(clockNow);
     renderer.render(scene, camera);
   }
 

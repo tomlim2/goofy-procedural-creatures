@@ -7,7 +7,6 @@
       "runtimeArgs": [
         "serve.mjs"
       ],
-      "port": 7300,
       "autoPort": true
     }
   ]

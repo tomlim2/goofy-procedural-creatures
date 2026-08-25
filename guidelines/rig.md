@@ -17,8 +17,8 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
 │   │   │                           Bristle (tailPuff): bone.scale.y — thickness only, perpendicular to the bone's own axis; a sibling bone shears no child
 │   │   └── SkinnedMesh ×1       ← the whole skin in the pivot's space, every vertex weighted to two or three bones (limbs.js weightsAt); all three boil frames in it, switched by drawRange
 │   └── limb pivot ×N        ← shoulder and hip pivots
-│       ├── front             ← the upper arm (2.5) or the leg (1.2 — behind the body)
-│       │   └── elbow         ← the elbow pivot plus the forearm (arms only). Shoulder and elbow angles separately
+│       ├── front             ← the upper arm (2.5) or the thigh (1.2 — behind the body)
+│       │   └── elbow         ← the lower bone's pivot — an arm's elbow plus the forearm (2.5), or a biped leg's **knee** plus the shin and foot (1.2). Two angles per limb (state.arms / state.legKnee); a quad leg and a float leg have no lower bone
 │       └── back              ← hands behind the back (arms only, 0.5)
 └── headGroup                ← origin = the neck (neckY = bodyTop). Tilt, roll, nod, dip. Only the outline sits here directly
     ├── headFrame ×3         ← boil variants. Head outline fills+ink, one mesh (2, the fill opaque)
@@ -80,7 +80,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 6.55 | Bangs — above the nose and eyewear, below the hat, the brows and the mouth (depth 0.12) |
 | 6.58 | Hat — above the bangs (a hat sits on the hair, never under it), below the brows and mouth (depth 0.45) |
 | 6.6 | Brows and mouth — above the eye rig (so a closed lid does not erase the brows and a widened cyclops white does not erase the mouth) |
-| 100000 | The emoji (♥ ! ? … ;) — above every individual's block (`EMOJI_ORDER`) |
+| 100000 | The emoji (♥ ! ? … ;) — above every individual's block (`EMOJI_ORDER`) — and the high-five stars (`scene/spark.js`, direct children of the scene root; three ☆ per contact, alive for 0.75 s) |
 
 ## Origin rules
 
@@ -89,7 +89,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 - **faceGroup** — the centre of the head (headCy). The face geometry (face frames, brows, mouth, eye rig) is baked lowered by `-faceCy` and the group is placed at `faceCy - neckY`. The turn's shift and squash are about this point
 - **depth groups** (`item.parallax`) — the same origin as headGroup (the neck). On a face turn, position only = depth × the features' shift (§ fake 3D depth). scale is never touched — an attachment moves position and does not change size
 - **limb pivot** — the shoulder (22% below bodyTop, on the torso's left/right outline — half-width per form: box 0.98 · bean 0.85 · dress 0.76 · tube 0.63) / the hip (0.02 above the hem) / a quad's root (25% of bodyH up). A limb is baked hanging from the pivot's origin. Arms are stood up with `bindArm(side)` (the T-pose) and the clock's `state.arms` supplies the joint angles
-- **elbow** — the end of the upper arm. The forearm is baked hanging from the elbow's origin. Upper:lower arm = 0.48:0.52. `armRig(spec)` passes the same dimensions to the clock so it can solve actions by IK
+- **elbow** — the end of the upper bone. The lower bone is baked hanging from its origin. Upper:lower arm = 0.48:0.52; a biped leg's **knee** sits at 52% (thigh:shin = 0.52:0.48), the foot on the shin. `armRig(spec)` passes the arm dimensions to the clock so it can solve actions by IK; the clock works a crouch's descent out of the leg split (motion/index.js)
 - **tailGroup** — the tail root (the back end of the body). Inside it, **eight bones as siblings** (`tailSketch().bones` — joint origins and rest-pose directions) and **one SkinnedMesh**: the skin drawn once along the whole spine, every vertex weighted to two or three bones (`weightsAt` — a bone reaches ±0.125 of the **tail** past its own stretch, so a turn at one joint is spread along a stretch of tail; the four skinIndex slots hold it), all three boil frames in it switched by drawRange ([performance.md](performance.md)). animate places the bones by forward kinematics (a joint's share of the raise or the arch is taken the short way round, the rest cascading down the chain — no cap: at eight bones the biggest turn asked of a joint is 110° and the biggest bend the skin takes is 27°, [motion/catalog.md](motion/catalog.md) § the tail), so the skin bends as one piece ([character/parts.md](character/parts.md) § tail); bristle is bone.scale.y — thickness only, perpendicular to the bone's own axis
 - **eyeRig** — the eye's centre. pupil.scale is the startle (1 → 0.5), pupil.position the gaze, lid.scale.y the lid. The rig itself never grows
 
@@ -117,13 +117,13 @@ When attaching a new layer to the head, settle on one depth in this table and wr
 | Baked once (per individual) | Changed every frame |
 | --- | --- |
 | 13 layers (body, back hair, side ears, head, horns, hair on the scalp, dog/cat ears, hat, face, static eyes ×2 (one per eye), the front of the face, bangs) × 3 boil sets — one mesh per layer; the tail (one skinned mesh) and the limbs boil too, all three frames in one mesh each (drawRange) (two for the face and static eyes: fills and ink) | Toggling visible (static eyes per eye — for sleep, ^^, a wink and startle variants only that eye is switched off) |
-| Limb pieces (front, back) | pivot.rotation.z, elbow.rotation.z (the eased target angle plus un-eased oscillation), front/back visible |
+| Limb pieces (front, back) | pivot.rotation.z, elbow.rotation.z (the eased target angle plus un-eased oscillation — an arm's elbow or a biped leg's knee), front/back visible |
 | The tail | The bones' position and rotation.z (forward kinematics from the joint rotations) · bone.scale.y (bristle — thickness only) |
 | Brow and mouth rest/alt | visible |
 | The eye rig | pupil.scale (startle — the pupil 1 → 0.5×), pupil.position (gaze), visible (open the open eye / shut the shut line / smile ^^) |
 | — | The position/rotation/scale of group, headGroup, the depth groups and faceGroup — group.position.x carries the distance walked (walkX) and group.scale.x carries a quad's walking direction (facing ±1) |
 
-**Never rebuild geometry per frame.** The only exceptions are the emoji (once per trigger) and regen (replacing an individual).
+**Never rebuild geometry per frame.** The only exceptions are the emoji (once per trigger), the high-five stars (once per contact, `scene/spark.js`) and regen (replacing an individual).
 
 ## Jitter phase (variant)
 

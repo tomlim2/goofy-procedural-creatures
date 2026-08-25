@@ -52,6 +52,7 @@ What `clock.update(t)` returns, and where the scene applies it.
 | arms | {−1, 1} → {shoulder, elbow, behind, oscShoulder, oscElbow} | The arm joints' world angles (rotation.z). idle or an action solved by IK, plus the pendulum, jump and jitter. osc is oscillation laid on without easing (waving, flapping) |
 | legOffset | [4] rad | Leg pivot rotation (eased). On a quad the idle standing stance (legStance) is the base, with flicks, steps and actions on top |
 | legOsc | [4] rad | Oscillation laid on the legs without easing (a paw shake, scratching) |
+| legKnee | [4] rad | **The knees** — the shin's relative fold at the knee pivot (eased like an elbow). Bipeds only (indices 0·1, signed per side — folded in, a plié seen head-on); a quad's one-bone legs have no knee. The jump's crouch and tuck and the high five's wind-up feed it |
 | action / actionSide | The action name of the arm layer (biped) or the leg and tail layer (quad), or null / the active arm's side or the leg index | For debugging and statistics. The scene only looks at arms and legOffset |
 | bodyAction | The body layer's action name, or null | "jump" while hopping in place. hopY and squash are its curve |
 | mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" / 0~1 / 0~1 / 0~1 | The base state and how far asleep, walking or sitting it is (eased). All of it is already blended into legOffset, hopY, sway, arms and so on. The scene only uses sleep, to turn on the sleep lid (the static eye cover) |
@@ -107,7 +108,7 @@ Big events appear nowhere across 4 individuals × 4 s. So the standing amplitude
 | Paw flick (0.09 rad, 0.9 s) | 12~30s | 14~34s | pup 14~32s / cat 16~36s |
 | Step in place (0.07 rad, diagonals alternating, 2.4 s) | — | — | pup 30~70s / cat 40~90s |
 | Leg joint jitter | 6.1Hz 0.006 | the same | the same |
-| On a jump | arms up (hopY×4), legs folding | the same | legs folding |
+| On a jump | arms up (hopY×4), the knees crouching and tucking (§ body actions) | the same | legs folding (splay) |
 
 ### The bind pose and arm actions
 
@@ -140,6 +141,7 @@ When and which action happens is `stepArmAction` in `states.js` (the per-species
 | hips | both | The hands at the waist (the hip anchor), elbows out | 3~7 | hands on hips | 2 | 1.5 |
 | behind | both | Behind the body (the back sketch) | 3~7 | hands behind the back | 1.5 | 1 |
 | flap | both | Shoulder ±0.28, elbow ±0.12 rad at 4Hz (6 ticks a cycle at 24 — 5Hz strobed) | 1.5~3 | flapping (fond) + ♥ | 1 | 2 |
+| **hifive** | one | The palm up and forward ([0.72, 0.55] of reach) | — | the plant half of a high five | — (never scheduled — § the high five) | — |
 
 Firing measures at 2.4/min on humans and 2.8/min on imps, split evenly left and right (measured over 60 s × 40 individuals). Quads (cat, pup) have no arms — see § quad idle and actions below.
 There is no action for letting the arms hang — that is idle.
@@ -172,9 +174,28 @@ Force one with the ACTION card and only that layer keeps going while the others 
 
 | Body action | What | human | pup | cat | imp |
 | --- | --- | --- | --- | --- | --- |
-| **jump** | From idle, **three in a row** light (amplitude ×0.5), quick (0.42 s) hops in place — crouch → airborne → landing, the arms dragged up and the legs folding | 10~25s | 12~30s | 25~60s | 8~20s |
+| **jump** | **Crouch-and-spring, three times over** — every hop the same full cycle: a knee-bent crouch held a beat → the spring → the arc with the knees tucked → the landing folding straight into the next crouch, and one soft knee dip after the last (2.33 s all told). The arms are dragged up by the flight | 10~25s | 12~30s | 25~60s | 8~20s |
 
-`jumpCurve(tau, def)` in `actions.js`. The curve goes out as `hopY` and `squashX/Y`, and `hopY×4` is added to the shoulder for the arms.
+**The jump is built on the twelve principles, and the deformation is the skeleton's — never the scale's** (no
+rubbery squash on the body; the earlier scale squash was taken out on purpose):
+
+- **Anticipation** — before the first spring it sinks into the crouch over 0.35 s (slow in) and **holds the
+  beat**; every later landing ramps straight back to the same full depth (equal crouches — crouch-and-spring,
+  crouch-and-spring, crouch-and-spring)
+- **The crouch is the legs', solved by IK** — it is written as a descent (`crouchDrop`, 0.16 of the leg's own
+  length; position, never scale) with each **foot held to its spot on the floor**, and `solveLeg` turns that
+  into this individual's thigh and knee (the knees bow outward — a plié seen head-on; feet-on-floor error
+  measures ≤ 0.006, jitter). A quad's one-bone legs splay what they can instead
+- **Arcs / timing** — the flight is a sine arc (position only, hopY to 0.044); the spring pops (the licensed
+  exception) out of a slow crouch
+- **The feet tuck up toward the hips mid-air** (`tuckFoot` — a frog jump, the same solve) and let go before
+  the landing
+- **Follow-through** — the landing knees absorb, and after the last one a soft dip-and-recover (0.3 s); the
+  arms lag the flight through their damping (overlapping action)
+
+`jumpCurve(tau, def)` in `actions.js` (the phase shape and every amplitude on `BODY_ACTIONS.jump`). The curve
+goes out as `hopY` and the envelopes `dropK`, `tuckK` and `splay`; the clock solves the legs onto them
+(`solveLeg`), subtracts the crouch descent from `hopY`, and adds `hopY×4` to the shoulders for the arms.
 
 ### The base state (mode) — idle · sleep · walk · sit
 
@@ -291,6 +312,62 @@ the point above the head from the scene root, so it is dragged a beat behind on 
 | The base state | sleep → z | Every 6 s while asleep (a per-individual phase, no rng) |
 
 To attach an emoji to a new motion, write `emoji: "kind"` on that action — that is the emoji trigger. Firing measures at human 3.6 · imp 4.4 · pup 5.6 · cat 4.2 per minute.
+
+## The high five — a scene interaction
+
+Every pair of same-row biped neighbours high fives **on its own schedule** — no distance is asked. When a
+pair's time comes (every 300~720 s per pair, its own rng stream; a fresh board's first within 40~300 s), the
+**short-armed one stops where it stands** (the anchor — a dead tie in reach falls to seed parity) and watches;
+the **long-armed one hurries over** from wherever it is (the mover — a commanded trip at 2.2× its walk speed,
+past the normal 0.10~0.18 trip cap). **Standing too close already** — less than `minApproach` (0.15 cells) of
+walking left for the mover — **the pair skips that round outright** and draws its next: a five with no
+approach has no show. Measured at 2~6 skips per board per 10 min (mid-walks into each other, mostly). The anchor's palm comes up once the mover is within 0.5 cells; the mover
+arrives, **winds up, holds, and slaps** — the palms first touch at the slap, **at the anchor's own height**.
+Three gold stars bounce out of the contact (`scene/spark.js` — the emoji's scale and layer, baked once per
+burst), the palms hold 0.55 s, both smile, and both go back to their schedules; the mover walks home on its own
+next walk.
+
+**The swing is built on the twelve principles, exaggeration on purpose** — the amplitudes sit 2~3× above the
+board's ordinary motion. All of it is on `ACTIONS.hifive` in `actions.js` (action content stays in the action
+table) and runs in the clock:
+
+- **Anticipation** — the hand pulls deep toward the body (to 12% of its outward distance, cocked up by 0.18 of
+  reach) over 0.3 s, **and freezes there 0.14 s** before the release (timing: long in, short out)
+- **The crouch is the knees'** — through the wind-up the knees bend (0.7 rad, the same plié the jump uses;
+  the body descends by what the folded legs lost — never a scale squash) and the body leans away (0.09 rad —
+  3× the ordinary sway); the strike swings it the other way with a little hop
+- **Arcs** — the slap travels an upward arc (0.12 of reach at its crest), not a straight line
+- **Follow-through** — the palm drives past the contact and settles back (0.12 s); the receiver's planted hand
+  dips under the hit and its body is pushed off it with a knee dip's brace (recoil, 0.24 s)
+- **Secondary action** — both parties go ^^ for 3.2 s from the impact
+- **Slow in slow out** — every leg of the curve is `ramp`/`bump` (the repo's easing law); **staging** — the
+  anchor waits looking at the incoming mover, both look at each other, and the jump rests mid-five (it would
+  tear the palms apart). The reaching arm drops the pendulum and walk swing, keeping only joint jitter
+
+The pair logic lives in **`scene/hifive.js`**, not in `motion/` — no per-individual clock knows another's
+position; the scene owns the board. A clock obeys one command (`clock.hifive` in `motion/index.js`): wait,
+plant or reach (the mover's hand tracks the meeting point in shoulder terms while it walks), walk to x, and the
+impact moment (the anchor is told when the slap lands; the mover works it out on arrival). Commands consume
+**no rng from any clock's stream** — every schedule keeps stepping underneath — and the pair scheduler's
+randomness is its own per-pair `makeRng` stream seeded from the two specs, so the fives are seed-deterministic
+and an isolated clock (the snapshot, the frequency counts) is byte-identical with the feature in place.
+
+The meeting height is the anchor's natural plant, pulled into the intersection of what **both** arms can span
+when the builds force it (reach and body height are separate draws — a long-armed mover can still be the short
+body): the mover's band (`reachK` 0.92 of its reach), the anchor's (its plant stretch rotated to ±0.9 of
+reach), never below the floor. The pairing knobs — the intervals, the plant distance, hold, cooldowns — are the
+`HIFIVE` table at the top of `scene/hifive.js` and nowhere else; the swing's shape lives on `ACTIONS.hifive`.
+
+Only same-row neighbours with arms pair (the lanes make those the human and imp rows; an armless imp sits it
+out). BIND and a forced ACTION release any running five (a forced arm would fight it); a regen mid-five lets
+both go and restarts that pair's stream. Force the static pose from the ACTION card's HIFIVE to judge the plant.
+
+**Measured** (`node scripts/hifive-sim.mjs` — it drives the real pair logic over real clocks and runs both
+palms back through FK): 1.7~2.3 fives/min on the default 7×5 board (1.77/min steady over 30 min), palm gap at
+the slap mean 0.006 · max 0.014 — inside the hand dot's radius (0.022), so the palms genuinely meet — 0
+unreachable pairs. The swing trace (the sim prints the first two per board) shows the whole shape: carried
+short (≈0.04~0.05), the pull opening to 0.13~0.23, **four ticks frozen at the top** (the anticipation hold),
+and the slap shutting it to ≤0.01 at the burst.
 
 ## Regen
 

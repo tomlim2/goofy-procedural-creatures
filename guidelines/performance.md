@@ -83,7 +83,8 @@ Split a layer only when **it has to be switched on and off separately** — stat
 eye's layer alone (with both eyes in one layer, the other eye disappears). The hair on the scalp is a different
 layer from the horns too — its face-turn depth differs ([rig.md](rig.md) § fake 3D depth).
 One individual shows around 15 meshes (whichever of the 13 layers are non-empty, plus limbs, tail bones, brows,
-mouth and eyes).
+mouth and eyes) — a biped with legs two more since the knee split each leg into thigh and shin (one boiled mesh
+each, ~+40 draw calls on a 7×5 board; 559 calls/frame measured on the dev machine after the split).
 When making a new layer, first ask "could this be drawn on an existing layer?" — one layer is 35~54 draw calls
 across the whole board.
 
@@ -91,7 +92,8 @@ across the whole board.
 
 [drawing.md](drawing.md) § generate once; animation only transforms. What changes per frame is `visible`,
 `position`, `rotation` and `scale`, and nothing else.
-The exceptions are the emoji (once per trigger) and regen (replacing an individual).
+The exceptions are the emoji (once per trigger), the high-five stars (three small meshes baked per contact and
+disposed 0.75 s later — `scene/spark.js`) and regen (replacing an individual).
 
 ### If the size did not change, do not re-take it
 

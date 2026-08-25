@@ -31,12 +31,15 @@ idling. "Waving is the hand's movement alone" — a wave decides one arm and the
 Never make an action that freezes other parts along with it. The one condition that makes a one-arm action work is that **the base is idle** —
 with a T-pose as the base, the other arm freezes horizontal and you get a mannequin twitching one arm.
 
-## An arm pose is written as a hand target
+## A limb pose is written as a target — a hand's or a foot's
 
 Never hand-tune a table of joint angles. `ARM_POSES` records only **where the hand goes** (coordinates as a multiple of reach, or the rig anchors
 hip, chin, brow, chestFar) and the side the elbow sticks out, and `solveArm` solves it onto that individual's rig (`armRig(spec)`)
 with two-bone IK. That is why the same action means the same thing at different arm lengths and body sizes.
-When adding a new pose, run the hand position back through FK and check by number that it reaches the anchor and stays above the floor (catalog § adding a new motion).
+**The legs follow the same law**: a crouch is written as how far the body descends with each **foot held to its
+spot on the floor**, and a tuck as a foot target by the hip — `solveLeg` (the same two-bone core) turns either
+into this individual's thigh and knee (`motionRig().leg`). A quad's one-bone legs and a float leg stay angles.
+When adding a new pose, run the hand or foot position back through FK and check by number that it reaches the target and stays above the floor (catalog § adding a new motion).
 
 ## Split into three kinds
 
@@ -82,6 +85,17 @@ What is tied to anger (a cat's tail bristling) follows the anger envelope (`angr
 ♥ ! ? … are run by the channel in `motion/emoji.js`. A motion (an action, an event) neither draws nor holds the emoji; it only **triggers** it —
 write `emoji: "heart"` on an action and it fires once at the start. An emoji's shape, length and curve are decided in the `EMOJI` table and nowhere else.
 To add a new emoji, put the kind, length and curve in `EMOJI` and the shape in `scene/emoji.js`, and write which motion fires it on that motion.
+
+## An interaction between individuals is the scene's, never a clock's
+
+A clock is one individual and knows nothing of the others — anything that needs two positions (the high five)
+is decided in `scene/` (`hifive.js`) and **commanded** to the clocks involved. A command must consume no rng
+from the clock's stream and leave every schedule stepping underneath (the pattern `force` set: fixed rng
+consumption whatever is overridden), so that a clock that never receives one — the snapshot, the frequency
+counts — is byte-identical, and one that does returns to its own schedule on release. An interaction that needs
+randomness of its own (when a pair fives) draws it from **its own `makeRng` stream seeded from the specs**,
+never from `Math.random` and never from a clock. Never give a clock a reference to another clock, and never put
+pair logic in `motion/` ([catalog.md](catalog.md) § the high five).
 
 ## Species differences live only in table.js
 

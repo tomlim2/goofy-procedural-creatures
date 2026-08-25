@@ -159,6 +159,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       }
     } else {
       target = state.legOffset[limb.index] || 0;
+      elbowTarget = state.legKnee ? state.legKnee[limb.index] || 0 : 0;   // the knee — the shin's relative fold (bipeds; a quad leg has no knee pivot)
       osc = state.legOsc ? state.legOsc[limb.index] || 0 : 0;
     }
     // Critically damped follow (ease in/out) — with an exponential lerp the first frame is the fastest and the arm jerks up

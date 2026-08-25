@@ -4,7 +4,7 @@
 //
 // Shape: { next: the next entry time, until: when the hold ends (otherwise -1) }
 
-import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./actions.js";
+import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpSpan } from "./actions.js";
 import { ramp, approach } from "./ease.js";
 
 const schedule = (rng, range) => (range ? rng.float(range[0], range[1]) : Infinity);
@@ -107,7 +107,7 @@ export function stepLook(s, t, rng, M) {
 // Returns { action, start, until } or null.
 export function initBodyAction(rng, M) { return { action: null, side: 0, start: -1, next: schedule(rng, M.bodyActions ? M.bodyActionGap : null), until: -1 }; }
 export function stepBodyAction(s, t, rng, M) {
-  return stepActionLayer(s, t, rng, M.bodyActions || [], M.bodyActionGap, [10, 25], BODY_ACTIONS, { hold: (def) => def.hops * def.dur });
+  return stepActionLayer(s, t, rng, M.bodyActions || [], M.bodyActionGap, [10, 25], BODY_ACTIONS, { hold: (def) => jumpSpan(def) });   // the whole timeline — anticipation, hops, settle (no rng)
 }
 // Quad actions — scratching with a hind paw, wagging the tail. Which leg is drawn within the pair (index 0~3, -1 for the tail). table.js quadActions.
 // Returns { action, index, start, until } or null (idle).

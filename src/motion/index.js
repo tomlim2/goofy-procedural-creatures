@@ -12,7 +12,7 @@ import { MOTION } from "./table.js";
 import * as R from "./rhythm.js";
 import * as E from "./events.js";
 import * as S from "./states.js";
-import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, sitPose, bindArm, solveArms } from "./actions.js";
+import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, jumpSpan, sitPose, bindArm, solveArms, solveLeg } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
 import { ramp, smoothstep, damp, approach, bump, envelope } from "./ease.js";
 import { TICK_FPS } from "../tick.js";
@@ -33,7 +33,7 @@ export const BIND_STATE = Object.freeze({
   happy: false, winkSide: 0, tailAngle: 0, tailTip: 0, tailPuff: 0, tailRaise: 0, tailRaisePose: null, tailArch: 0, tailPose: null,
   arms: { "-1": bindArm(-1), "1": bindArm(1) }, action: null, actionSide: 0, bodyAction: null,
   mode: "idle", sleep: 0, walk: 0, sit: 0, bodyTilt: 0, walkX: 0, facing: 1,
-  legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0]
+  legOffset: [0, 0, 0, 0], legOsc: [0, 0, 0, 0], legKnee: [0, 0, 0, 0]
 });
 
 // rig: character/draw/limbs.js motionRig(spec) — { arm (a biped's arm IK dimensions | null), legTop, quad, body (a quad's torso and leg-root dimensions | null) }.
@@ -96,6 +96,19 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   let forcedMode = null;   // "sleep" | "walk" | "sit" | "idle" | null — the ACTION card can set the base state too
   let forcedSide = 1;
   let forcedStart = -1;
+  // A high five commanded by the scene (scene/hifive.js) — the pair logic needs both creatures' positions,
+  // which no per-individual clock has, so the scene decides and the clock obeys. The command consumes **no
+  // rng**: every schedule keeps stepping underneath, and an isolated clock (the snapshot, the frequency
+  // counts) never receives one.
+  //   side     the arm toward the partner (-1/1)
+  //   wait     stand and watch — the partner is still walking over; the arm stays with its schedule
+  //   at       [x, y] the meeting point — x in cells from this creature's home, y from the floor. The mover's
+  //            hand tracks it while walking (the same world point shifts in shoulder terms every tick); with
+  //            neither at nor wait, the static hifive pose (the ACTION card's force)
+  //   walkTo   a commanded trip target in cells from home, or null (stand still). Cleared by the clock on arrival
+  //   impactAt when the slap lands (the anchor is told by the scene; the mover works it out on arrival) —
+  //            keys the receiver's recoil and both smiles
+  let five = null;
   const arm = rig ? rig.arm : null;
   const quad = !!(rig && rig.quad);
   const armed = !!arm;   // an arm rig is needed for the arm action layer to live (an armless imp rests even though it is a biped)
@@ -160,18 +173,49 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       forcedSide = side;
       forcedStart = -1;
     },
+    // The scene's high five command (scene/hifive.js). cmd = { side, at, walkTo } or null to release.
+    // A natural trip in flight is frozen where it stands — left ticking, its stale window would snap trip.x
+    // to the old target the moment the base state comes back to walk
+    hifive(cmd) {
+      // swings — only the walking party carries short, winds up and slaps; the anchor just plants where it is
+      // told. A re-command mid-five (the scene upgrades the anchor wait → plant → impact) keeps the action's
+      // start, so the arm's fade-in never re-runs
+      const start = cmd && five ? five.start : -1;
+      five = cmd ? {
+        side: cmd.side, wait: !!cmd.wait, at: cmd.at || null, walkTo: cmd.walkTo ?? null,
+        swings: cmd.walkTo != null, impactAt: cmd.impactAt ?? -1, start, hitAt: -1
+      } : null;
+      if (five && trip.start >= 0) { trip.to = trip.x; trip.start = -1; }
+    },
     update(globalT) {
       const t = globalT - birth;
 
       // -- update: fixed order --
       // The base state — idle (standing) / sleep (lying asleep). The schedule runs even while forced. sleepK blends the pose
       let modeName = forcedMode || S.stepMode(mode, t, rng, M);
+      // A high five overrides the base state without touching the schedule (stepMode already ran, rng intact) —
+      // the mover walks its commanded trip, the anchor stands. The schedule takes back over on release
+      if (five) modeName = five.walkTo != null && W ? "walk" : "idle";
+      // A commanded trip (the mover walking to the meeting point) — the target is the scene's, so no rng.
+      // The mover hurries (approach × the walk speed). Arrival starts the swing clock (hitAt), and the impact
+      // lands a full swing later (windup, the anticipation hold, the strike)
+      if (five && five.walkTo != null && W) {
+        if (trip.start < 0) {
+          trip.from = trip.x; trip.to = five.walkTo; trip.dir = trip.to > trip.x ? 1 : -1;
+          trip.start = t; trip.dur = Math.abs(trip.to - trip.from) / (W.speed * ACTIONS.hifive.approach);
+        }
+        if (t >= trip.start + trip.dur) {
+          trip.x = trip.to; trip.start = -1; five.walkTo = null; five.hitAt = t;
+          five.impactAt = t + ACTIONS.hifive.windup + ACTIONS.hifive.antHold + ACTIONS.hifive.strike;
+          modeName = "idle";
+        }
+      }
       // Starting a walk — one trip is taken and the walk hold is matched to the arrival (distance/speed instead of the table's walk hold)
-      if (W && modeName === "walk" && (lastMode !== "walk" || trip.start < 0)) {
+      if (W && !five && modeName === "walk" && (lastMode !== "walk" || trip.start < 0)) {
         startLeg(t);
         if (!forcedMode) mode.next = t + trip.dur + 0.2;
       }
-      if (W && modeName === "walk" && trip.start >= 0 && t >= trip.start + trip.dur) {
+      if (W && !five && modeName === "walk" && trip.start >= 0 && t >= trip.start + trip.dur) {
         // Arrival. On a forced walk, straight into the next trip (out and back home); otherwise the state machine hands over to idle
         trip.x = trip.to; trip.start = -1;
         if (forcedMode === "walk") startLeg(t);
@@ -206,6 +250,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // Look — while held, the gaze target is set that way (the pupils first) and the face follows round
       let looking = S.stepLook(look, t, rng, M);
       if (!quad && modeName === "walk" && trip.start >= 0) looking = [trip.dir * 0.9, 0];   // a biped looks the way it walks
+      if (five) looking = [five.side * 0.9, 0];   // through a high five both parties look at each other
       if (looking && !asleep) glance.gazeTarget = looking;
       const gaze0 = R.stepGaze(glance);
       const faceTurn0 = R.stepFaceTurn(glance, M, asleep ? null : looking);
@@ -218,6 +263,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // A ♥ emoji makes it smile (^^) — whatever fired the ♥ (the idle schedule, a flap, a wag, a ♥ startle). On a dog this leads into a wag.
       // A ^^ blink is stretched to a 3.2 s hold rather than a moment — there is no face that stops smiling halfway
       if ((emoji.kind === "heart" || bl.happy) && sleepK === 0) happyUntil = Math.max(happyUntil, t + 3.2);   // once it has started falling asleep it does not smile anew
+      // A landed high five makes both parties smile ^^ (secondary action) — keyed to the impact moment. No rng
+      if (five && five.impactAt >= 0 && t >= five.impactAt) happyUntil = Math.max(happyUntil, five.impactAt + ACTIONS.hifive.happy);
       if (t < happyUntil && !asleep) { lid = 1; isHappy = true; }
       const winkSide = sleepK > 0.5 ? 0 : S.stepWink(wink, t, rng, M);
       if (sleepK > 0.5) S.stepWink(wink, t, rng, M);   // (fixed rng consumption — only the result is thrown away)
@@ -246,33 +293,116 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // Body actions (hopping in place) — a different layer from the arm and quad actions. The schedule runs even while forced (fixed rng consumption).
       // A forced jump repeats with a rest between — the jump length plus a 1.2 s period
       let bact = resolveLayer(t, S.stepBodyAction(bodyAction, t, rng, M), BODY_ACTIONS, true, (def, start0) => {
-        const period = def.hops * def.dur + 1.2;
+        const period = jumpSpan(def) + 1.2;
         const start = start0 + Math.floor((t - start0) / period) * period;
-        return { action: forced, start, until: start + def.hops * def.dur };
+        return { action: forced, start, until: start + jumpSpan(def) };
       });
-      if (asleep || walkK > 0.5 || sitK > 0.5) bact = null;   // no body actions while asleep, walking or sitting (the schedule already ran above)
-      const hp = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, squashX: 0, squashY: 0 };
+      if (asleep || walkK > 0.5 || sitK > 0.5 || five) bact = null;   // no body actions while asleep, walking, sitting or mid-five (the schedule already ran above; a jump would tear the palms apart)
+      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, dropK: 0, tuckK: 0, splay: 0 };
+      // The jump carries no scale — squash here belongs to sleep alone (below). The crouch's descent is
+      // solved through the legs, at the legs section
+      const hp = { hopY: jc.hopY, splay: jc.splay, squashX: 0, squashY: 0 };
       // Walk — the body lifts slightly with each step
       if (walkK > 0 && W) hp.hopY += W.bob * stepBump * walkK;
       // Sleep — the body settles to the hem and flattens
       if (sleepK > 0 && rig) { hp.hopY -= rig.legTop * sleepK; hp.squashY -= 0.06 * sleepK; hp.squashX += 0.06 * sleepK; }
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
+      // The high five's body — the arm alone is not a slap. The mover CROUCHES — a leg-IK descent, never the
+      // scale — and leans away through the wind-up and its hold (anticipation), then swings into the strike
+      // with a little hop and a lean the other way; the receiver, at the impact, is pushed off its planted
+      // palm with a knee dip (follow-through). All bump/ramp curves off the five's own timeline — no rng,
+      // and nothing here runs on a clock that never fives
+      let fiveLean = 0;
+      let fiveDropK = 0;   // the five's crouch envelope (0~1) — × crouchDrop of the leg length at the legs section
+      if (five && armed) {
+        const H = ACTIONS.hifive;
+        if (five.swings && five.hitAt >= 0) {
+          const tau = t - five.hitAt;
+          const S2 = H.windup + H.antHold;
+          const relK = tau <= S2 ? 0 : ramp((tau - S2) / H.strike);           // the release across the strike
+          const anticK = ramp(Math.min(1, tau / H.windup)) * (1 - relK);      // rises through the wind-up, holds, lets go
+          const strikeB = tau > S2 ? bump(Math.min(1, (tau - S2) / (H.strike + 0.08))) : 0;   // one push through the slap
+          hp.hopY += H.hop * strikeB;
+          fiveLean = five.side * (-H.leanBack * anticK + H.leanHit * strikeB);
+          fiveDropK = anticK;
+        }
+        // The receiver takes the hit — pushed away from the palm, with a knee dip's brace
+        if (!five.swings && five.impactAt >= 0 && t >= five.impactAt) {
+          const k = (t - five.impactAt) / H.recoilDur;
+          if (k < 1) {
+            fiveLean -= five.side * H.recoilLean * bump(k);
+            fiveDropK = 0.4 * bump(k);
+          }
+        }
+      }
 
       // Arms — idle (the A-pose) by default; with an action, only the arms that action decides are overwritten. Solved onto the rig by IK,
       // with the pendulum, jump and jitter laid on top.
       // The schedule keeps running even while forced (keeping rng consumption identical — releasing the forcing does not disturb the clock).
       const scheduledArm = S.stepArmAction(armAction, t, rng, M);   // the schedule runs even with no arms (fixed rng consumption)
-      const act = armed ? resolveLayer(t, scheduledArm, ACTIONS, true,
+      let act = armed ? resolveLayer(t, scheduledArm, ACTIONS, true,
         (def, start) => ({ action: forced, side: forcedSide, start, until: Infinity })) : null;
+      // The high five takes the arm layer — but only once it is this party's moment: a waiting anchor and a
+      // mover still far out (beyond carryFrom of its target) keep their scheduled arms. act.def carries the
+      // computed pose past the ACTIONS table
+      const fiveRemaining = five && five.walkTo != null ? Math.abs(five.walkTo - trip.x) : 0;
+      const fiveEngaged = five && armed && !five.wait && !(five.swings && five.hitAt < 0 && fiveRemaining > ACTIONS.hifive.carryFrom);
+      if (fiveEngaged) {
+        if (five.start < 0) five.start = t;
+        let def = ACTIONS.hifive;
+        if (five.at) {
+          const H = ACTIONS.hifive;
+          const reach = arm.upper + arm.lower;
+          let tx = five.side * (five.at[0] - trip.x) - arm.x;
+          let ty = five.at[1] - arm.y;
+          if (five.swings) {
+            // The swing: carried short on the way in — reaching, not touching. Arrived (hitAt): the deep pull
+            // toward the body (anticipation), the frozen hold, the slap through an upward ARC onto the palm
+            // (the palms first meet at its end), and the drive past it that settles back (follow-through)
+            const px = tx * H.pull;
+            const py = ty + H.lift * reach;
+            const cx = tx * H.carry;
+            const cy = ty * H.carry;
+            if (five.hitAt < 0) { tx = cx; ty = cy; }
+            else {
+              const tau = t - five.hitAt;
+              const S1 = H.windup, S2 = S1 + H.antHold, S3 = S2 + H.strike, S4 = S3 + H.overshoot;
+              if (tau < S1) {
+                const k = ramp(tau / S1);
+                tx = cx + (px - cx) * k; ty = cy + (py - cy) * k;
+              } else if (tau < S2) { tx = px; ty = py; }
+              else if (tau < S3) {
+                const k = ramp((tau - S2) / H.strike);
+                const ax = tx, ay = ty;
+                tx = px + (ax - px) * k; ty = py + (ay - py) * k + H.arc * reach * bump(k);
+              } else if (tau < S4) {
+                const dx = tx - px, dy = ty - py;
+                const n = Math.hypot(dx, dy) || 1;
+                const push = H.punch * reach * bump((tau - S3) / H.overshoot);
+                tx += (dx / n) * push; ty += (dy / n) * push;
+              }
+            }
+          } else if (five.impactAt >= 0 && t >= five.impactAt) {
+            // The receiver's palm takes the slap — it dips and gives a little sideways, and comes back
+            const k = (t - five.impactAt) / H.recoilDur;
+            if (k < 1) { ty -= H.recoilDip * reach * bump(k); tx -= H.recoilDip * 0.4 * reach * bump(k); }
+          }
+          def = { pose: { hand: [tx / reach, ty / reach], bend: "out" }, arms: "one" };
+        }
+        act = { action: "hifive", side: five.side, start: five.start, until: Infinity, def };
+      }
       const arms = solveArms(arm, act, t);
       const swing = R.stepArmSwing(armSwing, sway, t, M);
       for (const side of [-1, 1]) {
         const arm = arms[String(side)];
         // The pendulum (opposite phase to the sway) · arms up on a jump · joint jitter. The elbow gets half (the joint boils separately)
-        let off = -side * swing;
-        if (hp.hopY > 0 && !(walkK > 0.5)) off += side * hp.hopY * 4;
-        if (walkK > 0 && W) off += Math.sin(ph + (side > 0 ? Math.PI : 0)) * W.arm * walkK;   // walk — the arms swing counter to the legs
+        // The arm reaching into a high five keeps only the jitter — the pendulum and the walk swing would pump
+        // the palm off the meeting point it is aimed at (the other arm keeps swinging as usual)
+        const reaching = five && act && act.action === "hifive" && side === act.side;
+        let off = reaching ? 0 : -side * swing;
+        if (!reaching && hp.hopY > 0 && !(walkK > 0.5)) off += side * hp.hopY * 4;
+        if (!reaching && walkK > 0 && W) off += Math.sin(ph + (side > 0 ? Math.PI : 0)) * W.arm * walkK;   // walk — the arms swing counter to the legs
         off += R.armJitter(armSwing, t, side);
         arm.shoulder += off;
         arm.elbow += off * 0.5;
@@ -283,7 +413,34 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const legOsc = [0, 0, 0, 0];
       E.stepLegTap(legTap, t, rng, M, legOffset);
       E.stepLegStep(legStep, t, rng, M, legOffset);
-      if (hp.squashY < 0) { legOffset[0] += hp.squashY * 1.5; legOffset[1] -= hp.squashY * 1.5; }
+      if (hp.squashY < 0) { legOffset[0] += hp.squashY * 1.5; legOffset[1] -= hp.squashY * 1.5; }   // (sleep's settling — quads)
+      if (quad && hp.splay) { legOffset[0] -= hp.splay; legOffset[1] += hp.splay; }   // a quad's jump crouch — its one-bone front legs fold what they can
+      // The legs' IK (bipeds with a knee — motionRig().leg). A crouch is written as a DESCENT: the body sinks
+      // by crouchDrop of the leg's own length (the jump's dropK, the five's crouch — exclusive sources) and
+      // each foot is held to its spot on the floor, the thigh and knee solved onto this individual's bones
+      // (solveLeg — the same law as the arms' hand targets). Mid-air the target is the tuck point instead
+      // (tuckFoot — a frog fold, no descent). Position, never scale
+      const legKnee = [0, 0, 0, 0];
+      let crouchDrop = 0;
+      if (!quad && rig && rig.leg) {
+        const leg = rig.leg;
+        const dropFrac = BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
+        if (dropFrac > 0.001) {
+          crouchDrop = leg.y * Math.min(dropFrac, 0.4);
+          const s0 = solveLeg(leg, -1, 0, -(leg.y - crouchDrop));
+          const s1 = solveLeg(leg, 1, 0, -(leg.y - crouchDrop));
+          legOffset[0] += s0.thigh; legOffset[1] += s1.thigh;
+          legKnee[0] = s0.knee; legKnee[1] = s1.knee;
+        } else if (jc.tuckK > 0) {
+          const TF = BODY_ACTIONS.jump.tuckFoot;
+          const tx = leg.y * TF[0] * jc.tuckK;
+          const ty = -(leg.y - leg.y * TF[1] * jc.tuckK);
+          const s0 = solveLeg(leg, -1, tx, ty);
+          const s1 = solveLeg(leg, 1, tx, ty);
+          legOffset[0] += s0.thigh; legOffset[1] += s1.thigh;
+          legKnee[0] = s0.knee; legKnee[1] = s1.knee;
+        }
+      }
       // Walk — a quad alternates its diagonal pairs (0·3 / 1·2) front and back; a biped's two legs alternately open and close (a walk seen head-on)
       if (walkK > 0 && W) {
         const s = Math.sin(ph) * W.leg * walkK;
@@ -420,13 +577,13 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       return {
         breathe: br, lid, gaze, startle, eyeFx, angry: angryK, regen: regenNow, emoji: em,
         browAlt: md.browAlt, mouthAlt: md.mouthAlt,
-        sway: sw.sway + (walkK > 0 && W ? Math.sin(ph) * W.sway * walkK : 0), rock: sw.rock,
+        sway: sw.sway + (walkK > 0 && W ? Math.sin(ph) * W.sway * walkK : 0) + fiveLean, rock: sw.rock,
         headAngle: (tiltAngle + rollAngle) * awake + sleepHead,
         headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
-        hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
+        hopY: hp.hopY - crouchDrop, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailRaisePose, tailArch, tailPose,
-        arms, legOffset, legOsc,
+        arms, legOffset, legOsc, legKnee,
         mode: modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing,
         // The action running right now — the arm layer (biped) or the leg and tail layers (quad) plus which side (the active arm's side / the leg index), and the body layer. For debugging and statistics
         action: act ? act.action : qact ? qact.action : null,

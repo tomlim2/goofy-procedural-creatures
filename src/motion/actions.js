@@ -31,7 +31,8 @@ export const ARM_POSES = {
   cross:  { hand: "chestFar", bend: "down" },
   think:  { hand: "chin", bend: "down" },
   salute: { hand: "brow", bend: "out" },
-  behind: { behind: true, shoulder: -0.2 }
+  behind: { behind: true, shoulder: -0.2 },
+  hifive: { hand: [0.72, 0.55], bend: "out" }   // the palm up and forward — the plant half of a high five (scene/hifive.js aims the other half at it)
 };
 
 // An action = a pose + which arms (arms: "one" / "both") + a hold time. An arm not decided stays idle.
@@ -46,28 +47,109 @@ export const ACTIONS = {
   cross:  { pose: "cross",  arms: "both", hold: [3, 7],   label: "arms crossed" },
   hips:   { pose: "hips",   arms: "both", hold: [3, 7],   label: "hands on hips" },
   behind: { pose: "behind", arms: "both", hold: [3, 7],   label: "hands behind the back" },
-  flap:   { pose: "flap",   arms: "both", hold: [1.5, 3], label: "flapping (fond)", emoji: "heart" }
+  flap:   { pose: "flap",   arms: "both", hold: [1.5, 3], label: "flapping (fond)", emoji: "heart" },
+  // Not in any species' armActions pool — the scene schedules it per pair (scene/hifive.js), and the ACTION
+  // card can force the static pose to judge it. The swing is built on the twelve principles, exaggeration
+  // required (guidelines/motion/catalog.md § the high five names which number does what):
+  //   approach   the mover hurries — the commanded trip runs at this multiple of the walk speed
+  //   carryFrom  within this many cells of the target the hand comes up, carried carry short of the palm
+  //   windup     ANTICIPATION — the hand pulls deep toward the body (to pull of its outward distance, lifted
+  //              by lift of reach) while the body crouches — a leg-IK descent (crouchDrop of the leg length,
+  //              the same solve the jump uses; never the scale) — and leans away (leanBack)
+  //   antHold    ...and HOLDS there, frozen, before the release (timing: long in, short out)
+  //   strike     the slap — through an upward ARC (arc of reach), the body swinging into it (leanHit) with a
+  //              little hop. The palms first touch at its end
+  //   punch      FOLLOW-THROUGH — the palm drives past the contact and settles back (over overshoot s)
+  //   recoil*    the receiver takes the hit: the planted hand dips (recoilDip of reach), the body is pushed
+  //              off it (recoilLean) with a knee dip, over recoilDur s
+  //   happy      SECONDARY ACTION — both smile ^^ this long from the impact
+  hifive: {
+    pose: "hifive", arms: "one", hold: [1.2, 2], label: "high five!",
+    approach: 2.2, carryFrom: 0.5, carry: 0.8,
+    windup: 0.3, antHold: 0.14, strike: 0.12, overshoot: 0.12,
+    pull: 0.12, lift: 0.18, arc: 0.12, punch: 0.07,
+    crouchDrop: 0.12, leanBack: 0.09, leanHit: 0.1, hop: 0.015,
+    recoilDip: 0.1, recoilLean: 0.05, recoilDur: 0.24,
+    happy: 3.2
+  }
 };
 
 // Body actions — what the whole body does (hopping in place…). **A different layer** from arm and quad actions, so they overlap:
 // it can wave while jumping, and a dog can wag while running. Shared by bipeds and quads.
-//   jump: hops light (amp) quick (dur seconds) hops in place in a row. Squash and stretch, the arms dragged up and the legs folding
+//
+// The jump is built on the twelve principles (guidelines/motion/catalog.md § body actions names which does what)
+// — and **the deformation is the skeleton's, never the scale's**: no rubbery squash-and-stretch on the body.
+// The legs are IK, like the arms: a crouch is written as **how far the body sinks** (crouchDrop of the leg's
+// length) with the feet held to their spot on the floor, and the clock solves each individual's thigh and knee
+// onto that (solveLeg) — never a table of joint angles.
+//   antic       ANTICIPATION — before the first spring it sinks into a deep knee-bent crouch (slow in)
+//   crouchDrop  the crouch itself — the body's descent, as a fraction of the leg length. The knees bow out
+//               (a plié seen head-on) because the solve bends them there
+//   splay       a quad's one-bone legs fold what they can instead
+//   amp         the flight's height (the arc — position, not scale)
+//   tuckFoot    the mid-air foot target — [outward, raised], fractions of the leg length: a frog tuck
+//   settle      FOLLOW-THROUGH — after the last landing, one soft knee dip and recover
+//   The landings ramp straight into the next crouch (timing: slow in, pop out), and the arms are dragged up
+//   by the flight (motion/index.js, hopY×4 — overlapping action through the joints' damping)
 export const BODY_ACTIONS = {
-  jump: { hops: 3, dur: 0.42, amp: 0.5, label: "hopping in place (three light hops)" }
+  jump: {
+    hops: 3, dur: 0.56, amp: 0.8, label: "hopping in place (crouch and spring)",
+    antic: 0.35,
+    crouchDrop: 0.16, tuckFoot: [0.3, 0.45], splay: 0.09,
+    settle: 0.3
+  }
 };
 
-// The jump curve. tau = time elapsed since the action started. One hop = crouch (20%) → airborne (60%) → landing (20%), running on without a rest.
+// The whole timeline of one action, for scheduling — the anticipation, the hops, the settle
+export function jumpSpan(def) {
+  return (def.antic || 0) + def.hops * def.dur + (def.settle || 0);
+}
+
+// The jump curve. tau = time elapsed since the action started (the anticipation included).
+// Returns { hopY, dropK, tuckK, splay } — envelopes, not angles: dropK (0~1) is how far into the crouch's
+// descent the body is (the clock turns it into a foot-planted leg solve), tuckK (0~1) how far into the
+// mid-air tuck. splay is a quad's one-bone fold. No scale channels.
 export function jumpCurve(tau, def) {
-  const hop = Math.floor(tau / def.dur);
-  if (hop >= def.hops || tau < 0) return { hopY: 0, squashX: 0, squashY: 0 };
-  const k = (tau - hop * def.dur) / def.dur;
-  const a = def.amp;
-  let hopY = 0, squashX = 0, squashY = 0;
-  // The crouch and landing squash use bump (velocity 0 at both ends). The airborne trajectory is sin — the moment the feet kick off the ground is meant to pop
-  if (k < 0.2) { squashY = -0.07 * a * bump(k / 0.2); squashX = -squashY * 0.8; }
-  else if (k < 0.8) { const j = (k - 0.2) / 0.6; hopY = Math.sin(j * Math.PI) * 0.05 * a; squashY = 0.05 * a * Math.sin(j * Math.PI); squashX = -squashY * 0.7; }
-  else { squashY = -0.05 * a * bump((k - 0.8) / 0.2); squashX = -squashY * 0.8; }
-  return { hopY, squashX, squashY };
+  const zero = { hopY: 0, dropK: 0, tuckK: 0, splay: 0 };
+  if (tau < 0) return zero;
+  const antic = def.antic || 0;
+  // Anticipation — sink into the crouch (slow in). Held by the shape of ramp until the first spring takes it
+  if (tau < antic) {
+    const k = ramp(tau / antic);
+    return { hopY: 0, dropK: k, tuckK: 0, splay: (def.splay || 0) * k };
+  }
+  const hopT = tau - antic;
+  const hop = Math.floor(hopT / def.dur);
+  // Follow-through — after the last landing, one soft knee dip and recover, then done
+  if (hop >= def.hops) {
+    const settle = def.settle || 0;
+    const k = settle > 0 ? (hopT - def.hops * def.dur) / settle : 1;
+    if (k >= 1) return zero;
+    const b = bump(k) * 0.35;
+    return { hopY: 0, dropK: b, tuckK: 0, splay: (def.splay || 0) * b };
+  }
+  const k = (hopT - hop * def.dur) / def.dur;
+  // Every hop is the same full cycle — **crouch (a held beat) → spring → air → land into the next crouch** —
+  // at the same depth each time: crouch-and-spring, crouch-and-spring, crouch-and-spring. The first crouch is
+  // the anticipation above holding on; the last landing comes down clean and the settle does its soft dip
+  const B = 0.24, SP = 0.14, LA = 0.12;   // the crouch beat · the spring · the landing (fractions of one hop; the air is the rest)
+  let hopY = 0, dropK = 0, tuckK = 0;
+  if (k < B) {
+    // The crouch, held — the breath and the boil keep it alive; the stillness IS the anticipation
+    dropK = 1;
+  } else if (k < B + SP) {
+    // The spring — the legs snap straight and the body rides up off them. The moment the feet leave is meant to pop
+    dropK = 1 - (k - B) / SP;
+  } else if (k < 1 - LA) {
+    // Airborne — the arc (position, never scale), the feet tucked up toward the hips (a frog jump)
+    const j = (k - B - SP) / (1 - B - SP - LA);
+    hopY = Math.sin(j * Math.PI) * 0.055 * def.amp;
+    tuckK = bump(j);
+  } else {
+    // Landing — the legs absorb, ramping straight into the next crouch's depth; the last lands clean
+    dropK = ramp((k - (1 - LA)) / LA) * (hop === def.hops - 1 ? 0 : 1);
+  }
+  return { hopY, dropK, tuckK, splay: (def.splay || 0) * Math.max(dropK, tuckK) };
 }
 
 // Quad actions — one leg or the tail doing something briefly. The quad rig is pivot rotation only, so these are angles, with no IK.
@@ -140,10 +222,35 @@ function bendSign(lx, ly, want) {
   return cross >= 0 ? 1 : -1;
 }
 
+// The two-bone solve every jointed limb shares — an arm's shoulder/elbow and a leg's thigh/knee run the same
+// law of cosines. Target [tx, ty] from the root joint, x outward; a and b the bone lengths; sign which side
+// the middle joint sticks out. d is clamped to the reachable band — out of reach it stretches straight toward
+// the target, too close it folds to the maximum.
+function twoBone(a, b, tx, ty, sign) {
+  const d = clamp(Math.hypot(tx, ty), Math.abs(a - b) + 1e-3, (a + b) * 0.995);
+  const dir = Math.atan2(tx, -ty);                                                // the target direction, measured counter-clockwise from down (0,−1)
+  const alpha = Math.acos(clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1));   // the angle the upper bone opens from the target line
+  const gamma = Math.acos(clamp((a * a + b * b - d * d) / (2 * a * b), -1, 1));   // the middle joint's inner angle
+  return { upper: dir + sign * alpha, lower: -sign * (Math.PI - gamma) };
+}
+
+// A leg pose is a **foot target**, the same law as an arm's hand target (guidelines/motion/rules.md — never a
+// table of joint angles): [x outward from the hip, y up from the hip], solved onto THIS individual's thigh and
+// shin (character motionRig().leg — null on a quad or a float leg, which returns straight). The knee always
+// bows outward — a plié seen head-on. Returns the world thigh angle and the relative knee fold for one side
+// (side −1 mirrors), ready for legOffset / legKnee.
+export function solveLeg(leg, side, tx, ty) {
+  if (!leg) return { thigh: 0, knee: 0 };
+  const ik = twoBone(leg.thigh, leg.shin, tx, ty, 1);
+  return { thigh: side * ik.upper, knee: side * ik.lower };
+}
+
 // One arm's target joint angles. World rotation.z (an arm hanging down is 0, counter-clockwise positive). The left arm is side=−1.
 // tau: time elapsed since the action started (the oscillation phase), env: the oscillation envelope 0~1 (a fade as the action comes in and goes out).
 export function solveArm(rig, side, poseName, tau = 0, env = 0) {
-  const pose = ARM_POSES[poseName];
+  // A pose may come in as an object instead of a name — the high five's reaching hand is a target computed
+  // per tick (the partner's hand in this creature's shoulder terms), not a table entry
+  const pose = typeof poseName === "string" ? ARM_POSES[poseName] : poseName;
   if (!pose || !rig) return bindArm(side);
   const anchors = rig.anchors;
   if (pose.behind) return { shoulder: side * pose.shoulder, elbow: 0, behind: true, oscShoulder: 0, oscElbow: 0 };
@@ -165,14 +272,10 @@ export function solveArm(rig, side, poseName, tau = 0, env = 0) {
   }
   if (pose.floor) ty = Math.max(ty, anchors.ground - rig.y + FLOOR_MARGIN);
 
-  // Two-bone IK. d is clamped to the reachable range — out of reach it stretches straight, too close it folds to the maximum.
-  const d = clamp(Math.hypot(tx, ty), Math.abs(a - b) + 1e-3, reach * 0.995);
-  const dir = Math.atan2(tx, -ty);                                       // the target direction, measured counter-clockwise from down (0,−1)
-  const alpha = Math.acos(clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1));   // the angle the upper arm opens from the target line
-  const gamma = Math.acos(clamp((a * a + b * b - d * d) / (2 * a * b), -1, 1));   // the elbow's inner angle
-  const sign = bendSign(tx, ty, pose.bend);
-  const shoulder = wrapShoulder(dir + sign * alpha);
-  const elbow = -sign * (Math.PI - gamma);
+  // Two-bone IK (the shared solve above), the bend side from the pose
+  const ik = twoBone(a, b, tx, ty, bendSign(tx, ty, pose.bend));
+  const shoulder = wrapShoulder(ik.upper);
+  const elbow = ik.lower;
 
   let oscShoulder = 0;
   let oscElbow = 0;
@@ -194,7 +297,7 @@ export function solveArm(rig, side, poseName, tau = 0, env = 0) {
 // that action decides are overwritten. With no arm rig (a quad), bind.
 export function solveArms(arm, act, t) {
   const arms = {};
-  const def = act && ACTIONS[act.action];
+  const def = act && (act.def || ACTIONS[act.action]);   // act.def: a computed action (the high five's reach) instead of a table entry
   // The oscillation envelope — a 0.35 s fade in and out. Without it the arm snaps the moment an action ends
   const env = def ? ramp(clamp(Math.min((t - act.start) / 0.35, (act.until - t) / 0.35), 0, 1)) : 0;
   for (const side of [-1, 1]) {

@@ -166,9 +166,11 @@ export function buildCreature(spec, noise, birth = 0) {
 
     let elbow = null;
     if (limb.lowerSketch) {
+      // The lower bone's pivot — an arm's elbow, or a leg's **knee** (the shin, with the foot on it).
+      // The shin stays on the leg layer (1.2, behind the body); the forearm on the arm layer (2.5)
       elbow = new THREE.Group();
       elbow.position.set(limb.elbow[0], limb.elbow[1], 0);
-      elbow.add(boiledMesh((fl) => fl[li].lowerSketch, 1, 2.5));
+      elbow.add(boiledMesh((fl) => fl[li].lowerSketch, 1, limb.kind === "leg" ? 1.2 : 2.5));
       front.add(elbow);
     }
 
@@ -315,6 +317,8 @@ export function buildCreature(spec, noise, birth = 0) {
     faceStates,
     // The clock takes a rig description — it solves actions (hand targets) onto this individual's shoulders, arm lengths and body anchors by IK, and solves a quad sit against the torso and leg-root dimensions
     clock: makeClock(spec.seed, birth, spec.species, mrig),
+    // The same description, for the scene — the high five pairing (scene/hifive.js) reads arm reach and shoulder position off it
+    motionRig: mrig,
     // The body group's rotation axis — in a quad sit (state.bodyTilt) the body tilts about the front legs' root (animate). null on a biped
     bodyPivot: mrig.body ? [mrig.body.frontHipX, mrig.body.hipY] : null,
     spec,
