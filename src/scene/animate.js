@@ -7,6 +7,7 @@ import { buildEmoji } from "./emoji.js";
 import { disposeGroup } from "./mesh.js";
 import { BOIL_FRAMES } from "./rig.js";
 import { damp } from "../motion/ease.js";
+import { solveLeg } from "../motion/index.js";
 
 const EMOJI_TARGET = new THREE.Vector3();
 
@@ -26,6 +27,14 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   item.group.rotation.z = state.sway;
   // The distance walked (walkX) · a quad flipping to face its walking direction (facing ±1, thinning through 0 and flipping)
   item.group.position.x = item.baseX + state.shiverX + (state.walkX || 0);
+  // The torso is the crouch's MASTER — the clock hands over one scalar (state.bodyDrop, how far the body
+  // sinks) and it is eased here, on the item. The limb loop below solves the knees off it (IK: move the torso
+  // and the knees bend by themselves), and the body's final height is then the FK of what the legs actually
+  // draw — so the feet hold the floor exactly, through every blend (a tuck's damped tail included)
+  if (!item.dropEase) item.dropEase = { x: 0, v: 0 };
+  if (snap) { item.dropEase.x = state.bodyDrop || 0; item.dropEase.v = 0; }
+  else damp(item.dropEase, state.bodyDrop || 0, 0.18);
+  const bodyDrop = Math.max(0, item.dropEase.x);
   item.group.position.y = item.baseY + state.hopY;
   item.group.scale.set(
     (state.facing === undefined ? 1 : state.facing) * (1 + state.breathe * 0.006 + state.squashX + state.stretchX + state.jellyX),
@@ -138,6 +147,8 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   // Limbs — easing to the target angle. Joints follow without snapping.
   // The arms are [shoulder, elbow] world angles the clock solved from the action by IK. Oscillation (osc) is laid straight on without easing
   // (a wave's hand shake and a flap get smeared out if they go through easing).
+  let plantDrop = 0;
+  let plantLegs = 0;
   for (const limb of item.limbs) {
     let target;
     let elbowTarget = 0;
@@ -172,9 +183,37 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       damp(e, elbowTarget, 0.18);
       limb.elbowAngle = e.x; limb.elbowV = e.v;
     }
-    limb.pivot.rotation.z = limb.angle + osc;
-    if (limb.elbow) limb.elbow.rotation.z = limb.elbowAngle + oscElbow;
+    // The crouch — solved HERE, off the eased master height (bodyDrop above), never authored as angles:
+    // wherever the torso is asked to sink, the knees bend to it by themselves. Laid on top of the damped
+    // targets (the walk's swing, a tuck's tail) and the un-eased oscillation. The onset fades the solve in
+    // over the first 2% of leg length — dead straight is outside the solver's reachable band
+    let crouchThigh = 0, crouchKnee = 0;
+    if (limb.kind === "leg" && limb.elbow && bodyDrop > 1e-4 && item.motionRig && item.motionRig.leg) {
+      const dims = item.motionRig.leg;
+      const o = Math.min(1, bodyDrop / (dims.y * 0.02));
+      const onset = o * o * (3 - 2 * o);
+      const solved = solveLeg(dims, limb.side, 0, -(dims.y - bodyDrop));
+      crouchThigh = solved.thigh * onset;
+      crouchKnee = solved.knee * onset;
+    }
+    limb.pivot.rotation.z = limb.angle + osc + crouchThigh;
+    if (limb.elbow) limb.elbow.rotation.z = limb.elbowAngle + oscElbow + crouchKnee;
+    // ...and the body's height comes back out of the legs as drawn (jitter aside): each knee-bent leg's FK
+    // shortening, gated by the knee's fold so a straight-legged walk swing never bobs the body
+    if (limb.kind === "leg" && limb.elbow && item.motionRig && item.motionRig.leg) {
+      plantLegs += 1;
+      const th = limb.angle + crouchThigh;
+      const kn = limb.elbowAngle + crouchKnee;
+      const gate = Math.min(1, Math.abs(kn) / 0.15);
+      if (gate > 0) {
+        const dims = item.motionRig.leg;
+        plantDrop += gate * (dims.thigh * (1 - Math.cos(th)) + dims.shin * (1 - Math.cos(th + kn)));
+      }
+    }
   }
+  // The floor holds the feet — grounded, the body descends by what the drawn legs lost. Released in the air
+  // (a tuck folds the legs up, it does not sink the body)
+  if (plantLegs > 0 && plantDrop > 0 && (state.hopY || 0) <= 0.001) item.group.position.y -= plantDrop / plantLegs;
 
   // Brow and mouth state sets — brows: angry (2) > alt (1) > rest (0). Mouth: angry (2) > ^^ (3, the tongue on dogs) > alt (1) > rest (0). The same kind shares a mesh, so only the chosen mesh is turned on
   const angryOn = (state.angry || 0) > 0.5;

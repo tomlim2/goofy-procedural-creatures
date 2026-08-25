@@ -52,7 +52,8 @@ What `clock.update(t)` returns, and where the scene applies it.
 | arms | {−1, 1} → {shoulder, elbow, behind, oscShoulder, oscElbow} | The arm joints' world angles (rotation.z). idle or an action solved by IK, plus the pendulum, jump and jitter. osc is oscillation laid on without easing (waving, flapping) |
 | legOffset | [4] rad | Leg pivot rotation (eased). On a quad the idle standing stance (legStance) is the base, with flicks, steps and actions on top |
 | legOsc | [4] rad | Oscillation laid on the legs without easing (a paw shake, scratching) |
-| legKnee | [4] rad | **The knees** — the shin's relative fold at the knee pivot (eased like an elbow). Bipeds only (indices 0·1, signed per side — folded in, a plié seen head-on); a quad's one-bone legs have no knee. The jump's crouch and tuck and the high five's wind-up feed it |
+| legKnee | [4] rad | **The knees** — the shin's relative fold at the knee pivot (eased like an elbow). Bipeds only (indices 0·1, signed per side); a quad's one-bone legs have no knee. Only the mid-air tuck writes it — a grounded crouch never does (that is bodyDrop's, below) |
+| bodyDrop | units ≥ 0 | **The torso is the crouch's master** — how far the body sinks below standing (the jump's and the five's crouches). The scene eases this one scalar and **solves the knees off the displayed height every frame** (animate.js + solveLeg): move the torso and the legs bend by themselves, the feet held to the floor by construction |
 | action / actionSide | The action name of the arm layer (biped) or the leg and tail layer (quad), or null / the active arm's side or the leg index | For debugging and statistics. The scene only looks at arms and legOffset |
 | bodyAction | The body layer's action name, or null | "jump" while hopping in place. hopY and squash are its curve |
 | mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" / 0~1 / 0~1 / 0~1 | The base state and how far asleep, walking or sitting it is (eased). All of it is already blended into legOffset, hopY, sway, arms and so on. The scene only uses sleep, to turn on the sleep lid (the static eye cover) |
@@ -182,10 +183,12 @@ rubbery squash on the body; the earlier scale squash was taken out on purpose):
 - **Anticipation** — before the first spring it sinks into the crouch over 0.35 s (slow in) and **holds the
   beat**; every later landing ramps straight back to the same full depth (equal crouches — crouch-and-spring,
   crouch-and-spring, crouch-and-spring)
-- **The crouch is the legs', solved by IK** — it is written as a descent (`crouchDrop`, 0.16 of the leg's own
-  length; position, never scale) with each **foot held to its spot on the floor**, and `solveLeg` turns that
-  into this individual's thigh and knee (the knees bow outward — a plié seen head-on; feet-on-floor error
-  measures ≤ 0.006, jitter). A quad's one-bone legs splay what they can instead
+- **The crouch is one number and the torso is its master** — `crouchDrop` (0.16 of the leg's own length) goes
+  out as `state.bodyDrop`; the scene eases that scalar and **solves each knee off the displayed torso height
+  every frame** (`animate.js` + `solveLeg` — move the torso and the knees bend by themselves, bowing outward:
+  a plié seen head-on), then takes the body's final height back out of the drawn legs' FK so the feet hold the
+  floor through every blend (displayed foot error measures ≤ 0.0005). Position, never scale. A quad's one-bone
+  legs splay what they can instead
 - **Arcs / timing** — the flight is a sine arc (position only, hopY to 0.044); the spring pops (the licensed
   exception) out of a slow crouch
 - **The feet tuck up toward the hips mid-air** (`tuckFoot` — a frog jump, the same solve) and let go before

@@ -117,7 +117,7 @@ When attaching a new layer to the head, settle on one depth in this table and wr
 | Baked once (per individual) | Changed every frame |
 | --- | --- |
 | 13 layers (body, back hair, side ears, head, horns, hair on the scalp, dog/cat ears, hat, face, static eyes ×2 (one per eye), the front of the face, bangs) × 3 boil sets — one mesh per layer; the tail (one skinned mesh) and the limbs boil too, all three frames in one mesh each (drawRange) (two for the face and static eyes: fills and ink) | Toggling visible (static eyes per eye — for sleep, ^^, a wink and startle variants only that eye is switched off) |
-| Limb pieces (front, back) | pivot.rotation.z, elbow.rotation.z (the eased target angle plus un-eased oscillation — an arm's elbow or a biped leg's knee), front/back visible |
+| Limb pieces (front, back) | pivot.rotation.z, elbow.rotation.z (the eased target angle plus un-eased oscillation — an arm's elbow or a biped leg's knee), front/back visible. A biped's knees also take the crouch solved off the eased state.bodyDrop (the torso is the master — animate.js + solveLeg), and grounded, group.position.y takes the drawn legs' FK shortening so the feet never cut the floor |
 | The tail | The bones' position and rotation.z (forward kinematics from the joint rotations) · bone.scale.y (bristle — thickness only) |
 | Brow and mouth rest/alt | visible |
 | The eye rig | pupil.scale (startle — the pupil 1 → 0.5×), pupil.position (gaze), visible (open the open eye / shut the shut line / smile ^^) |

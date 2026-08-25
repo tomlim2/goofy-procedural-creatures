@@ -36,9 +36,11 @@ with a T-pose as the base, the other arm freezes horizontal and you get a manneq
 Never hand-tune a table of joint angles. `ARM_POSES` records only **where the hand goes** (coordinates as a multiple of reach, or the rig anchors
 hip, chin, brow, chestFar) and the side the elbow sticks out, and `solveArm` solves it onto that individual's rig (`armRig(spec)`)
 with two-bone IK. That is why the same action means the same thing at different arm lengths and body sizes.
-**The legs follow the same law**: a crouch is written as how far the body descends with each **foot held to its
-spot on the floor**, and a tuck as a foot target by the hip — `solveLeg` (the same two-bone core) turns either
-into this individual's thigh and knee (`motionRig().leg`). A quad's one-bone legs and a float leg stay angles.
+**The legs follow the same law, with the torso as master**: a grounded crouch is written as ONE scalar — how
+far the body sinks (`state.bodyDrop`) — and the **scene** solves each knee off the displayed torso height every
+frame (`animate.js` + `solveLeg`, the same two-bone core, `motionRig().leg`): move the torso and the legs bend
+by themselves, the feet held to the floor. Only a mid-air tuck (no floor) is a foot-target pose written by the
+clock. A quad's one-bone legs and a float leg stay angles.
 When adding a new pose, run the hand or foot position back through FK and check by number that it reaches the target and stays above the floor (catalog § adding a new motion).
 
 ## Split into three kinds
