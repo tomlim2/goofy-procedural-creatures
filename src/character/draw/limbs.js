@@ -187,17 +187,20 @@ export function limbSketches(spec, variant = 0) {
       const sl = crumple([[side * -0.012, 0.012], [side * 0.012, 0.012], [side * 0.014, -upperLen], [side * -0.012, -upperLen]], 0.0025, side * 3);
       paintPart(upper, spec, sl, cloth, { body: true });   // a sleeve — the body's goofy material
       upper.contour(sl, { color: ink0 });
-      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0 });
+      // The elbow and the wrist are **joint ends**, like the knee (the leg above): a free end overshoots up to 1.1 widths
+      // and thins to a dome, and the arm broke apart at the fold — every IK pose bends the elbow (a hanging arm included).
+      // The shoulder end keeps its overshoot: that is the hand-drawn embedding into the body
+      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, joint: [true, true] });
       dot(lower, side * 0.006, -lowerLen - 0.006, 0.022, skin);
     } else if (armKind === "stubby") {
       // Two short thick bones plus a fist
-      upper.line([[0, 0], [side * 0.004, -upperLen]], { color: ink0 });
-      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0 });
+      upper.line([[0, 0], [side * 0.004, -upperLen]], { color: ink0, joint: [false, true] });
+      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, joint: [true, true] });
       dot(lower, side * 0.006, -lowerLen - 0.004, 0.02, skin);
     } else {
-      // stick / mitten — two thin bones. There is no joint marking at a bone's end (it is hand-drawn).
-      upper.line([[0, 0], [side * 0.006, -upperLen]], { color: ink0 });
-      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0 });
+      // stick / mitten — two thin bones, meeting at joint ends (the elbow and the wrist; see the sleeve above)
+      upper.line([[0, 0], [side * 0.006, -upperLen]], { color: ink0, joint: [false, true] });
+      lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, joint: [true, true] });
       if (armKind === "mitten") dot(lower, side * 0.006, -lowerLen - 0.006, 0.024, skin);
       else lower.line([[side * 0.006 - 0.016, -lowerLen], [side * 0.006 + 0.016, -lowerLen + 0.004]], { color: ink0 });
     }
