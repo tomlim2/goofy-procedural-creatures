@@ -425,7 +425,12 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       let bodyDrop = 0;
       if (!quad && rig && rig.leg) {
         const leg = rig.leg;
-        const dropFrac = BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
+        // A biped never stands dead straight: the torso is carried a touch low **at all times** (REST_BEND of the leg)
+        // and the knees hold the slight fold that comes with it. A stick-straight leg reads as a post, and dead straight
+        // is the edge of the solver's reachable band besides. The crouches stack on top; walking swings the bent legs,
+        // and the FK feedback in animate.js turns that into the small bob a walk on bent knees actually has
+        const REST_BEND = 0.03;
+        const dropFrac = REST_BEND + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
         bodyDrop = leg.y * Math.min(dropFrac, 0.4);
         if (jc.tuckK > 0) {
           const TF = BODY_ACTIONS.jump.tuckFoot;
