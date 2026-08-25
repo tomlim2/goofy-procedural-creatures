@@ -67,7 +67,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 1.7 | Side ears (humans, imps) — behind the head fill, so the root is hidden by the head (depth −0.4) |
 | 2 | Head (fills + outline ink) — the fill sits **above the body ink and is opaque**. So the body outline does not show through where the head covers the torso |
 | 2.06 | Horns (depth 0.45) · hair on the scalp (depth 0.12, above the horns) — above the outline |
-| 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth 0.2) |
+| 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth 0.2). The hat (6.58) stays above them: a cap covers the crown ears rather than letting them poke through — a hat is worn over the ears, and the small hats the animals draw (cap, beret, crown, halo) leave the silhouette readable |
 | 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) |
 | 2.4 | Face ink (whiskers, tears) · static eye ink (one layer per eye) |
 | 1.2 | **Legs** — behind the body (above the floor line at 1, below the body at 1.5). A leg's root is inside the body outline and the foot reaches back up to the hem; in front, both lay on top of the torso |

@@ -3,6 +3,7 @@
 
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
+import { shade } from "../../color.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
 
@@ -84,6 +85,60 @@ export function drawHeadgear(ink, fills, spec, box) {
     paintPart(fills, spec, disc, accent, { own: true });
     ink.contour(disc, { color: ink0 });
     ink.line([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0 });
+    return;
+  }
+
+  if (kind === "crown") {
+    // Crown — a band sitting on the crown of the head with a zigzag of points, the reference's scribbled paper crown.
+    // Hand-written polygon, so it goes through crumple (guidelines/drawing.md § nothing raw).
+    // **Filled in pieces** — the band and each spike on its own. fill() is a fan from the centre and assumes a shape
+    // visible from it; the V notches between the spikes are concave, and fanned as one polygon the fill crossed them
+    const by = Math.max(cy + ry * 0.7, brow + ry * 0.3);
+    const w = Math.max(halfW(by) * 0.98, rx * 0.55);
+    const bandH = ry * 0.14;
+    const peakH = ry * 0.62;   // top ≈ crown + 0.32·ry — under the 1.19 cell ceiling on the biggest head
+    const SPIKES = 4;
+    const vx = (i) => -w + (i * 2 * w) / SPIKES;                              // valley x — the spikes sit on the band's top edge
+    const peak = (i) => [-w + ((i + 0.5) * 2 * w) / SPIKES, by + peakH];
+    const phase = spec.seed * 0.001;
+    const band = crumple([[w, by], [-w, by], [-w, by + bandH], [w, by + bandH]], 0.004, phase);
+    const spikes = Array.from({ length: SPIKES }, (_, i) =>
+      crumple([[vx(i), by + bandH], peak(i), [vx(i + 1), by + bandH]], 0.004, phase + i));
+    paintPart(fills, spec, band, accent, { own: true });
+    for (const s of spikes) paintPart(fills, spec, s, accent, { own: true });
+    // One outline round the whole silhouette — the pieces are the filling's business, not the line's
+    const outline = [[w, by], [-w, by], [-w, by + bandH]];
+    for (let i = 0; i < SPIKES; i += 1) outline.push(peak(i), [vx(i + 1), by + bandH]);
+    outline[outline.length - 1] = [w, by + bandH];
+    ink.contour(crumple(outline, 0.004, phase), { color: ink0 });
+    return;
+  }
+
+  if (kind === "cone") {
+    // Party cone — a tall triangle sitting on the crown, leaning a little to one side, a pom at the tip.
+    // One convex triangle, so the fan fill is safe as it is; crumpled like every hand-written polygon
+    const by = Math.max(cy + ry * 0.68, brow + ry * 0.3);
+    const w = Math.max(halfW(by) * 0.42, rx * 0.26);   // narrow — a party cone, not a tent
+    const apex = [tiltSide * rx * 0.12, by + ry * 0.66];   // pom top ≈ crown + 0.34·ry — under the 1.19 cell ceiling
+    const body = crumple([[-w, by], [w, by], apex], 0.004, spec.seed * 0.0013);
+    paintPart(fills, spec, body, accent, { own: true });
+    ink.contour(body, { color: ink0 });
+    const pom = blobPath(apex[0], apex[1] + 0.012, 0.019, 0.019, { lumps: 3, amount: 0.18, noise: null });
+    paintPart(fills, spec, pom, shade(accent, 1.3), { own: true });   // the pom a step lighter, so it reads off the cone
+    ink.contour(pom, { color: ink0, size: "S" });
+    return;
+  }
+
+  if (kind === "halo") {
+    // Halo — a thin ring floating above the head, nothing else. Ink only: it is a mark, not a thing with a colour.
+    // It covers nothing, which is why it is the one headgear that keeps every hairstyle (spec.js applyConstraints)
+    const tilt = tiltSide * 0.06;
+    const hy = crown + ry * 0.28;   // ring top ≈ crown + 0.38·ry — floats clear of the lumpiest scalp, under the ceiling
+    const cos = Math.cos(tilt);
+    const sin = Math.sin(tilt);
+    const ring = blobPath(0, 0, rx * 0.44, ry * 0.11, { lumps: 3, amount: 0.06, noise: null })
+      .map(([x, y]) => [x * cos - y * sin, hy + x * sin + y * cos]);
+    ink.contour(ring, { color: ink0 });
     return;
   }
 
