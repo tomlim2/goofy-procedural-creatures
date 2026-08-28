@@ -699,7 +699,7 @@ export function tailSketch(spec, variant = 0) {
       const t = vis(0.42), a = at(t), w = wOf(t);
       sketch.line([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color: shade(pop, 0.8), size: "L", joint: [true, true], skinT: [t, t] });
       const kx = a.x - a.dy * (w * 0.85), ky = a.y + a.dx * (w * 0.85);   // the knot on the upper edge
-      const sz = (0.028 + w * 0.4) * (0.85 + dh(11) * 0.55);   // the bow's size — per individual, boldly
+      const sz = (0.042 + w * 0.55) * (0.85 + dh(11) * 0.55);   // the bow's size — per individual, boldly (a bow you can see across the room)
       const shape2 = spec.proportions.wobbleSeed % 3;          // 0 pointed bow · 1 round loops · 2 bow with streamers
       if (shape2 === 1) {
         for (const side of [-1, 1]) {
