@@ -439,15 +439,30 @@ export function tailSketch(spec, variant = 0) {
   const cx = box.bodyCx;
   // The root: a quad's is the rump (the body's back end); a biped's (the rex) is beside the hip, and the
   // skeleton runs out low from there — the counterweight (the rex branch of tailSpine)
+  // Where a rex root sits — ON its body, not at one x for every body. A box's side runs straight down to
+  // ±bodyW, so 0.85·w is buried under it; a bean's silhouette at hip height is already back at 0.8·w (the
+  // blob at uy −0.6) and its lumps take another 12%, so the same fixed root stood OUTSIDE a round body and
+  // the tube's pinched start showed — the tail read as floating beside it. Every kind buries the root the
+  // box's ~0.15·w under its own worst edge, and the spine's x is stretched below so the TIP lands exactly
+  // where the box root puts it: the visible tail is identical on every body — only the hidden root differs
+  const REX_ROOT = { box: 0.85, dress: 0.85, tube: 0.47 };   // bean and anything else — the round blob
+  const rootK = box.quad ? 0 : (REX_ROOT[spec.parts.body] ?? 0.55);
   const pivot = box.quad
     ? [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1]
-    : [box.bodyW * 0.85, box.legTop + box.bodyH * 0.2];
+    : [box.bodyW * rootK, box.legTop + box.bodyH * 0.2];
   // Length — shrinks the whole skeleton (long 1 · medium 0.7 · short 0.45). The skin thickness is unchanged.
   // A rex tail is the dinosaur's counterweight — the whole skeleton three-quarters again as long, and near
   // double thick below. It has to read as the third limb of the silhouette, not an appendage
   const rexK = box.quad ? 1 : 1.75;
   const lenK = (spec.parts.tailLength === "short" ? 0.45 : spec.parts.tailLength === "medium" ? 0.7 : 1) * rexK;
-  const spine = tailSpine(spec.parts.tail, p.tailLift, !box.quad).map(([x, y]) => [x * lenK, y * lenK]);
+  let spine = tailSpine(spec.parts.tail, p.tailLift, !box.quad).map(([x, y]) => [x * lenK, y * lenK]);
+  if (!box.quad) {   // the tip compensation for the buried root (see REX_ROOT above) — x only, the droop stays
+    const maxX = Math.max(...spine.map(([x]) => x));
+    if (maxX > 1e-6) {
+      const xs = (box.bodyW * (0.85 - rootK) + maxX) / maxX;
+      spine = spine.map(([x, y]) => [x * xs, y]);
+    }
+  }
   const skin = spec.parts.tailSkin || "line";
   const stub = spec.parts.tail === "stubtail";
   // The tail grows from the body, so it is the body's color — a quad's cloth, the head color or a tone of it (its value step is the head's: one mass)
