@@ -12,6 +12,7 @@ export const SPECIES = [
     forbid: {
       // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
+      tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" },
       arms: { none: "stick" },   // humans have arms (armless belongs to imps)
       face2: { tears: "none" },  // tear marks are not given to humans (they belong to imps)
       // A human ear is only a human ear — a small round ear (round) or none. Animal ears (pointy, floppy, folded, long) are not given to humans
@@ -39,6 +40,7 @@ export const SPECIES = [
     forbid: {
       // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
+      tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" },
       ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid", perkBig: "perkMid" },
       // Dog ear boundary — none and the huge ear become dog ears
       eyes: { cyclops: "dot" },
@@ -86,6 +88,7 @@ export const SPECIES = [
     forbid: {
       // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
+      tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" },
       ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
       // Cat ear boundary — floppy ears and none become crown ears
       eyes: { cyclops: "slit" },
@@ -177,6 +180,8 @@ export const SPECIES = [
       tail: [["longtail", 5], ["kink", 1.5], ["flag", 1]],
       tailSkin: [["thick", 5], ["block", 1]],
       tailLength: [["long", 5], ["medium", 1]],
+      // The dressing-up — a decorated tail on most (the pretty half of the counterweight)
+      tailDeco: [["none", 3], ["plates", 2], ["dip", 2], ["spikes", 2], ["ribbon", 1.5], ["club", 1], ["band", 1]],
       // Thick stomping legs on a heavy build — boots read as the dino feet's mass
       legs: [["boots", 4], ["stub", 3], ["stick", 0.5]],
       legLength: [["medium", 3], ["long", 2], ["short", 1]],
@@ -187,7 +192,8 @@ export const SPECIES = [
   {
     name: "imp",
     forbid: {
-      ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "pointy", perkMid: "pointy", perkBig: "pointy" }   // an imp ear is none or a small pointy one
+      ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "pointy", perkMid: "pointy", perkBig: "pointy" },   // an imp ear is none or a small pointy one
+      tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" }   // the tail decoration is the rex's — imps have no tail anyway
     },
     identity: {
       ears: ["none", "pointy"],   // an imp ear is none or a small pointy one

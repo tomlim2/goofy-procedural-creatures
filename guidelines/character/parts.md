@@ -437,6 +437,28 @@ opaque, so neighbours still hide each other. Everything the creature fills takes
 hands, boots and sleeves, the tail, the hats, the eyes, the nose, the mouth — the head's or, where `bodyMaterial` splits them, the
 body's ([../drawing.md](../drawing.md) § what takes the goofy material). The contour is not part of it (the goofy outline, PENCIL_STROKE).
 
+### tailDeco (7) — a late slot, the rex's
+
+An object **worn on the tail** — the rex's dressing-up; every other species forbids the lot (a forced value in
+the gallery still draws, on any tail). Drawn last in `tailSketch` so it sits on the hide, every mark carrying a
+skin tag at its t — it bends with the bones like the tube it rides. Placement is on the **visible** tail
+(`tVis` — where the spine clears the body's edge past the buried root), never on raw spine t: a short flag
+hides a third of its spine and wore its ring inside the body.
+
+**none** (25%) · **ribbon** — a ring round the tube and a bow standing on it, upright in screen space, one of
+three shapes per individual (pointed bow · round loops · bow with hanging streamers), sized per individual ·
+**plates** — 3~5 little back plates on the upper edge, stegosaur grammar, in the second scale color (they ape
+the hide) · **dip** — the tip dipped in paint over the visible last half · **club** — the tip a heavy ball, in
+the hide itself (the ankylosaur) · **band** — 3~5 knit rings alternating with white (the white is what keeps
+it an object when the hide's own rings land in the same tone) · **spikes** — the thagomizer: two or three bone
+horns at the end, leaning back, in a pale of the teeth's white.
+
+**Colors.** The ribbon, the dip and the band take a **POP** — the bold palette, one per individual (off
+wobbleSeed, stepped when it lands within 35 of luminance of the hide). Bolder than the accents on purpose: a
+dressed-up dinosaur is the point. The per-board pop cap governs whole-part accents (hair, a hat, a skin); a
+deco is a few strokes. Plates keep the second scale, the club the hide, the spikes bone — those three are the
+creature, not its clothes.
+
 ## Render order
 
 The `renderOrder` table is in [../rig.md](../rig.md) § the hierarchy.

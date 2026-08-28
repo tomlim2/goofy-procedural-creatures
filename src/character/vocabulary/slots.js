@@ -64,6 +64,12 @@ export const SLOTS = {
   // The mouth **size** — width multipliers small 0.7 · normal 1 · wide 1.4 (draw/mouth.js MOUTH_SIZE). In the reference, very small mouths and very wide mouths split at the extremes.
   // For imps a species multiplier of 1.3 is applied on top
   mouthSize: ["normal", "small", "wide"],
+  // The tail **decoration** — an object WORN on the tail, the rex's dressing-up (every other species forbids
+  // it — species.js): ribbon (a bow tied round it, three shapes) · plates (little back plates) · dip (the tip
+  // dipped in paint) · club (the tip a heavy ball) · band (knit rings) · spikes (the thagomizer — bone horns
+  // at the tip). Colors: plates ape the hide (the second scale), the club is the hide, the spikes are bone,
+  // and the ribbon, dip and band take a POP — the bold palette, one per individual
+  tailDeco: ["none", "ribbon", "plates", "dip", "club", "band", "spikes"],
   // The **material** — the creature's goofy material: what the head and the body are made of, how their areas are filled (medium/materials.js GOOFY_MATERIALS — a base color and its
   // texture). Each lays its marks over the base in a tone of the part's own color. FLAT, the fill-up with nothing on it, is not one of
   // them: it is what the whites of the eyes are filled with, not something a creature is made of. A late slot — the look, not the form
@@ -96,7 +102,7 @@ export const SLOTS = {
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing seeds keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -129,6 +135,7 @@ export const DEFAULT_BIAS = {
   material: [["graphite", 1.5], ["charcoal", 1], ["oil", 1], ["ink", 0.8]],
   // Most creatures are one tool through; a body of its own is seasoning on top of seasoning
   bodyMaterial: [["same", 9], ["graphite", 1], ["charcoal", 0.7], ["oil", 0.7], ["ink", 0.5]],
+  tailDeco: [["none", 1]],   // the rex carries its own weights; everyone else forbids the lot
   density: [["black", 1], ["hatch", 1], ["scribble", 1], ["stipple", 1], ["light", 1]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],

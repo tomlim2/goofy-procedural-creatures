@@ -6,8 +6,9 @@ import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart, patternOf } from "./body.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, BUILD } from "./layout.js";
-import { shade } from "../../color.js";
+import { shade, tint, luminance } from "../../color.js";
 import { SPECIES } from "../vocabulary/species.js";
+import { MARKS, POPS } from "../vocabulary/palette.js";
 
 // Arm dimensions. Length = a slot independent of form × per-individual jitter. medium is the baseline 1, long is 1.64× that (enough to sweep the floor).
 // The baseline arm length is 0.242 — shorter than that and the hand is near the torso and does not read as an arm.
@@ -637,6 +638,133 @@ export function tailSketch(spec, variant = 0) {
       }
     }
   } else throw new Error(`unknown tail skin: ${skin}`);   // a misspelt skin must not silently draw another
+
+  // The tail decoration (the tailDeco slot) — an OBJECT worn on the tail, drawn last so it sits on the hide.
+  // Its colors are its own (the own-color rule): accent for the bow and the knit, the second scale color
+  // (palette.pattern2) where it apes the hide — plates and the dip. Every mark carries a skin tag at its t, so
+  // it bends with the bones like everything else on the tube. The rex's dressing-up; every other species
+  // forbids it (species.js), but a value forced in the gallery still has to draw, so nothing here assumes rex.
+  // A stub keeps none — its spine is too short to wear anything
+  const deco = spec.parts.tailDeco;
+  if (deco && deco !== "none" && !stub) {
+    const wOf = widthOf[skin] || (() => 0.011);   // the thin skins (line, tuft, beads) wear it at a line's width
+    // Where the tail CLEARS the body — the deco sits on the visible tail, not at a spine t: with the root
+    // buried (REX_ROOT), a short flag hides a third of its spine and wore its ring inside the body. The edge
+    // is the same per-kind estimate the root uses, plus a margin of one root width
+    const edgeK = box.quad ? 0 : ({ box: 1, dress: 1.1, tube: 0.62 }[spec.parts.body] ?? 0.78);
+    const clearX = Math.max(0, (edgeK - rootK) * box.bodyW) + wOf(0) * 0.6;
+    let tVis = 0;
+    while (tVis < 0.6 && at(tVis).x < clearX) tVis += 0.05;
+    const vis = (k) => tVis + k * (1 - tVis);   // k of the VISIBLE tail
+    const accent = spec.palette.accent;
+    const second = spec.palette.pattern2 || accent;
+    const dh = (n) => (Math.imul((spec.proportions.wobbleSeed ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+    // The dressing-up's cloth is a POP — the bold palette, one per individual, stepped off a pop that lands
+    // too close to the hide to read. Bolder than the accents on purpose: a dressed-up dinosaur is the point.
+    // (The per-board pop cap governs whole-part accents — hair, a hat, a skin; a deco is a few strokes)
+    let pop = POPS[(spec.proportions.wobbleSeed >>> 3) % POPS.length];
+    if (Math.abs(luminance(pop) - luminance(fur)) < 35) pop = POPS[((spec.proportions.wobbleSeed >>> 3) + 2) % POPS.length];
+    if (deco === "plates") {
+      // Little back plates — triangles standing on the tube's upper edge, stegosaur grammar in the second scale
+      const n = 3 + (spec.proportions.wobbleSeed % 3);
+      for (let i = 0; i < n; i += 1) {
+        const t = vis(0.08 + (i / Math.max(1, n - 1)) * 0.62 + (dh(i * 3 + 1) - 0.5) * 0.05);
+        const a = at(t), w = wOf(t);
+        const ex = a.x - a.dy * (w * 0.9), ey = a.y + a.dx * (w * 0.9);   // on the upper edge, a hair inside
+        const bw = 0.013 + dh(i * 3 + 2) * 0.007;
+        const ph = Math.max(0.019, w * (1.05 + dh(i * 3 + 3) * 0.6));
+        const tri = [[ex - a.dx * bw, ey - a.dy * bw], [ex - a.dy * ph, ey + a.dx * ph], [ex + a.dx * bw, ey + a.dy * bw]];
+        paintPart(sketch, spec, tri, second, { own: true, body: true, skinT: t });
+        sketch.line(tri, { color: ink0, size: "S", joint: [true, true], skinT: [t, t] });   // the base stays open — buried in the tube, like an ear's root
+      }
+    } else if (deco === "dip") {
+      // The tip dipped in PAINT — the pop, a strip over the last third, its rails just inside the tube's
+      const t0 = Math.max(0.62, vis(0.45)), N = 7;
+      const ts2 = Array.from({ length: N + 1 }, (_, i) => t0 + (i / N) * (1 - t0));
+      const L = [], R = [];
+      for (const t of ts2) {
+        const a = at(t), w = Math.max(0.002, wOf(t) * 0.94);
+        L.push([a.x - a.dy * w, a.y + a.dx * w]);
+        R.push([a.x + a.dy * w, a.y - a.dx * w]);
+      }
+      if (skin !== "block") { const tip = at(1); L[N] = [tip.x, tip.y]; R[N] = [tip.x, tip.y]; }   // meet at the point, as the tube does
+      paintPart(sketch, spec, [...L, ...R.slice().reverse()], pop, { own: true, body: true, strip: [L, R], stripT: (i) => ts2[Math.min(i, N)] });
+      const a0 = at(t0), w0 = wOf(t0) * 0.96;   // the paint's edge — one ring where the dip stops
+      sketch.line([[a0.x - a0.dy * w0, a0.y + a0.dx * w0], [a0.x + a0.dy * w0, a0.y - a0.dx * w0]], { color: ink0, size: "S", joint: [true, true], skinT: [t0, t0] });
+    } else if (deco === "ribbon") {
+      // A ribbon TIED round the tail, a present's: a ring across the tube and a bow standing on it — in the
+      // POP, sized per individual, in one of three shapes (a hand does not tie the same bow twice). The bow
+      // stands in SCREEN space (straight up), the way a drawn ribbon always sits upright whatever it is tied
+      // to. Mid-visible-tail: at the tip the tube is thin and curling and the bow drowned in its own outline
+      const t = vis(0.42), a = at(t), w = wOf(t);
+      sketch.line([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color: shade(pop, 0.8), size: "L", joint: [true, true], skinT: [t, t] });
+      const kx = a.x - a.dy * (w * 0.85), ky = a.y + a.dx * (w * 0.85);   // the knot on the upper edge
+      const sz = (0.028 + w * 0.4) * (0.85 + dh(11) * 0.55);   // the bow's size — per individual, boldly
+      const shape2 = spec.proportions.wobbleSeed % 3;          // 0 pointed bow · 1 round loops · 2 bow with streamers
+      if (shape2 === 1) {
+        for (const side of [-1, 1]) {
+          const loop = blobPath(kx + side * sz * 0.8, ky + sz * 0.62, sz * 0.62, sz * 0.5, { lumps: 3, amount: 0.15, noise: null });
+          paintPart(sketch, spec, loop, pop, { own: true, body: true, skinT: t });
+          sketch.contour(loop, { color: ink0, skinT: [t, t] });
+        }
+      } else {
+        for (const side of [-1, 1]) {
+          const loop = [
+            [kx, ky],
+            [kx + side * sz * 1.15, ky + sz * 1.05],
+            [kx + side * sz * 0.2, ky + sz * 0.55]
+          ];
+          paintPart(sketch, spec, loop, pop, { own: true, body: true, skinT: t });
+          sketch.line([...loop, [kx, ky]], { color: ink0, size: "S", joint: [true, true], skinT: [t, t] });
+        }
+      }
+      if (shape2 === 2) {
+        for (const side of [-1, 1]) {   // the untied ends hanging below the knot
+          const sxx = kx + side * sz * 0.3;
+          const tail2 = [[sxx, ky], [sxx + side * sz * 0.35, ky - sz * 0.8], [sxx + side * sz * 0.1, ky - sz * 1.25]];
+          sketch.line(tail2, { color: shade(pop, 0.8), size: "L", joint: [true, false], skinT: [t, t] });
+        }
+      }
+      const knot = blobPath(kx, ky + sz * 0.08, sz * 0.3, sz * 0.3, { lumps: 3, amount: 0.15, noise: null });
+      paintPart(sketch, spec, knot, shade(pop, 0.72), { own: true, body: true, skinT: t });
+      sketch.contour(knot, { color: ink0, skinT: [t, t] });
+    } else if (deco === "club") {
+      // The tip a heavy ball — the ankylosaur's, in the tail's own hide
+      const a = at(0.96);
+      const r = Math.max(wOf(0.85) * 1.7, 0.022);
+      const ball = blobPath(a.x + a.dx * r * 0.45, a.y + a.dy * r * 0.45, r, r * 0.92, { lumps: 4, amount: 0.12, noise: null });
+      paintPart(sketch, spec, ball, fur, { body: true, skinT: 1 });
+      sketch.contour(ball, { color: ink0, skinT: [1, 1] });
+    } else if (deco === "band") {
+      // A knit band — the POP alternating with white, worn where the tail clears the hip. The white stripe is
+      // what keeps it an object: a colour alone vanished whenever the hide's own rings landed in the same
+      // tone. Three to five rings, spread per individual
+      const n = 3 + (spec.proportions.wobbleSeed % 3);
+      const span = 0.22 + dh(21) * 0.16;
+      for (let i = 0; i < n; i += 1) {
+        const t = vis(0.16 + (i / (n - 1)) * span);
+        const a = at(t), w = wOf(t) * 1.02;
+        sketch.line([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color: i % 2 ? MARKS.white : pop, size: "L", joint: [true, true], skinT: [t, t] });
+      }
+    } else if (deco === "spikes") {
+      // The thagomizer — two or three bone horns at the tail's end, leaning back the way the stegosaur wears
+      // them. Bone, not hide: a pale of the teeth's white, inked round
+      const n = 2 + (spec.proportions.wobbleSeed % 2);
+      const bone = shade(MARKS.white, 0.97);
+      for (let i = 0; i < n; i += 1) {
+        const t = vis(0.98 - i * 0.16);
+        const a = at(t), w = wOf(t);
+        const ex = a.x - a.dy * (w * 0.85), ey = a.y + a.dx * (w * 0.85);   // standing on the upper edge
+        const len = Math.max(0.024, w * 1.6) * (1 - i * 0.18) * (0.9 + dh(31 + i) * 0.4);
+        const lean = -0.35 - i * 0.22 + (dh(41 + i) - 0.5) * 0.15;          // back toward the body, more each spike
+        const dx2 = Math.sin(lean), dy2 = Math.cos(lean);
+        const bw = 0.008 + w * 0.16;
+        const tri = [[ex - a.dx * bw, ey - a.dy * bw], [ex + dx2 * len, ey + dy2 * len], [ex + a.dx * bw, ey + a.dy * bw]];
+        paintPart(sketch, spec, tri, bone, { own: true, body: true, skinT: t });
+        sketch.line(tri, { color: ink0, size: "S", joint: [true, true], skinT: [t, t] });
+      }
+    }
+  }
 
   // Skin weights by t along the rest spine. A bone's influence covers its own stretch and reaches BAND of the **tail** past each end, fading out by a
   // smoothstep, so a vertex is carried by two or three bones and a turn at one joint is spread along a stretch of tail rather than gathered at a seam.
