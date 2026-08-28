@@ -108,7 +108,7 @@ Big events appear nowhere across 4 individuals × 4 s. So the standing amplitude
 | Paw flick (0.09 rad, 0.9 s) | 12~30s | 14~34s | pup 14~32s / cat 16~36s |
 | Step in place (0.07 rad, diagonals alternating, 2.4 s) | — | — | pup 30~70s / cat 40~90s |
 | Leg joint jitter | 6.1Hz 0.006 | the same | the same |
-| On a jump | arms up (hopY×4), the knees crouching (§ body actions) | the same | legs folding (splay) |
+| On a jump | arms up (hopY×4), the knees crouching (§ body actions) | the same | the same — the knees crouch (two-bone legs) |
 
 ### The bind pose and arm actions
 
@@ -186,8 +186,10 @@ rubbery squash on the body; the earlier scale squash was taken out on purpose):
   out as `state.bodyDrop`; the scene eases that scalar and **solves each knee off the displayed torso height
   every frame** (`animate.js` + `solveLeg` — move the torso and the knees bend by themselves, bowing outward:
   a plié seen head-on), then takes the body's final height back out of the drawn legs' FK so the feet hold the
-  floor through every blend (displayed foot error measures ≤ 0.0005). Position, never scale. A quad's one-bone
-  legs splay what they can instead
+  floor through every blend (displayed foot error measures ≤ 0.0005 on a biped, ≤ 0.0011 on a quad — four legs
+  each with its own drawn lean, averaged over the four). Position, never scale. **A quad crouches the same way**:
+  its four legs are two-bone as well, so it takes bodyDrop like a biped (a `splay` channel used to fold its
+  one-bone legs instead, and went with them)
 - **Arcs / timing** — the flight is a sine arc (position only, hopY to 0.044); the spring pops (the licensed
   exception) out of a slow crouch
 - **The spring pushes through straight and the legs hang extended mid-air** (`flight` lets the standing rest
@@ -198,7 +200,7 @@ rubbery squash on the body; the earlier scale squash was taken out on purpose):
   arms lag the flight through their damping (overlapping action)
 
 `jumpCurve(tau, def)` in `actions.js` (the phase shape and every amplitude on `BODY_ACTIONS.jump`). The curve
-goes out as `hopY` and the envelopes `dropK`, `flight` and `splay`; the clock solves the legs onto them
+goes out as `hopY` and the envelopes `dropK` and `flight`; the clock solves the legs onto them
 (`solveLeg`), subtracts the crouch descent from `hopY`, and adds `hopY×4` to the shoulders for the arms.
 
 ### The base state (mode) — idle · sleep · walk · sit
@@ -234,7 +236,7 @@ Breathing is slow (×0.65) and deep (×1.6). A z emoji every 6 s. Falling asleep
 **The sitting pose** (quads only, `sitPose(rig.body)` in `actions.js` — solved per individual from the rig dimensions `motionRig().body`): blended with idle by `sitK` (eased at 0.05 per 60-Hz frame, about a second — `approach`) —
 the body tilts about **the front legs' root** so the back goes down (`bodyTilt`; the scene rotates bodyGroup about that axis), bringing the hip reference point (low at the back of the body) to the floor;
 the front legs stand at world angle 0 (vertical) and the hind legs fold forward to the angle that puts the feet on the floor. The head is directly above the axis and stays put (it is awake — the face and looking carry on).
-A dog's tail tilts with the body and drops a little further (−0.3) to lie on the floor, its **swish stilled by 90%** — a seated tail lies and only its tip taps and flicks (a tail sweeping the floor read as a tail moving down); the wag carries on. A cat's tail **stays up**: the arch keeps 70% and the swish carries on, so a seated cat swings its tail up, back and forth — awake, a cat's tail points up and nowhere else. A leg is one bone (no knee), so with a short body and long legs the hind foot passes the front one; the tilt
+A dog's tail tilts with the body and drops a little further (−0.3) to lie on the floor, its **swish stilled by 90%** — a seated tail lies and only its tip taps and flicks (a tail sweeping the floor read as a tail moving down); the wag carries on. A cat's tail **stays up**: the arch keeps 70% and the swish carries on, so a seated cat swings its tail up, back and forth — awake, a cat's tail points up and nowhere else. The sit lays the whole leg forward from the hip, so with a short body and long legs the hind foot passes the front one; the tilt
 is then reduced so the hind foot comes no further than between the front pair, and a build whose hips still sit more than 0.045 off the floor (long legs plus a short body, 9% of 600) **cannot sit** — it stands through the sit state.
 Scratching with a hind paw and wagging carry on while seated (a leg mid-action wins), while jumping rests. Measured at cat 12.9% and pup 11.1% (180 s × 40 creatures, sit > 0.5). Force it with the ACTION card's SIT.
 

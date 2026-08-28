@@ -298,10 +298,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         return { action: forced, start, until: start + jumpSpan(def) };
       });
       if (asleep || walkK > 0.5 || sitK > 0.5 || five) bact = null;   // no body actions while asleep, walking, sitting or mid-five (the schedule already ran above; a jump would tear the palms apart)
-      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, dropK: 0, flight: 0, splay: 0 };
+      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, dropK: 0, flight: 0 };
       // The jump carries no scale — squash here belongs to sleep alone (below). The crouch's descent is
       // solved through the legs, at the legs section
-      const hp = { hopY: jc.hopY, splay: jc.splay, squashX: 0, squashY: 0 };
+      const hp = { hopY: jc.hopY, squashX: 0, squashY: 0 };
       // Walk — the body lifts slightly with each step
       if (walkK > 0 && W) hp.hopY += W.bob * stepBump * walkK;
       // Sleep — the body settles to the hem and flattens
@@ -414,7 +414,6 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       E.stepLegTap(legTap, t, rng, M, legOffset);
       E.stepLegStep(legStep, t, rng, M, legOffset);
       if (hp.squashY < 0) { legOffset[0] += hp.squashY * 1.5; legOffset[1] -= hp.squashY * 1.5; }   // (sleep's settling — quads)
-      if (quad && hp.splay) { legOffset[0] -= hp.splay; legOffset[1] += hp.splay; }   // a quad's jump crouch — its one-bone front legs fold what they can
       // The legs are IK and **the torso is the master**: a crouch is nothing but bodyDrop — how far the body
       // sinks (crouchDrop of the leg's own length; the jump's dropK and the five's crouch are its sources).
       // The clock never touches the knees: the scene eases that one scalar and solves each leg from the
@@ -422,16 +421,20 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       // held to the floor by construction). Mid-air the legs hang with their rest bend — a frog tuck was
       // drawn and removed (actions.js BODY_ACTIONS)
       let bodyDrop = 0;
-      if (!quad && rig && rig.leg) {
+      if (rig && rig.leg) {
         const leg = rig.leg;
-        // A biped never stands dead straight: the torso is carried a touch low **on the ground** (REST_BEND of the leg)
+        // Nothing stands dead straight, biped or quad: the torso is carried a touch low **on the ground** (REST_BEND of the leg)
         // and the knees hold the slight fold that comes with it. A stick-straight leg reads as a post, and dead straight
         // is the edge of the solver's reachable band besides. The crouches stack on top; walking swings the bent legs,
         // and the FK feedback in animate.js turns that into the small bob a walk on bent knees actually has.
         // A jump's spring takes the bend away (flight): the legs push through straight and hang extended in the air —
         // held onto, the knees dangled bent and the released foot plant teleported the body at liftoff
+        // ...and it is a **standing** bend: sleeping and sitting place the legs themselves (sitPose lays the hind
+        // leg forward and solves where the foot lands), so a rest bend folded into those knees moved the foot out
+        // from under the pose that had just been solved for it. Faded out by both blends
         const REST_BEND = 0.03;
-        const dropFrac = REST_BEND * (1 - jc.flight) + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
+        const standing = Math.max(0, 1 - sleepK - sitK);
+        const dropFrac = REST_BEND * (1 - jc.flight) * standing + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
         bodyDrop = leg.y * Math.min(dropFrac, 0.4);
       }
       // Walk — a quad alternates its diagonal pairs (0·3 / 1·2) front and back; a biped's two legs alternately open and close (a walk seen head-on)

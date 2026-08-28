@@ -72,25 +72,45 @@ export function limbSketches(spec, variant = 0) {
       const len = hipY;
       const lean = noise(i * 7.1) * 0.012;
       if (kind === "float") {
-        // Floating feet — just the feet, with no leg line. Joint jitter makes them bob about
+        // Floating feet — just the feet, with no leg line. Joint jitter makes them bob about. No knee to bend
         dot(s, lean + 0.006, -len + 0.014, 0.024, skin);
-      } else if (kind === "stick") {
-        s.line([[0, 0], [lean, -len]], { color: ink0 });
-        dot(s, lean + 0.006, -len + 0.012, 0.02, skin);
+        limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side: i < 2 ? -1 : 1, index: i, behind: false });
+        return;
+      }
+      // **Two bones, like a biped's** — the thigh from the hip and the shin from the knee, split at KNEE_SPLIT,
+      // so the scene can solve a quad's crouch off the torso height the same way (motion/rules.md § a limb pose
+      // is written as a target). The knee and the ankle are joint ends (no overshoot, no thinning) or the leg
+      // breaks apart at the fold. The foot hangs from its own ankle group and counter-rotates, so the sole stays
+      // level however far the knee folds — exactly the biped arrangement
+      const sh = make();
+      const kneeH = len * KNEE_SPLIT;
+      const shinLen = len - kneeH;
+      const kneeX = lean * KNEE_SPLIT;
+      const footX = lean - kneeX;
+      const ft = make();
+      if (kind === "stick") {
+        s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
+        sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
+        dot(ft, 0.006, 0.012, 0.02, skin);
       } else if (kind === "boots") {
-        // Socks — a small boot filled to the ankle
-        s.line([[0, 0], [lean, -len]], { color: ink0 });
-        const boot = crumple([[lean - 0.022, -len], [lean - 0.018, -len + 0.036], [lean + 0.012, -len + 0.036], [lean + 0.03, -len + 0.005], [lean + 0.03, -len]], 0.003, lean * 90);
-        paintPart(s, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
-        s.contour(boot, { color: ink0 });
+        // Socks — a small boot filled to the ankle, hung from the ankle like a biped's
+        s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
+        sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
+        const boot = crumple([[-0.022, 0], [-0.018, 0.036], [0.012, 0.036], [0.03, 0.005], [0.03, 0]], 0.003, lean * 90);
+        paintPart(ft, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
+        ft.contour(boot, { color: ink0 });
       } else {
         // A thick stub leg plus a round toe tip poking slightly forward plus two toe lines (the reference)
-        s.line([[0, 0], [lean, -len]], { color: ink0 });
-        s.line([[lean - 0.02, -len], [lean + 0.03, -len + 0.003]], { color: ink0 });
-        s.line([[lean + 0.006, -len + 0.002], [lean + 0.01, -len + 0.016]], { color: ink0, size: "S" });
-        s.line([[lean + 0.018, -len + 0.002], [lean + 0.021, -len + 0.014]], { color: ink0, size: "S" });
+        s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
+        sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
+        ft.line([[-0.02, 0], [0.03, 0.003]], { color: ink0 });
+        ft.line([[0.006, 0.002], [0.01, 0.016]], { color: ink0, size: "S" });
+        ft.line([[0.018, 0.002], [0.021, 0.014]], { color: ink0, size: "S" });
       }
-      limbs.push({ sketch: s, pivot: [x, hipY], kind: "leg", side: i < 2 ? -1 : 1, index: i, behind: false });
+      // knee: which way the fold bows. A beast is seen from the side, and the **hind** knee bends forward — the
+      // stifle of a real dog or cat, against the front elbow that folds back. Indices 0·1 are the front pair
+      // (quadHips front, at −x) and 2·3 the hind
+      limbs.push({ sketch: s, lowerSketch: sh, footSketch: ft, pivot: [x, hipY], elbow: [kneeX, -kneeH], ankle: [footX, -shinLen], kind: "leg", side: i < 2 ? -1 : 1, knee: i < 2 ? 1 : -1, index: i, behind: false });
     });
     return limbs;
   }
@@ -257,7 +277,11 @@ export function motionRig(spec) {
   // arm is only for bipeds with arms. An armless biped (an imp with arms none) has arm null but quad false too — only the arm action layer rests
   return {
     arm: box.quad || spec.parts.arms === "none" ? null : armRigOf(spec, box),
-    leg: box.quad || spec.parts.legs === "float" ? null : {
+    // The leg IK's bones. A quad's four legs are the same length, so one description serves them all; its hip
+    // height is the quad's own (quadHips), not the biped hem. float has no leg to bend on either skeleton
+    leg: spec.parts.legs === "float" ? null : box.quad ? {
+      x: hips.front, y: hips.hipY, thigh: hips.hipY * KNEE_SPLIT, shin: hips.hipY * (1 - KNEE_SPLIT)
+    } : {
       x: box.bodyW * (BUILD[spec.parts.build] || BUILD.medium).stance,
       y: hipY, thigh: hipY * KNEE_SPLIT, shin: hipY * (1 - KNEE_SPLIT)
     },
