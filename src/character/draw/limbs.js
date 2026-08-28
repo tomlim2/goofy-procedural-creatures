@@ -440,8 +440,9 @@ export function tailSketch(spec, variant = 0) {
     ? [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1]
     : [box.bodyW * 0.85, box.legTop + box.bodyH * 0.2];
   // Length — shrinks the whole skeleton (long 1 · medium 0.7 · short 0.45). The skin thickness is unchanged.
-  // A rex tail is the dinosaur's counterweight — the whole skeleton half again as long, and thicker below
-  const rexK = box.quad ? 1 : 1.6;
+  // A rex tail is the dinosaur's counterweight — the whole skeleton three-quarters again as long, and near
+  // double thick below. It has to read as the third limb of the silhouette, not an appendage
+  const rexK = box.quad ? 1 : 1.75;
   const lenK = (spec.parts.tailLength === "short" ? 0.45 : spec.parts.tailLength === "medium" ? 0.7 : 1) * rexK;
   const spine = tailSpine(spec.parts.tail, p.tailLift, !box.quad).map(([x, y]) => [x * lenK, y * lenK]);
   const skin = spec.parts.tailSkin || "line";
@@ -455,9 +456,9 @@ export function tailSketch(spec, variant = 0) {
   const total = spine.reduce((acc, q, i) => (i ? acc + Math.hypot(q[0] - spine[i - 1][0], q[1] - spine[i - 1][1]) : 0), 0);
   const ts = spineT(spine);
 
-  // The thickness function (on the whole tail's t) — per skin. A rex tail is half again as thick at the root,
-  // tapering hard — the counterweight
-  const thickK = box.quad ? 1 : 1.55;
+  // The thickness function (on the whole tail's t) — per skin. A rex tail is two and a half times thick at the
+  // root, tapering hard — the counterweight
+  const thickK = box.quad ? 1 : 2.5;
   const widthOf = {
     thick: (t) => (stub ? 0.024 : 0.02 * thickK) * (1 - t * 0.7) + 0.004,
     plume: (t) => (stub ? 0.03 : 0.016 + 0.024 * Math.sin(Math.PI * Math.min(1, t * 1.15))),
