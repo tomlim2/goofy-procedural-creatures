@@ -197,7 +197,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       const dims = item.motionRig.leg;
       const o = Math.min(1, bodyDrop / (dims.y * 0.02));
       const onset = o * o * (3 - 2 * o);
-      const solved = solveLeg(dims, limb.side, 0, -(dims.y - bodyDrop));
+      const solved = solveLeg(dims, limb.knee !== undefined ? limb.knee : limb.side, 0, -(dims.y - bodyDrop));
       crouchThigh = solved.thigh * onset;
       crouchKnee = solved.knee * onset;
     }

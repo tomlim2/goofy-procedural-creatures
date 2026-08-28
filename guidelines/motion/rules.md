@@ -40,7 +40,9 @@ with two-bone IK. That is why the same action means the same thing at different 
 far the body sinks (`state.bodyDrop`) — and the **scene** solves each knee off the displayed torso height every
 frame (`animate.js` + `solveLeg`, the same two-bone core, `motionRig().leg`): move the torso and the legs bend
 by themselves, the feet held to the floor. The clock writes no knee targets at all — mid-air the legs simply
-hang, holding the standing rest bend. A quad's one-bone legs and a float leg stay angles.
+hang, holding the standing rest bend. **A quad's four legs are two-bone too** and take the crouch the same way —
+one description serves all four (they are the same length) and the hips come from `quadHips`. Only a float leg
+stays angles: there is no leg to bend, just a foot.
 When adding a new pose, run the hand or foot position back through FK and check by number that it reaches the target and stays above the floor (catalog § adding a new motion).
 
 ## Split into three kinds

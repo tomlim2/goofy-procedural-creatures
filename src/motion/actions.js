@@ -85,7 +85,6 @@ export const ACTIONS = {
 //   antic       ANTICIPATION — before the first spring it sinks into a deep knee-bent crouch (slow in)
 //   crouchDrop  the crouch itself — the body's descent, as a fraction of the leg length. The knees bow out
 //               (a plié seen head-on) because the solve bends them there
-//   splay       a quad's one-bone legs fold what they can instead
 //   amp         the flight's height (the arc — position, not scale)
 //   settle      FOLLOW-THROUGH — after the last landing, one soft knee dip and recover
 //   Mid-air the legs simply hang — the standing rest bend and nothing else. A frog tuck (tuckFoot) was
@@ -96,7 +95,7 @@ export const BODY_ACTIONS = {
   jump: {
     hops: 3, dur: 0.56, amp: 0.8, label: "hopping in place (crouch and spring)",
     antic: 0.35,
-    crouchDrop: 0.16, splay: 0.09,
+    crouchDrop: 0.16,
     settle: 0.3
   }
 };
@@ -107,20 +106,21 @@ export function jumpSpan(def) {
 }
 
 // The jump curve. tau = time elapsed since the action started (the anticipation included).
-// Returns { hopY, dropK, flight, splay } — envelopes, not angles: dropK (0~1) is how far into the crouch's
+// Returns { hopY, dropK, flight } — envelopes, not angles: dropK (0~1) is how far into the crouch's
 // descent the body is (the clock turns it into a foot-planted leg solve). flight (0~1) is how far off the
 // ground the jump is — 0 planted, ramping through the spring, 1 in the air, back down through the landing.
 // The clock lets the standing rest bend go by it: a spring pushes through **straight**, and legs that kept
-// their bend read as dangling while the body teleported up at liftoff. splay is a quad's one-bone fold,
-// riding the crouch. No scale channels.
+// their bend read as dangling while the body teleported up at liftoff. No scale channels.
+// (a `splay` channel folded a quad's one-bone legs here; quads have two-bone legs and take the crouch through
+// bodyDrop like a biped, so it went)
 export function jumpCurve(tau, def) {
-  const zero = { hopY: 0, dropK: 0, flight: 0, splay: 0 };
+  const zero = { hopY: 0, dropK: 0, flight: 0 };
   if (tau < 0) return zero;
   const antic = def.antic || 0;
   // Anticipation — sink into the crouch (slow in). Held by the shape of ramp until the first spring takes it
   if (tau < antic) {
     const k = ramp(tau / antic);
-    return { hopY: 0, dropK: k, flight: 0, splay: (def.splay || 0) * k };
+    return { hopY: 0, dropK: k, flight: 0 };
   }
   const hopT = tau - antic;
   const hop = Math.floor(hopT / def.dur);
@@ -130,7 +130,7 @@ export function jumpCurve(tau, def) {
     const k = settle > 0 ? (hopT - def.hops * def.dur) / settle : 1;
     if (k >= 1) return zero;
     const b = bump(k) * 0.35;
-    return { hopY: 0, dropK: b, flight: 0, splay: (def.splay || 0) * b };
+    return { hopY: 0, dropK: b, flight: 0 };
   }
   const k = (hopT - hop * def.dur) / def.dur;
   // Every hop is the same full cycle — **crouch (a held beat) → spring → air → land into the next crouch** —
@@ -156,7 +156,7 @@ export function jumpCurve(tau, def) {
     dropK = ramp((k - (1 - LA)) / LA) * (hop === def.hops - 1 ? 0 : 1);
     flight = 1 - (k - (1 - LA)) / LA;
   }
-  return { hopY, dropK, flight, splay: (def.splay || 0) * dropK };
+  return { hopY, dropK, flight };
 }
 
 // Quad actions — one leg or the tail doing something briefly. The quad rig is pivot rotation only, so these are angles, with no IK.
@@ -191,7 +191,7 @@ export function sitPose(body) {
     const phi = Math.acos(clamp((hipY - dxh * Math.sin(th)) / hipY, 0.12, 1));
     return { phi, footX: frontHipX + dxh * Math.cos(th) - hipY * Math.sin(phi) };
   };
-  // A hind foot must not pass a front foot — a leg is one bone (no knee), so with a short body and long legs the hind foot ends up ahead of the front one. In that case the tilt
+  // A hind foot must not pass a front foot — the sit lays the whole leg forward from the hip (the knee's fold is the crouch solve's, and the rest bend fades out while sitting), so with a short body and long legs the hind foot ends up ahead of the front one. In that case the tilt
   // is reduced (the hips lift a little) so the hind foot comes no further than between the front pair (the front legs' root x). A smaller tilt puts the hind foot further back, hence the bisection
   const minFootX = frontHipX + 0.005;
   let r = solve(theta);
@@ -243,13 +243,15 @@ function twoBone(a, b, tx, ty, sign) {
 
 // A leg pose is a **foot target**, the same law as an arm's hand target (guidelines/motion/rules.md — never a
 // table of joint angles): [x outward from the hip, y up from the hip], solved onto THIS individual's thigh and
-// shin (character motionRig().leg — null on a quad or a float leg, which returns straight). The knee always
-// bows outward — a plié seen head-on. Returns the world thigh angle and the relative knee fold for one side
-// (side −1 mirrors). The scene's crouch solve (animate.js) is its one caller.
-export function solveLeg(leg, side, tx, ty) {
+// shin (character motionRig().leg — null on a float leg, which returns straight). Returns the world thigh angle
+// and the relative knee fold. `bend` is which way the fold bows: on a biped seen head-on the knees bow outward,
+// a plié, so it is the leg's own side; on a quad seen from the side the **hind** knee bends forward like a real
+// stifle while the front folds back, which is the limb's own `knee` (character draw/limbs.js).
+// The scene's crouch solve (animate.js) is its one caller.
+export function solveLeg(leg, bend, tx, ty) {
   if (!leg) return { thigh: 0, knee: 0 };
   const ik = twoBone(leg.thigh, leg.shin, tx, ty, 1);
-  return { thigh: side * ik.upper, knee: side * ik.lower };
+  return { thigh: bend * ik.upper, knee: bend * ik.lower };
 }
 
 // One arm's target joint angles. World rotation.z (an arm hanging down is 0, counter-clockwise positive). The left arm is side=−1.
