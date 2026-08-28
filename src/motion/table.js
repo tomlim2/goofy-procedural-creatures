@@ -132,5 +132,30 @@ export const MOTION = {
     surprise: [6, 14], yaw: 0.6,
     look: [5, 14], lookHold: [1, 3], lookAmp: [1, 0.7],
     emojis: ["dots", "dots", "bang", "quest", "heart", "sweat"]
+  },
+  rex: {
+    // Tiny arms, big feelings — it raises them, points, and high fives (the scene's pairing takes any armed biped)
+    armActions: [["raise", 2.5], ["hi", 2], ["point", 1.5], ["wave", 1]],
+    armActionGap: [12, 32],
+    armSwing: 0.03,
+    legTap: [12, 28], legStep: null,
+    modes: [["idle", 3], ["walk", 1]], modeHold: { idle: [25, 80], walk: [6, 14] },
+    // The stomp — a slow, heavy step with a big body lift and lean; short trips
+    walk: { hz: 1.4, leg: 0.26, bob: 0.018, sway: 0.05, arm: 0.05, trip: [0.1, 0.16], speed: 0.045 },
+    sway: [0.01, 0.025], swayPeriod: [2.6, 4.6],
+    rock: 0.006,
+    roll: null, dip: null,
+    bodyActions: [["jump", 1]], bodyActionGap: [12, 30],
+    stretch: null,
+    tilt: [7, 16], tiltAmp: 0.08,
+    jelly: null, shiver: [26, 60],
+    // It gets ANGRY — the fierce eyes and the clenched tooth grid (faceStates ANGRY_MOUTH.rex), like a cat's hiss
+    wink: null, happyHold: null, angry: [22, 55], angryHold: [3, 5],
+    // The tail — a biped with one (the one exception): a slow heavy sway, the tip lagging behind
+    tailSwish: { amp: [0.06, 0.14], period: [2.8, 5] }, tailFlick: [8, 18],
+    tailTip: { follow: 0.06, twitch: null, raise: null, puff: 0, tuck: null },
+    surprise: [8, 20], yaw: 0.5,
+    look: [5, 14], lookHold: [1, 3], lookAmp: [1, 0.6],
+    emojis: ["bang", "quest", "heart", "dots"]
   }
 };

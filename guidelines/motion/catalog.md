@@ -319,6 +319,12 @@ the point above the head from the scene root, so it is dragged a beat behind on 
 
 To attach an emoji to a new motion, write `emoji: "kind"` on that action — that is the emoji trigger. Firing measures at human 3.6 · imp 4.4 · pup 5.6 · cat 4.2 per minute.
 
+**The rex** (the fifth lane) is a biped **with a tail** — the tail rides the same root/tip channels as a
+quad's (a slow heavy sway, amp 0.06~0.14 over 2.8~5 s, tip follow-through 0.06; no raise, no arch, no wag) —
+with tiny-arm actions (raise 2.5 · hi 2 · point 1.5 · wave 1, every 12~32 s; its stubby arms high five like any
+armed biped), a cat-cadence **anger** (every 22~55 s for 3~5 s — the fierce eyes with the clenched tooth grid,
+measured at 7.1% of ticks) and emojis bang · quest · heart · dots.
+
 ## The high five — a scene interaction
 
 Every pair of same-row biped neighbours high fives **on its own schedule** — no distance is asked. When a

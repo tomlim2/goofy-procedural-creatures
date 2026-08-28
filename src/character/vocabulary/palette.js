@@ -49,6 +49,19 @@ export const FURS = [
 ];
 export const FUR_POOL = [null, null, null, null, null, null, null, null, ...FURS];   // 4/12 ≈ 33%
 
+// Lizard scales — the one species whose whole point is color. Livelier than FILLS, still pulled toward the
+// paper the way POPS are (a raw green shouts over the board): S ≈ 30~40, luminance 125~155 — mid tones, so the
+// face keeps the dark ink and a contrasting pattern reads both ways. The pattern is drawn in a SECOND scale
+// color (spec.js pattern2), never the ink — that pair is the "colorful" of the species
+export const SCALES = [
+  "#8aa662", // moss green
+  "#5f9e8f", // sea teal
+  "#c08d4a", // amber
+  "#b56d4e", // coral clay
+  "#8d80ab", // dusty violet
+  "#7e97ad"  // sky slate
+];
+
 
 // **The fixed few** — colours that are not drawn from a pool. Every other colour on the board is picked by the seed; these five are
 // always themselves, because the thing they paint is always itself: a blush is pink, a tooth is white, a mark on a black part is

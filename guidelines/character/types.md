@@ -23,11 +23,11 @@ Part selection priority: **species bias > archetype bias > DEFAULT_BIAS > even**
 cycles down the rows, wrapping at the end:
 
 ```
-human · cat · pup · imp · human · cat · pup · imp · …
+human · cat · pup · imp · rex · human · cat · pup · imp · rex · …
 ```
 
-There is no table per row count. However many rows, the four species come round at even spacing and none goes
-missing on any board (with 5 rows the last row comes round to human again). Species are decided by the lane and
+There is no table per row count. However many rows, the five species come round at even spacing and none goes
+missing past five rows (the default 7×5 shows one row of each). Species are decided by the lane and
 nothing else — there are no species weights (the old `weight` field was read nowhere and was deleted).
 
 | Species | Skeleton | Color | Exclusive / biased parts | Dominant motion |
@@ -35,6 +35,7 @@ nothing else — there are no species weights (the old `weight` field was read n
 | **human** | biped | The palette as-is | forbid: all horns→none, cyclops→wide, long arms (long)→medium, stilts (verylong)→long, ears none·round only (pointy, floppy, folded→round/none — animal ears are not human), tear marks (tears)→none. The rest is decided by the archetype | Side-to-side and front-to-back rocking, arm actions (waving, arms crossed, thinking…) |
 | **pup** | quad | The head (fur) color (about 1/3 the black-ish FURS), the body the same or a close tone. No markings — the pattern slot is the imps' | Hanging ears (flap/long), a muzzle plus a black nose (the nose slot decides the form), the mouth above the muzzle and below the nose — w (omega), o (open), the tongue (on ^^ too), line, dot, smile; the tail skeleton flag/stubtail/ring × the skin thick/plume, patches, legs mostly stub (stick, float, boots) | The head roll at all times, sniffing dips, a held ^^ happy eye, tail flicks |
 | **cat** | quad | The head (fur) color (about 1/3 the black-ish FURS), the body the same or a close tone. No markings — the pattern slot is the imps' | Triangular crown ears (pointy/fold), whiskers (length per individual — the long ones poke outside the outline), the ω, 3, meow and blep mouths (fangs and a hiss when angry), a vertical pupil (slit), the tail skeleton curl/longtail/hook/kink × the skin line/thick, legs stub·stick (float, boots) | The tail swish at all times, winks, big head tilts, stretches |
+| **rex** | biped **with a tail** (the one biped allowed one — the tail gate reads `identity.tail`, draw/limbs.js) | The head and body a vivid scale color (SCALES — moss, teal, amber, coral, violet, slate; bodyRoll picks it, no extra rng) with **the pattern in a second scale color** (`palette.pattern2` — patternOf draws it instead of ink; the two are pulled apart in tone when they land close). ~94% patterned — the point of the species | A huge jaw of teeth (grimace/fangs/zigzag/open ×wide, mouth set low), small fierce eyes set high (proportions: eyeSize 0.11, eyeHeight 0.14), **tiny stubby arms** (armSpread halved; every arm form folds to stubby), thick mass legs drawn as filled shapes with three-clawed feet (a species branch in limbs.js), a counterweight tail (the skeleton 1.6× and thicker), no ears, no hair; brows allowed (angry ✓) | A slow heavy **stomp** walk (hz 1.4, big bob), a cat-cadence **anger** (fierce eyes + the clenched grid, 7.1% of ticks), a slow tail sway with tip lag, tiny-arm raises and high fives |
 | **imp** | biped | The head one of the 9 DARKS (ink, brown-grey, grey-blue, purple-black, green-black…), the body 50% the head color / 30% a light tone / 20% a dark tone (the same family), the face paper-colored, the ink #1c1917 | Long horns (1.8×: curved/straight/antenna/ram/crown), a cyclops eye, **a wide mouth** (×1.3 — the tooth grid, hatching, zigzag, big fangs, an open mouth with tooth strips), stub arms — or **armless** (arms none, ≈23%), **long arms that sweep the floor (long) are imps only** (bias 3:2, 40%), and **stilts (legLength verylong — twice long) are imps only** (bias 1.5, ≈20%; humans, dogs and cats forbid it→long) | The jelly wobble at all times, frequent shivers and startles, frequent arms-up and flapping, "..." muttering |
 
 The quad skeleton lies the body horizontally with the head on the front (left) of it. Being short, standing next
@@ -105,6 +106,7 @@ white fill (teeth) are the exception — they keep their own color or the dark i
 | pup | quad | none | not cyclops | ✗ | ● | flap·long·pointy(·Mid)·round(·Mid)·fold(·Mid) | hair·brow none (it is fur, not hair) |
 | cat | quad | none | not cyclops | ✗ | ● | pointy · pointyMid · pointyBig (triangular ears only) | hair·brow none |
 | imp | biped | (free) | (free) | ●/✗ (none allowed) | ✗ | none·pointy | The head is dark (luminance<90) |
+| rex | biped | none | not cyclops | ● (always stubby, medium) | **●** (the one biped with one) | none | hair·brow — hair none; legLength not verylong |
 
 ## Constraints (applyConstraints)
 
@@ -122,3 +124,18 @@ Combinations that break the drawing when they appear together. **Never re-drawn;
 10. After drawing the dimension slots (`LATE_SLOTS`), the species forbid runs **once more** — so those slots are restricted too
 11. If a pair of glasses' or goggles' lenses overlap (the eye gap < the sum of the lens radii), eyewear → none — decided with `eyeGeometry` after the proportions are settled
 12. An eyepatch goes to none on mismatched eyes (|eyeSizeSkew| > 0.09 or |eyeHeightSkew| > 0.03), and to none if the patch (1.5r) laps onto the other eye — after the proportions are settled, with no rng
+
+## Houses — a category, not a creature
+
+`src/house/index.js` — the sixth lane (`LANES`: … imp · rex · **house**), so a 9×6 board ends on a street;
+the SPECIES card's HOUSE previews a whole board of them. A house is **not a living thing**: it has form only —
+no face, no clock, no motion, no high fives — and the scene stands it up as a static item (three boil frames of
+one layer, `scene/index.js buildHouse`): its lines boil because the boil is the medium's, not the occupant's.
+
+Seeded form: roof gable · steep · flat · round (dome) × windows square · round · wide (1~3, cross panes, never
+over the door) × an arched or square door on either side with a knob × a chimney with two still smoke rings
+(60%, not on a dome), dimensions jittered. Colors: walls from FILLS, roofs from ACCENTS + mid DARKS + the brick
+and ochre POPS, the door an ACCENT; walls filled with a goofy material at a value step of their own (never
+black — a black house swallows its door). Nothing in `character/` or `motion/` knows houses exist; the grid
+(`makeGrid`) builds one when the lane says so, and the neighbour-clash re-draw works off `archetype:
+"house-<roof>"` so two same roofs keep apart.
