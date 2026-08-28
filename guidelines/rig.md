@@ -18,7 +18,7 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
 │   │   └── SkinnedMesh ×1       ← the whole skin in the pivot's space, every vertex weighted to two or three bones (limbs.js weightsAt); all three boil frames in it, switched by drawRange
 │   └── limb pivot ×N        ← shoulder and hip pivots
 │       ├── front             ← the upper arm (2.5) or the thigh (1.2 — behind the body)
-│       │   └── elbow         ← the lower bone's pivot — an arm's elbow plus the forearm (2.5), or a biped leg's **knee** plus the shin (1.2). Two angles per limb (state.arms; a leg's knee is the crouch solve's); a quad leg and a float leg have no lower bone
+│       │   └── elbow         ← the lower bone's pivot — an arm's elbow plus the forearm (2.5), or a leg's **knee** plus the shin (1.2), on a biped and a quad alike. Two angles per limb (state.arms; a leg's knee is the crouch solve's); only a float leg has no lower bone
 │       │       └── foot      ← the **ankle** at the shin's end (biped legs, not the tiptoe) — the foot's own sketch, counter-rotated by what the hip and knee turned so the sole stays level with the floor at any fold
 │       └── back              ← hands behind the back (arms only, 0.5)
 └── headGroup                ← origin = the neck (neckY = bodyTop). Tilt, roll, nod, dip. Only the outline sits here directly

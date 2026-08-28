@@ -303,10 +303,11 @@ The five kinds are drawn **over** the goofy material, last of all and clipped to
 Form only. How far they open (the stance) is set by `build` and the length by `legLength` — 6×3×5 combinations.
 float hangs off the hip pivot too, so joint jitter and a foot flick make the feet bob about.
 
-A biped leg is drawn as **two bones** — the thigh (from the hip pivot) and the shin (from the **knee** at 52%,
+Every leg is drawn as **two bones** — the thigh (from the hip pivot) and the shin (from the **knee** at 52%,
 carrying the foot) — the arm's upper/forearm arrangement, so motion can fold it (a jump's crouch, a
-high five's wind-up; [../motion/catalog.md](../motion/catalog.md) § body actions). The forms are unchanged;
-float has no leg and so no knee. A quad's legs stay one bone.
+high five's wind-up; [../motion/catalog.md](../motion/catalog.md) § body actions). **A quad's four legs too**:
+the same split, the same joint ends, the foot on its own ankle so the sole stays level however far the knee
+folds. The forms are unchanged; float has no leg and so no knee.
 
 A biped pivots at the hip (0.02 above the hem). **A quad** has its two front and two hind legs **each pair together** (a beast seen from the side — the spacing within a pair is
 max(0.03, 16% of the body length)), the front pair at −60% from the body's centre and the hind pair at +60%. The roots are 25% of bodyH up. Species bias: pup stub 4 · stick 2 ·
