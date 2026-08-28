@@ -57,7 +57,7 @@ What `clock.update(t)` returns, and where the scene applies it.
 | bodyAction | The body layer's action name, or null | "jump" while hopping in place. hopY and squash are its curve |
 | mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" / 0~1 / 0~1 / 0~1 | The base state and how far asleep, walking or sitting it is (eased). All of it is already blended into legOffset, hopY, sway, arms and so on. The scene only uses sleep, to turn on the sleep lid (the static eye cover) |
 | bodyTilt | rad | bodyGroup.rotation.z — the body tilt of a quad sit (negative = the back goes down), about **the front legs' root** (item.bodyPivot). sitPose(rig.body).tilt × sit |
-| walkX / facing | cells / ±1 | group.position.x (the distance moved from home) / group.scale.x (a quad flipping to face its walking direction; a biped is always 1) |
+| walkX / facing | cells / ±1 | group.position.x (the distance moved from home) / group.scale.x (a TAILED creature — the quads and the rex — flipping to face its walking direction, so the tail trails; a tailless biped is always 1, and a high five's commanded trip never flips) |
 | tailAngle / tailTip / tailPuff / tailRaise / tailRaisePose | rad / rad / 0~1 / 0~1 / [rad × bones] or null | The root bone's rotation / the tip bone's rotation (relative to the root) / the bone thickness scale (1 + 0.6·puff, perpendicular to the spine) / blending each joint from rest toward its raise target — vertical, or `tailRaisePose` (a ♥'s question mark: joint world angles) (scene/animate.js) |
 | tailArch / tailPose | 0~1 / [rad × bones] or null | Blending the idle pose (the cat arch) — each joint from rest to the tailPose world angle. Together with the raise it never passes 1 (the remainder is the skeleton) |
 | emoji | {kind, k, dy, scale, rot, opacity} or null | The glyph above the head — a frame from the emoji channel. The scene applies it as-is |
@@ -221,7 +221,7 @@ into one other state (weighted), and from another state back to idle. It never g
 **Walking moves it — out and back.** From home (the middle of the cell) it walks trip to the left or right (rng), stops and idles there as usual (a quad may even sleep).
 The next walk **always** brings it home the way it came. One trip's length = distance/speed, and the start and end are smoothstepped so it does not skid to a halt.
 The scene puts the state object's `walkX` (x from home, in cells) and `facing` (±1) into group.position.x and scale.x —
-**a quad faces its walking direction** (mirrored −1 going right, thinning to paper through 0 and flipping; standing back home it faces left again), while a biped does not flip but
+**a tailed creature faces its walking direction** — the quads and the rex, so the tail always trails the walk (mirrored −1 going right, thinning to paper through 0 and flipping; standing back home it faces left again; a high five's commanded trip never flips — the palm solve aims in world space), while a biped does not flip but
 **looks** the way it walks (the look target goes that way). A forced WALK paces home↔out without a rest.
 
 `walkK` (eased at 0.06 per 60-Hz frame — `approach`, the same seconds at any tick) blends the walking in. The step phase ph = t·2π·hz + a per-individual phase (from the seed) — on a quad the diagonal pairs (0·3 / 1·2)

@@ -125,7 +125,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   // Walking moves it — from home (the middle of the cell, x 0) it walks a little to the left or right, idles there as usual (and may sleep),
   // and the next walk **always** brings it home the way it came. leg = one trip { from, to, start, dur }. The speed is the species' (W.speed, cells/second)
   const trip = { x: 0, from: 0, to: 0, start: -1, dur: 0, dir: 0 };
-  let facing = 1;                 // only quads flip: -1 (mirrored) when walking right. It thins to paper through 0 and flips
+  let facing = 1;                 // tailed creatures flip (quads, the rex): -1 (mirrored) when walking right, so the tail trails. It thins to paper through 0 and flips
   let lastMode = mode.mode;
   const startLeg = (t) => {
     const home = Math.abs(trip.x) < 1e-4;
@@ -226,8 +226,13 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         trip.x = trip.from + (trip.to - trip.from) * p;
       }
       lastMode = modeName;
-      // A quad faces its walking direction — mirrored (-1) when going right. Standing back home it faces left again (+1). Idling outside it keeps the last direction
-      const facingTarget = !quad ? 1 : (modeName === "walk" && trip.start >= 0) ? (trip.dir > 0 ? -1 : 1) : (Math.abs(trip.x) < 1e-4 ? 1 : facing < 0 ? -1 : 1);
+      // A TAILED creature faces its walking direction — mirrored (-1) when going right, so the tail trails
+      // behind the walk instead of leading it (quads always did; the rex, the tailed biped, joins them).
+      // Standing back home it faces left again (+1); idling outside it keeps the last direction. A high five's
+      // commanded trip never flips: the palm solve aims in world space, and a mirrored mover would land its
+      // hand on the wrong side (quads never five, so only the rex could hit this)
+      const tailed = !!(rig && rig.tailed);
+      const facingTarget = !tailed || five ? 1 : (modeName === "walk" && trip.start >= 0) ? (trip.dir > 0 ? -1 : 1) : (Math.abs(trip.x) < 1e-4 ? 1 : facing < 0 ? -1 : 1);
       facing = approach(facing, facingTarget, 0.18);
       const asleep = modeName === "sleep" && canSleep;
       sleepK = approach(sleepK, asleep ? 1 : 0, 0.03);

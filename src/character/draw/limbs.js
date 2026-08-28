@@ -309,6 +309,9 @@ export function motionRig(spec) {
       y: hipY, thigh: hipY * KNEE_SPLIT, shin: hipY * (1 - KNEE_SPLIT)
     },
     legTop: box.legTop, quad: box.quad, tailLift: spec.proportions.tailLift,
+    // Tailed — a quad, or the tailed biped (the rex). The clock flips a tailed creature to face its walking
+    // direction, so the tail always TRAILS: pointing into the walk it read as leading with it
+    tailed: box.quad || ((SPECIES.find((s) => s.name === spec.species) || {}).identity || {}).tail === true,
     body: hips ? { frontHipX: hips.front, hindHipX: hips.back, hipY: hips.hipY, legTop: box.legTop, bodyH: box.bodyH, bodyW: box.bodyW, bodyCx: box.bodyCx } : null
   };
 }
