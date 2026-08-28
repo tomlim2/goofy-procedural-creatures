@@ -7,6 +7,7 @@ import { paintPart, patternOf } from "./body.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, BUILD } from "./layout.js";
 import { shade } from "../../color.js";
+import { SPECIES } from "../vocabulary/species.js";
 
 // Arm dimensions. Length = a slot independent of form × per-individual jitter. medium is the baseline 1, long is 1.64× that (enough to sweep the floor).
 // The baseline arm length is 0.242 — shorter than that and the hand is near the torso and does not read as an arm.
@@ -124,6 +125,28 @@ export function limbSketches(spec, variant = 0) {
     // or a sleeve covers the meeting
     let kneeX = 0;   // the knee's x in thigh space
     let footX = 0;   // the foot's x in shin space
+    // A rex leg is MASS whatever the leg slot says — a filled tapered thigh and shin and a big flat
+    // three-clawed foot (a species branch: the way of drawing differs, the dog-muzzle rule). The knee and
+    // ankle arrangement is the standard one, so the crouch folds it and the sole stays level like any leg
+    if (spec.species === "rex") {
+      const thigh = crumple([[-0.034, 0.012], [0.034, 0.012], [0.023, -kneeH], [-0.023, -kneeH]], 0.003, side * 5);
+      paintPart(s, spec, thigh, cloth, { body: true });
+      s.contour(thigh, { color: ink0 });
+      const shin = crumple([[-0.021, 0.006], [0.021, 0.006], [0.014, -shinLen + 0.004], [-0.014, -shinLen + 0.004]], 0.003, side * 9);
+      paintPart(sh, spec, shin, cloth, { body: true });
+      sh.contour(shin, { color: ink0 });
+      const ft = make();
+      const foot = crumple([[side * -0.022, 0], [side * -0.018, 0.022], [side * 0.042, 0.022], [side * 0.05, 0]], 0.003, side * 13);
+      paintPart(ft, spec, foot, cloth, { body: true });
+      ft.contour(foot, { color: ink0 });
+      // Three claws off the foot's front edge
+      for (let c = 0; c < 3; c += 1) {
+        const cxp = side * (0.016 + c * 0.014);
+        ft.line([[cxp, 0.003], [cxp + side * 0.007, 0.012]], { color: ink0, size: "S" });
+      }
+      limbs.push({ sketch: s, lowerSketch: sh, footSketch: ft, pivot: [x, hipY], elbow: [0, -kneeH], ankle: [0, -shinLen], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
+      continue;
+    }
     if (legKind === "bent") {
       // The drawn bend is the knee itself
       kneeX = side * 0.04;
@@ -365,14 +388,23 @@ export function tailSketch(spec, variant = 0) {
   const box = layout(spec);
   const sketch = new Sketch(noise, spec.proportions.wobble);
   const none = { sketches: [sketch], sketch, bones: [], pivot: [0, 0], weightsAt: () => [0, 1, 0, 0, 0, 0, 0, 0], weightsOf: () => [0, 1, 0, 0, 0, 0, 0, 0] };
-  if (!box.quad) return none;
+  // Who has a tail is the species' identity (species.js), not the skeleton's — the rex is a biped WITH one.
+  // A biped species without identity.tail (humans, imps) draws nothing here, as before
+  const hasTail = ((SPECIES.find((s) => s.name === spec.species) || {}).identity || {}).tail === true;
+  if (!box.quad && !hasTail) return none;
 
   const p = spec.proportions;
   const ink0 = spec.palette.ink;
   const cx = box.bodyCx;
-  const pivot = [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1];
-  // Length — shrinks the whole skeleton (long 1 · medium 0.7 · short 0.45). The skin thickness is unchanged
-  const lenK = spec.parts.tailLength === "short" ? 0.45 : spec.parts.tailLength === "medium" ? 0.7 : 1;
+  // The root: a quad's is the rump (the body's back end); a biped's (the rex) is beside the hip, and the
+  // skeleton reaches out to the side and up from there
+  const pivot = box.quad
+    ? [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1]
+    : [box.bodyW * 0.85, box.legTop + box.bodyH * 0.2];
+  // Length — shrinks the whole skeleton (long 1 · medium 0.7 · short 0.45). The skin thickness is unchanged.
+  // A rex tail is the dinosaur's counterweight — the whole skeleton half again as long, and thicker below
+  const rexK = box.quad ? 1 : 1.6;
+  const lenK = (spec.parts.tailLength === "short" ? 0.45 : spec.parts.tailLength === "medium" ? 0.7 : 1) * rexK;
   const spine = tailSpine(spec.parts.tail, p.tailLift).map(([x, y]) => [x * lenK, y * lenK]);
   const skin = spec.parts.tailSkin || "line";
   const stub = spec.parts.tail === "stubtail";
@@ -385,11 +417,13 @@ export function tailSketch(spec, variant = 0) {
   const total = spine.reduce((acc, q, i) => (i ? acc + Math.hypot(q[0] - spine[i - 1][0], q[1] - spine[i - 1][1]) : 0), 0);
   const ts = spineT(spine);
 
-  // The thickness function (on the whole tail's t) — per skin
+  // The thickness function (on the whole tail's t) — per skin. A rex tail is half again as thick at the root,
+  // tapering hard — the counterweight
+  const thickK = box.quad ? 1 : 1.55;
   const widthOf = {
-    thick: (t) => (stub ? 0.024 : 0.02) * (1 - t * 0.7) + 0.004,
+    thick: (t) => (stub ? 0.024 : 0.02 * thickK) * (1 - t * 0.7) + 0.004,
     plume: (t) => (stub ? 0.03 : 0.016 + 0.024 * Math.sin(Math.PI * Math.min(1, t * 1.15))),
-    block: () => (stub ? 0.024 : 0.019),
+    block: () => (stub ? 0.024 : 0.019 * thickK),
     wedge: (t) => (stub ? 0.03 : 0.028) * (1 - t) + 0.001
   };
   // The point at a whole-tail t — for placing fur strokes, beads, bands and tufts

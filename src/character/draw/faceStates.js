@@ -18,8 +18,8 @@ const ALT_MOUTH = {
   frown: "smug", smug: "frown", three: "omega", grimace: "line", grin: "smile", scribble: "wave", tongue: "open", fangs: "line", shout: "open", meow: "omega", blep: "omega", bracket: "line"
 };
 
-// The angry (state.angry) mouth — per species. Humans and dogs get the tooth grid (clenched teeth), imps and cats get fangs (a hiss). Docs: guidelines/character/parts.md § mouth
-const ANGRY_MOUTH = { human: "grimace", pup: "grimace", cat: "fangs", imp: "fangs" };
+// The angry (state.angry) mouth — per species. Humans and dogs get the tooth grid (clenched teeth), imps and cats get fangs; the rex clenches its grid (a hiss). Docs: guidelines/character/parts.md § mouth
+const ANGRY_MOUTH = { human: "grimace", pup: "grimace", cat: "fangs", imp: "fangs", rex: "grimace" };
 // The ^^ (state.happy) mouth — only dogs stick their tongue out (panting). The rest keep their rest mouth (same kind means the same mesh)
 const HAPPY_MOUTH = { pup: "tongue" };
 

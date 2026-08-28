@@ -1,6 +1,6 @@
 // Body — torso and markings. Docs: guidelines/character/parts.md § body
 
-import { blobPath } from "../../shape.js";
+import { blobPath, crumple } from "../../shape.js";
 import { stepOf } from "../../medium/materials.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { MARKS } from "../vocabulary/palette.js";
@@ -32,10 +32,12 @@ export function paintPart(fills, spec, path, color, { own = false, flat = false,
 }
 
 // The creature's pattern — the `pattern` slot as part of the goofy material's base color (medium/materials.js patternOn). Light ink on a dark body,
-// the same rule as face ink, and none is none
+// the same rule as face ink, and none is none. A lizard's pattern is drawn in its SECOND scale color instead
+// (palette.pattern2, spec.js) — color on color is that species' whole point
 export function patternOf(spec) {
   const kind = spec.parts.pattern;
   if (!kind || kind === "none") return undefined;   // a spec without the slot (an older tree's, in drawdiff) has no pattern
+  if (spec.palette.pattern2) return { kind, color: spec.palette.pattern2 };
   return { kind, color: luminance(spec.palette.cloth) < 120 ? MARKS.light : spec.palette.ink };
 }
 

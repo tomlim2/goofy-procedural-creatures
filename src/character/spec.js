@@ -7,11 +7,12 @@
 //   3. proportion jitter — most of the silhouette variety comes from continuous values
 
 import { makeRng } from "../rng.js";
-import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL } from "./vocabulary/index.js";
+import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES } from "./vocabulary/index.js";
 import { shade, luminance } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
 import { MARKS } from "./vocabulary/palette.js";
+import { makeHouse } from "../house/index.js";
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -86,19 +87,22 @@ function makeProportions(rng, archetype, species) {
   const sprite = archetype.name === "sprite";
   const blob = archetype.name === "blob";
   const human = species === "human";
+  // A rex head is big and wide with small eyes set high over the jaw, and its arms are TINY (means only —
+  // the rng call count never branches by species, guidelines/determinism.md)
+  const rex = species === "rex";
 
   return {
-    headScale: rng.around(blob ? 1.14 : sprite ? 0.96 : 1.04, 0.34),
-    headWide: rng.around(blob ? 1.16 : 1, 0.18),
+    headScale: rng.around(rex ? 1.12 : blob ? 1.14 : sprite ? 0.96 : 1.04, rex ? 0.24 : 0.34),
+    headWide: rng.around(rex ? 1.12 : blob ? 1.16 : 1, 0.18),
 
     // How much to crumple the head outline. At 0 a geometric figure; large, a mass drawn by hand.
     // A human skull stays smooth while keeping the hand-drawn wobble — lumps halved (the bumpy ones are imps and animals). The number of rng calls is the same (only the multiplier)
     headLumps: rng.int(4, 7),
     headLump: rng.around(0.07, 0.045) * (human ? 0.5 : 1),
 
-    eyeSize: rng.around(sprite ? 0.24 : 0.17, 0.07),
-    eyeGap: rng.around(0.42, 0.12),
-    eyeHeight: rng.around(0.03, 0.09),
+    eyeSize: rng.around(rex ? 0.11 : sprite ? 0.24 : 0.17, rex ? 0.04 : 0.07),
+    eyeGap: rng.around(rex ? 0.5 : 0.42, 0.12),
+    eyeHeight: rng.around(rex ? 0.14 : 0.03, 0.09),
 
     // Left-right asymmetry. The cheapest device there is for looking hand-drawn.
     eyeSizeSkew: rng.around(0, 0.22),
@@ -110,7 +114,8 @@ function makeProportions(rng, archetype, species) {
     bodyScale: rng.around(0.52, 0.12),
     bodyWide: rng.around(1, 0.2),
     legLength: rng.around(0.3, 0.12),
-    armSpread: rng.around(1, 0.25),
+    // Tiny rex arms — half reach, drawn stubby (the forbid): little fists it still high-fives with
+    armSpread: rng.around(rex ? 0.52 : 1, rex ? 0.12 : 0.25),
 
     // For quad species. Biped species draw the values too. If the number of rng calls
     // differed by species, seed reproduction would come apart.
@@ -181,6 +186,22 @@ export function makeCreature(seed, speciesName = "human") {
     if (bodyRoll < 0.5) palette.cloth = palette.skin;
     else if (bodyRoll < 0.8) palette.cloth = shade(palette.skin, 0.9);   // a slightly darker tone
     else palette.cloth = shade(palette.skin, 1.06);                       // a slightly lighter tone
+  } else if (species.name === "rex") {
+    // The rex: the head and body are a vivid scale color (SCALES) and the pattern is drawn in a SECOND scale
+    // color (pattern2 — draw/body.js patternOf), never the ink: that pair is the species' whole point.
+    // No rng of its own — the scale rides bodyRoll and the walk to the second rides the darkHead pick, both
+    // drawn above for every species (the call count stays fixed). A color accent landing on the skin still wins
+    const scaleIdx = Math.min(SCALES.length - 1, Math.floor(bodyRoll * SCALES.length));
+    if (!(palette.pop && palette.pop.target === "skin")) palette.skin = SCALES[scaleIdx];
+    const darkIdx = Math.max(0, DARKS.indexOf(darkHead));
+    if (darkIdx % 3 === 0) palette.cloth = palette.skin;
+    else if (darkIdx % 3 === 1) palette.cloth = shade(palette.skin, 0.88);   // a slightly darker tone
+    else palette.cloth = shade(palette.skin, 1.1);                            // a slightly lighter tone
+    // The second scale — a different entry, stepped from the first by the dark pick; pulled apart in tone
+    // when the two land too close for the pattern to read
+    let second = SCALES[(scaleIdx + 1 + (darkIdx % (SCALES.length - 1))) % SCALES.length];
+    if (Math.abs(luminance(second) - luminance(palette.cloth)) < 40) second = shade(second, luminance(palette.cloth) > 140 ? 0.72 : 1.35);
+    palette.pattern2 = second;
   }
 
   const proportions = makeProportions(rng, archetype, species.name);
@@ -227,9 +248,10 @@ export function makeCreature(seed, speciesName = "human") {
 //
 // Give the seeds as plain base+0, base+1… and archetypes clump, so a whole row
 // ends up looking alike. Each is built ahead of time and re-drawn if it collides with a neighbour.
-// Fixed lanes. From the top: human, cat, dog, imp, and below that the same order keeps cycling.
-// There is no table per row count — however many rows, the four species come round at even spacing and none goes missing on any board.
-export const LANES = ["human", "cat", "pup", "imp"];
+// Fixed lanes. From the top: human, cat, dog, imp, rex — and a street of HOUSES as the sixth lane (a 9×6
+// board shows it; houses are not creatures — src/house/index.js). Below that the same order keeps cycling.
+// There is no table per row count — however many rows, the five species come round at even spacing and none goes missing past five rows.
+export const LANES = ["human", "cat", "pup", "imp", "rex", "house"];
 
 export function laneSpecies(rows) {
   return Array.from({ length: rows }, (_, r) => LANES[r % LANES.length]);
@@ -250,7 +272,8 @@ export function makeGrid(baseSeed, count, columns, only = null) {
 
     // Only up to 8 re-draws. Picking indefinitely skews the distribution instead.
     for (let attempt = 0; attempt < 8; attempt += 1) {
-      candidate = makeCreature((baseSeed + i * 2654435761 + attempt * 40503) >>> 0, species);
+      const cseed = (baseSeed + i * 2654435761 + attempt * 40503) >>> 0;
+      candidate = species === "house" ? makeHouse(cseed) : makeCreature(cseed, species);
       const left = i % columns === 0 ? null : creatures[i - 1];
       const up = i >= columns ? creatures[i - columns] : null;
       const clash =

@@ -291,6 +291,11 @@ into a cat's or a dog's base as decals — was here and was removed: the whole d
 The five kinds are drawn **over** the goofy material, last of all and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `medium/materials.js`; light ink when the body color's luminance < 120), under the goofy material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
 
 ### legs (6)
+
+A **rex** leg ignores the form slot's line drawings: it is drawn as MASS — a filled tapered thigh and shin and
+a big flat three-clawed foot (`limbs.js`, a species branch — the way of drawing differs). The knee and ankle
+pivots are the standard ones, so it crouches and keeps its soles level like any biped.
+
 | Value | Biped | Quad (cat, dog) |
 | --- | --- | --- |
 | stick | A thin line plus a round foot | A thin leg plus a round foot |

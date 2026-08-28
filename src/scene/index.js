@@ -7,9 +7,10 @@ import { makeCreature } from "../character/index.js";
 import { makeNoise, makeRng } from "../rng.js";
 import { makePaperMaterial, setGrainScale } from "./paper.js";
 import { attachPost } from "./post.js";
-import { inkMaterial, disposeGroup } from "./mesh.js";
-import { buildCreature } from "./rig.js";
+import { inkMaterial, disposeGroup, sketchMesh } from "./mesh.js";
+import { buildCreature, BOIL_FRAMES } from "./rig.js";
 import { applyState } from "./animate.js";
+import { drawHouse } from "../house/index.js";
 import { BIND_STATE } from "../motion/index.js";
 import { makeHifives } from "./hifive.js";
 import { makeSparks } from "./spark.js";
@@ -62,7 +63,26 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
   // The active arm of an asymmetric action is split on the parity of the seed, so left and right look mixed on the board.
   let forcedAction = null;
   function applyForced(item) {
-    item.clock.force(forcedAction, item.spec.seed % 2 ? 1 : -1);
+    if (item.clock) item.clock.force(forcedAction, item.spec.seed % 2 ? 1 : -1);   // a house has no clock
+  }
+
+  // A house — a static occupant (src/house/index.js): three boil frames of one layer, no clock, no face,
+  // no emoji. The update loop only cycles its boil; everything else about it stands still on purpose
+  function buildHouse(spec) {
+    const group = new THREE.Group();
+    const frames = { house: [] };
+    for (let k = 0; k < BOIL_FRAMES; k += 1) {
+      const layer = drawHouse(spec, k);
+      const mesh = sketchMesh([layer.fills, layer.ink], 1, 1.5);
+      mesh.visible = k === 0;
+      frames.house.push(mesh);
+      group.add(mesh);
+    }
+    return {
+      static: true, group, frames, boilRanges: [], spec, limbs: [], lastState: null,
+      boilFps: (8 + (spec.seed % 5) * 0.5) / 15, boilOffset: spec.seed % BOIL_FRAMES,
+      baseX: 0, baseY: 0, generation: 0, emojiRoot: new THREE.Group()
+    };
   }
 
   // Lifts one individual out of the scene — throws the geometry away (materials are shared, so they stay) and detaches the group and emoji root
@@ -120,7 +140,7 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
   // Seats a newborn individual in the clock's current state immediately (no easing). Otherwise the arms are seen swinging down
   // from the rig's bind pose (T) to idle on the first frame. The bind pose should only be visible in the BIND view.
   function settle(item) {
-    if (bindView) return;
+    if (bindView || item.static) return;   // a house has nothing to seat
     applyState(item, item.clock.update(clockNow), clockNow, noise, { snap: true, boil: boilOn });
   }
 
@@ -176,7 +196,7 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     }
 
     specs.forEach((spec, index) => {
-      const item = buildCreature(spec, noise, clockNow);
+      const item = spec.kind === "house" ? buildHouse(spec) : buildCreature(spec, noise, clockNow);
       place(item, index);
       creatures.push(item);
     });
@@ -223,6 +243,12 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     clockNow = t;
     for (let index = 0; index < creatures.length; index += 1) {
       const item = creatures[index];
+      if (item.static) {
+        // A house — only its lines boil (the medium's, not the occupant's). INK STILL pins frame 0
+        const frame = boilOn ? Math.floor(t * item.boilFps + item.boilOffset) % BOIL_FRAMES : 0;
+        for (let k = 0; k < BOIL_FRAMES; k += 1) item.frames.house[k].visible = k === frame;
+        continue;
+      }
       if (bindView) {
         // The clock is let run (to prevent a runaway on return) while the rig is pinned to bind. Joint easing is immediate.
         item.lastState = item.clock.update(t);

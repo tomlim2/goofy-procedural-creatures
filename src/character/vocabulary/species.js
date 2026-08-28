@@ -10,7 +10,7 @@ export const SPECIES = [
     // forbid means "if this value comes up for this slot, swap it for this". applyConstraints reads it and
     // overwrites deterministically — the archetype's disposition (a scholar's dot eyes and so on) survives.
     forbid: {
-      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material
+      // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       arms: { none: "stick" },   // humans have arms (armless belongs to imps)
       face2: { tears: "none" },  // tear marks are not given to humans (they belong to imps)
@@ -37,7 +37,7 @@ export const SPECIES = [
   {
     name: "pup",
     forbid: {
-      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material
+      // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid", perkBig: "perkMid" },
       // Dog ear boundary — none and the huge ear become dog ears
@@ -84,7 +84,7 @@ export const SPECIES = [
   {
     name: "cat",
     forbid: {
-      // The **pattern** is the imps' — stripes, dots, spots, hatching and a patch belong to them alone, laid over the material
+      // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
       // Cat ear boundary — floppy ears and none become crown ears
@@ -124,6 +124,64 @@ export const SPECIES = [
       tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. wedge disabled
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
       face2: [["none", 5], ["blush", 1]]
+    }
+  },
+  {
+    name: "rex",
+    // The tyrannosaur. A biped WITH a tail (the one biped allowed one — the tail gate reads identity.tail,
+    // draw/limbs.js) whose whole point is still COLOR: vivid scales (palette.js SCALES) with a pattern in a
+    // second scale color on almost every one. A huge jaw of teeth, small fierce eyes set high, tiny stubby
+    // arms (armSpread is halved in the proportions), thick stomping legs, a long thick tail. It can be angry
+    // (the fierce eyes and the tooth grid), and its tiny arms still high five.
+    forbid: {
+      ears: { round: "none", roundMid: "none", roundBig: "none", pointy: "none", pointyMid: "none", pointyBig: "none", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "none", perkMid: "none", perkBig: "none" },
+      eyes: { cyclops: "dot" },
+      hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none", verylong: "none", twintailsBall: "none", appleBig: "none" },
+      horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
+      // The arms are tiny and stubby, always — every form folds to the little fists
+      arms: { stick: "stubby", sleeve: "stubby", mitten: "stubby", none: "stubby" },
+      armLength: { long: "medium" },
+      legLength: { verylong: "long" }
+    },
+    identity: {
+      ears: ["none"],
+      skeleton: "biped",
+      horns: ["none"],
+      hair: ["none"],
+      eyes: { not: ["cyclops"] },
+      arms: true,
+      armLength: ["medium"],
+      legLength: { not: ["verylong"] },
+      tail: true   // the one biped with a tail
+    },
+    bias: {
+      // The point of the species — almost every one is patterned, in a second scale color (spec.js pattern2)
+      pattern: [["stripes", 3], ["spots", 3], ["dots", 2.5], ["patch", 2], ["hatch", 2], ["none", 1]],
+      horns: [["none", 1]],
+      ears: [["none", 1]],
+      hair: [["none", 1]],
+      headgear: [["none", 9], ["cap", 0.5], ["crown", 0.4], ["halo", 0.3], ["cone", 0.4]],
+      eyewear: [["none", 7], ["monocle", 1], ["patch", 1]],
+      // A blocky head for the jaw to live in
+      head: [["block", 3], ["wide", 2.5], ["square", 2], ["pear", 1]],
+      // Small fierce eyes, set high on the head (the proportions push them up over the jaw)
+      eyes: [["dot", 3], ["sharp", 2.5], ["lidded", 2], ["ring", 1.5], ["slit", 1.5], ["hollow", 1], ["side", 1], ["half", 1]],
+      brow: [["none", 2], ["flat", 1.5], ["angry", 1.5]],
+      nose: [["nostrils", 3], ["none", 2], ["dot", 1]],
+      // THE JAW — a wide mouth full of teeth: the grid, fangs, zigzag, the open mouths with tooth strips
+      mouth: [["grimace", 3], ["fangs", 3], ["zigzag", 2], ["open", 2], ["shout", 1.5], ["grin", 1]],
+      mouthSize: [["wide", 3], ["normal", 1.5]],
+      mouthPos: [["low", 3], ["mid", 1]],
+      body: [["bean", 3], ["box", 1.5]],
+      arms: [["stubby", 1]],
+      tail: [["longtail", 5], ["kink", 1.5], ["flag", 1]],
+      tailSkin: [["thick", 5], ["block", 1]],
+      tailLength: [["long", 5], ["medium", 1]],
+      // Thick stomping legs on a heavy build — boots read as the dino feet's mass
+      legs: [["boots", 4], ["stub", 3], ["stick", 0.5]],
+      legLength: [["medium", 3], ["long", 2], ["short", 1]],
+      build: [["wide", 3], ["medium", 2]],
+      face2: [["none", 6], ["blush", 0.5]]
     }
   },
   {
