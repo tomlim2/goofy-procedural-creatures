@@ -459,9 +459,9 @@ export function tailSketch(spec, variant = 0) {
   const total = spine.reduce((acc, q, i) => (i ? acc + Math.hypot(q[0] - spine[i - 1][0], q[1] - spine[i - 1][1]) : 0), 0);
   const ts = spineT(spine);
 
-  // The thickness function (on the whole tail's t) — per skin. A rex tail is two and a half times thick at the
+  // The thickness function (on the whole tail's t) — per skin. A rex tail is three times and a bit thick at the
   // root, tapering hard — the counterweight
-  const thickK = box.quad ? 1 : 2.5;
+  const thickK = box.quad ? 1 : 3.2;
   const widthOf = {
     thick: (t) => (stub ? 0.024 : 0.02 * thickK) * (1 - t * 0.7) + 0.004,
     plume: (t) => (stub ? 0.03 : 0.016 + 0.024 * Math.sin(Math.PI * Math.min(1, t * 1.15))),
