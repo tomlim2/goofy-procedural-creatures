@@ -692,43 +692,29 @@ export function tailSketch(spec, variant = 0) {
       const a0 = at(t0), w0 = wOf(t0) * 0.96;   // the paint's edge — one ring where the dip stops
       sketch.line([[a0.x - a0.dy * w0, a0.y + a0.dx * w0], [a0.x + a0.dy * w0, a0.y - a0.dx * w0]], { color: ink0, size: "S", joint: [true, true], skinT: [t0, t0] });
     } else if (deco === "ribbon") {
-      // A ribbon TIED round the tail, a present's: a ring across the tube and a bow standing on it — in the
-      // POP, sized per individual, in one of three shapes (a hand does not tie the same bow twice). The bow
-      // stands in SCREEN space (straight up), the way a drawn ribbon always sits upright whatever it is tied
-      // to. Mid-visible-tail: at the tip the tube is thin and curling and the bow drowned in its own outline
-      const t = vis(0.42), a = at(t), w = wOf(t);
-      sketch.line([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color: shade(pop, 0.8), size: "L", joint: [true, true], skinT: [t, t] });
-      const kx = a.x - a.dy * (w * 0.85), ky = a.y + a.dx * (w * 0.85);   // the knot on the upper edge
-      const sz = (0.042 + w * 0.55) * (0.85 + dh(11) * 0.55);   // the bow's size — per individual, boldly (a bow you can see across the room)
-      const shape2 = spec.proportions.wobbleSeed % 3;          // 0 pointed bow · 1 round loops · 2 bow with streamers
-      if (shape2 === 1) {
-        for (const side of [-1, 1]) {
-          const loop = blobPath(kx + side * sz * 0.8, ky + sz * 0.62, sz * 0.62, sz * 0.5, { lumps: 3, amount: 0.15, noise: null });
-          paintPart(sketch, spec, loop, pop, { own: true, body: true, skinT: t });
-          sketch.contour(loop, { color: ink0, skinT: [t, t] });
-        }
-      } else {
-        for (const side of [-1, 1]) {
-          const loop = [
-            [kx, ky],
-            [kx + side * sz * 1.15, ky + sz * 1.05],
-            [kx + side * sz * 0.2, ky + sz * 0.55]
-          ];
-          paintPart(sketch, spec, loop, pop, { own: true, body: true, skinT: t });
-          sketch.line([...loop, [kx, ky]], { color: ink0, size: "S", joint: [true, true], skinT: [t, t] });
-        }
+      // THE anime bow (a maid-dragon's): two WIDE symmetric wings drooping a little, each with a V notch cut
+      // into its outer edge, and a small knot between — the wings are the ribbon, the knot only pinches them.
+      // In the POP, flat in SCREEN space, tied toward the tail's end the way that bow is worn. A short tail
+      // wears a smaller bow (capped by the visible length), never a buried one
+      const t = vis(0.66), a = at(t), w = wOf(t);
+      const kx = a.x - a.dy * (w * 0.75), ky = a.y + a.dx * (w * 0.75);
+      let sz = (0.075 + w * 0.9) * (0.9 + dh(11) * 0.4);
+      sz = Math.min(sz, total * (1 - tVis) * 0.55);
+      const droop = 0.08 + dh(12) * 0.14;   // how far the wings hang — per individual
+      for (const side of [-1, 1]) {
+        const P = [
+          [0, 0.3], [1.02, 0.44 - droop], [1.5, 0.16 - droop],
+          [1.16, -0.04 - droop * 0.5],                             // the V notch, biting inward
+          [1.5, -0.3 - droop], [1.0, -0.52 - droop], [0, -0.28]
+        ];
+        const wing = P.map(([px, py]) => [kx + side * px * sz, ky + py * sz]);
+        paintPart(sketch, spec, wing, pop, { own: true, body: true, skinT: t });
+        sketch.contour(wing, { color: ink0, skinT: [t, t] });
       }
-      if (shape2 === 2) {
-        for (const side of [-1, 1]) {   // the untied ends hanging below the knot
-          const sxx = kx + side * sz * 0.3;
-          const tail2 = [[sxx, ky], [sxx + side * sz * 0.35, ky - sz * 0.8], [sxx + side * sz * 0.1, ky - sz * 1.25]];
-          sketch.line(tail2, { color: shade(pop, 0.8), size: "L", joint: [true, false], skinT: [t, t] });
-        }
-      }
-      const knot = blobPath(kx, ky + sz * 0.08, sz * 0.3, sz * 0.3, { lumps: 3, amount: 0.15, noise: null });
+      const knot = blobPath(kx, ky, sz * 0.24, sz * 0.3, { lumps: 3, amount: 0.12, noise: null });
       paintPart(sketch, spec, knot, shade(pop, 0.72), { own: true, body: true, skinT: t });
       sketch.contour(knot, { color: ink0, skinT: [t, t] });
-    } else if (deco === "club") {
+        } else if (deco === "club") {
       // The tip a heavy ball — the ankylosaur's, in the tail's own hide
       const a = at(0.96);
       const r = Math.max(wOf(0.85) * 1.7, 0.022);
