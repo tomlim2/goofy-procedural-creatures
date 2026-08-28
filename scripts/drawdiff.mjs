@@ -70,7 +70,7 @@ try {
     }
   };
   let specDiffs = 0;
-  for (const species of ["human", "cat", "pup", "imp"]) {
+  for (const species of ["human", "cat", "pup", "imp", "rex"]) {
     for (const seed of [11, 2222, 333333]) {
       const base = oldM.makeCreature(seed, species);
       if (JSON.stringify(base) !== JSON.stringify(newM.makeCreature(seed, species))) specDiffs += 1;

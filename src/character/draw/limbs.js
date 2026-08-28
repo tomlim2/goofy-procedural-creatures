@@ -334,8 +334,22 @@ function armRigOf(spec, box) {
 // Any skin goes on any skeleton (a plume skin on a stub skeleton = a pom). The scene stands it up as an eight-bone chain and rotates each bone (tailSketch below).
 
 // The skeleton — the spine point list. tailLift (a ratio) raises or lowers the tip a little
-function tailSpine(kind, lift) {
+function tailSpine(kind, lift, rex = false) {
   const up = lift * 0.02;
+  // The rex's tail is the dinosaur's COUNTERWEIGHT whatever the tail slot says (the rex-leg rule: the way of
+  // drawing differs by species). The quad spines all climb — a cat's tail stands and curls over the back —
+  // and at 1.6× that put an upright cat tail on the tyrannosaur's hip. A counterweight runs OUT low, droops a
+  // little under its own weight, and only the tip rises. Each kind keeps its character sideways: kink zigzags,
+  // hook and curl turn their tip up, ring curls its tip right over, stubtail stays blunt
+  if (rex) {
+    if (kind === "stubtail") return [[0, 0], [0.025, -0.004], [0.05, 0.008]];
+    if (kind === "flag") return [[0, 0], [0.06, -0.008], [0.11, 0.025 + up]];
+    if (kind === "kink") return [[0, 0], [0.05, -0.015], [0.09, 0.012], [0.13, -0.012], [0.18, 0.018 + up]];
+    if (kind === "hook") return [[0, 0], [0.06, -0.01], [0.12, 0], [0.16, 0.03], [0.15, 0.07 + up]];
+    if (kind === "ring") return [[0, 0], [0.07, -0.01], [0.13, 0.01], [0.16, 0.05], [0.13, 0.08 + up]];
+    if (kind === "curl") return [[0, 0], [0.06, -0.012], [0.12, 0.005], [0.17, 0.04 + up]];
+    return [[0, 0], [0.07, -0.012], [0.14, -0.002], [0.2, 0.02 + up]];   // longtail — the full counterweight
+  }
   if (kind === "curl") return [[0, 0], [0.05, 0.08], [0.03 + up, 0.16], [-0.015, 0.2]];
   if (kind === "flag") return [[0, 0], [0.025, 0.1], [0.01 + up, 0.2]];
   if (kind === "longtail") return [[0, 0], [0.07, 0.015], [0.14, 0.05], [0.18, 0.12 + up]];
@@ -421,7 +435,7 @@ export function tailSketch(spec, variant = 0) {
   const ink0 = spec.palette.ink;
   const cx = box.bodyCx;
   // The root: a quad's is the rump (the body's back end); a biped's (the rex) is beside the hip, and the
-  // skeleton reaches out to the side and up from there
+  // skeleton runs out low from there — the counterweight (the rex branch of tailSpine)
   const pivot = box.quad
     ? [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1]
     : [box.bodyW * 0.85, box.legTop + box.bodyH * 0.2];
@@ -429,7 +443,7 @@ export function tailSketch(spec, variant = 0) {
   // A rex tail is the dinosaur's counterweight — the whole skeleton half again as long, and thicker below
   const rexK = box.quad ? 1 : 1.6;
   const lenK = (spec.parts.tailLength === "short" ? 0.45 : spec.parts.tailLength === "medium" ? 0.7 : 1) * rexK;
-  const spine = tailSpine(spec.parts.tail, p.tailLift).map(([x, y]) => [x * lenK, y * lenK]);
+  const spine = tailSpine(spec.parts.tail, p.tailLift, !box.quad).map(([x, y]) => [x * lenK, y * lenK]);
   const skin = spec.parts.tailSkin || "line";
   const stub = spec.parts.tail === "stubtail";
   // The tail grows from the body, so it is the body's color — a quad's cloth, the head color or a tone of it (its value step is the head's: one mass)
