@@ -116,36 +116,54 @@ export function drawHeadgear(ink, fills, spec, box) {
   }
 
   if (kind === "coronet") {
-    // The monkey's little crown, measured off the reference head (500 px, skull ry ≈ 138):
-    //   FOUR spikes, not three · the band is narrow — about a quarter of the head's half-width at that
-    //   height, where the paper `crown` spans nearly all of it · the spikes **splay outward**, their tips
-    //   reaching 1.7× the band's half-width · and the tips sit at FOUR DIFFERENT heights (0.80 · 1.00 ·
-    //   0.93 · 0.87 of the tallest, left to right), which is most of what makes it read as drawn by hand
-    //   rather than stamped. The reference's spikes rise 0.93·ry above the skull; the cell ceiling here
-    //   allows about 0.45, so the height is the board's and only the proportions are the reference's.
-    // Filled in pieces, like the paper crown — the V notches between spikes are concave and a fan from the
-    // centre crosses them.
-    const by = Math.max(cy + ry * 0.8, brow + ry * 0.3);
-    const w = Math.max(halfW(by) * 0.26, rx * 0.13);       // the band — narrow
-    const bandH = ry * 0.13;
-    const peakH = ry * 0.42;
-    const SPIKES = 4;
-    const RIPPLE = [0.8, 1, 0.93, 0.87];
-    const hOf = (i) => RIPPLE[tiltSide < 0 ? SPIKES - 1 - i : i];   // which way the ripple runs, per individual
-    const vx = (i) => -w + (i * 2 * w) / SPIKES;
-    const peak = (i) => {
-      const mid = -w + ((i + 0.5) * 2 * w) / SPIKES;
-      return [mid * 1.7, by + bandH + peakH * hOf(i)];      // splayed outward, so the tips clear the band
-    };
+    // The monkey's crown. It is **one tall body with V notches cut into its top**, not a band with triangles
+    // stood on it — that was the first reading and it came out as a squat strip. Measured off the reference
+    // head (500 px, skull ry ≈ 138, head half-width 72 at the crown's base):
+    //   the body is a trapezoid **narrower at the bottom than the top** (base half 16 px, top half 21 px) and
+    //   is about as TALL as it is wide (42 px each way) — that squareness is the "long body" of it ·
+    //   the notches cut down two thirds of the crown's height, leaving the body a third ·
+    //   the tips evenly spaced across ±1.5× the base half-width, so the outer two overhang the body ·
+    //   the tips sit at DIFFERENT heights (the ripple runs either way per individual) — most of what keeps
+    //   it from reading as a stamped icon. The reference has four; three reads better at this size.
+    // The reference stands 0.93·ry over the skull and this cell allows about 0.45, so the crown is scaled to
+    // the board, and the aspect is kept as far as it can be — narrowed rather than squashed, because
+    // squashing is what loses the long body. Narrowed all the way to the reference's ratio it turned into a
+    // sliver, so it sits between: about 1.9 tall to 1 wide against the reference's 2.3.
+    // One polygon, filled in pieces — the notches are concave and a fan from the centre crosses them.
+    const by = Math.max(cy + ry * 0.78, brow + ry * 0.3);
+    // **Every measurement hangs off the base half-width**, the way the reference's do, so the proportions hold
+    // whatever shape the head is. Tying the heights to ry instead let a wide head flatten the body back into
+    // the strip this kind exists to avoid. w itself is capped both ways: by the head's width at that height
+    // (it must sit on the skull) and by ry (the cell has a ceiling)
+    const w = Math.min(halfW(by) * 0.24, ry * 0.082);
+    const topW = w * 1.3;                  // the body flares as it rises
+    const bodyH = topW * 2.9;              // the body carries the height — this is the long-bodied crown
+    const peakH = bodyH * 1.35;            // the notches are shallow: the jagged part is the crown's top, not most of it
+    const tipSpan = w * 1.5;
+    const SPIKES = 3;
+    const RIPPLE = [0.85, 1, 0.9];   // still three different heights — even tips read as a stamped icon
+    const hOf = (i) => RIPPLE[tiltSide < 0 ? SPIKES - 1 - i : i];
+    const tipX = (i) => -tipSpan + (i * 2 * tipSpan) / (SPIKES - 1);
+    const tip = (i) => [tipX(i), by + bodyH + peakH * hOf(i)];
+    const valleyX = (i) => (tipX(i) + tipX(i + 1)) / 2;   // the notch between two tips
     const phase = spec.seed * 0.0017;
-    const band = crumple([[w, by], [-w, by], [-w, by + bandH], [w, by + bandH]], 0.003, phase);
-    const spikes = Array.from({ length: SPIKES }, (_, i) =>
-      crumple([[vx(i), by + bandH], peak(i), [vx(i + 1), by + bandH]], 0.003, phase + i));
-    paintPart(fills, spec, band, accent, { own: true });
-    for (const sp of spikes) paintPart(fills, spec, sp, accent, { own: true });
-    const outline = [[w, by], [-w, by], [-w, by + bandH]];
-    for (let i = 0; i < SPIKES; i += 1) outline.push(peak(i), [vx(i + 1), by + bandH]);
-    outline[outline.length - 1] = [w, by + bandH];
+
+    // the body — a trapezoid, filled as one convex piece
+    const body = crumple([[-w, by], [w, by], [topW, by + bodyH], [-topW, by + bodyH]], 0.003, phase);
+    paintPart(fills, spec, body, accent, { own: true });
+    // each spike its own triangle, standing on the body's top edge
+    for (let i = 0; i < SPIKES; i += 1) {
+      const l = i === 0 ? -topW : valleyX(i - 1);
+      const r = i === SPIKES - 1 ? topW : valleyX(i);
+      paintPart(fills, spec, crumple([[l, by + bodyH], tip(i), [r, by + bodyH]], 0.003, phase + i), accent, { own: true });
+    }
+    // one outline round the whole silhouette — the pieces are the filling's business, not the line's
+    const outline = [[w, by], [-w, by], [-topW, by + bodyH]];
+    for (let i = 0; i < SPIKES; i += 1) {
+      outline.push(tip(i));
+      if (i < SPIKES - 1) outline.push([valleyX(i), by + bodyH]);
+    }
+    outline.push([topW, by + bodyH]);
     ink.contour(crumple(outline, 0.003, phase), { color: ink0 });
     return;
   }

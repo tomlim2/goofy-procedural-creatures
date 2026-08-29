@@ -109,10 +109,12 @@ export function limbSketches(spec, variant = 0) {
         ft.line([[0.006, 0.002], [0.01, 0.016]], { color: ink0, size: "S" });
         ft.line([[0.018, 0.002], [0.021, 0.014]], { color: ink0, size: "S" });
       }
-      // knee: which way the fold bows. A beast is seen from the side, and the **hind** knee bends forward — the
-      // stifle of a real dog or cat, against the front elbow that folds back. Indices 0·1 are the front pair
-      // (quadHips front, at −x) and 2·3 the hind
-      limbs.push({ sketch: s, lowerSketch: sh, footSketch: ft, pivot: [x, hipY], elbow: [kneeX, -kneeH], ankle: [footX, -shinLen], kind: "leg", side: i < 2 ? -1 : 1, knee: i < 2 ? 1 : -1, index: i, behind: false });
+      // knee: which way the fold bows — **the same way on all four**. A real dog or cat folds the hind stifle
+      // forward against the front elbow's backward fold, and that is what this did (knee 1 front, −1 hind);
+      // at this scale the two directions read as one leg drawn wrong rather than as anatomy, so the drawing
+      // is chosen over the animal. Indices 0·1 are the front pair (quadHips front, at −x) and 2·3 the hind.
+      // `side` still marks front/hind for everything else, so only the fold was unified
+      limbs.push({ sketch: s, lowerSketch: sh, footSketch: ft, pivot: [x, hipY], elbow: [kneeX, -kneeH], ankle: [footX, -shinLen], kind: "leg", side: i < 2 ? -1 : 1, knee: 1, index: i, behind: false });
     });
     return limbs;
   }
