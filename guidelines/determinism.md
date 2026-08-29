@@ -68,10 +68,16 @@ It is fixed the way the top of `applyConstraints` says to — the replacement is
 is **no rng call at all** and the count cannot move whatever the pools do. Verified by adding a hair value
 afterwards: `parts.hair` moved on 17 of 600 and *nothing else moved at all*.
 
-Three of the same shape are still in `applyConstraints` and are **still live traps** — `horns === "antenna"`
-→ ears (fires on 6.9% of creatures), `eyewear === "patch"` → patchSide (6.1%), glasses/goggles → brows
-(7.3%). Edit the horns or eyewear pool and the same cascade happens. Each can be fixed the same way, and each
-costs a one-time reseed of roughly the creatures that fire it today.
+The three of the same shape that were left — `horns === "antenna"` → ears, `eyewear === "patch"` →
+patchSide, glasses/goggles → brows — are fixed the same way. **`applyConstraints` now consumes no rng at
+all**: every decision in it is a fixed overwrite or a `settled(seed, n)` hash, and it no longer takes the rng
+as a parameter, so a conditional draw cannot be added back by accident. Clearing all four cost a one-time
+reseed of 31.8% (the four conditions overlap on the same creature, so it came out well above the ~20% the
+individual rates suggested). Verified after: adding a horns value AND an eyewear value moved those two slots
+on 11 and 38 creatures of 600 and moved **nothing else at all** — no unrelated part, no proportion.
+
+**When you add a constraint here, it must not call rng.** Use a fixed overwrite, `settled(seed, n)` with an
+`n` no other call site uses, or `forbid` in `species.js`.
 
 ## Drawing randomness is drawn separately
 

@@ -36,7 +36,14 @@ function applyForbid(parts, speciesName) {
   }
 }
 
-function applyConstraints(parts, rng, speciesName, seed) {
+// A 0~1 settled by the seed alone — **no rng call**, so it costs nothing from the sequence and the count can
+// never move. `n` keeps the call sites apart so two constraints on one creature do not agree by accident.
+// This is what every conditional coin-flip in applyConstraints uses: firing rng only when a condition holds
+// makes the call count depend on that condition, and flipping it shifts every draw after (determinism.md)
+const settled = (seed, n) => (Math.imul((seed ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+
+// It takes no rng: every decision in here is either a fixed overwrite or settled() off the seed
+function applyConstraints(parts, speciesName, seed) {
   // The species forbid table is applied first. It has to come first so the later constraints (antennae removing ears, and so on)
   // do not misfire on a forbidden value.
   applyForbid(parts, speciesName);
@@ -58,7 +65,7 @@ function applyConstraints(parts, rng, speciesName, seed) {
     // a headgear value moved 6 — and every one of them had flipped exactly here. A hash of the seed picks the
     // replacement now: no rng call at all, so the count cannot move whatever the pools do
     if (!short.includes(parts.hair)) {
-      parts.hair = short[(Math.imul((seed ^ 0x85ebca6b) >>> 0, 0x9e3779b1) >>> 13) % short.length];
+      parts.hair = short[Math.floor(settled(seed, 4) * short.length) % short.length];
     }
   }
 
@@ -66,11 +73,11 @@ function applyConstraints(parts, rng, speciesName, seed) {
   if (parts.hair === "mohawk" || parts.hair === "bun" || parts.hair === "apple" || parts.hair === "appleBig") parts.headgear = "none";
 
   // With antennae there are no ears as well. The silhouette gets messy.
-  if (parts.horns === "antenna" && rng.chance(0.75)) parts.ears = "none";
+  if (parts.horns === "antenna" && settled(seed, 1) < 0.75) parts.ears = "none";
 
   // An eyepatch covers one eye. Which side is settled here.
   // A cyclops has side 0, so the sentinel for "no patch" must not be 0.
-  parts.patchSide = parts.eyewear === "patch" ? (rng.chance(0.5) ? -1 : 1) : 99;
+  parts.patchSide = parts.eyewear === "patch" ? (settled(seed, 2) < 0.5 ? -1 : 1) : 99;
 
   // Angry brows on a closed eye leave the expression unreadable.
   if (["sleepy", "happy", "squeeze", "droop"].includes(parts.eyes) && parts.brow === "angry") parts.brow = "flat";
@@ -85,7 +92,7 @@ function applyConstraints(parts, rng, speciesName, seed) {
   }
 
   // Eyewear overlaps the eyes, so it often covers the brows.
-  if ((parts.eyewear === "glasses" || parts.eyewear === "goggles") && rng.chance(0.6)) {
+  if ((parts.eyewear === "glasses" || parts.eyewear === "goggles") && settled(seed, 3) < 0.6) {
     parts.brow = "none";
   }
 
@@ -152,7 +159,7 @@ export function makeCreature(seed, speciesName = "human") {
     if (LATE_SLOTS.includes(slot)) continue;   // drawn at the very end (below)
     parts[slot] = pickSlot(rng, species, archetype, slot);
   }
-  applyConstraints(parts, rng, species.name, seed);
+  applyConstraints(parts, species.name, seed);
 
   const skin = rng.pick(FILLS);
   const palette = {

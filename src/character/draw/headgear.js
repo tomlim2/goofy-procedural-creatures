@@ -116,18 +116,27 @@ export function drawHeadgear(ink, fills, spec, box) {
   }
 
   if (kind === "coronet") {
-    // A small pointed crown perched on top of the head — the monkey's. Not the paper `crown` above, which is
-    // a wide band wrapping the skull with a zigzag of four: this one is **narrow** (half the head's width at
-    // that height), sits ON the crown rather than round it, and carries three tall thin spikes with the middle
-    // one highest. Filled in pieces for the same reason the paper crown is — the V notches between the spikes
-    // are concave, and a fan from the centre crosses them
-    const by = Math.max(cy + ry * 0.78, brow + ry * 0.3);
-    const w = Math.max(halfW(by) * 0.5, rx * 0.2);
-    const bandH = ry * 0.11;
-    const peakH = ry * 0.46;   // top ≈ crown + 0.35·ry, inside the 1.19 cell ceiling on the biggest head
-    const SPIKES = 3;
+    // The monkey's little crown, measured off the reference head (500 px, skull ry ≈ 138):
+    //   FOUR spikes, not three · the band is narrow — about a quarter of the head's half-width at that
+    //   height, where the paper `crown` spans nearly all of it · the spikes **splay outward**, their tips
+    //   reaching 1.7× the band's half-width · and the tips sit at FOUR DIFFERENT heights (0.80 · 1.00 ·
+    //   0.93 · 0.87 of the tallest, left to right), which is most of what makes it read as drawn by hand
+    //   rather than stamped. The reference's spikes rise 0.93·ry above the skull; the cell ceiling here
+    //   allows about 0.45, so the height is the board's and only the proportions are the reference's.
+    // Filled in pieces, like the paper crown — the V notches between spikes are concave and a fan from the
+    // centre crosses them.
+    const by = Math.max(cy + ry * 0.8, brow + ry * 0.3);
+    const w = Math.max(halfW(by) * 0.26, rx * 0.13);       // the band — narrow
+    const bandH = ry * 0.13;
+    const peakH = ry * 0.42;
+    const SPIKES = 4;
+    const RIPPLE = [0.8, 1, 0.93, 0.87];
+    const hOf = (i) => RIPPLE[tiltSide < 0 ? SPIKES - 1 - i : i];   // which way the ripple runs, per individual
     const vx = (i) => -w + (i * 2 * w) / SPIKES;
-    const peak = (i) => [-w + ((i + 0.5) * 2 * w) / SPIKES, by + bandH + peakH * (i === 1 ? 1 : 0.74)];
+    const peak = (i) => {
+      const mid = -w + ((i + 0.5) * 2 * w) / SPIKES;
+      return [mid * 1.7, by + bandH + peakH * hOf(i)];      // splayed outward, so the tips clear the band
+    };
     const phase = spec.seed * 0.0017;
     const band = crumple([[w, by], [-w, by], [-w, by + bandH], [w, by + bandH]], 0.003, phase);
     const spikes = Array.from({ length: SPIKES }, (_, i) =>
