@@ -247,6 +247,12 @@ body.how { height: auto; }
 .how figure canvas { display: block; width: 100%; margin: 0 auto; }
 .how .subs { display: flex; margin: 2px auto 0; }
 .how .subs span { flex: 1; text-align: center; font-size: 10px; letter-spacing: 0.1em; opacity: 0.55; }
+/* The goofy material's own name, over its row of balls — the density labels underneath say the step, not which material it is */
+.how .matname {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-bottom: 8px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+}
+.how .matname .kind { font-size: 10px; letter-spacing: 0.08em; text-transform: none; opacity: 0.5; }
 .how figcaption { margin-top: 8px; font-size: 11px; line-height: 1.6; opacity: 0.85; }
 .how code { font: inherit; background: rgba(43, 39, 36, 0.08); padding: 0 3px; }
 .how .foot { margin-top: 52px; opacity: 0.6; }

@@ -222,8 +222,10 @@ goofy material and hands over the path and the color: `fills.paint(path, "FLAT",
 
 The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt goofy material cannot silently draw
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
-way, its contour the board's PENCIL_STROKE — so the table cannot drift from what is seen. The last ball of every textured row is the same
-material on a **dark ground**, which is where the rule above is visible.
+way, its contour the board's PENCIL_STROKE — so the table cannot drift from what is seen. Each row is headed by **the goofy
+material's own name and its texture kind** (`graphite · hatch`, `charcoal · speckle`) — the balls and the labels under them show the
+five density steps, which says how many marks but never which of the five materials is making them. The last ball of every textured
+row is the same material on a **dark ground**, which is where the rule above is visible.
 
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |

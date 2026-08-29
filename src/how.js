@@ -242,8 +242,14 @@ Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
   const el = document.createElement("figure");
   el.dataset.fig = `material:${name}`;
   if (m.texture) el.className = "wide";
-  const label = (k) => (m.texture ? `${VALUES[k].name} · ${VALUES[k].v}` : name.toLowerCase());
-  el.innerHTML = `<canvas></canvas><div class="subs">${steps.map((k) => `<span>${label(k)}</span>`).join("")}</div>`;
+  // The row is named, not just its density steps — the ball alone does not say which of the five goofy
+  // materials it is, and the density labels underneath read as the whole legend without it
+  const kind = m.texture ? m.texture.kind : "no texture — the fill-up alone";
+  // FLAT's one ball needs no step label (its name is the heading now, and the step does not touch it)
+  const subs = m.texture
+    ? `<div class="subs">${steps.map((k) => `<span>${VALUES[k].name} · ${VALUES[k].v}</span>`).join("")}</div>`
+    : "";
+  el.innerHTML = `<div class="matname">${name.toLowerCase()}<span class="kind">${kind}</span></div><canvas></canvas>${subs}`;
   document.getElementById("materialBalls").appendChild(el);
   const half = steps.length * 0.25;
   const rowY = (r) => (grounds.length === 1 ? 0 : (grounds.length - 1) / 2 * 0.5 - r * 0.5);
