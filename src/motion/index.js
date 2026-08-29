@@ -129,13 +129,17 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
   // through update(), so an init draw here would shift every schedule after it and re-roll every creature's motion
   const F = M.float || null;
   const floatPhase = ((seed % 89) / 89) * Math.PI * 2;
-  // How far off the floor it hangs is **solved from the rig**, never a constant: legTop is how high this
-  // individual carries its body, the same measure sleep settles it down by, so every build leaves the ground by
-  // the same meaning rather than the same number (a fixed 0.038 lifted a small cat by 0.42 of a leg and a rex by
-  // 0.18). Clamped at both ends by measurement — the shortest build's legTop is 0.022, under the scene's own
-  // floor release (hopY 0.02, animate.js), which would leave the feet still pinned and the legs stretching for
-  // ground that is no longer there; the tallest is 0.46, which would carry a 1.05-high head out of the 1.35 cell
-  const floatLift = F ? Math.min(Math.max((rig && rig.legTop ? rig.legTop : 0) * F.lift, F.min), F.max) : 0;
+  // **Every ghost hangs at the same height.** One distance for all of them, not a fraction of each build: a row
+  // of ghosts should read as a row, and solving the lift off legTop (0.022~0.46 across the board) made the line
+  // ragged — the raggedness is what you see, not the meaning behind it. What still varies per individual is the
+  // knee fold, below. 0.09 clears the scene's floor release (hopY 0.02, animate.js) more than three times over
+  // even at the bottom of the drift, and carries the tallest head (1.05) to 1.16, inside the 1.35 cell
+  const floatLift = F ? F.lift : 0;
+  // How far the knees tuck up, per individual — one ghost hangs with its legs nearly straight and the next has
+  // them folded right up. **From the seed, no rng**, for the same reason the phase is. It goes out as bodyDrop,
+  // the crouch scalar: with the feet off the ground the scene's floor hold is released (animate.js), so the very
+  // solve that sinks a standing body into its knees instead pulls the feet up under a floating one
+  const floatFold = F ? F.fold[0] + ((Math.imul((seed ^ 0x6d2b79f5) >>> 0, 0x9e3779b1) >>> 9) / 8388608) * (F.fold[1] - F.fold[0]) : 0;
   // Walking moves it — from home (the middle of the cell, x 0) it walks a little to the left or right, idles there as usual (and may sleep),
   // and the next walk **always** brings it home the way it came. leg = one trip { from, to, start, dur }. The speed is the species' (W.speed, cells/second)
   const trip = { x: 0, from: 0, to: 0, start: -1, dur: 0, dir: 0 };
@@ -338,9 +342,11 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
       // above hopY 0.02 — this clears that even at the bottom of the drift. The legs let go of their standing
       // bend the way a jump's flight does (floatK, at the legs section), so they hang extended
       let floatK = 0;
+      let floatY = 0;   // kept apart from hp.hopY: the arms are dragged up by a JUMP's height, and a float is no jump
       if (F) {
         floatK = ramp(Math.min(1, t / 2.4));
-        hp.hopY += floatLift * (1 + Math.sin((t * Math.PI * 2) / F.period + floatPhase) * F.bob) * floatK;
+        floatY = floatLift * (1 + Math.sin((t * Math.PI * 2) / F.period + floatPhase) * F.bob) * floatK;
+        hp.hopY += floatY;
       }
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
@@ -428,7 +434,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
         }
         act = { action: "hifive", side: five.side, start: five.start, until: Infinity, def };
       }
-      const arms = solveArms(arm, act, t);
+      // A ghost's arms **hang** — every arm an action does not decide falls back to the limp pose instead of the
+      // A-pose. (A ghost takes no arm actions at all, so for one it is every arm, always)
+      const arms = solveArms(arm, act, t, F ? "limp" : "idle");
       const swing = R.stepArmSwing(armSwing, sway, t, M);
       for (const side of [-1, 1]) {
         const arm = arms[String(side)];
@@ -437,7 +445,11 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
         // the palm off the meeting point it is aimed at (the other arm keeps swinging as usual)
         const reaching = five && act && act.action === "hifive" && side === act.side;
         let off = reaching ? 0 : -side * swing;
-        if (!reaching && hp.hopY > 0 && !(walkK > 0.5)) off += side * hp.hopY * 4;
+        // Arms up on a jump — off the hop's height MINUS the float. A jump drags the arms up because the body
+        // left the ground under them; a ghost hangs there, and the same term would hold its arms out sideways
+        // for good (an imp's reached 93° — straight out from the shoulder)
+        const hopDrag = hp.hopY - floatY;
+        if (!reaching && hopDrag > 0 && !(walkK > 0.5)) off += side * hopDrag * 4;
         if (!reaching && walkK > 0 && W) off += Math.sin(ph + (side > 0 ? Math.PI : 0)) * W.arm * walkK;   // walk — the arms swing counter to the legs
         off += R.armJitter(armSwing, t, side);
         arm.shoulder += off;
@@ -470,8 +482,9 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
         // from under the pose that had just been solved for it. Faded out by both blends
         const REST_BEND = 0.03;
         const standing = Math.max(0, 1 - sleepK - sitK);
-        // A float is airborne the whole time — the same release as a jump's flight, held on
-        const dropFrac = REST_BEND * (1 - Math.max(jc.flight, floatK)) * standing + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
+        // A float is airborne the whole time — the same release as a jump's flight, held on — and its knees are
+        // folded by that individual's own amount, faded in with the rise so the tuck happens as it leaves the floor
+        const dropFrac = REST_BEND * (1 - Math.max(jc.flight, floatK)) * standing + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK + floatFold * floatK;
         bodyDrop = leg.y * Math.min(dropFrac, 0.4);
       }
       // Walk — a quad alternates its diagonal pairs (0·3 / 1·2) front and back; a biped's two legs alternately open and close (a walk seen head-on)

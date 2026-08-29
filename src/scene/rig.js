@@ -206,8 +206,12 @@ export function buildCreature(spec, noise, birth = 0) {
       kind: limb.kind, side: limb.side, index: limb.index ?? 0,
       // **knee has to come across.** animate falls back to `side` for the fold direction when it is missing,
       // and `side` marks front from hind on a quad — so the pair folded opposite ways however the drawing
-      // asked. The descriptor has carried a `knee` since the quad legs were written; it just never arrived
-      knee: limb.knee,
+      // asked. The descriptor has carried a `knee` since the quad legs were written; it just never arrived.
+      // A **floating** individual folds every leg the same way, and forward. A biped leg carries no knee of its
+      // own — on the ground it falls back to `side`, the pair bowing apart into a plié, which is exactly what a
+      // crouch with its feet planted wants and exactly wrong in the air, where it reads as a squat. Hanging,
+      // both tuck to one side together. Grounded creatures are untouched; quads already ask for one direction
+      knee: isGhost(spec) && limb.kind === "leg" ? -1 : limb.knee,
       angle: bind.shoulder, elbowAngle: bind.elbow
     };
   });

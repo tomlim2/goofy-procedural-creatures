@@ -125,6 +125,8 @@ export function limbSketches(spec, variant = 0) {
   // pivot, carrying the foot), split at 52%, exactly the arm's upper/forearm arrangement. The scene folds
   // them like an elbow: seen head-on a bend reads as a plié — thighs out, shins back in (the jump's crouch,
   // guidelines/motion/catalog.md § body actions). float keeps no knee — there is no leg to bend.
+  // No `knee` here on purpose: a grounded biped's pair bows APART, which is what a crouch with its feet
+  // planted wants. Only a floating one folds both to one side, and the scene sets that (scene/rig.js).
   const hipY = box.legTop + 0.02;
   // The stance (how far they open) is set by the torso build, not the leg form — a wide body carries a wide stance.
   const spread = (BUILD[spec.parts.build] || BUILD.medium).stance;

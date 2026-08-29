@@ -131,6 +131,7 @@ When and which action happens is `stepArmAction` in `states.js` (the per-species
 | Action | Arms | Pose | Hold (s) | Meaning | human | imp |
 | --- | --- | --- | --- | --- | --- | --- |
 | **idle** | — | 30° open, elbows slightly bent, clamped above the floor | always | the base | ● | ● |
+| **limp** | — | 9° off vertical at the same near-full reach, no floor clamp | always | the base **of anything that floats** — a ghost's arms hang instead of being held open | — | — |
 | **wave** | one | The hand up, the elbow ±0.5 rad at 3Hz | 1.5~3 | **waving hello** | 2 | 1.5 |
 | hi | one | One hand straight up | 2~4 | me! | 1 | 1 |
 | point | one | Straight out to the side (horizontal +17°) | 2~4 | pointing | 1 | 1 |
@@ -252,22 +253,47 @@ taken out by the table's own means (`null` = this motion does not exist), which 
 motion skips its init exactly as it does for a species that never had it. The blink and the mood are the only two expression channels with no table switch of their own, so those two
 are masked in `index.js` at the assembly point where `forced` and the high five already override — the schedules keep stepping and keep drawing, and only the result is dropped.
 
-**The lift is solved from the rig, not set as a number.** `legTop` is how high this individual carries its body off the floor — the same measure the sleeping pose settles it down by —
-so every build leaves the ground by the same *meaning*: `lift × legTop`, clamped into world units at both ends. A fixed distance lifted a small cat by 0.42 of a leg and a rex by 0.18.
-The clamps are measured: the shortest build's `legTop` is 0.022, under the scene's own floor release (`hopY` 0.02, `animate.js`), which would leave the feet pinned and the legs
-stretching for ground that is no longer there; the tallest is 0.46, which would carry a 1.05-high head out of the 1.35 cell. Over 1000 ghosts the drift runs 0.024~0.150 and the
-highest floating head reaches 1.200.
+**Every ghost hangs at the same height** — one distance for all of them, 0.09 world units, and not a fraction of each
+build. It was solved off `legTop` for a while, on the principle that a dachshund and a long-legged build should leave the
+ground by the same *meaning*; on screen that only made the line of them ragged, and the raggedness is what you see rather
+than the meaning behind it. A row of ghosts has to read as a row. What varies per individual is the knee fold, not the
+height. Measured over 72 ghosts: `hopY` runs 0.0675~0.1125 for **every** build, three times clear of the scene's floor
+release (0.02, `animate.js`) at the bottom of the drift, and the tallest floating head reaches 1.162 in the 1.35 cell.
+
+**The arms hang and the legs fold.** Nothing about a ghost is held up. Every arm falls back to `ARM_POSES.limp` instead of
+the A-pose — 9° off vertical rather than 30° open, at the same near-full reach, and with no floor clamp, since the whole
+point is that it is off the ground. And the **knees tuck up**, by an amount drawn per individual from the seed, so one
+ghost hangs with its legs nearly straight and the next has them folded right up (measured 0.14~0.37 of the leg length
+over 68 ghosts). A leg the drawing gave no knee to (a float leg — a foot and nothing to bend) simply hangs.
+
+The fold rides on **`bodyDrop`**, the crouch scalar, and needs no new machinery: `animate.js` releases the floor hold
+above `hopY` 0.02, so the very solve that sinks a standing body into its knees instead pulls the feet up under a floating
+one. A quad's idle stance goes to `null` as well — planting the front legs forward and the hind legs back is a stance for
+standing ON something.
+
+**Both knees fold the same way, and forward.** A biped leg carries no `knee` of its own, so `animate` falls back to
+`side`: the left bows left and the right bows right. That outward bow — a plié seen head-on — is exactly what a crouch
+with its feet planted wants, and exactly wrong in the air, where it reads as a squat. `scene/rig.js` gives every leg of a
+**floating** individual `knee: -1`, so the pair tucks to one side together. It is set there and not on the drawing's leg
+descriptor on purpose: grounded creatures keep the plié, and only what floats folds together. (Quads already asked for
+one direction on all four; a floating one takes the same reversal.)
+
+One correction the float forced: the arms are dragged up by a **jump's** height (`hopY × 4`), and a float is no jump. Left
+reading the total lift, the term held an imp ghost's arms out at 93° — straight out from the shoulder — for good. The drag
+now reads the hop minus the float, which is unchanged for everything that does not float.
 
 | | |
 | --- | --- |
-| the lift | `0.7 × legTop`, clamped to 0.032~0.12 world units |
+| the lift | 0.09 world units — the same for every build |
 | the drift | ±25% of the settled lift, one cycle every 3.6 s — a sine, which the easing rule exempts. The phase is per individual **from the seed, with no rng**: the clock keeps drawing from its stream all through `update()`, so an init draw would shift every schedule after it and re-roll every creature's motion |
-| rising into it | eased in over 2.4 s (`ramp`), so a ghost rises into the air instead of being born already up there |
-| the legs | let go of their standing rest bend exactly the way a jump's `flight` does, so they hang extended. The scene needs nothing new: `hopY` lifts the group and its floor hold releases itself above 0.02 |
+| rising into it | eased in over 2.4 s (`ramp`), so a ghost rises into the air instead of being born already up there. The fold fades in with it, so the tuck happens as the feet leave the floor |
+| the arms | `ARM_POSES.limp` as the rest pose — measured at a widest shoulder of 20°, against the A-pose's 36° and an imp's 78° |
+| the legs | the standing rest bend let go the way a jump's `flight` does, then folded by `fold × floatK` — `[0.12, 0.38]` of the leg length, per individual from the seed. **`knee: -1` on every leg** (the scene, not the drawing), so both fold to one side, forward |
 | the state | `mode` reads `"float"` |
 
-Measured over 60 s × 4 species: the mode is `float` for all 1440 ticks, `walkX` never leaves 0, `bodyDrop` is 0 once risen, and all eleven expression channels
-(happy · angry · emoji · eyeFx · wink · lid · browAlt · mouthAlt · arm action · body action · startle) come out at **0 ticks**.
+Measured: over 2160 ghost ticks once risen (5 species), the mode is `float` every tick, `walkX` never leaves 0, `hopY` never drops under the scene's
+0.02 floor release, and all eleven expression channels (happy · angry · emoji · eyeFx · wink · lid · browAlt · mouthAlt · arm action · body action ·
+startle) come out at **0 ticks**. Everything that does not float is byte-identical: 28,800 non-ghost clock ticks (5 species × 4 seeds × 60 s), diff 0.
 
 ### Quad idle and actions
 

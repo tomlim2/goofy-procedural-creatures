@@ -12,24 +12,34 @@ export const BLINK_TIME = 0.13;
 // means (null = this motion does not exist), which is also what keeps it out of the rng: `initMode` draws
 // nothing for a one-state creature, and every `null` motion skips its own init the same way it does for a
 // species that never had it.
-//   float   how it hangs. Ratios, not distances: `lift` is a fraction of **this individual's own legTop** (how
-//           high it carries its body off the floor — the very measure sleep settles it down by), so a dachshund
-//           and a long-legged build leave the ground by the same *meaning* rather than the same number.
-//           min·max clamp that in world units at both ends, `bob` is the drift as a fraction of the settled
-//           lift, and `period` its seconds. Solved in index.js against the rig
+//   float   how it hangs. `lift` is **one distance in world units for every ghost** — a tall build and a short
+//           one hang at the same height off the floor, which is what makes a row of them read as a row of
+//           ghosts. (It was a fraction of each individual's own legTop for a while; solving it off the build
+//           made the heights ragged, and the ragged line is what you see rather than the meaning.)
+//           `bob` is the drift as a fraction of the lift and `period` its seconds.
+//           `fold` [least, most] is how far the knees tuck up — a fraction of the leg length, **drawn per
+//           individual** from the seed, so one ghost hangs with its legs nearly straight and the next has them
+//           folded right up. That one *is* per individual: the height is the row, the fold is the character.
+//           It rides on bodyDrop, the crouch scalar: with the feet off the ground the scene's floor hold is
+//           released, so the same solve that sinks a standing body into its knees instead pulls the feet up
+//           under a floating one
 // (the two channels with no table switch of their own — the blink and the brow/mouth mood — are masked in
 // index.js, where `forced` and the high five already override)
 export function ghostMotion(M) {
   return {
     ...M,
     modes: [["idle", 1]], modeHold: { idle: [30, 90] }, walk: null,
+    // The legs hang from a vertical root — a quad's idle stance plants the front legs forward and the hind legs
+    // back, and that is a stance for standing ON something. null falls all four through to vertical. The fold
+    // below is what bends them from there (a biped never had a stance, so it starts vertical anyway)
+    legStance: null,
     armActions: null, armActionGap: null,
     quadActions: null, quadActionGap: null,
     bodyActions: null, bodyActionGap: null,
     legTap: null, legStep: null,
     stretch: null, shiver: null,
     wink: null, happyHold: null, angry: null, surprise: null, emojis: null,
-    float: { lift: 0.7, min: 0.032, max: 0.12, bob: 0.25, period: 3.6 }
+    float: { lift: 0.09, bob: 0.25, period: 3.6, fold: [0.12, 0.38] }
   };
 }
 

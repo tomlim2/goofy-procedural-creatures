@@ -22,6 +22,10 @@ import { ramp, bump } from "./ease.js";
 //   behind  hands behind the back — the arms disappear behind the body and only the back sketch shows. No IK
 export const ARM_POSES = {
   idle:   { hand: [0.5, -0.86], bend: "out", floor: true },   // the default. A 30° open A-pose, elbow slightly bent
+  // Hanging — a ghost's arms, and the rest pose of anything that floats. 9° off vertical instead of the A-pose's
+  // 30°, at the same near-full reach: limp, not held open. **No floor clamp** — the whole point is that it is off
+  // the ground, and clamping the hand at the standing floor would shorten the hang the higher it drifts
+  limp:   { hand: [0.16, -0.98], bend: "out" },
   raise:  { hand: [0.45, 0.88], bend: "out" },
   hi:     { hand: [0.3, 0.95], bend: "out" },
   wave:   { hand: [0.5, 0.7], bend: "out", osc: { shoulder: 0, elbow: 0.5, hz: 3 } },
@@ -304,7 +308,9 @@ export function solveArm(rig, side, poseName, tau = 0, env = 0) {
 
 // Solves both arms. idle by default; with an action (act = { action, side (the active arm), start, until }) only the arms
 // that action decides are overwritten. With no arm rig (a quad), bind.
-export function solveArms(arm, act, t) {
+// rest: the pose an arm this action does not decide falls back to — "idle" (the A-pose) for anything standing,
+// "limp" for a ghost, whose arms hang. It is the base of every arm, so it belongs here and not in each action
+export function solveArms(arm, act, t, rest = "idle") {
   const arms = {};
   const def = act && (act.def || ACTIONS[act.action]);   // act.def: a computed action (the high five's reach) instead of a table entry
   // The oscillation envelope — a 0.35 s fade in and out. Without it the arm snaps the moment an action ends
@@ -314,7 +320,7 @@ export function solveArms(arm, act, t) {
     const covered = def && (def.arms === "both" || side === act.side);
     arms[String(side)] = covered
       ? solveArm(arm, side, def.pose, t - act.start, env)
-      : solveArm(arm, side, "idle", 0, 0);
+      : solveArm(arm, side, rest, 0, 0);
   }
   return arms;
 }
