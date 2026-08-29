@@ -692,26 +692,32 @@ export function tailSketch(spec, variant = 0) {
       const a0 = at(t0), w0 = wOf(t0) * 0.96;   // the paint's edge — one ring where the dip stops
       sketch.line([[a0.x - a0.dy * w0, a0.y + a0.dx * w0], [a0.x + a0.dy * w0, a0.y - a0.dx * w0]], { color: ink0, size: "S", joint: [true, true], skinT: [t0, t0] });
     } else if (deco === "ribbon") {
-      // THE anime bow (a maid-dragon's): two WIDE symmetric wings drooping a little, each with a V notch cut
-      // into its outer edge, and a small knot between — the wings are the ribbon, the knot only pinches them.
-      // In the POP, flat in SCREEN space, tied toward the tail's end the way that bow is worn. A short tail
-      // wears a smaller bow (capped by the visible length), never a buried one
-      const t = vis(0.66), a = at(t), w = wOf(t);
-      const kx = a.x - a.dy * (w * 0.75), ky = a.y + a.dx * (w * 0.75);
-      let sz = (0.075 + w * 0.9) * (0.9 + dh(11) * 0.4);
-      sz = Math.min(sz, total * (1 - tVis) * 0.55);
-      const droop = 0.08 + dh(12) * 0.14;   // how far the wings hang — per individual
+      // THE anime bow (a maid-dragon's), tied ACROSS the tail: the knot sits on the spine and the two wide
+      // notched wings spread along the tube's NORMAL — perpendicular to the tail, the way a ribbon tied round
+      // a tail actually stands — so the bow tilts with the tail's own direction. The wings are the ribbon,
+      // the knot only pinches them; the droop sweeps them a little tipward. In the POP. A short tail wears a
+      // smaller bow (capped by the visible length), and the low wing never reaches the floor (capped by the
+      // spine's height over it)
+      const t = vis(0.66), a = at(t);
+      let sz = (0.075 + wOf(t) * 0.9) * (0.9 + dh(11) * 0.4);
+      sz = Math.min(sz, total * (1 - tVis) * 0.55, (pivot[1] + a.y) / 1.75);
+      const droop = 0.08 + dh(12) * 0.14;   // the tipward sweep — per individual
+      const nx2 = -a.dy, ny2 = a.dx;        // the tube's up-normal; the wings run ±along it
+      const P = [
+        [0, 0.3], [1.02, 0.44 - droop], [1.5, 0.16 - droop],
+        [1.16, -0.04 - droop * 0.5],                             // the V notch, biting inward
+        [1.5, -0.3 - droop], [1.0, -0.52 - droop], [0, -0.28]
+      ];
       for (const side of [-1, 1]) {
-        const P = [
-          [0, 0.3], [1.02, 0.44 - droop], [1.5, 0.16 - droop],
-          [1.16, -0.04 - droop * 0.5],                             // the V notch, biting inward
-          [1.5, -0.3 - droop], [1.0, -0.52 - droop], [0, -0.28]
-        ];
-        const wing = P.map(([px, py]) => [kx + side * px * sz, ky + py * sz]);
+        // px runs out along the normal (the wing's length), py along the tangent (its width and droop)
+        const wing = P.map(([px, py]) => [
+          a.x + nx2 * px * side * sz + a.dx * py * sz,
+          a.y + ny2 * px * side * sz + a.dy * py * sz
+        ]);
         paintPart(sketch, spec, wing, pop, { own: true, body: true, skinT: t });
         sketch.contour(wing, { color: ink0, skinT: [t, t] });
       }
-      const knot = blobPath(kx, ky, sz * 0.24, sz * 0.3, { lumps: 3, amount: 0.12, noise: null });
+      const knot = blobPath(a.x, a.y, sz * 0.24, sz * 0.3, { lumps: 3, amount: 0.12, noise: null });
       paintPart(sketch, spec, knot, shade(pop, 0.72), { own: true, body: true, skinT: t });
       sketch.contour(knot, { color: ink0, skinT: [t, t] });
         } else if (deco === "club") {
