@@ -149,6 +149,32 @@ function makeProportions(rng, archetype, species) {
   };
 }
 
+// **A ghost collapses to one tone.** Skin, cloth, hair, accent and the lizard's second scale all become the
+// same colour, and any pop is dropped — an accent is the opposite of what this is. The tone is picked off
+// wobbleSeed, so the slot costs no rng beyond its own draw at the end of the sequence.
+// A **dark** ghost turns its ink light as well: a dark outline on a dark body is no outline at all, and the
+// broken stroke this kind exists for would be invisible. faceInk then follows the board's own rule (head
+// luminance < 120 → light), which is exactly "the face marks in the opposite tone".
+// The goofy material is untouched, so the surface still hatches, dabs or speckles over the flat colour.
+// It is a **pure function of the pre-ghost palette** so the parts gallery can re-apply it when it swaps the
+// slot on a spec it already built — it overrides parts, not the palette, and without this the one slot the
+// board has for a whole-creature look could not be judged in the tool that judges looks
+export function ghostPalette(base, kind, wobbleSeed) {
+  if (!kind || kind === "none") return base;
+  const dark = kind === "dark";
+  const pick = (Math.imul((wobbleSeed ^ 0x1b873593) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+  const tone = dark ? DARKS[Math.floor(pick * DARKS.length) % DARKS.length] : shade(MARKS.white, 0.94 + pick * 0.06);
+  return {
+    ...base, skin: tone, cloth: tone, hair: tone, accent: tone,
+    pattern2: base.pattern2 ? tone : base.pattern2,
+    pop: null,
+    ink: dark ? MARKS.light : base.ink
+  };
+}
+// Every line a ghost draws is the BROKEN hold. It rides on the spec so each Sketch made for that creature can
+// take it (stroke.js) — BOARD_LINES is the whole board's switch and would take everyone with it
+export function ghostOutline(kind) { return !kind || kind === "none" ? undefined : "PENCIL_BROKEN"; }
+
 export function makeCreature(seed, speciesName = "human") {
   const rng = makeRng(seed);
   const species = SPECIES.find((s) => s.name === speciesName) || SPECIES[0];
@@ -253,6 +279,19 @@ export function makeCreature(seed, speciesName = "human") {
   for (const slot of LATE_SLOTS) parts[slot] = pickSlot(rng, species, archetype, slot);
   applyForbid(parts, species.name);
 
+  // **A ghost collapses to one tone.** Skin, cloth, hair, accent and the lizard's second scale all become the
+  // same colour, and any pop is dropped — an accent is the opposite of what this is. The tone is picked off
+  // wobbleSeed (no rng), so the slot cost one draw at the very end of the sequence and nothing after it moved.
+  // A **dark** ghost turns its ink light as well: a dark outline on a dark body is no outline at all, and the
+  // broken stroke this kind exists for would be invisible. faceInk then follows the board's own rule (head
+  // luminance < 120 → light), which is exactly "the face marks in the opposite tone".
+  // The goofy material is untouched, so the surface still hatches, dabs or speckles over the flat colour
+  const palette0 = { ...palette };            // the palette before the ghost collapse — the gallery re-applies from here
+  Object.assign(palette, ghostPalette(palette0, parts.ghost, proportions.wobbleSeed));
+  // Every line this creature draws is the BROKEN hold. It rides on the spec so each Sketch made for it can
+  // take it (stroke.js), which is what keeps it to this creature — BOARD_LINES is the whole board's switch
+  const outline = ghostOutline(parts.ghost);
+
   // Eyewear constraints that can only be known once the eye positions are settled (after the proportions and the last slots are drawn) — overwritten deterministically (no rng)
   const eyes = eyeGeometry({ species: species.name, parts, proportions }, layout({ species: species.name, parts, proportions }));
   const hadPatch = parts.eyewear === "patch";
@@ -275,6 +314,8 @@ export function makeCreature(seed, speciesName = "human") {
 
   return {
     seed,
+    outline,
+    palette0,
     species: species.name,
     archetype: archetype.name,
     parts,

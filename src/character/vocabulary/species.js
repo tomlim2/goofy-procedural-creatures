@@ -191,6 +191,9 @@ export const SPECIES = [
   {
     name: "imp",
     forbid: {
+      // An imp's head is ink-black — that is the species. A **white** ghost imp is not an imp, so the pale
+      // one becomes the dark one; imps still get ghosts, just never the pale kind (identity, census --check)
+      ghost: { white: "dark" },
       ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "pointy", perkMid: "pointy", perkBig: "pointy" },   // an imp ear is none or a small pointy one
       tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" }   // the tail decoration is the rex's — imps have no tail anyway
     },

@@ -79,6 +79,12 @@ export const SLOTS = {
   // at the tip). Colors: plates ape the hide (the second scale), the club is the hide, the spikes are bone,
   // and the ribbon, dip and band take a POP — the bold palette, one per individual
   tailDeco: ["none", "ribbon", "plates", "dip", "club", "band", "spikes"],
+  // **Ghosts.** A creature that comes out as one tone with every line broken — the board's rare, quiet oddity.
+  // dark: the whole thing is one dark tone and every line on it, outline and face alike, goes light. white: a
+  // pale tone with the usual dark lines (the reference's ghost). The goofy material still runs over it, so a
+  // dark ghost is hatched or dabbed like anything else; only the colour collapses. A late slot — the look, not
+  // the form, and every species can have one
+  ghost: ["none", "dark", "white"],
   // The **material** — the creature's goofy material: what the head and the body are made of, how their areas are filled (medium/materials.js GOOFY_MATERIALS — a base color and its
   // texture). Each lays its marks over the base in a tone of the part's own color. FLAT, the fill-up with nothing on it, is not one of
   // them: it is what the whites of the eyes are filled with, not something a creature is made of. A late slot — the look, not the form
@@ -111,7 +117,7 @@ export const SLOTS = {
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing seeds keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -146,6 +152,7 @@ export const DEFAULT_BIAS = {
   // Most creatures are one tool through; a body of its own is seasoning on top of seasoning
   bodyMaterial: [["same", 9], ["graphite", 1], ["charcoal", 0.7], ["oil", 0.7], ["ink", 0.5]],
   tailDeco: [["none", 1]],   // the rex carries its own weights; everyone else forbids the lot
+  ghost: [["none", 48], ["dark", 1], ["white", 1]],   // 1 in 25 — about 1.4 on a board of 35
   density: [["black", 1], ["hatch", 1], ["scribble", 1], ["stipple", 1], ["light", 1]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],

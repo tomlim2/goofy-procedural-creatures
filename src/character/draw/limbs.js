@@ -54,7 +54,7 @@ export function limbSketches(spec, variant = 0) {
   const cloth = spec.palette.cloth;
   const limbs = [];
 
-  const make = () => new Sketch(noise, p.wobble);
+  const make = () => { const s = new Sketch(noise, p.wobble); s.outline = spec.outline; return s; };
   const dot = (s, x, y, r, color) => {
     paintPart(s, spec, blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), color, { body: true });   // a hand — the body's goofy material
     s.contour(blobPath(x, y, r, r * 0.9, { lumps: 3, amount: 0.18, noise: null }), { color: ink0 });
@@ -431,6 +431,7 @@ export function tailSketch(spec, variant = 0) {
   const noise = makeNoise(rng);
   const box = layout(spec);
   const sketch = new Sketch(noise, spec.proportions.wobble);
+  sketch.outline = spec.outline;
   const none = { sketches: [sketch], sketch, bones: [], pivot: [0, 0], weightsAt: () => [0, 1, 0, 0, 0, 0, 0, 0], weightsOf: () => [0, 1, 0, 0, 0, 0, 0, 0] };
   // Who has a tail is the species' identity (species.js), not the skeleton's — the rex is a biped WITH one.
   // A biped species without identity.tail (humans, imps) draws nothing here, as before

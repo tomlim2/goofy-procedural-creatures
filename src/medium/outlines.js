@@ -51,7 +51,9 @@ export function lineWith(sketch, points, options) { return draw(sketch, points, 
 // skinT = [t0, t1] tags the line's triangles with their t along a bent part's spine (stroke.js — the tail's skin reads its bones from it).
 // An unknown name throws — a misspelt role or kind must not silently draw nothing
 function draw(sketch, points, role, closed, { color = "#2b2724", size = "M", paper, step, outline, joint, skinT } = {}) {
-  const name = outline || BOARD_LINES[role];
+  // outline: named by the call · sketch.outline: named for this whole creature (a ghost's broken stroke —
+  // character/spec.js) · BOARD_LINES: the board's switch. Most specific first
+  const name = outline || sketch.outline || BOARD_LINES[role];
   const o = GOOFY_OUTLINES[name];
   if (!o) throw new Error(`unknown outline: ${name} (${role})`);
   const width = o.sizes[size];

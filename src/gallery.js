@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
-import { makeCreature, SLOTS, SPECIES } from "./character/index.js";
+import { makeCreature, SLOTS, SPECIES, ghostPalette, ghostOutline } from "./character/index.js";
 import { formatSeed } from "./rng.js";
 import { bindSeg, addOption, randomSeed, runLoop } from "./ui.js";
 
@@ -65,7 +65,17 @@ function build() {
   window.history.replaceState(null, "", `?slot=${slot}&species=${species}&seed=${seed.toString(36)}${fix ? `&fix=${fix.slot}:${fix.value}` : ""}${picked.length ? `&values=${picked.join(",")}` : ""}`);
 
   const base = makeCreature(seed, species);
-  const specs = values.map((value) => ({ ...base, parts: { ...base.parts, ...fixed, [slot]: value } }));
+  // Swapping a part is enough for every slot but one: `ghost` collapses the whole palette and breaks every
+  // line, and those are decided when the spec is built. Re-derive them from the pre-ghost palette the spec
+  // carries, or the row would draw three identical creatures in whatever the base individual happened to be
+  const specs = values.map((value) => {
+    const parts = { ...base.parts, ...fixed, [slot]: value };
+    return {
+      ...base, parts,
+      palette: ghostPalette(base.palette0 || base.palette, parts.ghost, base.proportions.wobbleSeed),
+      outline: ghostOutline(parts.ghost)
+    };
+  });
   // Column count follows the canvas aspect — laid out in a single row the individuals come out too small
   const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
   const cols = Math.max(1, Math.min(values.length, Math.round(Math.sqrt(values.length * aspect * (CELL_H / CELL_W)))));
