@@ -6,6 +6,7 @@ import { paintPart } from "./body.js";
 import { shade } from "../../color.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
+import { MARKS } from "../vocabulary/palette.js";
 
 // **The bands** — the only widths a part still names, because they are not lines: a hat's colour laid as a thick pencil stroke, a
 // fill in disguise (a band across the crown, and the brim's rim). Everything that *is* a line asks for a size instead
@@ -172,6 +173,76 @@ export function drawHorns(ink, fills, spec, box, noise) {
   const rx = box.headRx;
   const ry = box.headRy;
   const cy = box.headCy;
+
+  // REX horns are DRAGON horns whatever the slot says (the rex-leg rule: the way of drawing differs by
+  // species) — filled bone mass with an ink contour, never a line, the same bone as the tail's thagomizer.
+  // The kinds map to the dragons of the maid-dragon show: curved — the thick pair sweeping out then up
+  // (Tohru, ring-segmented) · straight — the straight pair swept back (Fafnir) · antenna — thin pale horns
+  // with one twig, half an antler (Kanna) · ram — a tight curl (Lucoa) · crown — one BIG pair standing
+  // up and out (Ilulu) · nub — small bone bumps
+  if (spec.species === "rex") {
+    const bone = shade(MARKS.white, 0.97);
+    // A tapered bone horn along a centerline: rails swollen by a width that thins to a point at the tip
+    const boneHorn = (pts, w0) => {
+      const L = [], R = [];
+      for (let i = 0; i < pts.length; i += 1) {
+        const [x, y] = pts[i];
+        const [ax, ay] = pts[Math.max(0, i - 1)], [bx2, by2] = pts[Math.min(pts.length - 1, i + 1)];
+        let dx = bx2 - ax, dy = by2 - ay;
+        const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+        const w = w0 * (1 - (i / (pts.length - 1)) * 0.88) + 0.002;
+        L.push([x - dy * w, y + dx * w]);
+        R.push([x + dy * w, y - dx * w]);
+      }
+      const tip = pts[pts.length - 1];
+      L[L.length - 1] = tip.slice(); R[R.length - 1] = tip.slice();
+      const poly = [...L, ...R.slice().reverse()];
+      paintPart(fills, spec, poly, bone, { own: true });
+      ink.contour(poly, { color: ink0 });
+      return pts;
+    };
+    for (const side of [-1, 1]) {
+      const bx = side * rx * 0.55;
+      const by = cy + ry * 0.8;
+      const lean = noise(side * 9.1 + spec.seed * 0.0007) * 0.05;
+      if (kind === "curved") {
+        const c = boneHorn([[bx, by], [bx + side * 0.075, by + 0.095], [bx + side * 0.055 + lean, by + 0.19]], 0.024);
+        // the ring segments — two short lines across the horn (the annulated look)
+        for (const k of [0.35, 0.6]) {
+          const i = k * (c.length - 1), a = c[Math.floor(i)], b = c[Math.ceil(i)] || a;
+          const px = a[0] + (b[0] - a[0]) * (i % 1), py = a[1] + (b[1] - a[1]) * (i % 1);
+          const w = 0.024 * (1 - k * 0.88) + 0.002;
+          const dx = (b[0] - a[0]) || side, dy = (b[1] - a[1]) || 1;
+          const l = Math.hypot(dx, dy) || 1;
+          ink.line([[px - (-dy / l) * w, py - (dx / l) * w], [px + (-dy / l) * w, py + (dx / l) * w]], { color: ink0, size: "S", joint: [true, true] });
+        }
+      } else if (kind === "straight") {
+        boneHorn([[bx, by], [bx + side * 0.06 + lean, by + 0.1], [bx + side * 0.11 + lean, by + 0.185]], 0.02);
+      } else if (kind === "antenna") {
+        const pts = [[bx, by], [bx + side * 0.028, by + 0.12], [bx + side * 0.06 + lean, by + 0.2]];
+        boneHorn(pts, 0.011);
+        const mx = bx + side * 0.02, my = by + 0.085;   // one twig off the shaft — half an antler
+        boneHorn([[mx, my], [mx + side * 0.05, my + 0.05]], 0.008);
+      } else if (kind === "ram") {
+        const spiral = [];
+        for (let i = 0; i <= 14; i += 1) {
+          const k = i / 14;
+          const angle = Math.PI * 0.45 + side * k * Math.PI * 1.35;
+          const r = 0.062 * (1 - k * 0.55);
+          spiral.push([bx + side * 0.015 + Math.cos(angle) * r * side, by + 0.015 + Math.sin(angle) * r]);
+        }
+        boneHorn(spiral, 0.017);
+      } else if (kind === "crown") {
+        boneHorn([[bx, by], [bx + side * 0.045, by + 0.14], [bx + side * 0.115 + lean, by + 0.245]], 0.033);
+      } else {
+        const nub = blobPath(bx, by + 0.03, 0.028, 0.036, { lumps: 3, amount: 0.15, noise: null });
+        paintPart(fills, spec, nub, bone, { own: true });
+        ink.contour(nub, { color: ink0 });
+      }
+    }
+    return;
+  }
+
   // Imp horns are long, like the reference. They expand the silhouette upward considerably.
   const scale = spec.species === "imp" ? 1.8 : 1;
   const horn = spec.species === "imp" ? "L" : "M";   // an imp's horn is the one line on the board drawn at L

@@ -139,6 +139,13 @@ half-width at that height, fitting the head's size and shape. A hat is a separat
 `drawHorns` in `headgear.js`. none / curved / straight / antenna (a ball at the tip) / nub (a small bump) / ram (a spiral) / crown (a row of spikes across the crown).
 Imps get 1.8×.
 
+**The rex's horns are DRAGON horns** — the same slot values, redrawn by species (the rex-leg rule): filled
+bone mass with an ink contour, never a line, the tail-spikes' bone. The kinds map to the maid-dragon show's
+dragons: **curved** the thick pair sweeping out then up, ring-segmented (Tohru) · **straight** the straight
+pair swept back (Fafnir) · **antenna** thin pale horns with one twig, half an antler (Kanna) · **ram** a tight
+curl (Lucoa) · **crown** one BIG pair standing up and out (Ilulu) · **nub** small bone bumps. Bias: none 3 ·
+curved 2 · antenna/straight/ram 1.5 · nub/crown 1 — about three rexes in four horned.
+
 ### ears (15)
 none / round · roundMid · roundBig / pointy · pointyMid · pointyBig / flap (an arc hanging down) / long (a long lobe) / fold · foldMid · foldBig / perk · perkMid · perkBig.
 round, pointy, fold and perk come in **three sizes** (1 · 1.4 · 1.8×, the same shape) — strip the Mid/Big off the value name and you have the shape (`earKind`, `EAR_SIZE`).

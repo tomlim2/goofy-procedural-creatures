@@ -140,7 +140,6 @@ export const SPECIES = [
       ears: { round: "none", roundMid: "none", roundBig: "none", pointy: "none", pointyMid: "none", pointyBig: "none", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "none", perkMid: "none", perkBig: "none" },
       eyes: { cyclops: "dot" },
       hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none", verylong: "none", twintailsBall: "none", appleBig: "none" },
-      horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       // The arms are tiny and stubby, always — every form folds to the little fists
       arms: { stick: "stubby", sleeve: "stubby", mitten: "stubby", none: "stubby" },
       armLength: { long: "medium" },
@@ -149,7 +148,6 @@ export const SPECIES = [
     identity: {
       ears: ["none"],
       skeleton: "biped",
-      horns: ["none"],
       hair: ["none"],
       eyes: { not: ["cyclops"] },
       arms: true,
@@ -160,7 +158,8 @@ export const SPECIES = [
     bias: {
       // The point of the species — almost every one is patterned, in a second scale color (spec.js pattern2)
       pattern: [["stripes", 3], ["spots", 3], ["dots", 2.5], ["patch", 2], ["hatch", 2], ["none", 1]],
-      horns: [["none", 1]],
+      // Dragon horns — the maid-dragon mapping lives in drawHorns (the way of drawing differs by species)
+      horns: [["none", 3], ["curved", 2], ["antenna", 1.5], ["straight", 1.5], ["ram", 1.5], ["nub", 1], ["crown", 1]],
       ears: [["none", 1]],
       hair: [["none", 1]],
       headgear: [["none", 9], ["cap", 0.5], ["crown", 0.4], ["halo", 0.3], ["cone", 0.4]],
