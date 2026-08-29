@@ -3,9 +3,10 @@ node_modules/
 .DS_Store
 
 # reference images (third-party artwork — keep local only)
-reference/*.png
-reference/*.jpg
-reference/*.jpeg
-reference/*.webp
-reference/*.mp4
-reference/*.mov
+reference/**/*.png
+reference/**/*.jpg
+reference/**/*.jpeg
+reference/**/*.gif
+reference/**/*.webp
+reference/**/*.mp4
+reference/**/*.mov

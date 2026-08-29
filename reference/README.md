@@ -67,12 +67,40 @@ was tried and rejected — the lines here are quiet), the three-role split (`sli
 one pencil in three holds, and only PENCIL_STROKE is on anything), their shape recipe (the two fixed sines and the Chaikin pass;
 `blobPath` keeps its noise lumps), and the canvas, media and editor systems around it.
 
+## 4. Don't Starve — Klei Entertainment
+
+- Source: <https://dontstarve.wiki.gg/wiki/Template:Characters> (the character navbox), and each
+  character's own page from there
+- Downloaded to `dontstarve/` — 96 files, 40 characters, ~17 MB. Not committed (see below)
+
+Three kinds of image per character, named `character--tag--Original_Name.png`:
+
+| tag | what it is | size | count |
+| --- | --- | --- | --- |
+| `art` | the full-body key art, character standing in their own scene | ~560×720 | 36 |
+| `portrait` | the framed bust in the carved border used on the select screen | ~425×597 | 19 |
+| `head` | the round head icon from the navbox | 500×500 | 41 |
+
+Every character has a `head`; the `art` only exists for the older *Don't Starve* / *Shipwrecked* /
+*Hamlet* roster, and the *Don't Starve Together* characters (Wurt, Winona, Wortox, Walter, Wanda) have a
+`portrait` instead. The unimplemented ones (Wilton, Winnie, Wallace, Waverly, Pyro, Mod Player, Frog
+Webber) only ever had a head icon.
+
+**What was taken** — nothing yet. This was pulled as reference material; fill this in when it is used.
+
+Worth noting for when it is: the art is *painted*, not drawn in line — the ink outline is one weight and
+the volume underneath comes from soft airbrushed shading, which is the opposite of this board's flat fills
+plus pencil. The transferable part is the **character vocabulary**, not the rendering: enormous eyes set
+high in a squashed head, a torso far smaller than the head, stick limbs with no visible joint, and a
+silhouette read entirely from hair and one prop.
+
 ## Image files
 
-The original images are not kept in this folder. Both are someone else's work, so keeping them here would
-amount to copying and redistributing them in the repo — better to keep them locally only and put them in
-`.gitignore`.
+The original images are not kept in this folder as committed files. They are someone else's work, so
+keeping them in the repo would amount to copying and redistributing them — better to keep them locally
+only, and in `.gitignore`.
 
-To keep them for local reference, just drop them in this folder under names like `weird-faces.png` and
-`creature-grid.png`. The repo root's `.gitignore` already excludes images in this folder, so they will not
-be committed.
+For sources 1–3, drop them in this folder under names like `weird-faces.png` and `creature-grid.png`.
+Source 4 already sits under `dontstarve/`. The repo root's `.gitignore` excludes images anywhere under
+`reference/` (`reference/**/*.png` and friends), at any depth, so none of them will be committed — only
+the `.md` files here are.
