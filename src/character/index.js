@@ -5,7 +5,7 @@
 // Movement is not here. That is ../motion/.
 // Docs: guidelines/character/
 
-export { makeCreature, makeGrid, laneSpecies, LANES, ghostPalette, ghostOutline } from "./spec.js";
+export { makeCreature, makeGrid, laneSpecies, LANES, ghostPalette, ghostOutline, isGhost } from "./spec.js";
 export { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, BIND_ARM, tailSketch, LAYER_KEYS, HAIR_KEYS, STATIC_EYE_KEYS } from "./draw/index.js";
 export { layout, eyeGeometry } from "./draw/layout.js";
 export { RIG_EYES, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch } from "./draw/face.js";

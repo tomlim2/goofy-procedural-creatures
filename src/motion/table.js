@@ -4,6 +4,35 @@
 
 export const BLINK_TIME = 0.13;
 
+// **A ghost only floats.** It hangs a little off the floor, drifting, and does none of the rest: it does not
+// walk, lie down or sit, it takes no actions (no waving, no hopping, no wagging, no scratching, no foot taps),
+// and it has none of the expressions — no ^^, no anger, no wink, no startle, no emoji.
+// A profile, not a species: it is built **off the species' own table**, so a ghost cat still sways like a cat,
+// keeps a cat's tail and looks around on a cat's schedule. What is taken out is taken out by the table's own
+// means (null = this motion does not exist), which is also what keeps it out of the rng: `initMode` draws
+// nothing for a one-state creature, and every `null` motion skips its own init the same way it does for a
+// species that never had it.
+//   float   how it hangs. Ratios, not distances: `lift` is a fraction of **this individual's own legTop** (how
+//           high it carries its body off the floor — the very measure sleep settles it down by), so a dachshund
+//           and a long-legged build leave the ground by the same *meaning* rather than the same number.
+//           min·max clamp that in world units at both ends, `bob` is the drift as a fraction of the settled
+//           lift, and `period` its seconds. Solved in index.js against the rig
+// (the two channels with no table switch of their own — the blink and the brow/mouth mood — are masked in
+// index.js, where `forced` and the high five already override)
+export function ghostMotion(M) {
+  return {
+    ...M,
+    modes: [["idle", 1]], modeHold: { idle: [30, 90] }, walk: null,
+    armActions: null, armActionGap: null,
+    quadActions: null, quadActionGap: null,
+    bodyActions: null, bodyActionGap: null,
+    legTap: null, legStep: null,
+    stretch: null, shiver: null,
+    wink: null, happyHold: null, angry: null, surprise: null, emojis: null,
+    float: { lift: 0.7, min: 0.032, max: 0.12, bob: 0.25, period: 3.6 }
+  };
+}
+
 // Per-species motion character. [min, max] is the event interval (seconds); null means that motion does not exist.
 export const MOTION = {
   human: {

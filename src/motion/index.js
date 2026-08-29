@@ -8,7 +8,7 @@
 // Docs: guidelines/motion/catalog.md, guidelines/motion/rules.md
 
 import { makeRng } from "../rng.js";
-import { MOTION } from "./table.js";
+import { MOTION, ghostMotion } from "./table.js";
 import * as R from "./rhythm.js";
 import * as E from "./events.js";
 import * as S from "./states.js";
@@ -38,9 +38,11 @@ export const BIND_STATE = Object.freeze({
 
 // rig: character/draw/limbs.js motionRig(spec) — { arm (a biped's arm IK dimensions | null), legTop, quad, body (a quad's torso and leg-root dimensions | null) }.
 // It solves actions by IK, knows how far the body settles when a quad lies down to sleep, and solves the body tilt and leg angles of a sit for this individual.
-export function makeClock(seed, birth = 0, species = "human", rig = null) {
+// ghost: this individual is a ghost (character parts.ghost) — it only floats, and has none of the expressions.
+// It is a **table profile** (table.js ghostMotion), built off the species' own, so a ghost cat is still a cat
+export function makeClock(seed, birth = 0, species = "human", rig = null, ghost = false) {
   const rng = makeRng(seed ^ 0x5bf03635);
-  const M = MOTION[species] || MOTION.human;
+  const M = ghost ? ghostMotion(MOTION[species] || MOTION.human) : (MOTION[species] || MOTION.human);
 
   // -- init: fixed order --
   const breathe = R.initBreathe(rng);            // 1
@@ -122,6 +124,18 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
   const W = M.walk || null;
   let walkK = mode.mode === "walk" && W ? 1 : 0;
   const walkPhase = ((seed % 97) / 97) * Math.PI * 2;
+  // The float (a ghost) — a steady lift off the floor with a slow drift over it. Its phase is per individual and
+  // comes **from the seed with no rng**, like walkPhase just above: the clock keeps drawing from this stream all
+  // through update(), so an init draw here would shift every schedule after it and re-roll every creature's motion
+  const F = M.float || null;
+  const floatPhase = ((seed % 89) / 89) * Math.PI * 2;
+  // How far off the floor it hangs is **solved from the rig**, never a constant: legTop is how high this
+  // individual carries its body, the same measure sleep settles it down by, so every build leaves the ground by
+  // the same meaning rather than the same number (a fixed 0.038 lifted a small cat by 0.42 of a leg and a rex by
+  // 0.18). Clamped at both ends by measurement — the shortest build's legTop is 0.022, under the scene's own
+  // floor release (hopY 0.02, animate.js), which would leave the feet still pinned and the legs stretching for
+  // ground that is no longer there; the tallest is 0.46, which would carry a 1.05-high head out of the 1.35 cell
+  const floatLift = F ? Math.min(Math.max((rig && rig.legTop ? rig.legTop : 0) * F.lift, F.min), F.max) : 0;
   // Walking moves it — from home (the middle of the cell, x 0) it walks a little to the left or right, idles there as usual (and may sleep),
   // and the next walk **always** brings it home the way it came. leg = one trip { from, to, start, dur }. The speed is the species' (W.speed, cells/second)
   const trip = { x: 0, from: 0, to: 0, start: -1, dur: 0, dir: 0 };
@@ -250,7 +264,13 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       const stepBump = 0.5 - 0.5 * Math.cos(2 * ph);   // 0→1→0 once per step (twice the period)
 
       // Face
-      const bl = E.stepBlink(blink, t, rng);
+      // A ghost's eyes are hollow — two holes, and a hole has no lid to close. It does not blink, and the ^^ a
+      // blink can carry (a 22% chance, which then holds the smile for 3.2 s) goes with it. The blink and the
+      // brow/mouth mood are the two expression channels the table has no switch for, so they are masked here
+      // instead — at the source, so that everything downstream reads the masked value. The schedule keeps
+      // stepping and keeps drawing either way, the way a forced action's does: only the result is dropped
+      const bl0 = E.stepBlink(blink, t, rng);
+      const bl = F ? { lid: 0, happy: false } : bl0;
       E.stepGlanceTarget(glance, t, rng);
       // Look — while held, the gaze target is set that way (the pupils first) and the face follows round
       let looking = S.stepLook(look, t, rng, M);
@@ -311,6 +331,17 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
       if (walkK > 0 && W) hp.hopY += W.bob * stepBump * walkK;
       // Sleep — the body settles to the hem and flattens
       if (sleepK > 0 && rig) { hp.hopY -= rig.legTop * sleepK; hp.squashY -= 0.06 * sleepK; hp.squashX += 0.06 * sleepK; }
+      // **The float** — a ghost hangs off the floor and drifts, and that is the whole of its movement. A steady
+      // lift with a slow sine over it (oscillation itself is the one thing the easing rule exempts), eased IN
+      // over the first seconds so it rises into the air rather than being born already up there.
+      // The scene needs nothing new for it: hopY lifts the group, and animate.js lets the floor go by itself
+      // above hopY 0.02 — this clears that even at the bottom of the drift. The legs let go of their standing
+      // bend the way a jump's flight does (floatK, at the legs section), so they hang extended
+      let floatK = 0;
+      if (F) {
+        floatK = ramp(Math.min(1, t / 2.4));
+        hp.hopY += floatLift * (1 + Math.sin((t * Math.PI * 2) / F.period + floatPhase) * F.bob) * floatK;
+      }
       const stretchX = E.stepStretch(stretch, t, rng, M);
       const shiverX = E.stepShiver(shiver, t, rng, M);
       // The high five's body — the arm alone is not a slap. The mover CROUCHES — a leg-IK descent, never the
@@ -439,7 +470,8 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         // from under the pose that had just been solved for it. Faded out by both blends
         const REST_BEND = 0.03;
         const standing = Math.max(0, 1 - sleepK - sitK);
-        const dropFrac = REST_BEND * (1 - jc.flight) * standing + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
+        // A float is airborne the whole time — the same release as a jump's flight, held on
+        const dropFrac = REST_BEND * (1 - Math.max(jc.flight, floatK)) * standing + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK;
         bodyDrop = leg.y * Math.min(dropFrac, 0.4);
       }
       // Walk — a quad alternates its diagonal pairs (0·3 / 1·2) front and back; a biped's two legs alternately open and close (a walk seen head-on)
@@ -577,7 +609,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
 
       return {
         breathe: br, lid, gaze, startle, eyeFx, angry: angryK, regen: regenNow, emoji: em,
-        browAlt: md.browAlt, mouthAlt: md.mouthAlt,
+        browAlt: F ? false : md.browAlt, mouthAlt: F ? false : md.mouthAlt,   // a ghost's face does not change (the mood, above)
         sway: sw.sway + (walkK > 0 && W ? Math.sin(ph) * W.sway * walkK : 0) + fiveLean, rock: sw.rock,
         headAngle: (tiltAngle + rollAngle) * awake + sleepHead,
         headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
@@ -585,7 +617,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null) {
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailRaisePose, tailArch, tailPose,
         arms, legOffset, legOsc, bodyDrop,
-        mode: modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing,
+        mode: F ? "float" : modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing,
         // The action running right now — the arm layer (biped) or the leg and tail layers (quad) plus which side (the active arm's side / the leg index), and the body layer. For debugging and statistics
         action: act ? act.action : qact ? qact.action : null,
         actionSide: act ? act.side : qact ? qact.index : 0,

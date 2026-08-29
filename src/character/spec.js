@@ -149,31 +149,34 @@ function makeProportions(rng, archetype, species) {
   };
 }
 
-// **A ghost collapses to one tone.** Skin, cloth, hair, accent and the lizard's second scale all become the
-// same colour, and any pop is dropped — an accent is the opposite of what this is. The tone is picked off
+// **A ghost collapses to one pale tone.** Skin, cloth, hair, accent and the lizard's second scale all become
+// the same colour, and any pop is dropped — an accent is the opposite of what this is. The tone is picked off
 // wobbleSeed, so the slot costs no rng beyond its own draw at the end of the sequence.
-// A **dark** ghost turns its ink light as well: a dark outline on a dark body is no outline at all, and the
-// broken stroke this kind exists for would be invisible. faceInk then follows the board's own rule (head
-// luminance < 120 → light), which is exactly "the face marks in the opposite tone".
+// The ink is pinned to the **darkest** of the INKS rather than whatever the seed drew: everything else about
+// a ghost is pale and washed out, and the four inks run from luminance 35 to 61 — on the lightest of them the
+// eyes, nose, mouth and brows came out brown-grey on cream and the face lost its grip. Black against pale is
+// the whole read.
 // The goofy material is untouched, so the surface still hatches, dabs or speckles over the flat colour.
 // It is a **pure function of the pre-ghost palette** so the parts gallery can re-apply it when it swaps the
 // slot on a spec it already built — it overrides parts, not the palette, and without this the one slot the
 // board has for a whole-creature look could not be judged in the tool that judges looks
+const GHOST_INK = INKS.reduce((a, b) => (luminance(b) < luminance(a) ? b : a));   // the darkest of the four
 export function ghostPalette(base, kind, wobbleSeed) {
   if (!kind || kind === "none") return base;
-  const dark = kind === "dark";
   const pick = (Math.imul((wobbleSeed ^ 0x1b873593) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
-  const tone = dark ? DARKS[Math.floor(pick * DARKS.length) % DARKS.length] : shade(MARKS.white, 0.94 + pick * 0.06);
+  const tone = shade(MARKS.white, 0.94 + pick * 0.06);
   return {
     ...base, skin: tone, cloth: tone, hair: tone, accent: tone,
     pattern2: base.pattern2 ? tone : base.pattern2,
     pop: null,
-    ink: dark ? MARKS.light : base.ink
+    ink: GHOST_INK
   };
 }
-// Every line a ghost draws is the BROKEN hold. It rides on the spec so each Sketch made for that creature can
-// take it (stroke.js) — BOARD_LINES is the whole board's switch and would take everyone with it
 export function ghostOutline(kind) { return !kind || kind === "none" ? undefined : "PENCIL_BROKEN"; }
+// Is this individual a ghost? One definition, because three places outside the spec ask: the scene, when it
+// builds the clock (a ghost only floats — motion/table.js ghostMotion), the high five (a ghost never fives)
+// and the sim that gates it
+export function isGhost(spec) { return !!(spec && spec.parts && spec.parts.ghost && spec.parts.ghost !== "none"); }
 
 export function makeCreature(seed, speciesName = "human") {
   const rng = makeRng(seed);
@@ -291,6 +294,11 @@ export function makeCreature(seed, speciesName = "human") {
   // Every line this creature draws is the BROKEN hold. It rides on the spec so each Sketch made for it can
   // take it (stroke.js), which is what keeps it to this creature — BOARD_LINES is the whole board's switch
   const outline = ghostOutline(parts.ghost);
+  // A ghost's eyes are always **hollow** — the empty eye, a white and a rim with the pupil taken out. Nothing
+  // is looking back, which is the whole idea. A deterministic overwrite (no rng), and it lands here rather
+  // than in applyConstraints because `ghost` is a late slot and is not drawn yet when that runs. It has to be
+  // before eyeGeometry below, which the eyewear constraints measure
+  if (parts.ghost !== "none") parts.eyes = "hollow";
 
   // Eyewear constraints that can only be known once the eye positions are settled (after the proportions and the last slots are drawn) — overwritten deterministically (no rng)
   const eyes = eyeGeometry({ species: species.name, parts, proportions }, layout({ species: species.name, parts, proportions }));

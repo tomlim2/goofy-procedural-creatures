@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 28 slots, 208 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 28 slots, 207 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -127,22 +127,27 @@ Only humans have hair (dogs, cats and the rex are all none via forbid; imps get 
 from under a hat or band; cloud and hedgehog go with a band only; and mohawk, bun and the apple tops (apple, appleBig) take no hat. No hair covers the eyes — the front stops at the brow line and the sides go to the ear
 ([rules.md](rules.md)).
 
-### ghost (3) — every species, about 1 in 25
+### ghost (2) — every species but the imp, about 1 in 25
 
-`none` / `dark` / `white`. The board's one **whole-creature look**: a creature that comes out as a single tone with every line broken.
+`none` / `white`. The board's one **whole-creature look**: a creature that comes out as a single pale tone with every line broken, and nothing looking back.
 
 | | |
 | --- | --- |
-| the colour | Skin, cloth, hair, accent and a lizard's second scale all collapse to one tone, and any pop is dropped — an accent is the opposite of what this is. `dark` takes a DARKS entry, `white` a pale tone off MARKS.white. The tone is picked from `wobbleSeed` (no rng) |
-| the lines | Every line the creature draws — outline, brows, whiskers, limbs, hair strands, the eyes — is `PENCIL_BROKEN`, the three-pass hold that had been in `GOOFY_OUTLINES` unused. It rides on `spec.outline`, which each `Sketch` made for that creature takes; `BOARD_LINES` is the whole board's switch and would take everyone with it |
-| the face | A **dark** ghost turns its ink light too — a dark outline on a dark body is no outline, and the broken stroke would be invisible. `faceInk` then follows the board's own rule (head luminance < 120 → light), so the face marks come out in the opposite tone by themselves. A `white` ghost keeps the usual dark ink, like the reference's |
-| the surface | The goofy material is **untouched** — a dark ghost still hatches, dabs or speckles. Only the colour collapses |
+| the colour | Skin, cloth, hair, accent and a lizard's second scale all collapse to one pale tone off `MARKS.white`, and any pop is dropped — an accent is the opposite of what this is. The tone is picked from `wobbleSeed` (no rng) |
+| the ink | Pinned to the **darkest** of the four INKS rather than whatever the seed drew. Everything else about a ghost is washed out, and the inks run luminance 35~61: on the lightest of them the face came out brown-grey on cream and lost its grip. Black on pale is the whole read |
+| the lines | Every line — outline, brows, whiskers, limbs, hair strands, **and the eyes, nose and mouth** — is `PENCIL_BROKEN`, the three-pass hold that had been in `GOOFY_OUTLINES` unused. It rides on `spec.outline`, which each `Sketch` made for that creature takes; `BOARD_LINES` is the whole board's switch and would take everyone with it. (An eye with a white draws its rim into the **fills** sketch, so that sketch carries the kind too) |
+| the eyes | Always **hollow** — the empty eye, a white and a rim with the pupil taken out. Nothing is looking back, which is the idea. A deterministic overwrite, applied after the late slots (`ghost` is one, so `applyConstraints` has not seen it yet) and before `eyeGeometry`, which the eyewear constraints measure |
+| the surface | The goofy material is **untouched** — a ghost still hatches, dabs or speckles. Only the colour collapses |
 
-An imp forbids `white` (`ghost: { white: "dark" }`): an imp's head is ink-black and that is the species, so a pale one is not an imp. It still gets the dark kind.
+**A ghost only floats.** That is the motion side of the same idea, and it lives in `motion/table.js` (`ghostMotion`) — it hangs off the floor and drifts, does not walk, sleep or sit, takes no actions and shows none of the expressions. See [../motion/catalog.md](../motion/catalog.md) § the ghost.
 
-`ghostPalette()` and `ghostOutline()` in `spec.js` are **pure functions of the pre-ghost palette**, which the spec carries as `palette0`. That is what lets the parts gallery show the slot: it swaps a part and rebuilds nothing, so without them the row drew three identical creatures in whatever the base individual happened to be.
+A **dark** kind was built too, the same idea inverted: one dark tone with every line light, the face marks coming out pale by the board's own faceInk rule. It was removed — on this paper it read as a heavy black mass rather than as a ghost.
 
-The slot is last in `LATE_SLOTS`, so it costs one rng draw at the very end and nothing after it moves. Measured over 600 creatures: the 15 ghosts changed palette, and the other 585 changed **nothing at all** — not a part, not a proportion, not a colour.
+An imp gets no ghost (`ghost: { white: "none" }`): an imp's head is ink-black and that is the species, so a pale one is not an imp. `census --check` caught it.
+
+`ghostPalette()` and `ghostOutline()` in `spec.js` are **pure functions of the pre-ghost palette**, which the spec carries as `palette0`. That is what lets the parts gallery show the slot: it swaps a part and rebuilds nothing, so without them the row drew two identical creatures in whatever the base individual happened to be.
+
+The slot is last in `LATE_SLOTS`, so it costs one rng draw at the very end and nothing after it moves. Measured over 600 creatures: the ghosts changed palette, and every other creature changed **nothing at all** — not a part, not a proportion, not a colour.
 
 ### headgear (11) — humans, dogs and cats; imps never (species bias)
 `drawHeadgear` in `headgear.js`. none / helmet (a dome from above the brows to over the crown plus a rim and a ridge) / cap (a crown dome plus a brim to one side) / band (a forehead band) / pot (a tub rising from above the brows to higher than the crown) /

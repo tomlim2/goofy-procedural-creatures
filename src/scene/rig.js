@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { paintPart } from "../character/draw/body.js";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, STATIC_EYE_KEYS } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, isGhost, STATIC_EYE_KEYS } from "../character/index.js";
 import { Sketch } from "../stroke.js";
 import { blobPath, arcPath } from "../shape.js";
 import { makeClock, bindArm } from "../motion/index.js";
@@ -335,7 +335,7 @@ export function buildCreature(spec, noise, birth = 0) {
     staticLids,
     faceStates,
     // The clock takes a rig description — it solves actions (hand targets) onto this individual's shoulders, arm lengths and body anchors by IK, and solves a quad sit against the torso and leg-root dimensions
-    clock: makeClock(spec.seed, birth, spec.species, mrig),
+    clock: makeClock(spec.seed, birth, spec.species, mrig, isGhost(spec)),
     // The same description, for the scene — the high five pairing (scene/hifive.js) reads arm reach and shoulder position off it
     motionRig: mrig,
     // The body group's rotation axis — in a quad sit (state.bodyTilt) the body tilts about the front legs' root (animate). null on a biped

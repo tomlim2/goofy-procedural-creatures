@@ -103,6 +103,14 @@ value — if you moved drawing code in a big way (splitting files, turning it in
 `node scripts/drawdiff.mjs [ref]` to compare **every slot value × species × seed** against the previous tree
 (git, HEAD by default), sketch by sketch. It has to come out at 0.
 
+A slot that changes the spec rather than drawing a shape of its own needs a line in `drawdiff` or it is not
+really being compared. `drawdiff` swaps a value onto an **already-built spec** — that is enough for a part that
+draws itself, but `ghost` collapses the palette, breaks every line and empties the eyes, and all three are
+decided in `makeCreature`. Without re-deriving them both sides draw the plain creature and the slot comes out
+identical however much moved inside it. `ghosted()` in the script re-applies the transform with each side's own
+`ghostPalette` / `ghostOutline`, off the pre-ghost palette the spec carries as `palette0` — the same thing the
+parts gallery does, and for the same reason. If you add another slot of that kind, extend it.
+
 `drawdiff` compares sketches — the triangles a part hands to the GPU — and is blind to everything after them: the
 scene (a mesh's opacity, the parallax depths, render order) and the shaders (the paper, the sheet pass). For those,
 `/pixeldiff.html?seed=…&boards=4` renders the same boards with the working tree and with a base tree on the same

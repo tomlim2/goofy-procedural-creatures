@@ -66,8 +66,11 @@ for (const spec of grid) {
 // 3. motion trajectories — four species, 60 s at the board's tick (TICK_FPS), sampled every 10 ticks
 for (const species of ["human", "pup", "cat", "imp"]) {
   // The rig description (motionRig) is passed in — motion IK solves hand targets into angles, and knows how far the body settles when a quad sleeps
-  const rig = draw.motionRig ? draw.motionRig(draw.makeCreature(42, species)) : false;
-  const clock = clocks.makeClock(42, 3, species, rig);
+  const spec = draw.makeCreature(42, species);
+  const rig = draw.motionRig ? draw.motionRig(spec) : false;
+  // The ghost flag the scene passes (a ghost only floats — motion/table.js). Seed 42 is no ghost in any species
+  // today, so this changes nothing; it is here so the trajectory stays the scene's if that ever stops being true
+  const clock = clocks.makeClock(42, 3, species, rig, draw.isGhost ? draw.isGhost(spec) : false);
   const samples = [];
   for (let f = 0; f < 60 * TICK_FPS; f += 1) {
     const s = clock.update(3 + f / TICK_FPS);

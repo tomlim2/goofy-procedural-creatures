@@ -45,9 +45,21 @@ try {
   let n = 0;
   const diffs = [];
   const note = (label) => { if (diffs.length < 30) diffs.push(label); };
-  const check = (spec, label) => {
+  // `ghost` draws nothing of its own — it collapses the whole palette, breaks every line and empties the eyes,
+  // and all three are decided when the spec is built. Swapping the part onto an already-built spec therefore
+  // leaves both sides drawing the plain creature, and the slot compares equal no matter what changed inside it.
+  // Each side re-derives it with its own functions, off the pre-ghost palette the spec carries — the same
+  // thing the parts gallery has to do. A no-op for `ghost=none` and for a ref that predates the slot
+  const ghosted = (m, spec) => {
+    if (!m.ghostPalette || spec.parts.ghost === undefined) return spec;
+    const parts = { ...spec.parts };
+    if (parts.ghost !== "none") parts.eyes = "hollow";
+    return { ...spec, parts, outline: m.ghostOutline(parts.ghost), palette: m.ghostPalette(spec.palette0 || spec.palette, parts.ghost, spec.proportions.wobbleSeed) };
+  };
+  const check = (rawSpec, label) => {
+    const specOld = ghosted(oldM, rawSpec), spec = ghosted(newM, rawSpec);
     for (const v of [0, 1]) {
-      const a = oldM.drawCreature(spec, v), b = newM.drawCreature(spec, v);
+      const a = oldM.drawCreature(specOld, v), b = newM.drawCreature(spec, v);
       const ka = layerKeys(a), kb = layerKeys(b);
       for (const k of ka) if (!kb.includes(k)) onlyOne.add(`only in ${ref}: ${k}`);
       for (const k of kb) if (!ka.includes(k)) onlyOne.add(`only in the working tree: ${k}`);
@@ -57,15 +69,15 @@ try {
         if (hash(a[k].ink) !== hash(b[k].ink) || hash(a[k].fills) !== hash(b[k].fills)) note(`${label} ${k} variant ${v}`);
       }
     }
-    const la = oldM.limbSketches(spec), lb = newM.limbSketches(spec);
+    const la = oldM.limbSketches(specOld), lb = newM.limbSketches(spec);
     if (la.length !== lb.length) note(`${label} limb count`);
     else la.forEach((l, i) => { n += 1; if (hash(l.sketch) !== hash(lb[i].sketch)) note(`${label} limb ${i}`); });
-    const ta = oldM.tailSketch(spec), tb = newM.tailSketch(spec);
+    const ta = oldM.tailSketch(specOld), tb = newM.tailSketch(spec);
     ta.sketches.forEach((s, i) => { n += 1; if (!tb.sketches[i] || hash(s) !== hash(tb.sketches[i])) note(`${label} tail ${i}`); });
     for (const part of ["brow", "mouth"]) {
-      for (const kind of oldM.facePartKinds(spec)[part]) {
+      for (const kind of oldM.facePartKinds(specOld)[part]) {
         n += 1;
-        if (hash(oldM.facePartSketch(spec, part, kind)) !== hash(newM.facePartSketch(spec, part, kind))) note(`${label} ${part}=${kind}`);
+        if (hash(oldM.facePartSketch(specOld, part, kind)) !== hash(newM.facePartSketch(spec, part, kind))) note(`${label} ${part}=${kind}`);
       }
     }
   };

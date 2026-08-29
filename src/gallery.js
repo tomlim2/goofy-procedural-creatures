@@ -70,6 +70,7 @@ function build() {
   // carries, or the row would draw three identical creatures in whatever the base individual happened to be
   const specs = values.map((value) => {
     const parts = { ...base.parts, ...fixed, [slot]: value };
+    if (parts.ghost !== "none") parts.eyes = "hollow";   // the same overwrite spec.js makes (a ghost has empty eyes)
     return {
       ...base, parts,
       palette: ghostPalette(base.palette0 || base.palette, parts.ghost, base.proportions.wobbleSeed),

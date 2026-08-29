@@ -8,7 +8,7 @@
 //
 // Usage: node scripts/hifive-sim.mjs [seconds] [seed...]     (default 600 s, seeds 1 7 42 1234)
 
-import { makeGrid, motionRig } from "../src/character/index.js";
+import { makeGrid, motionRig, isGhost } from "../src/character/index.js";
 import { makeClock } from "../src/motion/index.js";
 import { makeHifives, HIFIVE } from "../src/scene/hifive.js";
 import { CELL_W, CELL_H } from "../src/scene/index.js";
@@ -47,7 +47,7 @@ for (const seed of SEEDS) {
     return {
       spec,
       motionRig: rig,
-      clock: makeClock(spec.seed, 0, spec.species, rig),
+      clock: makeClock(spec.seed, 0, spec.species, rig, isGhost(spec)),
       baseX: (i % COLS) * CELL_W,
       baseY: -Math.floor(i / COLS) * CELL_H,
       lastState: null
@@ -130,7 +130,7 @@ console.log(
   const items = specs.map((spec, i) => {
     const rig = motionRig(spec);
     return {
-      spec, motionRig: rig, clock: makeClock(spec.seed, 0, spec.species, rig),
+      spec, motionRig: rig, clock: makeClock(spec.seed, 0, spec.species, rig, isGhost(spec)),
       baseX: (i % COLS) * CELL_W, baseY: -Math.floor(i / COLS) * CELL_H, lastState: null
     };
   });

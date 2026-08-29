@@ -18,6 +18,7 @@
 // frequency).
 
 import { ACTIONS, ARM_POSES } from "../motion/index.js";
+import { isGhost } from "../character/index.js";
 import { makeRng } from "../rng.js";
 
 // The knobs. Distances in cells (a cell is one world unit), times in seconds.
@@ -36,6 +37,8 @@ export const HIFIVE = {
 };
 
 const armOf = (item) => (item.motionRig ? item.motionRig.arm : null);
+// A ghost never fives. It only floats — it will not walk over, and it has no smile to land at the impact
+const ghostly = (item) => isGhost(item.spec);
 const worldX = (item) => item.baseX + ((item.lastState && item.lastState.walkX) || 0);
 
 // The anchor's planted hand in world coordinates — the same arithmetic solveArm runs for the static pose
@@ -183,6 +186,7 @@ export function makeHifives({ rush = 1 } = {}) {
         if (j % columns === 0) continue;   // the row's edge
         const A = creatures[i], B = creatures[j];
         if (!armOf(A) || !armOf(B) || !A.lastState || !B.lastState) continue;
+        if (ghostly(A) || ghostly(B)) continue;
         const s = scheduleOf(i, j, A, B, t);
         if (t < s.next) continue;
         if (active.some((f) => f.ai === i || f.mi === i || f.ai === j || f.mi === j)) continue;

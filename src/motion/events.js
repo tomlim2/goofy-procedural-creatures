@@ -152,6 +152,7 @@ export function stepRegen(r, t, rng) {
 }
 // Emoji while idle — draws one from the per-species list and returns just the kind to trigger (the animation is the emoji.js channel's job)
 export function stepEmojiSchedule(e, t, rng, M) {
+  if (!M.emojis || !M.emojis.length) return null;   // null = this one has no emoji at all (a ghost) — the table's own means
   if (t >= e.next) {
     e.next = t + rng.float(14, 40);
     return rng.pick(M.emojis);

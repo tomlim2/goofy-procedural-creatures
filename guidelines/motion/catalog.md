@@ -55,7 +55,7 @@ What `clock.update(t)` returns, and where the scene applies it.
 | bodyDrop | units ≥ 0 | **The torso is the crouch's master** — how far the body sinks below standing (the jump's and the five's crouches). The scene eases this one scalar and **solves the knees off the displayed height every frame** (animate.js + solveLeg): move the torso and the legs bend by themselves, the feet held to the floor by construction |
 | action / actionSide | The action name of the arm layer (biped) or the leg and tail layer (quad), or null / the active arm's side or the leg index | For debugging and statistics. The scene only looks at arms and legOffset |
 | bodyAction | The body layer's action name, or null | "jump" while hopping in place. hopY and squash are its curve |
-| mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" / 0~1 / 0~1 / 0~1 | The base state and how far asleep, walking or sitting it is (eased). All of it is already blended into legOffset, hopY, sway, arms and so on. The scene only uses sleep, to turn on the sleep lid (the static eye cover) |
+| mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" · "float" (a ghost) / 0~1 / 0~1 / 0~1 | The base state and how far asleep, walking or sitting it is (eased). All of it is already blended into legOffset, hopY, sway, arms and so on. The scene only uses sleep, to turn on the sleep lid (the static eye cover) |
 | bodyTilt | rad | bodyGroup.rotation.z — the body tilt of a quad sit (negative = the back goes down), about **the front legs' root** (item.bodyPivot). sitPose(rig.body).tilt × sit |
 | walkX / facing | cells / ±1 | group.position.x (the distance moved from home) / group.scale.x (a TAILED creature — the quads and the rex — flipping to face its walking direction, so the tail trails; a tailless biped is always 1, and a high five's commanded trip never flips) |
 | tailAngle / tailTip / tailPuff / tailRaise / tailRaisePose | rad / rad / 0~1 / 0~1 / [rad × bones] or null | The root bone's rotation / the tip bone's rotation (relative to the root) / the bone thickness scale (1 + 0.6·puff, perpendicular to the spine) / blending each joint from rest toward its raise target — vertical, or `tailRaisePose` (a ♥'s question mark: joint world angles) (scene/animate.js) |
@@ -203,9 +203,9 @@ rubbery squash on the body; the earlier scale squash was taken out on purpose):
 goes out as `hopY` and the envelopes `dropK` and `flight`; the clock solves the legs onto them
 (`solveLeg`), subtracts the crouch descent from `hopY`, and adds `hopY×4` to the shoulders for the arms.
 
-### The base state (mode) — idle · sleep · walk · sit
+### The base state (mode) — idle · sleep · walk · sit · float
 
-An individual is always in some **base state**. idle (standing) · sleep (lying asleep, quads) · walk (walking — it moves, every species) · sit (sitting, quads). A state like running would join here.
+An individual is always in some **base state**. idle (standing) · sleep (lying asleep, quads) · walk (walking — it moves, every species) · sit (sitting, quads) · float (a ghost, below — its only state). A state like running would join here.
 The action layers stack on top — while asleep, actions, looking, startle and winking all rest; while walking, body actions (jumping) and quad actions rest while arm actions carry on (waving as it walks);
 and while sitting only body actions (jumping) rest, with quad actions (scratching with a hind paw, wagging), the face and looking carrying on (it scratches while sitting).
 `initMode`/`stepMode` in `states.js`; `modes` (the ratios), `modeHold` (the hold) and `walk` (the step parameters) in `table.js`. **Transitions pass through idle** — from idle
@@ -239,6 +239,35 @@ the front legs stand at world angle 0 (vertical) and the hind legs fold forward 
 A dog's tail tilts with the body and drops a little further (−0.3) to lie on the floor, its **swish stilled by 90%** — a seated tail lies and only its tip taps and flicks (a tail sweeping the floor read as a tail moving down); the wag carries on. A cat's tail **stays up**: the arch keeps 70% and the swish carries on, so a seated cat swings its tail up, back and forth — awake, a cat's tail points up and nowhere else. The sit lays the whole leg forward from the hip, so with a short body and long legs the hind foot passes the front one; the tilt
 is then reduced so the hind foot comes no further than between the front pair, and a build whose hips still sit more than 0.045 off the floor (long legs plus a short body, 9% of 600) **cannot sit** — it stands through the sit state.
 Scratching with a hind paw and wagging carry on while seated (a leg mid-action wins), while jumping rests. Measured at cat 12.9% and pup 11.1% (180 s × 40 creatures, sit > 0.5). Force it with the ACTION card's SIT.
+
+### The ghost — float, and nothing else
+
+A **ghost** (the character slot `ghost`, about 1 in 25 — [../character/parts.md](../character/parts.md)) has one base state and one only: it hangs a little off the floor
+and drifts. It does not walk, lie down or sit; it takes no action on any of the three layers (no waving, no hopping, no wagging, no scratching, no foot taps, no stretch, no shiver);
+and it has **none of the expressions** — no ^^, no anger, no wink, no startle, no emoji, no blink, and no brow/mouth mood. It never high fives. What it keeps is everything that is
+not a feeling: breathing, the sway and rock, the roll, the head tilt, looking around, the jelly wobble, and a tail's swish. A ghost cat still moves like a cat.
+
+It is a **profile, not a species** — `ghostMotion(M)` in `table.js` builds it off the species' own table, and the scene passes `isGhost(spec)` into `makeClock`. Nearly all of it is
+taken out by the table's own means (`null` = this motion does not exist), which is what keeps it out of the rng: `initMode` draws nothing for a one-state creature and every `null`
+motion skips its init exactly as it does for a species that never had it. The blink and the mood are the only two expression channels with no table switch of their own, so those two
+are masked in `index.js` at the assembly point where `forced` and the high five already override — the schedules keep stepping and keep drawing, and only the result is dropped.
+
+**The lift is solved from the rig, not set as a number.** `legTop` is how high this individual carries its body off the floor — the same measure the sleeping pose settles it down by —
+so every build leaves the ground by the same *meaning*: `lift × legTop`, clamped into world units at both ends. A fixed distance lifted a small cat by 0.42 of a leg and a rex by 0.18.
+The clamps are measured: the shortest build's `legTop` is 0.022, under the scene's own floor release (`hopY` 0.02, `animate.js`), which would leave the feet pinned and the legs
+stretching for ground that is no longer there; the tallest is 0.46, which would carry a 1.05-high head out of the 1.35 cell. Over 1000 ghosts the drift runs 0.024~0.150 and the
+highest floating head reaches 1.200.
+
+| | |
+| --- | --- |
+| the lift | `0.7 × legTop`, clamped to 0.032~0.12 world units |
+| the drift | ±25% of the settled lift, one cycle every 3.6 s — a sine, which the easing rule exempts. The phase is per individual **from the seed, with no rng**: the clock keeps drawing from its stream all through `update()`, so an init draw would shift every schedule after it and re-roll every creature's motion |
+| rising into it | eased in over 2.4 s (`ramp`), so a ghost rises into the air instead of being born already up there |
+| the legs | let go of their standing rest bend exactly the way a jump's `flight` does, so they hang extended. The scene needs nothing new: `hopY` lifts the group and its floor hold releases itself above 0.02 |
+| the state | `mode` reads `"float"` |
+
+Measured over 60 s × 4 species: the mode is `float` for all 1440 ticks, `walkX` never leaves 0, `bodyDrop` is 0 once risen, and all eleven expression channels
+(happy · angry · emoji · eyeFx · wink · lid · browAlt · mouthAlt · arm action · body action · startle) come out at **0 ticks**.
 
 ### Quad idle and actions
 
