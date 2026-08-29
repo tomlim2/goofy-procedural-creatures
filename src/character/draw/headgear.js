@@ -182,21 +182,30 @@ export function drawHorns(ink, fills, spec, box, noise) {
   // up and out (Ilulu) · nub — small bone bumps
   if (spec.species === "rex") {
     const bone = shade(MARKS.white, 0.97);
-    // A tapered bone horn along a centerline: rails swollen by a width that thins to a point at the tip
+    // A tapered bone horn along a centerline — and its tip is BLUNT: the rails thin gently and close over a
+    // round cap, never a point (dragon horn ends are rounded like fingers; collapsed to a point they came out
+    // as scraggly needles under the pencil's wobble)
     const boneHorn = (pts, w0) => {
       const L = [], R = [];
+      let ex = 0, ey = 1;
       for (let i = 0; i < pts.length; i += 1) {
         const [x, y] = pts[i];
         const [ax, ay] = pts[Math.max(0, i - 1)], [bx2, by2] = pts[Math.min(pts.length - 1, i + 1)];
         let dx = bx2 - ax, dy = by2 - ay;
         const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
-        const w = w0 * (1 - (i / (pts.length - 1)) * 0.88) + 0.002;
+        if (i === pts.length - 1) { ex = dx; ey = dy; }
+        const w = w0 * (1 - (i / (pts.length - 1)) * 0.55) + 0.004;
         L.push([x - dy * w, y + dx * w]);
         R.push([x + dy * w, y - dx * w]);
       }
       const tip = pts[pts.length - 1];
-      L[L.length - 1] = tip.slice(); R[R.length - 1] = tip.slice();
-      const poly = [...L, ...R.slice().reverse()];
+      const wEnd = w0 * 0.45 + 0.004;
+      const cap = [];
+      for (let i = 1; i < 6; i += 1) {   // the round cap — L's end through the horn's direction to R's end
+        const th = (i / 6) * Math.PI;
+        cap.push([tip[0] + (-ey) * wEnd * Math.cos(th) + ex * wEnd * Math.sin(th), tip[1] + ex * wEnd * Math.cos(th) + ey * wEnd * Math.sin(th)]);
+      }
+      const poly = [...L, ...cap, ...R.slice().reverse()];
       paintPart(fills, spec, poly, bone, { own: true });
       ink.contour(poly, { color: ink0 });
       return pts;
