@@ -9,7 +9,7 @@ point is the root [`CLAUDE.md`](../CLAUDE.md)).
 
 | Axis | Code | Catalog (what exists) | Rules (how to change it) |
 | --- | --- | --- | --- |
-| **Character** | `src/character/` | [character/types.md](character/types.md) species, archetypes, proportions, palette, constraints<br>[character/parts.md](character/parts.md) 27 slots, 206 parts | [character/rules.md](character/rules.md) the procedure for adding a part, separating form from motion, distribution standards |
+| **Character** | `src/character/` | [character/types.md](character/types.md) species, archetypes, proportions, palette, constraints<br>[character/parts.md](character/parts.md) 27 slots, 204 parts | [character/rules.md](character/rules.md) the procedure for adding a part, separating form from motion, distribution standards |
 | **Motion** | `src/motion/` | [motion/catalog.md](motion/catalog.md) the state object, per-species parameters, every motion | [motion/rules.md](motion/rules.md) classifying rhythm/events/states, rng order, measuring firing |
 | Shared | `src/scene/` `src/stroke.js` `src/shape.js` `src/medium/` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) the seed contract<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
 

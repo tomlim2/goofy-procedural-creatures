@@ -13,6 +13,7 @@ import { blobPath, arcPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { browLine } from "./head.js";
 import { paintPart } from "./body.js";
+import { luminance, tint, deepen } from "../../color.js";
 
 // A scribble cap covering the crown — several kinds share the same shape. depth is how far down the sides it comes (0.5 = ear height)
 // **Hair is drawn at L**, the goofy fur's thickest — every fur on the head, cap, tail, bun and bangs alike. It used to run S~L by kind,
@@ -268,7 +269,7 @@ const mopCap = ({ depth, passes, spread, backCap = true }) => (h) => {
 };
 
 // ---- The filled family — hair as SHAPES, not fur ---------------------------------------------------------
-// The two kinds below (bobBlunt · bobCurtain) are built the other way round from
+// The two kinds below (bobSwept · sheetsSwept) are built the other way round from
 // everything above: the fur pen scribbles a mass with no boundary, these draw the boundary first — a closed
 // form — and the inside is painted with the creature's goofy material (the line material), exactly like a hat
 // (paintPart + contour). The hair splits into two regions:
@@ -310,7 +311,7 @@ const eyeSafeY = (h) => {
 // The middle boundary is the front kind's business: under a blunt panel it sits a shade above the
 // bangs hem (the doubled line hides under the panel); behind a curtain parting it rises high — the parting
 // gap has to show the forehead's skin up to the hairline, or the parting reads as one solid panel
-const scalp = (h, frontY) => {
+const scalp = (h, frontY, topLine) => {
   const { crown, crownFills, spec, box, rx, ry, cy } = h;
   const brow = frontY ?? browLine(spec, box) + ry * 0.1;
   const sideBottom = Math.max(cy - ry * 0.45, eyeSafeY(h));
@@ -324,7 +325,12 @@ const scalp = (h, frontY) => {
   for (let i = 0; i <= 10; i += 1) { const x = -rx * 0.97 + (i / 10) * rx * 1.94; hem.push([x, bottomAt(x)]); }
   const poly = [...upper, ...hem];   // right → crown → left, then the hairline left → right
   paintPart(crownFills, spec, poly, h.ink0, { own: true });
-  crown.contour(poly, { color: h.lineInk });
+  // **Only the hairline gets a line when a mass sits behind the skull.** The scalp's top arc runs a hair
+  // inside that mass's own arc, and both being drawn put two dark lines side by side over one patch of hair.
+  // The mass carries the silhouette there and its fill is the same colour, so the arc needs no line of its
+  // own. With nothing behind (the sheets back) that arc IS the silhouette and keeps its contour
+  if (topLine) crown.contour(poly, { color: h.lineInk });
+  else crown.line(hem, { color: h.lineInk });
 };
 
 // The back mass — the grown dome falling to a hem. bob wears it alone (hem just under the chin, a small
@@ -351,6 +357,12 @@ const backMass = (h, hem, flare) => {
 // and verylong deliberately skips the strokes over the middle of the chest. If a filled 장발 is wanted, the
 // mass has to read as ONE piece across the back, never as a pair
 
+// Where each piece stops on the side of the face. The reference head measures a bare gap between them — the
+// fringe's last hair at y233, the sheets' first at y282, 48 rows of skin in between — but the fringe reads
+// better on these proportions carried down to the jaw, so it keeps the longer run and the two overlap.
+const FRINGE_END = (h) => h.cy - h.ry * 0.82;   // down past the cheek, about the jaw line
+const SHEET_TOP = (h) => h.cy - h.ry * 0.55;    // mid-cheek, about the nose — the sheets start here
+
 // The sheets back (뒷머리) — a pair of sheets falling at the sides of the FACE to frayed, tasselled ends.
 // A pair is fine here where the 장발 pair was not, and the difference is where they stop: these hang beside
 // the head and end **at or above the shoulder** (the hem is clamped to box.bodyTop), so what shows between
@@ -358,14 +370,12 @@ const backMass = (h, hem, flare) => {
 // does reach the shoulder is covered rather than laid over the chest.
 // Ragged hem: the sheet's bottom edge is a run of tassel points, alternating deep and shallow
 const backSheets = (h) => {
-  const { back, backFills, spec, rx, ry, cy, noise } = h;
-  backMass(h, cy - ry * 0.62, 1.0);   // a short dome — the sheets carry the length, the dome only joins them over the crown
-  // **The pair starts at the MOUTH.** In the reference the hair lies close to the head down past the cheek and
-  // only gathers and splays from about mouth height — hung from the temple instead it reads as a hood with two
-  // flaps, which is what the first cut of this did. So the top is anchored on the individual's own mouth
-  // (proportions.mouthDrop), and the sheet widens on the way down to a frayed, tasselled hem past the jaw.
-  const top = cy - ry * spec.proportions.mouthDrop;
-  const hem = cy - ry * 1.24;
+  const { back, backFills, spec, box, rx, ry, cy, noise } = h;
+  // The sheets are drawn ALONE — no dome behind the skull, no scalp piece over it. This value is stripped to
+  // the reference's two parts, the 앞머리 and the 뒷머리, and nothing else, so each can be judged on its own.
+  const top = SHEET_TOP(h);
+  const hem = box.legTop;          // the hip — the reference's sheets end level with it, and it is a landmark
+  const span = Math.max(ry * 0.5, top - hem);   // that already scales with each individual's build
   for (const side of [-1, 1]) {
     // The head fill is opaque and hides everything inside its own silhouette, so the inner edge is tucked
     // behind the cheek and only the splay shows — widest low, where the head has already narrowed
@@ -373,22 +383,22 @@ const backSheets = (h) => {
     const teeth = 5;
     for (let i = 0; i <= teeth; i += 1) {   // outer → inner along the hem, tassels cut alternately deep and shallow
       const t = i / teeth;
-      const x = side * rx * (1.42 - t * 0.74);
+      const x = side * rx * (1.44 - t * 0.8);
       const deep = i % 2 === 0 ? 1 : 0.48;
-      rag.push([x, hem + (1 - deep) * ry * 0.22 + Math.abs(noise(i * 5.3 + side * 3.1 + spec.seed * 0.002)) * ry * 0.09]);
+      rag.push([x, hem + (1 - deep) * span * 0.13 + Math.abs(noise(i * 5.3 + side * 3.1 + spec.seed * 0.002)) * span * 0.06]);
     }
     const poly = crumple([
-      [side * rx * 0.68, top + ry * 0.16],
-      [side * rx * 0.98, top + ry * 0.04],
-      [side * rx * 1.3, cy - ry * 0.66],
-      [side * rx * 1.46, hem + ry * 0.3],
+      [side * rx * 0.64, top + ry * 0.2],
+      [side * rx * 0.98, top + ry * 0.02],
+      [side * rx * 1.28, top - span * 0.38],
+      [side * rx * 1.44, hem + span * 0.16],
       ...rag,
-      [side * rx * 0.6, cy - ry * 0.72]
+      [side * rx * 0.56, top - span * 0.5]
     ], 0.004, spec.seed * 0.0015 + side * 4);
     paintPart(backFills, spec, poly, h.ink0, { own: true });
     back.contour(poly, { color: h.lineInk });
-    for (const k of [1.04, 1.26]) {   // the strand grain — following the splay, out where the sheet actually shows
-      back.line([[side * rx * (k * 0.78), top - ry * 0.05], [side * rx * k, hem + ry * 0.3]], { color: h.lineInk, size: "S" });
+    for (const k of [1.02, 1.26]) {   // the strand grain — following the splay, out where the sheet actually shows
+      back.line([[side * rx * (k * 0.8), top - ry * 0.04], [side * rx * k, hem + span * 0.22]], { color: h.grainInk, size: "S" });
     }
   }
 };
@@ -414,7 +424,7 @@ const frontBlunt = (h) => {
   paintPart(frontFills, spec, poly, h.ink0, { own: true });
   front.contour(poly, { color: h.lineInk });
   for (const sx of [-0.34, 0.1, 0.44]) {
-    front.line([[sx * rx, cy + ry * 0.5], [sx * rx * 1.05, hemY + ry * 0.1]], { color: h.lineInk, size: "S" });
+    front.line([[sx * rx, cy + ry * 0.5], [sx * rx * 1.05, hemY + ry * 0.1]], { color: h.grainInk, size: "S" });
   }
 };
 
@@ -471,7 +481,7 @@ const frontCurtain = (h) => {
     ];
     const boundary = fillStrip(h, frontFills, spine, [ry * 0.1, ry * 0.17, ry * 0.19, ry * 0.14, ry * 0.04], spec.seed * 0.0017 + side * 2);
     front.contour(boundary, { color: h.lineInk });
-    front.line([[side * rx * 0.24, cy + ry * 0.62], [side * rx * 0.6, brow + ry * 0.16]], { color: h.lineInk, size: "S" });
+    front.line([[side * rx * 0.24, cy + ry * 0.62], [side * rx * 0.6, brow + ry * 0.16]], { color: h.grainInk, size: "S" });
   }
 };
 
@@ -492,7 +502,7 @@ const frontSwept = (h) => {
   // under it, unattached. Drawn as one diagonal slab there is no parting at all, just a wedge.
   const px = side * rx * 0.22;                                // the part — 2:3 across the head's width
   const py = cy + ry * 0.96;
-  const mouthY = cy - ry * spec.proportions.mouthDrop;
+  const stop = FRINGE_END(h);   // both locks run down to here
   // The lane the side locks run down: outside the widest eye (they are opaque, and the front layer is above
   // the face). A very wide-set eye leaves no lane, and then the locks stop at the temple as before
   const eyes = eyeGeometry(spec, box);
@@ -507,7 +517,7 @@ const frontSwept = (h) => {
     [-side * rx * 0.52, cy + ry * 0.66],
     [-side * rx * 0.82, Math.max(brow + ry * 0.06, safe)]
   ];
-  if (runsDown) far.push([-side * lockX, cy + ry * 0.06], [-side * lockX, mouthY]);
+  if (runsDown) far.push([-side * lockX, cy + ry * 0.06], [-side * lockX, stop]);
   front.contour(fillStrip(h, frontFills, far, W, spec.seed * 0.0019), { color: h.lineInk });
 
   const near = [                                              // the short side (2) — straight down the near side
@@ -515,24 +525,13 @@ const frontSwept = (h) => {
     [side * rx * 0.5, cy + ry * 0.82],
     [side * rx * 0.76, Math.max(brow + ry * 0.14, safe)]
   ];
-  if (runsDown) near.push([side * lockX, cy + ry * 0.08], [side * lockX, mouthY]);
+  if (runsDown) near.push([side * lockX, cy + ry * 0.08], [side * lockX, stop]);
   front.contour(fillStrip(h, frontFills, near, [ry * 0.07, ry * 0.14, ry * 0.13, ry * 0.1, ry * 0.05], spec.seed * 0.0023 + 7),
     { color: h.lineInk });
 
-  // The grain — long strands fanning out of the part and following the same arc as the mass under them
-  const endY = runsDown ? mouthY + ry * 0.25 : Math.max(brow + ry * 0.1, safe);
-  for (let i = 1; i <= 4; i += 1) {
-    const k = i / 5;
-    front.line([
-      [px - side * rx * 0.06 * i, py - ry * 0.06 * i],
-      [-side * rx * (0.24 + k * 0.5), cy + ry * (0.74 - k * 0.46)],
-      [-side * lockX * (0.9 + k * 0.1), endY + ry * (1 - k) * 0.3]
-    ], { color: h.lineInk, size: "S" });
-  }
-  for (const k of [0.45, 0.8]) {
-    front.line([[px + side * rx * 0.1, py - ry * 0.08], [side * lockX * (0.86 + k * 0.14), endY + ry * (1 - k) * 0.3]],
-      { color: h.lineInk, size: "S" });
-  }
+  // No grain lines on this fringe. They were drawn from the part across the sweep, but a straight line between
+  // two points on a curved mass leaves the fill and lands on the bare face, where a hair stroke reads as a
+  // stray whisker rather than as the hair's grain. The mass's own contour carries the shape.
 };
 
 // back kind × front kind → one hair value.
@@ -543,12 +542,16 @@ const frontSwept = (h) => {
 const HAIRLINE = { curtain: 0.55, swept: 0.66 };
 const filledHair = (backKind, frontKind) => (h) => {
   const line = HAIRLINE[frontKind];
-  scalp(h, line === undefined ? undefined : h.cy + h.ry * line);
+  // Every back gets the scalp. It follows the head's own outline (grownOutline reads headShape, so a square
+  // skull keeps its corners), and without it the crown is bare skin between the fringe and the sheets — which
+  // does not read as a hairstyle, it reads as balding
+  scalp(h, line === undefined ? undefined : h.cy + h.ry * line, backKind === "sheets");
   if (backKind === "sheets") backSheets(h);
   else backMass(h, h.cy - h.ry * 1.14, 1.06);
-  if (frontKind === "blunt") frontBlunt(h);
-  else if (frontKind === "swept") frontSwept(h);
-  else frontCurtain(h);
+  // **No fringe piece.** All four of these carried a filled panel over the forehead and it did more harm than
+  // good: four values that read as one, and a slab whose lower edge the eye takes for a hat's brim. What tells
+  // them apart now is the scalp's own hairline (HAIRLINE above) — blunt sits low over the forehead, curtain
+  // mid, swept high. frontBlunt / frontCurtain / frontSwept are kept below, unused, until that is settled
 };
 
 // Kind → drawing function. 1:1 with the names in slots.js SLOTS.hair (none has none)
@@ -576,8 +579,6 @@ export const HAIR = {
   ponytail,
   apple: appleOf(1),
   appleBig: appleOf(1.7),
-  bobBlunt: filledHair("bob", "blunt"),
-  bobCurtain: filledHair("bob", "curtain"),
   bobSwept: filledHair("bob", "swept"),
   sheetsSwept: filledHair("sheets", "swept")
 };
@@ -586,12 +587,19 @@ export function drawHair(layers, spec, box, noise) {
   const kind = spec.parts.hair;
   const draw = HAIR[kind];
   if (!draw) return;   // none (or an unknown value)
-  const pop = spec.palette.pop;
+  // The hair's own colour (palette.hair — HAIRS, or a POP when one is aimed here). It used to be palette.ink,
+  // which is why every head on the board wore the same black
+  const ink0 = spec.palette.hair || spec.palette.ink;
   draw({
     ...layers,
     spec, box, noise,
-    ink0: pop && pop.target === "hair" ? pop.color : spec.palette.ink,
-    lineInk: spec.palette.ink,   // the filled family's contour — the outline stays pencil-dark even on pop hair
+    ink0,
+    lineInk: spec.palette.ink,   // the filled family's contour — the board's outline, dark whatever the hair is
+    // The strands drawn INSIDE a filled shape are a tone of the hair itself, not the board's ink: dark ink on
+    // dark hair is the "on the same colour" way of vanishing. Light hair deepens, dark hair tints
+    grainInk: luminance(spec.palette.hair || spec.palette.ink) < 105
+      ? tint(spec.palette.hair || spec.palette.ink, 0.42)
+      : deepen(spec.palette.hair || spec.palette.ink, 0.4),
     rx: box.headRx, ry: box.headRy, cy: box.headCy,
     shoulder: box.bodyTop - 0.02   // the floor back hair comes down to (the shoulder)
   });

@@ -22,14 +22,14 @@ export const SLOTS = {
   // What the back hair layer made possible: long straight hair to the shoulders · verylong very long straight hair (to mid-torso, curtains at both sides of the face) · twintails · twintailsBall twintails with round ends ·
   // ponytail · apple an apple top (a small nub on the crown) · appleBig a big apple top
   // The filled family — hair as a SHAPE, the inside painted with the goofy material like a hat, not scribbled fur (draw/hair.js § the filled family).
-  // back {bob a 단발 mass · sheets a pair falling beside the FACE to frayed, tasselled ends} × front {blunt the
-  // straight 일자 hem · curtain a middle parting · swept one deep side parting across the brow}:
-  // bobBlunt · bobCurtain · bobSwept · sheetsSwept (the last two from the attached Wendy reference).
+  // Two values, told apart by the BACK: bobSwept a 단발 mass to just under the chin · sheetsSwept a pair
+  // falling beside the face to frayed ends, level with the hip (the Wendy reference). Neither draws a fringe —
+  // a filled panel over the forehead made the values read as one and its lower edge read as a hat's brim.
   // The 장발 pair (a dome plus two side sheets to the chest) was **removed**, not disabled: the two sheets left a
   // narrow gap down the middle and the torso hung through it to a rounded end — the silhouette read obscene
   hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep", "pigtails", "curly", "bangs", "longbob", "bun", "helmet", "cloud", "hedgehog",
     "long", "twintails", "ponytail", "apple", "verylong", "twintailsBall", "appleBig",
-    "bobBlunt", "bobCurtain", "bobSwept", "sheetsSwept"],
+    "bobSwept", "sheetsSwept"],
   // bonnet (the frilly bonnet) is **disabled** — the asset stays but it is in no bias (it never gets drawn)
   headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet", "crown", "halo", "cone"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
@@ -124,7 +124,7 @@ export const DEFAULT_BIAS = {
     ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
   hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1], ["helmet", 2], ["cloud", 1.5], ["hedgehog", 1.5], ["long", 1.5], ["twintails", 1], ["ponytail", 1.5], ["apple", 1],
     ["verylong", 1], ["twintailsBall", 0.8], ["appleBig", 0.7],
-    ["bobBlunt", 1], ["bobCurtain", 0.9], ["bobSwept", 1], ["sheetsSwept", 1]],
+    ["bobSwept", 1.4], ["sheetsSwept", 1.4]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1]],   // bonnet disabled
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3], ["perk", 0.7], ["perkMid", 0.3]],

@@ -7,7 +7,7 @@
 //   3. proportion jitter — most of the silhouette variety comes from continuous values
 
 import { makeRng } from "../rng.js";
-import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES } from "./vocabulary/index.js";
+import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES, HAIR_POOL } from "./vocabulary/index.js";
 import { shade, luminance } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
@@ -48,7 +48,7 @@ function applyConstraints(parts, rng, speciesName) {
     // (not the halo — it floats above the head and covers nothing, so any hair keeps)
     // With a hat or a band, only short hair is kept (bangs, a side bob and the hood type may come out from under a hat). A band also suits the cloud and hedgehog types (the reference)
     const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob", "helmet", "long", "verylong", "twintails", "twintailsBall", "ponytail",
-      "bobBlunt", "bobCurtain", "bobSwept", "sheetsSwept"];   // back hair comes out from under a hat — the filled family's hem too
+      "bobSwept", "sheetsSwept"];   // back hair comes out from under a hat — the filled family's hem too
     if (parts.headgear === "band") short.push("cloud", "hedgehog");
     if (!short.includes(parts.hair)) parts.hair = rng.pick(short);
   }
@@ -206,6 +206,31 @@ export function makeCreature(seed, speciesName = "human") {
   }
 
   const proportions = makeProportions(rng, archetype, species.name);
+
+  // **Hair colour.** Read out of HAIR_POOL by a hash of wobbleSeed and **not by the rng** — a value the seed
+  // does not draw costs no rng call, so the whole board kept its seeds when this was added
+  // (guidelines/determinism.md). It used to be palette.ink, which is why every head wore the same black.
+  // A hair that lands within 45 luminance of the head it sits on is stepped away from it: dark hair on an
+  // imp's ink head, or a white one on a pale face, is a mass with no edge either way. A colour accent aimed
+  // at the hair still wins — that is the accent's whole job
+  const hairRoll = (Math.imul((proportions.wobbleSeed ^ 0x27d4eb2d) >>> 0, 0x9e3779b1) >>> 9) % HAIR_POOL.length;
+  let hair = HAIR_POOL[hairRoll];
+  if (Math.abs(luminance(hair) - luminance(palette.skin)) < 45) {
+    // Step along the pool to the first entry that reads against this head. Brightening the colour instead
+    // (shade × 2.4) clipped its channels and threw out raw yellows and near-whites — exactly the colours the
+    // pool is curated to keep off this paper. Every hair on the board is a HAIRS entry or a POP, nothing else
+    for (let i = 1; i <= HAIR_POOL.length; i += 1) {
+      const alt = HAIR_POOL[(hairRoll + i) % HAIR_POOL.length];
+      if (Math.abs(luminance(alt) - luminance(palette.skin)) >= 45) { hair = alt; break; }
+    }
+  }
+  if (palette.pop && palette.pop.target === "hair") {
+    // The accent wins, but it still has to be seen: a pop that lands on the head's own luminance is a mass
+    // with no edge. Pulled apart in tone the way the rex's second scale is, so it stays the accent colour
+    hair = palette.pop.color;
+    if (Math.abs(luminance(hair) - luminance(palette.skin)) < 40) hair = shade(hair, luminance(palette.skin) > 140 ? 0.7 : 1.4);
+  }
+  palette.hair = hair;
 
   // Slots added later. Drawing them here is what keeps the seeds of the earlier parts, colors and proportions (slots.js LATE_SLOTS).
   // The species forbid runs once more — so it applies to these slots too.

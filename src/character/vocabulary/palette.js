@@ -49,6 +49,39 @@ export const FURS = [
 ];
 export const FUR_POOL = [null, null, null, null, null, null, null, null, ...FURS];   // 4/12 ≈ 33%
 
+// Hair. It was the palette's **ink** and nothing else, so every head on the board wore the same black — the one
+// pool on the board with no variety in it at all. A hair colour has two jobs the other pools do not: it has to
+// cover the whole run from black to blonde (heads side by side in one shade read as one family), and it still
+// has to be a colour this paper can hold — a raw yellow or a fire red shouts the way an unpulled POP does. So
+// the pale end stops at a FILL's tan, never a true yellow, and the ginger keeps the brick red's restraint.
+// Luminance runs 43 (black-brown) to 183 (white), which straddles DARKS (34~69) and FILLS (190~220).
+export const HAIRS = [
+  "#2f2a26", // black-brown
+  "#3d332b", // dark brown
+  "#54412f", // brown
+  "#6d543c", // chestnut
+  "#8a6a45", // light brown
+  "#a98d5e", // dark blonde
+  "#c6ac78", // blonde
+  "#8c5138", // auburn
+  "#a4552f", // ginger
+  "#6a6560", // ash
+  "#918b83", // grey
+  "#bdb6ab"  // white
+];
+// The draw bag — browns and blacks carry the board and the rest is seasoning, the same way FUR_POOL weights
+// its nulls. Read by a hash of wobbleSeed, not by the rng: hair colour was added without moving a single seed
+export const HAIR_POOL = [
+  HAIRS[0], HAIRS[0], HAIRS[0], HAIRS[0],
+  HAIRS[1], HAIRS[1], HAIRS[1], HAIRS[1],
+  HAIRS[2], HAIRS[2], HAIRS[2],
+  HAIRS[3], HAIRS[3], HAIRS[3],
+  HAIRS[4], HAIRS[4],
+  HAIRS[5], HAIRS[5],
+  HAIRS[6], HAIRS[6],
+  HAIRS[7], HAIRS[8], HAIRS[9], HAIRS[10], HAIRS[11]
+];
+
 // Lizard scales — the one species whose whole point is color. Livelier than FILLS, still pulled toward the
 // paper the way POPS are (a raw green shouts over the board): S ≈ 30~40, luminance 125~155 — mid tones, so the
 // face keeps the dark ink and a contrasting pattern reads both ways. The pattern is drawn in a SECOND scale
