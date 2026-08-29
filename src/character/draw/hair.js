@@ -1,16 +1,18 @@
-// Hair — 21 kinds. Docs: guidelines/character/parts.md § hair
+// Hair — 28 kinds. Docs: guidelines/character/parts.md § hair
 //
-// Hair is drawn across **three layers** — layers = { back, crown, front } (all ink sketches):
-//   back  back hair — **behind** the head and face (1.55). Only what shows outside the head silhouette and above the shoulders is left (long hair, twintails, ponytail, big masses)
+// Hair is drawn across **three layers** — layers = { back, crown, front } (ink sketches), and the filled
+// family also gets each layer's fills sketch (backFills, crownFills, frontFills — the fur kinds never fill):
+//   back  back hair — **the backmost layer an individual has (0.4)**: behind the head and face, and behind the body and legs too. Only what shows outside those silhouettes is left (long hair, twintails, ponytail, big masses)
 //   crown on the scalp — above the head ink, below the face (2.06, the same depth as the horns). Crown caps, spikes, buns, apple tops
 //   front bangs — **over** the face (6.55). Bangs and side curtains. The brows (6.6) are drawn above the bangs
 // On a face turn (fake 3D) each layer shifts by its depth (scene/rig.js DEPTH) — bangs and scalp +0.12 (a little toward the face), back hair −0.12 (behind the head, so the other way). Horns and hats 0.45, ears −0.4
 // One drawing function per kind — the HAIR table. New hair means adding a function here and putting the name in slots.js SLOTS.hair.
 // A function takes h (the context): { back, crown, front, spec, box, noise, ink0 (the hair color), rx, ry, cy (the head's half-width, half-height and centre), shoulder (the floor for back hair) }
 
-import { blobPath, arcPath } from "../../shape.js";
-import { headShape } from "./layout.js";
+import { blobPath, arcPath, crumple } from "../../shape.js";
+import { headShape, eyeGeometry } from "./layout.js";
 import { browLine } from "./head.js";
+import { paintPart } from "./body.js";
 
 // A scribble cap covering the crown — several kinds share the same shape. depth is how far down the sides it comes (0.5 = ear height)
 // **Hair is drawn at L**, the goofy fur's thickest — every fur on the head, cap, tail, bun and bangs alike. It used to run S~L by kind,
@@ -265,6 +267,261 @@ const mopCap = ({ depth, passes, spread, backCap = true }) => (h) => {
   }
 };
 
+// ---- The filled family — hair as SHAPES, not fur ---------------------------------------------------------
+// The two kinds below (bobBlunt · bobCurtain) are built the other way round from
+// everything above: the fur pen scribbles a mass with no boundary, these draw the boundary first — a closed
+// form — and the inside is painted with the creature's goofy material (the line material), exactly like a hat
+// (paintPart + contour). The hair splits into two regions:
+//   the BACK (뒷머리)  — what hangs behind the head, on the back layer: the 단발 mass to just under the chin,
+//                        with a small A-line flare. One piece, always (there is no 장발 — see backMass below)
+//   the FRONT (앞머리) — the bangs panel over the forehead, on the bangs layer, and the named half of the
+//                        value: blunt the straight 일자 hem · curtain parted in the middle, two sweeps framing
+//                        the face, the tips dropping past the brow only outside the front zone (the browLine
+//                        rule's side allowance)
+// A scalp piece (crown layer) fills the head's own top to the hairline — the head fill covers the back dome
+// inside the silhouette, so without it the scalp between the two regions reads bare.
+// The fill is the hair's color (pop when pop targets hair); the outline is always the pencil's dark ink.
+
+// Sort a filtered outline arc right → crown → left without a seam at the bottom (atan2 flips sign there)
+const arcSort = (cy) => (p, q) => {
+  const key = ([x, y]) => { let a = Math.atan2(y - cy, x); if (a < -Math.PI / 2) a += Math.PI * 2; return a; };
+  return key(p) - key(q);
+};
+
+// The head outline grown a touch — every filled piece hugs the real head shape (square heads stay square)
+const grownOutline = (h, gx, gy, lumps, amount) => {
+  const shape = headShape(h.spec);
+  return blobPath(0, h.cy, h.rx * gx, h.ry * gy,
+    { lumps, amount, noise: null, phase: h.spec.seed * 0.0013, square: shape.square, taper: shape.taper });
+};
+
+// The lowest y any face-covering filled piece may reach: the highest eye's top, plus the whole travel a
+// face turn has left against a head-attached layer (shiftY 0.16·ry at parallax 0.12 ≈ 0.14·ry) and the
+// pencil's bite. The fur kinds never needed this — a scribble leaks pixels, so a grazed eye still read —
+// but these pieces are OPAQUE, and an eye slid behind one on a turned face is gone (and a dark-ink eye
+// DRAWN OVER a dark fill is just as gone — the audit's on-the-same-color class)
+const eyeSafeY = (h) => {
+  const eyes = eyeGeometry(h.spec, h.box);
+  return Math.max(...eyes.map((e) => e.y + e.r)) + h.ry * 0.22;
+};
+
+// The scalp — the upper head filled to the hairline, easing toward below-the-ear at the sides (voluminous's
+// easing) but never into the eye band (eyeSafeY — high-set or wide-set eyes pull the side lobes up).
+// The middle boundary is the front kind's business: under a blunt panel it sits a shade above the
+// bangs hem (the doubled line hides under the panel); behind a curtain parting it rises high — the parting
+// gap has to show the forehead's skin up to the hairline, or the parting reads as one solid panel
+const scalp = (h, frontY) => {
+  const { crown, crownFills, spec, box, rx, ry, cy } = h;
+  const brow = frontY ?? browLine(spec, box) + ry * 0.1;
+  const sideBottom = Math.max(cy - ry * 0.45, eyeSafeY(h));
+  const bottomAt = (x) => {
+    const u = Math.abs(x) / rx;
+    const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
+    return brow * (1 - k) + sideBottom * k;
+  };
+  const upper = grownOutline(h, 1.05, 1.04, 3, 0.04).filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
+  const hem = [];
+  for (let i = 0; i <= 10; i += 1) { const x = -rx * 0.97 + (i / 10) * rx * 1.94; hem.push([x, bottomAt(x)]); }
+  const poly = [...upper, ...hem];   // right → crown → left, then the hairline left → right
+  paintPart(crownFills, spec, poly, h.ink0, { own: true });
+  crown.contour(poly, { color: h.lineInk });
+};
+
+// The back mass — the grown dome falling to a hem. bob wears it alone (hem just under the chin, a small
+// A-line flare); long wears it cut at the chin and hangs the side sheets from it
+const backMass = (h, hem, flare) => {
+  const { back, backFills, spec, rx, ry, cy } = h;
+  const arc = grownOutline(h, 1.16, 1.08, 4, 0.05).filter(([, y]) => y >= cy - ry * 0.05).sort(arcSort(cy));
+  const [rx0] = arc[0];
+  const [lx0] = arc[arc.length - 1];
+  const poly = crumple([...arc,
+    [lx0 * 1.02, cy - ry * 0.6], [lx0 * flare, hem + ry * 0.03],
+    [lx0 * 0.6, hem], [0, hem + ry * 0.015], [rx0 * 0.6, hem - ry * 0.01],
+    [rx0 * flare, hem + ry * 0.03], [rx0 * 1.02, cy - ry * 0.6]
+  ], 0.0035, spec.seed * 0.0011);
+  paintPart(backFills, spec, poly, h.ink0, { own: true });
+  back.contour(poly, { color: h.lineInk });
+};
+
+// There is no 장발 in this family, and the reason is a rule, not a taste: **two filled sheets flanking a gap
+// down the middle of the TORSO is a silhouette to stay away from.** The long back hung a sheet at each side
+// from the shoulder to the chest, and the narrow strip left between them framed the torso — which tapers and
+// ends round — into an obscene shape on slim, skin-coloured bodies. The fur curtains (long, verylong) do not
+// have the problem: they are open scribble, they hang from the whole head outline rather than two side lobes,
+// and verylong deliberately skips the strokes over the middle of the chest. If a filled 장발 is wanted, the
+// mass has to read as ONE piece across the back, never as a pair
+
+// The sheets back (뒷머리) — a pair of sheets falling at the sides of the FACE to frayed, tasselled ends.
+// A pair is fine here where the 장발 pair was not, and the difference is where they stop: these hang beside
+// the head and end **at or above the shoulder** (the hem is clamped to box.bodyTop), so what shows between
+// them is the head, never the torso. Back hair also draws behind the body now (rig.js 0.4), so a hem that
+// does reach the shoulder is covered rather than laid over the chest.
+// Ragged hem: the sheet's bottom edge is a run of tassel points, alternating deep and shallow
+const backSheets = (h) => {
+  const { back, backFills, spec, rx, ry, cy, noise } = h;
+  backMass(h, cy - ry * 0.62, 1.0);   // a short dome — the sheets carry the length, the dome only joins them over the crown
+  // The hem sits just past the chin (the head's bottom is cy − ry). Note the shoulder is NOT the limit here:
+  // bodyTop is measured above the chin on every build, so clamping to it would shrink the sheets to nothing.
+  // What keeps this out of the flanking trap is that the pair straddles the HEAD — the hem clears the jaw by a
+  // hair, and the torso below is behind them anyway (rig.js draws back hair at 0.4, under the body)
+  const hem = cy - ry * 1.12;
+  for (const side of [-1, 1]) {
+    // Wide enough to read: the head fill is opaque and covers everything inside its own silhouette, so only
+    // what lies **outside** the ellipse shows. The outer edge bows out to 1.42·rx and the widest part is low,
+    // where the head has already narrowed — which is where the reference's sheets are fullest too
+    const rag = [];
+    const teeth = 5;
+    for (let i = 0; i <= teeth; i += 1) {   // outer → inner along the hem, tassels alternating deep and shallow
+      const t = i / teeth;
+      const x = side * rx * (1.34 - t * 0.6);
+      const deep = i % 2 === 0 ? 1 : 0.5;
+      rag.push([x, hem + (1 - deep) * ry * 0.2 + Math.abs(noise(i * 5.3 + side * 3.1 + spec.seed * 0.002)) * ry * 0.08]);
+    }
+    const poly = crumple([
+      [side * rx * 0.84, cy + ry * 0.58],
+      [side * rx * 1.08, cy + ry * 0.42],
+      [side * rx * 1.34, cy - ry * 0.1],
+      [side * rx * 1.42, cy - ry * 0.62],
+      ...rag,
+      [side * rx * 0.7, cy - ry * 0.5]
+    ], 0.004, spec.seed * 0.0015 + side * 4);
+    paintPart(backFills, spec, poly, h.ink0, { own: true });
+    back.contour(poly, { color: h.lineInk });
+    for (const k of [1.06, 1.24]) {   // the strand grain — long lines down the sheet, out where it actually shows
+      back.line([[side * rx * (k - 0.06), cy + ry * 0.34], [side * rx * k, hem + ry * 0.24]], { color: h.lineInk, size: "S" });
+    }
+  }
+};
+
+// Blunt bangs — one panel rooted high on the crown, the hem a straight 일자 line above the brow (a light jag,
+// so the pencil has something to bite), plus a few comb strands. The hem clears the brow line by 0.08·ry and
+// the side corners never dip under it: a face turn shifts the eyes up to 0.14·ry against the bangs (the face
+// moves at 1, the bangs layer at its 0.12 parallax) and the panel is OPAQUE — the fur fringe leaked scribble
+// pixels through, this leaks nothing, so what it covers on a turned face is gone
+const frontBlunt = (h) => {
+  const { front, frontFills, spec, box, rx, ry, cy, noise } = h;
+  const brow = browLine(spec, box);
+  const hemY = Math.max(brow + ry * 0.08, eyeSafeY(h));
+  const cornerY = hemY + ry * 0.01;
+  const arcFloor = Math.max(cy + ry * 0.3, hemY + ry * 0.02);   // arc ends below the hem would hang side wings into the eye band
+  const arc = grownOutline(h, 1.0, 1.0, 3, 0.03).filter(([, y]) => y >= arcFloor).sort(arcSort(cy));
+  const hem = [];
+  for (let i = 0; i <= 6; i += 1) {
+    const x = -rx * 0.78 + (i / 6) * rx * 1.56;
+    hem.push([x, hemY + Math.abs(noise(i * 3.7 + spec.seed * 0.002)) * ry * 0.04]);
+  }
+  const poly = crumple([...arc, [-rx * 0.8, cornerY], ...hem, [rx * 0.8, cornerY]], 0.0025, spec.seed * 0.0017);
+  paintPart(frontFills, spec, poly, h.ink0, { own: true });
+  front.contour(poly, { color: h.lineInk });
+  for (const sx of [-0.34, 0.1, 0.44]) {
+    front.line([[sx * rx, cy + ry * 0.5], [sx * rx * 1.05, hemY + ry * 0.1]], { color: h.lineInk, size: "S" });
+  }
+};
+
+// A ribbon along a spine, filled fan-safe — a curved crescent fanned as one polygon spills across its own
+// concave notch (the crown's filled-in-pieces rule), so each segment is painted as its own convex quad.
+// Returns the outer boundary for the contour
+// **Never hand this a crumpled spine.** crumple() is for closed polygons: it re-samples every segment (a
+// 5-point path comes back ~100 points) and it wraps the last point round to the first. Both are wrong here —
+// the wrap adds a segment that is not part of the ribbon, and the re-sample ran the spine past the end of
+// `widths`, so `widths[i]` came back undefined and filled the rails with NaN (three of the four filled hair
+// kinds shipped a NaN geometry that way, and three.js dropped the quads it could not measure). The widths are
+// read at the spine's own resolution instead, interpolated, so any length is safe; the hand-drawn wobble is a
+// per-point jitter here and the pencil's own shake on the contour.
+const fillStrip = (h, fills, spine, widths, phase = 0) => {
+  const L = [], R = [], n = spine.length;
+  const widthAt = (i) => {
+    if (widths.length === n) return widths[i];
+    const t = n === 1 ? 0 : (i / (n - 1)) * (widths.length - 1);
+    const a = Math.floor(t), b = Math.min(widths.length - 1, a + 1);
+    return widths[a] + (widths[b] - widths[a]) * (t - a);
+  };
+  for (let i = 0; i < n; i += 1) {
+    const [x, y] = spine[i];
+    const [ax, ay] = spine[Math.max(0, i - 1)];
+    const [bx, by] = spine[Math.min(n - 1, i + 1)];
+    let dx = bx - ax, dy = by - ay;
+    const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const w = widthAt(i);
+    const j = h.noise(i * 3.7 + phase) * 0.0045;   // the hand's swing, per rail point — crumple's job, done safely
+    L.push([x - dy * (w + j), y + dx * (w + j)]);
+    R.push([x + dy * (w - j), y - dx * (w - j)]);
+  }
+  for (let i = 0; i + 1 < n; i += 1) {
+    paintPart(fills, h.spec, [L[i], L[i + 1], R[i + 1], R[i]], h.ink0, { own: true });
+  }
+  return [...L, ...R.slice().reverse()];
+};
+
+// Curtain bangs — the pretty one: parted in the middle, two sweeps framing the face. Each sweep is a ribbon
+// from the part down past the temple; the parting gap widens downward (the forehead shows, with the scalp's
+// hairline across it), and the tips drop past the brow only beside the eyes — the side zone the browLine
+// rule leaves open
+const frontCurtain = (h) => {
+  const { front, frontFills, spec, box, rx, ry, cy } = h;
+  const brow = browLine(spec, box);
+  const tipY = Math.max(brow - ry * 0.24, eyeSafeY(h) - ry * 0.1);   // the tips may drop past the brow, but a turned wide-set eye must clear them (the strip is narrow — a 0.1·ry grace)
+  for (const side of [-1, 1]) {
+    const spine = [
+      [side * rx * 0.1, cy + ry * 0.8],
+      [side * rx * 0.38, cy + ry * 0.6],
+      [side * rx * 0.62, cy + ry * 0.3],
+      [side * rx * 0.8, Math.max(brow + ry * 0.08, tipY + ry * 0.16)],   // the rail under this point dips ~half its width — keep it tied above the tip
+      [side * rx * 0.9, tipY]
+    ];
+    const boundary = fillStrip(h, frontFills, spine, [ry * 0.1, ry * 0.17, ry * 0.19, ry * 0.14, ry * 0.04], spec.seed * 0.0017 + side * 2);
+    front.contour(boundary, { color: h.lineInk });
+    front.line([[side * rx * 0.24, cy + ry * 0.62], [side * rx * 0.6, brow + ry * 0.16]], { color: h.lineInk, size: "S" });
+  }
+};
+
+// Swept bangs (앞머리) — a **deep side parting**: the whole fringe starts at one temple and sweeps across the
+// forehead as one diagonal mass, thick at the part and thinning to a tip past the far temple. Which side it
+// parts on is per individual (the seed, like the ponytail's tie). The hem is a straight run from high at the
+// part to low at the far tip, so the forehead shows as a wedge under it rather than a band — and both ends
+// stay above eyeSafeY, since the panel is opaque
+const frontSwept = (h) => {
+  const { front, frontFills, spec, box, rx, ry, cy } = h;
+  const brow = browLine(spec, box);
+  const side = spec.seed % 2 ? 1 : -1;                        // the part's side
+  const safe = eyeSafeY(h);
+  const hi = Math.max(cy + ry * 0.52, safe);                  // the hem where it leaves the part (high)
+  const lo = Math.max(brow + ry * 0.04, safe);                // the hem at the far tip (low)
+  const spine = [
+    [side * rx * 0.52, cy + ry * 0.9],
+    [side * rx * 0.18, cy + ry * 0.86],
+    [-side * rx * 0.24, cy + ry * 0.74],
+    [-side * rx * 0.62, cy + ry * 0.5],
+    [-side * rx * 0.86, Math.max(lo + ry * 0.18, safe + ry * 0.02)]
+  ];
+  const boundary = fillStrip(h, frontFills, spine,
+    [ry * 0.13, ry * 0.2, ry * 0.22, ry * 0.19, ry * 0.09], spec.seed * 0.0019);
+  front.contour(boundary, { color: h.lineInk });
+  // The sweep's grain — three long strands following the parting, fanning out as they cross
+  for (const k of [0.25, 0.5, 0.78]) {
+    front.line([
+      [side * rx * (0.42 - k * 0.5), cy + ry * (0.84 - k * 0.06)],
+      [-side * rx * (0.1 + k * 0.66), hi - (hi - lo) * k * 0.85]
+    ], { color: h.lineInk, size: "S" });
+  }
+};
+
+// back kind × front kind → one hair value.
+//   backs  bob a 단발 mass to just under the chin · sheets a pair falling beside the FACE to frayed ends
+//   fronts blunt the straight 일자 hem · curtain a middle parting · swept one deep side parting across the brow
+// The scalp's hairline in the middle is the front kind's business: a parting has to show the forehead up to
+// it, a solid panel hides it
+const HAIRLINE = { curtain: 0.55, swept: 0.66 };
+const filledHair = (backKind, frontKind) => (h) => {
+  const line = HAIRLINE[frontKind];
+  scalp(h, line === undefined ? undefined : h.cy + h.ry * line);
+  if (backKind === "sheets") backSheets(h);
+  else backMass(h, h.cy - h.ry * 1.14, 1.06);
+  if (frontKind === "blunt") frontBlunt(h);
+  else if (frontKind === "swept") frontSwept(h);
+  else frontCurtain(h);
+};
+
 // Kind → drawing function. 1:1 with the names in slots.js SLOTS.hair (none has none)
 export const HAIR = {
   bob: mopCap({ depth: 0.56, passes: 14, spread: 0.26 }),
@@ -289,7 +546,11 @@ export const HAIR = {
   twintailsBall: twintailsOf(true),
   ponytail,
   apple: appleOf(1),
-  appleBig: appleOf(1.7)
+  appleBig: appleOf(1.7),
+  bobBlunt: filledHair("bob", "blunt"),
+  bobCurtain: filledHair("bob", "curtain"),
+  bobSwept: filledHair("bob", "swept"),
+  sheetsSwept: filledHair("sheets", "swept")
 };
 
 export function drawHair(layers, spec, box, noise) {
@@ -301,6 +562,7 @@ export function drawHair(layers, spec, box, noise) {
     ...layers,
     spec, box, noise,
     ink0: pop && pop.target === "hair" ? pop.color : spec.palette.ink,
+    lineInk: spec.palette.ink,   // the filled family's contour — the outline stays pencil-dark even on pop hair
     rx: box.headRx, ry: box.headRy, cy: box.headCy,
     shoulder: box.bodyTop - 0.02   // the floor back hair comes down to (the shoulder)
   });

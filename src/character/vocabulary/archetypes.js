@@ -21,7 +21,8 @@ export const ARCHETYPES = [
     bias: {
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
       eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
-      hair: [["bob", 3], ["helmet", 2], ["bangs", 2], ["longbob", 1.5], ["long", 1.5], ["verylong", 1], ["ponytail", 1], ["wisp", 2], ["curly", 2], ["cloud", 1], ["sweep", 2], ["none", 2]],
+      hair: [["bob", 3], ["helmet", 2], ["bangs", 2], ["longbob", 1.5], ["long", 1.5], ["verylong", 1], ["ponytail", 1], ["wisp", 2], ["curly", 2], ["cloud", 1], ["sweep", 2], ["none", 2],
+        ["bobBlunt", 2], ["bobCurtain", 1], ["bobSwept", 2]],   // the filled family — the neat, combed kinds suit the scholar
       headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet disabled
       mouth: [["line", 3], ["dot", 2], ["smile", 2], ["three", 1.5], ["frown", 1], ["smug", 1.5], ["bracket", 1]],
       nose: [["long", 3], ["hook", 3], ["dot", 1]],
@@ -51,7 +52,8 @@ export const ARCHETYPES = [
       build: [["narrow", 2], ["skinny", 2], ["medium", 1]],
       legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
       arms: [["stick", 3], ["mitten", 2]],
-      hair: [["none", 2], ["wisp", 2], ["tuft", 1.5], ["pigtails", 2], ["twintails", 1.5], ["twintailsBall", 1], ["apple", 1], ["appleBig", 1], ["curly", 1], ["cloud", 1], ["spikes", 1]],
+      hair: [["none", 2], ["wisp", 2], ["tuft", 1.5], ["pigtails", 2], ["twintails", 1.5], ["twintailsBall", 1], ["apple", 1], ["appleBig", 1], ["curly", 1], ["cloud", 1], ["spikes", 1],
+        ["bobCurtain", 1.5], ["sheetsSwept", 1.5], ["bobSwept", 1.2]],   // the filled family — the parted curtain is the pretty one
       nose: [["none", 4], ["dot", 3], ["hook", 1]]
     }
   },
@@ -74,7 +76,8 @@ export const ARCHETYPES = [
     weight: 2,
     bias: {
       headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5]],
-      hair: [["scribble", 3], ["mop", 2], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["bun", 1.5], ["appleBig", 0.8], ["ponytail", 1], ["verylong", 0.8], ["none", 2], ["wisp", 1]],
+      hair: [["scribble", 3], ["mop", 2], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["bun", 1.5], ["appleBig", 0.8], ["ponytail", 1], ["verylong", 0.8], ["none", 2], ["wisp", 1],
+        ["bobBlunt", 1], ["sheetsSwept", 1], ["bobSwept", 0.8]],   // the filled family — a little, so it is not the scholar's alone
       eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
       mouth: [["wave", 3], ["line", 2], ["dot", 2], ["frown", 1.5], ["scribble", 1]],
       body: [["dress", 3], ["bean", 2]]

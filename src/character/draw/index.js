@@ -69,7 +69,11 @@ export function drawCreature(spec, variant = 0) {
   drawWhiskers(L.face.ink, spec, box);   // cat whiskers — being on the face layer, they draw over the outline and can poke outside
   drawEyewear(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
   // Three hair layers — back hair (behind the head) · on the scalp (same depth as the horns) · bangs (over the face). Each layer has its own depth and shifts separately on a face turn (rig.js DEPTH). See hair.js
-  drawHair({ back: L.hairBack.ink, crown: L.hairCrown.ink, front: L.hairFront.ink }, spec, box, noise);
+  // The fills go along too — the filled family paints hair shapes with the goofy material; the fur kinds leave them empty (an empty sketch stands no mesh up)
+  drawHair({
+    back: L.hairBack.ink, crown: L.hairCrown.ink, front: L.hairFront.ink,
+    backFills: L.hairBack.fills, crownFills: L.hairCrown.fills, frontFills: L.hairFront.fills
+  }, spec, box, noise);
   drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // the hat layer is above the ears — it covers their roots
 
   // Only eyes whose pupil moves are passed along. A cyclops is alive too.

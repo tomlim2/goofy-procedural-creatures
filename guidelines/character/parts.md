@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 25 slots, 186 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 27 slots, 206 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -88,7 +88,7 @@ An eyepatch is always a **black** fill (an object) — on an imp's ink-black hea
 laps onto the other eye — decided once the proportions are settled). An eyepatch is also **dropped on mismatched eyes** — cover one side of an individual whose eye size (`eyeSizeSkew` > 0.09) or height (`eyeHeightSkew` > 0.03) is noticeably different and the remaining
 eye looks oddly large or high on its own, which reads as a mistake (set to none after the proportions are settled; patchSide is cleared too).
 
-### hair (24)
+### hair (28)
 `hair.js` — one drawing function per kind (the `HAIR` table: name → function). New hair means adding one function and putting the name in `SLOTS.hair`.
 Hair is drawn across **three layers** (`drawHair(layers)`): **back hair** (back — behind the head and face, 1.55 → only what shows outside the silhouette and above the shoulders) ·
 **on the scalp** (crown 2.06 — above the head ink and below the face, at the same depth as the horns) · **bangs** (front 6.55 — drawn over the face; the brows and mouth at 6.6 are drawn above the bangs).
@@ -119,8 +119,11 @@ Start every stroke at the same height (a straight horizontal top edge plus a con
 | tuft / wisp | A few strands (4 / 7) |
 | pigtails | Two bunches at the sides (back — behind the ears) plus a light crown (crown) |
 | curly | 7 small circles along the crown |
+| bobBlunt / bobCurtain / bobSwept / sheetsSwept | **The filled family** — hair as a SHAPE: the boundary drawn first (a closed form, contoured in the pencil's dark ink) and the inside painted with the creature's goofy material like a hat (`paintPart`), not scribbled fur. Two regions, each a named half of the value. The back (뒷머리): **bob** a 단발 mass to just under the chin with a small A-line flare · **sheets** a pair falling beside the **face** to frayed, tasselled ends (the Wendy reference). The front (앞머리): **blunt** one panel with the straight 일자 hem · **curtain** parted in the middle, two ribbon sweeps framing the face (each filled fan-safe as segment quads — a crescent fanned whole spills across its own notch), the parting gap showing the forehead up to the scalp's hairline · **swept** one **deep side parting** (which side is per individual, from the seed) sweeping the whole fringe across the brow as one diagonal mass, thick at the part and thinning to a tip past the far temple. A scalp piece (crown) fills the head's own top to the hairline — the head fill covers the back dome inside the silhouette, so without it the scalp reads bare. **Every face-covering piece is clamped by `eyeSafeY`** — the highest eye's top plus the travel a face turn has left (≈0.14·ry) plus the pencil's bite: these fills are opaque (and dark ink drawn on a dark fill is just as gone), so on big- or high-eyed individuals the hem, the side lobes and the curtain tips all pull up and the bangs abbreviate to a strip. The fill takes pop when pop targets hair; the outline stays pencil-dark |
 
-Only humans have hair (dogs and cats are all none via forbid; imps get spikes/none). Bangs, the side bob, the hood type, long hair (long, verylong), twintails (and Ball) and the ponytail count as hair that may come out
+**There is no filled 장발, and that is a rule rather than a gap.** A long back was built (the dome plus a sheet hanging at each side to the chest) and **removed**: the two sheets left a narrow strip open down the middle, and the torso showing through it — narrow, tapering, ending round — made an obscene silhouette on slim, skin-coloured bodies. The fur curtains (`long`, `verylong`) do not have the problem: they are open scribble rather than opaque fill, they hang from the whole head outline instead of two side lobes, and `verylong` deliberately skips the strokes over the middle of the chest. **Two filled masses flanking a gap over the TORSO is a shape to stay away from** — a filled 장발 has to read as one piece across the back, never as a pair. `sheets` is a pair and is fine, because of where it stops: it straddles the **head**, its hem clearing the jaw by a hair, so what shows between the two is the face. (Its hem is not clamped to the shoulder — `bodyTop` is measured *above* the chin on every build, so that clamp would shrink the sheets to nothing; back hair drawing at 0.4, under the body, is what covers the rest.)
+
+Only humans have hair (dogs, cats and the rex are all none via forbid; imps get spikes/none). Bangs, the side bob, the hood type, long hair (long, verylong), twintails (and Ball), the ponytail and the filled family (bobBlunt, bobCurtain, bobSwept, sheetsSwept) count as hair that may come out
 from under a hat or band; cloud and hedgehog go with a band only; and mohawk, bun and the apple tops (apple, appleBig) take no hat. No hair covers the eyes — the front stops at the brow line and the sides go to the ear
 ([rules.md](rules.md)).
 
