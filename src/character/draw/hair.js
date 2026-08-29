@@ -360,35 +360,35 @@ const backMass = (h, hem, flare) => {
 const backSheets = (h) => {
   const { back, backFills, spec, rx, ry, cy, noise } = h;
   backMass(h, cy - ry * 0.62, 1.0);   // a short dome — the sheets carry the length, the dome only joins them over the crown
-  // The hem sits just past the chin (the head's bottom is cy − ry). Note the shoulder is NOT the limit here:
-  // bodyTop is measured above the chin on every build, so clamping to it would shrink the sheets to nothing.
-  // What keeps this out of the flanking trap is that the pair straddles the HEAD — the hem clears the jaw by a
-  // hair, and the torso below is behind them anyway (rig.js draws back hair at 0.4, under the body)
-  const hem = cy - ry * 1.12;
+  // **The pair starts at the MOUTH.** In the reference the hair lies close to the head down past the cheek and
+  // only gathers and splays from about mouth height — hung from the temple instead it reads as a hood with two
+  // flaps, which is what the first cut of this did. So the top is anchored on the individual's own mouth
+  // (proportions.mouthDrop), and the sheet widens on the way down to a frayed, tasselled hem past the jaw.
+  const top = cy - ry * spec.proportions.mouthDrop;
+  const hem = cy - ry * 1.24;
   for (const side of [-1, 1]) {
-    // Wide enough to read: the head fill is opaque and covers everything inside its own silhouette, so only
-    // what lies **outside** the ellipse shows. The outer edge bows out to 1.42·rx and the widest part is low,
-    // where the head has already narrowed — which is where the reference's sheets are fullest too
+    // The head fill is opaque and hides everything inside its own silhouette, so the inner edge is tucked
+    // behind the cheek and only the splay shows — widest low, where the head has already narrowed
     const rag = [];
     const teeth = 5;
-    for (let i = 0; i <= teeth; i += 1) {   // outer → inner along the hem, tassels alternating deep and shallow
+    for (let i = 0; i <= teeth; i += 1) {   // outer → inner along the hem, tassels cut alternately deep and shallow
       const t = i / teeth;
-      const x = side * rx * (1.34 - t * 0.6);
-      const deep = i % 2 === 0 ? 1 : 0.5;
-      rag.push([x, hem + (1 - deep) * ry * 0.2 + Math.abs(noise(i * 5.3 + side * 3.1 + spec.seed * 0.002)) * ry * 0.08]);
+      const x = side * rx * (1.42 - t * 0.74);
+      const deep = i % 2 === 0 ? 1 : 0.48;
+      rag.push([x, hem + (1 - deep) * ry * 0.22 + Math.abs(noise(i * 5.3 + side * 3.1 + spec.seed * 0.002)) * ry * 0.09]);
     }
     const poly = crumple([
-      [side * rx * 0.84, cy + ry * 0.58],
-      [side * rx * 1.08, cy + ry * 0.42],
-      [side * rx * 1.34, cy - ry * 0.1],
-      [side * rx * 1.42, cy - ry * 0.62],
+      [side * rx * 0.68, top + ry * 0.16],
+      [side * rx * 0.98, top + ry * 0.04],
+      [side * rx * 1.3, cy - ry * 0.66],
+      [side * rx * 1.46, hem + ry * 0.3],
       ...rag,
-      [side * rx * 0.7, cy - ry * 0.5]
+      [side * rx * 0.6, cy - ry * 0.72]
     ], 0.004, spec.seed * 0.0015 + side * 4);
     paintPart(backFills, spec, poly, h.ink0, { own: true });
     back.contour(poly, { color: h.lineInk });
-    for (const k of [1.06, 1.24]) {   // the strand grain — long lines down the sheet, out where it actually shows
-      back.line([[side * rx * (k - 0.06), cy + ry * 0.34], [side * rx * k, hem + ry * 0.24]], { color: h.lineInk, size: "S" });
+    for (const k of [1.04, 1.26]) {   // the strand grain — following the splay, out where the sheet actually shows
+      back.line([[side * rx * (k * 0.78), top - ry * 0.05], [side * rx * k, hem + ry * 0.3]], { color: h.lineInk, size: "S" });
     }
   }
 };
@@ -483,26 +483,55 @@ const frontCurtain = (h) => {
 const frontSwept = (h) => {
   const { front, frontFills, spec, box, rx, ry, cy } = h;
   const brow = browLine(spec, box);
-  const side = spec.seed % 2 ? 1 : -1;                        // the part's side
+  const side = spec.seed % 2 ? 1 : -1;                        // which side the parting falls on
   const safe = eyeSafeY(h);
-  const hi = Math.max(cy + ry * 0.52, safe);                  // the hem where it leaves the part (high)
-  const lo = Math.max(brow + ry * 0.04, safe);                // the hem at the far tip (low)
-  const spine = [
-    [side * rx * 0.52, cy + ry * 0.9],
-    [side * rx * 0.18, cy + ry * 0.86],
-    [-side * rx * 0.24, cy + ry * 0.74],
-    [-side * rx * 0.62, cy + ry * 0.5],
-    [-side * rx * 0.86, Math.max(lo + ry * 0.18, safe + ry * 0.02)]
+  // **A parting is two pieces, and neither one stops at the brow.** In the reference the fringe leaves one
+  // parting high on the crown, and BOTH ends carry on round the temples and down the side of the face to the
+  // **mouth** — which is exactly where the 양갈래 sheets pick up (backSheets anchors on the same mouthDrop).
+  // Cut at the brow instead and the fringe reads as a patch laid on the forehead with the sheets floating
+  // under it, unattached. Drawn as one diagonal slab there is no parting at all, just a wedge.
+  const px = side * rx * 0.22;                                // the part — 2:3 across the head's width
+  const py = cy + ry * 0.96;
+  const mouthY = cy - ry * spec.proportions.mouthDrop;
+  // The lane the side locks run down: outside the widest eye (they are opaque, and the front layer is above
+  // the face). A very wide-set eye leaves no lane, and then the locks stop at the temple as before
+  const eyes = eyeGeometry(spec, box);
+  const eyeOuter = Math.max(...eyes.map((e) => Math.abs(e.x) + e.r));
+  const lockX = Math.max(eyeOuter + ry * 0.12, rx * 0.9);
+  const runsDown = lockX < rx * 1.04;
+  const W = [ry * 0.08, ry * 0.18, ry * 0.2, ry * 0.15, ry * 0.1, ry * 0.05];   // interpolated over the spine
+
+  const far = [                                               // the long side (3) — across the brow, then down
+    [px, py],
+    [-side * rx * 0.14, cy + ry * 0.9],
+    [-side * rx * 0.52, cy + ry * 0.66],
+    [-side * rx * 0.82, Math.max(brow + ry * 0.06, safe)]
   ];
-  const boundary = fillStrip(h, frontFills, spine,
-    [ry * 0.13, ry * 0.2, ry * 0.22, ry * 0.19, ry * 0.09], spec.seed * 0.0019);
-  front.contour(boundary, { color: h.lineInk });
-  // The sweep's grain — three long strands following the parting, fanning out as they cross
-  for (const k of [0.25, 0.5, 0.78]) {
+  if (runsDown) far.push([-side * lockX, cy + ry * 0.06], [-side * lockX, mouthY]);
+  front.contour(fillStrip(h, frontFills, far, W, spec.seed * 0.0019), { color: h.lineInk });
+
+  const near = [                                              // the short side (2) — straight down the near side
+    [px, py],
+    [side * rx * 0.5, cy + ry * 0.82],
+    [side * rx * 0.76, Math.max(brow + ry * 0.14, safe)]
+  ];
+  if (runsDown) near.push([side * lockX, cy + ry * 0.08], [side * lockX, mouthY]);
+  front.contour(fillStrip(h, frontFills, near, [ry * 0.07, ry * 0.14, ry * 0.13, ry * 0.1, ry * 0.05], spec.seed * 0.0023 + 7),
+    { color: h.lineInk });
+
+  // The grain — long strands fanning out of the part and following the same arc as the mass under them
+  const endY = runsDown ? mouthY + ry * 0.25 : Math.max(brow + ry * 0.1, safe);
+  for (let i = 1; i <= 4; i += 1) {
+    const k = i / 5;
     front.line([
-      [side * rx * (0.42 - k * 0.5), cy + ry * (0.84 - k * 0.06)],
-      [-side * rx * (0.1 + k * 0.66), hi - (hi - lo) * k * 0.85]
+      [px - side * rx * 0.06 * i, py - ry * 0.06 * i],
+      [-side * rx * (0.24 + k * 0.5), cy + ry * (0.74 - k * 0.46)],
+      [-side * lockX * (0.9 + k * 0.1), endY + ry * (1 - k) * 0.3]
     ], { color: h.lineInk, size: "S" });
+  }
+  for (const k of [0.45, 0.8]) {
+    front.line([[px + side * rx * 0.1, py - ry * 0.08], [side * lockX * (0.86 + k * 0.14), endY + ry * (1 - k) * 0.3]],
+      { color: h.lineInk, size: "S" });
   }
 };
 
