@@ -203,6 +203,10 @@ export function buildCreature(spec, noise, birth = 0) {
     return {
       pivot, front, elbow, foot, back,
       kind: limb.kind, side: limb.side, index: limb.index ?? 0,
+      // **knee has to come across.** animate falls back to `side` for the fold direction when it is missing,
+      // and `side` marks front from hind on a quad — so the pair folded opposite ways however the drawing
+      // asked. The descriptor has carried a `knee` since the quad legs were written; it just never arrived
+      knee: limb.knee,
       angle: bind.shoulder, elbowAngle: bind.elbow
     };
   });
