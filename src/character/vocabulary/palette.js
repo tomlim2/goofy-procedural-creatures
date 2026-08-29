@@ -108,6 +108,12 @@ export const MARKS = {
   sweat: "#b9cbd6"     // the sweat drop's pale blue (scene/emoji.js)
 };
 
+// The blush pink is one of the fixed few — a blush is pink because a blush is pink — **unless the individual's
+// own palette overrules it**. One does: a **ghost** has no warm blood in it, so its cheeks, its tongue, its nose
+// and the inside of its ears take the ink instead of the pink (spec.js ghostPalette). Everything that is not a
+// ghost carries no `blush` in its palette at all and falls through to MARKS, so nothing else moves
+export const blushOf = (spec) => (spec && spec.palette && spec.palette.blush) || MARKS.blush;
+
 // (shade, which makes a tone in the same family, is in src/color.js — spec.js uses it to give dogs, cats and imps a body "close to" the head color)
 
 export const ACCENTS = [

@@ -39,6 +39,11 @@ export function ghostMotion(M) {
     legTap: null, legStep: null,
     stretch: null, shiver: null,
     wink: null, happyHold: null, angry: null, surprise: null, emojis: null,
+    // **Half speed, all of it.** A ghost drifts; nothing about it is brisk. It is one factor on the clock's own
+    // time (index.js), so every oscillation, every schedule and every jitter halves together and none of them
+    // drift apart — plus the same factor on the two critically damped follows (the gaze and the face turn),
+    // which are stepped per tick rather than off t and would otherwise stay as quick as ever
+    slow: 0.5,
     float: { lift: 0.09, bob: 0.25, period: 3.6, fold: [0.12, 0.38] }
   };
 }

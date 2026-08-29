@@ -111,6 +111,11 @@ function of the species' own table (`ghostMotion(M)`), so a ghost cat still move
 motion does not exist, and it is what keeps a removed motion out of the rng as well as out of the picture. Only where a channel has no table switch of its own
 (the blink, the brow/mouth mood) mask it at the assembly point in `index.js`, alongside `forced` and the high five — never inside `rhythm/events/states`.
 
+If a profile changes **how fast** the whole creature moves, that is **one factor on the clock's time** where `t` is
+taken from `birth` — never a factor per motion. Every oscillation, schedule and jitter then halves together and
+nothing drifts out of phase with anything else. The exception to know about: a per-tick easing (`damp`, `approach`)
+steps once per call whatever `t` says, so those take the factor themselves or they stay as quick as they were.
+
 A distance in a profile is a **ratio against the rig**, never a constant: the ghost's lift is a fraction of that individual's own `legTop`, the same way a sit is
 solved from the body. A fixed number lifted a small cat by 0.42 of a leg and a rex by 0.18 — the same distance, a different meaning.
 

@@ -8,14 +8,15 @@ import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { TAU, eyeGeometry } from "./layout.js";
 import { eyeBottom, noseBottomY, muzzleGeometry } from "./face.js";
-import { MARKS } from "../vocabulary/palette.js";
+import { MARKS, blushOf } from "../vocabulary/palette.js";
 
 // Mouth width multiplier — the mouthSize slot (a late slot). In the reference, very small mouths and very wide mouths split at the extremes
 export const MOUTH_SIZE = { small: 0.7, normal: 1, wide: 1.4 };
 // Species width multiplier — an imp mouth is wider than half the face (the reference)
 const SPECIES_WIDTH = { imp: 1.3 };
 const TOOTH = MARKS.white;   // tooth and grid fill — the same white as the eye whites
-const PINK = MARKS.blush;   // tongue — the same pink as the blush
+// tongue — the same pink as the blush, and the same ink as it on a ghost (palette.js blushOf)
+const PINK = (m) => blushOf(m.spec);
 
 // Mouth position, width and ink. Solved from species, slots and proportions at once
 export function mouthPlacement(spec, box) {
@@ -89,7 +90,7 @@ function grid(m, hw, hh, bars) {
 // Tongue — a pink mass hanging below the mouth plus a centre line
 function tongueBlob(m, cx, top, rx, ry) {
   const t = blobPath(cx, top - ry, rx, ry, { lumps: 3, amount: 0.1, noise: null });
-  paintPart(m.fills, m.spec, t, PINK, { own: true });
+  paintPart(m.fills, m.spec, t, PINK(m), { own: true });
   m.ink.contour(t, { color: m.ink0, size: "S" });
   m.ink.line([[cx, top - ry * 0.3], [cx + 0.001, top - ry * 1.6]], { color: m.ink0, size: "S" });
 }
@@ -193,7 +194,7 @@ export const MOUTH = {
   blep: (m) => {
     MOUTH.omega(m);
     const t = blobPath(m.x, m.y - 0.012, 0.011, 0.012, { lumps: 3, amount: 0.1, noise: null });
-    paintPart(m.fills, m.spec, t, PINK, { own: true });
+    paintPart(m.fills, m.spec, t, PINK(m), { own: true });
     m.ink.contour(t, { color: m.ink0, size: "S" });
   }
 };

@@ -127,6 +127,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
   // The float (a ghost) — a steady lift off the floor with a slow drift over it. Its phase is per individual and
   // comes **from the seed with no rng**, like walkPhase just above: the clock keeps drawing from this stream all
   // through update(), so an init draw here would shift every schedule after it and re-roll every creature's motion
+  const SLOW = M.slow || 1;   // a ghost runs at half speed — one factor on the clock's time (see update)
   const F = M.float || null;
   const floatPhase = ((seed % 89) / 89) * Math.PI * 2;
   // **Every ghost hangs at the same height.** One distance for all of them, not a fraction of each build: a row
@@ -206,7 +207,14 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
       if (five && trip.start >= 0) { trip.to = trip.x; trip.start = -1; }
     },
     update(globalT) {
-      const t = globalT - birth;
+      // **A ghost moves at half speed** (table.js `slow`). One factor on the clock's own time, so every
+      // oscillation, every schedule, every jitter and the float's own drift halve **together** — scale them
+      // one by one and they come apart. Birth-relative first, then scaled, so the whole timeline stretches
+      // from the moment it was born rather than from the board's zero.
+      // What this cannot reach is a per-tick easing: `damp` and `approach` step once per call whatever t says.
+      // The two that matter for a ghost — the gaze and the face turn — take the factor themselves (rhythm.js);
+      // the rest belong to sleeping, sitting, walking and smiling, none of which a ghost does
+      const t = (globalT - birth) * SLOW;
 
       // -- update: fixed order --
       // The base state — idle (standing) / sleep (lying asleep). The schedule runs even while forced. sleepK blends the pose
@@ -281,7 +289,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
       if (!quad && modeName === "walk" && trip.start >= 0) looking = [trip.dir * 0.9, 0];   // a biped looks the way it walks
       if (five) looking = [five.side * 0.9, 0];   // through a high five both parties look at each other
       if (looking && !asleep) glance.gazeTarget = looking;
-      const gaze0 = R.stepGaze(glance);
+      const gaze0 = R.stepGaze(glance, 0.2 * SLOW);
       const faceTurn0 = R.stepFaceTurn(glance, M, asleep ? null : looking);
       // Sleep — eyes closed, gaze centred, the face tilted slightly down
       const gaze = [gaze0[0] * awake, gaze0[1] * awake];
@@ -595,7 +603,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
       if (TT && TT.follow) {
         const vel = tailPrevBase === null ? 0 : tailAngle - tailPrevBase;   // per tick
         tailPrevBase = tailAngle;
-        damp(tailFollow, Math.max(-0.5, Math.min(0.5, -vel * TT.follow * TICK_FPS)), 0.25);   // × ticks per second — the velocity per second
+        damp(tailFollow, Math.max(-0.5, Math.min(0.5, -vel * TT.follow * TICK_FPS)), 0.25 * SLOW);   // × ticks per second — the velocity per second
         tailTip += tailFollow.x;
       }
       const sleepHead = sleepK * 0.32 * (seed % 2 ? 1 : -1);      // the head tilts to one side as it rests

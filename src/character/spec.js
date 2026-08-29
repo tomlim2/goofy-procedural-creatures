@@ -169,10 +169,39 @@ export function ghostPalette(base, kind, wobbleSeed) {
     ...base, skin: tone, cloth: tone, hair: tone, accent: tone,
     pattern2: base.pattern2 ? tone : base.pattern2,
     pop: null,
-    ink: GHOST_INK
+    ink: GHOST_INK,
+    // No warm blood in it. The blush pink is one of the fixed few (a blush is pink because a blush is pink), and
+    // this is the one palette that overrules it: the cheeks, the tongue, the nose and the inside of the ears all
+    // take the ink. A pink flush is the one colour that says a thing is alive, and this one is not.
+    // Only a ghost's palette carries the key at all — everything else falls through to MARKS (palette.js blushOf)
+    blush: GHOST_INK
   };
 }
 export function ghostOutline(kind) { return !kind || kind === "none" ? undefined : "PENCIL_BROKEN"; }
+
+// **A ghost is downcast, and that is settled in the parts, not in any expression.** It has no expressions at all
+// (motion/table.js), so whatever mouth and brow it was drawn are the face it wears for good — and a grinning
+// ghost is a cartoon, not a ghost. The smiles are struck out, and so is the angry brow: anger is a feeling and
+// this one has none, where `worry` (the inner ends up) is the very shape of gloom.
+// The replacement comes out of **the pool that individual would have drawn from** — the same four-step
+// resolution as pickSlot, species over archetype over default — so a downcast cat is still drawn like a cat and
+// never lands on an imp's mouth. Deterministic (settled off the seed, no rng): `ghost` is a late slot, so by the
+// time this runs the sequence is finished and a re-roll here would shift nothing, but a draw is a draw
+const SMILING_MOUTHS = ["smile", "grin", "omega", "three", "blep", "tongue"];
+const DOWNCAST_BROWS = ["none", "flat", "worry"];
+function gloomify(parts, species, archetype, seed) {
+  const poolFor = (slot, banned) => {
+    const bias = species.bias[slot] || archetype.bias[slot] || DEFAULT_BIAS[slot];
+    const kept = (bias ? bias.map(([value]) => value) : SLOTS[slot]).filter((v) => !banned.includes(v));
+    return kept.length ? kept : SLOTS[slot].filter((v) => !banned.includes(v));
+  };
+  const step = (slot, banned, n) => {
+    const pool = poolFor(slot, banned);
+    parts[slot] = pool[Math.floor(settled(seed, n) * pool.length) % pool.length];
+  };
+  if (SMILING_MOUTHS.includes(parts.mouth)) step("mouth", SMILING_MOUTHS, 6);
+  if (!DOWNCAST_BROWS.includes(parts.brow)) step("brow", ["angry"], 7);
+}
 // Is this individual a ghost? One definition, because three places outside the spec ask: the scene, when it
 // builds the clock (a ghost only floats — motion/table.js ghostMotion), the high five (a ghost never fives)
 // and the sim that gates it
@@ -298,7 +327,10 @@ export function makeCreature(seed, speciesName = "human") {
   // is looking back, which is the whole idea. A deterministic overwrite (no rng), and it lands here rather
   // than in applyConstraints because `ghost` is a late slot and is not drawn yet when that runs. It has to be
   // before eyeGeometry below, which the eyewear constraints measure
-  if (parts.ghost !== "none") parts.eyes = "hollow";
+  if (parts.ghost !== "none") {
+    parts.eyes = "hollow";
+    gloomify(parts, species, archetype, seed);
+  }
 
   // Eyewear constraints that can only be known once the eye positions are settled (after the proportions and the last slots are drawn) — overwritten deterministically (no rng)
   const eyes = eyeGeometry({ species: species.name, parts, proportions }, layout({ species: species.name, parts, proportions }));

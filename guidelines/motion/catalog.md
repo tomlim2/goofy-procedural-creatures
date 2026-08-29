@@ -260,6 +260,16 @@ than the meaning behind it. A row of ghosts has to read as a row. What varies pe
 height. Measured over 72 ghosts: `hopY` runs 0.0675~0.1125 for **every** build, three times clear of the scene's floor
 release (0.02, `animate.js`) at the bottom of the drift, and the tallest floating head reaches 1.162 in the 1.35 cell.
 
+**Everything runs at half speed.** A ghost drifts; nothing about it is brisk. It is **one factor on the clock's own
+time** (`slow` in the table, applied where `t` is taken from `birth`), so every oscillation, every schedule, every
+jitter and the float's own drift halve together and none of them come apart — scale them one at a time and they do.
+Measured: breathing crosses 80 times in 120 s plain and 40 as a ghost, exactly 2.00×, and the bob's 3.6 s becomes 7.3 s.
+
+The one thing a time factor cannot reach is a **per-tick easing** — `damp` and `approach` step once per call whatever
+`t` says. Left alone, a ghost's pupils would dart to a new target as briskly as ever while everything around them
+halved. The two that matter take the factor themselves: the gaze (9 → 18 ticks to 95%) and the face turn (18 → 37), and
+the tail's follow-through with them. The rest belong to sleeping, sitting, walking and smiling, none of which a ghost does.
+
 **The arms hang and the legs fold.** Nothing about a ghost is held up. Every arm falls back to `ARM_POSES.limp` instead of
 the A-pose — 9° off vertical rather than 30° open, at the same near-full reach, and with no floor clamp, since the whole
 point is that it is off the ground. And the **knees tuck up**, by an amount drawn per individual from the seed, so one
@@ -288,7 +298,10 @@ now reads the hop minus the float, which is unchanged for everything that does n
 | the drift | ±25% of the settled lift, one cycle every 3.6 s — a sine, which the easing rule exempts. The phase is per individual **from the seed, with no rng**: the clock keeps drawing from its stream all through `update()`, so an init draw would shift every schedule after it and re-roll every creature's motion |
 | rising into it | eased in over 2.4 s (`ramp`), so a ghost rises into the air instead of being born already up there. The fold fades in with it, so the tuck happens as the feet leave the floor |
 | the arms | `ARM_POSES.limp` as the rest pose — measured at a widest shoulder of 20°, against the A-pose's 36° and an imp's 78° |
+| the thigh | takes only `item.thighFold` (0.45) of the fold, so the first bone hangs near vertical and the knee does the work. Multiplying the thigh **is** swinging the foot target back about the hip by that fraction of its angle — a two-bone solution rotates rigidly with its target direction, so the knee's interior angle, which depends only on the distance, is untouched. 1 on the ground: a crouch that has to keep its feet planted needs all of it |
 | the legs | the standing rest bend let go the way a jump's `flight` does, then folded by `fold × floatK` — `[0.12, 0.38]` of the leg length, per individual from the seed. **`knee: -1` on every leg** (the scene, not the drawing), so both fold to one side, forward |
+| the feet | `item.soleToFloor` 0 — the ankle stops counter-rotating. Levelling the sole is a **grounded** rule (it is the floor it is being kept level with); in the air it swung the toe out to the far side from the knee, a leg hanging on backwards. Off, the foot keeps the angle it was drawn at against the shin and follows the fold round, toe toward the knee |
+| the speed | `slow` 0.5 — one factor on the clock's time, plus the same on the gaze, the face turn and the tail follow-through |
 | the state | `mode` reads `"float"` |
 
 Measured: over 2160 ghost ticks once risen (5 species), the mode is `float` every tick, `walkX` never leaves 0, `hopY` never drops under the scene's

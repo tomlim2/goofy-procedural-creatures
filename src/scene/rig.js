@@ -342,6 +342,17 @@ export function buildCreature(spec, noise, birth = 0) {
     clock: makeClock(spec.seed, birth, spec.species, mrig, isGhost(spec)),
     // The same description, for the scene — the high five pairing (scene/hifive.js) reads arm reach and shoulder position off it
     motionRig: mrig,
+    // How much of the fold the **first bone** takes. A crouch that has to keep its feet planted needs all of it;
+    // a floating one does not, and hanging, most of the bend belongs at the knee — the thigh stays near vertical
+    // and the shin swings back under it. Multiplying the thigh is the same thing as swinging the foot target
+    // back about the hip by that fraction of its angle: a two-bone solution rotates rigidly with its target
+    // direction, so the knee's interior angle (which depends only on the distance) is untouched
+    thighFold: isGhost(spec) ? 0.45 : 1,
+    // Whether the ankle counter-rotates to keep the sole level with the floor (animate). 1 on the ground, where
+    // that is the whole job of an ankle. 0 in the air: there is no floor to be level with, and levelling swings
+    // the toe out to the far side from the knee — a leg hanging on backwards. Off, the foot keeps the angle it
+    // was drawn at against the shin and follows the fold round
+    soleToFloor: isGhost(spec) ? 0 : 1,
     // The body group's rotation axis — in a quad sit (state.bodyTilt) the body tilts about the front legs' root (animate). null on a biped
     bodyPivot: mrig.body ? [mrig.body.frontHipX, mrig.body.hipY] : null,
     spec,

@@ -198,14 +198,20 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
       const o = Math.min(1, bodyDrop / (dims.y * 0.02));
       const onset = o * o * (3 - 2 * o);
       const solved = solveLeg(dims, limb.knee !== undefined ? limb.knee : limb.side, 0, -(dims.y - bodyDrop));
-      crouchThigh = solved.thigh * onset;
+      // The first bone takes item.thighFold of the fold (1 on the ground — a planted crouch needs all of it).
+      // Under a floating creature it takes less, so the thigh hangs nearer vertical and the knee does the work
+      crouchThigh = solved.thigh * onset * (item.thighFold ?? 1);
       crouchKnee = solved.knee * onset;
     }
     limb.pivot.rotation.z = limb.angle + osc + crouchThigh;
     if (limb.elbow) limb.elbow.rotation.z = limb.elbowAngle + oscElbow + crouchKnee;
     // The sole stays level: the ankle counter-rotates what the hip and knee turned, so the foot aligns with
-    // the floor at any fold (baked into the shin, a bent knee tilted the whole foot with it)
-    if (limb.foot) limb.foot.rotation.z = -(limb.pivot.rotation.z + limb.elbow.rotation.z);
+    // the floor at any fold (baked into the shin, a bent knee tilted the whole foot with it).
+    // That is a **grounded** rule — it is the floor the sole is being kept level with. In the air there is no
+    // floor, and counter-rotating there swings the toe out to the far side from the knee, which is a leg
+    // hanging backwards. item.soleToFloor turns it off for a floating individual: the foot then keeps the
+    // angle it was DRAWN at against the shin, so the toe follows the fold round and points the knee's way
+    if (limb.foot) limb.foot.rotation.z = -(limb.pivot.rotation.z + limb.elbow.rotation.z) * (item.soleToFloor ?? 1);
     // ...and the body's height comes back out of the legs **as drawn** (jitter aside): the thigh vector is the
     // knee group's rest position and the shin's is the ankle's, so the very vectors the renderer rotates are the
     // ones measured. A vertical-bone model was here and drifted on the drawn lean (a stick leg leans up to ~11°):

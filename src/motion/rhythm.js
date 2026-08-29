@@ -52,8 +52,11 @@ export function stepRoll(roll, t) {
 }
 // Gaze eases toward a target. Updating that target (rng) is events' job.
 // Gaze — critically damped follow (w 0.2 ≈ 95% in 0.4 s). A softer start than an exponential lerp
-export function stepGaze(g) {
-  return [damp(g.gaze[0], g.gazeTarget[0], 0.2), damp(g.gaze[1], g.gazeTarget[1], 0.2)];
+// w is the follow weight per 60-Hz frame. It is a parameter because a **ghost moves at half speed** and a
+// critically damped follow is stepped per tick, not off t — scaling the clock's time alone would leave the
+// pupils darting to a new target as briskly as ever while everything around them halved (index.js SLOW)
+export function stepGaze(g, w = 0.2) {
+  return [damp(g.gaze[0], g.gazeTarget[0], w), damp(g.gaze[1], g.gazeTarget[1], w)];
 }
 // Face turn [x, y] (−1~1). Follows the gaze slowly — the pupils go first and the face comes after.
 // During a look it turns all the way that way. Up and down less than side to side (M.yaw × 0.6).
@@ -61,7 +64,8 @@ export function stepGaze(g) {
 export function stepFaceTurn(g, M, look) {
   const tx = look ? look[0] : g.gaze[0].x * M.yaw;
   const ty = look ? look[1] : g.gaze[1].x * M.yaw * 0.6;
-  return [damp(g.faceTurn[0], tx, 0.1), damp(g.faceTurn[1], ty, 0.1)];
+  const w = 0.1 * (M.slow || 1);   // half on a ghost — a per-tick follow does not slow with the clock's time
+  return [damp(g.faceTurn[0], tx, w), damp(g.faceTurn[1], ty, w)];
 }
 // Arm pendulum — opposite phase to the sway
 export function stepArmSwing(a, sway, t, M) {
