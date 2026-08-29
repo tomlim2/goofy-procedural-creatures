@@ -238,7 +238,8 @@ export function drawHorns(ink, fills, spec, box, noise) {
     // A tapered bone horn along a centerline — and its tip is BLUNT: the rails thin gently and close over a
     // round cap, never a point (dragon horn ends are rounded like fingers; collapsed to a point they came out
     // as scraggly needles under the pencil's wobble)
-    const boneHorn = (pts, w0) => {
+    const boneHorn = (raw, w0, place) => {
+      const pts = place ? place(raw) : raw;
       const L = [], R = [];
       let ex = 0, ey = 1;
       for (let i = 0; i < pts.length; i += 1) {
@@ -263,12 +264,27 @@ export function drawHorns(ink, fills, spec, box, noise) {
       ink.contour(poly, { color: ink0 });
       return pts;
     };
+    // **Where on the skull they root is per individual.** They used to be pinned to one spot near the crown;
+    // now the base slides down the head's own outline, from up top to the temple — the sideburn line. As it
+    // descends the whole horn is turned by the same amount, so it keeps pointing away from the skull instead
+    // of leaning over the face. Hashed off wobbleSeed, so it costs no rng and no seed moved
+    const A_TOP = Math.atan2(0.8, 0.55);            // the old fixed spot, in outline angle
+    const A_LOW = Math.PI * 0.04;                   // the temple
+    const slide = (Math.imul((spec.proportions.wobbleSeed ^ 0x5bd1e995) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+    const aOut = A_TOP + (A_LOW - A_TOP) * slide;
     for (const side of [-1, 1]) {
-      const bx = side * rx * 0.55;
-      const by = cy + ry * 0.8;
+      const bx0 = side * rx * 0.55, by0 = cy + ry * 0.8;                 // the shapes below are written here
+      const bx = side * rx * Math.cos(aOut) * 0.98;                      // ...and moved onto the outline
+      const by = cy + ry * Math.sin(aOut) * 0.98;
+      const rot = -side * (A_TOP - aOut);
+      const cs = Math.cos(rot), sn = Math.sin(rot);
+      const place = (pts) => pts.map(([x, y]) => {
+        const dx = x - bx0, dy = y - by0;
+        return [bx + dx * cs - dy * sn, by + dx * sn + dy * cs];
+      });
       const lean = noise(side * 9.1 + spec.seed * 0.0007) * 0.05;
       if (kind === "curved") {
-        const c = boneHorn([[bx, by], [bx + side * 0.075, by + 0.095], [bx + side * 0.055 + lean, by + 0.19]], 0.024);
+        const c = boneHorn([[bx0, by0], [bx0 + side * 0.075, by0 + 0.095], [bx0 + side * 0.055 + lean, by0 + 0.19]], 0.024, place);
         // the ring segments — two short lines across the horn (the annulated look)
         for (const k of [0.35, 0.6]) {
           const i = k * (c.length - 1), a = c[Math.floor(i)], b = c[Math.ceil(i)] || a;
@@ -279,25 +295,25 @@ export function drawHorns(ink, fills, spec, box, noise) {
           ink.line([[px - (-dy / l) * w, py - (dx / l) * w], [px + (-dy / l) * w, py + (dx / l) * w]], { color: ink0, size: "S", joint: [true, true] });
         }
       } else if (kind === "straight") {
-        boneHorn([[bx, by], [bx + side * 0.06 + lean, by + 0.1], [bx + side * 0.11 + lean, by + 0.185]], 0.02);
+        boneHorn([[bx0, by0], [bx0 + side * 0.06 + lean, by0 + 0.1], [bx0 + side * 0.11 + lean, by0 + 0.185]], 0.02, place);
       } else if (kind === "antenna") {
-        const pts = [[bx, by], [bx + side * 0.028, by + 0.12], [bx + side * 0.06 + lean, by + 0.2]];
-        boneHorn(pts, 0.011);
-        const mx = bx + side * 0.02, my = by + 0.085;   // one twig off the shaft — half an antler
-        boneHorn([[mx, my], [mx + side * 0.05, my + 0.05]], 0.008);
+        const pts = [[bx0, by0], [bx0 + side * 0.028, by0 + 0.12], [bx0 + side * 0.06 + lean, by0 + 0.2]];
+        boneHorn(pts, 0.011, place);
+        const mx = bx0 + side * 0.02, my = by0 + 0.085;   // one twig off the shaft — half an antler
+        boneHorn([[mx, my], [mx + side * 0.05, my + 0.05]], 0.008, place);
       } else if (kind === "ram") {
         const spiral = [];
         for (let i = 0; i <= 14; i += 1) {
           const k = i / 14;
           const angle = Math.PI * 0.45 + side * k * Math.PI * 1.35;
           const r = 0.062 * (1 - k * 0.55);
-          spiral.push([bx + side * 0.015 + Math.cos(angle) * r * side, by + 0.015 + Math.sin(angle) * r]);
+          spiral.push([bx0 + side * 0.015 + Math.cos(angle) * r * side, by0 + 0.015 + Math.sin(angle) * r]);
         }
-        boneHorn(spiral, 0.017);
+        boneHorn(spiral, 0.017, place);
       } else if (kind === "crown") {
-        boneHorn([[bx, by], [bx + side * 0.045, by + 0.14], [bx + side * 0.115 + lean, by + 0.245]], 0.033);
+        boneHorn([[bx0, by0], [bx0 + side * 0.045, by0 + 0.14], [bx0 + side * 0.115 + lean, by0 + 0.245]], 0.033, place);
       } else {
-        const nub = blobPath(bx, by + 0.03, 0.028, 0.036, { lumps: 3, amount: 0.15, noise: null });
+        const nub = place(blobPath(bx0, by0 + 0.03, 0.028, 0.036, { lumps: 3, amount: 0.15, noise: null }));
         paintPart(fills, spec, nub, bone, { own: true });
         ink.contour(nub, { color: ink0 });
       }

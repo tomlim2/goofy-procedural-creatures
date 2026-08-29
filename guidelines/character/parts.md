@@ -143,6 +143,8 @@ half-width at that height, fitting the head's size and shape. A hat is a separat
 `drawHorns` in `headgear.js`. none / curved / straight / antenna (a ball at the tip) / nub (a small bump) / ram (a spiral) / crown (a row of spikes across the crown).
 Imps get 1.8×.
 
+**A rex's horns root anywhere from the crown to the temple.** The base slides down the head's own outline per individual — from the old fixed spot (0.56·rx, 0.81·ry) to the sideburn line (0.97·rx, 0.12·ry) — and the whole horn turns by the same angle as it descends, so it keeps pointing away from the skull instead of leaning over the face. Hashed off `wobbleSeed`, so it costs no rng and moved no seed. It reaches **less** far than the fixed placement did, not more (top 1.237 against 1.260, and it comes no closer to the face's centre: 0.37·rx against 0.33).
+
 **The rex's horns are DRAGON horns** — the same slot values, redrawn by species (the rex-leg rule): filled
 bone mass with an ink contour, never a line, the tail-spikes' bone. The kinds map to the maid-dragon show's
 dragons: **curved** the thick pair sweeping out then up, ring-segmented (Tohru) · **straight** the straight
