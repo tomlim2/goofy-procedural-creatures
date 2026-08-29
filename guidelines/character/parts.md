@@ -351,6 +351,23 @@ high five's wind-up; [../motion/catalog.md](../motion/catalog.md) § body action
 the same split, the same joint ends, the foot on its own ankle so the sole stays level however far the knee
 folds. The forms are unchanged; float has no leg and so no knee.
 
+**Which way a knee bows** is the limb descriptor's `knee`, and the scene solves the fold off it (`animate.js`).
+A quad folds **forward on all four**. The animal itself folds its front elbow back against the hind stifle's
+forward fold, and both were drawn here: at this scale the two opposing directions read as one leg drawn wrong
+rather than as anatomy. **Cartoon license** — the drawing is chosen over the animal, and it is the *hind* leg's
+direction that the pair is unified on. Unified the other way (which it was for a while) gives a quad four legs
+buckling backward, the one direction a dog's leg never bends. Measured: 32 legs on 8 standing quads, all forward.
+
+A biped carries no `knee` and falls back to `side`, so its pair bows apart into a plié — which is what a crouch
+with its feet planted wants. A **floating** creature is overridden in the scene (`scene/rig.js`) to the same one
+direction: there is no ground under it, and the pair has to tuck together.
+
+**The toe points the way its own knee bows.** The foot is drawn toward that same sign in x — a quad's four toes
+forward with the fold, a biped's outward with its plié, the rex's already were. Drawn the other way the toe sits
+on the outside of the fold and points back along the leg it came from, which is what a leg looks like when it is
+on backwards. It applies wherever a foot has a front: the quad's stub toe and its two toe lines, both boots, and
+the round feet's small lean (a round foot has no toe, but it leans).
+
 A biped pivots at the hip (0.02 above the hem). **A quad** has its two front and two hind legs **each pair together** (a beast seen from the side — the spacing within a pair is
 max(0.03, 16% of the body length)), the front pair at −60% from the body's centre and the hind pair at +60%. The roots are 25% of bodyH up. Species bias: pup stub 4 · stick 2 ·
 float 1.5 · boots 1; cat stub 3 · stick 3 · float 1.5 · boots 1.

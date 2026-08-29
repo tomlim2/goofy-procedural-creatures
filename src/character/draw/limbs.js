@@ -90,31 +90,38 @@ export function limbSketches(spec, variant = 0) {
       const kneeX = lean * KNEE_SPLIT;
       const footX = lean - kneeX;
       const ft = make();
+      // BOW — which way the knee folds, and with it **which way the toe points**. The scene bows the knee toward
+      // this sign in x (solveLeg's bend: −1 bows −x), so the foot is drawn toward the same sign; drawn the other
+      // way the toe sits on the outside of the fold and points back the way the leg came from.
+      // **Forward on all four.** The animal folds its front elbow back against the hind stifle's forward fold,
+      // and that was drawn both ways here: at this scale two opposing directions read as one leg drawn wrong
+      // rather than as anatomy. Unified they had to go forward, the hind leg's way — unified backward (which
+      // this was for a while) gives a quad four legs buckling the one direction a dog's leg never bends.
+      // Cartoon license: the drawing is chosen over the animal, and the direction is taken off the hind leg
+      const BOW = -1;
       if (kind === "stick") {
         s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
         sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
-        dot(ft, 0.006, 0.012, 0.02, skin);
+        dot(ft, 0.006 * BOW, 0.012, 0.02, skin);   // a round foot has no toe, but its lean goes with the bow too
       } else if (kind === "boots") {
         // Socks — a small boot filled to the ankle, hung from the ankle like a biped's
         s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
         sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
-        const boot = crumple([[-0.022, 0], [-0.018, 0.036], [0.012, 0.036], [0.03, 0.005], [0.03, 0]], 0.003, lean * 90);
+        const boot = crumple([[-0.022 * BOW, 0], [-0.018 * BOW, 0.036], [0.012 * BOW, 0.036], [0.03 * BOW, 0.005], [0.03 * BOW, 0]], 0.003, lean * 90);
         paintPart(ft, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
         ft.contour(boot, { color: ink0 });
       } else {
         // A thick stub leg plus a round toe tip poking slightly forward plus two toe lines (the reference)
         s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
         sh.line([[0, 0], [footX, -shinLen]], { color: ink0, joint: [true, true] });
-        ft.line([[-0.02, 0], [0.03, 0.003]], { color: ink0 });
-        ft.line([[0.006, 0.002], [0.01, 0.016]], { color: ink0, size: "S" });
-        ft.line([[0.018, 0.002], [0.021, 0.014]], { color: ink0, size: "S" });
+        ft.line([[-0.02 * BOW, 0], [0.03 * BOW, 0.003]], { color: ink0 });
+        ft.line([[0.006 * BOW, 0.002], [0.01 * BOW, 0.016]], { color: ink0, size: "S" });
+        ft.line([[0.018 * BOW, 0.002], [0.021 * BOW, 0.014]], { color: ink0, size: "S" });
       }
-      // knee: which way the fold bows — **the same way on all four**. A real dog or cat folds the hind stifle
-      // forward against the front elbow's backward fold, and that is what this did (knee 1 front, −1 hind);
-      // at this scale the two directions read as one leg drawn wrong rather than as anatomy, so the drawing
-      // is chosen over the animal. Indices 0·1 are the front pair (quadHips front, at −x) and 2·3 the hind.
-      // `side` still marks front/hind for everything else, so only the fold was unified
-      limbs.push({ sketch: s, lowerSketch: sh, footSketch: ft, pivot: [x, hipY], elbow: [kneeX, -kneeH], ankle: [footX, -shinLen], kind: "leg", side: i < 2 ? -1 : 1, knee: 1, index: i, behind: false });
+      // Indices 0·1 are the front pair (quadHips front, at −x) and 2·3 the hind. `side` still marks front from
+      // hind for everything else — only the fold is unified. (A floating creature is overridden in the scene
+      // anyway — scene/rig.js — but to the same one direction)
+      limbs.push({ sketch: s, lowerSketch: sh, footSketch: ft, pivot: [x, hipY], elbow: [kneeX, -kneeH], ankle: [footX, -shinLen], kind: "leg", side: i < 2 ? -1 : 1, knee: BOW, index: i, behind: false });
     });
     return limbs;
   }
@@ -203,7 +210,9 @@ export function limbSketches(spec, variant = 0) {
     const ft = make();
     if (legKind === "boots") {
       // Boots — a mass filled to the ankle
-      const boot = crumple([[-0.028, 0], [-0.024, 0.045], [0.012, 0.045], [0.036, 0.006], [0.036, 0]], 0.003, footX * 90);
+      // The toe follows the knee's bow. A biped carries no `knee`, so animate falls back to `side` — the pair
+      // bows apart into a plié — and the boot has to go the same way or the near leg's toe points across the body
+      const boot = crumple([[-0.028 * side, 0], [-0.024 * side, 0.045], [0.012 * side, 0.045], [0.036 * side, 0.006], [0.036 * side, 0]], 0.003, footX * 90);
       paintPart(ft, spec, boot, cloth === skin ? ink0 : shade(cloth, 0.75), { body: true });
       ft.contour(boot, { color: ink0 });
     } else {

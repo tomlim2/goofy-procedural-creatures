@@ -111,6 +111,13 @@ identical however much moved inside it. `ghosted()` in the script re-applies the
 `ghostPalette` / `ghostOutline`, off the pre-ghost palette the spec carries as `palette0` — the same thing the
 parts gallery does, and for the same reason. If you add another slot of that kind, extend it.
 
+A **jointed limb is three sketches**, and `drawdiff` used to hash only the first. An arm or a leg hands over the
+upper bone (`sketch`), the lower one (`lowerSketch` — a forearm, a shin) and the foot on its own ankle
+(`footSketch`), plus `knee`, which is not geometry but is what the scene folds the leg by. Comparing the upper
+bone alone left the gate blind to two thirds of every limb: a change that moved every toe on the board came out
+at **0 differences**. All three are compared now. The lesson generalises — when a part returns more than one
+sketch, check that the gate hashes all of them.
+
 `drawdiff` compares sketches — the triangles a part hands to the GPU — and is blind to everything after them: the
 scene (a mesh's opacity, the parallax depths, render order) and the shaders (the paper, the sheet pass). For those,
 `/pixeldiff.html?seed=…&boards=4` renders the same boards with the working tree and with a base tree on the same

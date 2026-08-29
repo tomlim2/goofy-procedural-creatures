@@ -71,7 +71,18 @@ try {
     }
     const la = oldM.limbSketches(specOld), lb = newM.limbSketches(spec);
     if (la.length !== lb.length) note(`${label} limb count`);
-    else la.forEach((l, i) => { n += 1; if (hash(l.sketch) !== hash(lb[i].sketch)) note(`${label} limb ${i}`); });
+    // A jointed limb is **three** sketches, not one — the upper bone (sketch), the lower one (lowerSketch: a
+    // forearm, a shin) and the foot on its own ankle (footSketch). Only the upper was compared here, so the
+    // gate was blind to two thirds of every arm and leg: a change that moved every toe on the board came out
+    // at 0. `knee` rides along too — it is not geometry, but it is what the scene folds the leg by
+    else la.forEach((l, i) => {
+      for (const part of ["sketch", "lowerSketch", "footSketch"]) {
+        if (!l[part] && !lb[i][part]) continue;
+        n += 1;
+        if (!l[part] || !lb[i][part] || hash(l[part]) !== hash(lb[i][part])) note(`${label} limb ${i} ${part}`);
+      }
+      if (l.knee !== lb[i].knee) note(`${label} limb ${i} knee ${l.knee} → ${lb[i].knee}`);
+    });
     const ta = oldM.tailSketch(specOld), tb = newM.tailSketch(spec);
     ta.sketches.forEach((s, i) => { n += 1; if (!tb.sketches[i] || hash(s) !== hash(tb.sketches[i])) note(`${label} tail ${i}`); });
     for (const part of ["brow", "mouth"]) {
