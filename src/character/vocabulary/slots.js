@@ -34,7 +34,9 @@ export const SLOTS = {
   // Humans and imps get them as drawn, cats read them through catNose, and dogs read them as a muzzle shape (draw/face.js)
   nose: ["hook", "dot", "wedge", "long", "none", "bulb", "broad", "nostrils", "box"],
   // Cheek and eye-area detail. The reference's tear marks and blush.
-  face2: ["none", "tears", "blush"],
+  // none · tears (imps' trickles) · blush (cheek pink) · circles (dark rings under the eyes — every species
+  // can be tired; drawn in face ink, so they read on a dark face too)
+  face2: ["none", "tears", "blush", "circles"],
   // 20 mouths (the MOUTH table in draw/mouth.js). Reference: humans default to a very small mouth (dot, line, frown, 3) and what stands out is the tooth grid (grimace), the grin and the hatching (scribble),
   // dogs get w (omega), o (open) and the tongue, cats get ω, 3, a meow, a peeking tongue (blep) and a hiss (fangs), imps get the wide grid, hatching, zigzag, fangs and shout, open with two tooth strips.
   // Open mouths (open, shout, tongue) have a dark-ink cavity plus a white tooth strip — they read as mouths on a dark face too. (The spiked teeth kind doubled the fang silhouette and was dropped)
@@ -121,7 +123,7 @@ export const DEFAULT_BIAS = {
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1]],
   pattern: [["none", 4], ["stripes", 2], ["hatch", 2], ["dots", 2], ["patch", 1], ["spots", 1]],
   nose: [["hook", 3], ["dot", 2], ["wedge", 2], ["none", 4], ["long", 1], ["bulb", 2], ["broad", 1], ["nostrils", 1.5], ["box", 1.5]],
-  face2: [["none", 5], ["blush", 2], ["tears", 1.5]],
+  face2: [["none", 5], ["blush", 2], ["tears", 1.5], ["circles", 1.2]],
   horns: [["none", 5], ["curved", 2], ["straight", 2], ["antenna", 2], ["nub", 2]],
   tail: [["curl", 3], ["flag", 3], ["longtail", 2], ["stubtail", 2], ["hook", 1.5], ["kink", 1], ["ring", 1.5]],
   tailSkin: [["line", 3], ["thick", 2.5], ["plume", 1.5], ["tuft", 1], ["block", 1], ["ball", 1], ["puff", 1]],   // wedge disabled

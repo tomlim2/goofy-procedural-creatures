@@ -80,7 +80,7 @@ export const SPECIES = [
       // Mouth — the w (omega) under the muzzle by default, a barking o (open), a panting tongue (tongue), plus line, dot and smile. No duck bill, zigzag or spiked teeth (3 reference rows)
       mouth: [["omega", 4], ["line", 2], ["open", 2], ["tongue", 2], ["dot", 1.5], ["smile", 1]],
       mouthSize: [["normal", 3], ["small", 1.5], ["wide", 0.5]],
-      face2: [["none", 5], ["blush", 1]]
+      face2: [["none", 5], ["blush", 1], ["circles", 0.8]]
     }
   },
   {
@@ -126,7 +126,7 @@ export const SPECIES = [
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
       tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. wedge disabled
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
-      face2: [["none", 5], ["blush", 1]]
+      face2: [["none", 5], ["blush", 1], ["circles", 0.8]]
     }
   },
   {
@@ -185,7 +185,7 @@ export const SPECIES = [
       legs: [["boots", 4], ["stub", 3], ["stick", 0.5]],
       legLength: [["medium", 3], ["long", 2], ["short", 1]],
       build: [["wide", 3], ["medium", 2]],
-      face2: [["none", 6], ["blush", 0.5]]
+      face2: [["none", 6], ["blush", 0.5], ["circles", 0.8]]
     }
   },
   {
@@ -214,7 +214,7 @@ export const SPECIES = [
       mouthSize: [["normal", 2], ["wide", 2], ["small", 0.5]],
       // The patterns are the imps' alone (the other three species forbid them), so all five live here
       pattern: [["stripes", 3], ["hatch", 2], ["none", 2], ["dots", 1.5], ["spots", 1.5], ["patch", 1.5]],
-      face2: [["none", 6], ["tears", 1]],
+      face2: [["none", 6], ["tears", 1], ["circles", 1]],
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2]],
       arms: [["stubby", 5], ["stick", 2], ["none", 2]],   // some are blobs with no arms

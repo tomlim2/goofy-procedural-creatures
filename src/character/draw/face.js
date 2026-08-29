@@ -225,6 +225,24 @@ export function drawFace2(ink, fills, spec, box, eyes) {
   if (kind === "none") return;
   const ink0 = spec.faceInk || spec.palette.ink;
 
+  if (kind === "circles") {
+    // Dark circles — the manga tired-eye shorthand: two short arcs sagging under each eye, the lower one a
+    // little narrower. In face ink (the tears' rule), so a dark face carries them in light ink and they read
+    // on every skin. Under a patch there is no eye to be tired
+    for (const eye of eyes) {
+      if (patched(spec, eye)) continue;
+      for (const k of [0, 1]) {
+        const yb = eye.y - eye.r * (1.12 + k * 0.34);
+        const span = eye.r * (1.05 - k * 0.28);
+        ink.line(Array.from({ length: 7 }, (_, i) => {
+          const t = i / 6;
+          return [eye.x - span + t * span * 2, yb - Math.sin(t * Math.PI) * eye.r * 0.2];
+        }), { color: ink0, size: "S" });
+      }
+    }
+    return;
+  }
+
   if (kind === "tears") {
     // Two waves running down below the eye — a trickle, not a straight fall. A detail seen often in the reference.
     // Handed over as nine points so the pen's own re-sample (PENCIL.step) has a curve to follow rather than three corners
