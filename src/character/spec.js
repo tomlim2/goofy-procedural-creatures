@@ -36,7 +36,7 @@ function applyForbid(parts, speciesName) {
   }
 }
 
-function applyConstraints(parts, rng, speciesName) {
+function applyConstraints(parts, rng, speciesName, seed) {
   // The species forbid table is applied first. It has to come first so the later constraints (antennae removing ears, and so on)
   // do not misfire on a forbidden value.
   applyForbid(parts, speciesName);
@@ -50,7 +50,16 @@ function applyConstraints(parts, rng, speciesName) {
     const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob", "helmet", "long", "verylong", "twintails", "twintailsBall", "ponytail",
       "bobSwept", "sheetsSwept"];   // back hair comes out from under a hat — the filled family's hem too
     if (parts.headgear === "band") short.push("cloud", "hedgehog");
-    if (!short.includes(parts.hair)) parts.hair = rng.pick(short);
+    // **Deterministically, not by re-rolling** — the rule at the top of this file, which this one line used
+    // to break. `rng.pick(short)` fired only when the drawn hair was unusable, so the number of rng calls
+    // depended on the hair AND on the headgear; edit either pool and some seeds flip whether it fires, which
+    // shifts every draw after it and hands those individuals a different face, body and palette. Measured
+    // three times in one branch — adding a hair value moved 5 creatures in 600, removing two moved 2, adding
+    // a headgear value moved 6 — and every one of them had flipped exactly here. A hash of the seed picks the
+    // replacement now: no rng call at all, so the count cannot move whatever the pools do
+    if (!short.includes(parts.hair)) {
+      parts.hair = short[(Math.imul((seed ^ 0x85ebca6b) >>> 0, 0x9e3779b1) >>> 13) % short.length];
+    }
   }
 
   // A mohawk or a bun wears nothing.
@@ -143,7 +152,7 @@ export function makeCreature(seed, speciesName = "human") {
     if (LATE_SLOTS.includes(slot)) continue;   // drawn at the very end (below)
     parts[slot] = pickSlot(rng, species, archetype, slot);
   }
-  applyConstraints(parts, rng, species.name);
+  applyConstraints(parts, rng, species.name, seed);
 
   const skin = rng.pick(FILLS);
   const palette = {

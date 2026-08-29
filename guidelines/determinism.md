@@ -52,11 +52,26 @@ if (parts.headgear === "helmet") parts.hair = "none";
 while (!valid(parts)) parts = rollAgain(rng);
 ```
 
-Calling `rng.chance()` conditionally creates the same problem — call it only when the condition is true and
-every value after it diverges. There are a few such places in `applyConstraints` (antennae→ears,
-eyewear→brows) and they are frozen as they are for now. When adding a new one, either draw it outside the
-condition first (fixing the call count) or, if it is a species restriction, use `forbid` in `species.js`
-(a deterministic overwrite with no rng).
+Calling `rng.chance()` or `rng.pick()` **conditionally** creates the same problem — it fires only when the
+condition is true, and every value after it diverges when the condition flips. When adding a new one, either
+draw it outside the condition first (fixing the call count) or, if it is a species restriction, use `forbid`
+in `species.js` (a deterministic overwrite with no rng).
+
+**This is not theoretical, and the bill arrives on a part you did not touch.** The hat-vs-hair rule used to
+replace an unusable hairstyle with `rng.pick(short)` *only when the drawn hair was not in the list*, so the
+call count depended on the hair **and** on the headgear. Editing either pool flipped it for a handful of
+seeds, and those individuals came out with a different face, body and palette — not a different hairstyle.
+Measured three times in one branch: adding a hair value moved **5 creatures in 600**, removing two moved
+**2**, adding a headgear value moved **6**. A probe confirmed every one of them had flipped at that line.
+
+It is fixed the way the top of `applyConstraints` says to — the replacement is hashed off the seed, so there
+is **no rng call at all** and the count cannot move whatever the pools do. Verified by adding a hair value
+afterwards: `parts.hair` moved on 17 of 600 and *nothing else moved at all*.
+
+Three of the same shape are still in `applyConstraints` and are **still live traps** — `horns === "antenna"`
+→ ears (fires on 6.9% of creatures), `eyewear === "patch"` → patchSide (6.1%), glasses/goggles → brows
+(7.3%). Edit the horns or eyewear pool and the same cascade happens. Each can be fixed the same way, and each
+costs a one-time reseed of roughly the creatures that fire it today.
 
 ## Drawing randomness is drawn separately
 

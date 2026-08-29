@@ -115,6 +115,32 @@ export function drawHeadgear(ink, fills, spec, box) {
     return;
   }
 
+  if (kind === "coronet") {
+    // A small pointed crown perched on top of the head — the monkey's. Not the paper `crown` above, which is
+    // a wide band wrapping the skull with a zigzag of four: this one is **narrow** (half the head's width at
+    // that height), sits ON the crown rather than round it, and carries three tall thin spikes with the middle
+    // one highest. Filled in pieces for the same reason the paper crown is — the V notches between the spikes
+    // are concave, and a fan from the centre crosses them
+    const by = Math.max(cy + ry * 0.78, brow + ry * 0.3);
+    const w = Math.max(halfW(by) * 0.5, rx * 0.2);
+    const bandH = ry * 0.11;
+    const peakH = ry * 0.46;   // top ≈ crown + 0.35·ry, inside the 1.19 cell ceiling on the biggest head
+    const SPIKES = 3;
+    const vx = (i) => -w + (i * 2 * w) / SPIKES;
+    const peak = (i) => [-w + ((i + 0.5) * 2 * w) / SPIKES, by + bandH + peakH * (i === 1 ? 1 : 0.74)];
+    const phase = spec.seed * 0.0017;
+    const band = crumple([[w, by], [-w, by], [-w, by + bandH], [w, by + bandH]], 0.003, phase);
+    const spikes = Array.from({ length: SPIKES }, (_, i) =>
+      crumple([[vx(i), by + bandH], peak(i), [vx(i + 1), by + bandH]], 0.003, phase + i));
+    paintPart(fills, spec, band, accent, { own: true });
+    for (const sp of spikes) paintPart(fills, spec, sp, accent, { own: true });
+    const outline = [[w, by], [-w, by], [-w, by + bandH]];
+    for (let i = 0; i < SPIKES; i += 1) outline.push(peak(i), [vx(i + 1), by + bandH]);
+    outline[outline.length - 1] = [w, by + bandH];
+    ink.contour(crumple(outline, 0.003, phase), { color: ink0 });
+    return;
+  }
+
   if (kind === "cone") {
     // Party cone — a tall triangle sitting on the crown, leaning a little to one side, a pom at the tip.
     // One convex triangle, so the fan fill is safe as it is; crumpled like every hand-written polygon

@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 27 slots, 204 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 27 slots, 205 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -127,12 +127,13 @@ Only humans have hair (dogs, cats and the rex are all none via forbid; imps get 
 from under a hat or band; cloud and hedgehog go with a band only; and mohawk, bun and the apple tops (apple, appleBig) take no hat. No hair covers the eyes — the front stops at the brow line and the sides go to the ear
 ([rules.md](rules.md)).
 
-### headgear (10) — humans, dogs and cats; imps never (species bias)
+### headgear (11) — humans, dogs and cats; imps never (species bias)
 `drawHeadgear` in `headgear.js`. none / helmet (a dome from above the brows to over the crown plus a rim and a ridge) / cap (a crown dome plus a brim to one side) / band (a forehead band) / pot (a tub rising from above the brows to higher than the crown) /
 beret (a tilted disc plus a nub) / bonnet (a thick band crossing from eye level on both sides over the crown — **disabled**: it reads as frilly and is in no bias; assets and gallery only) /
 crown (a band on the crown of the head with a zigzag of four points — a crumpled hand-written polygon, top ≈ crown + 0.32·ry, under the cell ceiling) /
 halo (a thin ink ring floating clear above the head — ink only, a mark rather than a thing with a colour; **the one headgear that keeps every hairstyle**, `applyConstraints` exempts it because it covers nothing) /
-cone (a party cone — a tall crumpled triangle on the crown leaning to one side, a pom a shade lighter at the tip). The color is accent or pop.
+cone (a party cone — a tall crumpled triangle on the crown leaning to one side, a pom a shade lighter at the tip) /
+coronet (a small pointed crown perched **on** the crown of the head rather than round it — half the head's width at that height, a short band and three tall thin spikes with the middle one highest; the monkey's, top ≈ crown + 0.35·ry, lower than the paper crown's 0.46). It is **filled in pieces** for the same reason the paper crown is: the V notches between the spikes are concave and a fan from the centre crosses them. The color is accent or pop.
 
 **They all sit above the brow line** — measured from the top edge of the eyes (including eyewear, goggle, patch and monocle rims), so they never cover an individual whose eyes are set high; and their width follows the head outline's
 half-width at that height, fitting the head's size and shape. A hat is a separate layer **in front of** the head (fills 2.14, ink 2.16 — it covers the outline, hair, horns and the ears' roots but cannot cover the eyes or eyewear,

@@ -75,7 +75,7 @@ export const ARCHETYPES = [
     name: "wanderer",
     weight: 2,
     bias: {
-      headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5]],
+      headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5], ["coronet", 0.8]],
       hair: [["scribble", 3], ["mop", 2], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["bun", 1.5], ["appleBig", 0.8], ["ponytail", 1], ["verylong", 0.8], ["none", 2], ["wisp", 1],
         ["sheetsSwept", 1.4], ["bobSwept", 1]],   // the filled family — a little, so it is not the scholar's alone
       eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],

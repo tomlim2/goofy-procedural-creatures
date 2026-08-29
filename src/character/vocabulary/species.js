@@ -70,7 +70,7 @@ export const SPECIES = [
       hair: [["none", 1]],
       // Hats — a cap mostly, the odd beret, crown or halo. No helmet or pot (they cover the scalp whole and bury the
       // standing ears) and no band (it crosses the ear roots)
-      headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3], ["cone", 0.4]],
+      headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.5]],
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
@@ -115,7 +115,7 @@ export const SPECIES = [
       ears: [["pointy", 3], ["pointyMid", 2], ["pointyBig", 1.5]],
       horns: [["none", 1]],
       hair: [["none", 1]],
-      headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3], ["cone", 0.4]],
+      headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.5]],
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
       // Nose — cats read the slot as cat noses (face.js catNose): dot a small triangle · wedge a heart · hook triangle + philtrum · long a wide nose with a long philtrum · none nothing
       nose: [["dot", 3], ["wedge", 2], ["hook", 2], ["long", 1], ["none", 1.5]],
@@ -162,7 +162,7 @@ export const SPECIES = [
       horns: [["none", 3], ["curved", 2], ["antenna", 1.5], ["straight", 1.5], ["ram", 1.5], ["nub", 1], ["crown", 1]],
       ears: [["none", 1]],
       hair: [["none", 1]],
-      headgear: [["none", 9], ["cap", 0.5], ["crown", 0.4], ["halo", 0.3], ["cone", 0.4]],
+      headgear: [["none", 9], ["cap", 0.5], ["crown", 0.4], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.4]],
       eyewear: [["none", 7], ["monocle", 1], ["patch", 1]],
       // A blocky head for the jaw to live in
       head: [["block", 3], ["wide", 2.5], ["square", 2], ["pear", 1]],
