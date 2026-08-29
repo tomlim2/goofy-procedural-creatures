@@ -68,16 +68,20 @@ export function buildCreature(spec, noise, birth = 0) {
   // The exceptions are the face and the static eyes (staticEyeBack/Front — one layer per eye): their fills (2.3) and ink (2.4) are kept apart — a static eye's fill (pupil, white) has to sit
   // **below** the face ink (whiskers) while its ink sits above, so the two layers' fills and ink interleave.
   // Static eyes being one layer per eye is because of the wink — turning one eye into an arch means switching off that eye's layer alone (animate).
-  // Render order (guidelines/rig.md is the single source): body 1.5 → back hair 1.55 → side ears 1.7 → head 2 (the fill covers the body ink) → horns 2.06 → hair on the scalp 2.06 →
-  // dog/cat ears 2.12 → face and static eyes 2.3/2.4 → frontmost face (nose, eyewear) 6.5 → bangs 6.55 → hat 6.58
+  // Render order (guidelines/rig.md is the single source): back hair 0.4 → arms behind the back 0.5 → tail at rest 0.8 → legs 1.2 → body 1.5 → side ears 1.7 →
+  // head 2 (the fill covers the body ink) → horns 2.06 → hair on the scalp 2.06 → dog/cat ears 2.12 → face and static eyes 2.3/2.4 → arms 2.5 →
+  // frontmost face (nose, eyewear) 6.5 → bangs 6.55 → hat 6.58
   const firstDrawn = drawCreature(spec, 0);
   const mrig = motionRig(spec);
   const neckY = firstDrawn.neckY;
   const faceCy = firstDrawn.faceCy;
   // Head layers take depth instead of group — a depth group is made per layer below (the body is bodyGroup, the outline headGroup, the features faceGroup)
   const LAYERS = [
+    // Back hair is **the backmost thing an individual has** — behind the body (1.5) and the legs (1.2), and behind
+    // the arms held behind the back (0.5) too. It used to sit at 1.55, just above the body, and a mass that reached
+    // past the chin lay ON the torso like a bib instead of falling behind it
+    { key: "hairBack", depth: DEPTH.hairBack, dy: -neckY, order: 0.4 },
     { key: "body", group: bodyGroup, dy: 0, order: 1.5 },
-    { key: "hairBack", depth: DEPTH.hairBack, dy: -neckY, order: 1.55 },     // back hair — behind the head and ears, above the body
     { key: "crownBack", depth: DEPTH.sideEars, dy: -neckY, order: 1.7 },     // side ears — behind the head fill
     { key: "head", group: headGroup, dy: -neckY, order: 2 },
     { key: "horns", depth: DEPTH.horns, dy: -neckY, order: 2.06 },           // horns — above the head ink

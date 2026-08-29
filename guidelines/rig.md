@@ -24,7 +24,7 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
 └── headGroup                ← origin = the neck (neckY = bodyTop). Tilt, roll, nod, dip. Only the outline sits here directly
     ├── headFrame ×3         ← boil variants. Head outline fills+ink, one mesh (2, the fill opaque)
     ├── depth groups ×7 (item.parallax)  ← one group per layer attached to the head — on a face turn, position = **depth (DEPTH) × the features' shift** (the same multiplier on x·y, size unchanged). § fake 3D depth
-    │   ├── hairBackFrame ×3     ← depth −0.12 · back hair (the outside of long hair, twintails, a ponytail, big masses). Behind the head and ears, above the body (1.55) — behind the head, so the other way
+    │   ├── hairBackFrame ×3     ← depth −0.12 · back hair (the outside of long hair, twintails, a ponytail, big masses). The backmost layer (0.4) — behind the body and legs — and behind the head, so the parallax goes the other way
     │   ├── crownBackFrame ×3    ← depth −0.4 · side ears (humans, imps). Behind the head fill (1.7) — the root is hidden by the head
     │   ├── hornsFrame ×3        ← depth 0.45 · horns. Above the head ink (2.06)
     │   ├── hairCrownFrame ×3    ← depth 0.12 · hair on the scalp (the crown cap, spikes, a bun). The same depth as the horns, above them (2.06)
@@ -60,11 +60,11 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | renderOrder | What |
 | --- | --- |
 | 0 | Paper |
+| 0.4 | **Back hair** — the backmost thing an individual has (depth −0.12). Behind the body, the legs and even the arms held behind the back, so a mass reaching past the chin *falls behind* the torso instead of lying on it like a bib. Only what comes outside the head silhouette shows |
 | 0.5 | Arms behind the back (behind the body) |
 | 0.8 | The tail (at rest) — behind the torso and head. The part lying over the body (a loop or curl over the back) is hidden. **While raised (tailRaise > 0.5) it is 2.08** — above the outline and the hair on the scalp, below the ears and face (animate changes the renderOrder). One cat in four has its tail root inside the big head silhouette, so left behind it is invisible even when raised |
 | 1 | The floor line |
 | 1.5 | Body (fills+ink) |
-| 1.55 | Back hair — behind the head and ears, above the body (depth −0.12). Only what comes outside the silhouette shows |
 | 1.7 | Side ears (humans, imps) — behind the head fill, so the root is hidden by the head (depth −0.4) |
 | 2 | Head (fills + outline ink) — the fill sits **above the body ink and is opaque**. So the body outline does not show through where the head covers the torso |
 | 2.06 | Horns (depth 0.45) · hair on the scalp (depth 0.12, above the horns) — above the outline |
