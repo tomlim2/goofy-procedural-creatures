@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
-import { makeCreature, SLOTS, SPECIES, ghostPalette, ghostOutline } from "./character/index.js";
+import { makeCreature, SLOTS, SPECIES, ghostPalette, ghostOutline, ghostInk } from "./character/index.js";
 import { formatSeed } from "./rng.js";
 import { bindSeg, addOption, randomSeed, runLoop } from "./ui.js";
 
@@ -74,7 +74,8 @@ function build() {
     return {
       ...base, parts,
       palette: ghostPalette(base.palette0 || base.palette, parts.ghost, base.proportions.wobbleSeed),
-      outline: ghostOutline(parts.ghost)
+      outline: ghostOutline(parts.ghost),
+      lineInk: ghostInk(parts.ghost)
     };
   });
   // Column count follows the canvas aspect — laid out in a single row the individuals come out too small

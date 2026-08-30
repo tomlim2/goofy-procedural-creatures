@@ -35,7 +35,7 @@ const LID_STYLE = {
 };
 function lidSketches(eye, ink, noise, style, spec) {
   const s = LID_STYLE[style];
-  const mark = (sk) => { sk.outline = spec.outline; return sk; };   // a ghost's broken stroke reaches the eyes too
+  const mark = (sk) => { sk.outline = spec.outline; sk.inkColor = spec.lineInk; return sk; };   // a ghost's hairline, and its black, reach the eyes too
   const shut = mark(new Sketch(noise, s.shutWobble));
   shut.line(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink });
   const smile = mark(new Sketch(noise, 0.5));
@@ -253,13 +253,13 @@ export function buildCreature(spec, noise, birth = 0) {
     // lumps, how deep, where). The white and the rim take different ones, the way a hand redrawing a circle never lands on the same
     // wobble twice. The white and rim are one mesh (fill below, rim above)
     const flat = { side: eye.side };
-    const white = new Sketch(noise, 0.4); white.outline = spec.outline;
+    const white = new Sketch(noise, 0.4); white.outline = spec.outline; white.inkColor = spec.lineInk;
     paintPart(white, spec, blobPath(0, 0, rx, ry, eyeWob(spec, flat, 9, { amount: 0.06, noise })), MARKS.white, { flat: true });
-    const rim = new Sketch(noise, 0.6); rim.outline = spec.outline;
+    const rim = new Sketch(noise, 0.6); rim.outline = spec.outline; rim.inkColor = spec.lineInk;
     rim.contour(blobPath(0, 0, rx, ry, eyeWob(spec, flat, 10, { amount: 0.07, noise })), { color: spec.palette.ink });
     open.add(sketchMesh([white, rim], 1, o));
 
-    const pupilSketch = new Sketch(noise, 0.4); pupilSketch.outline = spec.outline;
+    const pupilSketch = new Sketch(noise, 0.4); pupilSketch.outline = spec.outline; pupilSketch.inkColor = spec.lineInk;
     paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, eyeWob(spec, flat, 11, { amount: 0.12 })), spec.palette.ink, { own: true });
     const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
     open.add(pupil);
@@ -305,11 +305,11 @@ export function buildCreature(spec, noise, birth = 0) {
   // Visible only when the startle is the star or heart variant (animate: state.eyeFx). Both are baked per eye and only the matching kind is turned on
   const eyeFx = [];
   for (const eye of allEyes) {
-    const starSketch = new Sketch(noise, 0.5); starSketch.outline = spec.outline;
+    const starSketch = new Sketch(noise, 0.5); starSketch.outline = spec.outline; starSketch.inkColor = spec.lineInk;
     const star = starPath(0, 0, eye.r * 1.1);
     paintPart(starSketch, spec, star, MARKS.white, { flat: true });
     starSketch.contour(star, { color: spec.palette.ink, step: 0.006 });
-    const heartSketch = new Sketch(noise, 0.5); heartSketch.outline = spec.outline;
+    const heartSketch = new Sketch(noise, 0.5); heartSketch.outline = spec.outline; heartSketch.inkColor = spec.lineInk;
     const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
     paintPart(heartSketch, spec, heart, MARKS.heart, { own: true });
     heartSketch.contour(heart, { color: spec.palette.ink, step: 0.006 });

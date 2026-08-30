@@ -46,6 +46,7 @@ export function facePartSketch(spec, part, kind) {
   const noise = makeNoise(rng);
   const sketch = new Sketch(noise, spec.proportions.wobble);
   sketch.outline = spec.outline;
+  sketch.inkColor = spec.lineInk;
   const box = layout(spec);
   if (part === "brow") drawBrow(sketch, spec, box, eyeGeometry(spec, box), kind);
   else drawMouth(sketch, sketch, spec, box, kind);

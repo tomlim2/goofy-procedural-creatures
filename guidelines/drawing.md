@@ -102,8 +102,11 @@ a 240-creature sample are stubs.
 | `PENCIL_SLINE` | `pencil()` **0.002 · 0.003 · 0.005** once — a hairline at every size, its ladder deliberately tight — and **the pen lifts** (`PENCIL.lift`): a skip every 0.45 **world units**, 0.006~0.015 long, never within 0.015 of an end and none at all on a line under 0.04, so a dot or a dash keeps its whole extent. The lift is in world units and measured along the path **as handed over**, not along the overshot spine — a hold does not change with the size, so the same kind at S, M and L skips in the same places for the same length; in widths the gaps grew with the line and the three sizes read as three different holds. It also holds its width: `breathe: 0.5` halves the width's sines and the per-stroke jitter, because the breath is a share of the width and a hairline has little to spend on it — the swing reads as lumps instead of a hand. **Detail** |
 | `PENCIL_BROKEN` | `pencil()` **0.0035 · 0.006 · 0.011** with the **ghost** habit stacked — three passes, the two **under** the line at `PENCIL.ghost` — 0.62 of the width, and **one ink each, bottom-up**: 0.2 for the deepest, 0.5 for the one just under the line, the way a hand going round again leans a little harder. Faintness is a colour (mixed that far toward the paper), not an alpha: the board's ink is opaque and slipped 0.5~1.6 widths off it, to one side or the other. The line is laid last, so it stays the one you read, each pass wandering and breathing on its own — the doubled, offset line a hand going round twice leaves. **Contour** |
 
-On the board today: every contour and every open line is PENCIL_STROKE — 45 and 119 call sites. **PENCIL_SLINE and
-PENCIL_BROKEN are built and on nothing** — they exist in the table and on the medium page, and a role picks one up by a single name in the switch. The
+On the board today: every contour and every open line is PENCIL_STROKE — 45 and 119 call sites — **except a ghost's,
+which are all PENCIL_SLINE** (character/parts.md § ghost): it rides on `spec.outline`, which every Sketch made for that
+creature takes, so one creature's lines change without BOARD_LINES taking the whole board with them. **PENCIL_BROKEN is
+built and on nothing** — the ghost wore it first, and three stacked passes came out as a thick doubled contour on a
+creature that pale. It — they exist in the table and on the medium page, and a role picks one up by a single name in the switch. The
 medium page names the kinds outright (`{ outline: "PENCIL_SLINE" }`) to show each on its own — the one place a kind is named —
 and draws the three roles off the switch, so it cannot drift from the board.
 

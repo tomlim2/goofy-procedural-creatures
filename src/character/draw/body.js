@@ -4,6 +4,7 @@ import { blobPath, crumple } from "../../shape.js";
 import { stepOf } from "../../medium/materials.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { MARKS } from "../vocabulary/palette.js";
+import { isGhost } from "../spec.js";
 
 // The creature's goofy material, by name — **the one place a material is named**. `where` is the half of the creature asking: the
 // head's is the `material` slot, the body's is `bodyMaterial` unless that says `same` (most of them). Everything standing on the head
@@ -17,7 +18,14 @@ export function materialOf(spec, where = "head") {
 // **The one place a surface's step is worked out** — and it is the creature's own, the `density` slot, so everything it fills draws
 // at the same step: one hand, one pressure, head and body and ears and hat alike. Spreads straight into paint()
 export function surfaceHand(spec) {
-  return { value: stepOf(spec.parts.density) };
+  // The value step is the creature's hand on the material (the `density` slot).
+  // A **ghost draws its base and no texture at all** (`only: "base"`). Every tone a material makes is a shade of
+  // the part's own colour, and a ghost's collapsed to one pale tone, so its fur, hatching and dust came out pale
+  // on pale and it read as a blank shape. Handing the texture a tone of its own was drawn and dropped: grey read
+  // as a second outline, and once the marks took the ghost's black (every line on a ghost is black — stroke.js
+  // inkColor) graphite's rules became hard slashes ruled clean across the creature. There is nothing under a
+  // ghost's skin to hatch. A flat pale body and black lines is the whole of it
+  return { value: stepOf(spec.parts.density), only: isGhost(spec) ? "base" : undefined };
 }
 
 // Paints a part's surface with the creature's goofy material — the one way in for every skin, fur and cloth surface that is not the head or

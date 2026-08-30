@@ -177,7 +177,17 @@ export function ghostPalette(base, kind, wobbleSeed) {
     blush: GHOST_INK
   };
 }
-export function ghostOutline(kind) { return !kind || kind === "none" ? undefined : "PENCIL_BROKEN"; }
+// A ghost's line is the **hairline** — PENCIL_SLINE, laid once at a third of the board's width, and the pen
+// lifts now and then so it comes open for a width or two. That lifting is the broken quality the kind was for;
+// PENCIL_BROKEN gave it by stacking three passes, which on a creature this pale read as a thick doubled contour
+// rather than as something barely there. Thin and interrupted is the ghost — heavy and interrupted is not
+export function ghostOutline(kind) { return !kind || kind === "none" ? undefined : "PENCIL_SLINE"; }
+// **Every line a ghost draws is black.** Not just its outline: the brows a dark creature would have drawn in
+// light ink, a horn's own colour, an accent, a pattern's — on a ghost they are all laid on one pale tone, and
+// anything but the ink comes out pale on pale and is not there. It rides on the sketch beside the outline kind
+// (medium/outlines.js) so it reaches every line at once. Fills are untouched: a ghost is a pale body with black
+// lines on it, and the body is still the fills' job
+export function ghostInk(kind) { return !kind || kind === "none" ? undefined : GHOST_INK; }
 
 // **A ghost is downcast, and that is settled in the parts, not in any expression.** It has no expressions at all
 // (motion/table.js), so whatever mouth and brow it was drawn are the face it wears for good — and a grinning
@@ -323,6 +333,7 @@ export function makeCreature(seed, speciesName = "human") {
   // Every line this creature draws is the BROKEN hold. It rides on the spec so each Sketch made for it can
   // take it (stroke.js), which is what keeps it to this creature — BOARD_LINES is the whole board's switch
   const outline = ghostOutline(parts.ghost);
+  const lineInk = ghostInk(parts.ghost);   // every line black on a ghost (medium/outlines.js sketch.inkColor)
   // A ghost's eyes are always **hollow** — the empty eye, a white and a rim with the pupil taken out. Nothing
   // is looking back, which is the whole idea. A deterministic overwrite (no rng), and it lands here rather
   // than in applyConstraints because `ghost` is a late slot and is not drawn yet when that runs. It has to be
@@ -355,6 +366,7 @@ export function makeCreature(seed, speciesName = "human") {
   return {
     seed,
     outline,
+    lineInk,
     palette0,
     species: species.name,
     archetype: archetype.name,
@@ -362,8 +374,14 @@ export function makeCreature(seed, speciesName = "human") {
     proportions,
     palette,
     // Face ink — when the head color is dark (imp ink-black, or blue, green and red-brown accent skins: luminance < 120) the features are drawn in light ink instead of black.
-    // Otherwise a black line is lost on a deep color and the eyes and mouth do not read
-    faceInk: species.name === "imp" || luminance(palette.skin) < 120 ? MARKS.light : null
+    // Otherwise a black line is lost on a deep color and the eyes and mouth do not read.
+    // The imp clause is a species fact — an imp's head is ink-black and that IS the species — but it stops being
+    // true of a **ghost** imp: its colour collapsed to one pale tone like everything else, and the light ink then
+    // drew its mouth and its under-eye circles in near-white on near-white and they disappeared. The shortcut
+    // only holds while the head really is dark; a pale one falls through to the luminance rule like any other.
+    // (An imp is forbidden the ghost slot on the board — but the parts gallery draws a species' forbidden values
+    // too, and that is the tool this repo judges form in)
+    faceInk: (species.name === "imp" && !isGhost({ parts })) || luminance(palette.skin) < 120 ? MARKS.light : null
   };
 }
 

@@ -27,7 +27,12 @@ export const GOOFY_MATERIALS = {
   // down again (lift: the strokes' lengths and the gaps between), now and then doubled. Their spacing is the step's.
   // `tone` deepens the **ground** as the step works it; `mark` is what the rules themselves are drawn in — the same watering of the
   // ground that ink scratches with, so the pencil's lines come **up** out of the surface instead of pressing further down into it
-  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", pull: 0.5, angle: 1.42, gap: 0.0115, width: 0.0024, tone: 0.68, mark: 0.34, lift: { length: [0.07, 0.2], gap: [0.005, 0.014] }, double: 0.18 } },
+  // Scaled up **×1.6 as one piece** — the gap between rules, the stroke width and the lift's lengths together, so
+  // it is the same hand drawing bigger and not a different one. At the old size the rules of the dense steps fell
+  // close enough together to read as a flat grey wash on a creature rather than as hatching; a cell is 144 device
+  // pixels across a world unit, and a 0.0115 gap is under two of them. The medium page's ball, being far bigger
+  // on screen, never showed it — the board did
+  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", pull: 0.5, angle: 1.42, gap: 0.0184, width: 0.0038, tone: 0.68, mark: 0.34, lift: { length: [0.112, 0.32], gap: [0.008, 0.022] }, double: 0.18 } },
   // Ink — solid, scratched **open**: a few long light lines dragged across it, taking the ink away. The darkest step is the least
   // scratched (the ink still covers it), the lightest the most. It used to run the other way — the black step laid the most light
   // lines and came out the palest of the five

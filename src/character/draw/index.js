@@ -37,7 +37,7 @@ export function drawCreature(spec, variant = 0) {
   const wobble = spec.proportions.wobble;
   const L = {};
   // sketch.outline carries a ghost's broken stroke to every line this creature draws (character/spec.js)
-  const mk = () => { const s = new Sketch(noise, wobble); s.outline = spec.outline; return s; };
+  const mk = () => { const s = new Sketch(noise, wobble); s.outline = spec.outline; s.inkColor = spec.lineInk; return s; };
   for (const key of LAYER_KEYS) L[key] = { ink: mk(), fills: mk() };
   const box = layout(spec);
   const eyes = eyeGeometry(spec, box);

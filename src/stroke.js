@@ -166,9 +166,18 @@ export class Sketch {
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
   // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
-  pencil(points, { color = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, breathe: breath = 1, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
+  pencil(points, { color: color0 = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, breathe: breath = 1, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
+    let color = color0;
     const P = PENCIL;
     const A = anatomy || ALL_HABITS;
+    // **this.inkColor overrides the colour of every line drawn on this sketch.** Only a ghost sets it, and it
+    // sets it to black (character/spec.js lineInk): a ghost is one pale tone and its lines are the whole of it,
+    // so a line drawn in anything else — the light ink a dark creature's marks take, a hat band's accent, a
+    // horn's own colour — comes out pale on pale and is not there. It sits HERE, on the primitive every line
+    // ends up in, and not in outlines.js draw(): a couple of parts reach for pencil() directly (a hat's band and
+    // its brim, which name a width outright) and an override one level up misses exactly those. Fills are
+    // untouched — a ghost is a pale body with black lines on it, and the body is the fills' job
+    if (this.inkColor) color = this.inkColor;
     const rgb = hexToRgb(color);
     // A colour per ghost, bottom-up — the deepest is the faintest and the one just under the line is the darkest, the
     // way a hand going round again leans a little harder. Faintness is a **colour**, not an alpha: the board's ink is opaque
