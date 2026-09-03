@@ -329,7 +329,10 @@ body.how { height: auto; }
 
 /* The buttons that stand at a clicked creature's feet. Positioned by projecting its cell onto the screen
    each frame, the way the gallery places its labels, so they follow the board through a resize. */
-.pin { position: fixed; z-index: 2; display: flex; gap: 4px; transform: translate(-50%, 0); }
+.pin { position: fixed; z-index: 2; display: flex; align-items: center; gap: 4px; transform: translate(-50%, 0); }
+/* The creature's seed, read off the board at its feet, ahead of the two buttons. On the same paper card as
+   the buttons so it does not sink into the drawing behind it. */
+.pin .pinSeed { padding: 0 8px; height: 26px; line-height: 26px; border: 1px solid var(--line); background: #f2ecdf; font-size: 12px; letter-spacing: 0.08em; }
 /* display: flex above beats the browser's own [hidden] rule, which would leave the pin standing at the
    top-left of a fresh board before anything is clicked. Said again here so hidden means hidden. */
 .pin[hidden] { display: none; }

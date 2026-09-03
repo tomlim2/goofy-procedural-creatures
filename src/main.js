@@ -14,6 +14,7 @@ const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
 const cellLabel = document.getElementById("cell");
 const pin = document.getElementById("pin");
+const pinSeed = document.getElementById("pinSeed");
 const backButton = document.getElementById("back");
 const pick = new THREE.Vector3();
 
@@ -93,6 +94,7 @@ function showSelected() {
   const cell = cells[selected];
   if (!cell) return;
   seedLabel.textContent = formatSeed(cell.seed);
+  if (pinSeed) pinSeed.textContent = formatSeed(cell.seed);
   if (cellLabel) cellLabel.textContent = `${cell.species.toUpperCase()} · CELL ${selected}`;
 }
 
