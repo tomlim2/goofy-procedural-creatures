@@ -18,7 +18,7 @@ export const BLINK_TIME = 0.13;
 //           made the heights ragged, and the ragged line is what you see rather than the meaning.)
 //           `bob` is the drift as a fraction of the lift and `period` its seconds.
 //           `fold` [least, most] is how far the knees tuck up — a fraction of the leg length, **drawn per
-//           individual** from the seed, so one ghost hangs with its legs nearly straight and the next has them
+//           individual** from the roll, so one ghost hangs with its legs nearly straight and the next has them
 //           folded right up. That one *is* per individual: the height is the row, the fold is the character.
 //           It rides on bodyDrop, the crouch scalar: with the feet off the ground the scene's floor hold is
 //           released, so the same solve that sinks a standing body into its knees instead pulls the feet up

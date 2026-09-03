@@ -2,7 +2,7 @@
 // is one glyph above one head; this is a point in the world between two creatures) but the same kind of thing:
 // a triggered layer, baked once per burst — the allowed exception, like the emoji (guidelines/performance.md) —
 // each mesh owning its material for the fade. Every curve is a function of t and the throws are fixed numbers,
-// no rng anywhere: a burst replays identically for a seed.
+// no rng anywhere: a burst replays identically for a roll.
 // Docs: guidelines/motion/catalog.md § the high five; order 100000 with the emoji (guidelines/rig.md)
 
 import { Sketch } from "../stroke.js";

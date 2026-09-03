@@ -75,7 +75,7 @@ the range. Most of the silhouette variety comes from here.
 | legLength / armSpread | 0.3 (0.12) / 1 (0.25) | Leg length (×0.55, and a further ×0.3 when `legLength` is short) · arm length (×0.242, and a further ×1.64 when `armLength` is long) |
 | bodyLen / tailLift | 1 (0.2) / 0 (1) | For quads. Bipeds draw them too (to fix the rng call count) |
 | wobble | 1 (0.55) | The per-individual hand-shake multiplier. Neat ones and messy ones have to be mixed |
-| wobbleSeed | 0~100000 | The rng seed for drawing. Kept separate from the generation rng |
+| `hand` | 0~100000 | The rng roll for drawing. Kept separate from the generation rng |
 
 ## The palette
 
@@ -88,7 +88,7 @@ the range. Most of the silhouette variety comes from here.
 | | Imps: 50% exactly the head color / 30% a light tone (×1.35) / 20% a dark tone (×0.75) | Being a mass, the same. Settled after a color accent has landed on the head, so the body follows |
 | ink | 1 of the 4 INKS | All dark brown-black. Imps are pinned to #1c1917 (darker than the head) |
 | **DARKS** | 9 colors | The dark palette for imp heads only. Ink · brown-black · brown-grey · light brown-grey · grey-blue · blue-grey · grey · purple-black · green-black. The body only shifts tone from here (`shade`) |
-| **hair** | 1 of the 12 HAIRS, from a weighted bag (`HAIR_POOL`, 25 entries) | Black-brown · dark brown · brown · chestnut · light brown · dark blonde · blonde · auburn · ginger · ash · grey · white (luminance 43~183, straddling DARKS and FILLS). It was `palette.ink` and nothing else, so **every head on the board wore the same black**. Browns and blacks carry the bag and the rest is seasoning. **Drawn by a hash of `wobbleSeed`, not by the rng** — so it was added without moving one seed ([../determinism.md](../determinism.md)). A colour landing within 45 luminance of the head it sits on steps along the bag to the first entry that reads (never brightened: multiplying clipped it to raw yellows the paper cannot hold). A pop aimed at the hair wins, and is pulled apart in tone if it lands on the head's own luminance |
+| **hair** | 1 of the 12 HAIRS, from a weighted bag (`HAIR_POOL`, 25 entries) | Black-brown · dark brown · brown · chestnut · light brown · dark blonde · blonde · auburn · ginger · ash · grey · white (luminance 43~183, straddling DARKS and FILLS). It was `palette.ink` and nothing else, so **every head on the board wore the same black**. Browns and blacks carry the bag and the rest is seasoning. **Drawn by a hash of `hand`, not by the rng** — so it was added without moving one roll ([../determinism.md](../determinism.md)). A colour landing within 45 luminance of the head it sits on steps along the bag to the first entry that reads (never brightened: multiplying clipped it to raw yellows the paper cannot hold). A pop aimed at the hair wins, and is pulled apart in tone if it lands on the head's own luminance |
 | accent | 1 of the 4 ACCENTS | Hat and band colors |
 | **pop** | 5 POPS, at 14% probability, targeting hair/headgear/skin | A saturated color accent. **Capped at 3 per board** (`makeGrid` switches off the excess). Landing on the skin with luminance < 120, the face ink switches to the light color (`faceInk`) |
 
@@ -143,7 +143,7 @@ the SPECIES card's HOUSE previews a whole board of them. A house is **not a livi
 no face, no clock, no motion, no high fives — and the scene stands it up as a static item (three boil frames of
 one layer, `scene/index.js buildHouse`): its lines boil because the boil is the medium's, not the occupant's.
 
-Seeded form: roof gable · steep · flat · round (dome) × windows square · round · wide (1~3, cross panes, never
+Rolled form: roof gable · steep · flat · round (dome) × windows square · round · wide (1~3, cross panes, never
 over the door) × an arched or square door on either side with a knob × a chimney with two still smoke rings
 (60%, not on a dome), dimensions jittered. Colors: walls from FILLS, roofs from ACCENTS + mid DARKS + the brick
 and ochre POPS, the door an ACCENT; walls filled with a goofy material at a value step of their own (never

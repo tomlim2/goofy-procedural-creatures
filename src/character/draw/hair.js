@@ -46,7 +46,7 @@ function curtain(h, hem, { grow = 1.14, inner = 0, count = 15, size = "S" }) {
       const [ox, oy] = outline(a);
       if (Math.abs(ox) < inner * rx) continue;         // the front of the chest is left clear (very long hair)
       const top = oy - ry * 0.02;                      // starts slightly inside the outline — embedded in the head
-      const jag = Math.abs(noise(i * 7.3 + side * 2.1 + spec.seed * 0.002)) * (cy - hem) * 0.12;
+      const jag = Math.abs(noise(i * 7.3 + side * 2.1 + spec.roll * 0.002)) * (cy - hem) * 0.12;
       const bottom = hem + jag;
       // Outward on the way down — the further to the side the more (the tip is x·grow). The middle strokes fall almost straight
       const endX = ox * grow;
@@ -91,7 +91,7 @@ function ponytail(h) {
   const { back, ink0, rx, ry, cy, spec } = h;
   cap(h, 0.52, 22, 12, ry * 0.24);
   // Ponytail — tied as one behind the crown, rising up and hanging back (which side it is tied on is per individual)
-  const s = spec.seed % 2 ? 1 : -1;
+  const s = spec.roll % 2 ? 1 : -1;
   const px0 = s * rx * 0.25, py0 = cy + ry * 0.92;
   const tail = [[px0, py0], [px0 + s * 0.06, py0 + 0.06], [px0 + s * 0.13, py0 + 0.02], [px0 + s * 0.15, py0 - 0.14], [px0 + s * 0.11, py0 - 0.3]];
   back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, size: "L", spread: 0.026 });
@@ -120,7 +120,7 @@ const spiky = (rings) => (h) => {
       const angle = Math.PI * (0.5 + span * (t - 0.5));
       const bx = Math.cos(angle) * rx * rad;
       const by = cy + Math.sin(angle) * ry * rad;
-      const len = len0 + Math.abs(noise(i * 3.1 + rad * 7 + spec.seed * 0.001)) * lenVar;
+      const len = len0 + Math.abs(noise(i * 3.1 + rad * 7 + spec.roll * 0.001)) * lenVar;
       crown.line([[bx, by], [bx + Math.cos(angle) * len, by + Math.sin(angle) * len]], { color: ink0 });
     }
   }
@@ -157,7 +157,7 @@ const voluminous = (kind) => (h) => {
     };
     for (let x = -rx * grow + step * 0.5; x < rx * grow; x += step) {
       const top = topAt(x) - 0.004;
-      const jag = (noise(x * 40 + spec.seed * 0.003) * 0.9 + 0.3) * ry * 0.09;   // −0.05ry ~ +0.11ry
+      const jag = (noise(x * 40 + spec.roll * 0.003) * 0.9 + 0.3) * ry * 0.09;   // −0.05ry ~ +0.11ry
       const bottom = bottomAt(x) + jag;
       if (top - bottom < 0.02) continue;
       const fan = x * 0.08;   // outward on the way down
@@ -175,7 +175,7 @@ const voluminous = (kind) => (h) => {
       const bx = Math.cos(angle) * rx * grow * 0.96;
       const by = cy + Math.sin(angle) * ry * grow * 0.96;
       if (by < bottomAt(bx)) continue;
-      const r = 0.03 + noise(i * 4.4 + spec.seed * 0.002) * 0.012;
+      const r = 0.03 + noise(i * 4.4 + spec.roll * 0.002) * 0.012;
       back.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0 });
     }
   }
@@ -232,7 +232,7 @@ const fringe = (kind) => (h) => {
     const t = (i / (teeth * 2)) * 2 - 1;
     const x = t * rx * 0.74;
     const top = cy + ry * (0.78 - t * t * 0.14);
-    const bottom = fringeBottom + Math.abs(noise(i * 2.7 + spec.seed * 0.002)) * ry * 0.09;
+    const bottom = fringeBottom + Math.abs(noise(i * 2.7 + spec.roll * 0.002)) * ry * 0.09;
     zig.push([x, i % 2 === 0 ? top : bottom]);
   }
   front.fur(zig, "SCRIBBLE", { color: ink0, passes: 6, size: "L", spread: 0.014 });   // bangs — over the face
@@ -294,7 +294,7 @@ const arcSort = (cy) => (p, q) => {
 const grownOutline = (h, gx, gy, lumps, amount) => {
   const shape = headShape(h.spec);
   return blobPath(0, h.cy, h.rx * gx, h.ry * gy,
-    { lumps, amount, noise: null, phase: h.spec.seed * 0.0013, square: shape.square, taper: shape.taper });
+    { lumps, amount, noise: null, phase: h.spec.roll * 0.0013, square: shape.square, taper: shape.taper });
 };
 
 // The lowest y any face-covering filled piece may reach: the highest eye's top, plus the whole travel a
@@ -345,7 +345,7 @@ const backMass = (h, hem, flare) => {
     [lx0 * 1.02, cy - ry * 0.6], [lx0 * flare, hem + ry * 0.03],
     [lx0 * 0.6, hem], [0, hem + ry * 0.015], [rx0 * 0.6, hem - ry * 0.01],
     [rx0 * flare, hem + ry * 0.03], [rx0 * 1.02, cy - ry * 0.6]
-  ], 0.0035, spec.seed * 0.0011);
+  ], 0.0035, spec.roll * 0.0011);
   paintPart(backFills, spec, poly, h.ink0, { own: true });
   back.contour(poly, { color: h.lineInk });
 };
@@ -386,7 +386,7 @@ const backSheets = (h) => {
       const t = i / teeth;
       const x = side * rx * (1.44 - t * 0.8);
       const deep = i % 2 === 0 ? 1 : 0.48;
-      rag.push([x, hem + (1 - deep) * span * 0.13 + Math.abs(noise(i * 5.3 + side * 3.1 + spec.seed * 0.002)) * span * 0.06]);
+      rag.push([x, hem + (1 - deep) * span * 0.13 + Math.abs(noise(i * 5.3 + side * 3.1 + spec.roll * 0.002)) * span * 0.06]);
     }
     const poly = crumple([
       [side * rx * 0.64, top + ry * 0.2],
@@ -395,7 +395,7 @@ const backSheets = (h) => {
       [side * rx * 1.44, hem + span * 0.16],
       ...rag,
       [side * rx * 0.56, top - span * 0.5]
-    ], 0.004, spec.seed * 0.0015 + side * 4);
+    ], 0.004, spec.roll * 0.0015 + side * 4);
     paintPart(backFills, spec, poly, h.ink0, { own: true });
     back.contour(poly, { color: h.lineInk });
     for (const k of [1.02, 1.26]) {   // the strand grain — following the splay, out where the sheet actually shows
@@ -419,9 +419,9 @@ const frontBlunt = (h) => {
   const hem = [];
   for (let i = 0; i <= 6; i += 1) {
     const x = -rx * 0.78 + (i / 6) * rx * 1.56;
-    hem.push([x, hemY + Math.abs(noise(i * 3.7 + spec.seed * 0.002)) * ry * 0.04]);
+    hem.push([x, hemY + Math.abs(noise(i * 3.7 + spec.roll * 0.002)) * ry * 0.04]);
   }
-  const poly = crumple([...arc, [-rx * 0.8, cornerY], ...hem, [rx * 0.8, cornerY]], 0.0025, spec.seed * 0.0017);
+  const poly = crumple([...arc, [-rx * 0.8, cornerY], ...hem, [rx * 0.8, cornerY]], 0.0025, spec.roll * 0.0017);
   paintPart(frontFills, spec, poly, h.ink0, { own: true });
   front.contour(poly, { color: h.lineInk });
   for (const sx of [-0.34, 0.1, 0.44]) {
@@ -480,7 +480,7 @@ const frontCurtain = (h) => {
       [side * rx * 0.8, Math.max(brow + ry * 0.08, tipY + ry * 0.16)],   // the rail under this point dips ~half its width — keep it tied above the tip
       [side * rx * 0.9, tipY]
     ];
-    const boundary = fillStrip(h, frontFills, spine, [ry * 0.1, ry * 0.17, ry * 0.19, ry * 0.14, ry * 0.04], spec.seed * 0.0017 + side * 2);
+    const boundary = fillStrip(h, frontFills, spine, [ry * 0.1, ry * 0.17, ry * 0.19, ry * 0.14, ry * 0.04], spec.roll * 0.0017 + side * 2);
     front.contour(boundary, { color: h.lineInk });
     front.line([[side * rx * 0.24, cy + ry * 0.62], [side * rx * 0.6, brow + ry * 0.16]], { color: h.grainInk, size: "S" });
   }
@@ -488,13 +488,13 @@ const frontCurtain = (h) => {
 
 // Swept bangs (앞머리) — a **deep side parting**: the whole fringe starts at one temple and sweeps across the
 // forehead as one diagonal mass, thick at the part and thinning to a tip past the far temple. Which side it
-// parts on is per individual (the seed, like the ponytail's tie). The hem is a straight run from high at the
+// parts on is per individual (the roll, like the ponytail's tie). The hem is a straight run from high at the
 // part to low at the far tip, so the forehead shows as a wedge under it rather than a band — and both ends
 // stay above eyeSafeY, since the panel is opaque
 const frontSwept = (h) => {
   const { front, frontFills, spec, box, rx, ry, cy } = h;
   const brow = browLine(spec, box);
-  const side = spec.seed % 2 ? 1 : -1;                        // which side the parting falls on
+  const side = spec.roll % 2 ? 1 : -1;                        // which side the parting falls on
   const safe = eyeSafeY(h);
   // **A parting is two pieces, and neither one stops at the brow.** In the reference the fringe leaves one
   // parting high on the crown, and BOTH ends carry on round the temples and down the side of the face to the
@@ -519,7 +519,7 @@ const frontSwept = (h) => {
     [-side * rx * 0.82, Math.max(brow + ry * 0.06, safe)]
   ];
   if (runsDown) far.push([-side * lockX, cy + ry * 0.06], [-side * lockX, stop]);
-  front.contour(fillStrip(h, frontFills, far, W, spec.seed * 0.0019), { color: h.lineInk });
+  front.contour(fillStrip(h, frontFills, far, W, spec.roll * 0.0019), { color: h.lineInk });
 
   const near = [                                              // the short side (2) — straight down the near side
     [px, py],
@@ -527,7 +527,7 @@ const frontSwept = (h) => {
     [side * rx * 0.76, Math.max(brow + ry * 0.14, safe)]
   ];
   if (runsDown) near.push([side * lockX, cy + ry * 0.08], [side * lockX, stop]);
-  front.contour(fillStrip(h, frontFills, near, [ry * 0.07, ry * 0.14, ry * 0.13, ry * 0.1, ry * 0.05], spec.seed * 0.0023 + 7),
+  front.contour(fillStrip(h, frontFills, near, [ry * 0.07, ry * 0.14, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 7),
     { color: h.lineInk });
 
   // No grain lines on this fringe. They were drawn from the part across the sweep, but a straight line between

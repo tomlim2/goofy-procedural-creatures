@@ -1,6 +1,6 @@
 // The high five — a scene interaction. Every pair of same-row biped neighbours high fives **on its own
 // schedule** (no distance gate): when a pair's time comes, the short-armed one stops where it stands (the
-// anchor — a dead tie in reach falls to seed parity) and the long-armed one hurries over from wherever it is
+// anchor — a dead tie in reach falls to roll parity) and the long-armed one hurries over from wherever it is
 // (the mover — a commanded trip at approach × walk speed). The anchor plants its palm once the mover is near;
 // the mover arrives, winds up, holds, and slaps — the swing itself (anticipation, the arc, the follow-through,
 // the smiles) lives on ACTIONS.hifive and runs in the clock (motion/index.js). Three stars bounce out of the
@@ -8,8 +8,8 @@
 //
 // The pair logic lives here and not in motion/ because no per-individual clock knows another's position — the
 // scene owns the board. A clock obeys one command (motion/index.js hifive) and the command consumes **no rng**
-// from the clock's stream; the scheduler's randomness is its own per-pair makeRng stream, seeded from the two
-// specs, so the fives are seed-deterministic and an isolated clock (the snapshot, the frequency counts) never
+// from the clock's stream; the scheduler's randomness is its own per-pair makeRng stream, keyed from the two
+// specs, so the fives are roll-deterministic and an isolated clock (the snapshot, the frequency counts) never
 // fives at all.
 // Docs: guidelines/motion/catalog.md § the high five
 //
@@ -53,7 +53,7 @@ function plantPoint(item, side) {
 }
 
 // rush divides the two waits — the wait for a board's first five and the wait between a pair's fives —
-// and nothing else. The pair logic, the approach, the swing and the seed-determinism are the board's own,
+// and nothing else. The pair logic, the approach, the swing and the roll-determinism are the board's own,
 // so what a rushed screen shows is the real thing, only sooner (main.js: the debug screen's ?five=rush)
 export function makeHifives({ rush = 1 } = {}) {
   const wait = ([lo, hi], rng) => rng.float(lo, hi) / rush;
@@ -64,14 +64,14 @@ export function makeHifives({ rush = 1 } = {}) {
   let started = 0;             // counters for the sim (scripts/hifive-sim.mjs) — fives begun, and rounds
   let skipped = 0;             // skipped because the pair stood too close for an approach (minApproach)
 
-  // A pair's schedule stream — seeded from the two specs, so it survives nothing and depends on nothing but
-  // the board. A regen changes a seed and the pair starts a fresh stream
+  // A pair's schedule stream — keyed from the two specs, so it survives nothing and depends on nothing but
+  // the board. A regen changes a roll and the pair starts a fresh stream
   const scheduleOf = (i, j, A, B, t) => {
     const key = i + ":" + j;
     let s = schedule.get(key);
-    if (!s || s.sa !== A.spec.seed || s.sb !== B.spec.seed) {
-      const rng = makeRng(((A.spec.seed ^ (B.spec.seed * 2654435761)) >>> 0) ^ 0x51f7);
-      s = { rng, sa: A.spec.seed, sb: B.spec.seed, next: t + wait(HIFIVE.firstWithin, rng) };
+    if (!s || s.sa !== A.spec.roll || s.sb !== B.spec.roll) {
+      const rng = makeRng(((A.spec.roll ^ (B.spec.roll * 2654435761)) >>> 0) ^ 0x51f7);
+      s = { rng, sa: A.spec.roll, sb: B.spec.roll, next: t + wait(HIFIVE.firstWithin, rng) };
       schedule.set(key, s);
     }
     return s;
@@ -92,9 +92,9 @@ export function makeHifives({ rush = 1 } = {}) {
   // whether the five is worth doing at all (too close → no show), and go() issues the commands from it
   function plan(A, ai, B, bi) {
     const reachOf = (item) => armOf(item).upper + armOf(item).lower;
-    // The short-armed one plants and the long-armed one walks over; a dead tie falls to seed parity
+    // The short-armed one plants and the long-armed one walks over; a dead tie falls to roll parity
     let anchor = A, mover = B, anchorI = ai, moverI = bi;
-    if (reachOf(B) < reachOf(A) || (reachOf(B) === reachOf(A) && (A.spec.seed + B.spec.seed) % 2)) {
+    if (reachOf(B) < reachOf(A) || (reachOf(B) === reachOf(A) && (A.spec.roll + B.spec.roll) % 2)) {
       anchor = B; mover = A; anchorI = bi; moverI = ai;
     }
     const side = worldX(mover) > worldX(anchor) ? 1 : -1;   // the anchor's arm toward the mover

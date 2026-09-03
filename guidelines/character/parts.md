@@ -6,7 +6,7 @@ The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 28 slots, 207 p
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
-The draw order is the declaration order of `SLOTS` and that *is* the seed — reordering **breaks existing seeds**. Append a new slot to `LATE_SLOTS`
+The draw order is the declaration order of `SLOTS` and that *is* the roll — reordering **breaks existing rolls**. Append a new slot to `LATE_SLOTS`
 so it is drawn at the very end and existing boards are preserved ([../determinism.md](../determinism.md)). The list below is grouped by body part, so it
 differs from the declaration order.
 
@@ -133,8 +133,8 @@ from under a hat or band; cloud and hedgehog go with a band only; and mohawk, bu
 
 | | |
 | --- | --- |
-| the colour | Skin, cloth, hair, accent and a lizard's second scale all collapse to one pale tone off `MARKS.white`, and any pop is dropped — an accent is the opposite of what this is. The tone is picked from `wobbleSeed` (no rng) |
-| the ink | Pinned to the **darkest** of the four INKS rather than whatever the seed drew. Everything else about a ghost is washed out, and the inks run luminance 35~61: on the lightest of them the face came out brown-grey on cream and lost its grip. Black on pale is the whole read |
+| the colour | Skin, cloth, hair, accent and a lizard's second scale all collapse to one pale tone off `MARKS.white`, and any pop is dropped — an accent is the opposite of what this is. The tone is picked from `hand` (no rng) |
+| the ink | Pinned to the **darkest** of the four INKS rather than whatever the roll drew. Everything else about a ghost is washed out, and the inks run luminance 35~61: on the lightest of them the face came out brown-grey on cream and lost its grip. Black on pale is the whole read |
 | the lines | Every line — outline, brows, whiskers, limbs, hair strands, **and the eyes, nose and mouth** — is `PENCIL_SLINE`, the **hairline**: laid once at about a third of the board's width, with the pen lifting now and then so the line comes open for a width or two. That lifting is the broken quality this wants. It was `PENCIL_BROKEN` first, which gets there by stacking three passes — on a creature this pale that read as a thick doubled contour rather than as something barely there. It rides on `spec.outline`, which each `Sketch` made for that creature takes; `BOARD_LINES` is the whole board's switch and would take everyone with it. (An eye with a white draws its rim into the **fills** sketch, so that sketch carries the kind too) |
 | the eyes | Always **hollow** — the empty eye, a white and a rim with the pupil taken out. Nothing is looking back, which is the idea. A deterministic overwrite, applied after the late slots (`ghost` is one, so `applyConstraints` has not seen it yet) and before `eyeGeometry`, which the eyewear constraints measure |
 | the surface | **No texture at all** — the base fill and nothing laid on it (`only: "base"` from `surfaceHand`). Every tone a goofy material makes is a shade of the part's own colour, and a ghost's collapsed to one pale tone, so its fur, hatching and dust came out pale on pale and it read as a blank shape anyway. Handing the texture a tone of its own was drawn and dropped: grey read as a second outline, and once the marks took the ghost's black, graphite's rules became hard slashes ruled clean across the creature. There is nothing under a ghost's skin to hatch |
@@ -168,7 +168,7 @@ half-width at that height, fitting the head's size and shape. A hat is a separat
 `drawHorns` in `headgear.js`. none / curved / straight / antenna (a ball at the tip) / nub (a small bump) / ram (a spiral) / crown (a row of spikes across the crown).
 Imps get 1.8×.
 
-**A rex's horns root anywhere from the crown to the temple.** The base slides down the head's own outline per individual — from the old fixed spot (0.56·rx, 0.81·ry) to the sideburn line (0.97·rx, 0.12·ry) — and the whole horn turns by the same angle as it descends, so it keeps pointing away from the skull instead of leaning over the face. Hashed off `wobbleSeed`, so it costs no rng and moved no seed. It reaches **less** far than the fixed placement did, not more (top 1.237 against 1.260, and it comes no closer to the face's centre: 0.37·rx against 0.33).
+**A rex's horns root anywhere from the crown to the temple.** The base slides down the head's own outline per individual — from the old fixed spot (0.56·rx, 0.81·ry) to the sideburn line (0.97·rx, 0.12·ry) — and the whole horn turns by the same angle as it descends, so it keeps pointing away from the skull instead of leaning over the face. Hashed off `hand`, so it costs no rng and moved no roll. It reaches **less** far than the fixed placement did, not more (top 1.237 against 1.260, and it comes no closer to the face's centre: 0.37·rx against 0.33).
 
 **The rex's horns are DRAGON horns** — the same slot values, redrawn by species (the rex-leg rule): filled
 bone mass with an ink contour, never a line, the tail-spikes' bone. The kinds map to the maid-dragon show's
@@ -180,7 +180,7 @@ curved 2 · antenna/straight/ram 1.5 · nub/crown 1 — about three rexes in fou
 ### ears (15)
 none / round · roundMid · roundBig / pointy · pointyMid · pointyBig / flap (an arc hanging down) / long (a long lobe) / fold · foldMid · foldBig / perk · perkMid · perkBig.
 round, pointy, fold and perk come in **three sizes** (1 · 1.4 · 1.8×, the same shape) — strip the Mid/Big off the value name and you have the shape (`earKind`, `EAR_SIZE`).
-**fold folds on one side only** — the other is a standing ear (which side folds is per individual, from `wobbleSeed`, with no rng). Differing left from right is what makes it doglike. **perk** stands on both sides.
+**fold folds on one side only** — the other is a standing ear (which side folds is per individual, from `hand`, with no rng). Differing left from right is what makes it doglike. **perk** stands on both sides.
 
 **The per-species boundary** — which species gets which ear is drawn by `forbid.ears` in `species.js` (overwritten after the draw) and `identity.ears` (checked by census).
 
@@ -188,7 +188,7 @@ round, pointy, fold and perk come in **three sizes** (1 · 1.4 · 1.8×, the sam
 | --- | --- | --- |
 | human | none · round (the small one only) | At the side (slightly above eye level). Animal ears (pointy, hanging, folded, long, huge) are not human — all become round/none |
 | pup | flap · long · pointy(·Mid) · round(·Mid) · fold(·Mid) · perk(·Mid) | Filled ears on top of and beside the head (§ dog ears). No none and no huge ear |
-| cat | pointy (the default — sides slightly concave, a blunt tip) · pointyMid (narrow and tall — opening further, +0.15 rad) · pointyBig (wide and low — a round tip and convex sides) | **Filled triangular bumps at the two corners of the crown (~35°; 30°, slightly inside, on a square head)** — the base tucked inside the outline so they are one mass with the head, the outline the same weight and drawn twice, the base laid along the tangent at the attachment point and the ear's axis halfway between that point's normal and vertical plus a per-kind opening (a round head opens them out, a flat head stands them straight, with a slight left/right difference). **Its sides are sampled, not straight**: it is the one shape on a creature that cannot be a blobPath (its base has to sit on the head outline and its tip has to be a point), and drawn as two straight runs with a single bend — 0.9px of bow at a board cell — it stood on a head of 4~7 lumps looking like a ruler's triangle. Each side is cut into 7, the bow runs a bit over 2× deeper, and a wobble off the creature's own wobbleSeed rides on it; both are enveloped by sin(πk), which pins the base and the tip exactly where they were. All four edges of one ear (two outer, two inner) draw their own wobble, so no two cats and no two sides repeat. The inner ear is **the same shape scaled in, on the same curve** — its base at the ear's base position (0.012 inside), its width 0.62× the ear and its tip 0.7× the height. Per individual (double line 45% · fill 30% · one crease stroke 15% · none 10%). No round, fold, flap, long or none (measured across 70 reference images) |
+| cat | pointy (the default — sides slightly concave, a blunt tip) · pointyMid (narrow and tall — opening further, +0.15 rad) · pointyBig (wide and low — a round tip and convex sides) | **Filled triangular bumps at the two corners of the crown (~35°; 30°, slightly inside, on a square head)** — the base tucked inside the outline so they are one mass with the head, the outline the same weight and drawn twice, the base laid along the tangent at the attachment point and the ear's axis halfway between that point's normal and vertical plus a per-kind opening (a round head opens them out, a flat head stands them straight, with a slight left/right difference). **Its sides are sampled, not straight**: it is the one shape on a creature that cannot be a blobPath (its base has to sit on the head outline and its tip has to be a point), and drawn as two straight runs with a single bend — 0.9px of bow at a board cell — it stood on a head of 4~7 lumps looking like a ruler's triangle. Each side is cut into 7, the bow runs a bit over 2× deeper, and a wobble off the creature's own `hand` rides on it; both are enveloped by sin(πk), which pins the base and the tip exactly where they were. All four edges of one ear (two outer, two inner) draw their own wobble, so no two cats and no two sides repeat. The inner ear is **the same shape scaled in, on the same curve** — its base at the ear's base position (0.012 inside), its width 0.62× the ear and its tip 0.7× the height. Per individual (double line 45% · fill 30% · one crease stroke 15% · none 10%). No round, fold, flap, long or none (measured across 70 reference images) |
 | imp | none · pointy (the small one only) | At the side |
 
 **cat** gets triangular ears only (measured across 35 creatures in the reference video: small triangles at the corners of the crown, the outline continuing into the ear and a colored head giving the ear the same color,
@@ -210,7 +210,7 @@ neutral: never darker, never neon). Which face shows is the ear's pose: a standi
 a hanging ear (flap, long) shows its back, and **the folded ear shows all three** — the standing root (front, the inner patch on it) and the flap bent over it (back).
 **The inner ear** — a patch made by scaling the ear shape 0.72 **about its root (where it meets the face)**, with no outline: its base attaches at the root and it narrows going up.
 Scale about the centre and it becomes a **patch hanging** mid-ear — the inner ear starts at the root. Per individual, the lighter tone 45% ·
-pink 30% · none 25% (`wobbleSeed`, no rng) — except on the folded ear, which always has it (its "none" falls to pink or the tone): the three colors are its design.
+pink 30% · none 25% (`hand`, no rng) — except on the folded ear, which always has it (its "none" falls to pink or the tone): the three colors are its design.
 **Cats follow the same rule** — a triangle whose base attaches at the root is drawn inside the triangular ear (0.62× the width, 0.7× the height): double line 45% · fill 30% (pink or a tone in the same family —
 toward the light side on black fur) · one crease stroke 15% (from the middle of the root to half the height) · none 10%. The inner **line** is a mark on fur and uses `spec.faceInk` —
 a black line on black fur is lost (the outline meets the background, so it stays black). It is not drawn on hanging ears (flap, long) — that pose shows the ear's **outer** face. On a folded ear **the standing root is the inner face**, so it is drawn there from the root up, and
@@ -255,7 +255,7 @@ Distribution: bulb, broad, box and nostrils are humans only (DEFAULT_BIAS; beast
 | none | Nothing |
 
 A cat nose is a **pink** fill (the same color as the blush and tongue) plus a face-ink rim — it reads on a light face and on black fur alike. Its size is proportional to the head (half-width 0.1·0.13rx).
-**A dog's muzzle** (the region the nose and mouth are grouped into) differs in color per individual: light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (the fur ×0.55) 25% (`muzzleGeometry.fill`, wobbleSeed, no rng).
+**A dog's muzzle** (the region the nose and mouth are grouped into) differs in color per individual: light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (the fur ×0.55) 25% (`muzzleGeometry.fill`, `hand`, no rng).
 **It is color only, with no outline** — an outline makes it look like a board tacked onto the face. The mouth ink over the muzzle is split by the muzzle's luminance (black if light, light ink if dark), and
 the nose, being an object, is always black but gets a light rim over a dark muzzle (the same rule as the eyepatch, [rules.md](rules.md)).
 
@@ -292,7 +292,7 @@ The rim is face ink (visible only on a dark face) and the lines over the teeth a
 | fangs | A line plus two **big** white fangs below its ends — the **angry mouth** for imps and cats (a hiss). (The spiked-teeth kind overlapped this and was dropped) | Imps |
 
 **Position** `mouthPos` (a late slot) — **high** (0.22) · **mid** (0.5) · **low** (0.76) between the bottom of the nose (`noseBottomY`) and above the chin (headCy − 0.86·ry). With no nose, the upper limit is
-the eye's lower edge or slightly below the head's centre. Dogs follow the muzzle rule (pinned below the nose). Wherever it is, it has to be below the (startle-widened) eye. A biped sits **±0.1rx off to one side** per individual (wobbleSeed) (the reference,
+the eye's lower edge or slightly below the head's centre. Dogs follow the muzzle rule (pinned below the nose). Wherever it is, it has to be below the (startle-widened) eye. A biped sits **±0.1rx off to one side** per individual (`hand`) (the reference,
 no rng). **Size** `mouthSize` (a late slot) — width multipliers small 0.7 · normal 1 · wide 1.4, with a further species multiplier of 1.3 on imps. Species bias: humans small↑, imps wide↑.
 A white fill (the grid, grin, fangs, tooth strips) is paper white and the rims and vertical lines over it are **the palette ink (dark)** — drawn in an imp's light face ink they are lost on the white and leave an empty white bar. The tongue is blush pink.
 
@@ -485,7 +485,7 @@ materials. The **density** is not split — one hand, one pressure ([../drawing.
 ### density (5) — a late slot
 
 How dark the goofy material draws this creature — **the value step itself**, one of the five, evenly weighted:
-**black · hatch · scribble · stipple · light** (`medium/materials.js` `VALUES`). The seed picks it, so every step turns up on every
+**black · hatch · scribble · stipple · light** (`medium/materials.js` `VALUES`). The roll picks it, so every step turns up on every
 species — a pale skin can be hatched black and a black one grazed light. Nothing on flat. Everything the creature fills draws at
 that one step, head and body alike ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
 opaque, so neighbours still hide each other. Everything the creature fills takes a goofy material — the head, the body, the ears and their insides, the muzzle, the
@@ -509,7 +509,7 @@ it an object when the hide's own rings land in the same tone) · **spikes** — 
 horns at the end, leaning back, in a pale of the teeth's white.
 
 **Colors.** The ribbon, the dip and the band take a **POP** — the bold palette, one per individual (off
-wobbleSeed, stepped when it lands within 35 of luminance of the hide). Bolder than the accents on purpose: a
+`hand`, stepped when it lands within 35 of luminance of the hide). Bolder than the accents on purpose: a
 dressed-up dinosaur is the point. The per-board pop cap governs whole-part accents (hair, a hat, a skin); a
 deco is a few strokes. Plates keep the second scale, the club the hide, the spikes bone — those three are the
 creature, not its clothes.

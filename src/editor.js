@@ -1,11 +1,11 @@
 // Editor — the character maker. Pick a species, then build one individual by hand: every slot, every colour,
-// every proportion. Where the board draws what the seed says, this screen draws what you say.
+// every proportion. Where the board draws what the roll says, this screen draws what you say.
 //
 // It holds **one working spec** and edits it in place. That is the difference from every other screen here:
-// the rest go back through `makeCreature(seed, species)` and are therefore always something a seed could have
+// the rest go back through `makeCreature(roll, species)` and are therefore always something a roll could have
 // produced, while an edited creature usually is not. So the thing this screen saves is the whole spec as JSON —
 // the same file the board's pin opens into a cell (guidelines/determinism.md: a creature is its JSON, and the
-// generator is the only thing that draws from a seed; nothing here calls rng). NEW rolls a fresh individual of
+// generator is the only thing that draws from a roll; nothing here calls rng). NEW rolls a fresh individual of
 // the species to start from. SHUFFLE deals a whole new creature, species included; picking a species deals a
 // new one of that species. The roll's number stays inside the file (the scene phases its clock off it), and nowhere else.
 //
@@ -22,7 +22,7 @@ import {
   SLOTS, SPECIES, PAINTABLE, paintKey
 } from "./character/index.js";
 import { FILLS, INKS, ACCENTS, POPS, DARKS, FURS, SCALES, HAIRS } from "./character/vocabulary/palette.js";
-import { bindSeg, addOption, randomSeed, runLoop, download } from "./ui.js";
+import { bindSeg, addOption, randomRoll, runLoop, download } from "./ui.js";
 
 const canvas = document.getElementById("stage");
 const speciesSel = document.getElementById("speciesSel");
@@ -47,8 +47,8 @@ const COLOR_KEYS = ["ink", "skin", "cloth", "hair", "accent", "pop", "pattern2"]
 const poolOf = (key) => (key === "pop" ? [null, ...PALETTE] : PALETTE);
 
 // The proportion sliders. Ranges are wide enough to reach past what the generator draws — this screen is for
-// making something on purpose, including something the board would never roll. `wobbleSeed` is not here: it is
-// a drawing seed, not a proportion, and it gets its own button.
+// making something on purpose, including something the board would never roll. `hand` is not here: it is
+// a drawing roll, not a proportion, and it gets its own button.
 const PROPORTION_RANGE = {
   headScale: [0.6, 1.8], headWide: [0.6, 1.6], headLumps: [0, 12], headLump: [0, 0.25],
   eyeSize: [0.02, 0.4], eyeGap: [0.1, 0.9], eyeHeight: [-0.2, 0.4],
@@ -61,7 +61,7 @@ const PROPORTION_RANGE = {
 // The address only says which species to start with. It makes a creature; it does not remember one — a file does.
 const params = new URLSearchParams(window.location.search);
 let species = SPECIES.some((s) => s.name === params.get("species")) ? params.get("species") : "human";
-let seed = randomSeed();
+let roll = randomRoll();
 let bind = true;
 let spec = null;         // the working spec — the single thing this screen edits and saves
 
@@ -76,12 +76,12 @@ const scene = createScene(canvas);
 // as settled as a rolled one before it is drawn.
 const derive = deriveSpec;
 
-// A creature made here starts from its seed, with one rule of this screen laid over it: the body's material
+// A creature made here starts from its roll, with one rule of this screen laid over it: the body's material
 // follows the base until a hand picks one. The generator rolls a body material of its own for the board; on
 // this screen nothing has been chosen yet, so the body wears the base's surface. A file opened here keeps
 // whatever it says.
 function regenerate() {
-  const made = makeCreature(seed, species);
+  const made = makeCreature(roll, species);
   spec = derive({ ...made, parts: { ...made.parts, bodyMaterial: "same" } });
 }
 
@@ -95,7 +95,7 @@ function notes() {
     if (forbidden[slot] !== spec.parts[slot]) out.push(`${spec.species} forbids ${slot} = ${spec.parts[slot]} (board would draw ${forbidden[slot]})`);
   }
   const constrained = { ...spec.parts };
-  applyConstraints(constrained, spec.species, spec.seed);
+  applyConstraints(constrained, spec.species, spec.roll);
   for (const slot of Object.keys(constrained)) {
     if (constrained[slot] !== spec.parts[slot] && forbidden[slot] === spec.parts[slot]) {
       out.push(`the rules would take ${slot} = ${spec.parts[slot]} to ${constrained[slot]}`);
@@ -368,13 +368,13 @@ speciesSel.addEventListener("change", () => { species = speciesSel.value; regene
 // SHUFFLE — everything goes, the species too. It sits above SPECIES because it is not a choice within one.
 document.getElementById("shuffle").addEventListener("click", () => {
   species = SPECIES[Math.floor(Math.random() * SPECIES.length)].name;
-  seed = randomSeed();
+  roll = randomRoll();
   regenerate();
   render();
 });
 document.getElementById("rewobble").addEventListener("click", () => {
-  // The same individual drawn by a different hand — the wobble seed is what every stroke's shake comes off.
-  spec = derive({ ...spec, proportions: { ...spec.proportions, wobbleSeed: randomSeed() % 65536 } });
+  // The same individual drawn by a different hand — the wobble roll is what every stroke's shake comes off.
+  spec = derive({ ...spec, proportions: { ...spec.proportions, hand: randomRoll() % 65536 } });
   render();
 });
 document.getElementById("save").addEventListener("click", save);

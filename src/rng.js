@@ -1,19 +1,9 @@
-// Seeded randomness. The same seed makes the same creature within one version of the generator (guidelines/determinism.md).
+// Repeatable randomness. The same roll makes the same creature within one version of the generator (guidelines/determinism.md).
 // The root of this lab is here, not in the renderer.
 
-// xmur3 — string seed to a 32-bit integer.
-export function seedFromString(text) {
-  let h = 1779033703 ^ text.length;
-  for (let i = 0; i < text.length; i += 1) {
-    h = Math.imul(h ^ text.charCodeAt(i), 3432918353);
-    h = (h << 13) | (h >>> 19);
-  }
-  return (h ^= h >>> 16) >>> 0;
-}
-
 // mulberry32 — short, evenly distributed PRNG.
-export function makeRng(seed) {
-  let state = seed >>> 0;
+export function makeRng(roll) {
+  let state = roll >>> 0;
 
   const next = () => {
     state = (state + 0x6d2b79f5) >>> 0;
@@ -74,9 +64,4 @@ export function makeNoise(rng) {
     const t = f * f * (3 - 2 * f);
     return a + (b - a) * t;
   };
-}
-
-// The seed in a form a person can read and type back in.
-export function formatSeed(seed) {
-  return seed.toString(36).toUpperCase().padStart(7, "0");
 }

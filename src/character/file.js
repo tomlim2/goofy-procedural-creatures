@@ -1,6 +1,6 @@
 // Creature and board files. **A creature is its JSON** — the whole spec, the way the editor saves it — and the
 // same file goes into a cell of the board. A board is a cast of those: `{ menagerie: "board", columns, cells }`.
-// The seed inside a spec is where it came from, nothing more; what is drawn is what the file says.
+// The roll inside a spec is where it came from, nothing more; what is drawn is what the file says.
 //
 // Reading checks only what the drawing cannot do without and says, in the one word a status label shows, why
 // it refused. Nothing here touches rng.
@@ -20,7 +20,7 @@ export const isHouse = (spec) => !!spec && spec.kind === "house";
 export function deriveSpec(next) {
   const parts = { ...next.parts };
   if (parts.ghost !== "none") parts.eyes = "hollow";   // a ghost has empty eyes — nothing is looking back
-  const palette = { ...ghostPalette(next.palette0, parts.ghost, next.proportions.wobbleSeed) };
+  const palette = { ...ghostPalette(next.palette0, parts.ghost, next.proportions.hand) };
   return {
     ...next, parts, palette,
     outline: ghostOutline(parts.ghost),
@@ -29,10 +29,23 @@ export function deriveSpec(next) {
   };
 }
 
+// A file from before the rename: a creature's `seed` was its roll and `proportions.wobbleSeed` its hand.
+function migrate(next) {
+  if (!next || typeof next !== "object") return next;
+  const out = { ...next };
+  if (out.roll === undefined && Number.isFinite(out.seed)) { out.roll = out.seed; delete out.seed; }
+  if (out.proportions && out.proportions.hand === undefined && out.proportions.wobbleSeed !== undefined) {
+    out.proportions = { ...out.proportions, hand: out.proportions.wobbleSeed };
+    delete out.proportions.wobbleSeed;
+  }
+  return out;
+}
+
 // One cell's worth of JSON, already parsed: a creature, or a house. Returns { spec } or { error }.
-function readCell(next) {
+function readCell(raw) {
+  const next = migrate(raw);
   if (isHouse(next)) {
-    return Number.isFinite(next.seed) && typeof next.roof === "string" && Number.isFinite(next.w) ? { spec: next } : { error: "NOT A HOUSE" };
+    return Number.isFinite(next.roll) && typeof next.roof === "string" && Number.isFinite(next.w) ? { spec: next } : { error: "NOT A HOUSE" };
   }
   if (!next || !next.parts || !next.palette0 || !next.proportions || !SPECIES.some((s) => s.name === next.species)) return { error: "NOT A CREATURE" };
   return { spec: deriveSpec(next) };

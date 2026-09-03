@@ -30,7 +30,7 @@ const violations = [];
 for (const sp of SPECIES) {
   const id = sp.identity || {};
   for (const c of bySpecies[sp.name] || []) {
-    const where = `${sp.name} seed=${c.seed}`;
+    const where = `${sp.name} roll=${c.roll}`;
     if (id.horns && !id.horns.includes(c.parts.horns)) violations.push(`${where}: horns=${c.parts.horns} (allowed: ${id.horns.join("/")})`);
     if (id.hair && !id.hair.includes(c.parts.hair)) violations.push(`${where}: hair=${c.parts.hair} (allowed: ${id.hair.join("/")})`);
     if (id.brow && !id.brow.includes(c.parts.brow)) violations.push(`${where}: brow=${c.parts.brow} (allowed: ${id.brow.join("/")})`);

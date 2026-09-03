@@ -97,7 +97,7 @@ is decided in `scene/` (`hifive.js`) and **commanded** to the clocks involved. A
 from the clock's stream and leave every schedule stepping underneath (the pattern `force` set: fixed rng
 consumption whatever is overridden), so that a clock that never receives one — the snapshot, the frequency
 counts — is byte-identical, and one that does returns to its own schedule on release. An interaction that needs
-randomness of its own (when a pair fives) draws it from **its own `makeRng` stream seeded from the specs**,
+randomness of its own (when a pair fives) draws it from **its own `makeRng` stream keyed from the specs**,
 never from `Math.random` and never from a clock. Never give a clock a reference to another clock, and never put
 pair logic in `motion/` ([catalog.md](catalog.md) § the high five).
 
@@ -119,10 +119,10 @@ steps once per call whatever `t` says, so those take the factor themselves or th
 A distance in a profile is a **ratio against the rig**, never a constant: the ghost's lift is a fraction of that individual's own `legTop`, the same way a sit is
 solved from the body. A fixed number lifted a small cat by 0.42 of a leg and a rex by 0.18 — the same distance, a different meaning.
 
-## The rng order is the seed
+## The rng order is the roll
 
 The 29 init steps and the update order in `index.js` are fixed. A new motion goes **at the end of its block**.
-Insert it in the middle and every schedule after it changes, so every existing seed's motion becomes different.
+Insert it in the middle and every schedule after it changes, so every existing roll's motion becomes different.
 
 A rhythm's step uses no rng. Only events' and states' steps use it (for the next slot).
 

@@ -31,7 +31,7 @@ export function drawHeadgear(ink, fills, spec, box) {
   const brow = browLine(spec, box);
   const halfW = (y) => rx * Math.sqrt(Math.max(0.05, 1 - ((y - cy) / ry) ** 2));
   const crown = cy + ry;
-  const tiltSide = spec.seed % 2 ? 1 : -1;
+  const tiltSide = spec.roll % 2 ? 1 : -1;
   // Hats that cover the head (helmet, cap) follow **the head outline shape** (squareness, the top/bottom width ratio) rather than an ellipse, drawn slightly larger and then
   // cut at the brow line — the corners of a square head and the hair on the crown both have to be covered. Only the outline above (y ≥ line) is kept and the bottom is joined up.
   const shape = headShape(spec);
@@ -104,7 +104,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const SPIKES = 4;
     const vx = (i) => -w + (i * 2 * w) / SPIKES;                              // valley x — the spikes sit on the band's top edge
     const peak = (i) => [-w + ((i + 0.5) * 2 * w) / SPIKES, by + peakH];
-    const phase = spec.seed * 0.001;
+    const phase = spec.roll * 0.001;
     const band = crumple([[w, by], [-w, by], [-w, by + bandH], [w, by + bandH]], 0.004, phase);
     const spikes = Array.from({ length: SPIKES }, (_, i) =>
       crumple([[vx(i), by + bandH], peak(i), [vx(i + 1), by + bandH]], 0.004, phase + i));
@@ -149,7 +149,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const tipX = (i) => -tipSpan + (i * 2 * tipSpan) / (SPIKES - 1);
     const tip = (i) => [tipX(i), by + bodyH + peakH * hOf(i)];
     const valleyX = (i) => (tipX(i) + tipX(i + 1)) / 2;   // the notch between two tips
-    const phase = spec.seed * 0.0017;
+    const phase = spec.roll * 0.0017;
 
     // the body — a trapezoid, filled as one convex piece
     const body = crumple([[-w, by], [w, by], [topW, by + bodyH], [-topW, by + bodyH]], 0.003, phase);
@@ -177,7 +177,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const by = Math.max(cy + ry * 0.68, brow + ry * 0.3);
     const w = Math.max(halfW(by) * 0.42, rx * 0.26);   // narrow — a party cone, not a tent
     const apex = [tiltSide * rx * 0.12, by + ry * 0.66];   // pom top ≈ crown + 0.34·ry — under the 1.19 cell ceiling
-    const body = crumple([[-w, by], [w, by], apex], 0.004, spec.seed * 0.0013);
+    const body = crumple([[-w, by], [w, by], apex], 0.004, spec.roll * 0.0013);
     paintPart(fills, spec, body, accent, { own: true });
     ink.contour(body, { color: ink0 });
     const pom = blobPath(apex[0], apex[1] + 0.012, 0.019, 0.019, { lumps: 3, amount: 0.18, noise: null });
@@ -270,10 +270,10 @@ export function drawHorns(ink, fills, spec, box, noise) {
     // **Where on the skull they root is per individual.** They used to be pinned to one spot near the crown;
     // now the base slides down the head's own outline, from up top to the temple — the sideburn line. As it
     // descends the whole horn is turned by the same amount, so it keeps pointing away from the skull instead
-    // of leaning over the face. Hashed off wobbleSeed, so it costs no rng and no seed moved
+    // of leaning over the face. Hashed off hand, so it costs no rng and no roll moved
     const A_TOP = Math.atan2(0.8, 0.55);            // the old fixed spot, in outline angle
     const A_LOW = Math.PI * 0.04;                   // the temple
-    const slide = (Math.imul((spec.proportions.wobbleSeed ^ 0x5bd1e995) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+    const slide = (Math.imul((spec.proportions.hand ^ 0x5bd1e995) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
     const aOut = A_TOP + (A_LOW - A_TOP) * slide;
     for (const side of [-1, 1]) {
       const bx0 = side * rx * 0.55, by0 = cy + ry * 0.8;                 // the shapes below are written here
@@ -285,7 +285,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
         const dx = x - bx0, dy = y - by0;
         return [bx + dx * cs - dy * sn, by + dx * sn + dy * cs];
       });
-      const lean = noise(side * 9.1 + spec.seed * 0.0007) * 0.05;
+      const lean = noise(side * 9.1 + spec.roll * 0.0007) * 0.05;
       if (kind === "curved") {
         const c = boneHorn([[bx0, by0], [bx0 + side * 0.075, by0 + 0.095], [bx0 + side * 0.055 + lean, by0 + 0.19]], 0.024, place);
         // the ring segments — two short lines across the horn (the annulated look)
@@ -331,7 +331,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
   for (const side of [-1, 1]) {
     const bx = side * rx * 0.6;
     const by = cy + ry * 0.82;
-    const lean = noise(side * 9.1 + spec.seed * 0.0007) * 0.06;
+    const lean = noise(side * 9.1 + spec.roll * 0.0007) * 0.06;
 
     if (kind === "curved") {
       ink.line([

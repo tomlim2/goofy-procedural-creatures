@@ -32,7 +32,7 @@ export const LAYER_KEYS = ["body", "crownBack", "head", "horns", ...HAIR_KEYS, "
 // the eyes are **removed** and replaced by the glyph rather than covered, which needs the eyes alone to be switchable.
 // variant is the boil frame number. Only the jitter phase differs; the composition is the same.
 export function drawCreature(spec, variant = 0) {
-  const rng = makeRng((spec.proportions.wobbleSeed ^ (variant * 0x9e3779b9)) >>> 0);
+  const rng = makeRng((spec.proportions.hand ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
   const wobble = spec.proportions.wobble;
   const L = {};

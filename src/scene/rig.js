@@ -339,7 +339,7 @@ export function buildCreature(spec, noise, birth = 0) {
     staticLids,
     faceStates,
     // The clock takes a rig description — it solves actions (hand targets) onto this individual's shoulders, arm lengths and body anchors by IK, and solves a quad sit against the torso and leg-root dimensions
-    clock: makeClock(spec.seed, birth, spec.species, mrig, isGhost(spec)),
+    clock: makeClock(spec.roll, birth, spec.species, mrig, isGhost(spec)),
     // The same description, for the scene — the high five pairing (scene/hifive.js) reads arm reach and shoulder position off it
     motionRig: mrig,
     // How much of the fold the **first bone** takes. A crouch that has to keep its feet planted needs all of it;
@@ -362,8 +362,8 @@ export function buildCreature(spec, noise, birth = 0) {
     headRy: firstDrawn.box.headRy,
     headTop: firstDrawn.headTop,
     // The boil period. Slightly different per individual (about 0.53~0.67 fps — once every 1.5~1.9 s). Faster and the drawing looks like it is trembling
-    boilFps: (8 + (spec.seed % 5) * 0.5) / 15,
-    boilOffset: spec.seed % BOIL_FRAMES,
+    boilFps: (8 + (spec.roll % 5) * 0.5) / 15,
+    boilOffset: spec.roll % BOIL_FRAMES,
     baseX: 0,
     baseY: 0,
     generation: 0,

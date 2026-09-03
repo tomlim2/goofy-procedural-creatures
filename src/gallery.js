@@ -8,7 +8,7 @@
 import * as THREE from "three";
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { makeCreature, SLOTS, SPECIES, ghostPalette, ghostOutline, ghostInk } from "./character/index.js";
-import { bindSeg, addOption, randomSeed, runLoop } from "./ui.js";
+import { bindSeg, addOption, randomRoll, runLoop } from "./ui.js";
 
 const canvas = document.getElementById("stage");
 const labelsBox = document.getElementById("labels");
@@ -22,7 +22,7 @@ const fixValueSel = document.getElementById("fixValue");
 const params = new URLSearchParams(window.location.search);
 let slot = SLOTS[params.get("slot")] ? params.get("slot") : "legs";
 let species = SPECIES.some((s) => s.name === params.get("species")) ? params.get("species") : "human";
-let seed = randomSeed();
+let roll = randomRoll();
 let bind = true;
 // values=a,b — only the values of that slot to look at (for putting a few up large). Values not in the slot are ignored; if none is left, all of them
 const only = (params.get("values") || "").split(",").filter(Boolean);
@@ -62,7 +62,7 @@ function build() {
   const values = picked.length ? picked : SLOTS[slot];
   window.history.replaceState(null, "", `?slot=${slot}&species=${species}${fix ? `&fix=${fix.slot}:${fix.value}` : ""}${picked.length ? `&values=${picked.join(",")}` : ""}`);
 
-  const base = makeCreature(seed, species);
+  const base = makeCreature(roll, species);
   // Swapping a part is enough for every slot but one: `ghost` collapses the whole palette and breaks every
   // line, and those are decided when the spec is built. Re-derive them from the pre-ghost palette the spec
   // carries, or the row would draw three identical creatures in whatever the base individual happened to be
@@ -71,7 +71,7 @@ function build() {
     if (parts.ghost !== "none") parts.eyes = "hollow";   // the same overwrite spec.js makes (a ghost has empty eyes)
     return {
       ...base, parts,
-      palette: ghostPalette(base.palette0 || base.palette, parts.ghost, base.proportions.wobbleSeed),
+      palette: ghostPalette(base.palette0 || base.palette, parts.ghost, base.proportions.hand),
       outline: ghostOutline(parts.ghost),
       lineInk: ghostInk(parts.ghost)
     };
@@ -112,7 +112,7 @@ function placeLabels() {
 
 slotSel.addEventListener("change", () => { slot = slotSel.value; build(); });
 speciesSel.addEventListener("change", () => { species = speciesSel.value; build(); });
-document.getElementById("reseed").addEventListener("click", () => { seed = randomSeed(); build(); });
+document.getElementById("reroll").addEventListener("click", () => { roll = randomRoll(); build(); });
 fixSlotSel.addEventListener("change", () => {
   const name = fixSlotSel.value;
   fix = name ? { slot: name, value: SLOTS[name][0] } : null;
@@ -125,7 +125,7 @@ const pose = bindSeg(poseSeg, "pose", (value) => {
 });
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
-  if (key === "r") document.getElementById("reseed").click();
+  if (key === "r") document.getElementById("reroll").click();
   if (key === "b") pose.set(bind ? "motion" : "bind");
 });
 window.addEventListener("resize", () => scene.resize());

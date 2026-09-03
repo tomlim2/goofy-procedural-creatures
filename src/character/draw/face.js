@@ -23,12 +23,12 @@ const SCLERA = MARKS.white;
 // **The crumple of a round eye, per individual.** A circle is the most repeated shape on the board — a ring, wide, oval or cyclops
 // white, a hollow, a lidded white, a dot pupil — and every one of them was drawn with the same three lumps at the same depth in the
 // same place, so the whole board's eyes came out stamped from one die. blobPath with no noise makes its lumps from two sines whose
-// only variable is `phase`, and that was left at 0 nearly everywhere. The creature's wobbleSeed picks all three now: how many lumps
+// only variable is `phase`, and that was left at 0 nearly everywhere. The creature's hand picks all three now: how many lumps
 // (3~6, which only counts when a noise is passed), how deep they go (half to twice the base) and where they sit. `k` separates the
 // parts of one eye, so a white, its rim and its pupil each crumple their own way — a hand redrawing a circle never lands twice on the
-// same wobble. It is geometry, never the rng, so the seed still decides the drawing
+// same wobble. It is geometry, never the rng, so the roll still decides the drawing
 export function eyeWob(spec, eye, k = 0, { amount = 0.07, noise = null } = {}) {
-  const h = (n) => (Math.imul((spec.proportions.wobbleSeed ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+  const h = (n) => (Math.imul((spec.proportions.hand ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
   return {
     lumps: 3 + Math.floor(h(k * 5 + 1) * 4),
     amount: amount * (0.5 + h(k * 5 + 2) * 1.5),
@@ -97,7 +97,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // Four loops, each drawn a bit past one turn, overlaid — each loop has its own centre, size and tilt, so the strokes pass over each other and the ends never meet.
       // (Several turns in one stroke would be concentric and read as a spiral — that is spiral)
       const wob = ink.noise;
-      const phase = eye.side * 5.5 + spec.proportions.wobbleSeed * 0.017;
+      const phase = eye.side * 5.5 + spec.proportions.hand * 0.017;
       for (let k = 0; k < 6; k += 1) {
         const w1 = wob(phase + k * 3.7), w2 = wob(phase + 17 + k * 3.7), w3 = wob(phase + 41 + k * 3.7);
         const cx = eye.x + eye.r * 0.17 * w1;
@@ -146,7 +146,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       ink.line([[eye.x - inward * eye.r * 0.7, eye.y + eye.r * 0.7], [eye.x + inward * eye.r * 0.45, eye.y], [eye.x - inward * eye.r * 0.7, eye.y - eye.r * 0.7]], { color: ink0 });
     } else if (kind === "side") {
       // ¬_¬ — a sideways glance. Half-lidded (a lower arc plus a lid line) but with the pupil pushed to one side (which side is per individual)
-      const dir = spec.proportions.wobbleSeed % 2 ? 1 : -1;
+      const dir = spec.proportions.hand % 2 ? 1 : -1;
       const lidY = eye.r * 0.3;
       const a0 = Math.asin(lidY / eye.r);
       // What the lower arc encloses is the white — the arc starts at both ends of the lid line and goes round the bottom, so filling it whitens only below that line.
@@ -199,7 +199,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
       fills.contour(path, { color: dark });
       // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil
-      const gaze = (spec.proportions.wobbleSeed % 5 - 2) * 0.06;
+      const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
       paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true });
       // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
       fills.line(lidLine, { color: dark });
@@ -273,7 +273,7 @@ export function drawFace2(ink, fills, spec, box, eyes) {
 // Being drawn on the face layer (2.4) they sit above the outline, ears and hat, and reach out onto the paper. They shift along with a face turn
 export function drawWhiskers(ink, spec, box) {
   if (spec.species !== "cat") return;
-  const roll = (spec.proportions.wobbleSeed % 97) / 97;
+  const roll = (spec.proportions.hand % 97) / 97;
   const len = box.headRx * (0.42 + roll * 0.5);
   const wy = box.headCy - box.headRy * 0.3;
   for (const side of [-1, 1]) {
@@ -350,7 +350,7 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
 
 // Dog muzzle dimensions and color. The nose slot decides the muzzle's form — the same slot gives a per-species variant.
 // The nose (drawNose) and the mouth (drawMouth, mouth.js) look at the same dimensions — the mouth sits above the muzzle and below the nose.
-//   fill the muzzle color — per individual (wobbleSeed, no rng): light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (0.55× the fur) 25%. A muzzle is **color only**, with no outline (a color patch)
+//   fill the muzzle color — per individual (hand, no rng): light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (0.55× the fur) 25%. A muzzle is **color only**, with no outline (a color patch)
 //   ink  the color of **the line drawn on** the muzzle (the mouth) — split by the muzzle's luminance (black if light, light ink if dark). The nose is an object and always black, but on a dark muzzle it gets a light rim
 export function muzzleGeometry(spec, box) {
   const kind = spec.parts.nose;
@@ -358,7 +358,7 @@ export function muzzleGeometry(spec, box) {
   const mh = kind === "long" ? 0.28 : kind === "wedge" ? 0.3 : 0.36;
   const my = box.headCy - box.headRy * (kind === "long" ? 0.48 : 0.42);
   const nr = kind === "hook" ? 0.05 : kind === "dot" ? 0.032 : 0.04;
-  const roll = spec.proportions.wobbleSeed % 100;
+  const roll = spec.proportions.hand % 100;
   const fill = roll < 45 ? MARKS.muzzle : roll < 75 ? shade(spec.palette.skin, 1.12) : shade(spec.palette.skin, 0.55);
   const dark = luminance(fill) < 120;
   return { my, rx: box.headRx * mw, ry: box.headRy * mh, noseY: my + box.headRy * 0.16, noseR: nr, fill, dark, ink: dark ? "#e9e3d5" : spec.palette.ink };
@@ -488,9 +488,9 @@ export function drawNose(ink, fills, spec, box, eyes) {
     const tilt = 0.5;   // rad — the angle of the outward tilt
     for (const side of [-1, 1]) {
       const cx = side * s.gap;
-      const seed = blobPath(0, 0, s.rx, s.ry, { lumps: 3, amount: 0.08, noise: null, taper: 0.55 });   // built about the origin, then rotated and moved
+      const pip = blobPath(0, 0, s.rx, s.ry, { lumps: 3, amount: 0.08, noise: null, taper: 0.55 });   // built about the origin, then rotated and moved
       const a = -side * tilt, cos = Math.cos(a), sin = Math.sin(a);
-      paintPart(fills, spec, seed.map(([x, y]) => [cx + x * cos - y * sin, s.cy + x * sin + y * cos]), ink0, { own: true });
+      paintPart(fills, spec, pip.map(([x, y]) => [cx + x * cos - y * sin, s.cy + x * sin + y * cos]), ink0, { own: true });
     }
   } else {
     // long — a long nose coming down from the forehead

@@ -128,7 +128,7 @@ When attaching a new layer to the head, settle on one depth in this table and wr
 
 ## Jitter phase (variant)
 
-`drawCreature(spec, variant)` seeds its rng from `wobbleSeed ^ (variant × 0x9e3779b9)`.
+`drawCreature(spec, variant)` keys its rng from ``hand` ^ (variant × 0x9e3779b9)`.
 The 3 variants share the composition and differ only in wobble. Brows, mouth, limbs and the tail have no variants (static jitter is enough).
 
 ## Pose and ink — two axes

@@ -1,6 +1,6 @@
 # guidelines — menagerie working rules
 
-This lab splits into two axes: **character** (what it is — everything static that the seed decides) and
+This lab splits into two axes: **character** (what it is — everything static that the roll decides) and
 **motion** (how it moves — everything dynamic that the clock decides). The code and the documents both
 follow that split. It is not per-part animation.
 
@@ -11,7 +11,7 @@ point is the root [`CLAUDE.md`](../CLAUDE.md)).
 | --- | --- | --- | --- |
 | **Character** | `src/character/` | [character/types.md](character/types.md) species, archetypes, proportions, palette, constraints<br>[character/parts.md](character/parts.md) 28 slots, 207 parts | [character/rules.md](character/rules.md) the procedure for adding a part, separating form from motion, distribution standards |
 | **Motion** | `src/motion/` | [motion/catalog.md](motion/catalog.md) the state object, per-species parameters, every motion | [motion/rules.md](motion/rules.md) classifying rhythm/events/states, rng order, measuring firing |
-| Shared | `src/scene/` `src/stroke.js` `src/shape.js` `src/medium/` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) seeds and files — what a seed promises, the gates<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
+| Shared | `src/scene/` `src/stroke.js` `src/shape.js` `src/medium/` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) rolls and files — what a roll promises, the gates<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
 
 ## The seven screens
 
@@ -53,13 +53,13 @@ Looking good to the eye and being right are different things. There is a tool fo
 
 ## In one line each
 
-- A creature is its JSON; a seed only rolls one. The same seed gives the same roll within one version of the
-  code and promises nothing across versions — anything worth keeping is a file. No screen shows a seed or
+- A creature is its JSON; a roll only rolls one. The same roll gives the same roll within one version of the
+  code and promises nothing across versions — anything worth keeping is a file. No screen shows a roll or
   takes one: a board is rolled on load, a NEW button rolls another, and a file remembers
 - Character is slots (form) only; motion is rhythm/events/states only. Hands behind the back is not a form
   but a pose (motion)
 - Looking good to the eye and having the right distribution and frequency are different things. If you
   changed it, count it
-- The editor is the one screen whose creature is **not** something a seed could have made. It edits a spec
+- The editor is the one screen whose creature is **not** something a roll could have made. It edits a spec
   directly and reports the rules instead of applying them. What it saves is the spec, and the board's pin
-  opens that same file into a cell. Nothing in it touches rng; the generator remains the only thing a seed drives
+  opens that same file into a cell. Nothing in it touches rng; the generator remains the only thing a roll drives

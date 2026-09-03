@@ -59,7 +59,7 @@ Adding one part means touching three places. Keep to the order.
 Adding an option to an existing slot and creating a slot itself carry different weight.
 A new slot goes at **the end** of `SLOTS` in `slots.js` and is appended to `LATE_SLOTS` too — `makeCreature`
 draws it at the very end, so existing boards (parts, colors, proportions) are preserved.
-Insert it into the middle of `SLOTS` and **every existing seed breaks.**
+Insert it into the middle of `SLOTS` and **every existing roll breaks.**
 Read [../determinism.md](../determinism.md) first.
 
 ## A new archetype
@@ -155,6 +155,6 @@ is the default (judging form); B for motion.
 
 `node scripts/drawdiff.mjs [ref]` — hashes the working tree's drawing (11 layers × 2 boil sets, limbs, tail
 bones, brow/mouth states) sketch by sketch against a git ref (HEAD by default), over
-**every slot value × species × seed**. A refactor that splits files or turns branches into a table is not done
+**every slot value × species × roll**. A refactor that splits files or turns branches into a table is not done
 until this is 0 — the gallery is the eye and this is the number. In a commit that **changes** form, a difference
 is correct (check the list to see which slot values changed).

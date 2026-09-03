@@ -23,7 +23,7 @@ const INK = INKS[0];
 const BLUSH = MARKS.blush;   // the blush/tongue pink
 const CARD = "#f2ecdf";    // the figure card's back (styles.css .how figure) — the pencil's bites take it here, paper on the board
 
-// A different hand on every load — the page rolls its own noise the way a creature rolls its wobbleSeed, so a reload draws the
+// A different hand on every load — the page rolls its own noise the way a creature rolls its hand, so a reload draws the
 // same figures again in another hand. Nothing here is compared against anything, so nothing needs it pinned
 const noise = makeNoise(makeRng((Math.random() * 0xffffffff) >>> 0));
 

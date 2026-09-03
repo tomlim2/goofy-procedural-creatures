@@ -49,7 +49,7 @@ proportions. The palette is one set of every colour the vocabulary knows, and ev
 hair, the ink — picks from all of it; the generator's per-key pools are the board's odds, not this screen's
 limits. A species' forbidden values and the constraint pass
 are reported under NOTES and **not** applied, so it can make creatures the board never will — which is also why
-SAVE writes the whole spec as JSON rather than a seed. OPEN takes one back — the same file the board's pin
+SAVE writes the whole spec as JSON rather than a roll. OPEN takes one back — the same file the board's pin
 opens into a cell, and the same one a cell's SAVE writes.
 
 `/how.html` — **the medium page**. The legend of how everything is drawn, on three axes: the goofy outlines (what a contour is drawn
@@ -104,28 +104,28 @@ The board itself is never in the address — it is rolled fresh, and kept as a f
 
 ## Structure
 
-Two axes: **character** (what it is) and **motion** (how it moves). Character is everything static that the seed decides and
+Two axes: **character** (what it is) and **motion** (how it moves). Character is everything static that the roll decides and
 motion everything dynamic that the clock decides. It is not per-part animation. What joins the two is the scene's rig.
 
 | Where | What it does | Docs |
 | --- | --- | --- |
-| `src/rng.js` | The seeded PRNG (mulberry32), weighted draws, 1D value noise | [determinism](guidelines/determinism.md) |
+| `src/rng.js` | The repeatable PRNG (mulberry32), weighted draws, 1D value noise | [determinism](guidelines/determinism.md) |
 | `src/stroke.js` | The lines — strokes → ribbon geometry: `pencil()` (the board's one pen, the reference's line, its numbers in `PENCIL`), the fill-up, the scribble, hatching; `buildGeometry` (several sketches → one geometry). A `Sketch` draws the three concepts — the lines by role (`contour()`, `line()`, `mark()`), `paint()`, `fur()` — delegating to `medium/` | [drawing](guidelines/drawing.md) |
 | `src/shape.js` | The shapes — `blobPath` (a lumpy closed curve: superellipse, taper, noise or two sines — never a perfect ellipse), `arcPath`, `crumple` (a hand-written polygon with the ruler taken out) | [drawing](guidelines/drawing.md) § nothing raw |
 | **`src/medium/`** | The three concepts, each a table and a procedure over a sketch. `outlines.js` — `GOOFY_OUTLINES` (the kinds, named pen + hold: PENCIL_STROKE, PENCIL_SLINE, PENCIL_BROKEN), `BOARD_LINES` (the switch: what each role — contour, line, mark — is drawn with) + `contourWith`/`lineWith`/`markWith`. `materials.js` — `GOOFY_MATERIALS` (FLAT, GRAPHITE, INK, OIL, CHARCOAL: a base color and its texture), `VALUES` (black · hatch · scribble · stipple · light) + `paintWith` (the pattern and the decals in the base, the texture at a value step, every mark clipped to the contour). `fur.js` — `GOOFY_FUR` (SCRIBBLE) + `furWith`. A part names them (the board: FLAT, PENCIL, SCRIBBLE) instead of picking techniques and widths; everything a creature fills goes through `paintPart` (`draw/body.js`) | [drawing](guidelines/drawing.md) |
 | `src/color.js` | Hex color utilities — linear conversion (`hexToRgb`), luminance (`luminance`, `isDark`), tones (`shade`). Character and drawing share them | [drawing](guidelines/drawing.md) § colors |
-| **`src/character/`** | What the seed decides. `vocabulary/` (slots, species, archetypes, palette) `spec.js` (seed→spec) `draw/` (spec→strokes: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
+| **`src/character/`** | What the roll decides. `vocabulary/` (slots, species, archetypes, palette) `spec.js` (roll→spec) `draw/` (spec→strokes: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | What the clock decides. `table.js` (per-species parameters) `rhythm.js` (standing) `events.js` (intermittent) `states.js` (held — including the base states idle/sleep/walk) `actions.js` (idle and actions — arm, body and quad layers) `emoji.js` (emoji animation — the trigger layer) `ease.js` (curve shapes — envelopes and following, all eased in and out) `index.js` (assembly in a fixed rng order) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js` (geometry → hierarchy) `animate.js` (state → rig) `paper.js` (the paper — one plane, one GLSL fragment: the board's only shader) `post.js` (what is drawn over the finished board — the same sheet again, on top) `mesh.js` (meshes and the shared GPU materials) `emoji.js` (glyph shapes) `index.js` (the scene, the loop, regen) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
 | `src/export.js` | Screen → PNG. Puts the WebGL canvas onto a 2D canvas and lays a signature (the name) on top to download. It knows nothing about the scene — it takes a canvas already drawn | |
 | `src/main.js` · `src/control.js` · `src/ui.js` | The entry point. `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the loop — a fixed 24 ticks a second, `tick.js`; shared with gallery, audit and the medium page) | |
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
-| `src/editor.js` · `editor.html` | The editor — one working spec edited by hand, saved and opened as JSON. The only screen whose creature need not be a seed's | [determinism](guidelines/determinism.md) |
+| `src/editor.js` · `editor.html` | The editor — one working spec edited by hand, saved and opened as JSON. The only screen whose creature need not be a roll's | [determinism](guidelines/determinism.md) |
 | `src/pixeldiff.js` · `pixeldiff.html` | The pixel diff — the working tree against a git ref, rendered on the same GPU, the differing pixels counted per creature | [determinism](guidelines/determinism.md) |
 | `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state, and whether a quad's tail shows at rest and raised | [character/rules](guidelines/character/rules.md) |
 | `src/how.js` · `how.html` | The medium page — the goofy outlines, the goofy materials and the goofy fur (balls generated from the tables), the shapes, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
-| `guidelines/` | The catalog and rules for the two axes, plus the performance, seed and drawing rules. **Read before changing anything** | [README](guidelines/README.md) |
+| `guidelines/` | The catalog and rules for the two axes, plus the performance, roll and drawing rules. **Read before changing anything** | [README](guidelines/README.md) |
 | `reference/` | What it was made from, and what was and was not taken | [README](reference/README.md) |
 | `scripts/` | § Scripts below | |
 
@@ -139,7 +139,7 @@ node scripts/census.mjs --check        # violations only (exit 1)
 node scripts/snapshot.mjs before       # before a refactor — records specs, geometry and 60 s motion trajectories
 node scripts/snapshot.mjs after        # after — diff 0 means behaviour is unchanged
 
-node scripts/drawdiff.mjs [ref]        # for drawing refactors — compares the working tree against a git ref (HEAD by default) over every slot value × species × seed. 0 means the drawing is unchanged
+node scripts/drawdiff.mjs [ref]        # for drawing refactors — compares the working tree against a git ref (HEAD by default) over every slot value × species × roll. 0 means the drawing is unchanged
 ```
 
 ## The layers that make variety
@@ -182,5 +182,5 @@ becomes a ribbon mesh.
   550 draw calls and 0.8 ms/frame of render JS for 35 creatures. How to measure it and the rules are in [guidelines/performance.md](guidelines/performance.md)
 - **The module cache** — `serve.mjs` appends `?v=` to relative imports. `Cache-Control: no-store` alone does not clear
   the browser's ES module map, so an edited file sometimes still runs the previous code
-- **Seeds and files** — a creature is its JSON; a seed only rolls one, and promises the same roll within one version of the code only.
+- **Rolls and files** — a creature is its JSON; a roll only rolls one, and promises the same roll within one version of the code only.
   Keep a change to the generator where it was made (a new slot on the end of `LATE_SLOTS`, no rng in `applyConstraints`) so `drawdiff` can read it ([guidelines/determinism.md](guidelines/determinism.md))

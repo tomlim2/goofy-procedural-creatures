@@ -19,13 +19,13 @@ import { drawEyes, drawFace2, drawNose, drawEyewear, drawWhiskers } from "./char
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng } from "./rng.js";
 import { sketchMesh, disposeGroup } from "./scene/mesh.js";
-import { randomSeed } from "./ui.js";
+import { randomRoll } from "./ui.js";
 
 const COLS = 7, ROWS = 5;
 const canvas = document.getElementById("stage");
 const report = document.getElementById("report");
 const statusLabel = document.getElementById("status");
-let seed = randomSeed();
+let roll = randomRoll();
 
 const scene = createScene(canvas);
 
@@ -43,7 +43,7 @@ const STATES = {
 const minPixels = (headPx) => Math.max(3, Math.round(headPx * 0.04));
 
 function run() {
-  const specs = makeGrid(seed, COLS * ROWS, COLS, null);
+  const specs = makeGrid(roll, COLS * ROWS, COLS, null);
   scene.build(specs, COLS);
   scene.setBind(true);
   scene.update(0);
@@ -110,7 +110,7 @@ function audit() {
     const box = layout(spec);
     const eyes = eyeGeometry(spec, box);
     const kinds = facePartKinds(spec);
-    const noise = makeNoise(makeRng(spec.proportions.wobbleSeed >>> 0));
+    const noise = makeNoise(makeRng(spec.proportions.hand >>> 0));
     // Parts baked into a shared frame (static eyes, cheeks, nose, eyewear) get their own temp mesh from the same drawing function,
     // and only the temp mesh is toggled while the original frame stays hidden
     const temp = [];
@@ -221,9 +221,9 @@ function audit() {
   return { violations, text: lines.join("\n") };
 }
 
-const reseed = () => { seed = randomSeed(); run(); };
-document.getElementById("reseed").addEventListener("click", reseed);
-window.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "r") reseed(); });
+const reroll = () => { roll = randomRoll(); run(); };
+document.getElementById("reroll").addEventListener("click", reroll);
+window.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "r") reroll(); });
 window.addEventListener("resize", () => scene.resize());
 scene.resize();
 run();

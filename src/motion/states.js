@@ -121,7 +121,7 @@ export function stepQuadAction(s, t, rng, M) {
 }
 // The base state (mode) — what state an individual is in right now: idle (standing) · sleep (lying down asleep). walk and run will join here.
 // The action layers (arm, body, quad) stack on top of this, and while asleep actions, looking and startle all rest. table.js modes/modeHold.
-// A species with only one state uses no rng (preserving human and imp seeds).
+// A species with only one state uses no rng (preserving human and imp rolls).
 export function initMode(rng, M) {
   const pool = M.modes || [["idle", 1]];
   if (pool.length < 2) return { mode: pool[0][0], next: Infinity };

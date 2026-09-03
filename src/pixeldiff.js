@@ -8,11 +8,11 @@
 
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { makeGrid } from "./character/index.js";
-import { randomSeed } from "./ui.js";
+import { randomRoll } from "./ui.js";
 
 const COLS = 7, ROWS = 5;
 const params = new URLSearchParams(window.location.search);
-let seed0 = randomSeed();
+let roll0 = randomRoll();
 const BOARDS = Math.max(1, Math.min(20, Number(params.get("boards")) || 4));
 const TOL = Math.max(0, Number(params.get("tol")) || 4);   // a channel has to move by more than this (0–255) for a pixel to count
 
@@ -44,14 +44,14 @@ for (const s of [tree, base]) {
   s.setBoil(false);  // frame 0 pinned
 }
 
-function boardSeed(i) {
-  return (seed0 + Math.imul(i, 0x9e3779b9)) >>> 0;
+function boardRoll(i) {
+  return (roll0 + Math.imul(i, 0x9e3779b9)) >>> 0;
 }
 
 // Draws one board with one tree and reads its pixels back (bottom row first, as WebGL hands them over) — in the same task as the render,
 // before the drawing buffer is cleared (src/export.js)
-function renderBoard(scene, grid, seed) {
-  const specs = grid(seed, COLS * ROWS, COLS, null);
+function renderBoard(scene, grid, roll) {
+  const specs = grid(roll, COLS * ROWS, COLS, null);
   scene.resize();
   scene.build(specs, COLS);
   scene.update(0);
@@ -139,11 +139,11 @@ function run() {
   report.textContent = "drawing…";
   let i = 0;
   const step = () => {
-    const seed = boardSeed(i);
-    const t = renderBoard(tree, makeGrid, seed);
-    const b = renderBoard(base, baseMod.makeGrid, seed);
+    const roll = boardRoll(i);
+    const t = renderBoard(tree, makeGrid, roll);
+    const b = renderBoard(base, baseMod.makeGrid, roll);
     if (t.W !== b.W || t.H !== b.H) throw new Error(`the two boards differ in size: ${t.W}×${t.H} vs ${b.W}×${b.H}`);
-    results.push({ seed, tree: t, base: b, diff: compare(t, b) });
+    results.push({ roll, tree: t, base: b, diff: compare(t, b) });
     i += 1;
     report.textContent = `drawing… ${i}/${BOARDS}`;
     if (i < BOARDS) setTimeout(step, 0);   // a timer, not requestAnimationFrame — a background tab stops animation frames and the run would never finish
@@ -205,13 +205,13 @@ viewSeg.addEventListener("click", (event) => {
   view = b.dataset.view;
   refresh();
 });
-function reseed() {
-  seed0 = randomSeed();
+function reroll() {
+  roll0 = randomRoll();
   run();
 }
-document.getElementById("reseed").addEventListener("click", reseed);
+document.getElementById("reroll").addEventListener("click", reroll);
 window.addEventListener("keydown", (event) => {
-  if (event.key.toLowerCase() === "r" && !event.metaKey && !event.ctrlKey) reseed();
+  if (event.key.toLowerCase() === "r" && !event.metaKey && !event.ctrlKey) reroll();
 });
 
 run();

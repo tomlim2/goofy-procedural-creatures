@@ -48,7 +48,7 @@ export function addOption(select, value, label) {
 }
 
 // A 32-bit random roll (only on load and when a NEW button is pressed — the generation path never uses Math.random, guidelines/determinism.md)
-export function randomSeed() {
+export function randomRoll() {
   return (Math.random() * 0xffffffff) >>> 0;
 }
 

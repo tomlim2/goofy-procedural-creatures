@@ -181,10 +181,10 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
   }
   sketch.phase += 5.55;
   const b = bounds(points);
-  // **The texture's seed is the part's own.** The phase alone is the sketch's stroke count, and a part is the *first* thing painted on
+  // **The texture's roll is the part's own.** The phase alone is the sketch's stroke count, and a part is the *first* thing painted on
   // nearly every layer — head, ears, muzzle, hat, body — so they all reached this line at 5.55 and scattered their scratches, dabs and
   // dust to the same numbers in the same places: one stamp repeated down a creature. The part's place and size on the board join it, so
-  // two parts are two seeds. It stays geometry, never the rng, so the seed still decides the drawing and the boil's three frames still
+  // two parts are two rolls. It stays geometry, never the rng, so the roll still decides the drawing and the boil's three frames still
   // differ only in the noise's jitter
   const ph = sketch.phase + b.cx * 31.7 + b.cy * 57.3 + b.r * 13.1;
   const noise = sketch.noise;
@@ -252,10 +252,10 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
     const holdTag = () => { sketch.skinT = markTag ? skinT : NaN; };
     const u = (k) => noise(ph * 0.29 + k * 2.17) * 0.5 + 0.5;   // a number in [0, 1] per k, from the drawing noise — smooth in k
     const h = (k) => hash01(Math.round(ph * 997) + k * 7919);   // a scattered one — neighbours unrelated
-    // **The hand's angle on this part** — a rotation seeded from the part itself, and the one every set the texture lays down turns by.
+    // **The hand's angle on this part** — a rotation keyed from the part itself, and the one every set the texture lays down turns by.
     // The table's angle is the technique's, not the hand's: with it fixed, every part of every creature was ruled in exactly the same
     // direction and the board came out combed. A leg is not met from the side a back is. ±34° is wide enough to see and narrow enough
-    // that graphite still reads as upright hatching. Off the part's seed, never the rng
+    // that graphite still reads as upright hatching. Off the part's roll, never the rng
     const swing = (u(9000) - 0.5) * 1.2;   // ±34°
     // **The light the ink opens with** — the ground watered toward the light ink, which is the tone ink drags its scratches in and now
     // the tone graphite rules and oil dabs in too. Tinted from the **ground** rather than from the part's colour, so a mark stays

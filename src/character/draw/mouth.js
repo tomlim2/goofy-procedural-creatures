@@ -35,8 +35,8 @@ export function mouthPlacement(spec, box) {
   // The open mouth's height — proportional to the head, ending below the nose (swallow the nose and the nose disappears)
   const noseBottom = spec.species === "pup" || spec.parts.nose === "none" ? Infinity : top;
   const openH = Math.max(0.018, Math.min(0.05, box.headRy * 0.22, noseBottom - 0.008 - y));
-  // Position jitter — a biped's mouth is sometimes slightly off to one side (the reference). ±0.1rx from the individual's wobbleSeed, no rng. On a quad it is centred under the nose
-  let x = box.quad ? 0 : ((spec.proportions.wobbleSeed % 11) / 10 - 0.5) * 0.2 * box.headRx;
+  // Position jitter — a biped's mouth is sometimes slightly off to one side (the reference). ±0.1rx from the individual's hand, no rng. On a quad it is centred under the nose
+  let x = box.quad ? 0 : ((spec.proportions.hand % 11) / 10 - 0.5) * 0.2 * box.headRx;
   if (spec.species === "pup") {
     // A dog's mouth is above the muzzle and below the nose — it follows the muzzle's dimensions, not the face proportion (mouthDrop). Overlapping the nose mass makes it invisible
     const m = muzzleGeometry(spec, box);

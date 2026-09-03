@@ -37,7 +37,7 @@ export const SLOTS = {
   // Cat crown ears, dog ears and human/imp side ears all use the same multipliers
   // fold **folds on one side only while the other stands** (which side is per individual) · perk stands on both
   ears: ["none", "round", "roundMid", "roundBig", "pointy", "pointyMid", "pointyBig", "flap", "long", "fold", "foldMid", "foldBig", "perk", "perkMid", "perkBig"],
-  // Noses — four lines (hook a hook · dot a dot · wedge a ∧ · long a long nose) + two nostrils (nostrils, two watermelon seeds) + three areas (bulb a round button nose · broad a wide triangle · box a square).
+  // Noses — four lines (hook a hook · dot a dot · wedge a ∧ · long a long nose) + two nostrils (nostrils, two watermelon rolls) + three areas (bulb a round button nose · broad a wide triangle · box a square).
   // Humans and imps get them as drawn, cats read them through catNose, and dogs read them as a muzzle shape (draw/face.js)
   nose: ["hook", "dot", "wedge", "long", "none", "bulb", "broad", "nostrils", "box"],
   // Cheek and eye-area detail. The reference's tear marks and blush.
@@ -94,7 +94,7 @@ export const SLOTS = {
   // second tool between them. Everything on the head follows `material` — ears, horns, hair, a hat, the muzzle; everything on the body
   // follows this one — the limbs, the hands, the boots, the sleeves, the tail. The **density** is not split: one hand, one pressure
   bodyMaterial: ["same", "graphite", "ink", "oil", "charcoal"],
-  // The **density** — how dark the goofy material draws this creature: **the value step itself**, picked by the seed from the five
+  // The **density** — how dark the goofy material draws this creature: **the value step itself**, picked by the roll from the five
   // (medium/materials.js VALUES: black · hatch · scribble · stipple · light). It used to be a hand (lighter/normal/darker) that moved
   // a step read off the part's colour, which meant a pale creature could never draw black and a black one never light — half the
   // ladder was unreachable. The colour still decides the marks' **tone** (contrast), the step decides how many. Nothing on flat
@@ -115,7 +115,7 @@ export const SLOTS = {
 };
 
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
-// that way the earlier rng consumption is unchanged and existing seeds keep their boards (only the new slot's value is added).
+// that way the earlier rng consumption is unchanged and existing rolls keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
 export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost"];
 

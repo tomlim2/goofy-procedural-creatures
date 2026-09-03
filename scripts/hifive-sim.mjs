@@ -6,7 +6,7 @@
 //     as a hand target: check by number that it reaches)
 //   - the stretch cases — a mover too tall to reach the anchor's height stands close and stretches; counted
 //
-// Usage: node scripts/hifive-sim.mjs [seconds] [seed...]     (default 600 s, seeds 1 7 42 1234)
+// Usage: node scripts/hifive-sim.mjs [seconds] [roll...]     (default 600 s, rolls 1 7 42 1234)
 
 import { makeGrid, motionRig, isGhost } from "../src/character/index.js";
 import { makeClock } from "../src/motion/index.js";
@@ -16,7 +16,7 @@ import { TICK_FPS } from "../src/tick.js";
 
 const args = process.argv.slice(2).map(Number);
 const SECONDS = args[0] || 600;
-const SEEDS = args.length > 1 ? args.slice(1) : [1, 7, 42, 1234];
+const ROLLS = args.length > 1 ? args.slice(1) : [1, 7, 42, 1234];
 const COLS = 7;
 const ROWS = 5;
 
@@ -40,14 +40,14 @@ let allStretch = 0;
 let allContacts = 0;
 let allPairs = 0;
 
-for (const seed of SEEDS) {
-  const specs = makeGrid(seed, COLS * ROWS, COLS);
+for (const roll of ROLLS) {
+  const specs = makeGrid(roll, COLS * ROWS, COLS);
   const items = specs.map((spec, i) => {
     const rig = motionRig(spec);
     return {
       spec,
       motionRig: rig,
-      clock: makeClock(spec.seed, 0, spec.species, rig, isGhost(spec)),
+      clock: makeClock(spec.roll, 0, spec.species, rig, isGhost(spec)),
       baseX: (i % COLS) * CELL_W,
       baseY: -Math.floor(i / COLS) * CELL_H,
       lastState: null
@@ -106,7 +106,7 @@ for (const seed of SEEDS) {
   const fmt = (v) => v.toFixed(3);
   const st = hifives.stats();
   console.log(
-    `seed ${seed}: ${contacts.length} fives in ${SECONDS} s (${fmt((contacts.length * 60) / SECONDS)}/min board, ` +
+    `roll ${roll}: ${contacts.length} fives in ${SECONDS} s (${fmt((contacts.length * 60) / SECONDS)}/min board, ` +
     `${pairs} armed pairs, ${fmt((contacts.length * 60) / SECONDS / Math.max(pairs, 1))}/min/pair) — ` +
     `palm gap mean ${fmt(gaps.reduce((a, b) => a + b, 0) / Math.max(gaps.length, 1))} max ${fmt(gaps.length ? Math.max(...gaps) : 0)}, ` +
     `${stretch} over 0.05 (stretch), ${st.skipped} rounds skipped too-close`
@@ -130,7 +130,7 @@ console.log(
   const items = specs.map((spec, i) => {
     const rig = motionRig(spec);
     return {
-      spec, motionRig: rig, clock: makeClock(spec.seed, 0, spec.species, rig, isGhost(spec)),
+      spec, motionRig: rig, clock: makeClock(spec.roll, 0, spec.species, rig, isGhost(spec)),
       baseX: (i % COLS) * CELL_W, baseY: -Math.floor(i / COLS) * CELL_H, lastState: null
     };
   });

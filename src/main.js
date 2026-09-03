@@ -9,7 +9,7 @@ import * as THREE from "three";
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { boardCells, makeBoard, readCreature, readBoard, creatureJson, boardJson } from "./character/index.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./motion/index.js";
-import { addOption, randomSeed, runLoop, download } from "./ui.js";
+import { addOption, randomRoll, runLoop, download } from "./ui.js";
 import { createControls } from "./control.js";
 import { exportPng } from "./export.js";
 
@@ -37,15 +37,15 @@ let rows = 5;
 let only = null;
 // The roll the cells are filled from. It names a starting spec for each one and has no other say; it is not
 // shown and not in the address — a board worth keeping is a file.
-let baseSeed = randomSeed();
+let baseRoll = randomRoll();
 // The cast: one spec per cell. This is the board.
 let cast = [];
 // Cells a hand has touched — redrawn, walked back, opened from a file. A resize keeps these where they stand
-// and fills the rest again from the base seed.
+// and fills the rest again from the base roll.
 const held = new Set();
 // What each touched cell was before, newest last — BACK walks a cell through them.
 const history = new Map();
-// What the next render owes the cast. "fill" grows a fresh cast from the base seed (a new board, a new
+// What the next render owes the cast. "fill" grows a fresh cast from the base roll (a new board, a new
 // species); "resize" keeps the held cells and fills the rest for the new size; null leaves it as it is.
 let stale = "fill";
 let selected = 0;
@@ -57,14 +57,14 @@ let booted = false;
 // usual rebuild must not run, or it would fill a board over the one just read.
 let quiet = false;
 
-// A fresh cast from the base seed: the fixed lanes, or — for the species preview, a judging mode — one
+// A fresh cast from the base roll: the fixed lanes, or — for the species preview, a judging mode — one
 // species standing 54 to a board.
 function fill(count) {
-  return makeBoard(boardCells(baseSeed, count, columns, only));
+  return makeBoard(boardCells(baseRoll, count, columns, only));
 }
 
 // The same board at another size. A cell a hand has touched stays where it is; every other cell is filled
-// again from the base seed, so the lanes come out right for the new width.
+// again from the base roll, so the lanes come out right for the new width.
 function resized(count) {
   const fresh = fill(count);
   return fresh.map((spec, i) => (held.has(i) && i < cast.length ? cast[i] : spec));
@@ -110,8 +110,8 @@ function syncUrl() {
 }
 
 // A new board: a fresh roll, and the cast let go with it.
-function reseed() {
-  baseSeed = randomSeed();
+function reroll() {
+  baseRoll = randomRoll();
   stale = "fill";
   picked = false;
   render();
@@ -124,7 +124,7 @@ function reseed() {
 function recast() {
   const cell = cast[selected];
   if (!cell) return;
-  setCell(makeBoard([{ seed: randomSeed(), species: cell.species }])[0]);
+  setCell(makeBoard([{ roll: randomRoll(), species: cell.species }])[0]);
 }
 
 // Puts one spec into the picked cell, remembering the one that stood there so BACK can return to it.
@@ -225,7 +225,7 @@ function onFile(input, take) {
   });
 }
 
-document.getElementById("reseed").addEventListener("click", reseed);
+document.getElementById("reroll").addEventListener("click", reroll);
 document.getElementById("pinRedraw").addEventListener("click", recast);
 backButton.addEventListener("click", back);
 document.getElementById("pinOpen").addEventListener("click", () => cellFile.click());
@@ -350,7 +350,7 @@ const controls = createControls({
     apply: (value) => scene.setRegen(value === "on")
   },
   // Species preview. ALL is the fixed lanes, the rest are that species only — for judging color and part
-  // distribution. Either way it is a fresh cast from the base seed: a cell somebody took over would spoil
+  // distribution. Either way it is a fresh cast from the base roll: a cell somebody took over would spoil
   // exactly the count the preview exists to show, so SAVE a board first if it is one to keep.
   species: {
     el: document.getElementById("speciesSeg"), initial: "all", rebuild: true,
@@ -381,7 +381,7 @@ function showJudging() {
 window.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement) return;
   const key = event.key.toLowerCase();
-  if (key === "r") reseed();
+  if (key === "r") reroll();
   if (key === "b") controls.set("pose", controls.value("pose") === "bind" ? "motion" : "bind");
   if (key === "i") controls.set("ink", controls.value("ink") === "boil" ? "still" : "boil");
   if (key === "s") controls.set("live", controls.value("live") === "on" ? "off" : "on");

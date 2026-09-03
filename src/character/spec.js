@@ -1,4 +1,4 @@
-// Seed → creature spec. Where this lab is won or lost.
+// Roll → creature spec. Where this lab is won or lost.
 //
 // Draw the slots by plain even random and around the thirtieth creature you get "the one I just saw".
 // So three layers are stacked.
@@ -26,7 +26,7 @@ function pickSlot(rng, species, archetype, slot) {
 }
 
 // Tidies up combinations that break the drawing when they appear together.
-// Overwriting deterministically rather than re-rolling the random is what keeps seeds reproducible.
+// Overwriting deterministically rather than re-rolling the random is what keeps rolls reproducible.
 // The species forbid table. Reads forbid from species.js and overwrites deterministically (no rng).
 // Restrictions like "no horns on humans" and "a cyclops eye is imps only" all live there — never hardcoded here.
 export function applyForbid(parts, speciesName) {
@@ -36,14 +36,14 @@ export function applyForbid(parts, speciesName) {
   }
 }
 
-// A 0~1 settled by the seed alone — **no rng call**, so it costs nothing from the sequence and the count can
+// A 0~1 settled by the roll alone — **no rng call**, so it costs nothing from the sequence and the count can
 // never move. `n` keeps the call sites apart so two constraints on one creature do not agree by accident.
 // This is what every conditional coin-flip in applyConstraints uses: firing rng only when a condition holds
 // makes the call count depend on that condition, and flipping it shifts every draw after (determinism.md)
-const settled = (seed, n) => (Math.imul((seed ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+const settled = (roll, n) => (Math.imul((roll ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
 
-// It takes no rng: every decision in here is either a fixed overwrite or settled() off the seed
-export function applyConstraints(parts, speciesName, seed) {
+// It takes no rng: every decision in here is either a fixed overwrite or settled() off the roll
+export function applyConstraints(parts, speciesName, roll) {
   // The species forbid table is applied first. It has to come first so the later constraints (antennae removing ears, and so on)
   // do not misfire on a forbidden value.
   applyForbid(parts, speciesName);
@@ -59,13 +59,13 @@ export function applyConstraints(parts, speciesName, seed) {
     if (parts.headgear === "band") short.push("cloud", "hedgehog");
     // **Deterministically, not by re-rolling** — the rule at the top of this file, which this one line used
     // to break. `rng.pick(short)` fired only when the drawn hair was unusable, so the number of rng calls
-    // depended on the hair AND on the headgear; edit either pool and some seeds flip whether it fires, which
+    // depended on the hair AND on the headgear; edit either pool and some rolls flip whether it fires, which
     // shifts every draw after it and hands those individuals a different face, body and palette. Measured
     // three times in one branch — adding a hair value moved 5 creatures in 600, removing two moved 2, adding
-    // a headgear value moved 6 — and every one of them had flipped exactly here. A hash of the seed picks the
+    // a headgear value moved 6 — and every one of them had flipped exactly here. A hash of the roll picks the
     // replacement now: no rng call at all, so the count cannot move whatever the pools do
     if (!short.includes(parts.hair)) {
-      parts.hair = short[Math.floor(settled(seed, 4) * short.length) % short.length];
+      parts.hair = short[Math.floor(settled(roll, 4) * short.length) % short.length];
     }
   }
 
@@ -73,11 +73,11 @@ export function applyConstraints(parts, speciesName, seed) {
   if (parts.hair === "mohawk" || parts.hair === "bun" || parts.hair === "apple" || parts.hair === "appleBig") parts.headgear = "none";
 
   // With antennae there are no ears as well. The silhouette gets messy.
-  if (parts.horns === "antenna" && settled(seed, 1) < 0.75) parts.ears = "none";
+  if (parts.horns === "antenna" && settled(roll, 1) < 0.75) parts.ears = "none";
 
   // An eyepatch covers one eye. Which side is settled here.
   // A cyclops has side 0, so the sentinel for "no patch" must not be 0.
-  parts.patchSide = parts.eyewear === "patch" ? (settled(seed, 2) < 0.5 ? -1 : 1) : 99;
+  parts.patchSide = parts.eyewear === "patch" ? (settled(roll, 2) < 0.5 ? -1 : 1) : 99;
 
   // Angry brows on a closed eye leave the expression unreadable.
   if (["sleepy", "happy", "squeeze", "droop"].includes(parts.eyes) && parts.brow === "angry") parts.brow = "flat";
@@ -92,7 +92,7 @@ export function applyConstraints(parts, speciesName, seed) {
   }
 
   // Eyewear overlaps the eyes, so it often covers the brows.
-  if ((parts.eyewear === "glasses" || parts.eyewear === "goggles") && settled(seed, 3) < 0.6) {
+  if ((parts.eyewear === "glasses" || parts.eyewear === "goggles") && settled(roll, 3) < 0.6) {
     parts.brow = "none";
   }
 
@@ -135,7 +135,7 @@ function makeProportions(rng, archetype, species) {
     armSpread: rng.around(rex ? 0.52 : 1, rex ? 0.12 : 0.25),
 
     // For quad species. Biped species draw the values too. If the number of rng calls
-    // differed by species, seed reproduction would come apart.
+    // differed by species, roll reproduction would come apart.
     bodyLen: rng.around(1, 0.2),
     tailLift: rng.around(0, 1),
 
@@ -145,14 +145,14 @@ function makeProportions(rng, archetype, species) {
 
     // Every individual shakes by a different amount. Some are neat, some are a mess.
     wobble: rng.around(1, 0.55),
-    wobbleSeed: rng.int(0, 100000)
+    hand: rng.int(0, 100000)
   };
 }
 
 // **A ghost collapses to one pale tone.** Skin, cloth, hair, accent and the lizard's second scale all become
 // the same colour, and any pop is dropped — an accent is the opposite of what this is. The tone is picked off
-// wobbleSeed, so the slot costs no rng beyond its own draw at the end of the sequence.
-// The ink is pinned to the **darkest** of the INKS rather than whatever the seed drew: everything else about
+// hand, so the slot costs no rng beyond its own draw at the end of the sequence.
+// The ink is pinned to the **darkest** of the INKS rather than whatever the roll drew: everything else about
 // a ghost is pale and washed out, and the four inks run from luminance 35 to 61 — on the lightest of them the
 // eyes, nose, mouth and brows came out brown-grey on cream and the face lost its grip. Black against pale is
 // the whole read.
@@ -161,13 +161,13 @@ function makeProportions(rng, archetype, species) {
 // slot on a spec it already built — it overrides parts, not the palette, and without this the one slot the
 // board has for a whole-creature look could not be judged in the tool that judges looks
 const GHOST_INK = INKS.reduce((a, b) => (luminance(b) < luminance(a) ? b : a));   // the darkest of the four
-export function ghostPalette(base, kind, wobbleSeed) {
+export function ghostPalette(base, kind, hand) {
   if (!kind || kind === "none") return base;
-  const pick = (Math.imul((wobbleSeed ^ 0x1b873593) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+  const pick = (Math.imul((hand ^ 0x1b873593) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
   // **White, and above the paper.** The board's paper is luminance 233 and this used to be shade(MARKS.white,
   // 0.94~1) — luminance 227~242 — so more than half of all ghosts came out DARKER than the sheet they are drawn
   // on and read as grey blobs rather than as white ones. Tinted the other way instead, the whole band sits clear
-  // of the paper (244~250) and a ghost is white against it whatever the seed drew. It stays a band and not one
+  // of the paper (244~250) and a ghost is white against it whatever the roll drew. It stays a band and not one
   // value so two ghosts side by side are not the same swatch, but the band is narrow: a ghost is a ghost
   const tone = tint(MARKS.white, 0.15 + pick * 0.5);
   return {
@@ -200,11 +200,11 @@ export function ghostInk(kind) { return !kind || kind === "none" ? undefined : G
 // this one has none, where `worry` (the inner ends up) is the very shape of gloom.
 // The replacement comes out of **the pool that individual would have drawn from** — the same four-step
 // resolution as pickSlot, species over archetype over default — so a downcast cat is still drawn like a cat and
-// never lands on an imp's mouth. Deterministic (settled off the seed, no rng): `ghost` is a late slot, so by the
+// never lands on an imp's mouth. Deterministic (settled off the roll, no rng): `ghost` is a late slot, so by the
 // time this runs the sequence is finished and a re-roll here would shift nothing, but a draw is a draw
 const SMILING_MOUTHS = ["smile", "grin", "omega", "three", "blep", "tongue"];
 const DOWNCAST_BROWS = ["none", "flat", "worry"];
-function gloomify(parts, species, archetype, seed) {
+function gloomify(parts, species, archetype, roll) {
   const poolFor = (slot, banned) => {
     const bias = species.bias[slot] || archetype.bias[slot] || DEFAULT_BIAS[slot];
     const kept = (bias ? bias.map(([value]) => value) : SLOTS[slot]).filter((v) => !banned.includes(v));
@@ -212,7 +212,7 @@ function gloomify(parts, species, archetype, seed) {
   };
   const step = (slot, banned, n) => {
     const pool = poolFor(slot, banned);
-    parts[slot] = pool[Math.floor(settled(seed, n) * pool.length) % pool.length];
+    parts[slot] = pool[Math.floor(settled(roll, n) * pool.length) % pool.length];
   };
   if (SMILING_MOUTHS.includes(parts.mouth)) step("mouth", SMILING_MOUTHS, 6);
   if (!DOWNCAST_BROWS.includes(parts.brow)) step("brow", ["angry"], 7);
@@ -222,8 +222,8 @@ function gloomify(parts, species, archetype, seed) {
 // and the sim that gates it
 export function isGhost(spec) { return !!(spec && spec.parts && spec.parts.ghost && spec.parts.ghost !== "none"); }
 
-export function makeCreature(seed, speciesName = "human") {
-  const rng = makeRng(seed);
+export function makeCreature(roll, speciesName = "human") {
+  const rng = makeRng(roll);
   const species = SPECIES.find((s) => s.name === speciesName) || SPECIES[0];
   const archetype = pickArchetype(rng);
 
@@ -232,7 +232,7 @@ export function makeCreature(seed, speciesName = "human") {
     if (LATE_SLOTS.includes(slot)) continue;   // drawn at the very end (below)
     parts[slot] = pickSlot(rng, species, archetype, slot);
   }
-  applyConstraints(parts, species.name, seed);
+  applyConstraints(parts, species.name, roll);
 
   const skin = rng.pick(FILLS);
   const palette = {
@@ -296,13 +296,13 @@ export function makeCreature(seed, speciesName = "human") {
 
   const proportions = makeProportions(rng, archetype, species.name);
 
-  // **Hair colour.** Read out of HAIR_POOL by a hash of wobbleSeed and **not by the rng** — a value the seed
-  // does not draw costs no rng call, so the whole board kept its seeds when this was added
+  // **Hair colour.** Read out of HAIR_POOL by a hash of hand and **not by the rng** — a value the roll
+  // does not draw costs no rng call, so the whole board kept its rolls when this was added
   // (guidelines/determinism.md). It used to be palette.ink, which is why every head wore the same black.
   // A hair that lands within 45 luminance of the head it sits on is stepped away from it: dark hair on an
   // imp's ink head, or a white one on a pale face, is a mass with no edge either way. A colour accent aimed
   // at the hair still wins — that is the accent's whole job
-  const hairRoll = (Math.imul((proportions.wobbleSeed ^ 0x27d4eb2d) >>> 0, 0x9e3779b1) >>> 9) % HAIR_POOL.length;
+  const hairRoll = (Math.imul((proportions.hand ^ 0x27d4eb2d) >>> 0, 0x9e3779b1) >>> 9) % HAIR_POOL.length;
   let hair = HAIR_POOL[hairRoll];
   if (Math.abs(luminance(hair) - luminance(palette.skin)) < 45) {
     // Step along the pool to the first entry that reads against this head. Brightening the colour instead
@@ -321,20 +321,20 @@ export function makeCreature(seed, speciesName = "human") {
   }
   palette.hair = hair;
 
-  // Slots added later. Drawing them here is what keeps the seeds of the earlier parts, colors and proportions (slots.js LATE_SLOTS).
+  // Slots added later. Drawing them here is what keeps the rolls of the earlier parts, colors and proportions (slots.js LATE_SLOTS).
   // The species forbid runs once more — so it applies to these slots too.
   for (const slot of LATE_SLOTS) parts[slot] = pickSlot(rng, species, archetype, slot);
   applyForbid(parts, species.name);
 
   // **A ghost collapses to one tone.** Skin, cloth, hair, accent and the lizard's second scale all become the
   // same colour, and any pop is dropped — an accent is the opposite of what this is. The tone is picked off
-  // wobbleSeed (no rng), so the slot cost one draw at the very end of the sequence and nothing after it moved.
+  // hand (no rng), so the slot cost one draw at the very end of the sequence and nothing after it moved.
   // A **dark** ghost turns its ink light as well: a dark outline on a dark body is no outline at all, and the
   // broken stroke this kind exists for would be invisible. faceInk then follows the board's own rule (head
   // luminance < 120 → light), which is exactly "the face marks in the opposite tone".
   // The goofy material is untouched, so the surface still hatches, dabs or speckles over the flat colour
   const palette0 = { ...palette };            // the palette before the ghost collapse — the gallery re-applies from here
-  Object.assign(palette, ghostPalette(palette0, parts.ghost, proportions.wobbleSeed));
+  Object.assign(palette, ghostPalette(palette0, parts.ghost, proportions.hand));
   // Every line this creature draws is the BROKEN hold. It rides on the spec so each Sketch made for it can
   // take it (stroke.js), which is what keeps it to this creature — BOARD_LINES is the whole board's switch
   const outline = ghostOutline(parts.ghost);
@@ -345,7 +345,7 @@ export function makeCreature(seed, speciesName = "human") {
   // before eyeGeometry below, which the eyewear constraints measure
   if (parts.ghost !== "none") {
     parts.eyes = "hollow";
-    gloomify(parts, species, archetype, seed);
+    gloomify(parts, species, archetype, roll);
   }
 
   // Eyewear constraints that can only be known once the eye positions are settled (after the proportions and the last slots are drawn) — overwritten deterministically (no rng)
@@ -369,7 +369,7 @@ export function makeCreature(seed, speciesName = "human") {
   if (hadPatch && parts.eyewear !== "patch") parts.patchSide = 99;
 
   return {
-    seed,
+    roll,
     outline,
     lineInk,
     palette0,
@@ -390,9 +390,9 @@ export function makeCreature(seed, speciesName = "human") {
   };
 }
 
-// Seed placement for the grid.
+// Roll placement for the grid.
 //
-// Give the seeds as plain base+0, base+1… and archetypes clump, so a whole row
+// Give the rolls as plain base+0, base+1… and archetypes clump, so a whole row
 // ends up looking alike. Each is built ahead of time and re-drawn if it collides with a neighbour.
 // Fixed lanes. From the top: human, cat, dog, imp, rex — and a street of HOUSES as the sixth lane (a 9×6
 // board shows it; houses are not creatures — src/house/index.js). Below that the same order keeps cycling.
@@ -403,38 +403,38 @@ export function laneSpecies(rows) {
   return Array.from({ length: rows }, (_, r) => LANES[r % LANES.length]);
 }
 
-// The seed of the cell at index i. Spreading by a large odd multiplier is what keeps neighbouring cells from
-// landing on neighbouring seeds — plain base+0, base+1… made archetypes clump into rows.
-export function cellSeed(baseSeed, index) {
-  return (baseSeed + index * 2654435761) >>> 0;
+// The roll of the cell at index i. Spreading by a large odd multiplier is what keeps neighbouring cells from
+// landing on neighbouring rolls — plain base+0, base+1… made archetypes clump into rows.
+export function cellRoll(baseRoll, index) {
+  return (baseRoll + index * 2654435761) >>> 0;
 }
 
-// The default cast for a board grown from one base seed: a seed and a species for every cell. Row species are
+// The default cast for a board grown from one base roll: a roll and a species for every cell. Row species are
 // fixed lanes — from the top, human, cat, dog, imp, rex and house cycle row by row. Give only a species name
 // and every row is filled with that species (for the preview: judging colour and part distribution needs one
 // species standing 54 to a board).
 //
-// **This is all a base seed does.** It names a starting spec for each cell and then has no further say: the
-// cell is its spec, and the seed is only where that spec came from (guidelines/determinism.md).
-export function boardCells(baseSeed, count, columns, only = null) {
+// **This is all a base roll does.** It names a starting spec for each cell and then has no further say: the
+// cell is its spec, and the roll is only where that spec came from (guidelines/determinism.md).
+export function boardCells(baseRoll, count, columns, only = null) {
   const rows = Math.ceil(count / columns);
   const rowSpecies = only ? Array(rows).fill(only) : laneSpecies(rows);
   return Array.from({ length: count }, (_, i) => ({
-    seed: cellSeed(baseSeed, i),
+    roll: cellRoll(baseRoll, i),
     species: rowSpecies[Math.floor(i / columns)]
   }));
 }
 
-// A board from an explicit cast. A cell is either a seed with the species to draw it as, or a whole `spec` —
+// A board from an explicit cast. A cell is either a roll with the species to draw it as, or a whole `spec` —
 // one made by hand in the editor, or read back from a file. Nothing on one cell can reach another, which is
 // the point: the same cell draws the same character wherever it sits on the board.
 export function makeBoard(cells) {
   return cells.map((cell) => {
     if (cell.spec) return cell.spec;
-    return cell.species === "house" ? makeHouse(cell.seed) : makeCreature(cell.seed, cell.species);
+    return cell.species === "house" ? makeHouse(cell.roll) : makeCreature(cell.roll, cell.species);
   });
 }
 
-export function makeGrid(baseSeed, count, columns, only = null) {
-  return makeBoard(boardCells(baseSeed, count, columns, only));
+export function makeGrid(baseRoll, count, columns, only = null) {
+  return makeBoard(boardCells(baseRoll, count, columns, only));
 }

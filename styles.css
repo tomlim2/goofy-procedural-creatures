@@ -99,16 +99,9 @@ html, body {
   margin: 0 0 6px;
   font-size: 10px;
   letter-spacing: 0.22em;
-  /* Dimmed via color, not opacity — the seed value sits inside the h2 and has to stay at full ink */
+  /* Dimmed via color, not opacity — what rides inside an h2 (a fold's note) has to stay at full ink */
   color: rgba(43, 39, 36, 0.55);
   font-weight: 600;
-}
-
-/* The seed value rides next to the card title */
-.seed {
-  font-size: 14px;
-  letter-spacing: 0.12em;
-  color: var(--ink);
 }
 
 button {

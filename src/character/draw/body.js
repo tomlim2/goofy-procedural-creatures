@@ -56,7 +56,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const cx = box.bodyCx;
     const cy = (box.legTop + box.bodyTop) / 2;
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
-      lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
+      lumps: 4, amount: 0.1, noise, phase: spec.proportions.hand * 0.02
     });
     fills.paint(path, materialOf(spec, "body"), { color: paintOf(spec, "body"), pattern: patternOf(spec), ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step, the pattern in its base
     // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
@@ -79,7 +79,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     path = [[-w * 0.62, bottom], [-w * 0.62, top], [w * 0.62, top], [w * 0.62, bottom]];
   } else {
     path = blobPath(0, (bottom + top) / 2, w, (top - bottom) / 2, {
-      lumps: 4, amount: 0.12, noise, phase: spec.proportions.wobbleSeed * 0.02
+      lumps: 4, amount: 0.12, noise, phase: spec.proportions.hand * 0.02
     });
   }
 

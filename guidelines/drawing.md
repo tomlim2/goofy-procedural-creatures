@@ -252,7 +252,7 @@ unit, the fine marks come out at half of one there, and the five steps measured 
 materials** — one flat colour to the eye, indistinguishable from FLAT. Coarsening the marks until they could carry a value on their
 own was tried and dropped: it turns a small part into blotches and a face into camouflage. A flat fill never falls under a pixel,
 so the colour carries the value and the marks stay **as fine as the hand would draw them** — the medium, not the tone. The steps
-measure 18~40 apart on a light ground now. **The step is the creature's own**: the `density` slot holds one of the five outright and the seed picks it (`stepOf`), so every
+measure 18~40 apart on a light ground now. **The step is the creature's own**: the `density` slot holds one of the five outright and the roll picks it (`stepOf`), so every
 step is reachable on every creature — a pale skin can be hatched black and a black one grazed light. It used to be read off the
 part's colour and nudged a step by a three-value hand, which meant half the ladder was unreachable: 59% of humans landed on light,
 76% of imps on black, and a third of the hand did nothing at all because the scale had no step left to give. The colour still
@@ -263,14 +263,14 @@ and the body, the pressure does not (`surfaceHand` in `draw/body.js` — the one
 the one place a material is named). The medium page draws each textured
 goofy material as a row of the five steps. Every other fill is FLAT.
 
-One hand, but not one throw of the dice: **a texture's seed is the part's own**, its place and size on the board folded into the
+One hand, but not one throw of the dice: **a texture's roll is the part's own**, its place and size on the board folded into the
 sketch's phase (`paintWith`). Without it the phase was just the sketch's stroke count, and a part is the *first* thing painted on
 nearly every layer — head, ears, muzzle, hat, body all reached the texture at the same number and scattered their scratches, dabs and
-dust to the same values in the same places, so a creature read as one stamp repeated down its parts. The part's seed also gives the
+dust to the same values in the same places, so a creature read as one stamp repeated down its parts. The part's roll also gives the
 hand a **swing** of its own (±34°) off the technique's ruling angle, and it is the rotation every set the texture lays down turns
 by: the angle in the table is the technique's, not the hand's, and with it fixed the whole board came out combed one way. One pencil
 does not meet a leg from the side it meets a back. Oil turns twice over — the part's swing moves the whole knife, and each stroke
-has `spreadEach` of its own on top, because paint laid by hand does not come off a comb. It is geometry, never the rng, so the seed still decides the drawing and the boil's three frames still differ only in
+has `spreadEach` of its own on top, because paint laid by hand does not come off a comb. It is geometry, never the rng, so the roll still decides the drawing and the boil's three frames still differ only in
 the noise's jitter.
 
 The medium page shows each ball's channels under it — the base colour alone, then the texture alone
@@ -329,7 +329,7 @@ its repeat as a diagonal weave. The fragment has no resolution, so the grain is 
 - **Grain** — a cell of 3/512 grain units (the old tile's texel), a uniform ±13/255 per channel, nearest (it never smears).
 - **Blotches** — three octaves of value noise (a third to a whole grain unit, the old discs' size), thinned to the
   darker patches and mixed 7% toward a warm tint (`#968468`), so most of the sheet is clean and nothing repeats.
-- **Seed** — fixed at 7. The paper is the desk, not the creature: NEW BOARD changes the board, not the sheet. The
+- **Roll** — fixed at 7. The paper is the desk, not the creature: NEW BOARD changes the board, not the sheet. The
   hash is an integer one (pcg2d), so every GPU draws the same grain.
 - **Color** — the arithmetic is in sRGB on purpose, as the canvas's was, and the last line converts to linear for
   the renderer's output pass (§ colors go in as linear). It is the one place a color is handled in sRGB, and it
@@ -350,7 +350,7 @@ material, a `press` per value step and a `teeth` tag on every triangle, which at
 what a real sheet does. It costs one full-screen quad and needs no render target, so the frame stays one pass
 and the blending stays on the canvas.
 
-**The fixed few.** Every colour on the board is picked by the seed from a pool, except five: the blush and the tongue's pink,
+**The fixed few.** Every colour on the board is picked by the roll from a pool, except five: the blush and the tongue's pink,
 the white of a tooth and an eye, the light ink a mark takes on a part too dark for the palette's ink, the palest muzzle, a
 heart eye and the sweat drop's blue. They are `MARKS` in `character/vocabulary/palette.js` — they lived as string literals in four files each, so a
 change had four places to miss. The medium page shows them beside the pools.

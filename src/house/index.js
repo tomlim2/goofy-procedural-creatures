@@ -23,16 +23,16 @@ const WINDOWS = ["square", "round", "wide"];
 const HOUSE_MATERIALS = ["graphite", "ink", "oil", "charcoal"];
 const VALUE_STEPS = ["hatch", "scribble", "stipple", "light"];   // never black — a black house swallows its own door
 
-// Seed → house spec. Its own rng stream — houses share nothing with the creature draws
-export function makeHouse(seed) {
-  const rng = makeRng((seed ^ 0x9e3779b9) >>> 0);
+// Roll → house spec. Its own rng stream — houses share nothing with the creature draws
+export function makeHouse(roll) {
+  const rng = makeRng((roll ^ 0x9e3779b9) >>> 0);
   const wall = rng.pick(FILLS);
   const roofPool = [...ACCENTS, ...DARKS.slice(2, 6), POPS[2], POPS[3]];
   const roof = rng.pick(roofPool.filter((c) => c !== wall));
   return {
     kind: "house",
     species: "house",                      // the lane/preview key — the scene branches on kind, nothing else reads it as a species
-    seed,
+    roll,
     archetype: "house-" + rng.pick(ROOFS), // for the grid's neighbour-clash re-draw only (two same roofs apart)
     roof: rng.pick(ROOFS),
     window: rng.pick(WINDOWS),
@@ -51,14 +51,14 @@ export function makeHouse(seed) {
       ink: rng.pick(INKS),
       pop: null                            // the board's pop cap reads this off every occupant
     },
-    proportions: { wobble: rng.around(1, 0.4), wobbleSeed: rng.int(0, 100000) }
+    proportions: { wobble: rng.around(1, 0.4), hand: rng.int(0, 100000) }
   };
 }
 
 // One boil variant of the house — a single layer (fills below, ink above, one mesh in the scene).
 // variant only changes the drawing noise, exactly as a creature's boil does
 export function drawHouse(spec, variant = 0) {
-  const rng = makeRng(((spec.proportions.wobbleSeed + 707) ^ (variant * 0x9e3779b9)) >>> 0);
+  const rng = makeRng(((spec.proportions.hand + 707) ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
   const ink = new Sketch(noise, spec.proportions.wobble);
   const fills = new Sketch(noise, spec.proportions.wobble);
@@ -67,7 +67,7 @@ export function drawHouse(spec, variant = 0) {
   const paint = (sketch, path, color) => paintWith(sketch, path, spec.material.toUpperCase(), { color, value: stepOf(spec.density) });
 
   // The walls — a crumpled box up from the floor
-  const wallPath = crumple([[-w, 0], [-w, h], [w, h], [w, 0]], 0.005, spec.seed % 40);
+  const wallPath = crumple([[-w, 0], [-w, h], [w, h], [w, 0]], 0.005, spec.roll % 40);
   paint(fills, wallPath, spec.palette.wall);
   ink.contour(wallPath, { color: ink0 });
 

@@ -3,7 +3,7 @@
 // An individual owns five colours (palette.js: skin, cloth, hair, accent, and a pop when it has one) and every
 // part is painted from that box, never from a colour of its own. What `paint` adds is the choice of **which**
 // of those a part takes. Unset, a part takes what the drawing always took — the defaults below are exactly
-// what draw/ did before paint existed, so a seed's creature does not move and a generated spec carries no
+// what draw/ did before paint existed, so a roll's creature does not move and a generated spec carries no
 // `paint` at all. The editor writes `spec.paint[part]` only when a hand picks another box.
 //
 // One region per part for now: a part is one colour. Parts that paint more than one thing (a hat with a band,

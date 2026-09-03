@@ -70,7 +70,7 @@ export const HAIRS = [
   "#bdb6ab"  // white
 ];
 // The draw bag — browns and blacks carry the board and the rest is seasoning, the same way FUR_POOL weights
-// its nulls. Read by a hash of wobbleSeed, not by the rng: hair colour was added without moving a single seed
+// its nulls. Read by a hash of hand, not by the rng: hair colour was added without moving a single roll
 export const HAIR_POOL = [
   HAIRS[0], HAIRS[0], HAIRS[0], HAIRS[0],
   HAIRS[1], HAIRS[1], HAIRS[1], HAIRS[1],
@@ -96,7 +96,7 @@ export const SCALES = [
 ];
 
 
-// **The fixed few** — colours that are not drawn from a pool. Every other colour on the board is picked by the seed; these five are
+// **The fixed few** — colours that are not drawn from a pool. Every other colour on the board is picked by the roll; these five are
 // always themselves, because the thing they paint is always itself: a blush is pink, a tooth is white, a mark on a black part is
 // light. They lived as string literals in four files each until they were gathered here
 export const MARKS = {

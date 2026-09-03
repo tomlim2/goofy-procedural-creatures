@@ -45,7 +45,7 @@ function armDims(spec, box) {
 // Returns: [{ sketch, pivot: [x, y], kind: "arm"|"leg", side, index, behind }]
 // variant is the boil frame — only the drawing noise differs; the pivots, joints and shapes are the same in every frame
 export function limbSketches(spec, variant = 0) {
-  const rng = makeRng(((spec.proportions.wobbleSeed + 303) ^ (variant * 0x9e3779b9)) >>> 0);
+  const rng = makeRng(((spec.proportions.hand + 303) ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
   const box = layout(spec);
   const p = spec.proportions;
@@ -438,7 +438,7 @@ export const TAIL_BONES = 8;
 // variant is the boil frame — only the drawing noise differs; the bones, the pivot and the weights are the same in every frame.
 // Returns the skin (sketch — in the pivot's space; sketches is the same as a one-item list, for the check scripts), the bones and weightsOf
 export function tailSketch(spec, variant = 0) {
-  const rng = makeRng(((spec.proportions.wobbleSeed + 404) ^ (variant * 0x9e3779b9)) >>> 0);
+  const rng = makeRng(((spec.proportions.hand + 404) ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
   const box = layout(spec);
   const sketch = new Sketch(noise, spec.proportions.wobble);
@@ -673,15 +673,15 @@ export function tailSketch(spec, variant = 0) {
     const vis = (k) => tVis + k * (1 - tVis);   // k of the VISIBLE tail
     const accent = spec.palette.accent;
     const second = spec.palette.pattern2 || accent;
-    const dh = (n) => (Math.imul((spec.proportions.wobbleSeed ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+    const dh = (n) => (Math.imul((spec.proportions.hand ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
     // The dressing-up's cloth is a POP — the bold palette, one per individual, stepped off a pop that lands
     // too close to the hide to read. Bolder than the accents on purpose: a dressed-up dinosaur is the point.
     // (The per-board pop cap governs whole-part accents — hair, a hat, a skin; a deco is a few strokes)
-    let pop = POPS[(spec.proportions.wobbleSeed >>> 3) % POPS.length];
-    if (Math.abs(luminance(pop) - luminance(fur)) < 35) pop = POPS[((spec.proportions.wobbleSeed >>> 3) + 2) % POPS.length];
+    let pop = POPS[(spec.proportions.hand >>> 3) % POPS.length];
+    if (Math.abs(luminance(pop) - luminance(fur)) < 35) pop = POPS[((spec.proportions.hand >>> 3) + 2) % POPS.length];
     if (deco === "plates") {
       // Little back plates — triangles standing on the tube's upper edge, stegosaur grammar in the second scale
-      const n = 3 + (spec.proportions.wobbleSeed % 3);
+      const n = 3 + (spec.proportions.hand % 3);
       for (let i = 0; i < n; i += 1) {
         const t = vis(0.08 + (i / Math.max(1, n - 1)) * 0.62 + (dh(i * 3 + 1) - 0.5) * 0.05);
         const a = at(t), w = wOf(t);
@@ -719,7 +719,7 @@ export function tailSketch(spec, variant = 0) {
       const nx2 = -a.dy, ny2 = a.dx;   // the tube's up-normal
       // A bow-local point → the sheet: px runs out along the normal (±side), py along the tangent (tipward +)
       const loc = (px, py, side) => [a.x + nx2 * px * side * sz + a.dx * py * sz, a.y + ny2 * px * side * sz + a.dy * py * sz];
-      const style = spec.proportions.wobbleSeed % 4;
+      const style = spec.proportions.hand % 4;
       const droop = (style === 3 ? 0.38 : 0.08) + dh(12) * 0.14;   // the tipward sweep — the wilted bow hangs hard
       const stretch = style === 3 ? 1.3 : 1;                        // …and reaches further
       const wingP = [
@@ -761,7 +761,7 @@ export function tailSketch(spec, variant = 0) {
       // A knit band — the POP alternating with white, worn where the tail clears the hip. The white stripe is
       // what keeps it an object: a colour alone vanished whenever the hide's own rings landed in the same
       // tone. Three to five rings, spread per individual
-      const n = 3 + (spec.proportions.wobbleSeed % 3);
+      const n = 3 + (spec.proportions.hand % 3);
       const span = 0.22 + dh(21) * 0.16;
       for (let i = 0; i < n; i += 1) {
         const t = vis(0.16 + (i / (n - 1)) * span);
@@ -771,7 +771,7 @@ export function tailSketch(spec, variant = 0) {
     } else if (deco === "spikes") {
       // The thagomizer — two or three bone horns at the tail's end, leaning back the way the stegosaur wears
       // them. Bone, not hide: a pale of the teeth's white, inked round
-      const n = 2 + (spec.proportions.wobbleSeed % 2);
+      const n = 2 + (spec.proportions.hand % 2);
       const bone = shade(MARKS.white, 0.97);
       for (let i = 0; i < n; i += 1) {
         const t = vis(0.98 - i * 0.16);

@@ -58,13 +58,13 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
   // The bind pose is a state of the rig and the boil is a hand-drawn material. Different axes, so they switch separately.
   let bindView = false;
   let boilOn = true;
-  // The regen switch. Off by default — form changes only through NEW SEED.
+  // The regen switch. Off by default — form changes only through NEW ROLL.
   let regenEnabled = false;
   // A forced action (the ACTION card). null follows each creature's own schedule. Used to judge one action.
-  // The active arm of an asymmetric action is split on the parity of the seed, so left and right look mixed on the board.
+  // The active arm of an asymmetric action is split on the parity of the roll, so left and right look mixed on the board.
   let forcedAction = null;
   function applyForced(item) {
-    if (item.clock) item.clock.force(forcedAction, item.spec.seed % 2 ? 1 : -1);   // a house has no clock
+    if (item.clock) item.clock.force(forcedAction, item.spec.roll % 2 ? 1 : -1);   // a house has no clock
   }
 
   // A house — a static occupant (src/house/index.js): three boil frames of one layer, no clock, no face,
@@ -81,7 +81,7 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     }
     return {
       static: true, group, frames, boilRanges: [], spec, limbs: [], lastState: null,
-      boilFps: (8 + (spec.seed % 5) * 0.5) / 15, boilOffset: spec.seed % BOIL_FRAMES,
+      boilFps: (8 + (spec.roll % 5) * 0.5) / 15, boilOffset: spec.roll % BOIL_FRAMES,
       baseX: 0, baseY: 0, generation: 0, emojiRoot: new THREE.Group()
     };
   }
@@ -185,11 +185,11 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     columns = cols;
     rows = Math.ceil(specs.length / cols);
 
-    const rng = makeRng(specs[0] ? specs[0].seed : 1);
+    const rng = makeRng(specs[0] ? specs[0].roll : 1);
     noise = makeNoise(rng);
 
     if (!paper) {
-      // The sheet — the board's one shader (paper.js), behind everything. Seed 7, fixed: the paper is the desk, not the creature
+      // The sheet — the board's one shader (paper.js), behind everything. Roll 7, fixed: the paper is the desk, not the creature
       paper = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), makePaperMaterial());
       paper.renderOrder = 0;
       paper.position.z = -1;
@@ -313,8 +313,8 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
   // Regen. The species stays with the slot; only the individual changes.
   function regenerate(index) {
     const old = creatures[index];
-    const nextSeed = (old.spec.seed + (old.generation + 1) * 48271) >>> 0;
-    const spec = makeCreature(nextSeed, old.spec.species);
+    const nextRoll = (old.spec.roll + (old.generation + 1) * 48271) >>> 0;
+    const spec = makeCreature(nextRoll, old.spec.species);
     discard(old);
     const item = buildCreature(spec, noise, clockNow);
     item.generation = old.generation + 1;

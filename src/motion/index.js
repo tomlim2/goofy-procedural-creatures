@@ -1,7 +1,7 @@
 // The per-individual clock. Assembles rhythm (standing), events (intermittent), states (held) and actions.
 //
-// ⚠ The order of rng calls *is* the seed. The init order and update order below are fixed. A new motion goes
-// **at the end** of its block. Reorder them and every existing seed's motion changes
+// ⚠ The order of rng calls *is* the roll. The init order and update order below are fixed. A new motion goes
+// **at the end** of its block. Reorder them and every existing roll's motion changes
 // (guidelines/determinism.md).
 //
 // Every schedule is relative to the birth time (birth).
@@ -40,8 +40,10 @@ export const BIND_STATE = Object.freeze({
 // It solves actions by IK, knows how far the body settles when a quad lies down to sleep, and solves the body tilt and leg angles of a sit for this individual.
 // ghost: this individual is a ghost (character parts.ghost) — it only floats, and has none of the expressions.
 // It is a **table profile** (table.js ghostMotion), built off the species' own, so a ghost cat is still a cat
-export function makeClock(seed, birth = 0, species = "human", rig = null, ghost = false) {
-  const rng = makeRng(seed ^ 0x5bf03635);
+// key: the creature's roll (spec.roll) — the number its rng stream and its fixed phases come off. It is not
+// called roll in here because roll is a motion: the body's roll (rhythm.js initRoll / stepRoll)
+export function makeClock(key, birth = 0, species = "human", rig = null, ghost = false) {
+  const rng = makeRng(key ^ 0x5bf03635);
   const M = ghost ? ghostMotion(MOTION[species] || MOTION.human) : (MOTION[species] || MOTION.human);
 
   // -- init: fixed order --
@@ -120,16 +122,16 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
   // Sit — quads only. The pose is solved once from the rig dimensions (actions.js sitPose). sitK 0~1 blends it with idle (so sitting and rising do not snap)
   const sit = quad && rig && rig.body ? sitPose(rig.body) : null;
   let sitK = mode.mode === "sit" && sit ? 1 : 0;
-  // How much it is walking, 0~1 (easing into the walk state). The step phase is offset per individual — from the seed, with no rng
+  // How much it is walking, 0~1 (easing into the walk state). The step phase is offset per individual — from the roll, with no rng
   const W = M.walk || null;
   let walkK = mode.mode === "walk" && W ? 1 : 0;
-  const walkPhase = ((seed % 97) / 97) * Math.PI * 2;
+  const walkPhase = ((key % 97) / 97) * Math.PI * 2;
   // The float (a ghost) — a steady lift off the floor with a slow drift over it. Its phase is per individual and
-  // comes **from the seed with no rng**, like walkPhase just above: the clock keeps drawing from this stream all
+  // comes **from the roll with no rng**, like walkPhase just above: the clock keeps drawing from this stream all
   // through update(), so an init draw here would shift every schedule after it and re-roll every creature's motion
   const SLOW = M.slow || 1;   // a ghost runs at half speed — one factor on the clock's time (see update)
   const F = M.float || null;
-  const floatPhase = ((seed % 89) / 89) * Math.PI * 2;
+  const floatPhase = ((key % 89) / 89) * Math.PI * 2;
   // **Every ghost hangs at the same height.** One distance for all of them, not a fraction of each build: a row
   // of ghosts should read as a row, and solving the lift off legTop (0.022~0.46 across the board) made the line
   // ragged — the raggedness is what you see, not the meaning behind it. What still varies per individual is the
@@ -137,10 +139,10 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
   // even at the bottom of the drift, and carries the tallest head (1.05) to 1.16, inside the 1.35 cell
   const floatLift = F ? F.lift : 0;
   // How far the knees tuck up, per individual — one ghost hangs with its legs nearly straight and the next has
-  // them folded right up. **From the seed, no rng**, for the same reason the phase is. It goes out as bodyDrop,
+  // them folded right up. **From the roll, no rng**, for the same reason the phase is. It goes out as bodyDrop,
   // the crouch scalar: with the feet off the ground the scene's floor hold is released (animate.js), so the very
   // solve that sinks a standing body into its knees instead pulls the feet up under a floating one
-  const floatFold = F ? F.fold[0] + ((Math.imul((seed ^ 0x6d2b79f5) >>> 0, 0x9e3779b1) >>> 9) / 8388608) * (F.fold[1] - F.fold[0]) : 0;
+  const floatFold = F ? F.fold[0] + ((Math.imul((key ^ 0x6d2b79f5) >>> 0, 0x9e3779b1) >>> 9) / 8388608) * (F.fold[1] - F.fold[0]) : 0;
   // Walking moves it — from home (the middle of the cell, x 0) it walks a little to the left or right, idles there as usual (and may sleep),
   // and the next walk **always** brings it home the way it came. leg = one trip { from, to, start, dur }. The speed is the species' (W.speed, cells/second)
   const trip = { x: 0, from: 0, to: 0, start: -1, dur: 0, dir: 0 };
@@ -606,7 +608,7 @@ export function makeClock(seed, birth = 0, species = "human", rig = null, ghost 
         damp(tailFollow, Math.max(-0.5, Math.min(0.5, -vel * TT.follow * TICK_FPS)), 0.25 * SLOW);   // × ticks per second — the velocity per second
         tailTip += tailFollow.x;
       }
-      const sleepHead = sleepK * 0.32 * (seed % 2 ? 1 : -1);      // the head tilts to one side as it rests
+      const sleepHead = sleepK * 0.32 * (key % 2 ? 1 : -1);      // the head tilts to one side as it rests
       const sleepBob = -0.05 * sleepK;
 
       // Expression states · events

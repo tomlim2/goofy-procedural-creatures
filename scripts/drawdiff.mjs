@@ -1,4 +1,4 @@
-// Before/after comparison for drawing refactors — diffs the working tree's drawing against a git ref (HEAD by default) over **every slot value × species × seed**.
+// Before/after comparison for drawing refactors — diffs the working tree's drawing against a git ref (HEAD by default) over **every slot value × species × roll**.
 //   node scripts/drawdiff.mjs          # compare against HEAD
 //   node scripts/drawdiff.mjs main     # compare against another ref
 //
@@ -54,10 +54,13 @@ try {
     if (!m.ghostPalette || spec.parts.ghost === undefined) return spec;
     const parts = { ...spec.parts };
     if (parts.ghost !== "none") parts.eyes = "hollow";
-    return { ...spec, parts, outline: m.ghostOutline(parts.ghost), palette: m.ghostPalette(spec.palette0 || spec.palette, parts.ghost, spec.proportions.wobbleSeed) };
+    return { ...spec, parts, outline: m.ghostOutline(parts.ghost), palette: m.ghostPalette(spec.palette0 || spec.palette, parts.ghost, spec.proportions.hand ?? spec.proportions.wobbleSeed) };
   };
+  // The ref may predate the rename (a creature's `seed` became its `roll`, `proportions.wobbleSeed` its `hand`);
+  // the working tree's drawing reads the new names, so its side of the spec carries both
+  const modern = (s) => ({ ...s, roll: s.roll ?? s.seed, proportions: { ...s.proportions, hand: s.proportions.hand ?? s.proportions.wobbleSeed } });
   const check = (rawSpec, label) => {
-    const specOld = ghosted(oldM, rawSpec), spec = ghosted(newM, rawSpec);
+    const specOld = ghosted(oldM, rawSpec), spec = ghosted(newM, modern(rawSpec));
     for (const v of [0, 1]) {
       const a = oldM.drawCreature(specOld, v), b = newM.drawCreature(spec, v);
       const ka = layerKeys(a), kb = layerKeys(b);
@@ -94,9 +97,9 @@ try {
   };
   let specDiffs = 0;
   for (const species of ["human", "cat", "pup", "imp", "rex"]) {
-    for (const seed of [11, 2222, 333333]) {
-      const base = oldM.makeCreature(seed, species);
-      if (JSON.stringify(base) !== JSON.stringify(newM.makeCreature(seed, species))) specDiffs += 1;
+    for (const roll of [11, 2222, 333333]) {
+      const base = oldM.makeCreature(roll, species);
+      if (JSON.stringify(base) !== JSON.stringify(newM.makeCreature(roll, species))) specDiffs += 1;
       // A base spec may itself hold a value the working tree no longer has (a removed part) — the tree cannot draw it, so that slot
       // is drawn as the tree's first value instead, noted once. The other slots' comparisons still stand
       const drawable = { ...base, parts: { ...base.parts } };
@@ -111,7 +114,7 @@ try {
         for (const value of values) {
           // A value the working tree no longer has (a removed part) cannot be drawn by it — noted once, not compared
           if (!newM.SLOTS[slot].includes(value)) { onlyOne.add(`only in ${ref}: ${slot}=${value}`); continue; }
-          check({ ...drawable, parts: { ...drawable.parts, [slot]: value } }, `${species}/${seed}/${slot}=${value}`);
+          check({ ...drawable, parts: { ...drawable.parts, [slot]: value } }, `${species}/${roll}/${slot}=${value}`);
         }
       }
     }

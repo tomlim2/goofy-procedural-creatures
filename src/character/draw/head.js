@@ -15,7 +15,7 @@ export function drawHead(ink, fills, spec, box, noise) {
     lumps: p.headLumps,
     amount: p.headLump,
     noise,
-    phase: p.wobbleSeed * 0.01,
+    phase: p.hand * 0.01,
     square: shape.square,
     taper: shape.taper
   });
@@ -145,17 +145,17 @@ export function drawCatEars(ink, fills, spec, box) {
   const rx = box.headRx, ry = box.headRy, cy = box.headCy;
   const ink0 = spec.palette.ink;
   const skin = spec.palette.skin;
-  const seed = spec.proportions.wobbleSeed;
-  const roll = seed % 100;
+  const hand = spec.proportions.hand;
+  const roll = hand % 100;
   // The inner ear — line (a double line) 45% · fill 30% · crease 15% · none 10%. The fill color is per individual, either pink (the same as the nose and blush) or a tone in the same family
   const inner = roll < 45 ? "line" : roll < 75 ? "dark" : roll < 90 ? "notch" : "none";
-  const innerFill = (seed >> 7) % 2 ? blushOf(spec) : shade(skin, isDark(skin) ? 1.5 : 0.62);
+  const innerFill = (hand >> 7) % 2 ? blushOf(spec) : shade(skin, isDark(skin) ? 1.5 : 0.62);
   // The inner line is **a mark drawn on fur**, so it uses face ink — a black line on black fur is lost and invisible (the outline meets the background, so it stays black)
   const innerInk = spec.faceInk || ink0;
   const boxy = headShape(spec).square >= 1.4;   // square and block — slightly inside the corner
   const theta = boxy ? Math.min(def.theta, 0.52) : def.theta;
-  // The ear's own numbers, off the creature's wobbleSeed — geometry, never the rng, like eyeWob in draw/face.js
-  const earHash = (n) => (Math.imul((seed ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
+  // The ear's own numbers, off the creature's hand — geometry, never the rng, like eyeWob in draw/face.js
+  const earHash = (n) => (Math.imul((hand ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
   for (const side of [-1, 1]) {
     const earFill = skin;
     const earInnerInk = innerInk;
@@ -165,12 +165,12 @@ export function drawCatEars(ink, fills, spec, box) {
     const tx = side * ny, ty = -side * nx;
     // The ear axis — half the normal's tilt plus the per-kind opening plus a per-individual left/right difference. A round head opens out, a flat head stands straight
     const normalTilt = Math.atan2(nx * side, ny);
-    const lean = normalTilt * 0.5 + 0.02 + def.lean + ((seed >> (side > 0 ? 3 : 5)) % 3) * 0.02;
+    const lean = normalTilt * 0.5 + 0.02 + def.lean + ((hand >> (side > 0 ? 3 : 5)) % 3) * 0.02;
     const ax = side * Math.sin(lean), ay = Math.cos(lean);
     // The base follows the tangent (to attach to the outline), inset inward. The tip is h along the axis, of width tip. The sides bow inward (−) or outward (+) by bow at their deepest
     const baseAt = (v, inset) => [bx + tx * v - nx * inset, by + ty * v - ny * inset];
     const tipAt = (v) => [bx + ax * def.h + tx * v, by + ay * def.h + ty * v];
-    // One side's wobble — its depth, how many bends it takes and where they sit, all off wobbleSeed. The two
+    // One side's wobble — its depth, how many bends it takes and where they sit, all off hand. The two
     // sides of one ear draw their own (a hand does not repeat itself), and so do the two ears
     const wobOf = (k) => ({
       amp: def.w * (0.07 + earHash(k) * 0.09),
@@ -243,12 +243,12 @@ export function drawPupEars(ink, fills, spec, box) {
   // θ is the polar angle on the ellipse (headRx, headRy), measured from the crown. A filled lobe plus an outline drawn twice. none is nothing.
   // A dog's ear has three colors (guidelines/character/parts.md § dog ears): the **front** face is the dog's own color; the **back** face the same,
   // a shade darker (0.86) — it is the far side; the **inner** face is tender skin — pink (the nose's and the blush's) or the dog's color one step
-  // lighter (mixed 45% toward a pale neutral — never darker, never neon), per individual (wobbleSeed, no rng): a tone 45% · pink 30% · none 25%.
+  // lighter (mixed 45% toward a pale neutral — never darker, never neon), per individual (hand, no rng): a tone 45% · pink 30% · none 25%.
   // Which face shows is the ear's pose: a standing ear (pointy, round, perk) shows its front with the inner patch on it, a hanging ear (flap, long)
   // shows its back, and the folded ear shows all three — the standing root (front, the inner patch on it) and the flap bent over it (back).
   // The folded ear always has its inner patch — the three colors are its design — so its "none" falls to pink or the tone
   const earInk = { color: spec.palette.ink };   // the ears' line — the contour and the folded root's open line alike, at M
-  const innerRoll = spec.proportions.wobbleSeed % 100;
+  const innerRoll = spec.proportions.hand % 100;
   const innerTone = (fur) => (innerRoll < 45 || (innerRoll >= 75 && innerRoll % 2) ? mix(fur, "#f3ece0", 0.45) : blushOf(spec));
   const innerShown = innerRoll < 75;
   const upper = kind === "pointy" || kind === "round" || kind === "fold" || kind === "perk";
@@ -314,8 +314,8 @@ export function drawPupEars(ink, fills, spec, box) {
       const tX = side * ny, tY = -side * nx;
       const nAt = (nu, nv) => [anchor.x + nx * nu + tX * nv, anchor.y + ny * nu + tY * nv];
       const halfW = 0.048 * k;         // the root's half-width (along the tangent)
-      // A folded ear **folds on one side only** — the other is a standing ear (differing left from right is what makes it doglike). Which side folds is per individual (wobbleSeed, no rng)
-      const foldSide = spec.proportions.wobbleSeed % 2 ? 1 : -1;
+      // A folded ear **folds on one side only** — the other is a standing ear (differing left from right is what makes it doglike). Which side folds is per individual (hand, no rng)
+      const foldSide = spec.proportions.hand % 2 ? 1 : -1;
       if (kind === "perk" || side !== foldSide) {
         // The standing ear — **a triangle standing straight** along the normal. The root is generous (so the ear feels seated on the head) and the tip is **round and blunt**
         // (a razor point reads as a horn; wide and low becomes the round ear). Low: about twice the root's half-width — taller (it was 0.155) and it is a fennec's ear

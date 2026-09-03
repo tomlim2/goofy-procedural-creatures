@@ -26,8 +26,8 @@ const sketchHash = (s) => hash([round(s.positions), round(s.colors)]);
 const out = { specs: [], geometry: [], motion: {} };
 
 // 1. specs
-for (const seed of [12345, 555, 99, 31337]) {
-  const g = makeGrid(seed, 50, 7);
+for (const roll of [12345, 555, 99, 31337]) {
+  const g = makeGrid(roll, 50, 7);
   out.specs.push(hash(g));
 }
 
@@ -38,7 +38,7 @@ for (const spec of grid) {
   const d1 = draw.drawCreature(spec, 1);
   const kinds = draw.facePartKinds(spec);
   const entry = {
-    seed: spec.seed,
+    roll: spec.roll,
     body: sketchHash(d.body.ink) + sketchHash(d.body.fills),
     head: sketchHash(d.head.ink) + sketchHash(d.head.fills),
     crownBack: sketchHash(d.crownBack.ink) + sketchHash(d.crownBack.fills),
@@ -68,7 +68,7 @@ for (const species of ["human", "pup", "cat", "imp"]) {
   // The rig description (motionRig) is passed in — motion IK solves hand targets into angles, and knows how far the body settles when a quad sleeps
   const spec = draw.makeCreature(42, species);
   const rig = draw.motionRig ? draw.motionRig(spec) : false;
-  // The ghost flag the scene passes (a ghost only floats — motion/table.js). Seed 42 is no ghost in any species
+  // The ghost flag the scene passes (a ghost only floats — motion/table.js). Roll 42 is no ghost in any species
   // today, so this changes nothing; it is here so the trajectory stays the scene's if that ever stops being true
   const clock = clocks.makeClock(42, 3, species, rig, draw.isGhost ? draw.isGhost(spec) : false);
   const samples = [];

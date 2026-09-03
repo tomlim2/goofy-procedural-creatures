@@ -42,7 +42,7 @@ export function facePartKinds(spec) {
 
 // Bakes one brow or mouth state as an independent Sketch. The scene stands them up as per-state meshes.
 export function facePartSketch(spec, part, kind) {
-  const rng = makeRng((spec.proportions.wobbleSeed + (part === "brow" ? 101 : 202)) >>> 0);
+  const rng = makeRng((spec.proportions.hand + (part === "brow" ? 101 : 202)) >>> 0);
   const noise = makeNoise(rng);
   const sketch = new Sketch(noise, spec.proportions.wobble);
   sketch.outline = spec.outline;

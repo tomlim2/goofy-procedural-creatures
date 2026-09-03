@@ -156,7 +156,7 @@ When it cannot reach, it stretches straight that way (a short arm's salute), and
 
 The rig description comes from character: `armRig(spec)` in `character/draw/limbs.js` → `{ x, y, upper, lower, anchors }`
 (shoulder position, upper and lower arm lengths, and the anchors ground, hip, chestFar, chin and brow — in body coordinates, for the right arm). The scene passes it in with
-`makeClock(seed, birth, species, armRig(spec))`. All of it is static dimensions coming from the spec.
+`makeClock(key, birth, species, armRig(spec))` — key is the creature's roll (spec.roll). All of it is static dimensions coming from the spec.
 
 Laid on top of an action: the arm pendulum (anti-phase to the sway), arms-up on a jump and joint jitter are added to the shoulder angle, and half of that to the elbow.
 The oscillation of a wave or a flap (`osc`) is laid straight onto the rig rotation without easing — through easing, 3~4Hz gets smeared out.
@@ -164,7 +164,7 @@ Going into and out of an action, a 0.35 s envelope fades it so the arm does not 
 The front/back (hands behind the back) switch only happens once the shoulder angle is back within 0.35 rad of the target.
 
 **To look at one action**, pick it from the screen's ACTION card. Every species with that layer keeps doing it (arm actions on bipeds, body actions on
-everyone, quad actions on quads) and the other layers go idle. The active arm of a one-arm action is split left and right on the parity of the seed. IDLE is every layer idle.
+everyone, quad actions on quads) and the other layers go idle. The active arm of a one-arm action is split left and right on the parity of the roll. IDLE is every layer idle.
 `clock.force(action, side)`, `scene.setAction(name)`. Set to AUTO and it follows the schedule (idle plus the occasional action, layers overlapping).
 
 ### Body actions — the layers overlap
@@ -225,13 +225,13 @@ The scene puts the state object's `walkX` (x from home, in cells) and `facing` (
 **a tailed creature faces its walking direction** — the quads and the rex, so the tail always trails the walk (mirrored −1 going right, thinning to paper through 0 and flipping; standing back home it faces left again; a high five's commanded trip never flips — the palm solve aims in world space), while a biped does not flip but
 **looks** the way it walks (the look target goes that way). A forced WALK paces home↔out without a rest.
 
-`walkK` (eased at 0.06 per 60-Hz frame — `approach`, the same seconds at any tick) blends the walking in. The step phase ph = t·2π·hz + a per-individual phase (from the seed) — on a quad the diagonal pairs (0·3 / 1·2)
+`walkK` (eased at 0.06 per 60-Hz frame — `approach`, the same seconds at any tick) blends the walking in. The step phase ph = t·2π·hz + a per-individual phase (from the roll) — on a quad the diagonal pairs (0·3 / 1·2)
 alternate front and back by sin(ph)·leg, and on a biped the two legs alternately open and close (a walk seen head-on). Each step (twice the period) the body lifts by bob and the head by
 half that; a biped leans side to side by sway and swings its arms counter to its legs by arm; and a quad's tail sways with the step (0.12).
 
 **The sleeping pose** (defined for quads only): blended with idle by `sleepK` (eased at 0.03 per 60-Hz frame — `approach`) — the legs fold under the body (front legs +1.35/+1.25, hind legs
 −1.3/−1.2 rad), the body settles to the hem (`rig.legTop`) and flattens (squash), the tail lowers (−0.55), the head tilts to one side (0.32,
-on the parity of the seed) and dips slightly (−0.05), the eyes close (lid 1 — a static eye gets the scene's sleep lid cover plus an arch; a live eye gets the shut line over the lid), and the gaze and face turn go centre and down.
+on the parity of the roll) and dips slightly (−0.05), the eyes close (lid 1 — a static eye gets the scene's sleep lid cover plus an arch; a live eye gets the shut line over the lid), and the gaze and face turn go centre and down.
 Breathing is slow (×0.65) and deep (×1.6). A z emoji every 6 s. Falling asleep and waking are eased, so nothing snaps. Force it with the ACTION card's SLEEP.
 
 **The sitting pose** (quads only, `sitPose(rig.body)` in `actions.js` — solved per individual from the rig dimensions `motionRig().body`): blended with idle by `sitK` (eased at 0.05 per 60-Hz frame, about a second — `approach`) —
@@ -272,7 +272,7 @@ the tail's follow-through with them. The rest belong to sleeping, sitting, walki
 
 **The arms hang and the legs fold.** Nothing about a ghost is held up. Every arm falls back to `ARM_POSES.limp` instead of
 the A-pose — 9° off vertical rather than 30° open, at the same near-full reach, and with no floor clamp, since the whole
-point is that it is off the ground. And the **knees tuck up**, by an amount drawn per individual from the seed, so one
+point is that it is off the ground. And the **knees tuck up**, by an amount drawn per individual from the roll, so one
 ghost hangs with its legs nearly straight and the next has them folded right up (measured 0.14~0.37 of the leg length
 over 68 ghosts). A leg the drawing gave no knee to (a float leg — a foot and nothing to bend) simply hangs.
 
@@ -295,18 +295,18 @@ now reads the hop minus the float, which is unchanged for everything that does n
 | | |
 | --- | --- |
 | the lift | 0.09 world units — the same for every build |
-| the drift | ±25% of the settled lift, one cycle every 3.6 s — a sine, which the easing rule exempts. The phase is per individual **from the seed, with no rng**: the clock keeps drawing from its stream all through `update()`, so an init draw would shift every schedule after it and re-roll every creature's motion |
+| the drift | ±25% of the settled lift, one cycle every 3.6 s — a sine, which the easing rule exempts. The phase is per individual **from the roll, with no rng**: the clock keeps drawing from its stream all through `update()`, so an init draw would shift every schedule after it and re-roll every creature's motion |
 | rising into it | eased in over 2.4 s (`ramp`), so a ghost rises into the air instead of being born already up there. The fold fades in with it, so the tuck happens as the feet leave the floor |
 | the arms | `ARM_POSES.limp` as the rest pose — measured at a widest shoulder of 20°, against the A-pose's 36° and an imp's 78° |
 | the thigh | takes only `item.thighFold` (0.45) of the fold, so the first bone hangs near vertical and the knee does the work. Multiplying the thigh **is** swinging the foot target back about the hip by that fraction of its angle — a two-bone solution rotates rigidly with its target direction, so the knee's interior angle, which depends only on the distance, is untouched. 1 on the ground: a crouch that has to keep its feet planted needs all of it |
-| the legs | the standing rest bend let go the way a jump's `flight` does, then folded by `fold × floatK` — `[0.12, 0.38]` of the leg length, per individual from the seed. **`knee: -1` on every leg** (the scene, not the drawing), so both fold to one side, forward |
+| the legs | the standing rest bend let go the way a jump's `flight` does, then folded by `fold × floatK` — `[0.12, 0.38]` of the leg length, per individual from the roll. **`knee: -1` on every leg** (the scene, not the drawing), so both fold to one side, forward |
 | the feet | `item.soleToFloor` 0 — the ankle stops counter-rotating. Levelling the sole is a **grounded** rule (it is the floor it is being kept level with); in the air it swung the toe out to the far side from the knee, a leg hanging on backwards. Off, the foot keeps the angle it was drawn at against the shin and follows the fold round, toe toward the knee |
 | the speed | `slow` 0.5 — one factor on the clock's time, plus the same on the gaze, the face turn and the tail follow-through |
 | the state | `mode` reads `"float"` |
 
 Measured: over 2160 ghost ticks once risen (5 species), the mode is `float` every tick, `walkX` never leaves 0, `hopY` never drops under the scene's
 0.02 floor release, and all eleven expression channels (happy · angry · emoji · eyeFx · wink · lid · browAlt · mouthAlt · arm action · body action ·
-startle) come out at **0 ticks**. Everything that does not float is byte-identical: 28,800 non-ghost clock ticks (5 species × 4 seeds × 60 s), diff 0.
+startle) come out at **0 ticks**. Everything that does not float is byte-identical: 28,800 non-ghost clock ticks (5 species × 4 rolls × 60 s), diff 0.
 
 ### Quad idle and actions
 
@@ -397,7 +397,7 @@ measured at 7.1% of ticks) and emojis bang · quest · heart · dots.
 
 Every pair of same-row biped neighbours high fives **on its own schedule** — no distance is asked. When a
 pair's time comes (every 300~720 s per pair, its own rng stream; a fresh board's first within 40~300 s), the
-**short-armed one stops where it stands** (the anchor — a dead tie in reach falls to seed parity) and watches;
+**short-armed one stops where it stands** (the anchor — a dead tie in reach falls to roll parity) and watches;
 the **long-armed one hurries over** from wherever it is (the mover — a commanded trip at 2.2× its walk speed,
 past the normal 0.10~0.18 trip cap). **Standing too close already** — less than `minApproach` (0.15 cells) of
 walking left for the mover — **the pair skips that round outright** and draws its next: a five with no
@@ -435,7 +435,7 @@ position; the scene owns the board. A clock obeys one command (`clock.hifive` in
 plant or reach (the mover's hand tracks the meeting point in shoulder terms while it walks), walk to x, and the
 impact moment (the anchor is told when the slap lands; the mover works it out on arrival). Commands consume
 **no rng from any clock's stream** — every schedule keeps stepping underneath — and the pair scheduler's
-randomness is its own per-pair `makeRng` stream seeded from the two specs, so the fives are seed-deterministic
+randomness is its own per-pair `makeRng` stream keyed from the two specs, so the fives are roll-deterministic
 and an isolated clock (the snapshot, the frequency counts) is byte-identical with the feature in place.
 
 The meeting height is the anchor's natural plant, pulled into the intersection of what **both** arms can span
@@ -469,7 +469,7 @@ The lines boiling is a hand-drawn **material**, not something the character does
 ## Adding a new motion
 
 1. Put the per-species parameters in `motion/table.js`. `null` for species without it
-2. Settle the kind — rhythm (`rhythm.js`) / event (`events.js`) / state (`states.js`) — add `initXxx` and `stepXxx` in that file → call it in `motion/index.js` **after the existing order** (insert it before and seeds break)
+2. Settle the kind — rhythm (`rhythm.js`) / event (`events.js`) / state (`states.js`) — add `initXxx` and `stepXxx` in that file → call it in `motion/index.js` **after the existing order** (insert it before and rolls break)
 3. Apply it to the rig in `applyState` in `scene/animate.js`
 4. Count the firing frequency with a 60 s simulation (the command below). Never judge by eye alone
 
