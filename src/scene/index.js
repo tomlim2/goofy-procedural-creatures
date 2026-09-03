@@ -3,6 +3,7 @@
 
 import * as THREE from "three";
 import { Sketch } from "../stroke.js";
+import { MARKS } from "../character/vocabulary/palette.js";   // the hover mark takes the palette's own red (palette.js imports nothing — no cycle)
 import { makeCreature } from "../character/index.js";
 import { makeNoise, makeRng } from "../rng.js";
 import { makePaperMaterial, setGrainScale } from "./paper.js";
@@ -96,7 +97,8 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
   function clear() {
     for (const item of creatures) discard(item);
     creatures = [];
-    setHover(null);
+    hoverIndex = null;
+    dropHoverMark();
     if (ground) {
       disposeGroup(ground);
       scene.remove(ground);
@@ -219,30 +221,63 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
   // The hover mark: a small arrow drawn under a creature's feet, pointing up at it, in the same hand as the
   // ground line — a Sketch, so it wobbles like every other line on the board rather than sitting on top of
   // it as a flat CSS shape. Rebuilt only when the hovered cell changes; null takes it away.
+  // It fades rather than pops: HOVER_FADE seconds each way, eased in and out, on the board's own clock — at
+  // 24 ticks a second that is two or three frames, a softening rather than a fade. A fade-out keeps the mesh
+  // until it has reached nothing, and only then lets it go.
+  const HOVER_FADE = 0.1;
+  const HOVER_INK = 0.95;
   let hoverMark = null;
   let hoverIndex = null;
+  let hoverFade = { from: 0, to: 0, start: 0 };
+  const eased = (p) => p * p * (3 - 2 * p);   // smoothstep — in and out
+  function hoverOpacity(t) {
+    const p = Math.min(1, Math.max(0, (t - hoverFade.start) / HOVER_FADE));
+    return hoverFade.from + (hoverFade.to - hoverFade.from) * eased(p);
+  }
+  function dropHoverMark() {
+    if (!hoverMark) return;
+    disposeGroup(hoverMark);
+    scene.remove(hoverMark);
+    hoverMark = null;
+  }
   function setHover(index) {
     if (index === hoverIndex) return;
+    const current = hoverMark ? hoverOpacity(clockNow) : 0;
     hoverIndex = index;
-    if (hoverMark) {
-      disposeGroup(hoverMark);
-      scene.remove(hoverMark);
-      hoverMark = null;
+    if (index === null || index === undefined || index < 0 || index >= creatures.length) {
+      // Leaving: fade what is there down to nothing; update() disposes it on arrival.
+      hoverIndex = null;
+      hoverFade = { from: current, to: 0, start: clockNow };
+      return;
     }
-    if (index === null || index === undefined || index < 0 || index >= creatures.length) { hoverIndex = null; return; }
+    dropHoverMark();
+    hoverFade = { from: current, to: HOVER_INK, start: clockNow };
     const [x, y0] = slotPosition(index);
     // A solid red arrowhead — just the point, no shaft — filled the way a part is filled and outlined in the
-    // same red with a wobblier pen so the edge reads as drawn. Red so it stands out from every ink on the board.
+    // same red with a wobblier pen so the edge reads as drawn. The red is the palette's own, the heart eye's,
+    // so the mark is drawn from the same box of colours as everything else on the board.
     const sketch = new Sketch(noise, 2.0, 1.6);
-    const red = "#c9403a";
+    const red = MARKS.heart;
     const tip = y0 - 0.05;
     const foot = tip - 0.09;
     const half = 0.07;
     sketch.fill([[x, tip], [x - half, foot], [x + half, foot]], red);
     sketch.line([[x, tip], [x - half, foot], [x + half, foot], [x, tip]], { color: red });
-    hoverMark = new THREE.Mesh(sketch.build(), inkMaterial(0.95));
+    // Its own material, not the shared one: inkMaterial() hands out one cached material per opacity for the
+    // whole board, and a fade that wrote into that would dim every mesh drawn with the same ink.
+    const material = inkMaterial(HOVER_INK).clone();
+    material.userData.shared = false;
+    material.transparent = true;
+    material.opacity = current;
+    hoverMark = new THREE.Mesh(sketch.build(), material);
     hoverMark.renderOrder = 1.5;   // over the ground line, under every creature
     scene.add(hoverMark);
+  }
+  function stepHover(t) {
+    if (!hoverMark) return;
+    const opacity = hoverOpacity(t);
+    hoverMark.material.opacity = opacity;
+    if (hoverFade.to === 0 && opacity <= 0.001) dropHoverMark();
   }
 
   // One slot, swapped for an individual the caller chose. Everything else on the board is left exactly where
@@ -314,6 +349,7 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     if (bindView || forcedAction) hifives.releaseAll();
     else hifives.update(creatures, columns, clockNow, (x, y) => sparks.burst(x, y, clockNow, noise));
     sparks.update(clockNow);
+    stepHover(clockNow);
     renderer.render(scene, camera);
   }
 
