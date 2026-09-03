@@ -94,7 +94,7 @@ function showSelected() {
   const cell = cells[selected];
   if (!cell) return;
   seedLabel.textContent = formatSeed(cell.seed);
-  if (pinSeed) pinSeed.textContent = formatSeed(cell.seed);
+  if (pinSeed && document.activeElement !== pinSeed) pinSeed.value = formatSeed(cell.seed);
   if (cellLabel) cellLabel.textContent = `${cell.species.toUpperCase()} · CELL ${selected}`;
 }
 
@@ -127,7 +127,13 @@ function reseed() {
 function recast() {
   const cell = cells[selected];
   if (!cell) return;
-  const next = { seed: randomSeed(), species: cell.species };
+  setCell({ seed: randomSeed(), species: cell.species });
+}
+
+// Puts one character into the picked cell, remembering the one that stood there so BACK can return to it.
+function setCell(next) {
+  const cell = cells[selected];
+  if (!cell) return;
   if (!history.has(selected)) history.set(selected, []);
   history.get(selected).push(cell);
   overrides.set(selected, next);
@@ -135,6 +141,20 @@ function recast() {
   scene.replace(selected, makeBoard([next])[0]);
   showSelected();
   syncUrl();
+}
+
+// A seed typed at the creature's feet. Read the way the address is read — base 36, and any other text
+// hashed to a seed — so a word works as well as a number. The same seed again is not a change.
+function castSeed(raw) {
+  const cell = cells[selected];
+  if (!cell) return;
+  const trimmed = raw.trim();
+  if (trimmed) {
+    const parsed = parseInt(trimmed, 36);
+    const seed = Number.isFinite(parsed) ? parsed >>> 0 : seedFromString(trimmed);
+    if (seed !== cell.seed) { setCell({ seed, species: cell.species }); return; }
+  }
+  pinSeed.value = formatSeed(cell.seed);
 }
 
 // The cell's previous seed, one step back per press. Landing on the base seed's own character lets the
@@ -175,6 +195,14 @@ const recastButton = document.getElementById("recast");
 if (recastButton) recastButton.addEventListener("click", recast);
 document.getElementById("pinRedraw").addEventListener("click", recast);
 backButton.addEventListener("click", back);
+// Enter commits the typed seed, Escape puts the current one back; focusing selects the whole seed so a new
+// one can be typed straight over it.
+pinSeed.addEventListener("focus", () => pinSeed.select());
+pinSeed.addEventListener("change", () => castSeed(pinSeed.value));
+pinSeed.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") pinSeed.blur();
+  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); pinSeed.blur(); }
+});
 
 // Picking a character. Nothing is picked until a creature is clicked, and a click that lands on no creature
 // lets the pick go. Each cell is projected to the screen — the same projection the parts gallery puts its
@@ -309,6 +337,7 @@ function showJudging() {
 
 // Shortcuts — R seed · B pose · I ink · S regen. They go through the same path as the buttons (set)
 window.addEventListener("keydown", (event) => {
+  if (event.target instanceof HTMLInputElement) return;   // a seed is being typed at a creature's feet
   const key = event.key.toLowerCase();
   if (key === "r") reseed();
   if (key === "b") controls.set("pose", controls.value("pose") === "bind" ? "motion" : "bind");
