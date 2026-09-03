@@ -41,9 +41,11 @@ To go back, press **MENAGERIE** in the header.
 (species and seed fixed). The FIX dropdown (`&fix=legLength:short`) pins one other slot, and `&values=bangs,bun` puts just a few of that slot's
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
-`/editor.html?seed=0z0y9qe&species=cat` — **the editor**. Pick a species, then build one individual by hand,
-a part at a time: open a part and the deck shows only what it has — its form, and for a painted part which of
-the creature's own colours it takes — plus the palette those colours come from and the proportions. A species' forbidden values and the constraint pass
+`/editor.html?seed=0z0y9qe&species=cat` — **the editor**. Pick a species, then build one individual by hand.
+The BASE is what the creature is made of before any part goes on — its colour (the skin) and its material —
+and is not a part. Then a part at a time: open one and the deck shows only what it has — its form, and for a
+painted part which of the creature's own colours it takes — plus the palette those colours come from and the
+proportions. A species' forbidden values and the constraint pass
 are reported under NOTES and **not** applied, so it can make creatures the board never will — which is also why
 SAVE writes the whole spec as JSON rather than a seed. OPEN takes one back.
 

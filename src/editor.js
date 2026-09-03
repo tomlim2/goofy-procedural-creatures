@@ -29,6 +29,7 @@ const speciesSel = document.getElementById("speciesSel");
 const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
 const poseSeg = document.getElementById("poseSeg");
+const baseBox = document.getElementById("base");
 const partsBox = document.getElementById("parts");
 const paletteBox = document.getElementById("palette");
 const proportionsBox = document.getElementById("proportions");
@@ -128,15 +129,36 @@ function field(parent, label) {
 // **The part is the unit.** One part is open at a time, and the deck shows only what that part has: its
 // form, and — for a part that is painted — which of the individual's own colours it takes. Parts that paint
 // more than one thing are inspected one by one before they get a second colour (vocabulary/paint.js).
-// The skin stands in the part list as a part's equal — the first entry — because it is the box most of the
-// creature is painted from, and the palette card it also lives in is folded away by default. Picked, it
-// shows its colours where a part shows its form.
-const SKIN = "skin";
-let part = SKIN;
+// **The base is not a part.** It is what the creature is made of before any part is put on it: its colour
+// is the skin — the box most of the creature is painted from — and its material is the goofy surface
+// (material, and how densely it is laid). Those two slots leave the part list for this card; the palette
+// card, folded away by default, carries the same colour box.
+const BASE_SLOTS = ["material", "density"];
+const baseSels = {};
+function buildBase() {
+  baseBox.innerHTML = "";
+  paletteRow(baseBox, "skin", "colour");
+  for (const slot of BASE_SLOTS) {
+    const row = field(baseBox, slot);
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", slot);
+    for (const value of SLOTS[slot]) addOption(select, value, value);
+    select.addEventListener("change", () => {
+      spec = derive({ ...spec, parts: { ...spec.parts, [slot]: select.value } });
+      render();
+    });
+    row.appendChild(select);
+    baseSels[slot] = select;
+  }
+}
+function renderBase() {
+  for (const slot of BASE_SLOTS) baseSels[slot].value = spec.parts[slot];
+}
+
+const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !BASE_SLOTS.includes(slot));
+let part = PART_SLOTS[0];
 let partSel = null;
-let formRow = null;
 let formSel = null;
-let skinRow = null;
 let paintRow = null;
 let paintStrip = null;
 const PAINT_BOXES = ["skin", "cloth", "hair", "accent", "pop"];
@@ -146,15 +168,11 @@ function buildParts() {
   const pick = field(partsBox, "part");
   partSel = document.createElement("select");
   partSel.setAttribute("aria-label", "Part");
-  addOption(partSel, SKIN, SKIN);
-  for (const slot of Object.keys(SLOTS)) addOption(partSel, slot, slot);
+  for (const slot of PART_SLOTS) addOption(partSel, slot, slot);
   partSel.addEventListener("change", () => { part = partSel.value; renderPart(); });
   pick.appendChild(partSel);
 
-  skinRow = paletteRow(partsBox, "skin", "colour");
-
-  formRow = field(partsBox, "form");
-  const form = formRow;
+  const form = field(partsBox, "form");
   formSel = document.createElement("select");
   formSel.setAttribute("aria-label", "Form");
   formSel.addEventListener("change", () => {
@@ -179,10 +197,6 @@ function buildParts() {
 // is not offered.
 function renderPart() {
   partSel.value = part;
-  const isSkin = part === SKIN;
-  skinRow.hidden = !isSkin;
-  formRow.hidden = isSkin;
-  if (isSkin) { paintRow.hidden = true; paintStrip.innerHTML = ""; return; }
   formSel.innerHTML = "";
   for (const value of SLOTS[part]) addOption(formSel, value, value);
   formSel.value = spec.parts[part];
@@ -278,6 +292,7 @@ function render() {
   speciesSel.value = spec.species;
   seedLabel.textContent = loaded ? "loaded" : formatSeed(spec.seed);
 
+  renderBase();
   renderPart();
   for (const row of document.querySelectorAll(".field.swatches[data-key]")) {
     const key = row.dataset.key;
@@ -341,6 +356,7 @@ function load(text) {
 // ---- wiring ---------------------------------------------------------------------------------------------
 
 for (const s of SPECIES) addOption(speciesSel, s.name, s.name.toUpperCase());
+buildBase();
 buildParts();
 buildPalette();
 buildProportions();
