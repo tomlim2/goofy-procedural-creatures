@@ -128,26 +128,33 @@ function field(parent, label) {
 // **The part is the unit.** One part is open at a time, and the deck shows only what that part has: its
 // form, and — for a part that is painted — which of the individual's own colours it takes. Parts that paint
 // more than one thing are inspected one by one before they get a second colour (vocabulary/paint.js).
-let part = Object.keys(SLOTS)[0];
+// The skin stands in the part list as a part's equal — the first entry — because it is the box most of the
+// creature is painted from, and the palette card it also lives in is folded away by default. Picked, it
+// shows its colours where a part shows its form.
+const SKIN = "skin";
+let part = SKIN;
 let partSel = null;
+let formRow = null;
 let formSel = null;
+let skinRow = null;
 let paintRow = null;
 let paintStrip = null;
 const PAINT_BOXES = ["skin", "cloth", "hair", "accent", "pop"];
 
 function buildParts() {
   partsBox.innerHTML = "";
-  // The skin first, above the parts: it is the box most of the creature is painted from, and the palette
-  // card it also lives in is folded away by default.
-  paletteRow(partsBox, "skin");
   const pick = field(partsBox, "part");
   partSel = document.createElement("select");
   partSel.setAttribute("aria-label", "Part");
+  addOption(partSel, SKIN, SKIN);
   for (const slot of Object.keys(SLOTS)) addOption(partSel, slot, slot);
   partSel.addEventListener("change", () => { part = partSel.value; renderPart(); });
   pick.appendChild(partSel);
 
-  const form = field(partsBox, "form");
+  skinRow = paletteRow(partsBox, "skin", "colour");
+
+  formRow = field(partsBox, "form");
+  const form = formRow;
   formSel = document.createElement("select");
   formSel.setAttribute("aria-label", "Form");
   formSel.addEventListener("change", () => {
@@ -172,6 +179,10 @@ function buildParts() {
 // is not offered.
 function renderPart() {
   partSel.value = part;
+  const isSkin = part === SKIN;
+  skinRow.hidden = !isSkin;
+  formRow.hidden = isSkin;
+  if (isSkin) { paintRow.hidden = true; paintStrip.innerHTML = ""; return; }
   formSel.innerHTML = "";
   for (const value of SLOTS[part]) addOption(formSel, value, value);
   formSel.value = spec.parts[part];
@@ -201,12 +212,12 @@ function renderPart() {
 
 // One row of a palette box's pool — the swatches a key may be picked from. The same row serves PALETTE and
 // the skin at the top of PART, so both show the same choice ringed.
-function paletteRow(parent, key) {
+function paletteRow(parent, key, label = key) {
   const row = document.createElement("div");
   row.className = "field swatches";
   row.dataset.key = key;
   const name = document.createElement("span");
-  name.textContent = key;
+  name.textContent = label;
   row.appendChild(name);
   const strip = document.createElement("div");
   strip.className = "strip";
