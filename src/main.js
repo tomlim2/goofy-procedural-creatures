@@ -281,8 +281,9 @@ document.getElementById("pinCopy").addEventListener("click", copySeed);
 // tighter than the tile so the gap between two creatures counts as nowhere.
 const HIT_W = 0.8;
 const HIT_H = 0.9;
-canvas.addEventListener("pointerdown", (event) => {
-  if (!cells.length) return;
+// The cell under a screen point, or -1 for nowhere.
+function cellAt(clientX, clientY) {
+  if (!cells.length) return -1;
   const box = canvas.getBoundingClientRect();
   const rows = Math.ceil(cells.length / columns);
   const width = columns * CELL_W;
@@ -291,22 +292,32 @@ canvas.addEventListener("pointerdown", (event) => {
     pick.set(x, y, 0).project(scene.camera);
     return [(pick.x * 0.5 + 0.5) * box.width, (-pick.y * 0.5 + 0.5) * box.height];
   };
-  const px = event.clientX - box.left;
-  const py = event.clientY - box.top;
-  let hit = -1;
-  for (let i = 0; i < cells.length && hit < 0; i += 1) {
+  const px = clientX - box.left;
+  const py = clientY - box.top;
+  for (let i = 0; i < cells.length; i += 1) {
     const col = i % columns;
     const row = Math.floor(i / columns);
     const cx = -width / 2 + CELL_W * (col + 0.5);
     const cy = height / 2 - CELL_H * (row + 0.5);
     const [x0, y0] = toScreen(cx - CELL_W * HIT_W / 2, cy + CELL_H * HIT_H / 2);
     const [x1, y1] = toScreen(cx + CELL_W * HIT_W / 2, cy - CELL_H * HIT_H / 2);
-    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) hit = i;
+    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) return i;
   }
+  return -1;
+}
+canvas.addEventListener("pointerdown", (event) => {
+  const hit = cellAt(event.clientX, event.clientY);
   if (hit >= 0) { selected = hit; picked = true; showSelected(); }
   else picked = false;
   placePin();
 });
+// Hovering a creature draws an arrow under its feet, on the canvas (scene.setHover). The scene only redraws
+// when the cell changes, so moving inside one cell costs nothing.
+canvas.addEventListener("pointermove", (event) => {
+  const hit = cellAt(event.clientX, event.clientY);
+  scene.setHover(hit >= 0 ? hit : null);
+});
+canvas.addEventListener("pointerleave", () => scene.setHover(null));
 
 // PNG export — the screen exactly as it is, with only a signature laid on top (seed bottom-left, name bottom-right).
 // scene.draw() is called first and the read happens **in the same task** — WebGL clears the drawing buffer at the end of a frame (src/export.js)

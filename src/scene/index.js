@@ -96,6 +96,7 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
   function clear() {
     for (const item of creatures) discard(item);
     creatures = [];
+    setHover(null);
     if (ground) {
       disposeGroup(ground);
       scene.remove(ground);
@@ -215,6 +216,33 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     layout();
   }
 
+  // The hover mark: a small arrow drawn under a creature's feet, pointing up at it, in the same hand as the
+  // ground line — a Sketch, so it wobbles like every other line on the board rather than sitting on top of
+  // it as a flat CSS shape. Rebuilt only when the hovered cell changes; null takes it away.
+  let hoverMark = null;
+  let hoverIndex = null;
+  function setHover(index) {
+    if (index === hoverIndex) return;
+    hoverIndex = index;
+    if (hoverMark) {
+      disposeGroup(hoverMark);
+      scene.remove(hoverMark);
+      hoverMark = null;
+    }
+    if (index === null || index === undefined || index < 0 || index >= creatures.length) { hoverIndex = null; return; }
+    const [x, y0] = slotPosition(index);
+    // Wobblier than the ground line and a heavier pen, so it reads as an arrow somebody drew, not a glyph.
+    const sketch = new Sketch(noise, 2.2, 2.2);
+    const tip = y0 - 0.06;
+    const ink = "#2b2724";
+    sketch.line([[x + 0.01, y0 - 0.34], [x, tip]], { color: ink });         // the shaft, up toward the feet, a touch off plumb
+    sketch.line([[x - 0.08, tip - 0.1], [x, tip]], { color: ink });         // the head, two strokes
+    sketch.line([[x + 0.08, tip - 0.09], [x, tip]], { color: ink });
+    hoverMark = new THREE.Mesh(sketch.build(), inkMaterial(0.85));
+    hoverMark.renderOrder = 1.5;   // over the ground line, under every creature
+    scene.add(hoverMark);
+  }
+
   // One slot, swapped for an individual the caller chose. Everything else on the board is left exactly where
   // it stands: rebuilding the whole board to change one cell discards all 35 rigs, resets every clock to its
   // birth and drops the high fives' cooldowns, which reads as the board blinking off and on.
@@ -317,5 +345,5 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     renderer.render(scene, camera);
   }
 
-  return { build, replace, update, resize, setRegen, setBind, setBoil, setAction, draw, probe, renderer, scene, camera, creatures: () => creatures };
+  return { build, replace, setHover, update, resize, setRegen, setBind, setBoil, setAction, draw, probe, renderer, scene, camera, creatures: () => creatures };
 }
