@@ -334,6 +334,11 @@ body.how { height: auto; }
    the buttons so it does not sink into the drawing behind it. */
 .pin .pinSeed { padding: 0 8px; height: 26px; width: 9ch; box-sizing: content-box; border: 1px solid var(--line); background: #f2ecdf; font: inherit; font-size: 12px; letter-spacing: 0.08em; color: inherit; text-transform: uppercase; }
 .pin .pinSeed:focus { outline: none; border-color: var(--ink); }
+/* A seed that is not one. The input takes the rust, and the reason hangs under the pin — the pin is fixed, so
+   it is the containing block for the note. */
+.pin .pinSeed[aria-invalid="true"] { border-color: #8c5138; color: #8c5138; }
+.pin .pinError { position: absolute; top: calc(100% + 4px); left: 0; white-space: nowrap; font-size: 11px; letter-spacing: 0.06em; color: #8c5138; }
+.pin .pinError[hidden] { display: none; }
 /* display: flex above beats the browser's own [hidden] rule, which would leave the pin standing at the
    top-left of a fresh board before anything is clicked. Said again here so hidden means hidden. */
 .pin[hidden] { display: none; }

@@ -15,6 +15,7 @@ const statusLabel = document.getElementById("status");
 const cellLabel = document.getElementById("cell");
 const pin = document.getElementById("pin");
 const pinSeed = document.getElementById("pinSeed");
+const pinError = document.getElementById("pinError");
 const backButton = document.getElementById("back");
 const pick = new THREE.Vector3();
 
@@ -94,7 +95,7 @@ function showSelected() {
   const cell = cells[selected];
   if (!cell) return;
   seedLabel.textContent = formatSeed(cell.seed);
-  if (pinSeed && document.activeElement !== pinSeed) pinSeed.value = formatSeed(cell.seed);
+  if (pinSeed && document.activeElement !== pinSeed) { pinSeed.value = formatSeed(cell.seed); seedError(null); }
   if (cellLabel) cellLabel.textContent = `${cell.species.toUpperCase()} · CELL ${selected}`;
 }
 
@@ -143,18 +144,34 @@ function setCell(next) {
   syncUrl();
 }
 
-// A seed typed at the creature's feet. Read the way the address is read — base 36, and any other text
-// hashed to a seed — so a word works as well as a number. The same seed again is not a change.
+// The note under the pin. null clears it.
+function seedError(message) {
+  if (!pinError) return;
+  pinError.textContent = message || "";
+  pinError.hidden = !message;
+  if (pinSeed) {
+    if (message) pinSeed.setAttribute("aria-invalid", "true");
+    else pinSeed.removeAttribute("aria-invalid");
+  }
+}
+
+// A seed typed at the creature's feet. A seed is what formatSeed writes: base 36, letters and digits, and it
+// has to fit in 32 bits — the last one is 1Z141Z3. Anything else is refused with the reason under the input;
+// the address bar's habit of hashing any word into a seed is not repeated here, because a typo would silently
+// become a creature. The same seed again is not a change.
 function castSeed(raw) {
   const cell = cells[selected];
   if (!cell) return;
   const trimmed = raw.trim();
-  if (trimmed) {
-    const parsed = parseInt(trimmed, 36);
-    const seed = Number.isFinite(parsed) ? parsed >>> 0 : seedFromString(trimmed);
-    if (seed !== cell.seed) { setCell({ seed, species: cell.species }); return; }
-  }
-  pinSeed.value = formatSeed(cell.seed);
+  if (!trimmed) { seedError("type a seed"); return; }
+  if (!/^[0-9a-z]+$/i.test(trimmed)) { seedError("letters and digits only"); return; }
+  const parsed = parseInt(trimmed, 36);
+  if (parsed > 0xffffffff) { seedError("too big — 1Z141Z3 is the last seed"); return; }
+  seedError(null);
+  const seed = parsed >>> 0;
+  if (seed !== cell.seed) setCell({ seed, species: cell.species });
+  else pinSeed.value = formatSeed(cell.seed);
+  pinSeed.blur();
 }
 
 // The cell's previous seed, one step back per press. Landing on the base seed's own character lets the
@@ -195,14 +212,16 @@ const recastButton = document.getElementById("recast");
 if (recastButton) recastButton.addEventListener("click", recast);
 document.getElementById("pinRedraw").addEventListener("click", recast);
 backButton.addEventListener("click", back);
-// Enter commits the typed seed, Escape puts the current one back; focusing selects the whole seed so a new
-// one can be typed straight over it.
+// Enter or the return glyph commits the typed seed; Escape puts the current one back. Leaving the input does
+// neither — the text and any note stay until one of those. Focusing selects the whole seed so a new one can be
+// typed straight over it, and typing clears a stale note.
 pinSeed.addEventListener("focus", () => pinSeed.select());
-pinSeed.addEventListener("change", () => castSeed(pinSeed.value));
+pinSeed.addEventListener("input", () => seedError(null));
 pinSeed.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") pinSeed.blur();
-  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); pinSeed.blur(); }
+  if (event.key === "Enter") castSeed(pinSeed.value);
+  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); seedError(null); pinSeed.blur(); }
 });
+document.getElementById("pinEnter").addEventListener("click", () => castSeed(pinSeed.value));
 
 // Picking a character. Nothing is picked until a creature is clicked, and a click that lands on no creature
 // lets the pick go. Each cell is projected to the screen — the same projection the parts gallery puts its
