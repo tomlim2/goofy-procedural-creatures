@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MENAGERIE — parts gallery</title>
-<meta name="description" content="Every value of one slot on the same individual. Species and seed held fixed.">
+<meta name="description" content="Every value of one slot on the same individual. Species held fixed.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -34,7 +34,10 @@
 
   <section class="card">
     <h2>SPECIES</h2>
-    <select id="speciesSel" class="wide" aria-label="Species"></select>
+    <div class="row seg">
+      <select id="speciesSel" aria-label="Species"></select>
+      <button id="reseed" class="narrow" title="Another individual of this species">NEW</button>
+    </div>
   </section>
 
   <section class="card">
@@ -46,11 +49,6 @@
   </section>
 
   <section class="card">
-    <h2>SEED <span class="seed" id="seed">·······</span></h2>
-    <button id="reseed" class="wide">NEW SEED</button>
-  </section>
-
-  <section class="card">
     <h2>POSE</h2>
     <div class="row seg" id="poseSeg" role="group" aria-label="Pose">
       <button data-pose="motion">MOTION</button>
@@ -58,7 +56,7 @@
     </div>
   </section>
 
-  <p class="hint">Same individual, only the slot value changes · FIX pins one other slot · R seed · B pose · values the species forbids are drawn too</p>
+  <p class="hint">Same individual, only the slot value changes · NEW is another individual · FIX pins one other slot · R new · B pose · values the species forbids are drawn too</p>
 </aside>
 
 <noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>

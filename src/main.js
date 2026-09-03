@@ -1,15 +1,14 @@
 // Entry point. Stands a cast up, runs the clock.
 //
 // The board is a **cast** — one spec per cell — and the spec is the truth: it is what is drawn, what SAVE
-// writes and what OPEN reads back. The base seed in the address only fills the cells; a seed is the
-// generator's input, not a creature's name (guidelines/determinism.md). Whatever is done to a cell after
-// that — REDRAW, BACK, a file opened into it — lives in the cast, and the address does not remember it. SAVE does.
+// writes and what OPEN reads back. A fresh board is rolled on load and NEW BOARD rolls another; whatever is
+// done to a cell after that — REDRAW, BACK, a file opened into it — lives in the cast. The address carries the
+// controls and nothing else: it does not remember a board, SAVE does (guidelines/determinism.md).
 
 import * as THREE from "three";
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { boardCells, makeBoard, readCreature, readBoard, creatureJson, boardJson } from "./character/index.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./motion/index.js";
-import { formatSeed, seedFromString } from "./rng.js";
 import { addOption, randomSeed, runLoop, download } from "./ui.js";
 import { createControls } from "./control.js";
 import { exportPng } from "./export.js";
@@ -36,8 +35,9 @@ let columns = 7;
 let rows = 5;
 // Species preview. null means the fixed lanes; a species name means that species only.
 let only = null;
-// **The base seed only fills cells.** It names a starting spec for each one and has no other say.
-let baseSeed = readSeedFromHash() ?? randomSeed();
+// The roll the cells are filled from. It names a starting spec for each one and has no other say; it is not
+// shown and not in the address — a board worth keeping is a file.
+let baseSeed = randomSeed();
 // The cast: one spec per cell. This is the board.
 let cast = [];
 // Cells a hand has touched — redrawn, walked back, opened from a file. A resize keeps these where they stand
@@ -56,13 +56,6 @@ let booted = false;
 // Set while a board file is being opened: the grid and species buttons are moved to match the file, and their
 // usual rebuild must not run, or it would fill a board over the one just read.
 let quiet = false;
-
-function readSeedFromHash() {
-  const raw = window.location.hash.replace(/^#/, "").trim();
-  if (!raw) return null;
-  const parsed = parseInt(raw, 36);
-  return Number.isFinite(parsed) ? parsed >>> 0 : seedFromString(raw);
-}
 
 // A fresh cast from the base seed: the fixed lanes, or — for the species preview, a judging mode — one
 // species standing 54 to a board.
@@ -105,19 +98,18 @@ function note(message) {
   noteTimer = setTimeout(() => { statusLabel.textContent = alive(); noteTimer = null; }, 1500);
 }
 
-// Debug URL — puts the current screen into the address. Controls go in the query (control.js builds it); the
-// seed stays in the hash. A screen built with the buttons can be moved straight into an address, and entering
-// by that address stands the same screen up:
-//   ?grid=1x1&species=cat&pose=bind&ink=still&action=wave#01dkuwa
-// The address makes a board; it does not remember one. A cell that was redrawn or opened from a file is not
-// in it — that is what SAVE is for.
+// Debug URL — puts the current screen's controls into the address (control.js builds the query). A screen
+// built with the buttons can be moved straight into an address, and entering by that address stands the same
+// controls up over a fresh board:
+//   ?grid=1x1&species=cat&pose=bind&ink=still&action=wave
+// The board itself is not in it — that is what SAVE is for.
 function syncUrl() {
   if (!booted) return;
   const query = controls.query();
-  window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}#${baseSeed.toString(36)}`);
+  window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
 }
 
-// A new board: a new base seed, and the cast let go with it.
+// A new board: a fresh roll, and the cast let go with it.
 function reseed() {
   baseSeed = randomSeed();
   stale = "fill";
@@ -165,18 +157,19 @@ function openCell(text) {
   note("OPENED");
 }
 
-// The picked creature as a file — the way one gets from the board into the editor.
+// The picked creature as a file — the way one gets from the board into the editor. Named by species; the
+// browser numbers a second cat.
 function saveCell() {
   const cell = cast[selected];
   if (!cell) return;
-  download(`${cell.species === "house" ? "house" : "creature"}-${formatSeed(cell.seed)}.json`, creatureJson(cell));
+  download(`${cell.species}.json`, creatureJson(cell));
 }
 
 // The whole board as a file. Under LIVE regen the scene swaps individuals on its own clocks, so the cells are
 // read off the scene rather than the cast — what is saved is what is standing there.
 function saveBoard() {
   const standing = scene.creatures().map((item, i) => (item && item.spec) || cast[i]);
-  download(`board-${formatSeed(baseSeed)}.json`, boardJson(columns, standing));
+  download("board.json", boardJson(columns, standing));
 }
 
 // A board file replaces the cast whole. Every cell counts as touched — a resize keeps them all — and the grid
@@ -286,16 +279,13 @@ canvas.addEventListener("pointermove", (event) => {
 });
 canvas.addEventListener("pointerleave", () => scene.setHover(null));
 
-// PNG export — the screen exactly as it is, with only a signature laid on top (seed bottom-left, name bottom-right).
+// PNG export — the screen exactly as it is, with only a signature laid on top (the name, bottom-right).
 // scene.draw() is called first and the read happens **in the same task** — WebGL clears the drawing buffer at the end of a frame (src/export.js)
 const exportButton = document.getElementById("exportPng");
 if (exportButton) {
   exportButton.addEventListener("click", () => {
-    // The signature names the base seed the board was grown from — and says so when cells have been touched,
-    // because that seed alone no longer stands this board back up.
-    const label = formatSeed(baseSeed) + (held.size ? " +CAST" : "");
     scene.draw();
-    exportPng(canvas, { seed: label, mark: "MENAGERIE", name: `menagerie-${formatSeed(baseSeed)}.png` });
+    exportPng(canvas, { mark: "MENAGERIE", name: "menagerie.png" });
   });
 }
 
@@ -353,7 +343,7 @@ const controls = createControls({
     el: document.getElementById("inkSeg"), initial: "boil",
     apply: (value) => scene.setBoil(value === "boil")
   },
-  // Regen. STILL by default — form changes only when NEW SEED is pressed.
+  // Regen. STILL by default — form changes only when NEW BOARD is pressed, or a creature is redrawn.
   // Turn LIVE on and slots swap on their own clocks, like the reference video.
   live: {
     el: document.getElementById("liveSeg"), initial: "off",
@@ -387,7 +377,7 @@ function showJudging() {
   judgeNow.textContent = on.length ? `· ${on.join(" · ")}` : "";
 }
 
-// Shortcuts — R seed · B pose · I ink · S regen. They go through the same path as the buttons (set)
+// Shortcuts — R new board · B pose · I ink · S regen. They go through the same path as the buttons (set)
 window.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement) return;
   const key = event.key.toLowerCase();
@@ -395,17 +385,6 @@ window.addEventListener("keydown", (event) => {
   if (key === "b") controls.set("pose", controls.value("pose") === "bind" ? "motion" : "bind");
   if (key === "i") controls.set("ink", controls.value("ink") === "boil" ? "still" : "boil");
   if (key === "s") controls.set("live", controls.value("live") === "on" ? "off" : "on");
-});
-
-// For pasting a seed hash into the address bar. A hash change within the same document does not reload, so without this
-// only the address would move while the board stayed put. It is also called for the hash syncUrl wrote, so an identical value is skipped
-window.addEventListener("hashchange", () => {
-  const fromHash = readSeedFromHash();
-  if (fromHash === null || fromHash === baseSeed) return;
-  baseSeed = fromHash;
-  stale = "fill";
-  picked = false;
-  render();
 });
 
 window.addEventListener("resize", () => scene.resize());

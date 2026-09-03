@@ -4,23 +4,21 @@
 // pinned, and counts the pixels that differ per creature. A refactor of the scene or a shader has to come out at 0; a change shows exactly where
 // the picture moved. The two trees share nothing but three.js: each is its own module graph, each draws on its own canvas.
 // Docs: guidelines/determinism.md § how to check
-//   pixeldiff.html?seed=0z0y9qe&boards=4&tol=4
+//   pixeldiff.html?boards=4&tol=4 — the boards are rolled on load, NEW BOARDS rolls others
 
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { makeGrid } from "./character/index.js";
-import { formatSeed } from "./rng.js";
 import { randomSeed } from "./ui.js";
 
 const COLS = 7, ROWS = 5;
 const params = new URLSearchParams(window.location.search);
-let seed0 = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : randomSeed();
+let seed0 = randomSeed();
 const BOARDS = Math.max(1, Math.min(20, Number(params.get("boards")) || 4));
 const TOL = Math.max(0, Number(params.get("tol")) || 4);   // a channel has to move by more than this (0–255) for a pixel to count
 
 const stage = document.getElementById("stage");
 const report = document.getElementById("report");
 const statusLabel = document.getElementById("status");
-const seedLabel = document.getElementById("seed");
 const boardSeg = document.getElementById("boardSeg");
 const viewSeg = document.getElementById("viewSeg");
 
@@ -135,8 +133,7 @@ let shown = 0;
 let view = "diff";
 
 function run() {
-  seedLabel.textContent = formatSeed(seed0);
-  window.history.replaceState(null, "", `?seed=${seed0.toString(36)}&boards=${BOARDS}&tol=${TOL}`);
+  window.history.replaceState(null, "", `?boards=${BOARDS}&tol=${TOL}`);
   results = [];
   statusLabel.textContent = "drawing…";
   report.textContent = "drawing…";
@@ -170,9 +167,9 @@ function finish() {
       const rect = r.diff.rects[i];
       const area = Math.max(1, (rect.x1 - rect.x0) * (rect.y1 - rect.y0));
       const specNote = JSON.stringify(spec) === JSON.stringify(other) ? "" : " · spec differs";
-      cells.push(`  ${spec.species} ${spec.seed.toString(36)} [${i}] ${n} px (${(n / area * 100).toFixed(2)}% of the cell)${specNote}`);
+      cells.push(`  ${spec.species} [${i}] ${n} px (${(n / area * 100).toFixed(2)}% of the cell)${specNote}`);
     });
-    perBoard.push({ k, lines: [`board ${k + 1} ${formatSeed(r.seed)} — ${r.diff.total} px${r.diff.outside ? ` (${r.diff.outside} outside the cells)` : ""}`, ...cells] });
+    perBoard.push({ k, lines: [`board ${k + 1} — ${r.diff.total} px${r.diff.outside ? ` (${r.diff.outside} outside the cells)` : ""}`, ...cells] });
   });
   lines.push(changed ? `changed: ${changed} creatures · ${total} px` : `changed: 0 — the picture did not move`, "");
   for (const b of perBoard) lines.push(...b.lines);

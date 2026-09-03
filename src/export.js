@@ -7,24 +7,20 @@
 const INK = "rgba(43, 39, 36, 0.5)";
 const FONT = "ui-monospace, SFMono-Regular, Menlo, monospace";   // same as the on-screen font (styles.css)
 
-export function exportPng(canvas, { seed, mark, name }) {
+export function exportPng(canvas, { mark, name }) {
   const out = document.createElement("canvas");
   out.width = canvas.width;      // canvas pixels as they are (the size setPixelRatio settled on — it goes out at screen resolution)
   out.height = canvas.height;
   const ctx = out.getContext("2d");
   ctx.drawImage(canvas, 0, 0);
 
-  // Signature — seed bottom-left, name bottom-right. It has to scale with the image or it turns into specks on a big board
+  // Signature — the name, bottom-right. It has to scale with the image or it turns into specks on a big board
   const short = Math.min(out.width, out.height);
   const size = Math.max(11, Math.round(short * 0.018));
   const pad = Math.round(short * 0.03);
   ctx.fillStyle = INK;
   ctx.textBaseline = "alphabetic";
   if ("letterSpacing" in ctx) ctx.letterSpacing = `${(size * 0.14).toFixed(2)}px`;   // wider than the on-screen tracking (0.04em) — it is a signature
-
-  ctx.font = `${size}px ${FONT}`;
-  ctx.textAlign = "left";
-  ctx.fillText(seed, pad, out.height - pad);
 
   ctx.font = `700 ${size}px ${FONT}`;
   ctx.textAlign = "right";

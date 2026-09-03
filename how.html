@@ -30,8 +30,8 @@
 <main class="page">
 
 <h1>how it is drawn</h1>
-<p class="lede"><b>MENAGERIE</b> is a board of thirty-odd creatures grown from one seed — human, cat, dog and imp, each breathing
-on its own clock, drawn as if by hand. The seed in the address grows a board; a board or a creature you keep is a file of JSON. It runs in the browser with no build
+<p class="lede"><b>MENAGERIE</b> is a board of thirty-odd creatures — human, cat, dog and imp, each breathing
+on its own clock, drawn as if by hand. A board is rolled fresh each time; one you keep, or a creature you make, is a file of JSON. It runs in the browser with no build
 step: <a href="./index.html">the board is here</a>, <a href="https://github.com/tomlim2/goofy-procedural-creatures">the code is
 here</a>.</p>
 
@@ -160,7 +160,7 @@ too.</p>
 gets a row of shader balls — the same ball at the five <b>value</b> steps, <b>black · hatch · scribble · stipple · light</b>, named
 for the way graphite makes each. <b>A step is in the colour first and the marks second</b>: it pulls the base toward the
 technique's own tone and lays the marks on top, because a mark fine enough to be pretty up close falls under a device pixel on a
-board. The step is the creature's <b>density</b> slot — one of the five, picked by the seed, so every step turns up on every
+board. The step is the creature's <b>density</b> slot — one of the five, picked by the roll, so every step turns up on every
 species; the colour decides the marks' tone, the step how many.</p>
 
 <p>A mark has to be lighter than what it is drawn on, so on a <b>dark ground</b> every technique turns around — the <b>lower
@@ -177,7 +177,7 @@ which clips: ink's scratches on a pale part came out <code>#ffffff</code> and ra
 colour with no room left to water turns ink around too: its ground is laid on <b>deeper</b> the more solid the step, and the scratch
 opens back toward the part's own colour.</p>
 
-<p>One creature is one hand and one pressure, but not one throw of the dice: <b>a texture's seed is the part's own</b> — its place
+<p>One creature is one hand and one pressure, but not one throw of the dice: <b>a texture's noise is the part's own</b> — its place
 and size on the board — and the hand takes a small swing of its own on each. Without it the head, the ears, the muzzle, the hat and
 the body all scattered their marks to the same values in the same places, and a creature read as one stamp repeated.</p>
 
@@ -256,7 +256,7 @@ Every hex passes through <code>hexToRgb → srgbToLinear</code> in <code>src/col
   <figure data-fig="marks" class="wide">
     <canvas></canvas>
     <div class="subs"></div>
-    <figcaption><b>the fixed few</b> — the only colours the seed does not pick: a blush and a tongue are pink, a tooth and an
+    <figcaption><b>the fixed few</b> — the only colours the roll does not pick: a blush and a tongue are pink, a tooth and an
     eye's white are white, a mark on a part too dark for the palette's ink is light, the palest muzzle, a heart eye. The thing
     they paint is always itself, so they always are.</figcaption>
   </figure>

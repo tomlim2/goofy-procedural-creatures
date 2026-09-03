@@ -21,7 +21,7 @@ below do not include.
 | triangles / frame | 119k | 59k (drawn once) |
 | baking a board (`scene.build`) | 55 ms | 52 ms |
 
-9×6 (54 creatures) is 848 draw calls and 1.3 ms per frame. Baking is 74 ms — NEW SEED is instant, so there is
+9×6 (54 creatures) is 848 draw calls and 1.3 ms per frame. Baking is 74 ms — NEW BOARD is instant, so there is
 no reason to shave the baking side further.
 
 ## How it is measured

@@ -457,7 +457,7 @@ and the slap shutting it to ≤0.01 at the burst.
 
 ## Regen
 
-6~14 s per slot. **Off by default (STILL)** — form changes only through NEW SEED. Turn LIVE on and individuals are
+6~14 s per slot. **Off by default (STILL)** — form changes only through NEW BOARD or a redraw. Turn LIVE on and individuals are
 replaced on their own clocks while the species stays with the slot. A new individual's clock takes that moment as its birth time
 (otherwise every schedule is in the past and it runs away, regenerating every frame).
 

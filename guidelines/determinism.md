@@ -6,10 +6,12 @@ is what the board draws, what the editor edits, what SAVE writes and what OPEN r
 it, and the spec remembers the seed it came from as provenance, nothing more. A saved creature never needs
 its seed again.
 
-A **board** is a cast of specs. `boardCells(baseSeed, …)` grows a default cast from one seed — it is what
-the address carries and what every gate below stands a board up with — but that base seed only **fills** the
-cells. What a hand does to a cell afterwards (REDRAW, BACK, a file opened into it) lives in the cast, and the
-cast is saved as a file. The address makes a board; it does not remember one.
+A **board** is a cast of specs. `boardCells(baseSeed, …)` grows a default cast from one roll — a fresh one
+on every load, and what every gate below stands a board up with — but that roll only **fills** the cells.
+What a hand does to a cell afterwards (REDRAW, BACK, a file opened into it) lives in the cast, and the cast
+is saved as a file. **No screen shows a seed or takes one.** The address carries a screen's controls and
+never a board; a NEW button rolls another; a file remembers. Seeds live in the generator and in the node
+gates, where a repeatable sample is the point.
 
 ## What a seed promises
 

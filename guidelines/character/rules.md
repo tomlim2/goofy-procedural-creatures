@@ -145,8 +145,8 @@ color or part distribution.
 
 ## Form is read with the gallery
 
-`gallery.html?slot=<slot>&species=<species>&seed=<seed>` — draws every value of one slot on **the same
-individual**, side by side (species and seed fixed, only the slot value changing). When you have drawn a new
+`gallery.html?slot=<slot>&species=<species>` — draws every value of one slot on **the same
+individual**, side by side (the individual fixed, only the slot value changing; NEW rolls another). When you have drawn a new
 part, look at it here next to its neighbouring values.
 It also draws values a species forbids, which never appear on a real board — this is a catalog, not a draw. BIND
 is the default (judging form); B for motion.

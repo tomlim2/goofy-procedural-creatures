@@ -1,20 +1,19 @@
-// Parts gallery — draws every value of one slot on the same individual, side by side. Species and seed are held fixed; only the slot value changes.
+// Parts gallery — draws every value of one slot on the same individual, side by side. The individual is held fixed; only the slot value changes.
 // Where census is distribution (numbers), this is form (the picture). Used to judge a single part.
 // It also draws values a species forbids, which never appear on a real board — this is a catalog, not a draw.
-//   gallery.html?slot=legs&species=human&seed=0z0y9qe&fix=legLength:short
+//   gallery.html?slot=legs&species=human&fix=legLength:short
+// The individual is rolled on load and NEW rolls another; the address does not carry one.
 // fix= pins one other slot — for combinations like "every leg type on short legs".
 
 import * as THREE from "three";
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { makeCreature, SLOTS, SPECIES, ghostPalette, ghostOutline, ghostInk } from "./character/index.js";
-import { formatSeed } from "./rng.js";
 import { bindSeg, addOption, randomSeed, runLoop } from "./ui.js";
 
 const canvas = document.getElementById("stage");
 const labelsBox = document.getElementById("labels");
 const slotSel = document.getElementById("slotSel");
 const speciesSel = document.getElementById("speciesSel");
-const seedLabel = document.getElementById("seed");
 const poseSeg = document.getElementById("poseSeg");
 const statusLabel = document.getElementById("status");
 const fixSlotSel = document.getElementById("fixSlot");
@@ -23,7 +22,7 @@ const fixValueSel = document.getElementById("fixValue");
 const params = new URLSearchParams(window.location.search);
 let slot = SLOTS[params.get("slot")] ? params.get("slot") : "legs";
 let species = SPECIES.some((s) => s.name === params.get("species")) ? params.get("species") : "human";
-let seed = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : randomSeed();
+let seed = randomSeed();
 let bind = true;
 // values=a,b — only the values of that slot to look at (for putting a few up large). Values not in the slot are ignored; if none is left, all of them
 const only = (params.get("values") || "").split(",").filter(Boolean);
@@ -56,13 +55,12 @@ let cells = [];   // [{ x, y, value }] in world coordinates — labels are proje
 function build() {
   slotSel.value = slot;
   speciesSel.value = species;
-  seedLabel.textContent = formatSeed(seed);
   if (fix && fix.slot === slot) fix = null;   // the slot being looked at cannot be pinned
   fillFixSelects();
   const fixed = fix ? { [fix.slot]: fix.value } : {};
   const picked = SLOTS[slot].filter((value) => only.includes(value));
   const values = picked.length ? picked : SLOTS[slot];
-  window.history.replaceState(null, "", `?slot=${slot}&species=${species}&seed=${seed.toString(36)}${fix ? `&fix=${fix.slot}:${fix.value}` : ""}${picked.length ? `&values=${picked.join(",")}` : ""}`);
+  window.history.replaceState(null, "", `?slot=${slot}&species=${species}${fix ? `&fix=${fix.slot}:${fix.value}` : ""}${picked.length ? `&values=${picked.join(",")}` : ""}`);
 
   const base = makeCreature(seed, species);
   // Swapping a part is enough for every slot but one: `ghost` collapses the whole palette and breaks every

@@ -329,7 +329,7 @@ its repeat as a diagonal weave. The fragment has no resolution, so the grain is 
 - **Grain** — a cell of 3/512 grain units (the old tile's texel), a uniform ±13/255 per channel, nearest (it never smears).
 - **Blotches** — three octaves of value noise (a third to a whole grain unit, the old discs' size), thinned to the
   darker patches and mixed 7% toward a warm tint (`#968468`), so most of the sheet is clean and nothing repeats.
-- **Seed** — fixed at 7. The paper is the desk, not the creature: NEW SEED changes the board, not the sheet. The
+- **Seed** — fixed at 7. The paper is the desk, not the creature: NEW BOARD changes the board, not the sheet. The
   hash is an integer one (pcg2d), so every GPU draws the same grain.
 - **Color** — the arithmetic is in sRGB on purpose, as the canvas's was, and the last line converts to linear for
   the renderer's output pass (§ colors go in as linear). It is the one place a color is handled in sRGB, and it

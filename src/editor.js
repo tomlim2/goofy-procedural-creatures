@@ -6,7 +6,7 @@
 // produced, while an edited creature usually is not. So the thing this screen saves is the whole spec as JSON —
 // the same file the board's pin opens into a cell (guidelines/determinism.md: a creature is its JSON, and the
 // generator is the only thing that draws from a seed; nothing here calls rng). NEW rolls a fresh individual of
-// the species to start from; the roll's seed stays in the file as where it came from, and nowhere else.
+// the species to start from. The roll's number stays inside the file (the scene phases its clock off it), and nowhere else.
 //
 // The rules are reported, not enforced. A species' forbidden values and the constraint pass (a helmet takes
 // the hair, an eyepatch comes off overlapping eyes) are run on a **copy** and the differences are listed under
@@ -21,7 +21,6 @@ import {
   SLOTS, SPECIES, PAINTABLE, paintKey
 } from "./character/index.js";
 import { FILLS, INKS, ACCENTS, POPS, DARKS, FURS, SCALES, HAIRS } from "./character/vocabulary/palette.js";
-import { formatSeed } from "./rng.js";
 import { bindSeg, addOption, randomSeed, runLoop, download } from "./ui.js";
 
 const canvas = document.getElementById("stage");
@@ -334,9 +333,9 @@ function render() {
 
 // ---- the file -------------------------------------------------------------------------------------------
 
-// The file is named by the roll the creature started from — a name, not an identity; the file is the creature.
+// Named by species; the browser numbers a second cat. The file is the creature.
 function save() {
-  download(`creature-${formatSeed(spec.seed)}.json`, creatureJson(spec));
+  download(`${spec.species}.json`, creatureJson(spec));
 }
 
 // A loaded spec is drawn as it is — the same file the board saves from a cell, or a board file's one cell. It

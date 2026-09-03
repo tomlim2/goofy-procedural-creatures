@@ -1,7 +1,7 @@
 // Face part audit — draws every individual on one board in each face state, toggling one part off and on and counting the pixel difference.
 // If the difference is under the threshold (4% of the head width), that part is "not visible" in that state (gone to width 0, drawn on the same color, or covered by something else).
 // Docs: guidelines/character/rules.md § a face part has to be visible in every state
-//   audit.html?seed=0z0y9qe
+//   audit.html — a fresh board on load, NEW BOARD for another
 //
 // What counts as correct (the expectation):
 //   brows (not none) · mouth · nose (muzzle) · eyewear · cheeks · whiskers (cats) — visible in every state
@@ -17,17 +17,15 @@ import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { makeGrid, layout, eyeGeometry, facePartKinds } from "./character/index.js";
 import { drawEyes, drawFace2, drawNose, drawEyewear, drawWhiskers } from "./character/draw/face.js";
 import { Sketch } from "./stroke.js";
-import { makeNoise, makeRng, formatSeed } from "./rng.js";
+import { makeNoise, makeRng } from "./rng.js";
 import { sketchMesh, disposeGroup } from "./scene/mesh.js";
 import { randomSeed } from "./ui.js";
 
 const COLS = 7, ROWS = 5;
 const canvas = document.getElementById("stage");
 const report = document.getElementById("report");
-const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
-const params = new URLSearchParams(window.location.search);
-let seed = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : randomSeed();
+let seed = randomSeed();
 
 const scene = createScene(canvas);
 
@@ -45,8 +43,6 @@ const STATES = {
 const minPixels = (headPx) => Math.max(3, Math.round(headPx * 0.04));
 
 function run() {
-  seedLabel.textContent = formatSeed(seed);
-  window.history.replaceState(null, "", `?seed=${seed.toString(36)}`);
   const specs = makeGrid(seed, COLS * ROWS, COLS, null);
   scene.build(specs, COLS);
   scene.setBind(true);
@@ -183,7 +179,7 @@ function audit() {
         if (hidden) hidden[0].visible = true;   // probe turns on boil frame 0 only — that is the only one restored
         else for (const m of meshes) m.visible = true;
         if (d < MIN_PIXELS) {
-          violations.push(`${spec.species} ${spec.seed.toString(36)} ${stateName} ${key} — eyes=${spec.parts.eyes} mouth=${spec.parts.mouth} nose=${spec.parts.nose} eyewear=${spec.parts.eyewear} face2=${spec.parts.face2} (${d}px)`);
+          violations.push(`${spec.species} [${list.indexOf(item)}] ${stateName} ${key} — eyes=${spec.parts.eyes} mouth=${spec.parts.mouth} nose=${spec.parts.nose} eyewear=${spec.parts.eyewear} face2=${spec.parts.face2} (${d}px)`);
         }
       }
     }
@@ -207,7 +203,7 @@ function audit() {
         item.tailGroup.visible = true;
         const d = diffCount(on, off);
         if (d < TAIL_PIXELS) {
-          const line = `${spec.species} ${spec.seed.toString(36)} tail ${stateName} — tail=${spec.parts.tail} skin=${spec.parts.tailSkin} length=${spec.parts.tailLength} (${d}px, threshold ${TAIL_PIXELS}px)`;
+          const line = `${spec.species} [${list.indexOf(item)}] tail ${stateName} — tail=${spec.parts.tail} skin=${spec.parts.tailSkin} length=${spec.parts.tailLength} (${d}px, threshold ${TAIL_PIXELS}px)`;
           (strict ? violations : tailHidden).push(line);
         }
       }
@@ -217,7 +213,7 @@ function audit() {
   for (const other of list) other.group.visible = true;
   scene.update(0);
 
-  const lines = [`board ${formatSeed(seed)} · ${list.length} creatures × ${Object.keys(STATES).length} states · head width ≥ ${Math.round(headPxMin)}px (threshold ${minPixels(headPxMin)}px)`, `checked ${Object.entries(checked).map(([k, v]) => `${k} ${v}`).join(" · ")}`, ""];
+  const lines = [`${list.length} creatures × ${Object.keys(STATES).length} states · head width ≥ ${Math.round(headPxMin)}px (threshold ${minPixels(headPxMin)}px)`, `checked ${Object.entries(checked).map(([k, v]) => `${k} ${v}`).join(" · ")}`, ""];
   lines.push(violations.length ? `not visible: ${violations.length}` : "not visible: 0 — every part shows in every state");
   lines.push(...violations);
   lines.push("", `tails ${tails} · hidden at rest ${tailHidden.length} (drawn behind the body — information, not a violation; raised ones count above)`);

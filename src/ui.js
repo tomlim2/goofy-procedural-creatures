@@ -47,7 +47,7 @@ export function addOption(select, value, label) {
   select.appendChild(option);
 }
 
-// A 32-bit random seed (only when NEW SEED is pressed on screen — the generation path never uses Math.random, guidelines/determinism.md)
+// A 32-bit random roll (only on load and when a NEW button is pressed — the generation path never uses Math.random, guidelines/determinism.md)
 export function randomSeed() {
   return (Math.random() * 0xffffffff) >>> 0;
 }
