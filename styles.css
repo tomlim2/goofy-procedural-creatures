@@ -134,8 +134,9 @@ select {
 }
 select.wide { width: 100%; }
 
-/* Two selects side by side (the gallery FIX) */
+/* Two selects side by side (the gallery FIX), or a select with a button after it (the editor's SPECIES · NEW) */
 .seg select { flex: 1; min-width: 0; }
+.seg button.narrow { flex: 0 0 auto; padding: 6px 10px; }
 
 .seg { display: flex; gap: 4px; }
 .seg button { flex: 1; padding: 6px 4px; }

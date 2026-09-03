@@ -28,14 +28,9 @@
 <aside class="deck">
   <section class="card">
     <h2>SPECIES</h2>
-    <select id="speciesSel" class="wide" aria-label="Species"></select>
-  </section>
-
-  <section class="card">
-    <h2>SEED <span class="seed" id="seed">·······</span></h2>
     <div class="row seg">
-      <button id="reseed">NEW</button>
-      <button id="rewobble">WOBBLE</button>
+      <select id="speciesSel" aria-label="Species"></select>
+      <button id="reseed" class="narrow" title="A fresh individual of this species">NEW</button>
     </div>
   </section>
 
@@ -64,6 +59,9 @@
 
   <details class="card">
     <summary><h2>PROPORTIONS</h2></summary>
+    <div class="fields">
+      <div class="field"><span title="The same individual drawn by a different hand — every stroke's shake">hand</span><button id="rewobble">WOBBLE</button></div>
+    </div>
     <div id="proportions" class="fields"></div>
   </details>
 
@@ -81,7 +79,7 @@
     <ul id="notes" class="notes empty"></ul>
   </section>
 
-  <p class="hint">Species first, then parts · the rules are reported, not applied — what you pick is drawn · a part is one colour from the creature's own box · SAVE writes the whole spec, not a seed · R seed · B pose</p>
+  <p class="hint">Species first, then parts · the rules are reported, not applied — what you pick is drawn · a part is one colour from the creature's own box · SAVE writes the whole spec — the file the board's pin opens into a cell · R new · B pose</p>
 </aside>
 
 <noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>

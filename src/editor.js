@@ -3,15 +3,16 @@
 //
 // It holds **one working spec** and edits it in place. That is the difference from every other screen here:
 // the rest go back through `makeCreature(seed, species)` and are therefore always something a seed could have
-// produced, while an edited creature usually is not. So the thing this screen saves is the whole spec as JSON,
-// not a seed — a seed cannot express it (guidelines/determinism.md is about the generator, and the generator
-// is still the only thing that draws from a seed; nothing here calls rng).
+// produced, while an edited creature usually is not. So the thing this screen saves is the whole spec as JSON —
+// the same file the board's pin opens into a cell (guidelines/determinism.md: a creature is its JSON, and the
+// generator is the only thing that draws from a seed; nothing here calls rng). NEW rolls a fresh individual of
+// the species to start from; the roll's seed stays in the file as where it came from, and nowhere else.
 //
 // The rules are reported, not enforced. A species' forbidden values and the constraint pass (a helmet takes
 // the hair, an eyepatch comes off overlapping eyes) are run on a **copy** and the differences are listed under
 // NOTES. What you picked is what gets drawn, so this screen can make individuals the board never will.
 //
-//   editor.html?seed=0z0y9qe&species=cat
+//   editor.html?species=cat
 
 import { createScene } from "./scene/index.js";
 import {
@@ -25,7 +26,6 @@ import { bindSeg, addOption, randomSeed, runLoop, download } from "./ui.js";
 
 const canvas = document.getElementById("stage");
 const speciesSel = document.getElementById("speciesSel");
-const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
 const poseSeg = document.getElementById("poseSeg");
 const baseBox = document.getElementById("base");
@@ -58,12 +58,12 @@ const PROPORTION_RANGE = {
   armSpread: [0.3, 1.8], bodyLen: [0.5, 1.8], tailLift: [-0.4, 0.9], wobble: [0, 2.5]
 };
 
+// The address only says which species to start with. It makes a creature; it does not remember one — a file does.
 const params = new URLSearchParams(window.location.search);
 let species = SPECIES.some((s) => s.name === params.get("species")) ? params.get("species") : "human";
-let seed = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : randomSeed();
+let seed = randomSeed();
 let bind = true;
 let spec = null;         // the working spec — the single thing this screen edits and saves
-let loaded = false;      // true once a spec has been loaded from a file, so the seed no longer describes it
 
 const scene = createScene(canvas);
 
@@ -83,7 +83,6 @@ const derive = deriveSpec;
 function regenerate() {
   const made = makeCreature(seed, species);
   spec = derive({ ...made, parts: { ...made.parts, bodyMaterial: "same" } });
-  loaded = false;
 }
 
 // **What the rules would have done.** Run on a copy so nothing is applied: the species' forbid table first (it
@@ -304,7 +303,6 @@ function buildProportions() {
 
 function render() {
   speciesSel.value = spec.species;
-  seedLabel.textContent = loaded ? "loaded" : formatSeed(spec.seed);
 
   renderBase();
   renderPart();
@@ -329,7 +327,6 @@ function render() {
   }
   notesBox.classList.toggle("empty", list.length === 0);
 
-  if (!loaded) window.history.replaceState(null, "", `?seed=${seed.toString(36)}&species=${species}`);
   scene.build([spec], 1);
   scene.setBind(bind);
   statusLabel.textContent = `${spec.species.toUpperCase()}${list.length ? ` · ${list.length} NOTE${list.length > 1 ? "S" : ""}` : ""}`;
@@ -337,9 +334,9 @@ function render() {
 
 // ---- the file -------------------------------------------------------------------------------------------
 
+// The file is named by the roll the creature started from — a name, not an identity; the file is the creature.
 function save() {
-  const name = loaded ? "creature" : `creature-${formatSeed(spec.seed)}`;
-  download(`${name}.json`, creatureJson(spec));
+  download(`creature-${formatSeed(spec.seed)}.json`, creatureJson(spec));
 }
 
 // A loaded spec is drawn as it is — the same file the board saves from a cell, or a board file's one cell. It
@@ -352,7 +349,6 @@ function load(text) {
     return;
   }
   spec = read.spec;
-  loaded = true;
   species = spec.species;
   render();
 }
