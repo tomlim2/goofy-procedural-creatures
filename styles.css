@@ -315,6 +315,9 @@ body.how { height: auto; }
 .editor details[open] summary::after { content: " –"; }
 .fields { display: grid; gap: 4px; margin-top: 6px; }
 .field { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 6px; }
+/* display: grid above beats the browser's own [hidden]; said again so a hidden row (a paint row on a part that
+   takes no paint) really goes, label and all. */
+.field[hidden] { display: none; }
 .field > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.7; }
 .field select, .field input[type="range"] { min-width: 0; width: 100%; }
 .field .readout { grid-column: 2; font-variant-numeric: tabular-nums; opacity: 0.5; }

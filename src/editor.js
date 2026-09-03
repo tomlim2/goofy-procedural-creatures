@@ -137,6 +137,9 @@ const PAINT_BOXES = ["skin", "cloth", "hair", "accent", "pop"];
 
 function buildParts() {
   partsBox.innerHTML = "";
+  // The skin first, above the parts: it is the box most of the creature is painted from, and the palette
+  // card it also lives in is folded away by default.
+  paletteRow(partsBox, "skin");
   const pick = field(partsBox, "part");
   partSel = document.createElement("select");
   partSel.setAttribute("aria-label", "Part");
@@ -196,36 +199,42 @@ function renderPart() {
   }
 }
 
+// One row of a palette box's pool — the swatches a key may be picked from. The same row serves PALETTE and
+// the skin at the top of PART, so both show the same choice ringed.
+function paletteRow(parent, key) {
+  const row = document.createElement("div");
+  row.className = "field swatches";
+  row.dataset.key = key;
+  const name = document.createElement("span");
+  name.textContent = key;
+  row.appendChild(name);
+  const strip = document.createElement("div");
+  strip.className = "strip";
+  for (const color of COLOR_POOLS[key]) {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "swatch";
+    dot.dataset.color = color === null ? "" : color;
+    dot.title = color === null ? "none" : color;
+    dot.setAttribute("aria-label", `${key} ${color === null ? "none" : color}`);
+    if (color !== null) dot.style.background = color;
+    else dot.textContent = "—";
+    dot.addEventListener("click", () => {
+      // A pop is a colour **and** a target, so keep the target the individual already had.
+      const value = key === "pop" ? (color === null ? null : { color, target: spec.palette0.pop?.target || "hair" }) : color;
+      spec = derive({ ...spec, palette0: { ...spec.palette0, [key]: value } });
+      render();
+    });
+    strip.appendChild(dot);
+  }
+  row.appendChild(strip);
+  parent.appendChild(row);
+  return row;
+}
+
 function buildPalette() {
   paletteBox.innerHTML = "";
-  for (const key of Object.keys(COLOR_POOLS)) {
-    const row = document.createElement("div");
-    row.className = "field swatches";
-    const name = document.createElement("span");
-    name.textContent = key;
-    row.appendChild(name);
-    const strip = document.createElement("div");
-    strip.className = "strip";
-    for (const color of COLOR_POOLS[key]) {
-      const dot = document.createElement("button");
-      dot.type = "button";
-      dot.className = "swatch";
-      dot.dataset.color = color === null ? "" : color;
-      dot.title = color === null ? "none" : color;
-      dot.setAttribute("aria-label", `${key} ${color === null ? "none" : color}`);
-      if (color !== null) dot.style.background = color;
-      else dot.textContent = "—";
-      dot.addEventListener("click", () => {
-        // A pop is a colour **and** a target, so keep the target the individual already had.
-        const value = key === "pop" ? (color === null ? null : { color, target: spec.palette0.pop?.target || "hair" }) : color;
-        spec = derive({ ...spec, palette0: { ...spec.palette0, [key]: value } });
-        render();
-      });
-      strip.appendChild(dot);
-    }
-    row.appendChild(strip);
-    paletteBox.appendChild(row);
-  }
+  for (const key of Object.keys(COLOR_POOLS)) paletteRow(paletteBox, key);
 }
 
 function buildProportions() {
@@ -259,8 +268,8 @@ function render() {
   seedLabel.textContent = loaded ? "loaded" : formatSeed(spec.seed);
 
   renderPart();
-  for (const row of paletteBox.children) {
-    const key = row.firstChild.textContent;
+  for (const row of document.querySelectorAll(".field.swatches[data-key]")) {
+    const key = row.dataset.key;
     const current = key === "pop" ? (spec.palette0.pop?.color ?? "") : (spec.palette0[key] ?? "");
     for (const dot of row.querySelectorAll(".swatch")) dot.classList.toggle("on", dot.dataset.color === current);
   }
