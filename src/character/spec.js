@@ -8,7 +8,7 @@
 
 import { makeRng } from "../rng.js";
 import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES, HAIR_POOL } from "./vocabulary/index.js";
-import { shade, luminance } from "../color.js";
+import { shade, luminance, tint } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
 import { MARKS } from "./vocabulary/palette.js";
@@ -164,7 +164,12 @@ const GHOST_INK = INKS.reduce((a, b) => (luminance(b) < luminance(a) ? b : a)); 
 export function ghostPalette(base, kind, wobbleSeed) {
   if (!kind || kind === "none") return base;
   const pick = (Math.imul((wobbleSeed ^ 0x1b873593) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
-  const tone = shade(MARKS.white, 0.94 + pick * 0.06);
+  // **White, and above the paper.** The board's paper is luminance 233 and this used to be shade(MARKS.white,
+  // 0.94~1) — luminance 227~242 — so more than half of all ghosts came out DARKER than the sheet they are drawn
+  // on and read as grey blobs rather than as white ones. Tinted the other way instead, the whole band sits clear
+  // of the paper (244~250) and a ghost is white against it whatever the seed drew. It stays a band and not one
+  // value so two ghosts side by side are not the same swatch, but the band is narrow: a ghost is a ghost
+  const tone = tint(MARKS.white, 0.15 + pick * 0.5);
   return {
     ...base, skin: tone, cloth: tone, hair: tone, accent: tone,
     pattern2: base.pattern2 ? tone : base.pattern2,
