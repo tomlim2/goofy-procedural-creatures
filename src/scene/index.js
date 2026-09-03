@@ -256,27 +256,42 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     // A solid red arrowhead — just the point, no shaft — filled the way a part is filled and outlined in the
     // same red with a wobblier pen so the edge reads as drawn. The red is the palette's own, the heart eye's,
     // so the mark is drawn from the same box of colours as everything else on the board.
-    const sketch = new Sketch(noise, 2.0, 1.6);
-    const red = MARKS.heart;
-    const tip = y0 - 0.05;
-    const foot = tip - 0.09;
-    const half = 0.07;
-    sketch.fill([[x, tip], [x - half, foot], [x + half, foot]], red);
-    sketch.line([[x, tip], [x - half, foot], [x + half, foot], [x, tip]], { color: red });
+    //
+    // It boils like a part does: the same shape drawn BOIL_FRAMES times from a different phase of the pen,
+    // one mesh each in one group, and the frame is picked in stepHover the way applyState picks a creature's.
     // Its own material, not the shared one: inkMaterial() hands out one cached material per opacity for the
     // whole board, and a fade that wrote into that would dim every mesh drawn with the same ink.
     const material = inkMaterial(HOVER_INK).clone();
     material.userData.shared = false;
     material.transparent = true;
     material.opacity = current;
-    hoverMark = new THREE.Mesh(sketch.build(), material);
-    hoverMark.renderOrder = 1.5;   // over the ground line, under every creature
+    const red = MARKS.heart;
+    const tip = y0 - 0.05;
+    const foot = tip - 0.09;
+    const half = 0.07;
+    hoverMark = new THREE.Group();
+    for (let k = 0; k < BOIL_FRAMES; k += 1) {
+      const sketch = new Sketch(noise, 2.0, 1.6);
+      sketch.phase = k * 101.7;   // a different stretch of the noise per frame — that is the boil
+      sketch.fill([[x, tip], [x - half, foot], [x + half, foot]], red);
+      sketch.line([[x, tip], [x - half, foot], [x + half, foot], [x, tip]], { color: red });
+      const mesh = new THREE.Mesh(sketch.build(), material);
+      mesh.renderOrder = 1.5;   // over the ground line, under every creature
+      mesh.visible = k === 0;
+      hoverMark.add(mesh);
+    }
     scene.add(hoverMark);
   }
+  // The mark's boil runs at the slowest creature rate with no offset, and stands still with INK STILL.
+  const HOVER_BOIL_FPS = 8 / 15;
   function stepHover(t) {
     if (!hoverMark) return;
     const opacity = hoverOpacity(t);
-    hoverMark.material.opacity = opacity;
+    const frame = boilOn ? Math.floor(t * HOVER_BOIL_FPS) % BOIL_FRAMES : 0;
+    hoverMark.children.forEach((mesh, k) => {
+      mesh.material.opacity = opacity;
+      mesh.visible = k === frame;
+    });
     if (hoverFade.to === 0 && opacity <= 0.001) dropHoverMark();
   }
 
