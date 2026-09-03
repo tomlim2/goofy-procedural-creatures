@@ -231,22 +231,15 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     }
     if (index === null || index === undefined || index < 0 || index >= creatures.length) { hoverIndex = null; return; }
     const [x, y0] = slotPosition(index);
-    // A solid red arrow, filled the way a part is filled (two convex pieces — fill fans from the centroid, so a
-    // concave arrow in one go would spill), then outlined in the same red with a wobblier, heavier pen so the
-    // edge reads as drawn. Red so it stands out from every ink on the board.
+    // A solid red arrowhead — just the point, no shaft — filled the way a part is filled and outlined in the
+    // same red with a wobblier pen so the edge reads as drawn. Red so it stands out from every ink on the board.
     const sketch = new Sketch(noise, 2.0, 1.6);
     const red = "#c9403a";
     const tip = y0 - 0.05;
-    const neck = tip - 0.08;       // where the head meets the shaft
-    const base = y0 - 0.24;        // the tail of the shaft
-    const halfHead = 0.065;
-    const halfShaft = 0.022;
-    sketch.fill([[x, tip], [x - halfHead, neck], [x + halfHead, neck]], red);
-    sketch.fill([[x - halfShaft, neck + 0.01], [x + halfShaft, neck + 0.01], [x + halfShaft, base], [x - halfShaft, base]], red);
-    sketch.line([
-      [x, tip], [x - halfHead, neck], [x - halfShaft, neck], [x - halfShaft, base],
-      [x + halfShaft, base], [x + halfShaft, neck], [x + halfHead, neck], [x, tip]
-    ], { color: red });
+    const foot = tip - 0.09;
+    const half = 0.07;
+    sketch.fill([[x, tip], [x - half, foot], [x + half, foot]], red);
+    sketch.line([[x, tip], [x - half, foot], [x + half, foot], [x, tip]], { color: red });
     hoverMark = new THREE.Mesh(sketch.build(), inkMaterial(0.95));
     hoverMark.renderOrder = 1.5;   // over the ground line, under every creature
     scene.add(hoverMark);
