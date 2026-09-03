@@ -155,10 +155,15 @@ function renderBase() {
   for (const slot of BASE_SLOTS) baseSels[slot].value = spec.parts[slot];
 }
 
-const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !BASE_SLOTS.includes(slot));
+// A part that carries a material of its own. The body is clothing: what is put on it brings its own surface
+// (bodyMaterial), and `same` means it follows the base. The slot leaves the part list and shows under body.
+const PART_MATERIAL = { body: "bodyMaterial" };
+const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !BASE_SLOTS.includes(slot) && !Object.values(PART_MATERIAL).includes(slot));
 let part = PART_SLOTS[0];
 let partSel = null;
 let formSel = null;
+let materialRow = null;
+let materialSel = null;
 let paintRow = null;
 let paintStrip = null;
 const PAINT_BOXES = ["skin", "cloth", "hair", "accent", "pop"];
@@ -181,6 +186,15 @@ function buildParts() {
   });
   form.appendChild(formSel);
 
+  materialRow = field(partsBox, "material");
+  materialSel = document.createElement("select");
+  materialSel.setAttribute("aria-label", "Material");
+  materialSel.addEventListener("change", () => {
+    spec = derive({ ...spec, parts: { ...spec.parts, [PART_MATERIAL[part]]: materialSel.value } });
+    render();
+  });
+  materialRow.appendChild(materialSel);
+
   paintRow = document.createElement("div");
   paintRow.className = "field swatches";
   const name = document.createElement("span");
@@ -200,6 +214,14 @@ function renderPart() {
   formSel.innerHTML = "";
   for (const value of SLOTS[part]) addOption(formSel, value, value);
   formSel.value = spec.parts[part];
+
+  const materialSlot = PART_MATERIAL[part];
+  materialRow.hidden = !materialSlot;
+  if (materialSlot) {
+    materialSel.innerHTML = "";
+    for (const value of SLOTS[materialSlot]) addOption(materialSel, value, value === "same" ? "same as base" : value);
+    materialSel.value = spec.parts[materialSlot];
+  }
 
   const paintable = PAINTABLE.includes(part);
   paintRow.hidden = !paintable;
