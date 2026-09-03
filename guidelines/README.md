@@ -13,15 +13,17 @@ point is the root [`CLAUDE.md`](../CLAUDE.md)).
 | **Motion** | `src/motion/` | [motion/catalog.md](motion/catalog.md) the state object, per-species parameters, every motion | [motion/rules.md](motion/rules.md) classifying rhythm/events/states, rng order, measuring firing |
 | Shared | `src/scene/` `src/stroke.js` `src/shape.js` `src/medium/` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) the seed contract<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
 
-## The six screens
+## The seven screens
 
-Every page carries the same nav, so any screen is one click from any other. Each judges a different thing.
+Every page carries the same nav, so any screen is one click from any other. Six of them judge a different
+thing; the editor is the one that **makes** rather than judges.
 
 | Screen | What it is for |
 | --- | --- |
 | `/index.html` **GRID** | The board itself — the thing being made. Seed, species, grid size, PNG |
 | `/debug.html` **DEBUG** | The board plus the judging controls, folded into one JUDGING card: POSE (bind), INK (boil), ACTION (force one), HIGH FIVE (rush), REGEN (live). Folded, the summary names whatever is away from its default, so a screen left on BIND never reads as a bug. Every control rides in the address |
 | `/gallery.html` **GALLERY** | One slot's every value on the same individual, side by side |
+| `/editor.html` **EDITOR** | The character maker — a species, then every slot, colour and proportion by hand |
 | `/audit.html` **AUDIT** | The face part audit — the whole board × 22 face states, counted in pixels |
 | `/pixeldiff.html` **DIFF** | The rendered board against a reference, pixel by pixel — the only gate that sees the scene and the shaders |
 | `/how.html` **HOW** | The medium page — outlines, materials, fur, shapes and palette, drawn live by the real code |
@@ -56,3 +58,6 @@ Looking good to the eye and being right are different things. There is a tool fo
   but a pose (motion)
 - Looking good to the eye and having the right distribution and frequency are different things. If you
   changed it, count it
+- The editor is the one screen whose creature is **not** something a seed could have made. It edits a spec
+  directly and reports the rules instead of applying them, so what it saves is the spec, not a seed. Nothing
+  in it touches rng, and the generator remains the only thing a seed drives

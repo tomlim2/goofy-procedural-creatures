@@ -29,7 +29,7 @@ function pickSlot(rng, species, archetype, slot) {
 // Overwriting deterministically rather than re-rolling the random is what keeps seeds reproducible.
 // The species forbid table. Reads forbid from species.js and overwrites deterministically (no rng).
 // Restrictions like "no horns on humans" and "a cyclops eye is imps only" all live there — never hardcoded here.
-function applyForbid(parts, speciesName) {
+export function applyForbid(parts, speciesName) {
   const forbid = (SPECIES.find((s) => s.name === speciesName) || {}).forbid || {};
   for (const [slot, table] of Object.entries(forbid)) {
     if (table[parts[slot]] !== undefined) parts[slot] = table[parts[slot]];
@@ -43,7 +43,7 @@ function applyForbid(parts, speciesName) {
 const settled = (seed, n) => (Math.imul((seed ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
 
 // It takes no rng: every decision in here is either a fixed overwrite or settled() off the seed
-function applyConstraints(parts, speciesName, seed) {
+export function applyConstraints(parts, speciesName, seed) {
   // The species forbid table is applied first. It has to come first so the later constraints (antennae removing ears, and so on)
   // do not misfire on a forbidden value.
   applyForbid(parts, speciesName);

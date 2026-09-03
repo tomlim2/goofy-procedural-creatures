@@ -1,0 +1,312 @@
+// Editor — the character maker. Pick a species, then build one individual by hand: every slot, every colour,
+// every proportion. Where the board draws what the seed says, this screen draws what you say.
+//
+// It holds **one working spec** and edits it in place. That is the difference from every other screen here:
+// the rest go back through `makeCreature(seed, species)` and are therefore always something a seed could have
+// produced, while an edited creature usually is not. So the thing this screen saves is the whole spec as JSON,
+// not a seed — a seed cannot express it (guidelines/determinism.md is about the generator, and the generator
+// is still the only thing that draws from a seed; nothing here calls rng).
+//
+// The rules are reported, not enforced. A species' forbidden values and the constraint pass (a helmet takes
+// the hair, an eyepatch comes off overlapping eyes) are run on a **copy** and the differences are listed under
+// NOTES. What you picked is what gets drawn, so this screen can make individuals the board never will.
+//
+//   editor.html?seed=0z0y9qe&species=cat
+
+import { createScene } from "./scene/index.js";
+import {
+  makeCreature, applyForbid, applyConstraints,
+  ghostPalette, ghostOutline, ghostInk, isGhost,
+  SLOTS, SPECIES
+} from "./character/index.js";
+import { FILLS, INKS, ACCENTS, POPS, SCALES, HAIR_POOL, MARKS } from "./character/vocabulary/palette.js";
+import { luminance } from "./color.js";
+import { formatSeed } from "./rng.js";
+import { bindSeg, addOption, randomSeed, runLoop } from "./ui.js";
+
+const canvas = document.getElementById("stage");
+const speciesSel = document.getElementById("speciesSel");
+const seedLabel = document.getElementById("seed");
+const statusLabel = document.getElementById("status");
+const poseSeg = document.getElementById("poseSeg");
+const partsBox = document.getElementById("parts");
+const paletteBox = document.getElementById("palette");
+const proportionsBox = document.getElementById("proportions");
+const notesBox = document.getElementById("notes");
+const fileInput = document.getElementById("file");
+
+// The colour pools each palette key may be picked from. `pop` carries a `null` for "no accent at all", which is
+// what most individuals have. `pattern2` is the rex's second scale colour and is meaningless on anything else.
+// HAIR_POOL is a weighted bag — 25 entries over 12 colours — so it is deduped here. A picker offers colours,
+// not the odds of drawing one.
+const unique = (pool) => [...new Set(pool)];
+const COLOR_POOLS = {
+  ink: unique(INKS),
+  skin: unique(FILLS),
+  cloth: unique(FILLS),
+  hair: unique(HAIR_POOL),
+  accent: unique(ACCENTS),
+  pop: [null, ...unique(POPS)],
+  pattern2: unique(SCALES)
+};
+
+// The proportion sliders. Ranges are wide enough to reach past what the generator draws — this screen is for
+// making something on purpose, including something the board would never roll. `wobbleSeed` is not here: it is
+// a drawing seed, not a proportion, and it gets its own button.
+const PROPORTION_RANGE = {
+  headScale: [0.6, 1.8], headWide: [0.6, 1.6], headLumps: [0, 12], headLump: [0, 0.25],
+  eyeSize: [0.02, 0.4], eyeGap: [0.1, 0.9], eyeHeight: [-0.2, 0.4],
+  eyeSizeSkew: [-0.6, 0.6], eyeHeightSkew: [-0.15, 0.15],
+  noseDrop: [-0.1, 0.4], mouthDrop: [0, 0.7],
+  bodyScale: [0.2, 1.1], bodyWide: [0.4, 1.6], legLength: [0, 0.7],
+  armSpread: [0.3, 1.8], bodyLen: [0.5, 1.8], tailLift: [-0.4, 0.9], wobble: [0, 2.5]
+};
+
+const params = new URLSearchParams(window.location.search);
+let species = SPECIES.some((s) => s.name === params.get("species")) ? params.get("species") : "human";
+let seed = params.get("seed") ? parseInt(params.get("seed"), 36) >>> 0 : randomSeed();
+let bind = true;
+let spec = null;         // the working spec — the single thing this screen edits and saves
+let loaded = false;      // true once a spec has been loaded from a file, so the seed no longer describes it
+
+const scene = createScene(canvas);
+
+// **The derived fields.** Four things on a spec are not chosen but computed, and the generator computes them at
+// the end of `makeCreature`. Editing a slot or a colour has to recompute them or the screen lies: a ghost that
+// keeps its old palette is not a ghost, and a face on a newly darkened head keeps marks that have gone
+// invisible. `palette0` is the palette **before** the ghost collapse and is what edits are written into — that
+// is what lets the ghost slot be switched off again and give the colours back.
+function derive(next) {
+  const parts = { ...next.parts };
+  if (parts.ghost !== "none") parts.eyes = "hollow";   // a ghost has empty eyes — nothing is looking back
+  const palette = { ...ghostPalette(next.palette0, parts.ghost, next.proportions.wobbleSeed) };
+  return {
+    ...next, parts, palette,
+    outline: ghostOutline(parts.ghost),
+    lineInk: ghostInk(parts.ghost),
+    faceInk: (next.species === "imp" && !isGhost({ parts })) || luminance(palette.skin) < 120 ? MARKS.light : null
+  };
+}
+
+function regenerate() {
+  spec = makeCreature(seed, species);
+  loaded = false;
+}
+
+// **What the rules would have done.** Run on a copy so nothing is applied: the species' forbid table first (it
+// maps a forbidden value to its replacement), then the constraint pass. Anything that moved is a note.
+function notes() {
+  const out = [];
+  const forbidden = { ...spec.parts };
+  applyForbid(forbidden, spec.species);
+  for (const slot of Object.keys(forbidden)) {
+    if (forbidden[slot] !== spec.parts[slot]) out.push(`${spec.species} forbids ${slot} = ${spec.parts[slot]} (board would draw ${forbidden[slot]})`);
+  }
+  const constrained = { ...spec.parts };
+  applyConstraints(constrained, spec.species, spec.seed);
+  for (const slot of Object.keys(constrained)) {
+    if (constrained[slot] !== spec.parts[slot] && forbidden[slot] === spec.parts[slot]) {
+      out.push(`the rules would take ${slot} = ${spec.parts[slot]} to ${constrained[slot]}`);
+    }
+  }
+  if (spec.parts.ghost !== "none") out.push("ghost: one tone over every colour, eyes hollow — colour edits go to the palette underneath");
+  return out;
+}
+
+// ---- the deck -------------------------------------------------------------------------------------------
+
+function field(parent, label) {
+  const row = document.createElement("label");
+  row.className = "field";
+  const name = document.createElement("span");
+  name.textContent = label;
+  row.appendChild(name);
+  parent.appendChild(row);
+  return row;
+}
+
+function buildParts() {
+  partsBox.innerHTML = "";
+  for (const slot of Object.keys(SLOTS)) {
+    const row = field(partsBox, slot);
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", slot);
+    for (const value of SLOTS[slot]) addOption(select, value, value);
+    select.addEventListener("change", () => {
+      spec = derive({ ...spec, parts: { ...spec.parts, [slot]: select.value } });
+      render();
+    });
+    row.appendChild(select);
+  }
+}
+
+function buildPalette() {
+  paletteBox.innerHTML = "";
+  for (const key of Object.keys(COLOR_POOLS)) {
+    const row = document.createElement("div");
+    row.className = "field swatches";
+    const name = document.createElement("span");
+    name.textContent = key;
+    row.appendChild(name);
+    const strip = document.createElement("div");
+    strip.className = "strip";
+    for (const color of COLOR_POOLS[key]) {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "swatch";
+      dot.dataset.color = color === null ? "" : color;
+      dot.title = color === null ? "none" : color;
+      dot.setAttribute("aria-label", `${key} ${color === null ? "none" : color}`);
+      if (color !== null) dot.style.background = color;
+      else dot.textContent = "—";
+      dot.addEventListener("click", () => {
+        // A pop is a colour **and** a target, so keep the target the individual already had.
+        const value = key === "pop" ? (color === null ? null : { color, target: spec.palette0.pop?.target || "hair" }) : color;
+        spec = derive({ ...spec, palette0: { ...spec.palette0, [key]: value } });
+        render();
+      });
+      strip.appendChild(dot);
+    }
+    row.appendChild(strip);
+    paletteBox.appendChild(row);
+  }
+}
+
+function buildProportions() {
+  proportionsBox.innerHTML = "";
+  for (const key of Object.keys(PROPORTION_RANGE)) {
+    const [min, max] = PROPORTION_RANGE[key];
+    const row = field(proportionsBox, key);
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = String(min);
+    slider.max = String(max);
+    // A step derived from the range lands on values like 1.79 and never reaches the end of the slider. Round
+    // numbers instead — fine on a wide range, finer on a narrow one.
+    slider.step = key === "headLumps" ? "1" : max - min <= 0.4 ? "0.005" : "0.01";
+    slider.setAttribute("aria-label", key);
+    slider.addEventListener("input", () => {
+      spec = { ...spec, proportions: { ...spec.proportions, [key]: Number(slider.value) } };
+      render();
+    });
+    row.appendChild(slider);
+    const readout = document.createElement("output");
+    readout.className = "readout";
+    row.appendChild(readout);
+  }
+}
+
+// ---- drawing --------------------------------------------------------------------------------------------
+
+function render() {
+  speciesSel.value = spec.species;
+  seedLabel.textContent = loaded ? "loaded" : formatSeed(spec.seed);
+
+  for (const row of partsBox.children) {
+    const select = row.querySelector("select");
+    select.value = spec.parts[select.getAttribute("aria-label")];
+  }
+  for (const row of paletteBox.children) {
+    const key = row.firstChild.textContent;
+    const current = key === "pop" ? (spec.palette0.pop?.color ?? "") : (spec.palette0[key] ?? "");
+    for (const dot of row.querySelectorAll(".swatch")) dot.classList.toggle("on", dot.dataset.color === current);
+  }
+  for (const row of proportionsBox.children) {
+    const slider = row.querySelector("input");
+    const key = slider.getAttribute("aria-label");
+    slider.value = String(spec.proportions[key]);
+    row.querySelector("output").textContent = spec.proportions[key].toFixed(key === "headLumps" ? 0 : 2);
+  }
+
+  const list = notes();
+  notesBox.innerHTML = "";
+  for (const note of list) {
+    const item = document.createElement("li");
+    item.textContent = note;
+    notesBox.appendChild(item);
+  }
+  notesBox.classList.toggle("empty", list.length === 0);
+
+  if (!loaded) window.history.replaceState(null, "", `?seed=${seed.toString(36)}&species=${species}`);
+  scene.build([spec], 1);
+  scene.setBind(bind);
+  statusLabel.textContent = `${spec.species.toUpperCase()}${list.length ? ` · ${list.length} NOTE${list.length > 1 ? "S" : ""}` : ""}`;
+}
+
+// ---- the file -------------------------------------------------------------------------------------------
+
+function save() {
+  const name = loaded ? "creature" : `creature-${formatSeed(spec.seed)}`;
+  const url = URL.createObjectURL(new Blob([JSON.stringify(spec, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${name}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// A loaded spec is drawn as it is. It is only checked for the parts the drawing cannot do without — a file
+// that is missing them would throw somewhere deep in a part instead of saying so here.
+function load(text) {
+  let next = null;
+  try {
+    next = JSON.parse(text);
+  } catch {
+    statusLabel.textContent = "NOT JSON";
+    return;
+  }
+  if (!next || !next.parts || !next.palette0 || !next.proportions || !SPECIES.some((s) => s.name === next.species)) {
+    statusLabel.textContent = "NOT A CREATURE";
+    return;
+  }
+  spec = derive(next);
+  loaded = true;
+  species = spec.species;
+  render();
+}
+
+// ---- wiring ---------------------------------------------------------------------------------------------
+
+for (const s of SPECIES) addOption(speciesSel, s.name, s.name.toUpperCase());
+buildParts();
+buildPalette();
+buildProportions();
+
+// Changing the species draws a new individual of it. Every species has its own palette rules — an imp's head is
+// ink and a rex is two scale colours — so carrying the old colours across would give a creature no species
+// would ever wear, and the flow here is species first, parts after.
+speciesSel.addEventListener("change", () => { species = speciesSel.value; regenerate(); render(); });
+document.getElementById("reseed").addEventListener("click", () => { seed = randomSeed(); regenerate(); render(); });
+document.getElementById("rewobble").addEventListener("click", () => {
+  // The same individual drawn by a different hand — the wobble seed is what every stroke's shake comes off.
+  spec = derive({ ...spec, proportions: { ...spec.proportions, wobbleSeed: randomSeed() % 65536 } });
+  render();
+});
+document.getElementById("save").addEventListener("click", save);
+document.getElementById("open").addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files && fileInput.files[0];
+  if (file) file.text().then(load);
+  fileInput.value = "";
+});
+
+const pose = bindSeg(poseSeg, "pose", (value) => {
+  bind = value === "bind";
+  scene.setBind(bind);
+});
+window.addEventListener("keydown", (event) => {
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
+  const key = event.key.toLowerCase();
+  if (key === "r") document.getElementById("reseed").click();
+  if (key === "b") pose.set(bind ? "motion" : "bind");
+});
+window.addEventListener("resize", () => scene.resize());
+
+regenerate();
+render();
+scene.resize();
+
+runLoop((t) => {
+  scene.resize();
+  scene.update(t);
+}, () => { statusLabel.textContent = "ERROR"; });

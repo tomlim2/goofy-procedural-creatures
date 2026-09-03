@@ -304,3 +304,25 @@ body.how { height: auto; }
 .pixeldiff #stage { left: 380px; top: 52px; width: calc(100% - 380px); height: calc(100% - 52px); object-fit: contain; }
 .pixeldiff #boardSeg { margin-top: 4px; flex-wrap: wrap; }
 .pixeldiff #boardSeg button { flex: 0 0 auto; min-width: 28px; }
+
+/* The editor deck carries every slot, colour and proportion at once, so it is wider than the others and
+   scrolls — the same treatment the debug deck already gets. */
+.editor .deck { width: 244px; max-height: calc(100vh - 76px); overflow-y: auto; padding-right: 2px; }
+.editor summary { cursor: pointer; list-style: none; }
+.editor summary::-webkit-details-marker { display: none; }
+.editor summary h2 { display: inline; }
+.editor summary::after { content: " +"; opacity: 0.45; }
+.editor details[open] summary::after { content: " –"; }
+.fields { display: grid; gap: 4px; margin-top: 6px; }
+.field { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 6px; }
+.field > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.7; }
+.field select, .field input[type="range"] { min-width: 0; width: 100%; }
+.field .readout { grid-column: 2; font-variant-numeric: tabular-nums; opacity: 0.5; }
+.field.swatches { grid-template-columns: 74px 1fr; align-items: start; }
+.strip { display: flex; flex-wrap: wrap; gap: 3px; }
+/* A swatch is the colour itself, so the only state it can show is a ring around it. */
+.swatch { width: 16px; height: 16px; padding: 0; border: 1px solid var(--line); line-height: 1; }
+.swatch.on { outline: 2px solid var(--ink); outline-offset: 1px; }
+.notes { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 3px; }
+.notes.empty::before { content: "the board would draw this one"; opacity: 0.45; margin-left: -16px; }
+.notes li { opacity: 0.8; }

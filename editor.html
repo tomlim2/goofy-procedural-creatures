@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MENAGERIE — editor</title>
+<meta name="description" content="Pick a species, then build one creature by hand — every slot, colour and proportion.">
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body class="editor">
+
+<canvas id="stage" aria-label="The creature being edited"></canvas>
+
+<header class="bar">
+  <a class="mark" href="./index.html">MENAGERIE</a>
+  <nav class="nav"><a href="./index.html">GRID</a><a href="./debug.html">DEBUG</a><a href="./gallery.html">GALLERY</a><span class="here">EDITOR</span><a href="./audit.html">AUDIT</a><a href="./pixeldiff.html">DIFF</a><a href="./how.html">HOW</a></nav>
+  <span class="status" id="status">BOOT</span>
+</header>
+
+<aside class="deck">
+  <section class="card">
+    <h2>SPECIES</h2>
+    <select id="speciesSel" class="wide" aria-label="Species"></select>
+  </section>
+
+  <section class="card">
+    <h2>SEED <span class="seed" id="seed">·······</span></h2>
+    <div class="row seg">
+      <button id="reseed">NEW</button>
+      <button id="rewobble">WOBBLE</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>POSE</h2>
+    <div class="row seg" id="poseSeg" role="group" aria-label="Pose">
+      <button data-pose="motion">MOTION</button>
+      <button data-pose="bind" class="on">BIND</button>
+    </div>
+  </section>
+
+  <details class="card" open>
+    <summary><h2>PARTS</h2></summary>
+    <div id="parts" class="fields"></div>
+  </details>
+
+  <details class="card">
+    <summary><h2>PALETTE</h2></summary>
+    <div id="palette" class="fields"></div>
+  </details>
+
+  <details class="card">
+    <summary><h2>PROPORTIONS</h2></summary>
+    <div id="proportions" class="fields"></div>
+  </details>
+
+  <section class="card">
+    <h2>SPEC</h2>
+    <div class="row seg">
+      <button id="save">SAVE</button>
+      <button id="open">OPEN</button>
+    </div>
+    <input id="file" type="file" accept="application/json,.json" hidden aria-label="Open a creature file">
+  </section>
+
+  <section class="card">
+    <h2>NOTES</h2>
+    <ul id="notes" class="notes empty"></ul>
+  </section>
+
+  <p class="hint">Species first, then parts · the rules are reported, not applied — what you pick is drawn · SAVE writes the whole spec, not a seed · R seed · B pose</p>
+</aside>
+
+<noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>
+
+<script type="module" src="./src/editor.js"></script>
+</body>
+</html>

@@ -41,6 +41,11 @@ To go back, press **MENAGERIE** in the header.
 (species and seed fixed). The FIX dropdown (`&fix=legLength:short`) pins one other slot, and `&values=bangs,bun` puts just a few of that slot's
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
+`/editor.html?seed=0z0y9qe&species=cat` — **the editor**. Pick a species, then build one individual by hand:
+every one of the 28 slots, the palette and the proportions. A species' forbidden values and the constraint pass
+are reported under NOTES and **not** applied, so it can make creatures the board never will — which is also why
+SAVE writes the whole spec as JSON rather than a seed. OPEN takes one back.
+
 `/how.html` — **the medium page**. The legend of how everything is drawn, on three axes: the goofy outlines (what a contour is drawn
 with — the pencil, with its anatomy and its sizes), the goofy materials (how a surface is filled — five of them as shader balls) and the goofy fur
 (how hair is grown — fur balls), then the shapes, the colors and the boil. Every figure is drawn live by the same `src/stroke.js` and `src/medium/` that draw the creatures, at the board's own scale, and the
@@ -101,6 +106,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | `src/main.js` · `src/control.js` · `src/ui.js` | The entry point. `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the loop — a fixed 24 ticks a second, `tick.js`; shared with gallery, audit and the medium page) | |
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
+| `src/editor.js` · `editor.html` | The editor — one working spec edited by hand, saved and opened as JSON. The only screen whose creature need not be a seed's | [determinism](guidelines/determinism.md) |
 | `src/pixeldiff.js` · `pixeldiff.html` | The pixel diff — the working tree against a git ref, rendered on the same GPU, the differing pixels counted per creature | [determinism](guidelines/determinism.md) |
 | `src/audit.js` · `audit.html` | The face part audit — counts by pixel whether a part is visible in each state, and whether a quad's tail shows at rest and raised | [character/rules](guidelines/character/rules.md) |
 | `src/how.js` · `how.html` | The medium page — the goofy outlines, the goofy materials and the goofy fur (balls generated from the tables), the shapes, the palette and the boil, drawn live by `stroke.js` itself | [drawing](guidelines/drawing.md) |
