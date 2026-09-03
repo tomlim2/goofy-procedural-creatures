@@ -215,6 +215,21 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     layout();
   }
 
+  // One slot, swapped for an individual the caller chose. Everything else on the board is left exactly where
+  // it stands: rebuilding the whole board to change one cell discards all 35 rigs, resets every clock to its
+  // birth and drops the high fives' cooldowns, which reads as the board blinking off and on.
+  function replace(index, spec) {
+    const old = creatures[index];
+    if (!old) return;
+    // A five in progress needs no release here: the pairing notices the item is gone on its next tick, the
+    // same way it already does for a LIVE regen (scene/hifive.js).
+    discard(old);
+    const item = spec.kind === "house" ? buildHouse(spec) : buildCreature(spec, noise, clockNow);
+    item.generation = old.generation;
+    place(item, index);
+    creatures[index] = item;
+  }
+
   // Regen. The species stays with the slot; only the individual changes.
   function regenerate(index) {
     const old = creatures[index];
@@ -302,5 +317,5 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     renderer.render(scene, camera);
   }
 
-  return { build, update, resize, setRegen, setBind, setBoil, setAction, draw, probe, renderer, scene, camera, creatures: () => creatures };
+  return { build, replace, update, resize, setRegen, setBind, setBoil, setAction, draw, probe, renderer, scene, camera, creatures: () => creatures };
 }

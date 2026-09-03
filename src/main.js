@@ -112,12 +112,19 @@ function reseed() {
   render();
 }
 
-// One character, redrawn. Only this cell moves — that is the whole point of a character owning its seed.
+// One character, redrawn. Only this cell moves — that is the whole point of a character owning its seed, and
+// it is why this swaps the one slot rather than calling render(): a full rebuild would discard every rig on
+// the board, restart all 35 clocks from their birth and drop the high fives, which looks like the board
+// blinking off and back on for a change to a single creature.
 function recast() {
   const cell = cells[selected];
   if (!cell) return;
-  overrides.set(selected, { seed: randomSeed(), species: cell.species });
-  render();
+  const next = { seed: randomSeed(), species: cell.species };
+  overrides.set(selected, next);
+  cells[selected] = next;
+  scene.replace(selected, makeBoard([next])[0]);
+  showSelected();
+  syncUrl();
 }
 
 document.getElementById("reseed").addEventListener("click", reseed);
