@@ -9,6 +9,7 @@
 // One drawing function per kind — the HAIR table. New hair means adding a function here and putting the name in slots.js SLOTS.hair.
 // A function takes h (the context): { back, crown, front, spec, box, noise, ink0 (the hair color), rx, ry, cy (the head's half-width, half-height and centre), shoulder (the floor for back hair) }
 
+import { paintOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { browLine } from "./head.js";
@@ -589,7 +590,8 @@ export function drawHair(layers, spec, box, noise) {
   if (!draw) return;   // none (or an unknown value)
   // The hair's own colour (palette.hair — HAIRS, or a POP when one is aimed here). It used to be palette.ink,
   // which is why every head on the board wore the same black
-  const ink0 = spec.palette.hair || spec.palette.ink;
+  const hairColor = paintOf(spec, "hair") || spec.palette.ink;   // paint: the hair's box, or one a hand chose
+  const ink0 = hairColor;
   draw({
     ...layers,
     spec, box, noise,
@@ -597,9 +599,9 @@ export function drawHair(layers, spec, box, noise) {
     lineInk: spec.palette.ink,   // the filled family's contour — the board's outline, dark whatever the hair is
     // The strands drawn INSIDE a filled shape are a tone of the hair itself, not the board's ink: dark ink on
     // dark hair is the "on the same colour" way of vanishing. Light hair deepens, dark hair tints
-    grainInk: luminance(spec.palette.hair || spec.palette.ink) < 105
-      ? tint(spec.palette.hair || spec.palette.ink, 0.42)
-      : deepen(spec.palette.hair || spec.palette.ink, 0.4),
+    grainInk: luminance(hairColor) < 105
+      ? tint(hairColor, 0.42)
+      : deepen(hairColor, 0.4),
     rx: box.headRx, ry: box.headRy, cy: box.headCy,
     shoulder: box.bodyTop - 0.02   // the floor back hair comes down to (the shoulder)
   });

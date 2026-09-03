@@ -1,5 +1,6 @@
 // Body — torso and markings. Docs: guidelines/character/parts.md § body
 
+import { paintOf } from "../vocabulary/paint.js";
 import { blobPath, crumple } from "../../shape.js";
 import { stepOf } from "../../medium/materials.js";
 import { shade, isDark, luminance } from "../../color.js";
@@ -57,7 +58,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.wobbleSeed * 0.02
     });
-    fills.paint(path, materialOf(spec, "body"), { color: spec.palette.cloth, pattern: patternOf(spec), ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step, the pattern in its base
+    fills.paint(path, materialOf(spec, "body"), { color: paintOf(spec, "body"), pattern: patternOf(spec), ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step, the pattern in its base
     // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
     ink.contour(path, { color: spec.palette.ink });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
@@ -82,7 +83,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
   }
 
-  fills.paint(path, materialOf(spec, "body"), { color: spec.palette.cloth, pattern: patternOf(spec), ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step, the pattern in its base
+  fills.paint(path, materialOf(spec, "body"), { color: paintOf(spec, "body"), pattern: patternOf(spec), ...surfaceHand(spec) });   // the goofy material (the material slot; flat when absent) at the creature's value step, the pattern in its base
   // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
   ink.contour(path, { color: ink0 });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   return { path, top, bottom, w, cx: 0 };

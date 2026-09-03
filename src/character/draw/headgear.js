@@ -1,6 +1,7 @@
 // Hats and horns — the things that sit on top of the head. Docs: guidelines/character/parts.md § headgear · horns
 // A hat sits above the brow line (head.js browLine) and covers along the head outline shape (layout.js headShape).
 
+import { paintOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { shade } from "../../color.js";
@@ -18,7 +19,9 @@ export function drawHeadgear(ink, fills, spec, box) {
   if (kind === "none") return;
   const ink0 = spec.palette.ink;
   const pop = spec.palette.pop;
-  const accent = pop && pop.target === "headgear" ? pop.color : spec.palette.accent;
+  // The hat's box: a pop aimed at the headgear wins as it always did, otherwise the accent — unless a hand has
+  // repainted the hat, in which case its choice is the colour, pop or not.
+  const accent = spec.paint && spec.paint.headgear ? paintOf(spec, "headgear") : pop && pop.target === "headgear" ? pop.color : spec.palette.accent;
   const rx = box.headRx;
   const ry = box.headRy;
   const cy = box.headCy;

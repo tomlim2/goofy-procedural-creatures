@@ -97,6 +97,16 @@ face is decided by the head color (`faceInk`) and body markings by the body colo
 Black-furred dogs and cats and imps all ride the same rule. Objects (an eyepatch, a hat, a lens) and lines over a
 white fill (teeth) are the exception — they keep their own color or the dark ink ([rules.md](rules.md)).
 
+## Paint (paint.js)
+
+A part is filled from the individual's own box of colours — skin, cloth, hair, accent, a pop when it has one —
+and `paint` is the choice of **which**. `PAINT_DEFAULTS` names what each paintable part took before paint
+existed (head and ears the skin, hair the hair, the headgear the accent or a pop aimed at it, the body the
+cloth), so a generated spec carries no `paint` and draws exactly as it did; the editor writes `spec.paint[part]`
+only when a hand picks another box, and `paintOf(spec, part)` is what the drawing reads. One region per part
+for now — a part is one colour. A part that paints more than one thing is inspected on its own before it gets
+a second region, and a part not in `PAINTABLE` is not offered a paint at all.
+
 ## Identity
 
 `identity` in `species.js`. The species invariants census checks.

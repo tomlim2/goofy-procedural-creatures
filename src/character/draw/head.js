@@ -1,5 +1,6 @@
 // Head — the outline, ears, anchors on the outline, the brow line. Hair is hair.js; hats and horns are headgear.js. Docs: guidelines/character/parts.md § head
 
+import { paintOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath } from "../../shape.js";
 import { headShape, eyeGeometry, TAU } from "./layout.js";
 import { shade, isDark, mix } from "../../color.js";
@@ -20,7 +21,7 @@ export function drawHead(ink, fills, spec, box, noise) {
   });
 
   // The material slot — the creature's goofy material: how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
-  fills.paint(path, materialOf(spec), { color: spec.palette.skin, ...surfaceHand(spec) });
+  fills.paint(path, materialOf(spec), { color: paintOf(spec, "head"), ...surfaceHand(spec) });
 
   // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
 
@@ -45,7 +46,7 @@ export function drawEars(ink, fills, spec, box) {
   const y = box.headCy - box.headRy * 0.05;
   // Every ear is **filled in the skin** (the creature's goofy material) before its line — an unfilled ear showed the paper through it. The layer is
   // behind the head, so the part of the fill inside the silhouette is covered by the head; only the ear that sticks out shows
-  const skin = spec.palette.skin;
+  const skin = paintOf(spec, "ears");   // the head's box unless a hand repaints the ears
 
   for (const side of [-1, 1]) {
     const x = side * box.headRx * 0.98;

@@ -17,7 +17,7 @@ import { createScene } from "./scene/index.js";
 import {
   makeCreature, applyForbid, applyConstraints,
   ghostPalette, ghostOutline, ghostInk, isGhost,
-  SLOTS, SPECIES
+  SLOTS, SPECIES, PAINTABLE, paintKey
 } from "./character/index.js";
 import { FILLS, INKS, ACCENTS, POPS, SCALES, HAIR_POOL, MARKS } from "./character/vocabulary/palette.js";
 import { luminance } from "./color.js";
@@ -125,18 +125,74 @@ function field(parent, label) {
   return row;
 }
 
+// **The part is the unit.** One part is open at a time, and the deck shows only what that part has: its
+// form, and — for a part that is painted — which of the individual's own colours it takes. Parts that paint
+// more than one thing are inspected one by one before they get a second colour (vocabulary/paint.js).
+let part = Object.keys(SLOTS)[0];
+let partSel = null;
+let formSel = null;
+let paintRow = null;
+let paintStrip = null;
+const PAINT_BOXES = ["skin", "cloth", "hair", "accent", "pop"];
+
 function buildParts() {
   partsBox.innerHTML = "";
-  for (const slot of Object.keys(SLOTS)) {
-    const row = field(partsBox, slot);
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", slot);
-    for (const value of SLOTS[slot]) addOption(select, value, value);
-    select.addEventListener("change", () => {
-      spec = derive({ ...spec, parts: { ...spec.parts, [slot]: select.value } });
+  const pick = field(partsBox, "part");
+  partSel = document.createElement("select");
+  partSel.setAttribute("aria-label", "Part");
+  for (const slot of Object.keys(SLOTS)) addOption(partSel, slot, slot);
+  partSel.addEventListener("change", () => { part = partSel.value; renderPart(); });
+  pick.appendChild(partSel);
+
+  const form = field(partsBox, "form");
+  formSel = document.createElement("select");
+  formSel.setAttribute("aria-label", "Form");
+  formSel.addEventListener("change", () => {
+    spec = derive({ ...spec, parts: { ...spec.parts, [part]: formSel.value } });
+    render();
+  });
+  form.appendChild(formSel);
+
+  paintRow = document.createElement("div");
+  paintRow.className = "field swatches";
+  const name = document.createElement("span");
+  name.textContent = "paint";
+  paintRow.appendChild(name);
+  paintStrip = document.createElement("div");
+  paintStrip.className = "strip";
+  paintRow.appendChild(paintStrip);
+  partsBox.appendChild(paintRow);
+}
+
+// The open part's controls, from the spec: the form list, and the paint boxes drawn in the individual's own
+// colours with the one it currently takes ringed. A box the individual does not have (a pop on one without)
+// is not offered.
+function renderPart() {
+  partSel.value = part;
+  formSel.innerHTML = "";
+  for (const value of SLOTS[part]) addOption(formSel, value, value);
+  formSel.value = spec.parts[part];
+
+  const paintable = PAINTABLE.includes(part);
+  paintRow.hidden = !paintable;
+  paintStrip.innerHTML = "";
+  if (!paintable) return;
+  const current = paintKey(spec, part);
+  for (const key of PAINT_BOXES) {
+    const color = key === "pop" ? spec.palette0.pop && spec.palette0.pop.color : spec.palette0[key];
+    if (!color) continue;
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "swatch";
+    dot.style.background = color;
+    dot.title = key;
+    dot.setAttribute("aria-label", `paint ${part} with ${key}`);
+    dot.classList.toggle("on", key === current);
+    dot.addEventListener("click", () => {
+      spec = derive({ ...spec, paint: { ...(spec.paint || {}), [part]: key } });
       render();
     });
-    row.appendChild(select);
+    paintStrip.appendChild(dot);
   }
 }
 
@@ -202,10 +258,7 @@ function render() {
   speciesSel.value = spec.species;
   seedLabel.textContent = loaded ? "loaded" : formatSeed(spec.seed);
 
-  for (const row of partsBox.children) {
-    const select = row.querySelector("select");
-    select.value = spec.parts[select.getAttribute("aria-label")];
-  }
+  renderPart();
   for (const row of paletteBox.children) {
     const key = row.firstChild.textContent;
     const current = key === "pop" ? (spec.palette0.pop?.color ?? "") : (spec.palette0[key] ?? "");
