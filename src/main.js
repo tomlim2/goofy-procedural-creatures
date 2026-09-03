@@ -13,7 +13,6 @@ const canvas = document.getElementById("stage");
 const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
 const cellLabel = document.getElementById("cell");
-const editLink = document.getElementById("edit");
 const pick = new THREE.Vector3();
 
 // The high five's schedule. RUSH divides its two waits by 60 — a board's first five lands within a second or
@@ -89,7 +88,6 @@ function showSelected() {
   if (!cell) return;
   seedLabel.textContent = formatSeed(cell.seed);
   if (cellLabel) cellLabel.textContent = `${cell.species.toUpperCase()} · CELL ${selected}`;
-  if (editLink) editLink.href = `./editor.html?seed=${cell.seed.toString(36)}&species=${cell.species}`;
 }
 
 // Debug URL — puts the current screen into the address. Controls go in the query (control.js builds it); the seed stays in the hash as before.
