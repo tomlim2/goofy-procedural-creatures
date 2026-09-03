@@ -317,6 +317,15 @@ body.how { height: auto; }
 .field .readout { grid-column: 2; font-variant-numeric: tabular-nums; opacity: 0.5; }
 .field.swatches { grid-template-columns: 74px 1fr; align-items: start; }
 .strip { display: flex; flex-wrap: wrap; gap: 3px; }
+/* Material balls (src/balls.js) — a 3D program's shader ball. The preview is colour, material and density
+   together; a sample is one material in the creature's own colour and density, ringed when it is the one. */
+.field canvas.preview { display: block; width: 72px; height: 72px; }
+.balls .ball { display: block; width: 28px; height: 28px; padding: 0; border: 0; background: transparent; border-radius: 50%; position: relative; }
+.balls .ball canvas { display: block; }
+.balls .ball:hover { background: rgba(43, 39, 36, 0.06); }
+.balls .ball.on { outline: 2px solid var(--ink); outline-offset: 1px; }
+/* The body's "base skin's" — the same ball the base card shows, marked so it reads as a reference, not a fifth material */
+.balls .ball.same::after { content: "="; position: absolute; right: -3px; bottom: -5px; font-size: 9px; line-height: 1; opacity: 0.55; }
 /* A swatch is the colour itself, so the only state it can show is a ring around it. */
 .swatch { width: 16px; height: 16px; padding: 0; border: 1px solid var(--line); line-height: 1; }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 1px; }

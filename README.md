@@ -43,7 +43,9 @@ values up large. For judging the form of a single part. Where census is numbers,
 
 `/editor.html?species=cat` — **the editor**. Pick a species, NEW rolls a fresh individual of it, then build by hand.
 **Colour belongs to the material.** The BASE SKIN MATERIAL is what the creature is made of before any part
-goes on — a colour (the skin box), a material and a density — and is not a part. The body wears a material of
+goes on — a colour (the skin box), a material and a density — and is not a part. Its card reads like a 3D
+program's material panel: a ball previewing the three together, the four materials as sample balls in the
+creature's own colour and density, the density as a stepped slider, then the colour. The body wears a material of
 its own: its colour (the cloth box) and its material, or the base skin's. Then a part at a time: open one and
 the deck shows only what it has — its form, the body's material, and for a part with no material of its own
 (the hair, the headgear) which of the creature's own colours it is painted from — plus the palette those

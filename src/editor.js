@@ -23,6 +23,7 @@ import {
 } from "./character/index.js";
 import { FILLS, INKS, ACCENTS, POPS, DARKS, FURS, SCALES, HAIRS } from "./character/vocabulary/palette.js";
 import { bindSeg, addOption, randomRoll, runLoop, download } from "./ui.js";
+import { paintBall } from "./balls.js";
 
 const canvas = document.getElementById("stage");
 const speciesSel = document.getElementById("speciesSel");
@@ -120,30 +121,97 @@ function field(parent, label) {
 // **The part is the unit.** One part is open at a time, and the deck shows only what that part has: its
 // form, and — for a part that is painted — which of the individual's own colours it takes. Parts that paint
 // more than one thing are inspected one by one before they get a second colour (vocabulary/paint.js).
-// **The base is not a part.** It is what the creature is made of before any part is put on it: its colour
-// is the skin — the box most of the creature is painted from — and its material is the goofy surface
-// (material, and how densely it is laid). Those two slots leave the part list for this card; the palette
-// card, folded away by default, carries the same colour box.
+// **The base is not a part.** It is what the creature is made of before any part is put on it: the base skin
+// material — a colour (the skin box), a goofy material, and the density it is laid at. The card reads the way
+// a 3D program's material panel does: a ball previewing the three together, the materials as sample balls in
+// the creature's own colour and density, the density as a stepped slider, then the colour. The two slots leave
+// the part list for this card; the palette card, folded away by default, carries the same colour box.
 const BASE_SLOTS = ["material", "density"];
-const baseSels = {};
+const MATERIALS = SLOTS.material;    // graphite · ink · oil · charcoal
+const DENSITIES = SLOTS.density;     // black · hatch · scribble · stipple · light — the steps, dark to light
+const base = { preview: null, readout: null, balls: {}, density: null, densityOut: null };
+
+// A row that is not a <label>: a label activates its first button on any click, and these rows hold many.
+function fieldRow(parent, label, className = "field") {
+  const row = document.createElement("div");
+  row.className = className;
+  const name = document.createElement("span");
+  name.textContent = label;
+  row.appendChild(name);
+  parent.appendChild(row);
+  return row;
+}
+// The preview ball, with what it shows written under it.
+function previewRow(parent) {
+  const row = fieldRow(parent, "preview");
+  const canvas = document.createElement("canvas");
+  canvas.className = "preview";
+  row.appendChild(canvas);
+  const readout = document.createElement("output");
+  readout.className = "readout";
+  row.appendChild(readout);
+  return { row, canvas, readout };
+}
+// A strip of sample balls, one per material name; "same" is the body's "base skin's".
+function ballStrip(parent, names, onPick) {
+  const row = fieldRow(parent, "material", "field balls");
+  const strip = document.createElement("div");
+  strip.className = "strip";
+  const balls = {};
+  for (const name of names) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = name === "same" ? "ball same" : "ball";
+    item.title = name === "same" ? "base skin's" : name;
+    item.setAttribute("aria-label", `material ${item.title}`);
+    const canvas = document.createElement("canvas");
+    item.appendChild(canvas);
+    item.addEventListener("click", () => onPick(name));
+    strip.appendChild(item);
+    balls[name] = { item, canvas };
+  }
+  row.appendChild(strip);
+  return { row, balls };
+}
+
 function buildBase() {
   baseBox.innerHTML = "";
+  const preview = previewRow(baseBox);
+  base.preview = preview.canvas;
+  base.readout = preview.readout;
+  base.balls = ballStrip(baseBox, MATERIALS, (name) => {
+    spec = derive({ ...spec, parts: { ...spec.parts, material: name } });
+    render();
+  }).balls;
+  const densityRow = field(baseBox, "density");
+  base.density = document.createElement("input");
+  base.density.type = "range";
+  base.density.min = "0";
+  base.density.max = String(DENSITIES.length - 1);
+  base.density.step = "1";
+  base.density.setAttribute("aria-label", "density");
+  base.density.addEventListener("input", () => {
+    spec = derive({ ...spec, parts: { ...spec.parts, density: DENSITIES[Number(base.density.value)] } });
+    render();
+  });
+  densityRow.appendChild(base.density);
+  base.densityOut = document.createElement("output");
+  base.densityOut.className = "readout";
+  densityRow.appendChild(base.densityOut);
   paletteRow(baseBox, "skin", "colour");
-  for (const slot of BASE_SLOTS) {
-    const row = field(baseBox, slot);
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", slot);
-    for (const value of SLOTS[slot]) addOption(select, value, value);
-    select.addEventListener("change", () => {
-      spec = derive({ ...spec, parts: { ...spec.parts, [slot]: select.value } });
-      render();
-    });
-    row.appendChild(select);
-    baseSels[slot] = select;
-  }
 }
 function renderBase() {
-  for (const slot of BASE_SLOTS) baseSels[slot].value = spec.parts[slot];
+  const { material, density } = spec.parts;
+  const color = spec.palette0.skin;
+  paintBall(base.preview, { color, material, density, phase: 0, size: 72 });
+  base.readout.textContent = `${material} · ${density}`;
+  MATERIALS.forEach((name, i) => {
+    const b = base.balls[name];
+    paintBall(b.canvas, { color, material: name, density, phase: 1 + i });
+    b.item.classList.toggle("on", name === material);
+  });
+  base.density.value = String(Math.max(0, DENSITIES.indexOf(density)));
+  base.densityOut.textContent = density;
 }
 
 // A part that carries a material of its own. The body is clothing: what is put on it brings its own surface
@@ -160,8 +228,8 @@ let part = PART_SLOTS[0];
 let partSel = null;
 let formSel = null;
 let bodyColourRow = null;
-let materialRow = null;
-let materialSel = null;
+const body = { previewRow: null, preview: null, readout: null, materialRow: null, balls: {} };
+const BODY_MATERIALS = ["same", ...SLOTS.bodyMaterial.filter((name) => name !== "same")];
 let paintRow = null;
 let paintStrip = null;
 const PAINT_BOXES = ["skin", "cloth", "hair", "accent", "pop"];
@@ -184,16 +252,19 @@ function buildParts() {
   });
   form.appendChild(formSel);
 
-  // The body's material — its colour first, then the material, the way the base skin card reads
-  bodyColourRow = paletteRow(partsBox, "cloth", "colour");
-  materialRow = field(partsBox, "material");
-  materialSel = document.createElement("select");
-  materialSel.setAttribute("aria-label", "Material");
-  materialSel.addEventListener("change", () => {
-    spec = derive({ ...spec, parts: { ...spec.parts, [PART_MATERIAL[part]]: materialSel.value } });
+  // The body's material, read the way the base skin card is: a preview ball, the materials (the base skin's
+  // own first), then the colour. No density of its own — that is the creature's, one hand and one pressure
+  const preview = previewRow(partsBox);
+  body.previewRow = preview.row;
+  body.preview = preview.canvas;
+  body.readout = preview.readout;
+  const strip = ballStrip(partsBox, BODY_MATERIALS, (name) => {
+    spec = derive({ ...spec, parts: { ...spec.parts, bodyMaterial: name } });
     render();
   });
-  materialRow.appendChild(materialSel);
+  body.materialRow = strip.row;
+  body.balls = strip.balls;
+  bodyColourRow = paletteRow(partsBox, "cloth", "colour");
 
   paintRow = document.createElement("div");
   paintRow.className = "field swatches";
@@ -215,13 +286,22 @@ function renderPart() {
   for (const value of SLOTS[part]) addOption(formSel, value, value);
   formSel.value = spec.parts[part];
 
-  const materialSlot = PART_MATERIAL[part];
-  bodyColourRow.hidden = part !== "body";
-  materialRow.hidden = !materialSlot;
-  if (materialSlot) {
-    materialSel.innerHTML = "";
-    for (const value of SLOTS[materialSlot]) addOption(materialSel, value, value === "same" ? "base skin's" : value);
-    materialSel.value = spec.parts[materialSlot];
+  const isBody = part === "body";
+  body.previewRow.hidden = !isBody;
+  body.materialRow.hidden = !isBody;
+  bodyColourRow.hidden = !isBody;
+  if (isBody) {
+    const own = spec.parts.bodyMaterial;
+    const material = own === "same" ? spec.parts.material : own;
+    const color = spec.palette0.cloth;
+    const density = spec.parts.density;
+    paintBall(body.preview, { color, material, density, phase: 40, size: 72 });
+    body.readout.textContent = `${own === "same" ? "base skin's " : ""}${material} · ${density}`;
+    BODY_MATERIALS.forEach((name, i) => {
+      const b = body.balls[name];
+      paintBall(b.canvas, { color, material: name === "same" ? spec.parts.material : name, density, phase: 41 + i });
+      b.item.classList.toggle("on", name === own);
+    });
   }
 
   const paintable = PAINTED.includes(part);
