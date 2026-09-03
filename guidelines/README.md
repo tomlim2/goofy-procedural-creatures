@@ -20,7 +20,7 @@ thing; the editor is the one that **makes** rather than judges.
 
 | Screen | What it is for |
 | --- | --- |
-| `/index.html` **GRID** | The board itself — the thing being made. Seed, species, grid size, PNG |
+| `/index.html` **GRID** | The board itself — the thing being made. Click a creature to see its seed, redraw that one alone, or take it to the editor. Species, grid size, PNG |
 | `/debug.html` **DEBUG** | The board plus the judging controls, folded into one JUDGING card: POSE (bind), INK (boil), ACTION (force one), HIGH FIVE (rush), REGEN (live). Folded, the summary names whatever is away from its default, so a screen left on BIND never reads as a bug. Every control rides in the address |
 | `/gallery.html` **GALLERY** | One slot's every value on the same individual, side by side |
 | `/editor.html` **EDITOR** | The character maker — a species, then every slot, colour and proportion by hand |
@@ -53,7 +53,8 @@ Looking good to the eye and being right are different things. There is a tool fo
 
 ## In one line each
 
-- The same seed has to give the same result. If that breaks, this lab means nothing
+- The same seed has to give the same result. If that breaks, this lab means nothing. The unit is the
+  **character**, not the board: a board is a cast of cells, and a base seed only fills the empty ones
 - Character is slots (form) only; motion is rhythm/events/states only. Hands behind the back is not a form
   but a pose (motion)
 - Looking good to the eye and having the right distribution and frequency are different things. If you

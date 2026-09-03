@@ -1,7 +1,8 @@
 // Entry point. Settles the seed, bakes the grid, runs the clock.
 
-import { createScene } from "./scene/index.js";
-import { makeGrid } from "./character/index.js";
+import * as THREE from "three";
+import { createScene, CELL_W, CELL_H } from "./scene/index.js";
+import { boardCells, makeBoard } from "./character/index.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./motion/index.js";
 import { formatSeed, seedFromString } from "./rng.js";
 import { addOption, randomSeed, runLoop } from "./ui.js";
@@ -11,6 +12,9 @@ import { exportPng } from "./export.js";
 const canvas = document.getElementById("stage");
 const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
+const cellLabel = document.getElementById("cell");
+const editLink = document.getElementById("edit");
+const pick = new THREE.Vector3();
 
 // The high five's schedule. RUSH divides its two waits by 60 — a board's first five lands within a second or
 // two instead of within five minutes, and the pairs keep going. **Only the waiting is shortened**: the pair
@@ -26,9 +30,27 @@ let columns = 7;
 let rows = 5;
 // Species preview. null means the fixed lanes; a species name means that species only.
 let only = null;
-let seed = readSeedFromHash() ?? randomSeed();
+// **The base seed only fills cells.** It names a starting character for each one and has no other say — a
+// character is its own seed's, so the same seed draws the same creature wherever it sits (determinism.md).
+let baseSeed = readSeedFromHash() ?? randomSeed();
+// Cells the user has taken over, by index: { seed, species }. Everything else comes from the base seed.
+const overrides = new Map();
+let cells = [];
+let selected = 0;
 // Nothing is baked while booting — every value from the address goes into the controls and one bake happens at the very end (otherwise a 9×6 gets baked three times)
 let booted = false;
+
+// The hand-cast cells from the address — index:seed, the form syncUrl writes.
+function readCastFromQuery() {
+  const raw = new URLSearchParams(window.location.search).get("cells");
+  if (!raw) return;
+  for (const entry of raw.split(",")) {
+    const [index, seed] = entry.split(":");
+    const at = Number(index);
+    const parsed = parseInt(seed, 36);
+    if (Number.isInteger(at) && at >= 0 && Number.isFinite(parsed)) overrides.set(at, { seed: parsed >>> 0, species: null });
+  }
+}
 
 function readSeedFromHash() {
   const raw = window.location.hash.replace(/^#/, "").trim();
@@ -37,15 +59,37 @@ function readSeedFromHash() {
   return Number.isFinite(parsed) ? parsed >>> 0 : seedFromString(raw);
 }
 
+// The species preview is a judging mode — one species standing 54 to a board — so a cell somebody took over
+// would spoil exactly the count it exists to show. It draws the plain lanes.
+function currentCells() {
+  const next = boardCells(baseSeed, columns * rows, columns, only);
+  if (only !== null) return next;
+  for (const [index, cell] of overrides) {
+    if (index >= next.length) continue;
+    // A cast entry read from the address carries no species — it stands in whatever lane it landed in.
+    next[index] = { ...cell, species: cell.species ?? next[index].species };
+  }
+  return next;
+}
+
 function render() {
   if (!booted) return;
+  cells = currentCells();
+  if (selected >= cells.length) selected = 0;
   // The label updates first. Whatever reason a build fails for, the fact that
   // the click was registered has to show on screen.
-  seedLabel.textContent = formatSeed(seed);
+  showSelected();
   syncUrl();
-  const specs = makeGrid(seed, columns * rows, columns, only);
-  scene.build(specs, columns);
-  statusLabel.textContent = `${specs.length} ALIVE`;
+  scene.build(makeBoard(cells), columns);
+  statusLabel.textContent = `${cells.length} ALIVE`;
+}
+
+function showSelected() {
+  const cell = cells[selected];
+  if (!cell) return;
+  seedLabel.textContent = formatSeed(cell.seed);
+  if (cellLabel) cellLabel.textContent = `${cell.species.toUpperCase()} · CELL ${selected}`;
+  if (editLink) editLink.href = `./editor.html?seed=${cell.seed.toString(36)}&species=${cell.species}`;
 }
 
 // Debug URL — puts the current screen into the address. Controls go in the query (control.js builds it); the seed stays in the hash as before.
@@ -54,24 +98,64 @@ function render() {
 function syncUrl() {
   if (!booted) return;
   const search = controls.query();
-  window.history.replaceState(null, "", `${window.location.pathname}${search ? `?${search}` : ""}#${seed.toString(36)}`);
+  // The taken-over cells ride in the address as their own seeds — index:seed, the shortest thing that puts a
+  // hand-cast board back up. A cell edited in the editor cannot be a seed at all, and is not written here.
+  const cast = [...overrides.entries()].map(([index, cell]) => `${index}:${cell.seed.toString(36)}`).join(",");
+  const query = [search, cast ? `cells=${cast}` : ""].filter(Boolean).join("&");
+  window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}#${baseSeed.toString(36)}`);
 }
 
+// A new board: a new base seed, and the hand-cast cells let go with it.
 function reseed() {
-  seed = randomSeed();
+  baseSeed = randomSeed();
+  overrides.clear();
+  render();
+}
+
+// One character, redrawn. Only this cell moves — that is the whole point of a character owning its seed.
+function recast() {
+  const cell = cells[selected];
+  if (!cell) return;
+  overrides.set(selected, { seed: randomSeed(), species: cell.species });
   render();
 }
 
 document.getElementById("reseed").addEventListener("click", reseed);
+const recastButton = document.getElementById("recast");
+if (recastButton) recastButton.addEventListener("click", recast);
+
+// Picking a character. Every cell centre is projected to the screen and the nearest one to the click wins —
+// the same projection the parts gallery puts its labels with, and it needs no raycast into the rig.
+canvas.addEventListener("pointerdown", (event) => {
+  if (!cells.length) return;
+  const box = canvas.getBoundingClientRect();
+  const rows = Math.ceil(cells.length / columns);
+  const width = columns * CELL_W;
+  const height = rows * CELL_H;
+  let best = -1;
+  let bestDistance = Infinity;
+  for (let i = 0; i < cells.length; i += 1) {
+    const col = i % columns;
+    const row = Math.floor(i / columns);
+    pick.set(-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 0.5), 0).project(scene.camera);
+    const x = (pick.x * 0.5 + 0.5) * box.width;
+    const y = (-pick.y * 0.5 + 0.5) * box.height;
+    const distance = Math.hypot(x - (event.clientX - box.left), y - (event.clientY - box.top));
+    if (distance < bestDistance) { bestDistance = distance; best = i; }
+  }
+  if (best >= 0) { selected = best; showSelected(); }
+});
 
 // PNG export — the screen exactly as it is, with only a signature laid on top (seed bottom-left, name bottom-right).
 // scene.draw() is called first and the read happens **in the same task** — WebGL clears the drawing buffer at the end of a frame (src/export.js)
 const exportButton = document.getElementById("exportPng");
 if (exportButton) {
   exportButton.addEventListener("click", () => {
-    const label = formatSeed(seed);
+    // A board is a cast now, so the signature names the base seed it was grown from — and says so when cells
+    // have been taken over, because that base seed alone no longer stands this board back up.
+    const label = formatSeed(baseSeed) + (overrides.size ? " +CAST" : "");
     scene.draw();
-    exportPng(canvas, { seed: label, mark: "MENAGERIE", name: `menagerie-${label}.png` });
+    exportPng(canvas, { seed: label, mark: "MENAGERIE", name: `menagerie-${formatSeed(baseSeed)}.png` });
   });
 }
 
@@ -173,8 +257,9 @@ window.addEventListener("keydown", (event) => {
 // only the address would move while the board stayed put. It is also called for the hash syncUrl wrote, so an identical value is skipped
 window.addEventListener("hashchange", () => {
   const fromHash = readSeedFromHash();
-  if (fromHash === null || fromHash === seed) return;
-  seed = fromHash;
+  if (fromHash === null || fromHash === baseSeed) return;
+  baseSeed = fromHash;
+  overrides.clear();
   render();
 });
 
@@ -182,6 +267,7 @@ window.addEventListener("resize", () => scene.resize());
 
 // Puts the address's values into the screen, then bakes once
 controls.read(new URLSearchParams(window.location.search));
+readCastFromQuery();
 showJudging();
 booted = true;
 render();

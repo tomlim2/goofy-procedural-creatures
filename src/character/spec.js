@@ -403,41 +403,38 @@ export function laneSpecies(rows) {
   return Array.from({ length: rows }, (_, r) => LANES[r % LANES.length]);
 }
 
-// Give only a species name and every row is filled with that species — for the preview. Judging color and part
-// distribution needs one species standing 54 to a board.
-export function makeGrid(baseSeed, count, columns, only = null) {
-  const creatures = [];
+// The seed of the cell at index i. Spreading by a large odd multiplier is what keeps neighbouring cells from
+// landing on neighbouring seeds — plain base+0, base+1… made archetypes clump into rows.
+export function cellSeed(baseSeed, index) {
+  return (baseSeed + index * 2654435761) >>> 0;
+}
+
+// The default cast for a board grown from one base seed: a seed and a species for every cell. Row species are
+// fixed lanes — from the top, human, cat, dog, imp, rex and house cycle row by row. Give only a species name
+// and every row is filled with that species (for the preview: judging colour and part distribution needs one
+// species standing 54 to a board).
+//
+// **This is all a base seed does now.** It names a starting character for each cell and then has no further
+// say: a character is its own seed's and nothing else's (guidelines/determinism.md).
+export function boardCells(baseSeed, count, columns, only = null) {
   const rows = Math.ceil(count / columns);
-
-  // Row species are fixed lanes: from the top, human, cat, dog and imp cycle row by row.
   const rowSpecies = only ? Array(rows).fill(only) : laneSpecies(rows);
+  return Array.from({ length: count }, (_, i) => ({
+    seed: cellSeed(baseSeed, i),
+    species: rowSpecies[Math.floor(i / columns)]
+  }));
+}
 
-  for (let i = 0; i < count; i += 1) {
-    const species = rowSpecies[Math.floor(i / columns)];
-    let candidate = null;
+// A board from an explicit cast. A cell is either a seed with the species to draw it as, or a whole `spec`
+// that was made by hand in the editor and cannot be expressed as a seed. Nothing on one cell can reach
+// another, which is the point: the same cell draws the same character wherever it sits on the board.
+export function makeBoard(cells) {
+  return cells.map((cell) => {
+    if (cell.spec) return cell.spec;
+    return cell.species === "house" ? makeHouse(cell.seed) : makeCreature(cell.seed, cell.species);
+  });
+}
 
-    // Only up to 8 re-draws. Picking indefinitely skews the distribution instead.
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      const cseed = (baseSeed + i * 2654435761 + attempt * 40503) >>> 0;
-      candidate = species === "house" ? makeHouse(cseed) : makeCreature(cseed, species);
-      const left = i % columns === 0 ? null : creatures[i - 1];
-      const up = i >= columns ? creatures[i - columns] : null;
-      const clash =
-        (left && left.archetype === candidate.archetype) ||
-        (up && up.archetype === candidate.archetype);
-      if (!clash) break;
-    }
-
-    creatures.push(candidate);
-  }
-
-  // At most 3 color accents per board. Beyond that the earlier ones are kept and the rest switched off.
-  let pops = 0;
-  for (const creature of creatures) {
-    if (!creature.palette.pop) continue;
-    pops += 1;
-    if (pops > 3) creature.palette.pop = null;
-  }
-
-  return creatures;
+export function makeGrid(baseSeed, count, columns, only = null) {
+  return makeBoard(boardCells(baseSeed, count, columns, only));
 }

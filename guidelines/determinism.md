@@ -1,7 +1,26 @@
 # The seed contract
 
-**The same seed always makes the same board.** This is the one absolute rule of this lab.
+**The same seed always makes the same character.** This is the one absolute rule of this lab.
 Recording a good result as a seed and calling it back later is the reason this tool exists.
+
+The rule used to be written a board at a time, and a board is no longer the unit. A **character** owns its
+seed: `makeCreature(seed, species)` is the whole of it, and the same seed draws the same creature standing
+alone, in a gallery row, or in any cell of any board. A **board** is a cast — a list of cells, each one a seed
+or a whole spec made by hand in the editor. `boardCells(baseSeed, …)` still grows a default cast from one
+seed, which is what every measuring tool below stands a board up with, but that base seed only **fills** the
+cells. It has no say over what any of them then is.
+
+Two board-wide rules were dropped to get here, and they are worth knowing about because boards drawn before
+the change do not come back the same. Cells used to be redrawn up to eight times so no creature shared an
+archetype with its left or upper neighbour, which made a character's real seed depend on where it sat; and a
+board kept at most three colour accents, switching off the fourth and later ones **after** they were drawn,
+which made three creatures in thirty-five impossible to reproduce on their own. Neither could survive a
+character owning its seed. If a board wants those properties again they belong in the cast — in what is
+chosen for each cell — not in a pass that reaches into a finished character.
+
+Measured over 20 boards: **207 creatures of 700 moved (29.6%)**, of which 21 only got a colour accent back.
+The rest are cells whose redraw counter collapsed to zero. Seeds re-shuffled; boards recorded before this are
+gone.
 
 ## Forbidden
 
@@ -95,6 +114,10 @@ function of t. A stall skips ticks rather than catching up — time is the truth
 motion trajectories and the frequency count ([motion/rules.md](motion/rules.md)) step at the same tick.
 
 ## How to check
+
+Every gate below still asks for a board by seed, through `makeGrid(seed, …)`. That call is now
+`makeBoard(boardCells(seed, …))` and is kept exactly for them: a whole board from one number is the cheapest
+way to get a large, repeatable sample of characters.
 
 `scripts/snapshot.mjs` verifies specs, geometry and motion trajectories in one pass
 ([../README.md](../README.md) § Scripts).
