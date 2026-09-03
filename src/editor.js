@@ -89,8 +89,13 @@ function derive(next) {
   };
 }
 
+// A creature made here starts from its seed, with one rule of this screen laid over it: the body's material
+// follows the base until a hand picks one. The generator rolls a body material of its own for the board; on
+// this screen nothing has been chosen yet, so the body wears the base's surface. A file opened here keeps
+// whatever it says.
 function regenerate() {
-  spec = makeCreature(seed, species);
+  const made = makeCreature(seed, species);
+  spec = derive({ ...made, parts: { ...made.parts, bodyMaterial: "same" } });
   loaded = false;
 }
 
