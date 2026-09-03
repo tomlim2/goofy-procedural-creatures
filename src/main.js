@@ -145,10 +145,41 @@ function seedError(message) {
   if (!pinError) return;
   pinError.textContent = message || "";
   pinError.hidden = !message;
+  delete pinError.dataset.ok;
   if (pinSeed) {
     if (message) pinSeed.setAttribute("aria-invalid", "true");
     else pinSeed.removeAttribute("aria-invalid");
   }
+}
+
+// Good news in the same slot, gone again after a moment.
+let noteTimer = null;
+function seedNote(message) {
+  if (!pinError) return;
+  if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; }
+  pinError.textContent = message;
+  pinError.dataset.ok = "";
+  pinError.hidden = false;
+  noteTimer = setTimeout(() => { if (pinError.dataset.ok !== undefined) { pinError.hidden = true; pinError.textContent = ""; delete pinError.dataset.ok; } noteTimer = null; }, 1200);
+}
+
+// The picked creature's seed, to the clipboard — the seed it has, not whatever is half-typed in the input.
+async function copySeed() {
+  const cell = cells[selected];
+  if (!cell) return;
+  const text = formatSeed(cell.seed);
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // No clipboard (an insecure origin, or permission refused): select the seed so ⌘C / Ctrl+C still gets it.
+    pinSeed.value = text;
+    pinSeed.focus();
+    pinSeed.select();
+    seedError("could not copy — it is selected, press ⌘C");
+    return;
+  }
+  seedNote("copied");
+  seedValid(true, { linger: true });
 }
 
 // The green on the input: on while what is typed is a seed, and for a moment after one has been taken.
@@ -233,6 +264,7 @@ pinSeed.addEventListener("keydown", (event) => {
   if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); seedError(null); seedValid(false); pinSeed.blur(); }
 });
 document.getElementById("pinEnter").addEventListener("click", () => castSeed(pinSeed.value));
+document.getElementById("pinCopy").addEventListener("click", copySeed);
 
 // Picking a character. Nothing is picked until a creature is clicked, and a click that lands on no creature
 // lets the pick go. Each cell is projected to the screen — the same projection the parts gallery puts its
