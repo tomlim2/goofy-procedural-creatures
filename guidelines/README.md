@@ -20,7 +20,7 @@ thing; the editor is the one that **makes** rather than judges.
 
 | Screen | What it is for |
 | --- | --- |
-| `/index.html` **GRID** | The board itself — the thing being made. Click a creature to see its seed, redraw that one alone, or take it to the editor. Species, grid size, PNG |
+| `/index.html` **GRID** | The board itself — the thing being made. Nothing is picked until a creature is clicked; then its seed shows and BACK · REDRAW stand at its feet, one cell only. A click on nowhere lets the pick go. Species, grid size, PNG |
 | `/debug.html` **DEBUG** | The board plus the judging controls, folded into one JUDGING card: POSE (bind), INK (boil), ACTION (force one), HIGH FIVE (rush), REGEN (live). Folded, the summary names whatever is away from its default, so a screen left on BIND never reads as a bug. Every control rides in the address |
 | `/gallery.html` **GALLERY** | One slot's every value on the same individual, side by side |
 | `/editor.html` **EDITOR** | The character maker — a species, then every slot, colour and proportion by hand |

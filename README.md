@@ -63,9 +63,10 @@ A refactor has to come out at 0; a change shows where the picture moved.
 
 The main screen (`/`) has only **BOARD · CHARACTER · EXPORT · SPECIES · GRID**. The rest belongs to the debug screen (`/debug.html`).
 
-A board is a **cast**, not a seed. Click any creature and the CHARACTER card names its own seed: REDRAW gives
-that one cell a new seed and leaves every other creature alone, and EDIT opens it in the editor. NEW BOARD
-grows a fresh cast from a new base seed. The base seed only fills cells — the address carries it in the hash
+A board is a **cast**, not a seed. Nothing is picked until you click a creature; then the CHARACTER card
+names its own seed and two buttons stand at its feet: REDRAW gives that one cell a new seed and leaves every
+other creature alone, and BACK walks it to the seeds it had before, one step per press. Clicking on nowhere
+lets the pick go. NEW BOARD grows a fresh cast from a new base seed. The base seed only fills cells — the address carries it in the hash
 and any hand-cast cell after it as `?cells=2:1a9tu21`, so a board you picked over is a link like any other.
 On narrow screens (≤700px) the deck moves from the left edge to a bottom strip — cards run left to right and
 scroll sideways (main and debug screens; gallery and audit assume a desktop width).

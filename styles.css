@@ -326,3 +326,12 @@ body.how { height: auto; }
 .notes { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 3px; }
 .notes.empty::before { content: "the board would draw this one"; opacity: 0.45; margin-left: -16px; }
 .notes li { opacity: 0.8; }
+
+/* The buttons that stand at a clicked creature's feet. Positioned by projecting its cell onto the screen
+   each frame, the way the gallery places its labels, so they follow the board through a resize. */
+.pin { position: fixed; z-index: 2; display: flex; gap: 4px; transform: translate(-50%, 0); }
+/* display: flex above beats the browser's own [hidden] rule, which would leave the pin standing at the
+   top-left of a fresh board before anything is clicked. Said again here so hidden means hidden. */
+.pin[hidden] { display: none; }
+.pin button { font-size: 11px; letter-spacing: 0.1em; padding: 4px 8px; background: #f2ecdf; }
+.pin button:disabled { opacity: 0.35; cursor: default; }

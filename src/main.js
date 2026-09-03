@@ -13,6 +13,8 @@ const canvas = document.getElementById("stage");
 const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
 const cellLabel = document.getElementById("cell");
+const pin = document.getElementById("pin");
+const backButton = document.getElementById("back");
 const pick = new THREE.Vector3();
 
 // The high five's schedule. RUSH divides its two waits by 60 — a board's first five lands within a second or
@@ -34,8 +36,12 @@ let only = null;
 let baseSeed = readSeedFromHash() ?? randomSeed();
 // Cells the user has taken over, by index: { seed, species }. Everything else comes from the base seed.
 const overrides = new Map();
+// What each taken-over cell was before, newest last — so BACK can walk a cell to its earlier seeds.
+const history = new Map();
 let cells = [];
 let selected = 0;
+// A creature has been clicked. The pin at its feet only shows after that; a fresh board has nothing picked.
+let picked = false;
 // Nothing is baked while booting — every value from the address goes into the controls and one bake happens at the very end (otherwise a 9×6 gets baked three times)
 let booted = false;
 
@@ -74,7 +80,7 @@ function currentCells() {
 function render() {
   if (!booted) return;
   cells = currentCells();
-  if (selected >= cells.length) selected = 0;
+  if (selected >= cells.length) { selected = 0; picked = false; }
   // The label updates first. Whatever reason a build fails for, the fact that
   // the click was registered has to show on screen.
   showSelected();
@@ -107,6 +113,8 @@ function syncUrl() {
 function reseed() {
   baseSeed = randomSeed();
   overrides.clear();
+  history.clear();
+  picked = false;
   render();
 }
 
@@ -118,6 +126,8 @@ function recast() {
   const cell = cells[selected];
   if (!cell) return;
   const next = { seed: randomSeed(), species: cell.species };
+  if (!history.has(selected)) history.set(selected, []);
+  history.get(selected).push(cell);
   overrides.set(selected, next);
   cells[selected] = next;
   scene.replace(selected, makeBoard([next])[0]);
@@ -125,30 +135,76 @@ function recast() {
   syncUrl();
 }
 
+// The cell's previous seed, one step back per press. Landing on the base seed's own character lets the
+// override go, so the address shrinks back to the base seed alone.
+function back() {
+  const past = history.get(selected);
+  if (!past || !past.length) return;
+  const previous = past.pop();
+  const base = boardCells(baseSeed, columns * rows, columns, only)[selected];
+  if (previous.seed === base.seed && previous.species === base.species) overrides.delete(selected);
+  else overrides.set(selected, previous);
+  cells[selected] = previous;
+  scene.replace(selected, makeBoard([previous])[0]);
+  showSelected();
+  syncUrl();
+}
+
+// The pin at the picked creature's feet. Projected every frame, like the gallery's labels.
+function placePin() {
+  if (!pin) return;
+  if (!picked || !cells[selected]) { pin.hidden = true; return; }
+  const rowCount = Math.ceil(cells.length / columns);
+  const width = columns * CELL_W;
+  const height = rowCount * CELL_H;
+  const col = selected % columns;
+  const row = Math.floor(selected / columns);
+  // The ground line of the row sits at +0.16 above the cell's bottom edge; the pin hangs just under it.
+  pick.set(-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 1) + 0.16 - 0.03, 0).project(scene.camera);
+  const box = canvas.getBoundingClientRect();
+  pin.style.left = `${box.left + (pick.x * 0.5 + 0.5) * box.width}px`;
+  pin.style.top = `${box.top + (-pick.y * 0.5 + 0.5) * box.height}px`;
+  pin.hidden = false;
+  backButton.disabled = !(history.get(selected) && history.get(selected).length);
+}
+
 document.getElementById("reseed").addEventListener("click", reseed);
 const recastButton = document.getElementById("recast");
 if (recastButton) recastButton.addEventListener("click", recast);
+document.getElementById("pinRedraw").addEventListener("click", recast);
+backButton.addEventListener("click", back);
 
-// Picking a character. Every cell centre is projected to the screen and the nearest one to the click wins —
-// the same projection the parts gallery puts its labels with, and it needs no raycast into the rig.
+// Picking a character. Nothing is picked until a creature is clicked, and a click that lands on no creature
+// lets the pick go. Each cell is projected to the screen — the same projection the parts gallery puts its
+// labels with, no raycast into the rig — and the click has to fall inside the cell's own box, drawn a little
+// tighter than the tile so the gap between two creatures counts as nowhere.
+const HIT_W = 0.8;
+const HIT_H = 0.9;
 canvas.addEventListener("pointerdown", (event) => {
   if (!cells.length) return;
   const box = canvas.getBoundingClientRect();
   const rows = Math.ceil(cells.length / columns);
   const width = columns * CELL_W;
   const height = rows * CELL_H;
-  let best = -1;
-  let bestDistance = Infinity;
-  for (let i = 0; i < cells.length; i += 1) {
+  const toScreen = (x, y) => {
+    pick.set(x, y, 0).project(scene.camera);
+    return [(pick.x * 0.5 + 0.5) * box.width, (-pick.y * 0.5 + 0.5) * box.height];
+  };
+  const px = event.clientX - box.left;
+  const py = event.clientY - box.top;
+  let hit = -1;
+  for (let i = 0; i < cells.length && hit < 0; i += 1) {
     const col = i % columns;
     const row = Math.floor(i / columns);
-    pick.set(-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 0.5), 0).project(scene.camera);
-    const x = (pick.x * 0.5 + 0.5) * box.width;
-    const y = (-pick.y * 0.5 + 0.5) * box.height;
-    const distance = Math.hypot(x - (event.clientX - box.left), y - (event.clientY - box.top));
-    if (distance < bestDistance) { bestDistance = distance; best = i; }
+    const cx = -width / 2 + CELL_W * (col + 0.5);
+    const cy = height / 2 - CELL_H * (row + 0.5);
+    const [x0, y0] = toScreen(cx - CELL_W * HIT_W / 2, cy + CELL_H * HIT_H / 2);
+    const [x1, y1] = toScreen(cx + CELL_W * HIT_W / 2, cy - CELL_H * HIT_H / 2);
+    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) hit = i;
   }
-  if (best >= 0) { selected = best; showSelected(); }
+  if (hit >= 0) { selected = hit; picked = true; showSelected(); }
+  else picked = false;
+  placePin();
 });
 
 // PNG export — the screen exactly as it is, with only a signature laid on top (seed bottom-left, name bottom-right).
@@ -281,4 +337,5 @@ scene.resize();
 runLoop((t) => {
   scene.resize();
   scene.update(t);
+  placePin();
 }, () => { statusLabel.textContent = "ERROR"; });
