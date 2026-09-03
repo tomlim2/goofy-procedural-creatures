@@ -333,5 +333,7 @@ body.how { height: auto; }
 /* display: flex above beats the browser's own [hidden] rule, which would leave the pin standing at the
    top-left of a fresh board before anything is clicked. Said again here so hidden means hidden. */
 .pin[hidden] { display: none; }
-.pin button { font-size: 11px; letter-spacing: 0.1em; padding: 4px 8px; background: #f2ecdf; }
+.pin button { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; background: #f2ecdf; }
+/* The glyph takes the button's ink, so it reads as drawn with the same pen as the board's chrome. */
+.pin svg { width: 16px; height: 16px; fill: currentColor; }
 .pin button:disabled { opacity: 0.35; cursor: default; }
