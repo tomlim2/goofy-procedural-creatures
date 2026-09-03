@@ -10,9 +10,7 @@ import { createControls } from "./control.js";
 import { exportPng } from "./export.js";
 
 const canvas = document.getElementById("stage");
-const seedLabel = document.getElementById("seed");
 const statusLabel = document.getElementById("status");
-const cellLabel = document.getElementById("cell");
 const pin = document.getElementById("pin");
 const pinSeed = document.getElementById("pinSeed");
 const pinError = document.getElementById("pinError");
@@ -94,9 +92,7 @@ function render() {
 function showSelected() {
   const cell = cells[selected];
   if (!cell) return;
-  seedLabel.textContent = formatSeed(cell.seed);
   if (pinSeed && document.activeElement !== pinSeed) { pinSeed.value = formatSeed(cell.seed); seedError(null); seedValid(false); }
-  if (cellLabel) cellLabel.textContent = `${cell.species.toUpperCase()} · CELL ${selected}`;
 }
 
 // Debug URL — puts the current screen into the address. Controls go in the query (control.js builds it); the seed stays in the hash as before.
@@ -225,8 +221,6 @@ function placePin() {
 }
 
 document.getElementById("reseed").addEventListener("click", reseed);
-const recastButton = document.getElementById("recast");
-if (recastButton) recastButton.addEventListener("click", recast);
 document.getElementById("pinRedraw").addEventListener("click", recast);
 backButton.addEventListener("click", back);
 // Enter or the return glyph commits the typed seed; Escape puts the current one back. Leaving the input does
