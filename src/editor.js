@@ -6,7 +6,8 @@
 // produced, while an edited creature usually is not. So the thing this screen saves is the whole spec as JSON —
 // the same file the board's pin opens into a cell (guidelines/determinism.md: a creature is its JSON, and the
 // generator is the only thing that draws from a seed; nothing here calls rng). NEW rolls a fresh individual of
-// the species to start from. The roll's number stays inside the file (the scene phases its clock off it), and nowhere else.
+// the species to start from. SHUFFLE deals a whole new creature, species included; picking a species deals a
+// new one of that species. The roll's number stays inside the file (the scene phases its clock off it), and nowhere else.
 //
 // The rules are reported, not enforced. A species' forbidden values and the constraint pass (a helmet takes
 // the hair, an eyepatch comes off overlapping eyes) are run on a **copy** and the differences are listed under
@@ -364,7 +365,13 @@ buildProportions();
 // ink and a rex is two scale colours — so carrying the old colours across would give a creature no species
 // would ever wear, and the flow here is species first, parts after.
 speciesSel.addEventListener("change", () => { species = speciesSel.value; regenerate(); render(); });
-document.getElementById("reseed").addEventListener("click", () => { seed = randomSeed(); regenerate(); render(); });
+// SHUFFLE — everything goes, the species too. It sits above SPECIES because it is not a choice within one.
+document.getElementById("shuffle").addEventListener("click", () => {
+  species = SPECIES[Math.floor(Math.random() * SPECIES.length)].name;
+  seed = randomSeed();
+  regenerate();
+  render();
+});
 document.getElementById("rewobble").addEventListener("click", () => {
   // The same individual drawn by a different hand — the wobble seed is what every stroke's shake comes off.
   spec = derive({ ...spec, proportions: { ...spec.proportions, wobbleSeed: randomSeed() % 65536 } });
@@ -385,7 +392,7 @@ const pose = bindSeg(poseSeg, "pose", (value) => {
 window.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
   const key = event.key.toLowerCase();
-  if (key === "r") document.getElementById("reseed").click();
+  if (key === "r") document.getElementById("shuffle").click();
   if (key === "b") pose.set(bind ? "motion" : "bind");
 });
 window.addEventListener("resize", () => scene.resize());
