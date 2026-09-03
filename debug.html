@@ -20,8 +20,10 @@
 <canvas id="stage" aria-label="Procedurally drawn creature grid"></canvas>
 <!-- The pin at a picked creature's feet. Glyphs are Google Material Icons "keyboard_return", "content_copy", "undo" and "refresh" (Apache 2.0), inlined so the page stays a static file -->
 <div id="pin" class="pin" hidden>
-  <input id="pinSeed" class="seed pinSeed" type="text" aria-label="Seed" aria-describedby="pinError" title="Type a seed and press Enter" spellcheck="false" autocomplete="off" maxlength="16">
-  <button id="pinEnter" type="button" aria-label="Use this seed" title="Use this seed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/></svg></button>
+  <span class="seedWrap">
+    <input id="pinSeed" class="seed pinSeed" type="text" aria-label="Seed" aria-describedby="pinError" title="Type a seed and press Enter" spellcheck="false" autocomplete="off" maxlength="16">
+    <button id="pinEnter" class="ghost" type="button" aria-label="Use this seed" title="Use this seed" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/></svg></button>
+  </span>
   <button id="pinCopy" type="button" aria-label="Copy this seed" title="Copy this seed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
   <span id="pinError" class="pinError" role="alert" hidden></span>
   <button id="back" type="button" aria-label="Back to the previous seed" title="Back to the previous seed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></button>

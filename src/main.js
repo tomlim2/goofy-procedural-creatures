@@ -14,6 +14,7 @@ const statusLabel = document.getElementById("status");
 const pin = document.getElementById("pin");
 const pinSeed = document.getElementById("pinSeed");
 const pinError = document.getElementById("pinError");
+const pinEnter = document.getElementById("pinEnter");
 const backButton = document.getElementById("back");
 const pick = new THREE.Vector3();
 
@@ -92,7 +93,7 @@ function render() {
 function showSelected() {
   const cell = cells[selected];
   if (!cell) return;
-  if (pinSeed && document.activeElement !== pinSeed) { pinSeed.value = formatSeed(cell.seed); seedError(null); seedValid(false); }
+  if (pinSeed && document.activeElement !== pinSeed) { pinSeed.value = formatSeed(cell.seed); seedError(null); seedValid(false); seedDirty(); }
 }
 
 // Debug URL — puts the current screen into the address. Controls go in the query (control.js builds it); the seed stays in the hash as before.
@@ -192,6 +193,13 @@ function seedValid(on, { linger = false } = {}) {
   if (on && linger) validTimer = setTimeout(() => { delete pinSeed.dataset.valid; validTimer = null; }, 1200);
 }
 
+// The return glyph wakes only once the seed has been changed from the one the creature has.
+function seedDirty() {
+  if (!pinEnter || !pinSeed) return;
+  const cell = cells[selected];
+  pinEnter.disabled = !cell || pinSeed.value.trim().toUpperCase() === formatSeed(cell.seed);
+}
+
 // What formatSeed writes, and nothing else: base 36, letters and digits, fitting in 32 bits — the last seed
 // is 1Z141Z3. Returns the seed, or the reason the text is not one.
 function readSeed(raw) {
@@ -216,6 +224,7 @@ function castSeed(raw) {
   pinSeed.value = formatSeed(read.seed);
   pinSeed.blur();
   seedValid(true, { linger: true });
+  seedDirty();
 }
 
 // The cell's previous seed, one step back per press. Landing on the base seed's own character lets the
@@ -258,12 +267,12 @@ backButton.addEventListener("click", back);
 // neither — the text and any note stay until one of those. Focusing selects the whole seed so a new one can be
 // typed straight over it, and typing clears a stale note.
 pinSeed.addEventListener("focus", () => pinSeed.select());
-pinSeed.addEventListener("input", () => { seedError(null); seedValid(!readSeed(pinSeed.value).reason); });
+pinSeed.addEventListener("input", () => { seedError(null); seedValid(!readSeed(pinSeed.value).reason); seedDirty(); });
 pinSeed.addEventListener("keydown", (event) => {
   if (event.key === "Enter") castSeed(pinSeed.value);
-  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); seedError(null); seedValid(false); pinSeed.blur(); }
+  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); seedError(null); seedValid(false); seedDirty(); pinSeed.blur(); }
 });
-document.getElementById("pinEnter").addEventListener("click", () => castSeed(pinSeed.value));
+pinEnter.addEventListener("click", () => castSeed(pinSeed.value));
 document.getElementById("pinCopy").addEventListener("click", copySeed);
 
 // Picking a character. Nothing is picked until a creature is clicked, and a click that lands on no creature
