@@ -234,13 +234,13 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     // A solid red arrow, filled the way a part is filled (two convex pieces — fill fans from the centroid, so a
     // concave arrow in one go would spill), then outlined in the same red with a wobblier, heavier pen so the
     // edge reads as drawn. Red so it stands out from every ink on the board.
-    const sketch = new Sketch(noise, 2.0, 2.0);
+    const sketch = new Sketch(noise, 2.0, 1.6);
     const red = "#c9403a";
     const tip = y0 - 0.05;
-    const neck = tip - 0.13;       // where the head meets the shaft
-    const base = y0 - 0.36;        // the tail of the shaft
-    const halfHead = 0.11;
-    const halfShaft = 0.035;
+    const neck = tip - 0.08;       // where the head meets the shaft
+    const base = y0 - 0.24;        // the tail of the shaft
+    const halfHead = 0.065;
+    const halfShaft = 0.022;
     sketch.fill([[x, tip], [x - halfHead, neck], [x + halfHead, neck]], red);
     sketch.fill([[x - halfShaft, neck + 0.01], [x + halfShaft, neck + 0.01], [x + halfShaft, base], [x - halfShaft, base]], red);
     sketch.line([
