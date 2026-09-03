@@ -149,10 +149,17 @@ function renderBase() {
 // A part that carries a material of its own. The body is clothing: what is put on it brings its own surface
 // (bodyMaterial), and `same` means it follows the base. The slot leaves the part list and shows under body.
 const PART_MATERIAL = { body: "bodyMaterial" };
+// **Colour belongs to the material.** The base skin material is a colour (the skin box), a material and a
+// density; the body's material is its own colour (the cloth box) and its own material, or the base skin's. So
+// these parts take no paint row: their colour is their material's. Only a part with no material of its own —
+// the hair, the headgear — is painted from one of the creature's boxes.
+const MATERIAL_PARTS = ["head", "ears", "body"];
+const PAINTED = PAINTABLE.filter((slot) => !MATERIAL_PARTS.includes(slot));
 const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !BASE_SLOTS.includes(slot) && !Object.values(PART_MATERIAL).includes(slot));
 let part = PART_SLOTS[0];
 let partSel = null;
 let formSel = null;
+let bodyColourRow = null;
 let materialRow = null;
 let materialSel = null;
 let paintRow = null;
@@ -177,6 +184,8 @@ function buildParts() {
   });
   form.appendChild(formSel);
 
+  // The body's material — its colour first, then the material, the way the base skin card reads
+  bodyColourRow = paletteRow(partsBox, "cloth", "colour");
   materialRow = field(partsBox, "material");
   materialSel = document.createElement("select");
   materialSel.setAttribute("aria-label", "Material");
@@ -197,9 +206,9 @@ function buildParts() {
   partsBox.appendChild(paintRow);
 }
 
-// The open part's controls, from the spec: the form list, and the paint boxes drawn in the individual's own
-// colours with the one it currently takes ringed. A box the individual does not have (a pop on one without)
-// is not offered.
+// The open part's controls, from the spec: the form list; for the body its material (colour, material); and
+// for a part with no material of its own the paint boxes, drawn in the individual's own colours with the one
+// it currently takes ringed. A box the individual does not have (a pop on one without) is not offered.
 function renderPart() {
   partSel.value = part;
   formSel.innerHTML = "";
@@ -207,14 +216,15 @@ function renderPart() {
   formSel.value = spec.parts[part];
 
   const materialSlot = PART_MATERIAL[part];
+  bodyColourRow.hidden = part !== "body";
   materialRow.hidden = !materialSlot;
   if (materialSlot) {
     materialSel.innerHTML = "";
-    for (const value of SLOTS[materialSlot]) addOption(materialSel, value, value === "same" ? "same as base" : value);
+    for (const value of SLOTS[materialSlot]) addOption(materialSel, value, value === "same" ? "base skin's" : value);
     materialSel.value = spec.parts[materialSlot];
   }
 
-  const paintable = PAINTABLE.includes(part);
+  const paintable = PAINTED.includes(part);
   paintRow.hidden = !paintable;
   paintStrip.innerHTML = "";
   if (!paintable) return;
@@ -237,8 +247,8 @@ function renderPart() {
   }
 }
 
-// One row of a palette box's pool — the swatches a key may be picked from. The same row serves PALETTE and
-// the skin at the top of PART, so both show the same choice ringed.
+// One row of a palette box's pool — the swatches a key may be picked from. The same row serves PALETTE, the
+// base skin material's colour and the body material's colour, so all of them show the same choice ringed.
 function paletteRow(parent, key, label = key) {
   const row = document.createElement("div");
   row.className = "field swatches";
