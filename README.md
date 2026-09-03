@@ -45,7 +45,9 @@ values up large. For judging the form of a single part. Where census is numbers,
 The BASE is what the creature is made of before any part goes on — its colour (the skin) and its material —
 and is not a part. Then a part at a time: open one and the deck shows only what it has — its form, and for a
 painted part which of the creature's own colours it takes — plus the palette those colours come from and the
-proportions. A species' forbidden values and the constraint pass
+proportions. The palette is one set of every colour the vocabulary knows, and every key — the base, a cloth, a
+hair, the ink — picks from all of it; the generator's per-key pools are the board's odds, not this screen's
+limits. A species' forbidden values and the constraint pass
 are reported under NOTES and **not** applied, so it can make creatures the board never will — which is also why
 SAVE writes the whole spec as JSON rather than a seed. OPEN takes one back.
 

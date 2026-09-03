@@ -19,7 +19,7 @@ import {
   ghostPalette, ghostOutline, ghostInk, isGhost,
   SLOTS, SPECIES, PAINTABLE, paintKey
 } from "./character/index.js";
-import { FILLS, INKS, ACCENTS, POPS, SCALES, HAIR_POOL, MARKS } from "./character/vocabulary/palette.js";
+import { FILLS, INKS, ACCENTS, POPS, DARKS, FURS, SCALES, HAIRS, MARKS } from "./character/vocabulary/palette.js";
 import { luminance } from "./color.js";
 import { formatSeed } from "./rng.js";
 import { bindSeg, addOption, randomSeed, runLoop } from "./ui.js";
@@ -36,20 +36,16 @@ const proportionsBox = document.getElementById("proportions");
 const notesBox = document.getElementById("notes");
 const fileInput = document.getElementById("file");
 
-// The colour pools each palette key may be picked from. `pop` carries a `null` for "no accent at all", which is
-// what most individuals have. `pattern2` is the rex's second scale colour and is meaningless on anything else.
-// HAIR_POOL is a weighted bag — 25 entries over 12 colours — so it is deduped here. A picker offers colours,
-// not the odds of drawing one.
+// One palette for the whole screen. Every colour a creature can carry — a line ink, a skin, a fur, a dark, a
+// scale, an accent, a pop, a hair — picks from the same set, pool by pool in that order, each colour once. The
+// generator deals each key from a pool of its own (a human's skin from FILLS, a rex's from SCALES); those odds
+// are the board's business and stay with it. Here a key is a key, and any colour goes in any of them.
+// `pop` alone leads with a `null` for "no accent at all", which is what most individuals have. `pattern2` is the
+// rex's second scale colour and is meaningless on anything else.
 const unique = (pool) => [...new Set(pool)];
-const COLOR_POOLS = {
-  ink: unique(INKS),
-  skin: unique(FILLS),
-  cloth: unique(FILLS),
-  hair: unique(HAIR_POOL),
-  accent: unique(ACCENTS),
-  pop: [null, ...unique(POPS)],
-  pattern2: unique(SCALES)
-};
+const PALETTE = unique([...INKS, ...FILLS, ...FURS, ...DARKS, ...SCALES, ...ACCENTS, ...POPS, ...HAIRS]);
+const COLOR_KEYS = ["ink", "skin", "cloth", "hair", "accent", "pop", "pattern2"];
+const poolOf = (key) => (key === "pop" ? [null, ...PALETTE] : PALETTE);
 
 // The proportion sliders. Ranges are wide enough to reach past what the generator draws — this screen is for
 // making something on purpose, including something the board would never roll. `wobbleSeed` is not here: it is
@@ -262,7 +258,7 @@ function paletteRow(parent, key, label = key) {
   row.appendChild(name);
   const strip = document.createElement("div");
   strip.className = "strip";
-  for (const color of COLOR_POOLS[key]) {
+  for (const color of poolOf(key)) {
     const dot = document.createElement("button");
     dot.type = "button";
     dot.className = "swatch";
@@ -286,7 +282,7 @@ function paletteRow(parent, key, label = key) {
 
 function buildPalette() {
   paletteBox.innerHTML = "";
-  for (const key of Object.keys(COLOR_POOLS)) paletteRow(paletteBox, key);
+  for (const key of COLOR_KEYS) paletteRow(paletteBox, key);
 }
 
 function buildProportions() {
