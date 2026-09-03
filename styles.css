@@ -337,6 +337,8 @@ body.how { height: auto; }
 /* A seed that is not one. The input takes the rust, and the reason hangs under the pin — the pin is fixed, so
    it is the containing block for the note. */
 .pin .pinSeed[aria-invalid="true"] { border-color: #8c5138; color: #8c5138; }
+/* A seed that is one — while it is being typed, and for a moment after it has been taken. */
+.pin .pinSeed[data-valid] { border-color: #5f7d43; color: #5f7d43; }
 .pin .pinError { position: absolute; top: calc(100% + 4px); left: 0; white-space: nowrap; font-size: 11px; letter-spacing: 0.06em; color: #8c5138; }
 .pin .pinError[hidden] { display: none; }
 /* display: flex above beats the browser's own [hidden] rule, which would leave the pin standing at the

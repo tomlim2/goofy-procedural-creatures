@@ -95,7 +95,7 @@ function showSelected() {
   const cell = cells[selected];
   if (!cell) return;
   seedLabel.textContent = formatSeed(cell.seed);
-  if (pinSeed && document.activeElement !== pinSeed) { pinSeed.value = formatSeed(cell.seed); seedError(null); }
+  if (pinSeed && document.activeElement !== pinSeed) { pinSeed.value = formatSeed(cell.seed); seedError(null); seedValid(false); }
   if (cellLabel) cellLabel.textContent = `${cell.species.toUpperCase()} · CELL ${selected}`;
 }
 
@@ -155,23 +155,40 @@ function seedError(message) {
   }
 }
 
-// A seed typed at the creature's feet. A seed is what formatSeed writes: base 36, letters and digits, and it
-// has to fit in 32 bits — the last one is 1Z141Z3. Anything else is refused with the reason under the input;
+// The green on the input: on while what is typed is a seed, and for a moment after one has been taken.
+let validTimer = null;
+function seedValid(on, { linger = false } = {}) {
+  if (!pinSeed) return;
+  if (validTimer) { clearTimeout(validTimer); validTimer = null; }
+  if (on) pinSeed.dataset.valid = "";
+  else delete pinSeed.dataset.valid;
+  if (on && linger) validTimer = setTimeout(() => { delete pinSeed.dataset.valid; validTimer = null; }, 1200);
+}
+
+// What formatSeed writes, and nothing else: base 36, letters and digits, fitting in 32 bits — the last seed
+// is 1Z141Z3. Returns the seed, or the reason the text is not one.
+function readSeed(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return { reason: "type a seed" };
+  if (!/^[0-9a-z]+$/i.test(trimmed)) return { reason: "letters and digits only" };
+  const parsed = parseInt(trimmed, 36);
+  if (parsed > 0xffffffff) return { reason: "too big — 1Z141Z3 is the last seed" };
+  return { seed: parsed >>> 0 };
+}
+
+// A seed typed at the creature's feet. Anything that is not one is refused with the reason under the input;
 // the address bar's habit of hashing any word into a seed is not repeated here, because a typo would silently
 // become a creature. The same seed again is not a change.
 function castSeed(raw) {
   const cell = cells[selected];
   if (!cell) return;
-  const trimmed = raw.trim();
-  if (!trimmed) { seedError("type a seed"); return; }
-  if (!/^[0-9a-z]+$/i.test(trimmed)) { seedError("letters and digits only"); return; }
-  const parsed = parseInt(trimmed, 36);
-  if (parsed > 0xffffffff) { seedError("too big — 1Z141Z3 is the last seed"); return; }
+  const read = readSeed(raw);
+  if (read.reason) { seedValid(false); seedError(read.reason); return; }
   seedError(null);
-  const seed = parsed >>> 0;
-  if (seed !== cell.seed) setCell({ seed, species: cell.species });
-  else pinSeed.value = formatSeed(cell.seed);
+  if (read.seed !== cell.seed) setCell({ seed: read.seed, species: cell.species });
+  pinSeed.value = formatSeed(read.seed);
   pinSeed.blur();
+  seedValid(true, { linger: true });
 }
 
 // The cell's previous seed, one step back per press. Landing on the base seed's own character lets the
@@ -216,10 +233,10 @@ backButton.addEventListener("click", back);
 // neither — the text and any note stay until one of those. Focusing selects the whole seed so a new one can be
 // typed straight over it, and typing clears a stale note.
 pinSeed.addEventListener("focus", () => pinSeed.select());
-pinSeed.addEventListener("input", () => seedError(null));
+pinSeed.addEventListener("input", () => { seedError(null); seedValid(!readSeed(pinSeed.value).reason); });
 pinSeed.addEventListener("keydown", (event) => {
   if (event.key === "Enter") castSeed(pinSeed.value);
-  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); seedError(null); pinSeed.blur(); }
+  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); seedError(null); seedValid(false); pinSeed.blur(); }
 });
 document.getElementById("pinEnter").addEventListener("click", () => castSeed(pinSeed.value));
 
