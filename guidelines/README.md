@@ -11,7 +11,7 @@ point is the root [`CLAUDE.md`](../CLAUDE.md)).
 | --- | --- | --- | --- |
 | **Character** | `src/character/` | [character/types.md](character/types.md) species, archetypes, proportions, palette, constraints<br>[character/parts.md](character/parts.md) 28 slots, 207 parts | [character/rules.md](character/rules.md) the procedure for adding a part, separating form from motion, distribution standards |
 | **Motion** | `src/motion/` | [motion/catalog.md](motion/catalog.md) the state object, per-species parameters, every motion | [motion/rules.md](motion/rules.md) classifying rhythm/events/states, rng order, measuring firing |
-| Shared | `src/scene/` `src/stroke.js` `src/shape.js` `src/medium/` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) the seed contract<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
+| Shared | `src/scene/` `src/stroke.js` `src/shape.js` `src/medium/` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) seeds and files — what a seed promises, the gates<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
 
 ## The seven screens
 
@@ -20,7 +20,7 @@ thing; the editor is the one that **makes** rather than judges.
 
 | Screen | What it is for |
 | --- | --- |
-| `/index.html` **GRID** | The board itself — the thing being made. Nothing is picked until a creature is clicked; then its seed shows and BACK · REDRAW stand at its feet, one cell only. A click on nowhere lets the pick go. Species, grid size, PNG |
+| `/index.html` **GRID** | The board itself — a cast of specs, the thing being made. Nothing is picked until a creature is clicked; then REDRAW · BACK · OPEN · SAVE stand at its feet, one cell only, and a click on nowhere lets the pick go. BOARD saves and opens the whole cast as JSON. Species, grid size, PNG |
 | `/debug.html` **DEBUG** | The board plus the judging controls, folded into one JUDGING card: POSE (bind), INK (boil), ACTION (force one), HIGH FIVE (rush), REGEN (live). Folded, the summary names whatever is away from its default, so a screen left on BIND never reads as a bug. Every control rides in the address |
 | `/gallery.html` **GALLERY** | One slot's every value on the same individual, side by side |
 | `/editor.html` **EDITOR** | The character maker — a species, then every slot, colour and proportion by hand |
@@ -53,12 +53,13 @@ Looking good to the eye and being right are different things. There is a tool fo
 
 ## In one line each
 
-- The same seed has to give the same result. If that breaks, this lab means nothing. The unit is the
-  **character**, not the board: a board is a cast of cells, and a base seed only fills the empty ones
+- A creature is its JSON; a seed only rolls one. The same seed gives the same roll within one version of the
+  code and promises nothing across versions — anything worth keeping is a file. A board is a cast of specs,
+  and the base seed in the address only fills it
 - Character is slots (form) only; motion is rhythm/events/states only. Hands behind the back is not a form
   but a pose (motion)
 - Looking good to the eye and having the right distribution and frequency are different things. If you
   changed it, count it
 - The editor is the one screen whose creature is **not** something a seed could have made. It edits a spec
-  directly and reports the rules instead of applying them, so what it saves is the spec, not a seed. Nothing
-  in it touches rng, and the generator remains the only thing a seed drives
+  directly and reports the rules instead of applying them. What it saves is the spec, and the board's pin
+  opens that same file into a cell. Nothing in it touches rng; the generator remains the only thing a seed drives

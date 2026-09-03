@@ -1,4 +1,4 @@
-// Seeded randomness. The same seed always makes the same creature.
+// Seeded randomness. The same seed makes the same creature within one version of the generator (guidelines/determinism.md).
 // The root of this lab is here, not in the renderer.
 
 // xmur3 — string seed to a 32-bit integer.

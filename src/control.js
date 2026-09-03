@@ -36,12 +36,13 @@ export function createControls(defs, onChange) {
       }
     },
 
-    // Screen → address. Items at initial are left out — the address of an untouched screen carries nothing
+    // Screen → address. Items at initial are left out — the address of an untouched screen carries nothing.
+    // So is a control with nothing lit (a board file standing at a size the grid buttons do not offer)
     query() {
       const query = new URLSearchParams();
       for (const key of Object.keys(bound)) {
         const value = bound[key].value();
-        if (value !== defs[key].initial) query.set(key, value);
+        if (value !== null && value !== defs[key].initial) query.set(key, value);
       }
       return query.toString();
     }

@@ -52,6 +52,16 @@ export function randomSeed() {
   return (Math.random() * 0xffffffff) >>> 0;
 }
 
+// Hands the browser a file to save — a creature or a board as JSON (the PNG goes its own way, export.js)
+export function download(name, text, type = "application/json") {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 // rAF loop. The loop survives exceptions — if the rAF loop dies, only the label changes while the canvas freezes, which reads as "the buttons don't work".
 // Calls tick(elapsedSeconds) every frame. onError is for updating the status label
 // The loop — a fixed TICK_FPS ticks per second (tick.js). A rAF frame whose tick has not changed does nothing: no update, no render.

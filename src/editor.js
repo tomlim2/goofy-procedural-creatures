@@ -16,13 +16,12 @@
 import { createScene } from "./scene/index.js";
 import {
   makeCreature, applyForbid, applyConstraints,
-  ghostPalette, ghostOutline, ghostInk, isGhost,
+  deriveSpec, readCreature, creatureJson, isHouse,
   SLOTS, SPECIES, PAINTABLE, paintKey
 } from "./character/index.js";
-import { FILLS, INKS, ACCENTS, POPS, DARKS, FURS, SCALES, HAIRS, MARKS } from "./character/vocabulary/palette.js";
-import { luminance } from "./color.js";
+import { FILLS, INKS, ACCENTS, POPS, DARKS, FURS, SCALES, HAIRS } from "./character/vocabulary/palette.js";
 import { formatSeed } from "./rng.js";
-import { bindSeg, addOption, randomSeed, runLoop } from "./ui.js";
+import { bindSeg, addOption, randomSeed, runLoop, download } from "./ui.js";
 
 const canvas = document.getElementById("stage");
 const speciesSel = document.getElementById("speciesSel");
@@ -73,17 +72,9 @@ const scene = createScene(canvas);
 // keeps its old palette is not a ghost, and a face on a newly darkened head keeps marks that have gone
 // invisible. `palette0` is the palette **before** the ghost collapse and is what edits are written into — that
 // is what lets the ghost slot be switched off again and give the colours back.
-function derive(next) {
-  const parts = { ...next.parts };
-  if (parts.ghost !== "none") parts.eyes = "hollow";   // a ghost has empty eyes — nothing is looking back
-  const palette = { ...ghostPalette(next.palette0, parts.ghost, next.proportions.wobbleSeed) };
-  return {
-    ...next, parts, palette,
-    outline: ghostOutline(parts.ghost),
-    lineInk: ghostInk(parts.ghost),
-    faceInk: (next.species === "imp" && !isGhost({ parts })) || luminance(palette.skin) < 120 ? MARKS.light : null
-  };
-}
+// Every edit goes through deriveSpec (character/file.js) — the step a roll ends with, so an edited spec is
+// as settled as a rolled one before it is drawn.
+const derive = deriveSpec;
 
 // A creature made here starts from its seed, with one rule of this screen laid over it: the body's material
 // follows the base until a hand picks one. The generator rolls a body material of its own for the board; on
@@ -348,29 +339,19 @@ function render() {
 
 function save() {
   const name = loaded ? "creature" : `creature-${formatSeed(spec.seed)}`;
-  const url = URL.createObjectURL(new Blob([JSON.stringify(spec, null, 2)], { type: "application/json" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${name}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
+  download(`${name}.json`, creatureJson(spec));
 }
 
-// A loaded spec is drawn as it is. It is only checked for the parts the drawing cannot do without — a file
-// that is missing them would throw somewhere deep in a part instead of saying so here.
+// A loaded spec is drawn as it is — the same file the board saves from a cell, or a board file's one cell. It
+// is only checked for what the drawing cannot do without (character/file.js), and the reason it was refused
+// takes the status label's place.
 function load(text) {
-  let next = null;
-  try {
-    next = JSON.parse(text);
-  } catch {
-    statusLabel.textContent = "NOT JSON";
+  const read = readCreature(text);
+  if (read.error || isHouse(read.spec)) {
+    statusLabel.textContent = read.error || "NOT A CREATURE";
     return;
   }
-  if (!next || !next.parts || !next.palette0 || !next.proportions || !SPECIES.some((s) => s.name === next.species)) {
-    statusLabel.textContent = "NOT A CREATURE";
-    return;
-  }
-  spec = derive(next);
+  spec = read.spec;
   loaded = true;
   species = spec.species;
   render();

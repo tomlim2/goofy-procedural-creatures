@@ -6,6 +6,7 @@
 // Docs: guidelines/character/
 
 export { makeCreature, makeGrid, makeBoard, boardCells, cellSeed, laneSpecies, LANES, ghostPalette, ghostOutline, ghostInk, isGhost, applyForbid, applyConstraints } from "./spec.js";
+export { deriveSpec, readCreature, readBoard, creatureJson, boardJson, isHouse, BOARD_FILE } from "./file.js";
 export { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, BIND_ARM, tailSketch, LAYER_KEYS, HAIR_KEYS, STATIC_EYE_KEYS } from "./draw/index.js";
 export { layout, eyeGeometry } from "./draw/layout.js";
 export { RIG_EYES, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch } from "./draw/face.js";

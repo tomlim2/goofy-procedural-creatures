@@ -330,42 +330,17 @@ body.how { height: auto; }
 .notes.empty::before { content: "the board would draw this one"; opacity: 0.45; margin-left: -16px; }
 .notes li { opacity: 0.8; }
 
-/* The buttons that stand at a clicked creature's feet. Positioned by projecting its cell onto the screen
-   each frame, the way the gallery places its labels, so they follow the board through a resize. */
+/* The buttons that stand at a clicked creature's feet — REDRAW · BACK · OPEN · SAVE. Positioned by projecting
+   its cell onto the screen each frame, the way the gallery places its labels, so they follow the board through
+   a resize. */
 .pin { position: fixed; z-index: 2; display: flex; align-items: center; gap: 4px; transform: translate(-50%, 0); }
-/* The creature's seed, read off the board at its feet, ahead of the two buttons. On the same paper card as
-   the buttons so it does not sink into the drawing behind it. */
-.pin .seedWrap { position: relative; display: inline-flex; }
-/* Room at the right end of the seed for the three glyphs that live inside the box. */
-.pin .pinSeed[readonly] { cursor: default; }
-.pin .pinSeed { padding: 0 70px 0 8px; height: 26px; width: 9ch; box-sizing: content-box; border: 1px solid var(--line); background: #f2ecdf; font: inherit; font-size: 12px; letter-spacing: 0.08em; color: inherit; text-transform: uppercase; }
-/* The glyphs inside the input — return, copy, redraw — are ghosts with no box of their own. */
-.pin .seedWrap .glyphs { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: flex; }
-.pin .seedWrap .ghost { width: 22px; height: 22px; border: 0; background: transparent; padding: 0; display: grid; place-items: center; color: inherit; }
-.pin .seedWrap .ghost:hover { background: rgba(43, 39, 36, 0.06); }
-.pin .seedWrap .ghost:disabled { opacity: 0.25; cursor: default; background: transparent; }
-/* The pencil and the return glyph share one slot: the pencil while the seed is only being read, the return
-   glyph once editing has begun. */
-.pin .seedWrap[data-editing] #pinEdit { display: none; }
-.pin .seedWrap:not([data-editing]) #pinEnter { display: none; }
-/* Only the return glyph follows the typed seed's colour: it is the one that acts on what is typed. Asleep
-   until the seed has been changed. Copy and redraw act on the seed the creature has and stay in ink. */
-.pin .seedWrap:has(.pinSeed[data-valid]) #pinEnter { color: #5f7d43; }
-.pin .seedWrap:has(.pinSeed[aria-invalid="true"]) #pinEnter { color: #8c5138; }
-.pin .pinSeed:focus { outline: none; border-color: var(--ink); }
-/* A seed that is not one. The input takes the rust, and the reason hangs under the pin — the pin is fixed, so
-   it is the containing block for the note. */
-.pin .pinSeed[aria-invalid="true"] { border-color: #8c5138; color: #8c5138; }
-/* A seed that is one — while it is being typed, and for a moment after it has been taken. */
-.pin .pinSeed[data-valid] { border-color: #5f7d43; color: #5f7d43; }
-.pin .pinError { position: absolute; top: calc(100% + 5px); left: 0; white-space: nowrap; font-size: 11px; letter-spacing: 0.06em; color: #8c5138; }
-.pin .pinError[hidden] { display: none; }
-/* The same slot carries good news too — "copied" — in the green a taken seed uses. */
-.pin .pinError[data-ok] { color: #5f7d43; }
 /* display: flex above beats the browser's own [hidden] rule, which would leave the pin standing at the
    top-left of a fresh board before anything is clicked. Said again here so hidden means hidden. */
 .pin[hidden] { display: none; }
+/* On the same paper as the cards so they do not sink into the drawing behind them. */
 .pin button { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; background: #f2ecdf; }
 /* The glyph takes the button's ink, so it reads as drawn with the same pen as the board's chrome. */
 .pin svg { width: 16px; height: 16px; fill: currentColor; }
 .pin button:disabled { opacity: 0.35; cursor: default; }
+/* A row that follows a wide button inside one card (BOARD: NEW BOARD, then SAVE · OPEN). */
+.mt { margin-top: 4px; }

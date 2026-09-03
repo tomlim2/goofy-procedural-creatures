@@ -1,102 +1,67 @@
-# The seed contract
+# Seeds and files
 
-**The same seed always makes the same character.** This is the one absolute rule of this lab.
-Recording a good result as a seed and calling it back later is the reason this tool exists.
+**A creature is its JSON.** The spec — species, parts, palette, proportions — is the truth of a character. It
+is what the board draws, what the editor edits, what SAVE writes and what OPEN reads back
+(`src/character/file.js`). A seed is the generator's input: `makeCreature(seed, species)` rolls a spec from
+it, and the spec remembers the seed it came from as provenance, nothing more. A saved creature never needs
+its seed again.
 
-The rule used to be written a board at a time, and a board is no longer the unit. A **character** owns its
-seed: `makeCreature(seed, species)` is the whole of it, and the same seed draws the same creature standing
-alone, in a gallery row, or in any cell of any board. A **board** is a cast — a list of cells, each one a seed
-or a whole spec made by hand in the editor. `boardCells(baseSeed, …)` still grows a default cast from one
-seed, which is what every measuring tool below stands a board up with, but that base seed only **fills** the
-cells. It has no say over what any of them then is.
+A **board** is a cast of specs. `boardCells(baseSeed, …)` grows a default cast from one seed — it is what
+the address carries and what every gate below stands a board up with — but that base seed only **fills** the
+cells. What a hand does to a cell afterwards (REDRAW, BACK, a file opened into it) lives in the cast, and the
+cast is saved as a file. The address makes a board; it does not remember one.
 
-Two board-wide rules were dropped to get here, and they are worth knowing about because boards drawn before
-the change do not come back the same. Cells used to be redrawn up to eight times so no creature shared an
-archetype with its left or upper neighbour, which made a character's real seed depend on where it sat; and a
-board kept at most three colour accents, switching off the fourth and later ones **after** they were drawn,
-which made three creatures in thirty-five impossible to reproduce on their own. Neither could survive a
-character owning its seed. If a board wants those properties again they belong in the cast — in what is
-chosen for each cell — not in a pass that reaches into a finished character.
+## What a seed promises
 
-Measured over 20 boards: **207 creatures of 700 moved (29.6%)**, of which 21 only got a colour accent back.
-The rest are cells whose redraw counter collapsed to zero. Seeds re-shuffled; boards recorded before this are
-gone.
+- **Within one version of the code, the same seed gives the same spec.** Every roll on the generation path
+  comes from `makeRng(seed)`. This is what lets a seed fill a board, and what lets a gate stand up the same
+  sample twice.
+- **Across versions it promises nothing.** Change the generator — add a slot, reorder a roll, add a
+  constraint — and a seed rolls something else. That is allowed, and it needs no accounting, because nothing
+  that mattered is stored as a seed. Anything worth keeping is a file.
 
-## Forbidden
+This used to be the one absolute rule of this lab — *the same seed always makes the same character* — with a
+page of rules on the order of rng calls, reshuffle percentages measured per change, and "seeds re-shuffled"
+written into commits. All of it was paid to protect creatures that were only ever stored as seeds. They are
+stored as JSON now, so the contract is lowered to the one thing the tools still need: repeatability within a
+run.
 
-- Never call `Math.random()` anywhere on the generation path. All randomness comes from `makeRng(seed)`
-- Never read `Date.now()` or `performance.now()` on the generation path. Time is used only in `motion/`
-- Never write code that depends on object key iteration order. Slot iteration follows the declaration order
-  of `SLOTS`
+## Forbidden on the generation path
 
-## The order of rng calls *is* the seed
+- `Math.random()` — all randomness comes from `makeRng(seed)`. `randomSeed()` in `ui.js` is the one
+  exception, and it only fires when a button is pressed
+- `Date.now()` and `performance.now()` — time is used only in `motion/`
+- Depending on object key iteration order — slot iteration follows the declaration order of `SLOTS`
 
-`makeRng` is a state machine. Change the number or order of calls and **every value after it changes.**
+## Keep a change where it was made
 
-```js
-// Change it this way and every existing seed's result becomes different
-const parts = {};
-for (const slot of Object.keys(SLOTS)) parts[slot] = pickSlot(rng, archetype, slot);
-```
+`makeRng` is a state machine: change the number or order of calls before a roll and that roll changes. That
+breaks no promise any more, but it makes a change unreadable — adding a hair value that also moves faces,
+bodies and palettes on some seeds is a change nobody can judge. So the generator is written so a change lands
+where it was made, and `drawdiff` per slot (below) is the test: a change to one slot moves that slot and
+nothing else.
 
-So all of the following **break existing seeds**. You may do them, but do them knowingly.
-
-- Reordering `SLOTS`, or inserting a slot **in the middle** (`character/vocabulary/slots.js`)
-- Changing the order in which rng is called inside `makeCreature`
-- Adding or removing an `rng.chance()` call in `applyConstraints`
-
-Conversely, the following **do not break seeds.**
-
-- Changing only the weight numbers (adjusting values in `DEFAULT_BIAS`) — the result differs but the call
-  count is the same
-- Appending a new slot to the end of `LATE_SLOTS` — it is drawn **after** `makeCreature` has drawn all the
-  parts, constraints, colors and proportions, so existing boards stay as they are and only the new slot's
-  value is added (`legLength`, `build`, `tailSkin`, `tailLength` and `mouthPos` sit here). The order of
-  `LATE_SLOTS` is the order they were added
-- Changing only `character/draw/`. Drawing consumes the spec; it does not consume rng
-- Changing the width and wobble constants in `stroke.js`
-
-If you made a seed-breaking change, say so in the commit message.
-
-## Constraints overwrite; they never re-draw
-
-When a combination does not work in `applyConstraints`, **do not re-draw the whole thing.** Overwrite
-deterministically.
+- A new slot goes on the end of `LATE_SLOTS`, drawn after everything else, so only its own value is new
+  (`legLength`, `build`, `tailSkin`, `tailLength` and `mouthPos` sit there)
+- Changing only the weights in `DEFAULT_BIAS` moves what is picked and nothing after it — the call count is
+  the same
+- `applyConstraints` consumes **no rng at all**: every decision in it is a fixed overwrite or a
+  `settled(seed, n)` hash with an `n` no other call site uses, and it does not take the rng as a parameter,
+  so a conditional roll cannot creep back in. When it did roll — the hat-vs-hair rule replaced an unusable
+  hairstyle with `rng.pick(short)` only when the drawn hair was not in the list — editing either pool flipped
+  the call count for a handful of seeds, and those individuals came out with a different face, body and
+  palette, not a different hairstyle (measured: 5 creatures in 600 for one added hair value, every one of
+  them flipped at that line). Hashed off the seed instead, the same edit moved `parts.hair` alone.
+  **When you add a constraint, use a fixed overwrite, `settled(seed, n)`, or `forbid` in `species.js`.
+  Never a roll**
 
 ```js
-// Good — the call count is predictable regardless of the condition
+// Good — the call count is the same whatever the condition
 if (parts.headgear === "helmet") parts.hair = "none";
 
 // Bad — rng consumption varies with the condition, so every later value shifts
 while (!valid(parts)) parts = rollAgain(rng);
 ```
-
-Calling `rng.chance()` or `rng.pick()` **conditionally** creates the same problem — it fires only when the
-condition is true, and every value after it diverges when the condition flips. When adding a new one, either
-draw it outside the condition first (fixing the call count) or, if it is a species restriction, use `forbid`
-in `species.js` (a deterministic overwrite with no rng).
-
-**This is not theoretical, and the bill arrives on a part you did not touch.** The hat-vs-hair rule used to
-replace an unusable hairstyle with `rng.pick(short)` *only when the drawn hair was not in the list*, so the
-call count depended on the hair **and** on the headgear. Editing either pool flipped it for a handful of
-seeds, and those individuals came out with a different face, body and palette — not a different hairstyle.
-Measured three times in one branch: adding a hair value moved **5 creatures in 600**, removing two moved
-**2**, adding a headgear value moved **6**. A probe confirmed every one of them had flipped at that line.
-
-It is fixed the way the top of `applyConstraints` says to — the replacement is hashed off the seed, so there
-is **no rng call at all** and the count cannot move whatever the pools do. Verified by adding a hair value
-afterwards: `parts.hair` moved on 17 of 600 and *nothing else moved at all*.
-
-The three of the same shape that were left — `horns === "antenna"` → ears, `eyewear === "patch"` →
-patchSide, glasses/goggles → brows — are fixed the same way. **`applyConstraints` now consumes no rng at
-all**: every decision in it is a fixed overwrite or a `settled(seed, n)` hash, and it no longer takes the rng
-as a parameter, so a conditional draw cannot be added back by accident. Clearing all four cost a one-time
-reseed of 31.8% (the four conditions overlap on the same creature, so it came out well above the ~20% the
-individual rates suggested). Verified after: adding a horns value AND an eyewear value moved those two slots
-on 11 and 38 creatures of 600 and moved **nothing else at all** — no unrelated part, no proportion.
-
-**When you add a constraint here, it must not call rng.** Use a fixed overwrite, `settled(seed, n)` with an
-`n` no other call site uses, or `forbid` in `species.js`.
 
 ## Drawing randomness is drawn separately
 
@@ -115,12 +80,14 @@ motion trajectories and the frequency count ([motion/rules.md](motion/rules.md))
 
 ## How to check
 
-Every gate below still asks for a board by seed, through `makeGrid(seed, …)`. That call is now
-`makeBoard(boardCells(seed, …))` and is kept exactly for them: a whole board from one number is the cheapest
-way to get a large, repeatable sample of characters.
+Every gate below stands a board up by seed, through `makeGrid(seed, …)` = `makeBoard(boardCells(seed, …))`:
+a whole board from one number is the cheapest way to get a large, repeatable sample. Each gate compares the
+working tree against a reference **of the same generator** — the tree before your change, or HEAD — so what
+it measures is whether the change did what it says, not whether old seeds survived.
 
 `scripts/snapshot.mjs` verifies specs, geometry and motion trajectories in one pass
-([../README.md](../README.md) § Scripts).
+([../README.md](../README.md) § Scripts). A refactor comes out at 0. A deliberate change to the generator
+will not, and the commit says what moved and why.
 The geometry hashes are the per-layer sketches of one board (35 creatures), so they do not visit every slot
 value — if you moved drawing code in a big way (splitting files, turning it into a table), use
 `node scripts/drawdiff.mjs [ref]` to compare **every slot value × species × seed** against the previous tree
@@ -154,5 +121,4 @@ node scripts/snapshot.mjs before   # before the change
 node scripts/snapshot.mjs after    # after — diff 0 means behaviour is unchanged
 ```
 
-If you deliberately made a seed-breaking change (adding a slot, reordering rng calls), take `before` again to
-refresh the baseline and write "seeds re-shuffled" in the commit message.
+After a deliberate change to the generator, take `before` again so the next refactor has a baseline.

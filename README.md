@@ -49,7 +49,8 @@ proportions. The palette is one set of every colour the vocabulary knows, and ev
 hair, the ink — picks from all of it; the generator's per-key pools are the board's odds, not this screen's
 limits. A species' forbidden values and the constraint pass
 are reported under NOTES and **not** applied, so it can make creatures the board never will — which is also why
-SAVE writes the whole spec as JSON rather than a seed. OPEN takes one back.
+SAVE writes the whole spec as JSON rather than a seed. OPEN takes one back — the same file the board's pin
+opens into a cell, and the same one a cell's SAVE writes.
 
 `/how.html` — **the medium page**. The legend of how everything is drawn, on three axes: the goofy outlines (what a contour is drawn
 with — the pencil, with its anatomy and its sizes), the goofy materials (how a surface is filled — five of them as shader balls) and the goofy fur
@@ -68,18 +69,20 @@ A refactor has to come out at 0; a change shows where the picture moved.
 
 The main screen (`/`) has only **BOARD · EXPORT · SPECIES · GRID**. The rest belongs to the debug screen (`/debug.html`).
 
-A board is a **cast**, not a seed. Nothing is picked until you click a creature; then a pin stands at its
-feet with its own seed and three glyphs: the seed can be typed over and taken with Enter or ↵ (a seed is
-letters and digits, up to 1Z141Z3 — anything else is refused with the reason under the pin), REDRAW gives
-that one cell a new seed and leaves every other creature alone, and BACK walks it to the seeds it had before,
-one step per press. Clicking on nowhere lets the pick go. NEW BOARD grows a fresh cast from a new base seed. The base seed only fills cells — the address carries it in the hash
-and any hand-cast cell after it as `?cells=2:1a9tu21`, so a board you picked over is a link like any other.
+A board is a **cast** of specs, and a spec is JSON. Nothing is picked until you click a creature; then a pin
+stands at its feet with four glyphs: REDRAW rolls a fresh one into that cell and leaves every other creature
+alone, BACK walks the cell to what stood there before, one step per press, OPEN puts a creature file into the
+cell (the file the editor saves), and SAVE writes the cell's creature as one (the file the editor opens).
+Clicking on nowhere lets the pick go. BOARD → SAVE writes the whole cast as one JSON file and OPEN stands it
+back up, at the file's own width. NEW BOARD grows a fresh cast from a new base seed. The base seed only fills
+cells — the address carries it in the hash and nothing else: the address makes a board, and a file remembers one.
 On narrow screens (≤700px) the deck moves from the left edge to a bottom strip — cards run left to right and
 scroll sideways (main and debug screens; gallery and audit assume a desktop width).
 
 | Control | |
 | --- | --- |
-| NEW SEED / `R` | A new seed. The address bar's hash is the seed — keep something like `#0z0y9qe` and that board comes back |
+| NEW BOARD / `R` | A fresh cast from a new base seed. The address bar's hash is that seed — `#0z0y9qe` grows the same board again on the same version of the code. What a hand did to it since is not in the address; SAVE is |
+| BOARD SAVE / OPEN | The whole cast as one JSON file, and back. Every cell is a creature file, so a creature saved in the editor goes into a cell with the pin's OPEN, and a cell's SAVE goes into the editor |
 | POSE MOTION / BIND / `B` | BIND pins the rig to the bind pose (T). For judging form and parts |
 | INK BOIL / STILL / `I` | STILL stops the lines boiling. A separate axis from pose — it removes the noise when judging motion |
 | ACTION AUTO / IDLE / SLEEP / SIT / WALK / an action | Forces one action (that layer only; the others idle) — arms (waving, arms up, arms crossed, a salute…, bipeds), body (hopping in place, everyone), quad (scratching, wagging). SLEEP lies quads down to sleep, SIT sits them (quad actions still follow their schedule — they scratch and wag while sitting), and WALK walks everyone — out from home and back (arm actions still follow their schedule). AUTO lets the layers overlap, with dogs and cats sleeping and sitting now and then and everyone walking now and then. IDLE is every layer idle and awake |
@@ -179,5 +182,5 @@ becomes a ribbon mesh.
   550 draw calls and 0.8 ms/frame of render JS for 35 creatures. How to measure it and the rules are in [guidelines/performance.md](guidelines/performance.md)
 - **The module cache** — `serve.mjs` appends `?v=` to relative imports. `Cache-Control: no-store` alone does not clear
   the browser's ES module map, so an edited file sometimes still runs the previous code
-- **Seed reproduction** — the same seed is the same board. The order of rng calls *is* the seed, so reordering slots breaks existing seeds.
-  A new slot is drawn at the very end via `LATE_SLOTS`, preserving existing boards. Write "seeds re-shuffled" in the commit for a breaking change
+- **Seeds and files** — a creature is its JSON; a seed only rolls one, and promises the same roll within one version of the code only.
+  Keep a change to the generator where it was made (a new slot on the end of `LATE_SLOTS`, no rng in `applyConstraints`) so `drawdiff` can read it ([guidelines/determinism.md](guidelines/determinism.md))

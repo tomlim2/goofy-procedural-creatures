@@ -414,8 +414,8 @@ export function cellSeed(baseSeed, index) {
 // and every row is filled with that species (for the preview: judging colour and part distribution needs one
 // species standing 54 to a board).
 //
-// **This is all a base seed does now.** It names a starting character for each cell and then has no further
-// say: a character is its own seed's and nothing else's (guidelines/determinism.md).
+// **This is all a base seed does.** It names a starting spec for each cell and then has no further say: the
+// cell is its spec, and the seed is only where that spec came from (guidelines/determinism.md).
 export function boardCells(baseSeed, count, columns, only = null) {
   const rows = Math.ceil(count / columns);
   const rowSpecies = only ? Array(rows).fill(only) : laneSpecies(rows);
@@ -425,9 +425,9 @@ export function boardCells(baseSeed, count, columns, only = null) {
   }));
 }
 
-// A board from an explicit cast. A cell is either a seed with the species to draw it as, or a whole `spec`
-// that was made by hand in the editor and cannot be expressed as a seed. Nothing on one cell can reach
-// another, which is the point: the same cell draws the same character wherever it sits on the board.
+// A board from an explicit cast. A cell is either a seed with the species to draw it as, or a whole `spec` —
+// one made by hand in the editor, or read back from a file. Nothing on one cell can reach another, which is
+// the point: the same cell draws the same character wherever it sits on the board.
 export function makeBoard(cells) {
   return cells.map((cell) => {
     if (cell.spec) return cell.spec;
