@@ -15,6 +15,8 @@ const pin = document.getElementById("pin");
 const pinSeed = document.getElementById("pinSeed");
 const pinError = document.getElementById("pinError");
 const pinEnter = document.getElementById("pinEnter");
+const pinEdit = document.getElementById("pinEdit");
+const seedWrap = pinSeed ? pinSeed.parentElement : null;
 const backButton = document.getElementById("back");
 const pick = new THREE.Vector3();
 
@@ -93,7 +95,7 @@ function render() {
 function showSelected() {
   const cell = cells[selected];
   if (!cell) return;
-  if (pinSeed && document.activeElement !== pinSeed) { pinSeed.value = formatSeed(cell.seed); seedError(null); seedValid(false); seedDirty(); }
+  if (pinSeed) { endEdit(); pinSeed.value = formatSeed(cell.seed); seedError(null); seedValid(false); seedDirty(); }
 }
 
 // Debug URL — puts the current screen into the address. Controls go in the query (control.js builds it); the seed stays in the hash as before.
@@ -193,6 +195,23 @@ function seedValid(on, { linger = false } = {}) {
   if (on && linger) validTimer = setTimeout(() => { delete pinSeed.dataset.valid; validTimer = null; }, 1200);
 }
 
+// The seed is read until the pencil is pressed. Editing opens the input with the whole seed selected and puts
+// the return glyph in the pencil's place; committing, Escape, or picking another creature closes it again.
+function startEdit() {
+  if (!pinSeed || !cells[selected]) return;
+  seedWrap.dataset.editing = "";
+  pinSeed.readOnly = false;
+  pinSeed.focus();
+  pinSeed.select();
+  seedDirty();
+}
+function endEdit() {
+  if (!pinSeed) return;
+  delete seedWrap.dataset.editing;
+  pinSeed.readOnly = true;
+  if (document.activeElement === pinSeed) pinSeed.blur();
+}
+
 // The return glyph wakes only once the seed has been changed from the one the creature has.
 function seedDirty() {
   if (!pinEnter || !pinSeed) return;
@@ -222,7 +241,7 @@ function castSeed(raw) {
   seedError(null);
   if (read.seed !== cell.seed) setCell({ seed: read.seed, species: cell.species });
   pinSeed.value = formatSeed(read.seed);
-  pinSeed.blur();
+  endEdit();
   seedValid(true, { linger: true });
   seedDirty();
 }
@@ -266,12 +285,16 @@ backButton.addEventListener("click", back);
 // Enter or the return glyph commits the typed seed; Escape puts the current one back. Leaving the input does
 // neither — the text and any note stay until one of those. Focusing selects the whole seed so a new one can be
 // typed straight over it, and typing clears a stale note.
-pinSeed.addEventListener("focus", () => pinSeed.select());
+// Clicking the seed itself also opens it — the pencil is the sign, not the only door. On click rather than
+// focus: a click lands after the browser has placed its caret, so the select-all that opening does holds.
+pinSeed.addEventListener("click", () => { if (pinSeed.readOnly) startEdit(); });
 pinSeed.addEventListener("input", () => { seedError(null); seedValid(!readSeed(pinSeed.value).reason); seedDirty(); });
 pinSeed.addEventListener("keydown", (event) => {
+  if (pinSeed.readOnly) return;
   if (event.key === "Enter") castSeed(pinSeed.value);
-  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); seedError(null); seedValid(false); seedDirty(); pinSeed.blur(); }
+  if (event.key === "Escape") { pinSeed.value = formatSeed(cells[selected].seed); seedError(null); seedValid(false); endEdit(); seedDirty(); }
 });
+pinEdit.addEventListener("click", startEdit);
 pinEnter.addEventListener("click", () => castSeed(pinSeed.value));
 document.getElementById("pinCopy").addEventListener("click", copySeed);
 
@@ -308,7 +331,7 @@ function cellAt(clientX, clientY) {
 canvas.addEventListener("pointerdown", (event) => {
   const hit = cellAt(event.clientX, event.clientY);
   if (hit >= 0) { selected = hit; picked = true; showSelected(); }
-  else picked = false;
+  else { picked = false; endEdit(); }
   placePin();
 });
 // Hovering a creature draws an arrow under its feet, on the canvas (scene.setHover). The scene only redraws
