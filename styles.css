@@ -388,8 +388,10 @@ body.how { height: auto; }
 /* The material's name under its ball — main, then mat1, mat2 … the one being edited at full ink */
 .cap { font-size: 10px; letter-spacing: 0.14em; opacity: 0.5; }
 .pv.on .cap { opacity: 1; font-weight: 700; }
-/* + — a new material for the part, standing after the last card of what it may wear as one more of them, its
-   ball an empty ring the size of the others */
+/* + — a new material for the part, on the line under the cards of what it may wear, its ball an empty ring the
+   size of the others */
+.wear .addRow { overflow: visible; padding-top: 0; }
+.wear .addRow[hidden] { display: none; }
 .pv.add .plus { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px dashed var(--line); font-size: 22px; line-height: 1; opacity: 0.55; }
 .pv.add:hover .plus { opacity: 1; border-style: solid; }
 /* NAME is typed over its line — the same line the other sections read their value on */

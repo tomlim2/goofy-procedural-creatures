@@ -431,6 +431,7 @@ let mode = "shape";     // under the open part: shape (its forms) or material (w
 const modeTabs = {};    // mode → the tab button
 let wearBox = null;     // the MATERIAL panel: the creature's materials as cards, the one this part wears framed
 let wearStrip = null;   // the cards, one per material, rebuilt on render — a hand adds materials
+let wearAdd = null;     // the line under them, holding + — on its own line so the scrolling row never hides it
 let wearNote = null;    // for a part that wears none
 const grids = {};       // `${species}/${part}` → { box, forms: value → { item, canvas } } — each grid built and painted once, kept
 let gridKey = null;     // the grid standing in formsBox
@@ -537,6 +538,9 @@ function buildParts() {
   wearStrip = document.createElement("div");
   wearStrip.className = "strip";
   wearBox.appendChild(wearStrip);
+  wearAdd = document.createElement("div");
+  wearAdd.className = "strip addRow";
+  wearBox.appendChild(wearAdd);
   wearNote = document.createElement("output");
   wearNote.className = "readout";
   wearBox.appendChild(wearNote);
@@ -674,7 +678,8 @@ function renderPart() {
         card.classList.toggle("on", key === wears);
         wearStrip.appendChild(card);
       });
-      // + — a new material for this part: a copy of what it has on, worn at once, opened in MATERIALS
+      // + — a new material for this part: a copy of what it has on, worn at once, opened in MATERIALS. On the
+      // line under the cards, so however far the row scrolls it is there
       const add = document.createElement("button");
       add.type = "button";
       add.className = "pv add";
@@ -690,10 +695,11 @@ function renderPart() {
       cap.textContent = "new";
       add.appendChild(cap);
       add.addEventListener("click", () => addMaterialFor(part));
-      wearStrip.appendChild(add);
+      wearAdd.replaceChildren(add);
       const on = wearStrip.querySelector(".pv.on");
       if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
-    }
+    } else wearAdd.replaceChildren();
+    wearAdd.hidden = !wears;
     wearNote.textContent = wears ? "" : `${part} wears no material — a mark, an object with a colour of its own, or flat by rule`;
   }
 
