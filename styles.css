@@ -374,10 +374,11 @@ body.how { height: auto; }
 .field canvas.preview { display: block; width: 72px; height: 72px; }
 /* A material card — the ball and its name together, the card itself the button: MATERIALS' previews (the one being edited
    framed) and, under a part, the picker of what the part wears (the one it wears framed). The others sit bare on the panel */
-/* The material cards wrap — a hand adds materials and the rows fold, every card in view, the cards one width so
-   the columns line up from row to row (and the + on its own line under them sits under the first) */
-.previews .strip, .wear .strip { padding: 2px; }
-.previews .strip { gap: 6px; }
+/* The material cards fill the width — a grid of as many columns as fit, the cards stretched to share the row, so
+   a hand adds materials and the rows fold with no gap left at the right; the + on its own line under them is on
+   the same grid and sits under the first column */
+.previews .strip, .wear .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px 4px; padding: 2px; }
+.wear .strip { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 4px; }
 .pv { display: grid; justify-items: center; gap: 2px; padding: 6px 10px 4px; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; }
 .pv:hover { background: rgba(43, 39, 36, 0.06); }
 .pv.on { border-color: var(--ink); background: #f8f3e8; color: inherit; box-shadow: 0 1px 6px rgba(43, 39, 36, 0.12); }
