@@ -184,8 +184,9 @@ function ballStrip(parent, names, onPick, kind = "texture") {
 // **Every material the creature wears, in one card.** The roll deals two — the main material (`material` and
 // `density`, its colour the skin box — everything on the head side takes it) and the body's (`bodyMaterial` and
 // `bodyDensity`, its colour the cloth box — everything hanging off the torso) — and a hand may add any number
-// more with **+**: each a name, a texture, a density and a colour of its own (`spec.materials`,
-// vocabulary/wear.js), starting as a copy of the one being edited. Each is a material in the 3D sense — a
+// more: each a name, a texture, a density and a colour of its own (`spec.materials`, vocabulary/wear.js). A
+// new one is made where it is worn — under a part, material → **+** — as a copy of what the part had on, and
+// the part wears it from then on; it is edited here. Each is a material in the 3D sense — a
 // texture, the density it is laid at and a colour — and **each is its own**: nothing here says one follows
 // another (asOwn). Each gets a preview card at the top; **the previews are the selection**: click one and the
 // sections below edit that material — its name, the parts that wear it, its texture (the sample balls), its
@@ -241,14 +242,19 @@ function setName(key, name) {
   }
   render();
 }
-// + — a new material of the hand's own, a copy of the one being edited to start from, and edited from here on
-function addMaterial() {
+// + under a part — a new material of the hand's own, a copy of what the part had on to start from; the part
+// wears it from then on, and MATERIALS opens it for editing
+function addMaterialFor(part) {
   const keys = Object.keys(spec.materials || {});
   let n = 1;
   while (keys.includes(`m${n}`)) n += 1;
   const key = `m${n}`;
-  const { texture, density, colour } = surfaceOf(selected);
-  spec = derive({ ...spec, materials: { ...(spec.materials || {}), [key]: { name: "", texture, density, colour } } });
+  const { texture, density, colour } = surfaceOf(wearOf(spec, part));
+  spec = derive({
+    ...spec,
+    materials: { ...(spec.materials || {}), [key]: { name: "", texture, density, colour } },
+    wear: { ...(spec.wear || {}), [part]: key }
+  });
   selected = key;
   render();
 }
@@ -366,7 +372,8 @@ function buildMaterials() {
 function renderMaterials() {
   const keys = materialKeys(spec);
   if (!keys.includes(selected)) selected = "main";
-  // The previews — every material the creature wears, the one being edited framed, and + after the last
+  // The previews — every material the creature wears, the one being edited framed. A new one is made under a
+  // part (material → +), not here
   const strip = document.createElement("div");
   strip.className = "strip";
   keys.forEach((key, i) => {
@@ -375,22 +382,6 @@ function renderMaterials() {
     card.classList.toggle("on", key === selected);
     strip.appendChild(card);
   });
-  const add = document.createElement("button");
-  add.type = "button";
-  add.className = "pv add";
-  add.title = "a new material — a copy of this one to start from";
-  add.setAttribute("aria-label", "add a material");
-  const plus = document.createElement("span");
-  plus.className = "plus";
-  plus.setAttribute("aria-hidden", "true");
-  plus.textContent = "+";
-  add.appendChild(plus);
-  const cap = document.createElement("span");
-  cap.className = "cap";
-  cap.textContent = "new";
-  add.appendChild(cap);
-  add.addEventListener("click", addMaterial);
-  strip.appendChild(add);
   mat.previews.replaceChildren(strip);
   // The row scrolls sideways; the card being edited stays in view
   const on = strip.querySelector(".pv.on");
@@ -683,6 +674,23 @@ function renderPart() {
         card.classList.toggle("on", key === wears);
         wearStrip.appendChild(card);
       });
+      // + — a new material for this part: a copy of what it has on, worn at once, opened in MATERIALS
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "pv add";
+      add.title = `a new material for the ${part} — a copy of what it has on`;
+      add.setAttribute("aria-label", `a new material for the ${part}`);
+      const plus = document.createElement("span");
+      plus.className = "plus";
+      plus.setAttribute("aria-hidden", "true");
+      plus.textContent = "+";
+      add.appendChild(plus);
+      const cap = document.createElement("span");
+      cap.className = "cap";
+      cap.textContent = "new";
+      add.appendChild(cap);
+      add.addEventListener("click", () => addMaterialFor(part));
+      wearStrip.appendChild(add);
       const on = wearStrip.querySelector(".pv.on");
       if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
     }

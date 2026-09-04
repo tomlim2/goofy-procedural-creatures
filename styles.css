@@ -375,7 +375,7 @@ body.how { height: auto; }
 /* A material card — the ball and its name together, the card itself the button: MATERIALS' previews (the one being edited
    framed) and, under a part, the picker of what the part wears (the one it wears framed). The others sit bare on the panel */
 /* The material cards run in one row and scroll sideways, the way the part tabs do — a hand adds materials, and the
-   row does not fold. The + at the end shows the row goes on; the card being edited is scrolled into view (editor.js) */
+   row does not fold. The card being edited (under a part, the one worn) is scrolled into view (editor.js) */
 .previews .strip, .wear .strip { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 4px; scrollbar-width: none; }
 .previews .strip::-webkit-scrollbar, .wear .strip::-webkit-scrollbar { display: none; }
 .previews .strip { gap: 6px; }
@@ -388,8 +388,9 @@ body.how { height: auto; }
 /* The material's name under its ball — main, then mat1, mat2 … the one being edited at full ink */
 .cap { font-size: 10px; letter-spacing: 0.14em; opacity: 0.5; }
 .pv.on .cap { opacity: 1; font-weight: 700; }
-/* + — a new material, standing after the last card as one more of them, its ball an empty ring */
-.pv.add .plus { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 50%; border: 1px dashed var(--line); font-size: 24px; line-height: 1; opacity: 0.55; }
+/* + — a new material for the part, standing after the last card of what it may wear as one more of them, its
+   ball an empty ring the size of the others */
+.pv.add .plus { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px dashed var(--line); font-size: 22px; line-height: 1; opacity: 0.55; }
 .pv.add:hover .plus { opacity: 1; border-style: solid; }
 /* NAME is typed over its line — the same line the other sections read their value on */
 .sect input.val { font: inherit; font-size: 12px; letter-spacing: 0.04em; color: var(--ink); background: transparent; border: 0; border-bottom: 1px dashed var(--line); padding: 0; width: 100%; outline: none; }
