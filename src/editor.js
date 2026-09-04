@@ -24,6 +24,7 @@ import {
 import { PALETTE } from "./character/vocabulary/palette.js";
 import { bindSeg, addOption, randomRoll, runLoop, download } from "./ui.js";
 import { paintBall } from "./balls.js";
+import { paintPart } from "./thumbs.js";
 
 const canvas = document.getElementById("stage");
 const speciesSel = document.getElementById("speciesSel");
@@ -32,7 +33,6 @@ const statusLabel = document.getElementById("status");
 const poseSeg = document.getElementById("poseSeg");
 const baseBox = document.getElementById("base");
 const partsBox = document.getElementById("parts");
-const paletteBox = document.getElementById("palette");
 const proportionsBox = document.getElementById("proportions");
 const notesBox = document.getElementById("notes");
 const fileInput = document.getElementById("file");
@@ -44,7 +44,6 @@ const fileInput = document.getElementById("file");
 // are the board's business and stay with it. Here a key is a key, and any colour goes in any of them.
 // `pop` alone leads with a `null` for "no accent at all", which is what most individuals have. `pattern2` is the
 // rex's second scale colour and is meaningless on anything else.
-const COLOR_KEYS = ["ink", "skin", "cloth", "hair", "accent", "pop", "pattern2"];
 const poolOf = (key) => (key === "pop" ? [null, ...PALETTE] : PALETTE);
 
 // The proportion sliders. Ranges are wide enough to reach past what the generator draws — this screen is for
@@ -137,7 +136,7 @@ function field(parent, label) {
 // material — a colour (the skin box), a goofy material, and the density it is laid at. The card reads the way
 // a 3D program's material panel does: a ball previewing the three together, the materials as sample balls in
 // the creature's own colour and density, the density as a stepped slider, then the colour. The two slots leave
-// the part list for this card; the palette card, folded away by default, carries the same colour box.
+// the part list for this card; MATERIALS carries the colour boxes themselves.
 // The slots the MATERIALS card owns — the main material and its density, the body's material and its density
 const MATERIAL_SLOTS = ["material", "density", "bodyMaterial", "bodyDensity"];
 const MATERIALS = SLOTS.material;    // graphite · ink · oil · charcoal
@@ -348,30 +347,78 @@ const STATE_SLOT = "ghost";
 const stateName = (value) => (value === "none" ? "NORMAL" : "GHOST");
 const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT);
 let part = PART_SLOTS[0];
-let partSel = null;
-let formSel = null;
+const tabs = {};        // part → { item, canvas } — the icon tabs down the left
+let formsBox = null;    // where the open part's preview grid stands
+const grids = {};       // `${species}/${part}` → { box, forms: value → { item, canvas } } — each grid built and painted once, kept
+let gridKey = null;     // the grid standing in formsBox
+const tabImages = {};   // species → slot → an offscreen canvas of the painted icon — painted once, blitted back on return
 let paintRow = null;
 let paintStrip = null;
 // The boxes a part may be painted from. `pattern2` is a mark, not a surface; `ink` is the line, never a fill
 const PAINT_BOXES = ["skin", "cloth", "hair", "accent", "pop"];
+// Which parts a species draws at all — a tail only where the identity has one, arms only on a biped (the same
+// rule USED BY goes by). A tab for a part the species never draws would be an empty icon
+function partApplies(slot, name) {
+  const identity = (SPECIES.find((s) => s.name === name) || {}).identity || {};
+  if (slot.startsWith("tail")) return identity.tail === true;
+  if (slot === "arms" || slot === "armLength") return identity.skeleton !== "quad";
+  return true;
+}
+const TAB_SIZE = 34;    // CSS pixels — the icon on a part tab
+const FORM_SIZE = 44;   // CSS pixels — a form preview: three to a row inside the card, with the strip beside them
 
+// **The part is picked by its picture, and the pictures are a legend.** A tab per part down the left, each an icon
+// of the part, and the open part's forms as a grid of previews, each one value drawn, the current one framed. The
+// pictures are not the creature being edited: they are a **reference individual** of the species — one fixed roll
+// with the parts that share a layer quieted (no hat, no hair, no eyewear, no nose, no pattern) — drawn once with
+// **everything but the part hidden** (thumbs.js — the real drawing, framed on the region the part lives in) and
+// left alone. Rendering them off the
+// live creature on every edit was tried: a build per slider tick, and icons that changed under the hand
+const REFERENCE_ROLL = 4242;
+const REFERENCE_PARTS = { headgear: "none", eyewear: "none", hair: "none", face2: "none", pattern: "none", ghost: "none", tailDeco: "none", brow: "none", nose: "none", material: "graphite", density: "light" };
+// A tab shows its part at a value that has something to show: the reference's own unless that is none, then the
+// slot's first value that is not
+const representativeOf = (name, slot) => {
+  const own = referenceOf(name).parts[slot];
+  return own !== "none" ? own : SLOTS[slot].find((v) => v !== "none") || own;
+};
+const references = {};
+function referenceOf(name) {
+  if (!references[name]) {
+    const made = makeCreature(REFERENCE_ROLL, name);
+    references[name] = derive({ ...made, parts: { ...made.parts, ...REFERENCE_PARTS, bodyMaterial: "graphite", bodyDensity: "light" } });
+  }
+  return references[name];
+}
 function buildParts() {
   partsBox.innerHTML = "";
-  const pick = field(partsBox, "part");
-  partSel = document.createElement("select");
-  partSel.setAttribute("aria-label", "Part");
-  for (const slot of PART_SLOTS) addOption(partSel, slot, slot);
-  partSel.addEventListener("change", () => { part = partSel.value; renderPart(); });
-  pick.appendChild(partSel);
-
-  const form = field(partsBox, "form");
-  formSel = document.createElement("select");
-  formSel.setAttribute("aria-label", "Form");
-  formSel.addEventListener("change", () => {
-    spec = derive({ ...spec, parts: { ...spec.parts, [part]: formSel.value } });
-    render();
-  });
-  form.appendChild(formSel);
+  const card = document.createElement("div");
+  card.className = "partCard";
+  const strip = document.createElement("div");
+  strip.className = "tabs";
+  strip.setAttribute("role", "tablist");
+  strip.setAttribute("aria-label", "Part");
+  for (const slot of PART_SLOTS) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "tab";
+    item.title = slot;
+    item.setAttribute("role", "tab");
+    item.setAttribute("aria-label", `part ${slot}`);
+    const canvas = document.createElement("canvas");
+    item.appendChild(canvas);
+    const cap = document.createElement("span");
+    cap.textContent = slot;
+    item.appendChild(cap);
+    item.addEventListener("click", () => { part = slot; renderPart(); });
+    strip.appendChild(item);
+    tabs[slot] = { item, canvas };
+  }
+  card.appendChild(strip);
+  formsBox = document.createElement("div");   // the open part's grid stands here; the grids themselves are kept (gridOf)
+  formsBox.className = "formsSlot";
+  card.appendChild(formsBox);
+  partsBox.appendChild(card);
 
   paintRow = document.createElement("div");
   paintRow.className = "field swatches";
@@ -384,14 +431,117 @@ function buildParts() {
   partsBox.appendChild(paintRow);
 }
 
-// The open part's controls, from the spec: the form list, and for a part with no material of its own the
-// paint boxes, drawn in the individual's own colours with the one it currently takes ringed. A box the
-// individual does not have (a pop on one without) is not offered. The body's material is MATERIALS' business
+// **The legend is painted once, ahead, and kept.** One queue of paint jobs, one build per frame, so the deck never
+// freezes: when a species comes on the stage its tabs go in first (a build per tab, into offscreen canvases that are
+// blitted onto the tabs — coming back to the species blits them again and builds nothing), then the open part's
+// preview grid, then every other part's grid in tab order, so by the time a tab is clicked its previews are
+// there. Opening a part whose previews are still pending moves them to the front. Nothing is painted on an edit,
+// and nothing twice
+let thumbSpecies = null;
+const queue = [];        // [{ key, run }] — key is `${species}/${part}` (or `${species}/tabs`)
+let pumping = false;
+function enqueue(key, run) {
+  queue.push({ key, run });
+  if (!pumping) { pumping = true; requestAnimationFrame(pump); }
+}
+function pump() {
+  const job = queue.shift();
+  if (job) job.run();
+  if (queue.length) requestAnimationFrame(pump);
+  else pumping = false;
+}
+function prioritise(key) {   // the open part's jobs first
+  const mine = queue.filter((j) => j.key === key);
+  if (!mine.length) return;
+  const rest = queue.filter((j) => j.key !== key);
+  queue.length = 0;
+  queue.push(...mine, ...rest);
+}
+const blit = (from, to) => {
+  to.width = from.width;
+  to.height = from.height;
+  to.style.width = from.style.width;
+  to.style.height = from.style.height;
+  to.getContext("2d").drawImage(from, 0, 0);
+};
+function paintTabs() {
+  const name = spec.species;
+  const images = tabImages[name] || (tabImages[name] = {});
+  const at = referenceOf(name);
+  const slots = PART_SLOTS.filter((slot) => partApplies(slot, name));
+  for (const slot of slots) {
+    if (images[slot]) { blit(images[slot], tabs[slot].canvas); continue; }   // kept from before
+    enqueue(`${name}/tabs`, () => {
+      if (images[slot]) return;
+      const off = document.createElement("canvas");
+      paintPart(off, derive({ ...at, parts: { ...at.parts, [slot]: representativeOf(name, slot) } }), slot, TAB_SIZE);
+      images[slot] = off;
+      if (spec.species === name) blit(off, tabs[slot].canvas);
+    });
+  }
+}
+// Every part's grid for the species, built and queued ahead — the open part's first (renderPart prioritises it)
+function prepaint(name) {
+  for (const slot of PART_SLOTS) if (partApplies(slot, name)) gridOf(name, slot);
+}
+// The preview grid of a part for a species — built and its paints queued the first time, kept after
+function gridOf(name, slot) {
+  const key = `${name}/${slot}`;
+  if (grids[key]) return grids[key];
+  const box = document.createElement("div");
+  box.className = "forms";
+  box.setAttribute("role", "listbox");
+  box.setAttribute("aria-label", "Form");
+  const forms = {};
+  for (const value of SLOTS[slot]) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "form";
+    item.title = value;
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-label", `${slot} ${value}`);
+    const canvas = document.createElement("canvas");
+    item.appendChild(canvas);
+    const cap = document.createElement("span");
+    cap.textContent = value;
+    item.appendChild(cap);
+    item.addEventListener("click", () => {
+      spec = derive({ ...spec, parts: { ...spec.parts, [slot]: value } });
+      render();
+    });
+    box.appendChild(item);
+    forms[value] = { item, canvas };
+  }
+  grids[key] = { box, forms };
+  const at = referenceOf(name);
+  for (const value of SLOTS[slot]) {
+    enqueue(key, () => paintPart(forms[value].canvas, derive({ ...at, parts: { ...at.parts, [slot]: value } }), slot, FORM_SIZE));
+  }
+  return grids[key];
+}
+
+// The open part's controls, from the spec: its tab framed, the form previews (rebuilt when the part changes), and
+// for a part with no material of its own the paint boxes, drawn in the individual's own colours with the one it
+// currently takes ringed. A box the individual does not have (a pop on one without) is not offered
 function renderPart() {
-  partSel.value = part;
-  formSel.innerHTML = "";
-  for (const value of SLOTS[part]) addOption(formSel, value, value);
-  formSel.value = spec.parts[part];
+  for (const slot of PART_SLOTS) tabs[slot].item.hidden = !partApplies(slot, spec.species);
+  if (!partApplies(part, spec.species)) part = PART_SLOTS[0];   // the open part left with the species — back to the head
+  for (const slot of PART_SLOTS) tabs[slot].item.classList.toggle("on", slot === part);
+  tabs[part].item.scrollIntoView({ block: "nearest" });   // the strip scrolls; the open tab stays in its window
+  const key = `${spec.species}/${part}`;
+  const grid = gridOf(spec.species, part);
+  if (thumbSpecies !== spec.species) {   // a new species is a new legend — or one kept from before
+    thumbSpecies = spec.species;
+    paintTabs();
+    prioritise(`${spec.species}/tabs`);
+    prepaint(spec.species);
+  }
+  if (gridKey !== key) {
+    formsBox.replaceChildren(grid.box);
+    gridKey = key;
+    prioritise(key);
+  }
+  for (const value of SLOTS[part]) grid.forms[value].item.classList.toggle("on", value === spec.parts[part]);
 
   const paintable = PAINTED.includes(part);
   paintRow.hidden = !paintable;
@@ -416,8 +566,9 @@ function renderPart() {
   }
 }
 
-// One row of a palette box's pool — the swatches a key may be picked from. The same row serves PALETTE, the
-// main material's colour and the body material's colour, so all of them show the same choice ringed.
+// One row of a palette box's pool — the swatches a key may be picked from: the main material's colour (the skin
+// box) and the body material's (the cloth box). The other boxes — ink, hair, accent, pop, the rex's second scale —
+// are the roll's; the PALETTE card that edited them was dropped as one card too many.
 function paletteRow(parent, key, label = key) {
   const row = document.createElement("div");
   row.className = label === null ? "field swatches bare" : "field swatches";
@@ -449,11 +600,6 @@ function paletteRow(parent, key, label = key) {
   row.appendChild(strip);
   parent.appendChild(row);
   return row;
-}
-
-function buildPalette() {
-  paletteBox.innerHTML = "";
-  for (const key of COLOR_KEYS) paletteRow(paletteBox, key);
 }
 
 function buildProportions() {
@@ -546,7 +692,6 @@ for (const s of SPECIES) addOption(speciesSel, s.name, s.name.toUpperCase());
 for (const value of SLOTS[STATE_SLOT]) addOption(stateSel, value, stateName(value));
 buildMaterials();
 buildParts();
-buildPalette();
 buildProportions();
 
 // Changing the species draws a new individual of it. Every species has its own palette rules — an imp's head is

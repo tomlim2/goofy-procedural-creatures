@@ -301,13 +301,37 @@ body.how { height: auto; }
 
 /* The editor deck carries every slot, colour and proportion at once, so it is wider than the others and
    scrolls — the same treatment the debug deck already gets. */
-.editor .deck { width: 244px; max-height: calc(100vh - 76px); overflow-y: auto; padding-right: 2px; }
+/* One column that can never grow past the deck (minmax(0, 1fr)): a card's minimum width used to widen the track and push
+   every card's right edge under the scrollbar. The cards fit the column; what does not fit a card wraps or clips inside it */
+.editor .deck { width: 244px; max-height: calc(100vh - 76px); overflow-y: scroll; overflow-x: hidden; scrollbar-gutter: stable; padding-right: 2px; grid-template-columns: minmax(0, 1fr); }
+/* The editor's scrollbars are always there — the deck's and the part strip's. The platform's overlay bar came and went with
+   the hand, and a bar that appears is a thing that moved. A drawn bar (::-webkit-scrollbar) is never an overlay, so it stays;
+   the gutter is reserved (overflow-y: scroll, scrollbar-gutter) so nothing shifts when a card grows past the fold either.
+   No scrollbar-width / scrollbar-color here: in Chromium the standard properties win over ::-webkit-scrollbar and keep the
+   bar an overlay, which is the bar that comes and goes */
+.editor .deck::-webkit-scrollbar, .editor .tabs::-webkit-scrollbar { width: 7px; }
+.editor .deck::-webkit-scrollbar-track, .editor .tabs::-webkit-scrollbar-track { background: transparent; }
+.editor .deck::-webkit-scrollbar-thumb, .editor .tabs::-webkit-scrollbar-thumb { background: rgba(43, 39, 36, 0.28); border-radius: 4px; border: 1px solid transparent; background-clip: padding-box; }
+.editor .deck::-webkit-scrollbar-thumb:hover, .editor .tabs::-webkit-scrollbar-thumb:hover { background: rgba(43, 39, 36, 0.45); background-clip: padding-box; }
 .editor summary { cursor: pointer; list-style: none; }
 .editor summary::-webkit-details-marker { display: none; }
 .editor summary h2 { display: inline; }
 .editor summary::after { content: " +"; opacity: 0.45; }
 .editor details[open] summary::after { content: " –"; }
 .fields { display: grid; gap: 4px; margin-top: 6px; }
+/* The PART card — icon tabs down the left (this creature cropped to each part, thumbs.js), the open part's form previews as a
+   grid on the right (the creature drawn with each value), the current tab and the current form framed as cards */
+.partCard { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px; align-items: start; }
+.tabs { display: flex; flex-direction: column; gap: 2px; max-height: 340px; overflow-y: scroll; scrollbar-gutter: stable; padding-right: 2px; }
+.tab, .form { display: grid; justify-items: center; gap: 1px; padding: 3px 2px 2px; min-width: 0; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; font-size: 8px; letter-spacing: 0.04em; line-height: 1.2; }
+.tab span, .form span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.6; }
+.tab:hover, .form:hover { background: rgba(43, 39, 36, 0.06); }
+.tab.on, .form.on { border-color: var(--ink); background: #f8f3e8; color: inherit; }
+.tab.on span, .form.on span { opacity: 1; font-weight: 700; }
+.tab canvas, .form canvas { display: block; }
+.forms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+.form { font-size: 9px; }
+
 /* The state dropdown (NORMAL · GHOST) sits under the species one in the same card */
 #stateSel { margin-top: 6px; }
 .field { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 6px; }
