@@ -97,32 +97,26 @@ face is decided by the head color (`faceInk`) and body markings by the body colo
 Black-furred dogs and cats and imps all ride the same rule. Objects (an eyepatch, a hat, a lens) and lines over a
 white fill (teeth) are the exception — they keep their own color or the dark ink ([rules.md](rules.md)).
 
-## Paint (paint.js)
+## Wear — the materials (wear.js, paint.js)
 
-A part is filled from the individual's own box of colours — skin, cloth, hair, accent, a pop when it has one —
-and `paint` is the choice of **which**. `PAINT_DEFAULTS` names what each paintable part took before paint
-existed (head and ears the skin, hair the hair, the headgear the accent or a pop aimed at it, the body the
-cloth), so a generated spec carries no `paint` and draws exactly as it did; the editor writes `spec.paint[part]`
-only when a hand picks another box, and `paintOf(spec, part)` is what the drawing reads. One region per part
-for now — a part is one colour. A part that paints more than one thing is inspected on its own before it gets
-a second region, and a part not in `PAINTABLE` is not offered a paint at all.
+**A material is a palette box with a texture.** The roll deals the palette's boxes — skin, cloth, hair, accent,
+a pop when it has one — and the ink its marks are drawn in; each is a colour, laid at the main material's
+texture and density (`material`, `density`), cloth at the body's (`bodyMaterial`, `bodyDensity`). `wear` is
+which of them a part is made of: `WEAR_DEFAULTS` names what each part took before wear existed — exactly the
+box draw/ painted it from (head, ears, horns, nose the skin; hair the hair; headgear the accent; eyes, brow,
+mouth the ink; body, arms, legs, tail the cloth) — so a roll's creature does not move and a generated spec
+carries no `wear` at all. A part not listed — an eyepatch, cheeks, a pattern, the whites of the eyes — is an
+object with a colour of its own or flat by rule, and wears none.
 
-## Wear (wear.js)
-
-An individual wears two materials — the **main** one (`material`, `density`) and the **body's** (`bodyMaterial`,
-`bodyDensity`) — and every surface that takes a goofy material takes one of the two. `wear` is the choice of
-**which**: `WEAR_DEFAULTS` names what each part took before wear existed (the head's side the main — head, ears,
-horns, hair, headgear, nose — and the body's side the body's — body, arms, legs, tail), so a generated spec carries
-no `wear` and draws exactly as it did; the editor writes `spec.wear[part]` when a hand puts a part in the other
-material (PART → the part → MATERIAL). A part hands its name to `paintPart` and `sideOf` turns it into the side
-`materialOf` and `surfaceHand` read (draw/body.js). A part not in `WEARABLE` — a mark, an object with a colour of
-its own, the flat whites of the eyes — wears nothing and is offered nothing.
-
-Beyond the two, a hand may add materials of its own in the editor (under a part, material → +, which the part wears at once): `spec.materials` is a map,
-`m1`, `m2` … → `{ name, texture, density, colour }`, and a part wears one by its key in `wear`. Such a material
-carries its colour with it — a part in it is painted that colour, not from a box (paint.js paintOf, body.js
-paintPart) — and a ghost's one pale tone still wins. The generator never writes any; a file carries them, and a
-key that names nothing falls back to the drawing's own.
+The editor writes `spec.wear[part]` when a hand puts a part in another material, and `spec.materials[key]`:
+for a box, a texture or density of its own (hair hatched while the skin is oil); for a material of the hand's
+own — `m1`, `m2` … made under a part (material → +) or beside MATERIALS — a name, a texture, a density and a
+colour that comes with it. **Colour belongs to the material** (`paintOf`, `markInkOf`, body.js `paintPart`):
+a part in another box is painted that box's colour, in a hand's own that material's, and in its own box the
+colour the drawing chose for it — a tone of the box, a lid a shade darker, the face ink light on a dark face.
+A ghost's one pale tone still wins over a hand's own colour. The generator never writes any of it; a file
+carries it (an older file's `paint` reads as `wear`), and a key that names nothing falls back to the drawing's
+own.
 
 ## Identity
 

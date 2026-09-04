@@ -38,6 +38,21 @@ function migrate(next) {
     out.proportions = { ...out.proportions, hand: out.proportions.wobbleSeed };
     delete out.proportions.wobbleSeed;
   }
+  // `paint` (which box a part was painted from) is `wear` now, and the two materials the roll deals are named
+  // by their boxes: main → skin, body → cloth
+  const box = { main: "skin", body: "cloth" };
+  if (out.paint || out.wear) {
+    const wear = {};
+    for (const [part, key] of Object.entries(out.paint || {})) wear[part] = key;
+    for (const [part, key] of Object.entries(out.wear || {})) wear[part] = box[key] || key;
+    out.wear = wear;
+    delete out.paint;
+  }
+  if (out.materialNames && (out.materialNames.main || out.materialNames.body)) {
+    const names = { ...out.materialNames };
+    for (const [from, to] of Object.entries(box)) if (names[from]) { names[to] = names[from]; delete names[from]; }
+    out.materialNames = names;
+  }
   return out;
 }
 

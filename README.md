@@ -42,18 +42,16 @@ To go back, press **MENAGERIE** in the header.
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
 
 `/editor.html?species=cat` — **the editor**. Pick a species, NEW rolls a fresh individual of it, then build by hand.
-**Colour belongs to the material.** The BASE SKIN MATERIAL is what the creature is made of before any part
-goes on — a colour (the skin box), a material and a density — and is not a part. Its card reads like a 3D
-program's material panel: a ball previewing the three together, the four materials as sample balls in the
-creature's own colour and density, the density as a stepped slider, then the colour. MATERIALS holds every
-material the creature wears — the two the roll deals (the main and the body's) and any number a hand adds,
-each a name, a texture, a density and a colour of its own — and a part is put in any of them under PART →
-material, where **+** makes a new one for that part (a copy of what it had on, worn at once) and MATERIALS
-opens it for editing. The body wears a material of
-its own: its colour (the cloth box) and its material, or the base skin's. Then a part at a time: open one and
-the deck shows only what it has — its form, the body's material, and for a part with no material of its own
-(the hair, the headgear) which of the creature's own colours it is painted from — plus the palette those
-colours come from and the proportions. The palette is one set of every colour the vocabulary knows, and every key — the base, a cloth, a
+**Colour belongs to the material, and a material is a palette box with a texture.** MATERIALS holds every
+material the creature wears — skin, cloth, hair, accent, a pop when it has one, and the ink its marks are
+drawn in, each a colour laid at a texture and a density — and any number a hand adds, each a name, a
+texture, a density and a colour of its own. The card reads like a 3D program's material panel: the materials
+as cards in a row, a ball previewing the selected one's colour, texture and density together, the textures as
+sample balls in that colour and density, the density as a stepped slider, then the colour. A part is put in
+any of them under PART → material — the eyes in a blue of their own, the hair hatched while the skin is oil —
+where **+** makes a new one for that part (a copy of what it had on, worn at once) and MATERIALS opens it for
+editing. Then a part at a time: open one and the deck shows its forms and its material, plus the
+proportions. The palette is one set of every colour the vocabulary knows, and every key — the base, a cloth, a
 hair, the ink — picks from all of it; the generator's per-key pools are the board's odds, not this screen's
 limits. A species' forbidden values and the constraint pass
 are reported under NOTES and **not** applied, so it can make creatures the board never will — which is also why

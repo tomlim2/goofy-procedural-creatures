@@ -19,9 +19,9 @@ import { createScene } from "./scene/index.js";
 import {
   makeCreature, applyForbid, applyConstraints,
   deriveSpec, readCreature, creatureJson, isHouse,
-  SLOTS, SPECIES, PAINTABLE, paintKey
+  SLOTS, SPECIES
 } from "./character/index.js";
-import { WEARABLE, wearOf, extraOf, materialKeys } from "./character/vocabulary/wear.js";
+import { WEARABLE, wearOf, extraOf, materialKeys, isBox, BOXES, surfaceOf as wornSurface } from "./character/vocabulary/wear.js";
 import { PALETTE } from "./character/vocabulary/palette.js";
 import { bindSeg, addOption, randomRoll, runLoop, download } from "./ui.js";
 import { paintBall } from "./balls.js";
@@ -181,59 +181,58 @@ function ballStrip(parent, names, onPick, kind = "texture") {
 
 // ---- MATERIALS ------------------------------------------------------------------------------------------
 //
-// **Every material the creature wears, in one card.** The roll deals two — the main material (`material` and
-// `density`, its colour the skin box — everything on the head side takes it) and the body's (`bodyMaterial` and
-// `bodyDensity`, its colour the cloth box — everything hanging off the torso) — and a hand may add any number
-// more: each a name, a texture, a density and a colour of its own (`spec.materials`, vocabulary/wear.js). A
-// new one is made where it is worn — under a part, material → **+** — as a copy of what the part had on, and
-// the part wears it from then on; it is edited here. Each is a material in the 3D sense — a
-// texture, the density it is laid at and a colour — and **each is its own**: nothing here says one follows
-// another (asOwn). Each gets a preview card at the top, in one row that scrolls sideways; **the previews are
-// the selection**: click one and the sections below edit that material — its name, the parts that wear it,
-// its texture (the sample balls), its density (a slider, low to high), its colour. A part is put in a
-// material under PART → material.
-let selected = "main";   // the material being edited — main, body, or one of the hand's own (m1, m2 …)
+// **Every material the creature wears, in one card.** A material is a palette box with a texture
+// (vocabulary/wear.js): the roll deals skin, cloth, hair, accent, a pop when it has one, and the ink its marks
+// are drawn in — each a colour, laid at the main material's texture and density, cloth at the body's — and a
+// hand may add any number more: each a name, a texture, a density and a colour of its own. A new one is made
+// where it is worn — under a part, material → **+**, a copy of what the part had on, worn at once — or with
+// the + beside the title. Each is a material in the 3D sense — a texture, the density it is laid at and a
+// colour — and **each is its own**: nothing here says one follows another (asOwn). Each gets a preview card
+// at the top, in one row that scrolls sideways; **the previews are the selection**: click one and the
+// sections below edit that material — its name, the parts that wear it, its texture (the sample balls), its
+// density (a slider, low to high), its colour. A part is put in a material under PART → material.
+let selected = "skin";   // the material being edited — a box, or one of the hand's own (m1, m2 …)
 const mat = { previews: null, name: null, sect: {}, strip: null, density: null, colourRows: {}, ownColours: null };
 
-// What a material is called under its ball: the roll's two are main and mat1 until named
-// (`spec.materialNames`); a hand's own carries its name, and is mat2, mat3 … until it has one
+// What a material is called under its ball: a box by its name until a hand names it (`spec.materialNames`);
+// a hand's own carries its name, and is mat1, mat2 … until it has one
 function captionOf(key) {
-  if (key === "main" || key === "body") return (spec.materialNames && spec.materialNames[key]) || (key === "main" ? "main" : "mat1");
-  const extra = extraOf(spec, key);
-  return (extra && extra.name) || `mat${materialKeys(spec).indexOf(key)}`;
+  if (isBox(key)) return (spec.materialNames && spec.materialNames[key]) || key;
+  const own = extraOf(spec, key);
+  if (own && own.name) return own.name;
+  const owns = materialKeys(spec).filter((k) => !isBox(k));
+  return `mat${owns.indexOf(key) + 1}`;
 }
-// A material's three — texture, density, colour — whichever kind it is. Its own on this screen (asOwn); a
-// `same` is still read as what it stands for, in case one reaches here
+// A box's colour before the ghost collapse — what the swatches ring (palette0, the box edits are written into)
+function boxColour0(box) {
+  if (box === "pop") return (spec.palette0.pop && spec.palette0.pop.color) || null;
+  return spec.palette0[box] || null;
+}
+// A material's three — texture, density, colour — whichever kind it is
 function surfaceOf(key) {
-  const p = spec.parts;
-  if (key === "main") return { texture: p.material, density: p.density, colour: spec.palette0.skin };
-  if (key === "body") {
-    return {
-      texture: p.bodyMaterial && p.bodyMaterial !== "same" ? p.bodyMaterial : p.material,
-      density: p.bodyDensity && p.bodyDensity !== "same" ? p.bodyDensity : p.density,
-      colour: spec.palette0.cloth
-    };
-  }
-  const extra = extraOf(spec, key) || {};
-  return { texture: extra.texture || p.material, density: extra.density || p.density, colour: extra.colour || spec.palette0.skin };
+  const { texture, density } = wornSurface(spec, key);
+  const colour = isBox(key) ? boxColour0(key) : (extraOf(spec, key) || {}).colour;
+  return { texture, density, colour: colour || spec.palette0.skin };
 }
-// Writes one of a material's three back where it lives: the main's and the body's in their slots and boxes,
-// a hand's own in `spec.materials`
+// Writes one of a material's three back where it lives: skin's and cloth's texture and density in their slots,
+// a box's colour in its palette box, any other box's texture and density and a hand's own material entire in
+// `spec.materials`
 function setSurface(key, what, value) {
-  if (key === "main" || key === "body") {
-    if (what === "colour") spec = derive({ ...spec, palette0: { ...spec.palette0, [key === "main" ? "skin" : "cloth"]: value } });
-    else {
-      const slot = key === "main" ? (what === "texture" ? "material" : "density") : (what === "texture" ? "bodyMaterial" : "bodyDensity");
-      spec = derive({ ...spec, parts: { ...spec.parts, [slot]: value } });
-    }
+  if (isBox(key) && what === "colour") {
+    // A pop is a colour **and** a target, so keep the target the individual already had
+    const boxValue = key === "pop" ? { color: value, target: (spec.palette0.pop && spec.palette0.pop.target) || "hair" } : value;
+    spec = derive({ ...spec, palette0: { ...spec.palette0, [key]: boxValue } });
+  } else if (key === "skin" || key === "cloth") {
+    const slot = key === "skin" ? (what === "texture" ? "material" : "density") : (what === "texture" ? "bodyMaterial" : "bodyDensity");
+    spec = derive({ ...spec, parts: { ...spec.parts, [slot]: value } });
   } else {
-    spec = derive({ ...spec, materials: { ...spec.materials, [key]: { ...spec.materials[key], [what]: value } } });
+    spec = derive({ ...spec, materials: { ...(spec.materials || {}), [key]: { ...(extraOf(spec, key) || {}), [what]: value } } });
   }
   render();
 }
 function setName(key, name) {
   const trimmed = name.trim();
-  if (key === "main" || key === "body") {
+  if (isBox(key)) {
     const names = { ...(spec.materialNames || {}) };
     if (trimmed) names[key] = trimmed;
     else delete names[key];
@@ -274,13 +273,23 @@ function present(slot) {
   const quad = identity.skeleton === "quad";
   if (slot === "arms") return !quad && spec.parts.arms !== "none";
   if (slot === "tail") return identity.tail === true;
-  if (slot === "legs" || slot === "body" || slot === "head") return true;
+  if (slot === "legs" || slot === "body" || slot === "head" || slot === "mouth") return true;
   return spec.parts[slot] !== undefined && spec.parts[slot] !== "none";
 }
-// The parts that wear this material (wear.js — the drawing's side by default, the hand's choice when it put a
+// The parts that wear this material (wear.js — the drawing's own by default, the hand's choice when it put a
 // part elsewhere), of those the creature has
 function presentParts(key) {
   return WEARABLE.filter((slot) => wearOf(spec, slot) === key && present(slot));
+}
+
+// Brings an item of a row that scrolls sideways into view — the row alone, never the deck: scrollIntoView
+// also scrolls every ancestor, and on each edit it pulled the deck up to MATERIALS
+function revealInRow(row, item) {
+  if (!row || !item) return;
+  const r = item.getBoundingClientRect();
+  const s = row.getBoundingClientRect();
+  if (r.left < s.left) row.scrollLeft += r.left - s.left;
+  else if (r.right > s.right) row.scrollLeft += r.right - s.right;
 }
 
 // A section of the card, three lines: its name, what is applied (a line of its own), then the control
@@ -371,16 +380,15 @@ function buildMaterials() {
   mat.density.addEventListener("input", () => setSurface(selected, "density", DENSITIES[Number(mat.density.value)]));
   densityRow.appendChild(mat.density);
 
-  // COLOUR — the main's is the skin box, the body's the cloth box, a hand's own material's is its own
+  // COLOUR — a box's is its palette box (one row per box, the selected one showing), a hand's own material's its own
   mat.sect.colour = section(baseBox, "COLOUR");
-  mat.colourRows.main = paletteRow(baseBox, "skin", null);
-  mat.colourRows.body = paletteRow(baseBox, "cloth", null);
+  for (const box of BOXES) mat.colourRows[box] = paletteRow(baseBox, box, null);
   mat.ownColours = swatchRow(baseBox, (color) => setSurface(selected, "colour", color));
 }
 
 function renderMaterials() {
   const keys = materialKeys(spec);
-  if (!keys.includes(selected)) selected = "main";
+  if (!keys.includes(selected)) selected = "skin";
   // The previews — every material the creature wears, the one being edited framed and scrolled into view. A
   // new one is made with the + beside the title, or under a part (material → +)
   const strip = document.createElement("div");
@@ -392,11 +400,10 @@ function renderMaterials() {
     strip.appendChild(card);
   });
   mat.previews.replaceChildren(strip);
-  const on = strip.querySelector(".pv.on");
-  if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
+  revealInRow(strip, strip.querySelector(".pv.on"));
 
   const s = surfaceOf(selected);
-  const own = extraOf(spec, selected);
+  const own = isBox(selected) ? null : extraOf(spec, selected);
   mat.name.value = own ? own.name || "" : (spec.materialNames && spec.materialNames[selected]) || "";
   mat.name.placeholder = captionOf(selected);
   mat.sect.uses.textContent = presentParts(selected).join(" · ") || "nothing yet — under a part, material";
@@ -411,22 +418,17 @@ function renderMaterials() {
   mat.sect.density.textContent = s.density;
   mat.density.value = String(Math.max(0, DENSITIES.indexOf(s.density)));
 
-  const box = selected === "main" ? "skin" : selected === "body" ? "cloth" : null;
+  const box = isBox(selected) ? selected : null;
   mat.sect.colour.textContent = `${box ? `${box} ` : ""}${s.colour || ""}`;
-  mat.colourRows.main.hidden = selected !== "main";
-  mat.colourRows.body.hidden = selected !== "body";
+  for (const name of BOXES) mat.colourRows[name].hidden = name !== box;
   mat.ownColours.hidden = !!box;
   for (const dot of mat.ownColours.querySelectorAll(".swatch")) dot.classList.toggle("on", dot.dataset.color === s.colour);
 }
 
 // The body is clothing: what is put on it brings its own surface (bodyMaterial) and its own pressure (bodyDensity),
 // each its own on this screen (asOwn). Those slots leave the part list; they are edited in MATERIALS.
-// **Colour belongs to the material.** The main material is a colour (the skin box), a material and a
-// density; the body's material is its own colour (the cloth box) and its own material, or the main material's. So
-// these parts take no paint row: their colour is their material's. Only a part with no material of its own —
-// the hair, the headgear — is painted from one of the creature's boxes.
-const MATERIAL_PARTS = ["head", "ears", "body"];
-const PAINTED = PAINTABLE.filter((slot) => !MATERIAL_PARTS.includes(slot));
+// **Colour belongs to the material.** A part takes no paint row: its colour is its material's, and its
+// material is picked under it (material → the cards).
 // The ghost is not a part but a state of the whole creature — it sits under SPECIES as its own dropdown
 // (NORMAL, then GHOST), not in the part list.
 const STATE_SLOT = "ghost";
@@ -443,10 +445,7 @@ let wearNote = null;    // for a part that wears none
 const grids = {};       // `${species}/${part}` → { box, forms: value → { item, canvas } } — each grid built and painted once, kept
 let gridKey = null;     // the grid standing in formsBox
 const tabImages = {};   // species → slot → an offscreen canvas of the painted icon — painted once, blitted back on return
-let paintRow = null;
-let paintStrip = null;
 // The boxes a part may be painted from. `pattern2` is a mark, not a surface; `ink` is the line, never a fill
-const PAINT_BOXES = ["skin", "cloth", "hair", "accent", "pop"];
 // Which parts a species draws at all — a tail only where the identity has one, arms only on a biped (the same
 // rule USED BY goes by). A tab for a part the species never draws would be an empty icon
 function partApplies(slot, name) {
@@ -528,15 +527,6 @@ function buildParts() {
   formsBox = document.createElement("div");   // the open part's grid stands here; the grids themselves are kept (gridOf)
   formsBox.className = "formsSlot";
   panel.appendChild(formsBox);
-  paintRow = document.createElement("div");
-  paintRow.className = "field swatches";
-  const name = document.createElement("span");
-  name.textContent = "paint";
-  paintRow.appendChild(name);
-  paintStrip = document.createElement("div");
-  paintStrip.className = "strip";
-  paintRow.appendChild(paintStrip);
-  panel.appendChild(paintRow);
   // MATERIAL — the creature's materials, as the cards MATERIALS shows, here only to be picked from: the part's
   // material is whichever is framed, and a click puts the part in another (spec.wear). Editing a material is
   // MATERIALS' business, in one place. The cards are laid on render — a hand adds materials
@@ -671,7 +661,7 @@ function renderPartBody() {
   for (const slot of PART_SLOTS) tabs[slot].item.hidden = !partApplies(slot, spec.species);
   if (!partApplies(part, spec.species)) part = PART_SLOTS[0];   // the open part left with the species — back to the head
   for (const slot of PART_SLOTS) tabs[slot].item.classList.toggle("on", slot === part);
-  tabs[part].item.scrollIntoView({ block: "nearest", inline: "nearest" });   // the strip scrolls sideways; the open tab stays in view
+  revealInRow(tabs[part].item.parentElement, tabs[part].item);   // the strip scrolls sideways; the open tab stays in view — the row alone
   const key = `${spec.species}/${part}`;
   const grid = gridOf(spec.species, part);
   if (thumbSpecies !== spec.species) {   // a new species is a new legend — or one kept from before
@@ -725,28 +715,6 @@ function renderPartBody() {
     wearNote.textContent = wears ? "" : `${part} wears no material — a mark, an object with a colour of its own, or flat by rule`;
   }
 
-  // A part in one of the hand's own materials is that material's colour: nothing to paint
-  const paintable = PAINTED.includes(part) && !extraOf(spec, wearOf(spec, part));
-  paintRow.hidden = mode !== "shape" || !paintable;
-  paintStrip.innerHTML = "";
-  if (!paintable) return;
-  const current = paintKey(spec, part);
-  for (const key of PAINT_BOXES) {
-    const color = key === "pop" ? spec.palette0.pop && spec.palette0.pop.color : spec.palette0[key];
-    if (!color) continue;
-    const dot = document.createElement("button");
-    dot.type = "button";
-    dot.className = "swatch";
-    dot.style.background = color;
-    dot.title = key;
-    dot.setAttribute("aria-label", `paint ${part} with ${key}`);
-    dot.classList.toggle("on", key === current);
-    dot.addEventListener("click", () => {
-      spec = derive({ ...spec, paint: { ...(spec.paint || {}), [part]: key } });
-      render();
-    });
-    paintStrip.appendChild(dot);
-  }
 }
 
 // One row of a palette box's pool — the swatches a key may be picked from: the main material's colour (the skin

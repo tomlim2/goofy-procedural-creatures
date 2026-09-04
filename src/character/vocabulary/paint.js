@@ -1,39 +1,23 @@
-// Paint — which of the individual's own colours a part is filled with.
-//
-// An individual owns five colours (palette.js: skin, cloth, hair, accent, and a pop when it has one) and every
-// part is painted from that box, never from a colour of its own. What `paint` adds is the choice of **which**
-// of those a part takes. Unset, a part takes what the drawing always took — the defaults below are exactly
-// what draw/ did before paint existed, so a roll's creature does not move and a generated spec carries no
-// `paint` at all. The editor writes `spec.paint[part]` only when a hand picks another box.
-//
-// One region per part for now: a part is one colour. Parts that paint more than one thing (a hat with a band,
-// a sleeve and a hand) are inspected one at a time before they get a second region.
-import { wearOf, extraOf } from "./wear.js";
+// Paint — the colour a part is filled with: its material's (vocabulary/wear.js). Kept as the one word draw/ asks
+// with. A part in its own box takes the box's colour; moved to another box, that box's; to a material of the
+// hand's own, that material's — colour belongs to the material. A ghost's one pale tone (spec.js ghostPalette)
+// is the palette's, so a box's colour is already a ghost's; a hand's own colour is passed over on a ghost.
+import { wearOf, colourOf, isBox, WEAR_DEFAULTS } from "./wear.js";
 
-export const PAINT_DEFAULTS = {
-  head: "skin",
-  ears: "skin",
-  hair: "hair",
-  headgear: "accent",
-  body: "cloth"
-};
+const ghostly = (spec) => !!(spec.parts && spec.parts.ghost && spec.parts.ghost !== "none");
 
-// The parts a hand can repaint, in the editor's order.
-export const PAINTABLE = Object.keys(PAINT_DEFAULTS);
-
-// The palette key a part is painted with — the hand's choice, or the drawing's own.
-export function paintKey(spec, part) {
-  return (spec.paint && spec.paint[part]) || PAINT_DEFAULTS[part];
+export function paintOf(spec, part) {
+  const worn = wearOf(spec, part);
+  const colour = colourOf(spec, worn);
+  if (colour && (isBox(worn) || !ghostly(spec))) return colour;
+  return colourOf(spec, WEAR_DEFAULTS[part]) || spec.palette.skin;
 }
 
-// The colour itself. A part in one of the hand's own materials takes that material's colour — colour belongs
-// to the material (wear.js) — unless the creature is a ghost, whose one pale tone is the palette's. Otherwise a
-// key the palette does not carry (a pop on an individual without one) falls back to the part's default box, so
-// a saved choice never paints with nothing.
-export function paintOf(spec, part) {
-  const extra = extraOf(spec, wearOf(spec, part));
-  if (extra && extra.colour && !(spec.parts && spec.parts.ghost && spec.parts.ghost !== "none")) return extra.colour;
-  const key = paintKey(spec, part);
-  const color = key === "pop" ? spec.palette.pop && spec.palette.pop.color : spec.palette[key];
-  return color || spec.palette[PAINT_DEFAULTS[part]];
+// A mark's ink — an eye's line, a brow, the mouth. In its own material the drawing's own choice (`fallback`:
+// the face ink, light on a dark face); moved by a hand, the worn material's colour.
+export function markInkOf(spec, part, fallback) {
+  const worn = wearOf(spec, part);
+  if (!worn || worn === WEAR_DEFAULTS[part]) return fallback;
+  const colour = colourOf(spec, worn);
+  return colour && (isBox(worn) || !ghostly(spec)) ? colour : fallback;
 }

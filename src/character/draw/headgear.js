@@ -2,6 +2,7 @@
 // A hat sits above the brow line (head.js browLine) and covers along the head outline shape (layout.js headShape).
 
 import { paintOf } from "../vocabulary/paint.js";
+import { wearOf } from "../vocabulary/wear.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { shade } from "../../color.js";
@@ -21,7 +22,7 @@ export function drawHeadgear(ink, fills, spec, box) {
   const pop = spec.palette.pop;
   // The hat's box: a pop aimed at the headgear wins as it always did, otherwise the accent — unless a hand has
   // repainted the hat, in which case its choice is the colour, pop or not.
-  const accent = spec.paint && spec.paint.headgear ? paintOf(spec, "headgear") : pop && pop.target === "headgear" ? pop.color : spec.palette.accent;
+  const accent = wearOf(spec, "headgear") !== "accent" ? paintOf(spec, "headgear") : pop && pop.target === "headgear" ? pop.color : spec.palette.accent;   // moved by a hand, what it wears; else a pop aimed at it, or its box
   const rx = box.headRx;
   const ry = box.headRy;
   const cy = box.headCy;

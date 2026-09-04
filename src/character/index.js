@@ -10,4 +10,4 @@ export { deriveSpec, readCreature, readBoard, creatureJson, boardJson, isHouse, 
 export { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, BIND_ARM, tailSketch, LAYER_KEYS, HAIR_KEYS, STATIC_EYE_KEYS } from "./draw/index.js";
 export { layout, eyeGeometry } from "./draw/layout.js";
 export { RIG_EYES, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch } from "./draw/face.js";
-export { SLOTS, DEFAULT_BIAS, ARCHETYPES, SPECIES, PAPER, INKS, FILLS, ACCENTS, POPS, DARKS, PAINT_DEFAULTS, PAINTABLE, paintKey, paintOf } from "./vocabulary/index.js";
+export { SLOTS, DEFAULT_BIAS, ARCHETYPES, SPECIES, PAPER, INKS, FILLS, ACCENTS, POPS, DARKS, paintOf, markInkOf } from "./vocabulary/index.js";

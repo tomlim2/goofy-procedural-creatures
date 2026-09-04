@@ -2,6 +2,7 @@
 // Docs: guidelines/character/parts.md § head (eyes~nose), guidelines/motion/catalog.md § the face
 
 import { paintPart } from "./body.js";
+import { markInkOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath } from "../../shape.js";
 import { TAU } from "./layout.js";
 import { shade, luminance } from "../../color.js";
@@ -76,16 +77,18 @@ export function eyeFloor(spec, eyes, x) {
 
 export function drawEyes(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyes;
-  const ink0 = spec.faceInk || spec.palette.ink;
+  // The eyes wear the ink (vocabulary/wear.js): their own choice of it here — the face ink, light on a dark face —
+  // unless a hand moved them to another material, whose colour they take
+  const ink0 = markInkOf(spec, "eyes", spec.faceInk || spec.palette.ink);
   // The ink of eyes laid on a white (slit, side, half, the lidded set) — drawn in light face ink it is lost on the white
-  const dark = spec.palette.ink;
+  const dark = markInkOf(spec, "eyes", spec.palette.ink);
 
   // Drawn smallest first — when they overlap the larger eye is in front (so no crossing line appears on eyes like hollow, whose fill and outline share one sketch)
   for (const eye of [...eyes].sort((a, b) => a.r - b.r)) {
     if (patched(spec, eye)) continue;
 
     if (kind === "dot") {
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 1, { amount: 0.2 })), ink0, { own: true });
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 1, { amount: 0.2 })), ink0, { own: true, part: "eyes" });
     } else if (kind === "sleepy") {
       ink.line(arcPath(eye.x, eye.y, eye.r, eye.r * 0.7, Math.PI, TAU), { color: ink0 });
     } else if (kind === "cross") {
@@ -133,7 +136,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, eyeWob(spec, eye, 2, { amount: 0.1 }));
       paintPart(fills, spec, path, SCLERA, { flat: true });
       fills.contour(path, { color: dark });
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, eyeWob(spec, eye, 3, { amount: 0.05 })), dark, { own: true });
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, eyeWob(spec, eye, 3, { amount: 0.05 })), dark, { own: true, part: "eyes" });
     } else if (kind === "line") {
       // A flat two-dash eye — an expressionless dash. It droops slightly on the outside
       ink.line([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0 });
@@ -155,10 +158,10 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, arc, SCLERA, { flat: true });
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
-      paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true });
+      paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true, part: "eyes" });
     } else if (kind === "droop") {
       // ´･ω･` — drooping outer corners. A lid stroke falling outward over a dot eye (glum)
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 5, { amount: 0.2 })), ink0, { own: true });
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 5, { amount: 0.2 })), ink0, { own: true, part: "eyes" });
       ink.line([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0 });
     } else if (kind === "hollow") {
       // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket).
@@ -200,7 +203,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       fills.contour(path, { color: dark });
       // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil
       const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
-      paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true });
+      paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" });
       // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
       fills.line(lidLine, { color: dark });
     } else if (kind === "half") {
@@ -213,7 +216,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, arc, SCLERA, { flat: true });
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
-      paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true });
+      paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true, part: "eyes" });
     }
     // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
     // as separate meshes to move the startle (pupil shrink), gaze and lids.
@@ -289,7 +292,7 @@ export function drawWhiskers(ink, spec, box) {
 export function drawBrow(ink, spec, box, eyes, kindOverride) {
   const kind = kindOverride || spec.parts.brow;
   if (kind === "none") return;
-  const ink0 = spec.faceInk || spec.palette.ink;
+  const ink0 = markInkOf(spec, "brow", spec.faceInk || spec.palette.ink);   // the brow wears the ink; moved by a hand, what it wears
 
   for (const eye of eyes) {
     if (patched(spec, eye)) continue;
@@ -521,5 +524,5 @@ export function angryEyeSketch(sketch, eye, ink, spec) {
   const inward = -eye.side;   // the nose side (0 on a cyclops)
   const lid = inward === 0 ? [[-r * 0.95, r * 0.45], [r * 0.95, r * 0.45]] : [[-inward * r * 0.95, r * 0.55], [inward * r * 0.95, r * 0.05]];
   sketch.line(lid, { color: ink });
-  paintPart(sketch, spec, blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink, { own: true });
+  paintPart(sketch, spec, blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink, { own: true, part: "eyes" });
 }

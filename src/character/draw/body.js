@@ -6,17 +6,18 @@ import { stepOf } from "../../medium/materials.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { MARKS } from "../vocabulary/palette.js";
 import { isGhost } from "../spec.js";
-import { sideOf, extraOf } from "../vocabulary/wear.js";
+import { sideOf, wearOf, surfaceOf, colourOf, WEAR_DEFAULTS, BOXES } from "../vocabulary/wear.js";
+const BOXES_SET = new Set(BOXES);
 
 // The creature's goofy material, by name — **the one place a material is named**. `where` is the half of the creature asking: the
 // head's is the `material` slot, the body's is `bodyMaterial` unless that says `same` (most of them). Everything standing on the head
 // counts as the head — ears, horns, hair, a hat, the muzzle, the face — and everything hanging off the body as the body — limbs,
 // hands, boots, sleeves, the tail. A spec without either slot — an older tree's, in drawdiff — is flat, like every late slot's default
+// `where` is what the part wears (vocabulary/wear.js — a box, or a material of the hand's own); the two older words
+// still work: "body" is the cloth, "head" the skin
+const keyOf = (where) => (where === "body" ? "cloth" : !where || where === "head" ? "skin" : where);
 export function materialOf(spec, where = "head") {
-  const extra = extraOf(spec, where);   // one of the hand's own materials (vocabulary/wear.js) — its texture, or the main's while it has none
-  if (extra) return (extra.texture || spec.parts.material || "flat").toUpperCase();
-  const body = where === "body" && spec.parts.bodyMaterial && spec.parts.bodyMaterial !== "same" ? spec.parts.bodyMaterial : null;
-  return (body || spec.parts.material || "flat").toUpperCase();
+  return (surfaceOf(spec, keyOf(where)).texture || "flat").toUpperCase();
 }
 
 // **The one place a surface's step is worked out.** `where` is the half asking, as in `materialOf`: the head's step is the `density`
@@ -25,15 +26,14 @@ export function materialOf(spec, where = "head") {
 // Spreads straight into paint()
 export function surfaceHand(spec, where = "head") {
   // The value step is the creature's hand on the material (the `density` slot), or the body's own on the body's side
-  const extra = extraOf(spec, where);   // a hand's own material lays at its own step
-  const body = where === "body" && spec.parts.bodyDensity && spec.parts.bodyDensity !== "same" ? spec.parts.bodyDensity : null;
+  const { density } = surfaceOf(spec, keyOf(where));
   // A **ghost draws its base and no texture at all** (`only: "base"`). Every tone a material makes is a shade of
   // the part's own colour, and a ghost's collapsed to one pale tone, so its fur, hatching and dust came out pale
   // on pale and it read as a blank shape. Handing the texture a tone of its own was drawn and dropped: grey read
   // as a second outline, and once the marks took the ghost's black (every line on a ghost is black — stroke.js
   // inkColor) graphite's rules became hard slashes ruled clean across the creature. There is nothing under a
   // ghost's skin to hatch. A flat pale body and black lines is the whole of it
-  return { value: stepOf((extra && extra.density) || body || spec.parts.density), only: isGhost(spec) ? "base" : undefined };
+  return { value: stepOf(density), only: isGhost(spec) ? "base" : undefined };
 }
 
 // Paints a part's surface with the creature's goofy material — the one way in for every skin, fur and cloth surface that is not the head or
@@ -43,11 +43,13 @@ export function surfaceHand(spec, where = "head") {
 // the body's, by default the head's side and the body's side); `body` is the older word for the body's side, kept for
 // the callers that are not a part of their own
 export function paintPart(fills, spec, path, color, { own = false, flat = false, body = false, part = null, strip, stripT, skinT } = {}) {
-  const where = part ? sideOf(spec, part) : body ? "body" : "head";
-  // A part in one of the hand's own materials takes that material's colour — colour belongs to the material. A
-  // ghost's one pale tone wins over it, as over every colour (spec.js ghostPalette)
-  const extra = extraOf(spec, where);
-  const options = { color: extra && extra.colour && !isGhost(spec) ? extra.colour : color, ...surfaceHand(spec, where) };
+  const where = part ? wearOf(spec, part) : body ? "cloth" : "skin";
+  // Colour belongs to the material. A part in its own box is painted the colour the drawing chose for it (a tone
+  // of the box, a lid a shade darker); moved by a hand to another box or a material of its own, that one's
+  // colour. A ghost's one pale tone wins over a hand's own colour (spec.js ghostPalette); a box's is already a ghost's
+  const moved = part && where !== WEAR_DEFAULTS[part];
+  const worn = moved ? colourOf(spec, where) : null;
+  const options = { color: worn && (BOXES_SET.has(where) || !isGhost(spec)) ? worn : color, ...surfaceHand(spec, where) };
   if (strip) options.strip = strip;   // a tube's base cut as a strip between its rails (the tail — bones bend it)
   if (stripT) options.stripT = stripT;   // …tagged per rung with its t along the spine (the skin reads its bones from the tag)
   if (skinT !== undefined) options.skinT = skinT;   // a fill at one t of the spine (a bead, a tuft, a pom)

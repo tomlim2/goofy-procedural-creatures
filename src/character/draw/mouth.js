@@ -6,6 +6,7 @@
 
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
+import { markInkOf } from "../vocabulary/paint.js";
 import { TAU, eyeGeometry } from "./layout.js";
 import { eyeBottom, noseBottomY, muzzleGeometry } from "./face.js";
 import { MARKS, blushOf } from "../vocabulary/palette.js";
@@ -30,7 +31,7 @@ export function mouthPlacement(spec, box) {
   const tPos = spec.parts.mouthPos === "high" ? 0.22 : spec.parts.mouthPos === "low" ? 0.76 : 0.5;
   let y = Math.min(top + (chin - top) * tPos, floor - 0.03);
   // A dog's mouth sits **above the muzzle**, so its ink follows the muzzle's luminance too (black on a light muzzle, light ink on a black one) — separate from the face (head color) ink
-  const ink0 = spec.species === "pup" ? muzzleGeometry(spec, box).ink : (spec.faceInk || spec.palette.ink);
+  const ink0 = markInkOf(spec, "mouth", spec.species === "pup" ? muzzleGeometry(spec, box).ink : (spec.faceInk || spec.palette.ink));   // the mouth wears the ink; moved by a hand, what it wears
   let w = box.headRx * 0.38 * (MOUTH_SIZE[spec.parts.mouthSize] || 1) * (SPECIES_WIDTH[spec.species] || 1);
   // The open mouth's height — proportional to the head, ending below the nose (swallow the nose and the nose disappears)
   const noseBottom = spec.species === "pup" || spec.parts.nose === "none" ? Infinity : top;
@@ -51,7 +52,7 @@ export function mouthPlacement(spec, box) {
 // The cavity is always **dark ink (palette ink)** and the rim is face ink — on a light face the rim matches the cavity and is lost; on a dark face a light rim holds the mouth's shape.
 // Filling the cavity with light face ink leaves nothing but an empty bright blob on an imp's face (which reads as a mistake). Teeth are a white strip plus dark lines (edge)
 function cavity(m, pts) {
-  paintPart(m.fills, m.spec, pts, m.spec.palette.ink, { own: true });
+  paintPart(m.fills, m.spec, pts, m.spec.palette.ink, { own: true, part: "mouth" });
   m.ink.line([...pts, pts[0]], { color: m.ink0 });
 }
 // A tooth strip — h tall, going up (dir −1: down from the upper lip) or down (dir +1). Vertical lines divide the teeth
