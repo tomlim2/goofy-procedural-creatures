@@ -291,31 +291,73 @@ export function drawWhiskers(ink, spec, box) {
 
 // Wide apart on purpose: at 0.8 and 1.25 the three read as one length on the board; medium stays what every brow was
 const BROW_LENGTH = { short: 0.65, medium: 1, long: 1.45 };
+// A brow's line sampled along its length: `f(t)` in [-1, 1] is the rise above the brow line in eye radii, t from the
+// inner end (toward the nose) to the outer. `n` steps, so a curve is a curve and not a tent. The points always run
+// left to right whatever the side — the pen's shake and taper follow the stroke's direction, and a brow drawn
+// backwards on one eye is a different brow (drawdiff caught exactly that)
+function browPath(x, y, half, side, r, f, n = 7) {
+  const points = [];
+  for (let i = 0; i <= n; i += 1) {
+    const t = -1 + (2 * i) / n;                 // -1 the inner end, 1 the outer
+    points.push([x + side * t * half, y + f(t) * r]);
+  }
+  return side < 0 ? points.reverse() : points;
+}
+// The brows. flat · angry (inner end down) · worry (inner end up) are one straight stroke each; the rest are the shapes
+// the eye knows from brows in the world — arch (rounded), peak (a steep arch, up and down at the tail), wave (the S:
+// a dip, a rise, a taper), bushy (three strokes thick), raised (one lifted and arched, the other flat), mono (one
+// brow across both eyes), dot (a short heavy dash). Every one is drawn per eye off the eye's own centre, radius and
+// side, so it follows the face: brows on a wide head sit wide, a cyclops gets one over its one eye
 export function drawBrow(ink, spec, box, eyes, kindOverride) {
   const kind = kindOverride || spec.parts.brow;
   if (kind === "none") return;
   const ink0 = markInkOf(spec, "brow", spec.faceInk || spec.palette.ink);   // the brow wears the ink; moved by a hand, what it wears
+  // The skeptic's raised side — per individual, off the hand, no rng
+  const raisedSide = (spec.proportions.hand >> 5) % 2 ? 1 : -1;
+
+  // One brow across both eyes: from the outer end of one to the outer end of the other, over the brow line of the
+  // higher one; the cap that keeps a pair apart does not apply — meeting is the point. A single eye gets a flat brow
+  if (kind === "mono" && eyes.length === 2) {
+    const [a, b] = eyes;
+    const r = Math.max(a.r, b.r);
+    const y = Math.min(Math.max(a.y, b.y) + r * 1.9, box.headCy + box.headRy * 0.84);
+    const k = BROW_LENGTH[spec.parts.browLength] || 1;
+    const reach = Math.max(r * 1.15 * k, 0.022);
+    const left = Math.min(a.x, b.x) - reach, right = Math.max(a.x, b.x) + reach;
+    const mid = (left + right) / 2, halfW = (right - left) / 2;
+    ink.line(browPath(mid, y, halfW, 1, r, (t) => 0.12 * (1 - t * t), 9), { color: ink0 });   // the faintest arch, so it reads as one brow and not a ruled line
+    return;
+  }
 
   for (const eye of eyes) {
     if (patched(spec, eye)) continue;
     // Brows go above the eyes, but inside the head — on a big eye like a cyclops, 1.9× up is outside the head (on the paper) and it disappears
-    const y = Math.min(eye.y + eye.r * (eye.side === 0 ? 1.35 : 1.9), box.headCy + box.headRy * 0.84);
+    let y = Math.min(eye.y + eye.r * (eye.side === 0 ? 1.35 : 1.9), box.headCy + box.headRy * 0.84);
     // The brow's length is its own slot — short · medium · long of the eye (medium is what every brow was) — and
     // on a small eye a brow is at least brow-length. However long, the two never meet: a pair is capped short
     // of the midline between the eyes, so a wide brow on close-set eyes does not read as one brow
     const k = BROW_LENGTH[spec.parts.browLength] || 1;
     let half = Math.max(eye.r * 1.15 * k, 0.022);
     if (eyes.length === 2) half = Math.max(Math.min(half, Math.abs(eyes[1].x - eyes[0].x) / 2 - eye.r * 0.12), eye.r * 0.4);
-    let left = y;
-    let right = y;
-    if (kind === "angry") {
-      left = y - eye.r * 0.4 * (eye.side > 0 ? 1 : 0);
-      right = y - eye.r * 0.4 * (eye.side > 0 ? 0 : 1);
-    } else if (kind === "worry") {
-      left = y + eye.r * 0.3 * (eye.side > 0 ? 1 : 0);
-      right = y + eye.r * 0.3 * (eye.side > 0 ? 0 : 1);
-    }
-    ink.line([[eye.x - half, left], [eye.x + half, right]], { color: ink0 });
+    // The inner end of a brow is toward the nose: t = -1 sits at x - side·half. A cyclops has no nose side; its one
+    // brow has always been drawn as a left eye's (the inner end on the right), and stays so
+    const side = eye.side === 0 ? -1 : eye.side;
+    const r = eye.r;
+    const line = (f, n) => ink.line(browPath(eye.x, y, half, side, r, f, n), { color: ink0 });
+
+    if (kind === "flat") line(() => 0, 1);
+    else if (kind === "angry") line((t) => -0.2 * (1 - t), 1);          // inner end down 0.4r — the straight stroke it always was
+    else if (kind === "worry") line((t) => 0.15 * (1 - t), 1);          // inner end up 0.3r
+    else if (kind === "arch") line((t) => 0.38 * (1 - t * t));          // a rounded arch, highest over the eye's centre
+    else if (kind === "peak") line((t) => (t < 0.35 ? 0.1 + 0.42 * (t + 1) / 1.35 : 0.52 - 0.72 * (t - 0.35) / 0.65), 5);   // up to a peak past the centre, then down to the tail
+    else if (kind === "wave") line((t) => 0.28 * Math.sin((t + 0.35) * Math.PI * 0.9) - 0.1, 9);   // the S: a dip at the inner end, a rise, a taper
+    else if (kind === "bushy") for (const dy of [-0.09, 0, 0.09]) ink.line(browPath(eye.x, y + dy * r, half, side, r, (t) => 0.1 * (1 - t * t), 5), { color: ink0 });   // three strokes thick
+    else if (kind === "raised") {
+      if (eye.side === raisedSide) { y += r * 0.45; line((t) => 0.4 * (1 - t * t)); }   // the lifted one arches
+      else line(() => 0, 1);
+    } else if (kind === "dot") { half = Math.max(r * 0.28, 0.012); line(() => 0, 1); }   // a short heavy dash: the brow-length rule does not reach it
+    else if (kind === "mono") line(() => 0, 1);   // one eye: a flat brow
+    else line(() => 0, 1);   // an unknown kind (a file from elsewhere) is a flat brow, never nothing
   }
 }
 

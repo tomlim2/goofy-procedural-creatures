@@ -77,9 +77,16 @@ highlighted eyeball eyes — bead and ◕ sparkle — were dropped.)
 `LINE_EYES` (sleepy, line, happy, squeeze, droop, cross, half, side) are left-right symmetric — one stroke (a lid line or an arch) defines the eye, so
 if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". half and side stay on this list even after gaining a white ([rules.md](rules.md)). An eye hidden by a patch is skipped with `patched(spec, eye)` — only when there is a patch (look at patchSide alone and the eye disappears along with a patch dropped late).
 
-### brow — brows (4)
-none / flat / angry (inner end down) / worry (inner end up). **Subject to state switching** — rest and alt are both baked and
-the clock toggles them. The alt table: none→flat, flat→worry, angry→flat, worry→flat.
+### brow — brows (11)
+none / flat / angry (inner end down) / worry (inner end up) — the straight three — and the shapes the eye knows from brows
+in the world: **arch** (a rounded arch, highest over the eye's centre) · **peak** (a steep arch — up to a peak past the
+centre, down to the tail) · **wave** (the S: a dip at the inner end, a rise, a taper) · **bushy** (three strokes thick) ·
+**raised** (one lifted and arched, the other flat — the skeptic; which side, per individual off `hand`) · **mono** (one
+brow across both eyes, the faintest arch; a single eye gets a flat brow) · **dot** (a short heavy dash over each eye,
+outside the length rule). Every brow is drawn per eye off the eye's centre, radius and side, so it follows the face.
+Animals have none of them (species.js forbid). **Subject to state switching** — rest and alt are both baked and the clock
+toggles them. The alt table: none→none, flat→worry, angry→flat, worry→flat, arch→flat, peak→flat, wave→arch,
+bushy→angry, raised→flat, mono→flat, dot→worry; anger is angry for all but none.
 
 
 ### browLength — the brow's length (3)

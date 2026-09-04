@@ -10,7 +10,7 @@ import { drawMouth } from "./mouth.js";
 
 // The brows' alt state. From rest it crosses over to this now and then and comes back.
 // An individual with no brows has no alt either — a part that does not exist is not drawn in on a mood change
-const ALT_BROW = { none: "none", flat: "worry", angry: "flat", worry: "flat" };
+const ALT_BROW = { none: "none", flat: "worry", angry: "flat", worry: "flat", arch: "flat", peak: "flat", wave: "arch", bushy: "angry", raised: "flat", mono: "flat", dot: "worry" };
 
 // The mouth's alt state — shifts slightly to a neighbour in the same mood (line↔wave, dot↔3, smile→smug, tense↔grid…)
 const ALT_MOUTH = {

@@ -47,7 +47,7 @@ export const SPECIES = [
       // Dogs have no horns and no hair — all none (it is fur, not hair)
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none", verylong: "none", twintailsBall: "none", appleBig: "none", bobSwept: "none", sheetsSwept: "none" },
-      brow: { flat: "none", angry: "none", worry: "none" },   // animals have no brows (which blocks the alt brow of a state switch too)
+      brow: { flat: "none", angry: "none", worry: "none", arch: "none", peak: "none", wave: "none", bushy: "none", raised: "none", mono: "none", dot: "none" },   // animals have no brows (which blocks the alt brow of a state switch too)
       legLength: { verylong: "long" }
     },
     identity: {
@@ -94,7 +94,7 @@ export const SPECIES = [
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       hair: { bob: "none", mop: "none", scribble: "none", sweep: "none", spikes: "none", mohawk: "none", tuft: "none", wisp: "none", pigtails: "none", curly: "none", bangs: "none", longbob: "none", bun: "none", helmet: "none", cloud: "none", hedgehog: "none", long: "none", twintails: "none", ponytail: "none", apple: "none", verylong: "none", twintailsBall: "none", appleBig: "none", bobSwept: "none", sheetsSwept: "none" },
-      brow: { flat: "none", angry: "none", worry: "none" },
+      brow: { flat: "none", angry: "none", worry: "none", arch: "none", peak: "none", wave: "none", bushy: "none", raised: "none", mono: "none", dot: "none" },
       legLength: { verylong: "long" }
     },
     identity: {
@@ -168,7 +168,7 @@ export const SPECIES = [
       head: [["block", 3], ["wide", 2.5], ["square", 2], ["pear", 1]],
       // Small fierce eyes, set high on the head (the proportions push them up over the jaw)
       eyes: [["dot", 3], ["sharp", 2.5], ["lidded", 2], ["ring", 1.5], ["slit", 1.5], ["hollow", 1], ["side", 1], ["half", 1]],
-      brow: [["none", 2], ["flat", 1.5], ["angry", 1.5]],
+      brow: [["none", 2], ["flat", 1.5], ["angry", 1.5], ["peak", 0.8], ["bushy", 0.6], ["mono", 0.3]],
       nose: [["nostrils", 3], ["none", 2], ["dot", 1]],
       // THE JAW — a wide mouth full of teeth: the grid, fangs, zigzag, the open mouths with tooth strips
       mouth: [["grimace", 3], ["fangs", 3], ["zigzag", 2], ["open", 2], ["shout", 1.5], ["grin", 1]],
@@ -219,7 +219,7 @@ export const SPECIES = [
       pattern: [["stripes", 3], ["hatch", 2], ["none", 2], ["dots", 1.5], ["spots", 1.5], ["patch", 1.5]],
       face2: [["none", 6], ["tears", 1], ["circles", 1]],
       body: [["bean", 3], ["box", 1]],
-      brow: [["none", 3], ["flat", 2], ["angry", 2]],
+      brow: [["none", 3], ["flat", 2], ["angry", 2], ["peak", 1], ["bushy", 0.5]],
       arms: [["stubby", 5], ["stick", 2], ["none", 2]],   // some are blobs with no arms
       // Long arms that sweep the floor belong to imps (humans forbid them). Enough to stand out in the imp row
       armLength: [["medium", 3], ["long", 2]],
