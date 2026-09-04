@@ -11,7 +11,7 @@ const TAU = Math.PI * 2;
 // color — the fill-up (flat) — always opaque (on the board the one in front has to hide the one behind), printed out of
 // register, in the part's color or a tone of it — and it carries the creature's pattern (stripes, dots, spots, hatching: the `pattern`
 // slot), drawn inside it and clipped to the contour, the way a pattern is part of an albedo. `texture` is the base color's texture —
-// hatch, scratch, dab or speckle — the medium's pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
+// hatch, scratch, dab, speckle or wash — the medium's pattern laid over it, clipped to the contour. Both paint the same thing, the color of the surface; a channel that would be a
 // different thing (opacity — the reference's 62% graphite; grain — the paper showing through) is not built, and would be a new key,
 // not a second texture. That is the goofy material, and nothing else: the contour is a separate concept (GOOFY_OUTLINES, below). The
 // color always comes from the part; every tone the texture adds is a shade of that color (lighter on a dark color, darker on a
@@ -46,7 +46,43 @@ export const GOOFY_MATERIALS = {
   // surface. On a dark ground the whole spread drops so the first of them go on **darker** than the ground instead (the dab case below)
   OIL:         { base: { kind: "flat" }, texture: { kind: "dab", angle: 0.5, spread: 0.12, width: 0.026, length: [0.08, 0.26], per: 400, pull: 0.45, tone: 0.82, washes: [0.06, 0.16, 0.28, 0.42], spreadEach: 0.5 } },
   // Charcoal — a ground dusted with dark specks, each a short stroke at its own angle rather than a square
-  CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", pull: 0.5, per: 900, size: [0.0025, 0.0055], tone: 0.55 } }
+  CHARCOAL:    { base: { kind: "flat" }, texture: { kind: "speckle", pull: 0.5, per: 900, size: [0.0025, 0.0055], tone: 0.55 } },
+  // Watercolour — a wash, and how it dries. The ground is the pigment thinned with water: the step pulls it **paler** (`tone` above
+  // 1 and `wash`, the way ink's does — the solid step is the colour laid on full, the light step is mostly water). Over it, the
+  // things a wash does as it dries, and nothing a wash does not:
+  //   `bloom` — a backrun, water dropped into the damp wash pushing the pigment out: a pale centre fading outward through nested
+  //     lobes (`rings` tints, `shrink` per lobe — a gradient, no edge of its own), and the pigment it pushed gathered on **one side**
+  //     as a soft deeper arc (`rim`, over `arc` of the turn). One to three of them, a fifth to two fifths of the part across —
+  //     the touches of a brush, smaller than the part, larger than a speck. And the whole bloom is gone round **once with a
+  //     broken hairline** (`sketch` — the `kind` at S, cut into dashes of `dash` length with `gap` between, at `opacity` of a
+  //     pencil line: there is no opacity channel, so the line is the ground carried that share of the way to black, in the part's
+  //     own family): the hand noting where the water went, the way a sketch under a wash shows through it. Not pigment — a thin
+  //     line in pieces, so it does not read as a cell
+  //   `edge` — pigment walks to where a wash stops drying: a thin deeper line just inside the contour, along a **run** of it
+  //     (`run`, a share of the way round), never all the way — all the way round is a second outline
+  //   `grain` — granulation, heavy pigment settling into the paper's tooth: fine deeper specks, more in the loaded steps
+  //   `glaze` — a second wash laid over one side once the first has dried (wet on dry): a large lobe a little deeper, its inner
+  //     boundary a soft hard edge, the rest of it cut by the contour. The loaded steps only — the shadow side of the part
+  //   `drip` — a run: at the two heaviest steps, sometimes, paint runs down from the bloom, tapering to a bead
+  //   `sparkle` — dry brush: at the thin steps a band of tiny pale flecks where the brush skipped the paper's tooth
+  //   `strokes` — the brush itself: a few broad sweeps across the part along the hand's swing, each a rounded stroke a shade
+  //     deeper or lighter than the ground (`tone`, a spread either side of it), laid under everything else so the blooms happen in
+  //     them, and trailing off one end in dry bristle marks (`bristles`). `load` is how the count follows the step: a light
+  //     wash is one or two sweeps, a loaded one is the brush going back over itself — the sweeps overlapping, each a shade off
+  //     the last, which is where a wash shows its layers
+  //   `lineMax` — the widest any line of the wash may be drawn (world units): the rim band, the dried edge, the glaze's edge,
+  //     the bristles and the drip are all clamped to it, and the pencil-drawn edge holds its breath (breathe 0.5) so its swell
+  //     stays under it too. A line wider than that reads as a stroke of paint rather than an edge
+  // A wash never draws closed dark cells: the first wash here ringed every pool and ran the edge line the whole way round, and the
+  // network of closed boundaries read as cracked earth. Blooms are the wash's lights (opened, like the ink's); the rim, the edge and
+  // the grain are the one place besides charcoal a mark goes deeper, because that is what dried pigment is
+  WATERCOLOUR: { base: { kind: "flat" }, texture: { kind: "wash", pull: 0.5, tone: 1.3, wash: 0.3, blooms: [1, 3], size: [0.22, 0.4], squash: [0.7, 1.15],
+                                                    bloom: { rings: [0.07, 0.14, 0.22], shrink: 0.68 }, rim: { tone: 0.975, arc: 0.36, width: 0.0085 }, lineMax: 0.0045, sketch: { opacity: 0.08, kind: "PENCIL_SLINE", size: "S", dash: [0.03, 0.07], gap: [0.012, 0.028] },
+                                                    edge: { inset: 0.05, width: 0.006, tone: 0.94, run: [0.3, 0.55] }, grain: { per: 360, size: [0.0015, 0.0028], tone: 0.74 },
+                                                    glaze: { size: 0.46, tone: 0.96, edgeTone: 0.985, edgeWidth: 0.006, from: 0.35 },
+                                                    drip: { chance: 0.55, length: [0.3, 0.6], width: 0.0034, from: 0.5 },
+                                                    sparkle: { per: 260, size: [0.0018, 0.0036], tone: 0.3, until: 0.42 },
+                                                    strokes: { count: [2, 4], length: [0.9, 1.5], width: [0.16, 0.28], tone: [-0.025, 0.06], spread: 0.5, bristles: 5, load: [0.4, 2.6] } } }
 };
 
 
@@ -57,8 +93,8 @@ export const GOOFY_MATERIALS = {
 
 // Values — how dark a surface is drawn, in five steps, named for the way graphite makes each (the reference's scale): black,
 // hatch, scribble, stipple, light. A goofy material renders a step its own way — graphite changes technique step by step (cross-hatch →
-// hatch → a wavy scribble → stipple → one thin set three gaps apart), ink, oil and charcoal change how much of their texture they
-// lay down. **No step lays nothing**: half the board's surfaces are pale, and a material invisible there is a material unused.
+// hatch → a wavy scribble → stipple → one thin set three gaps apart), ink, oil, charcoal and the watercolour wash change how much of
+// their texture they lay down. **No step lays nothing**: half the board's surfaces are pale, and a material invisible there is a material unused.
 // A part draws at the step its creature's `density` slot names (stepOf); the medium page names one outright per ball.
 // A step is in the **colour** first and the marks second: it pulls the base toward the technique's own tone (texture.pull) and then
 // lays the marks on top. Carried by marks alone it did not survive the board — the fine ones fall under a device pixel there and the
@@ -392,6 +428,185 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         dust(sketch, points, b, { ...f, per: f.per * (0.4 + V.v * 0.8) }, h, contrast(f.tone), holdTag);   // black: thick dust · light: a few specks
         break;
       }
+      case "wash": {
+        // How a wash dries. The step is the pigment's strength: at black the wash is loaded — a firm dried edge, heavy granulation,
+        // one bloom; at light it is mostly water — a faint edge, hardly any grain, and the blooms large and pale, the one thing there
+        // is to see. The ground already carries the value (pulled toward `wash` above)
+        // First the brush — broad sweeps across the part along the hand's swing, each a rounded stroke a shade off the ground
+        // either way (on a dark ground only lighter: there is nothing below it to draw with), clipped by the contour. The tail of
+        // each sweep dries out into bristle marks: thin broken lines running on past the stroke's end. Under everything else
+        {
+          const S = f.strokes;
+          const n = Math.round((S.count[0] + (S.count[1] - S.count[0]) * h(200)) * (S.load[0] + weight * S.load[1]));
+          for (let i = 0; i < n; i += 1) {
+            const cx = b.x0 + (b.x1 - b.x0) * (0.2 + 0.6 * h(210 + i * 5));
+            const cy = b.y0 + (b.y1 - b.y0) * (0.2 + 0.6 * h(211 + i * 5));
+            if (!insidePath([cx, cy], points)) continue;
+            const ang = swing + 0.5 + (h(212 + i * 5) - 0.5) * S.spread;
+            const dx = Math.cos(ang), dy = Math.sin(ang);
+            const len = b.r * (S.length[0] + (S.length[1] - S.length[0]) * h(213 + i * 5));
+            const wid = b.r * (S.width[0] + (S.width[1] - S.width[0]) * h(214 + i * 5));
+            // Every sweep a shade off the last, and the loaded steps leaning a touch deeper — overlaps are what the layers show by
+            let amount = S.tone[0] + (S.tone[1] - S.tone[0]) * h(215 + i * 5) - weight * 0.012;
+            if (dark) amount = Math.abs(amount);
+            const strokeTone = opened(amount);
+            // The stroke as a polygon — a rounded rectangle, its long sides wandering a little — filled only inside the contour
+            const poly = [];
+            const nx = -dy, ny = dx;
+            const half = len / 2, hw = wid / 2;
+            const wob = (t, k) => (noise(ph * 0.07 + t * 9 + i * 3.3 + k) * 0.5) * hw * 0.35;
+            for (let k = 0; k <= 10; k += 1) { const t = -half + len * (k / 10); poly.push([cx + dx * t + nx * (hw + wob(t, 1)), cy + dy * t + ny * (hw + wob(t, 1))]); }
+            for (let k = 1; k < 6; k += 1) { const a = Math.PI / 2 - Math.PI * (k / 6); poly.push([cx + dx * (half + Math.cos(a) * hw) + nx * Math.sin(a) * hw, cy + dy * (half + Math.cos(a) * hw) + ny * Math.sin(a) * hw]); }
+            for (let k = 10; k >= 0; k -= 1) { const t = -half + len * (k / 10); poly.push([cx + dx * t - nx * (hw + wob(t, 2)), cy + dy * t - ny * (hw + wob(t, 2))]); }
+            for (let k = 1; k < 6; k += 1) { const a = -Math.PI / 2 - Math.PI * (k / 6); poly.push([cx + dx * (-half + Math.cos(a) * hw) + nx * Math.sin(a) * hw, cy + dy * (-half + Math.cos(a) * hw) + ny * Math.sin(a) * hw]); }
+            holdTag();
+            fillClipped(sketch, poly, points, strokeTone);
+            // The bristles — past the stroke's end, a few thin lines in the stroke's own tone, each a different length
+            const rgb = hexToRgb(strokeTone);
+            for (let k = 0; k < S.bristles; k += 1) {
+              const off = (k / (S.bristles - 1) - 0.5) * wid * 0.8;
+              const from = half - hw * 0.4, to = half + hw * (0.3 + 1.1 * h(216 + i * 5 + k * 11));
+              const a = [cx + dx * from + nx * off, cy + dy * from + ny * off], c = [cx + dx * to + nx * off, cy + dy * to + ny * off];
+              holdTag();
+              for (const [p, q] of clipSegment(a, c, points)) capsule(sketch, p, q, Math.min(f.lineMax, 0.0026), rgb, false, true);
+            }
+          }
+        }
+        // The blooms — a backrun: water dropped into the damp wash. Nested lobes, each smaller and paler than the last, so the centre
+        // fades out through a gradient with no edge of its own; the body is free to run past the contour and be cut by it. The pigment
+        // the water pushed out gathers on one side: a soft deeper arc over part of the outer lobe, the side chosen by the part
+        const count = Math.round(f.blooms[0] + (f.blooms[1] - f.blooms[0]) * h(1) * (1 - weight * 0.5));
+        const rimRgb = hexToRgb(contrast(f.rim.tone));
+        for (let i = 0; i < count; i += 1) {
+          const cx = b.x0 + (b.x1 - b.x0) * (0.15 + 0.7 * h(20 + i));
+          const cy = b.y0 + (b.y1 - b.y0) * (0.15 + 0.7 * h(30 + i));
+          if (!insidePath([cx, cy], points)) continue;
+          const r0 = b.r * (f.size[0] + (f.size[1] - f.size[0]) * h(10 + i)) * (0.8 + (1 - weight) * 0.4);
+          const squash = f.squash[0] + (f.squash[1] - f.squash[0]) * h(40 + i);
+          let outer = null;
+          f.bloom.rings.forEach((ring, k) => {
+            const r = r0 * Math.pow(f.bloom.shrink, k);
+            // Each lobe drifts a little off the last — a bloom is not concentric, the water ran
+            const lobe = blobPath(cx + (h(50 + i * 3 + k) - 0.5) * r0 * 0.25 * k, cy + (h(60 + i * 3 + k) - 0.5) * r0 * 0.25 * k, r, r * squash, { lumps: 5, amount: 0.22, noise, phase: ph * 0.01 + i * 7.3 + k * 2.1 });
+            holdTag();
+            fillClipped(sketch, lobe, points, opened(ring * (0.8 + (1 - weight) * 0.5)));
+            if (k === 0) outer = lobe;
+          });
+          // The rim — one side of the outer lobe, `arc` of the way round, starting where the part says. A soft band, wide and
+          // barely off the ground, no line in it: a backrun's edge is a blur of pigment, not a stroke
+          const start = Math.floor(h(70 + i) * outer.length);
+          const span = Math.round(outer.length * f.rim.arc);
+          holdTag();
+          for (let k = start; k < start + span; k += 1) {
+            for (const [p, q] of clipSegment(outer[k % outer.length], outer[(k + 1) % outer.length], points)) capsule(sketch, p, q, Math.min(f.lineMax, f.rim.width), rimRgb, false, false);
+          }
+          // The whole bloom, once, with the pencil's broken — faint, and only the part of it that lies inside the contour: the
+          // vertices inside are gathered into runs, each run one open line; a bloom wholly inside is one closed loop
+          // A pencil line at `opacity` over the ground — deepened that share of the way on a light ground. On a dark one a pencil
+          // line at that opacity all but vanishes, and the mirrored lift the other marks take made it the strongest line in the
+          // part, so it is lifted about half the share only: there, but barely
+          const sketchTone = dark ? tint(pulled, f.sketch.opacity * 0.47) : deepen(pulled, f.sketch.opacity);
+          // `paper: pulled` — the pencil sheds its bites in the paper's colour, and on a dark ground those bites, not the line,
+          // were what showed. Over a fill the bites take the ground
+          const inside = outer.map((pnt) => insidePath(pnt, points));
+          // A run of the bloom's outline, drawn in dashes — the pencil coming down for a stroke's length and lifting, again and
+          // again, so the line is in pieces rather than one loop
+          const dashed = (run, seed) => {
+            const lens = [0];
+            for (let k = 1; k < run.length; k += 1) lens.push(lens[k - 1] + Math.hypot(run[k][0] - run[k - 1][0], run[k][1] - run[k - 1][1]));
+            const total = lens[lens.length - 1];
+            const at = (t) => {
+              let k = 1;
+              while (k < lens.length - 1 && lens[k] < t) k += 1;
+              const seg = (t - lens[k - 1]) / Math.max(1e-9, lens[k] - lens[k - 1]);
+              return [run[k - 1][0] + (run[k][0] - run[k - 1][0]) * seg, run[k - 1][1] + (run[k][1] - run[k - 1][1]) * seg];
+            };
+            let t = h(seed) * f.sketch.gap[1];   // the first dash starts a little in, so two blooms do not start alike
+            for (let d = 0; t < total && d < 60; d += 1) {
+              const end = Math.min(total, t + f.sketch.dash[0] + (f.sketch.dash[1] - f.sketch.dash[0]) * h(seed + d * 3 + 1));
+              if (end - t > 0.008) {
+                const piece = [];
+                for (let q = t; q < end; q += 0.006) piece.push(at(q));
+                piece.push(at(end));
+                sketch.line(piece, { outline: f.sketch.kind, size: f.sketch.size, color: sketchTone, paper: pulled, skinT: markTag });
+              }
+              t = end + f.sketch.gap[0] + (f.sketch.gap[1] - f.sketch.gap[0]) * h(seed + d * 3 + 2);
+            }
+          };
+          if (inside.every(Boolean)) {
+            dashed([...outer, outer[0]], 700 + i * 90);
+          } else {
+            // start a run just after an outside vertex so no run is split at index 0
+            const first = inside.indexOf(false);
+            let run = [];
+            let r = 0;
+            for (let k = 1; k <= outer.length; k += 1) {
+              const idx = (first + k) % outer.length;
+              if (inside[idx]) run.push(outer[idx]);
+              if ((!inside[idx] || k === outer.length) && run.length > 2) { dashed(run, 700 + i * 90 + (r += 1) * 7); run = []; }
+              else if (!inside[idx]) run = [];
+            }
+          }
+        }
+        // The edge — pigment walks to where the wash stops drying: a deeper line just inside the contour (the shape pulled toward its
+        // centre by `inset`, so the line stays inside; the contour ink covers what little crosses), along a run of it and not all the
+        // way round. Firmer the more pigment
+        const inset = points.map(([x, y]) => [b.cx + (x - b.cx) * (1 - f.edge.inset), b.cy + (y - b.cy) * (1 - f.edge.inset)]);
+        const runLen = Math.round(inset.length * (f.edge.run[0] + (f.edge.run[1] - f.edge.run[0]) * h(80)));
+        const runStart = Math.floor(h(81) * inset.length);
+        const run = [];
+        for (let k = 0; k <= runLen; k += 1) run.push(inset[(runStart + k) % inset.length]);
+        sketch.pencil(run, { color: contrast(1 - (1 - f.edge.tone) * (0.5 + weight * 0.7)), width: Math.min(f.lineMax, f.edge.width * (0.7 + weight * 0.6)), breathe: 0.5, paper: pulled, skinT: markTag });
+        // The glaze — a second wash over one side, wet on dry. A large lobe pushed off-centre to the side the part chooses, a little
+        // deeper than the ground, its inner boundary a soft hard edge (the line stops where the contour cuts the lobe). Only once
+        // there is pigment enough for a second coat to show
+        if (weight >= f.glaze.from) {
+          const ga = h(83) * TAU;
+          const gr = b.r * f.glaze.size;
+          const glaze = blobPath(b.cx + Math.cos(ga) * b.r * 0.55, b.cy + Math.sin(ga) * b.r * 0.55, gr, gr * (0.8 + 0.4 * h(84)), { lumps: 4, amount: 0.18, noise, phase: ph * 0.013 + 4.4 });
+          holdTag();
+          fillClipped(sketch, glaze, points, contrast(1 - (1 - f.glaze.tone) * (0.6 + weight * 0.6)));
+          const glazeRgb = hexToRgb(contrast(f.glaze.edgeTone));
+          for (let k = 0; k < glaze.length; k += 1) {
+            for (const [p, q] of clipSegment(glaze[k], glaze[(k + 1) % glaze.length], points)) capsule(sketch, p, q, Math.min(f.lineMax, f.glaze.edgeWidth), glazeRgb, false, false);
+          }
+        }
+        // The drip — a run of paint down from the bloom, tapering to a bead at the bottom. Sometimes, and only where the wash is
+        // loaded enough to run. Straight down the world, whatever the part's swing: water does not care which way the hand went
+        if (weight >= f.drip.from && h(85) < f.drip.chance && count > 0) {
+          const sx = b.x0 + (b.x1 - b.x0) * (0.15 + 0.7 * h(20));
+          const sy = b.y0 + (b.y1 - b.y0) * (0.15 + 0.7 * h(30));
+          const len = b.r * (f.drip.length[0] + (f.drip.length[1] - f.drip.length[0]) * h(86));
+          const dripRgb = hexToRgb(contrast(f.rim.tone));
+          holdTag();
+          const n = 6;
+          for (let k = 0; k < n; k += 1) {   // a few pieces, each thinner than the last, so the run tapers
+            const a = [sx + (h(87 + k) - 0.5) * 0.002, sy - (len * k) / n], c = [sx + (h(88 + k) - 0.5) * 0.002, sy - (len * (k + 1)) / n];
+            for (const [p, q] of clipSegment(a, c, points)) capsule(sketch, p, q, Math.min(f.lineMax, f.drip.width) * (1 - k / (n + 1)), dripRgb, false, false);
+          }
+          const bead = blobPath(sx, sy - len - f.drip.width * 0.6, f.drip.width * 1.1, f.drip.width * 1.3, { lumps: 3, amount: 0.1, noise, phase: ph * 0.02 + 9.1 });
+          fillClipped(sketch, bead, points, contrast(f.rim.tone), 0.0015);
+        }
+        // Dry brush — at the thin steps the brush skips the paper's tooth and leaves flecks of the ground's own light along one
+        // band of the part, the way the hand dragged
+        if (weight < f.sparkle.until) {
+          const band = h(89) * TAU;
+          const bx = Math.cos(band), by = Math.sin(band);
+          const rgb = hexToRgb(opened(f.sparkle.tone));
+          const along = Math.round(f.sparkle.per * 0.8 * (b.x1 - b.x0) * (b.y1 - b.y0) * 4);
+          for (let i = 0; i < along; i += 1) {
+            const t = (h(i * 2 + 130000) - 0.5) * 2 * b.r, w = (h(i * 2 + 130001) - 0.5) * b.r * 0.5;
+            const pnt = [b.cx + bx * t - by * w, b.cy + by * t + bx * w];
+            if (!insidePath(pnt, points)) continue;
+            const l = f.sparkle.size[0] + (f.sparkle.size[1] - f.sparkle.size[0]) * h(i + 140000);
+            holdTag();
+            capsule(sketch, [pnt[0] - bx * l * 0.5, pnt[1] - by * l * 0.5], [pnt[0] + bx * l * 0.5, pnt[1] + by * l * 0.5], l * 0.55, rgb);
+          }
+        }
+        // Granulation — heavy pigment settling into the paper's tooth
+        dust(sketch, points, b, { per: f.grain.per * (0.12 + weight * 1.2), size: f.grain.size }, (k) => h(k + 90000), contrast(f.grain.tone), holdTag);
+        break;
+      }
       default:
         throw new Error(`goofy material ${name}: unknown texture kind ${f.kind}`);
     }
@@ -464,6 +679,19 @@ export function dust(sketch, points, b, { per, size }, h, color, holdTag = null)
   }
 }
 
+
+// A polygon filled only where it lies inside another — the wash's pools, whose bodies run past the part's contour and are cut
+// by it. Scanlines across the polygon's bounds, each cut to the polygon and then to the clip, laid as flat strips a little wider
+// than the step so they seal. A fan fill cannot be clipped; this is the one place a fill is not a fan
+export function fillClipped(sketch, poly, clip, color, step = 0.004) {
+  const rgb = hexToRgb(color);
+  const b = bounds(poly);
+  for (let y = b.y0 + step / 2; y < b.y1; y += step) {
+    for (const [p, q] of clipSegment([b.x0 - 0.01, y], [b.x1 + 0.01, y], poly)) {
+      for (const piece of clipSegment(p, q, clip)) capsule(sketch, piece[0], piece[1], step * 1.3, rgb, false, false);
+    }
+  }
+}
 
 // A capsule from p to q — a blunt paint stroke: a strip of one width with a round cap at each end that is a real end (an end cut
 // by the contour stays flat). No taper, no wander — thick paint does not tremble
