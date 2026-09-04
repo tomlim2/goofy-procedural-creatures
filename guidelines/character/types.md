@@ -107,6 +107,17 @@ only when a hand picks another box, and `paintOf(spec, part)` is what the drawin
 for now — a part is one colour. A part that paints more than one thing is inspected on its own before it gets
 a second region, and a part not in `PAINTABLE` is not offered a paint at all.
 
+## Wear (wear.js)
+
+An individual wears two materials — the **main** one (`material`, `density`) and the **body's** (`bodyMaterial`,
+`bodyDensity`) — and every surface that takes a goofy material takes one of the two. `wear` is the choice of
+**which**: `WEAR_DEFAULTS` names what each part took before wear existed (the head's side the main — head, ears,
+horns, hair, headgear, nose — and the body's side the body's — body, arms, legs, tail), so a generated spec carries
+no `wear` and draws exactly as it did; the editor writes `spec.wear[part]` when a hand puts a part in the other
+material (PART → the part → MATERIAL). A part hands its name to `paintPart` and `sideOf` turns it into the side
+`materialOf` and `surfaceHand` read (draw/body.js). A part not in `WEARABLE` — a mark, an object with a colour of
+its own, the flat whites of the eyes — wears nothing and is offered nothing.
+
 ## Identity
 
 `identity` in `species.js`. The species invariants census checks.

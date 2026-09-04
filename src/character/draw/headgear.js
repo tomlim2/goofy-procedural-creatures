@@ -58,7 +58,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     // Helmet — covers from above the brows to the crown along the head shape (1.1×). A lower rim plus a centre ridge
     const bottom = brow;
     const { path, w } = cover(1.1, bottom);
-    paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's goofy material at its own color's step
+    paintPart(fills, spec, path, accent, { part: "headgear", own: true });   // a hat takes the creature's goofy material at its own color's step
     ink.contour(path, { color: ink0 });
     ink.line([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0 });
     ink.line([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, size: "S" });
@@ -69,10 +69,10 @@ export function drawHeadgear(ink, fills, spec, box) {
     // Baseball cap — a dome following the head shape (1.04×) plus a brim out to one side (the brow line). The brim droops slightly
     const bottom = brow + ry * 0.05;
     const { path, w } = cover(1.04, bottom);
-    paintPart(fills, spec, path, accent, { own: true });   // a hat takes the creature's goofy material at its own color's step
+    paintPart(fills, spec, path, accent, { part: "headgear", own: true });   // a hat takes the creature's goofy material at its own color's step
     ink.contour(path, { color: ink0 });
     const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
-    paintPart(fills, spec, brim, accent, { own: true });
+    paintPart(fills, spec, brim, accent, { part: "headgear", own: true });
     ink.contour(brim, { color: ink0 });
     return;
   }
@@ -86,7 +86,7 @@ export function drawHeadgear(ink, fills, spec, box) {
     const sin = Math.sin(tilt);
     const disc = blobPath(0, 0, rx * 0.95, ry * 0.3, { lumps: 4, amount: 0.12, noise: null })
       .map(([x, y]) => [bx + x * cos - y * sin, by + x * sin + y * cos]);
-    paintPart(fills, spec, disc, accent, { own: true });
+    paintPart(fills, spec, disc, accent, { part: "headgear", own: true });
     ink.contour(disc, { color: ink0 });
     ink.line([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0 });
     return;
@@ -108,8 +108,8 @@ export function drawHeadgear(ink, fills, spec, box) {
     const band = crumple([[w, by], [-w, by], [-w, by + bandH], [w, by + bandH]], 0.004, phase);
     const spikes = Array.from({ length: SPIKES }, (_, i) =>
       crumple([[vx(i), by + bandH], peak(i), [vx(i + 1), by + bandH]], 0.004, phase + i));
-    paintPart(fills, spec, band, accent, { own: true });
-    for (const s of spikes) paintPart(fills, spec, s, accent, { own: true });
+    paintPart(fills, spec, band, accent, { part: "headgear", own: true });
+    for (const s of spikes) paintPart(fills, spec, s, accent, { part: "headgear", own: true });
     // One outline round the whole silhouette — the pieces are the filling's business, not the line's
     const outline = [[w, by], [-w, by], [-w, by + bandH]];
     for (let i = 0; i < SPIKES; i += 1) outline.push(peak(i), [vx(i + 1), by + bandH]);
@@ -153,12 +153,12 @@ export function drawHeadgear(ink, fills, spec, box) {
 
     // the body — a trapezoid, filled as one convex piece
     const body = crumple([[-w, by], [w, by], [topW, by + bodyH], [-topW, by + bodyH]], 0.003, phase);
-    paintPart(fills, spec, body, accent, { own: true });
+    paintPart(fills, spec, body, accent, { part: "headgear", own: true });
     // each spike its own triangle, standing on the body's top edge
     for (let i = 0; i < SPIKES; i += 1) {
       const l = i === 0 ? -topW : valleyX(i - 1);
       const r = i === SPIKES - 1 ? topW : valleyX(i);
-      paintPart(fills, spec, crumple([[l, by + bodyH], tip(i), [r, by + bodyH]], 0.003, phase + i), accent, { own: true });
+      paintPart(fills, spec, crumple([[l, by + bodyH], tip(i), [r, by + bodyH]], 0.003, phase + i), accent, { part: "headgear", own: true });
     }
     // one outline round the whole silhouette — the pieces are the filling's business, not the line's
     const outline = [[w, by], [-w, by], [-topW, by + bodyH]];
@@ -178,10 +178,10 @@ export function drawHeadgear(ink, fills, spec, box) {
     const w = Math.max(halfW(by) * 0.42, rx * 0.26);   // narrow — a party cone, not a tent
     const apex = [tiltSide * rx * 0.12, by + ry * 0.66];   // pom top ≈ crown + 0.34·ry — under the 1.19 cell ceiling
     const body = crumple([[-w, by], [w, by], apex], 0.004, spec.roll * 0.0013);
-    paintPart(fills, spec, body, accent, { own: true });
+    paintPart(fills, spec, body, accent, { part: "headgear", own: true });
     ink.contour(body, { color: ink0 });
     const pom = blobPath(apex[0], apex[1] + 0.012, 0.019, 0.019, { lumps: 3, amount: 0.18, noise: null });
-    paintPart(fills, spec, pom, shade(accent, 1.3), { own: true });   // the pom a step lighter, so it reads off the cone
+    paintPart(fills, spec, pom, shade(accent, 1.3), { part: "headgear", own: true });   // the pom a step lighter, so it reads off the cone
     ink.contour(pom, { color: ink0, size: "S" });
     return;
   }
@@ -217,7 +217,7 @@ export function drawHeadgear(ink, fills, spec, box) {
   const w = halfW(bottom) * 0.9;
   const top = crown + ry * 0.28;
   const pot = crumple([[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]], 0.004, 5);
-  paintPart(fills, spec, pot, accent, { own: true });
+  paintPart(fills, spec, pot, accent, { part: "headgear", own: true });
   ink.contour(pot, { color: ink0 });
   ink.line([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, size: "S" });
 }
@@ -263,7 +263,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
         cap.push([tip[0] + (-ey) * wEnd * Math.cos(th) + ex * wEnd * Math.sin(th), tip[1] + ex * wEnd * Math.cos(th) + ey * wEnd * Math.sin(th)]);
       }
       const poly = [...L, ...cap, ...R.slice().reverse()];
-      paintPart(fills, spec, poly, bone, { own: true });
+      paintPart(fills, spec, poly, bone, { part: "horns", own: true });
       ink.contour(poly, { color: ink0 });
       return pts;
     };
@@ -317,7 +317,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
         boneHorn([[bx0, by0], [bx0 + side * 0.045, by0 + 0.14], [bx0 + side * 0.115 + lean, by0 + 0.245]], 0.033, place);
       } else {
         const nub = place(blobPath(bx0, by0 + 0.03, 0.028, 0.036, { lumps: 3, amount: 0.15, noise: null }));
-        paintPart(fills, spec, nub, bone, { own: true });
+        paintPart(fills, spec, nub, bone, { part: "horns", own: true });
         ink.contour(nub, { color: ink0 });
       }
     }
@@ -345,7 +345,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
       const tipX = bx + side * 0.05 + lean;
       const tipY = by + 0.24 * scale;
       ink.line([[bx, by], [tipX, tipY]], { color: ink0, size: "S" });
-      paintPart(fills, spec, blobPath(tipX, tipY, 0.022 * scale, 0.022 * scale, { lumps: 3, amount: 0.2, noise: null }), ink0, { own: true });
+      paintPart(fills, spec, blobPath(tipX, tipY, 0.022 * scale, 0.022 * scale, { lumps: 3, amount: 0.2, noise: null }), ink0, { part: "horns", own: true });
     } else if (kind === "ram") {
       // Ram horn curled into a spiral
       const spiral = [];

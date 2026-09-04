@@ -325,7 +325,7 @@ const scalp = (h, frontY, topLine) => {
   const hem = [];
   for (let i = 0; i <= 10; i += 1) { const x = -rx * 0.97 + (i / 10) * rx * 1.94; hem.push([x, bottomAt(x)]); }
   const poly = [...upper, ...hem];   // right → crown → left, then the hairline left → right
-  paintPart(crownFills, spec, poly, h.ink0, { own: true });
+  paintPart(crownFills, spec, poly, h.ink0, { part: "hair", own: true });
   // **Only the hairline gets a line when a mass sits behind the skull.** The scalp's top arc runs a hair
   // inside that mass's own arc, and both being drawn put two dark lines side by side over one patch of hair.
   // The mass carries the silhouette there and its fill is the same colour, so the arc needs no line of its
@@ -346,7 +346,7 @@ const backMass = (h, hem, flare) => {
     [lx0 * 0.6, hem], [0, hem + ry * 0.015], [rx0 * 0.6, hem - ry * 0.01],
     [rx0 * flare, hem + ry * 0.03], [rx0 * 1.02, cy - ry * 0.6]
   ], 0.0035, spec.roll * 0.0011);
-  paintPart(backFills, spec, poly, h.ink0, { own: true });
+  paintPart(backFills, spec, poly, h.ink0, { part: "hair", own: true });
   back.contour(poly, { color: h.lineInk });
 };
 
@@ -396,7 +396,7 @@ const backSheets = (h) => {
       ...rag,
       [side * rx * 0.56, top - span * 0.5]
     ], 0.004, spec.roll * 0.0015 + side * 4);
-    paintPart(backFills, spec, poly, h.ink0, { own: true });
+    paintPart(backFills, spec, poly, h.ink0, { part: "hair", own: true });
     back.contour(poly, { color: h.lineInk });
     for (const k of [1.02, 1.26]) {   // the strand grain — following the splay, out where the sheet actually shows
       back.line([[side * rx * (k * 0.8), top - ry * 0.04], [side * rx * k, hem + span * 0.22]], { color: h.grainInk, size: "S" });
@@ -422,7 +422,7 @@ const frontBlunt = (h) => {
     hem.push([x, hemY + Math.abs(noise(i * 3.7 + spec.roll * 0.002)) * ry * 0.04]);
   }
   const poly = crumple([...arc, [-rx * 0.8, cornerY], ...hem, [rx * 0.8, cornerY]], 0.0025, spec.roll * 0.0017);
-  paintPart(frontFills, spec, poly, h.ink0, { own: true });
+  paintPart(frontFills, spec, poly, h.ink0, { part: "hair", own: true });
   front.contour(poly, { color: h.lineInk });
   for (const sx of [-0.34, 0.1, 0.44]) {
     front.line([[sx * rx, cy + ry * 0.5], [sx * rx * 1.05, hemY + ry * 0.1]], { color: h.grainInk, size: "S" });
@@ -459,7 +459,7 @@ const fillStrip = (h, fills, spine, widths, phase = 0) => {
     R.push([x + dy * (w - j), y - dx * (w - j)]);
   }
   for (let i = 0; i + 1 < n; i += 1) {
-    paintPart(fills, h.spec, [L[i], L[i + 1], R[i + 1], R[i]], h.ink0, { own: true });
+    paintPart(fills, h.spec, [L[i], L[i + 1], R[i + 1], R[i]], h.ink0, { part: "hair", own: true });
   }
   return [...L, ...R.slice().reverse()];
 };

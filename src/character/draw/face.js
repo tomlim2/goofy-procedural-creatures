@@ -439,7 +439,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
     const m = muzzleGeometry(spec, box);
     // The muzzle (the region the nose and mouth are grouped into) is **color only** — no outline is drawn round it. An outline makes it look like a board tacked onto the face (it has to stay a color patch)
     const muzzle = blobPath(0, m.my, m.rx, m.ry, { lumps: 3, amount: 0.1, noise: null });
-    paintPart(fills, spec, muzzle, m.fill);   // the muzzle is fur — the creature's goofy material
+    paintPart(fills, spec, muzzle, m.fill, { part: "nose" });   // the muzzle is fur — the creature's goofy material
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
     paintPart(fills, spec, nose, spec.palette.ink, { own: true });   // the nose is an object — always black
     if (m.dark) ink.contour(nose, { color: m.ink, size: "S" });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)
@@ -467,19 +467,19 @@ export function drawNose(ink, fills, spec, box, eyes) {
     // Having a different silhouette from the four line noses is this nose's whole reason — at grid distance it separates as "the mass nose"
     const b = bulbShape(spec, box, eyes);
     const path = blobPath(0.003 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.1, noise: fills.noise, phase: 2.3 });
-    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
+    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true, part: "nose" });
     ink.contour(path, { color: ink0 });
   } else if (kind === "broad") {
     // Broad nose — a wide, low **filled triangle** (a ∇ with rounded corners). The same point layout as the cat's triangular nose but wider and in skin tones
     const { w, h, y: ny } = broadShape(spec, box, eyes);
     const path = [[-w, ny + h * 0.7], [-w * 0.2, ny + h], [w * 0.2, ny + h], [w, ny + h * 0.7], [w * 0.3, ny - h * 0.6], [0, ny - h], [-w * 0.3, ny - h * 0.6]];
-    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
+    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true, part: "nose" });
     ink.contour(path, { color: ink0 });
   } else if (kind === "box") {
     // Square nose — a **rounded square** area. The exponent goes higher (2.5) than the head's square (1.5) — at nose size, 1.5 just smears into a circle and does not separate from bulb
     const b = boxShape(spec, box, eyes);
     const path = blobPath(0.002 * k, b.cy, b.rx, b.ry, { lumps: 3, amount: 0.04, noise: fills.noise, phase: 6.7, square: 2.5 });
-    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true });
+    paintPart(fills, spec, path, shade(spec.palette.skin, 0.86), { own: true, part: "nose" });
     ink.contour(path, { color: ink0 });
   } else if (kind === "nostrils") {
     // Nostrils only — **two watermelon seeds** with no nose outline. Teardrops pointed at the top (taper +) tilted up and outward (left ＼ right ／).
