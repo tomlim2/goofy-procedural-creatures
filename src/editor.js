@@ -21,7 +21,8 @@ import {
   deriveSpec, readCreature, creatureJson, isHouse,
   SLOTS, SPECIES
 } from "./character/index.js";
-import { WEARABLE, wearOf, extraOf, materialKeys, isBox, BOXES, surfaceOf as wornSurface } from "./character/vocabulary/wear.js";
+import { WEARABLE, wearOf, extraOf, materialKeys, isBox, BOXES, surfaceOf as wornSurface, regionsOf, partOf, REGION_LABEL } from "./character/vocabulary/wear.js";
+import { MARKS } from "./character/vocabulary/palette.js";
 import { PALETTE } from "./character/vocabulary/palette.js";
 import { bindSeg, addOption, randomRoll, runLoop, download } from "./ui.js";
 import { paintBall } from "./balls.js";
@@ -206,6 +207,7 @@ function captionOf(key) {
 // A box's colour before the ghost collapse — what the swatches ring (palette0, the box edits are written into)
 function boxColour0(box) {
   if (box === "pop") return (spec.palette0.pop && spec.palette0.pop.color) || null;
+  if (box === "white") return (extraOf(spec, "white") || {}).colour || MARKS.white;   // no box behind it: its own, or the one white
   return spec.palette0[box] || null;
 }
 // A material's three — texture, density, colour — whichever kind it is
@@ -218,7 +220,7 @@ function surfaceOf(key) {
 // a box's colour in its palette box, any other box's texture and density and a hand's own material entire in
 // `spec.materials`
 function setSurface(key, what, value) {
-  if (isBox(key) && what === "colour") {
+  if (isBox(key) && key !== "white" && what === "colour") {
     // A pop is a colour **and** a target, so keep the target the individual already had
     const boxValue = key === "pop" ? { color: value, target: (spec.palette0.pop && spec.palette0.pop.target) || "hair" } : value;
     spec = derive({ ...spec, palette0: { ...spec.palette0, [key]: boxValue } });
@@ -268,7 +270,8 @@ function addMaterialFor(part) {
 }
 
 // Is this part on the creature at all — a slot at none, a quad's arms, a tailless biped's tail are not
-function present(slot) {
+function present(region) {
+  const slot = partOf(region);   // a region stands when its part does
   const identity = (SPECIES.find((s) => s.name === spec.species) || {}).identity || {};
   const quad = identity.skeleton === "quad";
   if (slot === "arms") return !quad && spec.parts.arms !== "none";
@@ -279,7 +282,7 @@ function present(slot) {
 // The parts that wear this material (wear.js — the drawing's own by default, the hand's choice when it put a
 // part elsewhere), of those the creature has
 function presentParts(key) {
-  return WEARABLE.filter((slot) => wearOf(spec, slot) === key && present(slot));
+  return WEARABLE.filter((region) => wearOf(spec, region) === key && present(region)).map((region) => REGION_LABEL[region] ? `${partOf(region)} ${REGION_LABEL[region]}` : region);
 }
 
 // Brings an item of a row that scrolls sideways into view — the row alone, never the deck: scrollIntoView
@@ -365,7 +368,7 @@ function buildMaterials() {
 
   // TEXTURE — the applied one on its line, the samples under it, in the selected material's colour and density
   mat.sect.texture = section(baseBox, "TEXTURE");
-  mat.strip = ballStrip(baseBox, MATERIALS, (name) => setSurface(selected, "texture", name));
+  mat.strip = ballStrip(baseBox, ["flat", ...MATERIALS], (name) => setSurface(selected, "texture", name));   // flat: the white's own, and any material that is not a slot's
 
   // DENSITY — one slider, low on the left and high on the right, writing whichever material is selected. (Five
   // sample balls, one per step, were tried: at 28px the steps of a wash all look alike)
@@ -382,7 +385,7 @@ function buildMaterials() {
 
   // COLOUR — a box's is its palette box (one row per box, the selected one showing), a hand's own material's its own
   mat.sect.colour = section(baseBox, "COLOUR");
-  for (const box of BOXES) mat.colourRows[box] = paletteRow(baseBox, box, null);
+  for (const box of BOXES) mat.colourRows[box] = box === "white" ? swatchRow(baseBox, (color) => setSurface("white", "colour", color)) : paletteRow(baseBox, box, null);
   mat.ownColours = swatchRow(baseBox, (color) => setSurface(selected, "colour", color));
 }
 
@@ -409,8 +412,10 @@ function renderMaterials() {
   mat.sect.uses.textContent = presentParts(selected).join(" · ") || "nothing yet — under a part, material";
 
   mat.sect.texture.textContent = s.texture;
-  MATERIALS.forEach((name, i) => {
+  ["flat", ...MATERIALS].forEach((name, i) => {
     const b = mat.strip.balls[name];
+    b.item.hidden = name === "flat" && (selected === "skin" || selected === "cloth");   // the two slots have no flat
+    if (b.item.hidden) return;
     paintBall(b.canvas, { color: s.colour, material: name, density: s.density, phase: 1 + i });
     b.item.classList.toggle("on", name === s.texture);
   });
@@ -422,7 +427,7 @@ function renderMaterials() {
   mat.sect.colour.textContent = `${box ? `${box} ` : ""}${s.colour || ""}`;
   for (const name of BOXES) mat.colourRows[name].hidden = name !== box;
   mat.ownColours.hidden = !!box;
-  for (const dot of mat.ownColours.querySelectorAll(".swatch")) dot.classList.toggle("on", dot.dataset.color === s.colour);
+  for (const row of [mat.ownColours, mat.colourRows.white]) for (const dot of row.querySelectorAll(".swatch")) dot.classList.toggle("on", dot.dataset.color === s.colour);
 }
 
 // The body is clothing: what is put on it brings its own surface (bodyMaterial) and its own pressure (bodyDensity),
@@ -682,15 +687,26 @@ function renderPartBody() {
   formsBox.hidden = mode !== "shape";
   wearBox.hidden = mode !== "material";
   if (mode === "material") {
-    const wears = wearOf(spec, part);
+    // One row per region of the part — an eye is a pupil and a white, each in a material of its own; most
+    // parts are one surface and get one unnamed row
     wearStrip.replaceChildren();
-    if (wears) {
-      // + first — a new material for this part: a copy of what it has on, worn at once, opened in MATERIALS
+    const regions = regionsOf(part).filter((region) => wearOf(spec, region));
+    for (const region of regions) {
+      const wears = wearOf(spec, region);
+      if (regions.length > 1) {
+        const label = document.createElement("span");
+        label.className = "regionName";
+        label.textContent = REGION_LABEL[region] || region;
+        wearStrip.appendChild(label);
+      }
+      const row = document.createElement("div");
+      row.className = "strip";
+      // + first — a new material for this region: a copy of what it has on, worn at once, opened in MATERIALS
       const add = document.createElement("button");
       add.type = "button";
       add.className = "pv add";
-      add.title = `a new material for the ${part} — a copy of what it has on`;
-      add.setAttribute("aria-label", `a new material for the ${part}`);
+      add.title = `a new material for the ${REGION_LABEL[region] || region} — a copy of what it has on`;
+      add.setAttribute("aria-label", `a new material for the ${REGION_LABEL[region] || region}`);
       const plus = document.createElement("span");
       plus.className = "plus";
       plus.setAttribute("aria-hidden", "true");
@@ -700,19 +716,20 @@ function renderPartBody() {
       cap.className = "cap";
       cap.textContent = "new";
       add.appendChild(cap);
-      add.addEventListener("click", () => addMaterialFor(part));
-      wearStrip.appendChild(add);
+      add.addEventListener("click", () => addMaterialFor(region));
+      row.appendChild(add);
       materialKeys(spec).forEach((key, i) => {
         const card = materialCard(key, 48, i * 40, (picked) => {
-          spec = derive({ ...spec, wear: { ...(spec.wear || {}), [part]: picked } });
+          spec = derive({ ...spec, wear: { ...(spec.wear || {}), [region]: picked } });
           render();
         });
-        card.setAttribute("aria-label", `${part} wears ${captionOf(key)}`);
+        card.setAttribute("aria-label", `${REGION_LABEL[region] || region} wears ${captionOf(key)}`);
         card.classList.toggle("on", key === wears);
-        wearStrip.appendChild(card);
+        row.appendChild(card);
       });
+      wearStrip.appendChild(row);
     }
-    wearNote.textContent = wears ? "" : `${part} wears no material — a mark, an object with a colour of its own, or flat by rule`;
+    wearNote.textContent = regions.length ? "" : `${part} wears no material — a mark, an object with a colour of its own`;
   }
 
 }

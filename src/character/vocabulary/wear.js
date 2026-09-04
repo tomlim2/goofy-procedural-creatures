@@ -13,15 +13,29 @@
 // own box the colour the drawing chose for it (a tone of the box, a lid a shade darker). A key that names
 // nothing (a file from elsewhere) falls back to the drawing's own.
 //
+// The whites of the eyes are a material of their own — **white**: no box behind it, the one white every white
+// on the board is (palette.js MARKS.white), laid flat by rule until a hand sets it a texture or a colour
+// (`spec.materials.white`). So an eye is two regions: the pupil (`eyes`) wears the ink and the white
+// (`eyeWhite`) wears white, each moved on its own; the eye's line stays the face ink — an outline is not a
+// surface.
+//
 // The parts listed are the ones that take a material at all. The rest — an eyepatch, cheeks, a pattern — are
-// objects with a colour of their own, or flat by rule (the whites of the eyes): nothing to wear.
-export const BOXES = ["skin", "cloth", "hair", "accent", "pop", "ink"];
+// objects with a colour of their own: nothing to wear.
+import { MARKS } from "./palette.js";
+
+export const BOXES = ["skin", "cloth", "hair", "accent", "pop", "ink", "white"];
 export const WEAR_DEFAULTS = {
   head: "skin", ears: "skin", horns: "skin", nose: "skin",
   hair: "hair", headgear: "accent",
-  eyes: "ink", brow: "ink", mouth: "ink",
+  eyes: "ink", eyeWhite: "white", brow: "ink", mouth: "ink",
   body: "cloth", arms: "cloth", legs: "cloth", tail: "cloth"
 };
+// A part with more than one surface: its regions, in the editor's order, and what the editor calls them
+export const REGIONS = { eyes: ["eyes", "eyeWhite"] };
+export const REGION_LABEL = { eyes: "pupil", eyeWhite: "white" };
+export const regionsOf = (part) => REGIONS[part] || [part];
+// The part a region belongs to — a region stands on the creature when its part does
+export const partOf = (region) => Object.keys(REGIONS).find((part) => REGIONS[part].includes(region)) || region;
 
 // The parts that wear a material, in the editor's order.
 export const WEARABLE = Object.keys(WEAR_DEFAULTS);
@@ -36,7 +50,7 @@ export const isOwn = (spec, key) => !!key && !isBox(key) && !!extraOf(spec, key)
 // then the hand's own.
 export function materialKeys(spec) {
   const hasPop = !!((spec.palette0 && spec.palette0.pop) || (spec.palette && spec.palette.pop));
-  const boxes = BOXES.filter((box) => box !== "pop" || hasPop);
+  const boxes = BOXES.filter((box) => box !== "pop" || hasPop);   // white is always there — every creature has eyes
   return [...boxes, ...Object.keys((spec && spec.materials) || {}).filter((key) => !isBox(key))];
 }
 
@@ -61,6 +75,7 @@ export function colourOf(spec, key) {
     return (own && own.colour) || null;
   }
   if (key === "pop") return (spec.palette.pop && spec.palette.pop.color) || null;
+  if (key === "white") return (extraOf(spec, "white") || {}).colour || MARKS.white;
   return spec.palette[key] || null;
 }
 
@@ -75,5 +90,6 @@ export function surfaceOf(spec, key) {
     };
   }
   const own = key === "skin" ? null : extraOf(spec, key);
+  if (key === "white") return { texture: (own && own.texture) || "flat", density: (own && own.density) || p.density };
   return { texture: (own && own.texture) || p.material, density: (own && own.density) || p.density };
 }

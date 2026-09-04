@@ -105,8 +105,11 @@ texture and density (`material`, `density`), cloth at the body's (`bodyMaterial`
 which of them a part is made of: `WEAR_DEFAULTS` names what each part took before wear existed — exactly the
 box draw/ painted it from (head, ears, horns, nose the skin; hair the hair; headgear the accent; eyes, brow,
 mouth the ink; body, arms, legs, tail the cloth) — so a roll's creature does not move and a generated spec
-carries no `wear` at all. A part not listed — an eyepatch, cheeks, a pattern, the whites of the eyes — is an
-object with a colour of its own or flat by rule, and wears none.
+carries no `wear` at all. An eye is two regions — the pupil (`eyes`) wears the ink,
+the white (`eyeWhite`) wears **white**, a material with no box behind it: the one white every white on the board
+is, laid flat until a hand sets it a texture or a colour (`spec.materials.white`). The eye's line stays the face
+ink; an outline is not a surface. A part not listed — an eyepatch, cheeks, a pattern — is an object with a
+colour of its own, and wears none.
 
 The editor writes `spec.wear[part]` when a hand puts a part in another material, and `spec.materials[key]`:
 for a box, a texture or density of its own (hair hatched while the skin is oil); for a material of the hand's

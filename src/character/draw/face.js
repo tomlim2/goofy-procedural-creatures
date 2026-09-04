@@ -2,7 +2,7 @@
 // Docs: guidelines/character/parts.md § head (eyes~nose), guidelines/motion/catalog.md § the face
 
 import { paintPart } from "./body.js";
-import { markInkOf } from "../vocabulary/paint.js";
+import { paintOf, markInkOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath } from "../../shape.js";
 import { TAU } from "./layout.js";
 import { shade, luminance } from "../../color.js";
@@ -19,7 +19,6 @@ export const RIG_EYES = ["ring", "wide", "cyclops", "oval"];
 // The angle the heavy-lidded eye (lidded) is tilted by — sharp is the same eye rotated this much toward the nose, soft the other way (rad)
 const TILTED_LID = 0.34;
 // The white — paper white (the same value as scene/rig.js's live eyes and mouth.js's teeth)
-const SCLERA = MARKS.white;
 
 // **The crumple of a round eye, per individual.** A circle is the most repeated shape on the board — a ring, wide, oval or cyclops
 // white, a hollow, a lidded white, a dot pupil — and every one of them was drawn with the same three lumps at the same depth in the
@@ -77,11 +76,12 @@ export function eyeFloor(spec, eyes, x) {
 
 export function drawEyes(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyes;
-  // The eyes wear the ink (vocabulary/wear.js): their own choice of it here — the face ink, light on a dark face —
-  // unless a hand moved them to another material, whose colour they take
-  const ink0 = markInkOf(spec, "eyes", spec.faceInk || spec.palette.ink);
+  // The eye's line is the face ink — an outline is not a surface, and no material moves it. The pupil is one
+  // (part: "eyes" on its fills — paintPart takes the worn material's colour when a hand moved it) and the white
+  // another (part: "eyeWhite", vocabulary/wear.js)
+  const ink0 = spec.faceInk || spec.palette.ink;
   // The ink of eyes laid on a white (slit, side, half, the lidded set) — drawn in light face ink it is lost on the white
-  const dark = markInkOf(spec, "eyes", spec.palette.ink);
+  const dark = spec.palette.ink;
 
   // Drawn smallest first — when they overlap the larger eye is in front (so no crossing line appears on eyes like hollow, whose fill and outline share one sketch)
   for (const eye of [...eyes].sort((a, b) => a.r - b.r)) {
@@ -134,7 +134,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // the almond is raised a little (0.7r) and the pupil filled as an area, so it reads as a cat eye from a distance.
       // Inside the almond is the white — in skin tone it becomes a patch with a pupil floating in it, and on black fur or an imp the almond merges with the head
       const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, eyeWob(spec, eye, 2, { amount: 0.1 }));
-      paintPart(fills, spec, path, SCLERA, { flat: true });
+      paintPart(fills, spec, path, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
       fills.contour(path, { color: dark });
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, eyeWob(spec, eye, 3, { amount: 0.05 })), dark, { own: true, part: "eyes" });
     } else if (kind === "line") {
@@ -155,7 +155,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // What the lower arc encloses is the white — the arc starts at both ends of the lid line and goes round the bottom, so filling it whitens only below that line.
       // Above the line (the lid) is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
-      paintPart(fills, spec, arc, SCLERA, { flat: true });
+      paintPart(fills, spec, arc, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true, part: "eyes" });
@@ -168,7 +168,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // The fill and outline are drawn per eye into **the same sketch (fills)** — when two eyes overlap the later eye (the larger) covers the front eye's outline (no crossing line).
       // For that, smallest first: the larger eye is drawn later and so ends up in front
       const path = blobPath(eye.x, eye.y, eye.r, eye.r, eyeWob(spec, eye, 6, { noise: fills.noise }));   // a slightly crumpled circle, its crumple the creature's own
-      paintPart(fills, spec, path, SCLERA, { flat: true });
+      paintPart(fills, spec, path, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
       fills.contour(path, { color: dark });   // the white's rim is black — being on the white, it is always visible
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
       // The heavy-lidded set — **the same eye at different tilts**: lidded flat · sharp tilted toward the nose (the fierce look of a lifted outer corner) ·
@@ -196,7 +196,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
         lid.push([x, eye.y + eye.r * (rel * 1.05) - Math.sin(Math.PI * t) * eye.r * 0.16]);
       }
       const lidLine = rot(lid);
-      paintPart(fills, spec, path, SCLERA, { flat: true });
+      paintPart(fills, spec, path, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
       // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it
       const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
       paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
@@ -213,7 +213,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const a0 = Math.asin(lidY / eye.r);   // the angle at which the lid line meets the circle
       // What the arc encloses (below the line) is the white. Above the line is not filled — that is skin, not eyeball
       const arc = arcPath(eye.x, eye.y, eye.r, eye.r, Math.PI - a0, Math.PI * 2 + a0, 18);
-      paintPart(fills, spec, arc, SCLERA, { flat: true });
+      paintPart(fills, spec, arc, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true, part: "eyes" });

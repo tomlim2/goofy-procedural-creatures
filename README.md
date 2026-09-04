@@ -48,7 +48,7 @@ drawn in, each a colour laid at a texture and a density — and any number a han
 texture, a density and a colour of its own. The card reads like a 3D program's material panel: the materials
 as cards in a row, a ball previewing the selected one's colour, texture and density together, the textures as
 sample balls in that colour and density, the density as a stepped slider, then the colour. A part is put in
-any of them under PART → material — the eyes in a blue of their own, the hair hatched while the skin is oil —
+any of them under PART → material — the pupils in a blue of their own and the whites in a yellow, the hair hatched while the skin is oil —
 where **+** makes a new one for that part (a copy of what it had on, worn at once) and MATERIALS opens it for
 editing. Then a part at a time: open one and the deck shows its forms and its material, plus the
 proportions. The palette is one set of every colour the vocabulary knows, and every key — the base, a cloth, a
