@@ -383,9 +383,6 @@ function renderMaterials() {
     strip.appendChild(card);
   });
   mat.previews.replaceChildren(strip);
-  // The row scrolls sideways; the card being edited stays in view
-  const on = strip.querySelector(".pv.on");
-  if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
 
   const s = surfaceOf(selected);
   const own = extraOf(spec, selected);
@@ -431,7 +428,7 @@ let mode = "shape";     // under the open part: shape (its forms) or material (w
 const modeTabs = {};    // mode → the tab button
 let wearBox = null;     // the MATERIAL panel: the creature's materials as cards, the one this part wears framed
 let wearStrip = null;   // the cards, one per material, rebuilt on render — a hand adds materials
-let wearAdd = null;     // the line under them, holding + — on its own line so the scrolling row never hides it
+let wearAdd = null;     // the line under them, holding + — on its own line, under the first card
 let wearNote = null;    // for a part that wears none
 const grids = {};       // `${species}/${part}` → { box, forms: value → { item, canvas } } — each grid built and painted once, kept
 let gridKey = null;     // the grid standing in formsBox
@@ -679,7 +676,7 @@ function renderPart() {
         wearStrip.appendChild(card);
       });
       // + — a new material for this part: a copy of what it has on, worn at once, opened in MATERIALS. On the
-      // line under the cards, so however far the row scrolls it is there
+      // line under the cards
       const add = document.createElement("button");
       add.type = "button";
       add.className = "pv add";
@@ -696,8 +693,6 @@ function renderPart() {
       add.appendChild(cap);
       add.addEventListener("click", () => addMaterialFor(part));
       wearAdd.replaceChildren(add);
-      const on = wearStrip.querySelector(".pv.on");
-      if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
     } else wearAdd.replaceChildren();
     wearAdd.hidden = !wears;
     wearNote.textContent = wears ? "" : `${part} wears no material — a mark, an object with a colour of its own, or flat by rule`;

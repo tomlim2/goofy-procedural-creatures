@@ -374,12 +374,10 @@ body.how { height: auto; }
 .field canvas.preview { display: block; width: 72px; height: 72px; }
 /* A material card — the ball and its name together, the card itself the button: MATERIALS' previews (the one being edited
    framed) and, under a part, the picker of what the part wears (the one it wears framed). The others sit bare on the panel */
-/* The material cards run in one row and scroll sideways, the way the part tabs do — a hand adds materials, and the
-   row does not fold. The card being edited (under a part, the one worn) is scrolled into view (editor.js) */
-.previews .strip, .wear .strip { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 4px; scrollbar-width: none; }
-.previews .strip::-webkit-scrollbar, .wear .strip::-webkit-scrollbar { display: none; }
+/* The material cards wrap — a hand adds materials and the rows fold, every card in view, the cards one width so
+   the columns line up from row to row (and the + on its own line under them sits under the first) */
+.previews .strip, .wear .strip { padding: 2px; }
 .previews .strip { gap: 6px; }
-.pv { flex: 0 0 auto; }
 .pv { display: grid; justify-items: center; gap: 2px; padding: 6px 10px 4px; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; }
 .pv:hover { background: rgba(43, 39, 36, 0.06); }
 .pv.on { border-color: var(--ink); background: #f8f3e8; color: inherit; box-shadow: 0 1px 6px rgba(43, 39, 36, 0.12); }
@@ -390,7 +388,7 @@ body.how { height: auto; }
 .pv.on .cap { opacity: 1; font-weight: 700; }
 /* + — a new material for the part, on the line under the cards of what it may wear, its ball an empty ring the
    size of the others */
-.wear .addRow { overflow: visible; padding-top: 0; }
+.wear .addRow { padding-top: 0; }
 .wear .addRow[hidden] { display: none; }
 .pv.add .plus { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px dashed var(--line); font-size: 22px; line-height: 1; opacity: 0.55; }
 .pv.add:hover .plus { opacity: 1; border-style: solid; }
