@@ -427,8 +427,7 @@ let formsBox = null;    // where the open part's preview grid stands
 let mode = "shape";     // under the open part: shape (its forms) or material (which of the creature's materials it wears)
 const modeTabs = {};    // mode → the tab button
 let wearBox = null;     // the MATERIAL panel: the creature's materials as cards, the one this part wears framed
-let wearStrip = null;   // the cards, one per material, rebuilt on render — a hand adds materials
-let wearAdd = null;     // the line under them, holding + — on its own line, under the first card
+let wearStrip = null;   // the cards — + first, then one per material — rebuilt on render, since a hand adds materials
 let wearNote = null;    // for a part that wears none
 const grids = {};       // `${species}/${part}` → { box, forms: value → { item, canvas } } — each grid built and painted once, kept
 let gridKey = null;     // the grid standing in formsBox
@@ -535,9 +534,6 @@ function buildParts() {
   wearStrip = document.createElement("div");
   wearStrip.className = "strip";
   wearBox.appendChild(wearStrip);
-  wearAdd = document.createElement("div");
-  wearAdd.className = "strip addRow";
-  wearBox.appendChild(wearAdd);
   wearNote = document.createElement("output");
   wearNote.className = "readout";
   wearBox.appendChild(wearNote);
@@ -666,17 +662,7 @@ function renderPart() {
     const wears = wearOf(spec, part);
     wearStrip.replaceChildren();
     if (wears) {
-      materialKeys(spec).forEach((key, i) => {
-        const card = materialCard(key, 48, i * 40, (picked) => {
-          spec = derive({ ...spec, wear: { ...(spec.wear || {}), [part]: picked } });
-          render();
-        });
-        card.setAttribute("aria-label", `${part} wears ${captionOf(key)}`);
-        card.classList.toggle("on", key === wears);
-        wearStrip.appendChild(card);
-      });
-      // + — a new material for this part: a copy of what it has on, worn at once, opened in MATERIALS. On the
-      // line under the cards
+      // + first — a new material for this part: a copy of what it has on, worn at once, opened in MATERIALS
       const add = document.createElement("button");
       add.type = "button";
       add.className = "pv add";
@@ -692,9 +678,17 @@ function renderPart() {
       cap.textContent = "new";
       add.appendChild(cap);
       add.addEventListener("click", () => addMaterialFor(part));
-      wearAdd.replaceChildren(add);
-    } else wearAdd.replaceChildren();
-    wearAdd.hidden = !wears;
+      wearStrip.appendChild(add);
+      materialKeys(spec).forEach((key, i) => {
+        const card = materialCard(key, 48, i * 40, (picked) => {
+          spec = derive({ ...spec, wear: { ...(spec.wear || {}), [part]: picked } });
+          render();
+        });
+        card.setAttribute("aria-label", `${part} wears ${captionOf(key)}`);
+        card.classList.toggle("on", key === wears);
+        wearStrip.appendChild(card);
+      });
+    }
     wearNote.textContent = wears ? "" : `${part} wears no material — a mark, an object with a colour of its own, or flat by rule`;
   }
 

@@ -375,8 +375,7 @@ body.how { height: auto; }
 /* A material card — the ball and its name together, the card itself the button: MATERIALS' previews (the one being edited
    framed) and, under a part, the picker of what the part wears (the one it wears framed). The others sit bare on the panel */
 /* The material cards fill the width — a grid of as many columns as fit, the cards stretched to share the row, so
-   a hand adds materials and the rows fold with no gap left at the right; the + on its own line under them is on
-   the same grid and sits under the first column */
+   a hand adds materials and the rows fold with no gap left at the right; under a part the + is the first card */
 .previews .strip, .wear .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px 4px; padding: 2px; }
 .wear .strip { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 4px; }
 .pv { display: grid; justify-items: center; gap: 2px; padding: 6px 10px 4px; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; }
@@ -387,10 +386,8 @@ body.how { height: auto; }
 /* The material's name under its ball — main, then mat1, mat2 … the one being edited at full ink */
 .cap { font-size: 10px; letter-spacing: 0.14em; opacity: 0.5; }
 .pv.on .cap { opacity: 1; font-weight: 700; }
-/* + — a new material for the part, on the line under the cards of what it may wear, its ball an empty ring the
-   size of the others */
-.wear .addRow { padding-top: 0; }
-.wear .addRow[hidden] { display: none; }
+/* + — a new material for the part, first of the cards of what it may wear, its ball an empty ring the size of the
+   others */
 .pv.add .plus { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px dashed var(--line); font-size: 22px; line-height: 1; opacity: 0.55; }
 .pv.add:hover .plus { opacity: 1; border-style: solid; }
 /* NAME is typed over its line — the same line the other sections read their value on */
