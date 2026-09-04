@@ -32,7 +32,10 @@ export const GOOFY_MATERIALS = {
   // close enough together to read as a flat grey wash on a creature rather than as hatching; a cell is 144 device
   // pixels across a world unit, and a 0.0115 gap is under two of them. The medium page's ball, being far bigger
   // on screen, never showed it — the board did
-  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", pull: 0.5, angle: 1.42, gap: 0.0184, width: 0.0038, tone: 0.68, mark: 0.34, lift: { length: [0.112, 0.32], gap: [0.008, 0.022] }, double: 0.18 } },
+  // `scribble` is the scribble step's wave: its length and swing (world units) and its gap as a multiple of the ruling gap. At
+  // 0.02 long and 0.0032 of swing the wave fell under the pencil's own wander and the rules read as straight; a third longer and
+  // nearly twice the swing, with the rules set further apart so the crests do not meet, and it reads as the pencil going side to side
+  GRAPHITE:    { base: { kind: "flat" }, texture: { kind: "hatch", pull: 0.5, angle: 1.42, gap: 0.0184, width: 0.0038, tone: 0.68, mark: 0.34, lift: { length: [0.112, 0.32], gap: [0.008, 0.022] }, double: 0.18, scribble: { wave: 0.034, amp: 0.0055, gap: 1.35 } } },
   // Ink — solid, scratched **open**: a few long light lines dragged across it, taking the ink away. The darkest step is the least
   // scratched (the ink still covers it), the lightest the most. It used to run the other way — the black step laid the most light
   // lines and came out the palest of the five
@@ -344,14 +347,14 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
           hatchAt(f.angle + swing, f.gap, f.width);
         } else if (V.name === "scribble") {
           // wavy rules, nearly level — the pencil going side to side
-          rules(points, 0.08 + swing * 0.5, f.gap * 1.05, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => {
+          rules(points, 0.08 + swing * 0.5, f.gap * f.scribble.gap, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => {
             const len = Math.hypot(q[0] - p[0], q[1] - p[1]);
             const dx = (q[0] - p[0]) / len, dy = (q[1] - p[1]) / len;
             const n = Math.max(2, Math.round(len / 0.005));
             const pts = [];
             for (let k = 0; k <= n; k += 1) {
               const t = (k / n) * len;
-              const wave = Math.sin((t / 0.02) * TAU + i * 1.7) * 0.0032;
+              const wave = Math.sin((t / f.scribble.wave) * TAU + i * 1.7) * f.scribble.amp;
               pts.push([p[0] + dx * t - dy * wave, p[1] + dy * t + dx * wave]);
             }
             liftedRule(pts, i + 500, f.width);
