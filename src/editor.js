@@ -188,11 +188,11 @@ function ballStrip(parent, names, onPick, kind = "texture") {
 // new one is made where it is worn — under a part, material → **+** — as a copy of what the part had on, and
 // the part wears it from then on; it is edited here. Each is a material in the 3D sense — a
 // texture, the density it is laid at and a colour — and **each is its own**: nothing here says one follows
-// another (asOwn). Each gets a preview card at the top; **the previews are the selection**: click one and the
-// sections below edit that material — its name, the parts that wear it, its texture (the sample balls), its
-// density (a slider, low to high), its colour. A part is put in a material under PART → material.
+// another (asOwn). A dropdown at the top picks the one being edited, its ball under it; the sections below
+// edit that material — its name, the parts that wear it, its texture (the sample balls), its density (a
+// slider, low to high), its colour. A part is put in a material under PART → material.
 let selected = "main";   // the material being edited — main, body, or one of the hand's own (m1, m2 …)
-const mat = { previews: null, name: null, sect: {}, strip: null, density: null, colourRows: {}, ownColours: null };
+const mat = { select: null, preview: null, name: null, sect: {}, strip: null, density: null, colourRows: {}, ownColours: null };
 
 // What a material is called under its ball: the roll's two are main and mat1 until named
 // (`spec.materialNames`); a hand's own carries its name, and is mat2, mat3 … until it has one
@@ -242,19 +242,27 @@ function setName(key, name) {
   }
   render();
 }
-// + under a part — a new material of the hand's own, a copy of what the part had on to start from; the part
-// wears it from then on, and MATERIALS opens it for editing
-function addMaterialFor(part) {
+// A new material of the hand's own — a copy of `from` to start from, keyed after the last. Returns its key
+function newMaterial(from) {
   const keys = Object.keys(spec.materials || {});
   let n = 1;
   while (keys.includes(`m${n}`)) n += 1;
   const key = `m${n}`;
-  const { texture, density, colour } = surfaceOf(wearOf(spec, part));
-  spec = derive({
-    ...spec,
-    materials: { ...(spec.materials || {}), [key]: { name: "", texture, density, colour } },
-    wear: { ...(spec.wear || {}), [part]: key }
-  });
+  const { texture, density, colour } = surfaceOf(from);
+  spec = { ...spec, materials: { ...(spec.materials || {}), [key]: { name: "", texture, density, colour } } };
+  return key;
+}
+// + beside MATERIALS — a new material, a copy of the one being edited, worn by nothing yet; opened for editing
+function addMaterial() {
+  selected = newMaterial(selected);
+  spec = derive(spec);
+  render();
+}
+// + under a part — a new material, a copy of what the part had on; the part wears it from then on, and
+// MATERIALS opens it for editing
+function addMaterialFor(part) {
+  const key = newMaterial(wearOf(spec, part));
+  spec = derive({ ...spec, wear: { ...(spec.wear || {}), [part]: key } });
   selected = key;
   render();
 }
@@ -329,8 +337,20 @@ function swatchRow(parent, onPick) {
 
 function buildMaterials() {
   baseBox.innerHTML = "";
-  // The previews — one card per material and + at the end; filled on render, since a hand adds to them
-  mat.previews = fieldRow(baseBox, null, "field previews");
+  // The material being edited — a dropdown of every one the creature wears (filled on render, since a hand adds
+  // to them), and its ball under it
+  const pick = field(baseBox, null);
+  mat.select = document.createElement("select");
+  mat.select.className = "wide";
+  mat.select.setAttribute("aria-label", "Material");
+  mat.select.addEventListener("change", () => { selected = mat.select.value; renderMaterials(); });
+  pick.appendChild(mat.select);
+  const preview = fieldRow(baseBox, null, "field previews");
+  const ball = document.createElement("div");
+  ball.className = "ball preview";
+  mat.preview = document.createElement("canvas");
+  ball.appendChild(mat.preview);
+  preview.appendChild(ball);
 
   // NAME — typed over its line; empty takes the numbering back. USED BY — the parts that wear it
   const nameVal = section(baseBox, "NAME");
@@ -372,19 +392,13 @@ function buildMaterials() {
 function renderMaterials() {
   const keys = materialKeys(spec);
   if (!keys.includes(selected)) selected = "main";
-  // The previews — every material the creature wears, the one being edited framed. A new one is made under a
-  // part (material → +), not here
-  const strip = document.createElement("div");
-  strip.className = "strip";
-  keys.forEach((key, i) => {
-    const card = materialCard(key, 72, i * 40, (picked) => { selected = picked; renderMaterials(); });
-    card.setAttribute("aria-label", `edit the material ${captionOf(key)}`);
-    card.classList.toggle("on", key === selected);
-    strip.appendChild(card);
-  });
-  mat.previews.replaceChildren(strip);
+  // The dropdown — every material the creature wears, by name. A new one is made under a part (material → +)
+  mat.select.replaceChildren();
+  for (const key of keys) addOption(mat.select, key, captionOf(key));
+  mat.select.value = selected;
 
   const s = surfaceOf(selected);
+  paintBall(mat.preview, { color: s.colour, material: s.texture, density: s.density, phase: keys.indexOf(selected) * 40, size: 72 });
   const own = extraOf(spec, selected);
   mat.name.value = own ? own.name || "" : (spec.materialNames && spec.materialNames[selected]) || "";
   mat.name.placeholder = captionOf(selected);
@@ -865,6 +879,7 @@ document.getElementById("rewobble").addEventListener("click", () => {
   spec = derive({ ...spec, proportions: { ...spec.proportions, hand: randomRoll() % 65536 } });
   render();
 });
+document.getElementById("addMaterial").addEventListener("click", addMaterial);
 document.getElementById("save").addEventListener("click", save);
 document.getElementById("open").addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", () => {
