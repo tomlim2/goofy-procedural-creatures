@@ -21,7 +21,7 @@ import {
   deriveSpec, readCreature, creatureJson, isHouse,
   SLOTS, SPECIES, PAINTABLE, paintKey
 } from "./character/index.js";
-import { FILLS, INKS, ACCENTS, POPS, DARKS, FURS, SCALES, HAIRS } from "./character/vocabulary/palette.js";
+import { PALETTE } from "./character/vocabulary/palette.js";
 import { bindSeg, addOption, randomRoll, runLoop, download } from "./ui.js";
 import { paintBall } from "./balls.js";
 
@@ -37,14 +37,13 @@ const proportionsBox = document.getElementById("proportions");
 const notesBox = document.getElementById("notes");
 const fileInput = document.getElementById("file");
 
-// One palette for the whole screen. Every colour a creature can carry — a line ink, a skin, a fur, a dark, a
-// scale, an accent, a pop, a hair — picks from the same set, pool by pool in that order, each colour once. The
-// generator deals each key from a pool of its own (a human's skin from FILLS, a rex's from SCALES); those odds
+// One palette for the whole screen — PALETTE (vocabulary/palette.js): every colour a creature can carry — a line
+// ink, a skin, a fur, a dark, a scale, an accent, a pop, a hair, the imp's ink — pool by pool, each colour once.
+// The generator deals each key from a pool of its own (a human's skin from FILLS, a rex's from SCALES) and snaps
+// every derived tone to the nearest entry, so a creature's colours always answer to these swatches; those odds
 // are the board's business and stay with it. Here a key is a key, and any colour goes in any of them.
 // `pop` alone leads with a `null` for "no accent at all", which is what most individuals have. `pattern2` is the
 // rex's second scale colour and is meaningless on anything else.
-const unique = (pool) => [...new Set(pool)];
-const PALETTE = unique([...INKS, ...FILLS, ...FURS, ...DARKS, ...SCALES, ...ACCENTS, ...POPS, ...HAIRS]);
 const COLOR_KEYS = ["ink", "skin", "cloth", "hair", "accent", "pop", "pattern2"];
 const poolOf = (key) => (key === "pop" ? [null, ...PALETTE] : PALETTE);
 

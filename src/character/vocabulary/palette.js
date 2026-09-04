@@ -122,3 +122,12 @@ export const ACCENTS = [
   "#8d7168",
   "#7a7686"
 ];
+
+// The imp's ink — darker than the darkest of the DARKS, so an ink-black head still has an outline. Not in INKS: the roll
+// never deals it, the imp is pinned to it (spec.js). In PALETTE below, so the editor shows it and it can be picked
+export const IMP_INK = "#1c1917";
+
+// **Every colour a creature carries is one of these.** The pools, each colour once, and the imp's ink — what the editor lays out
+// as its swatches, and what spec.js snaps a derived tone to (`toned`): a body "a shade lighter than the head" is the entry
+// nearest that shade, never a hex of its own. So every colour on a saved creature answers to a swatch
+export const PALETTE = [...new Set([...INKS, ...FILLS, ...FURS, ...DARKS, ...SCALES, ...ACCENTS, ...POPS, ...HAIRS, IMP_INK])];
