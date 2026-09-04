@@ -15,10 +15,16 @@ import { INKS } from "./character/vocabulary/palette.js";
 
 const INK = INKS[0];
 const CARD = "#f2ecdf";   // the card's back (styles.css .card) — the pencil's bites take it
-const HALF = 0.26;        // the world half-size a ball is framed in; the ball itself is radius 0.2
+// The world a ball is framed in: radius 0.2 in a ±0.26 window for a preview. A **sample** (under 40 CSS px) is
+// drawn at half that — radius 0.1 in ±0.13 — because the pen's width is a world width: at 28 px the board's M
+// line came out under a pixel and a flat ball in a pale colour was a disc with no edge. Half the ball under the
+// same pen is an edge twice as heavy against it, and the textures coarser, which at a thumbnail reads better
+const PREVIEW = { r: 0.2, half: 0.26, size: "M" };
+const SAMPLE = { r: 0.1, half: 0.13, size: "L" };
 // A fixed hand: the balls are a legend, not a creature, and hold still between repaints
 const noise = makeNoise(makeRng(7));
-const camera = new THREE.OrthographicCamera(-HALF, HALF, HALF, -HALF, -1, 1);
+const cameras = {};
+const cameraFor = (half) => (cameras[half] ||= new THREE.OrthographicCamera(-half, half, half, -half, -1, 1));
 
 let renderer = null;
 function gl() {
@@ -41,19 +47,20 @@ export function paintBall(canvas, { color, material, density, phase = 0, size = 
   canvas.width = Math.round(size * dpr);
   canvas.height = Math.round(size * dpr);
 
+  const frame = size < 40 ? SAMPLE : PREVIEW;
   const fills = new Sketch(noise, 1);
   fills.phase = 31 + phase * 17;
   const ink = new Sketch(noise, 1);
   ink.phase = 131 + phase * 17;
-  const ball = blobPath(0, 0, 0.2, 0.2, { lumps: 5, amount: 0.05, noise, phase: 97 + phase * 3 });
+  const ball = blobPath(0, 0, frame.r, frame.r, { lumps: 5, amount: 0.05, noise, phase: 97 + phase * 3 });
   fills.paint(ball, String(material || "flat").toUpperCase(), { color, value: stepOf(density) });
-  ink.contour(ball, { color: INK, paper: CARD });   // the board's contour — a goofy material is only the filling
+  ink.contour(ball, { color: INK, paper: CARD, size: frame.size });   // the board's contour — a goofy material is only the filling
 
   const scene = new THREE.Scene();
   const group = sketchMesh([fills, ink], 1, 0);
   scene.add(group);
   r.setSize(size, size, false);
-  r.render(scene, camera);
+  r.render(scene, cameraFor(frame.half));
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(r.domElement, 0, 0, canvas.width, canvas.height);
