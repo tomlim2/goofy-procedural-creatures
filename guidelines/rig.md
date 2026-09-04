@@ -154,6 +154,13 @@ and seats it at idle — otherwise the first frame shows the arms swinging down 
 `regenerate(index)` lifts the existing individual out (`discard` — geometry only is thrown away; materials are shared) and stands a new one up in the same slot (`place` —
 the forced action, position, render order block, `settle` and adding to the scene; `build` uses the same function). The new clock receives `clockNow` as its birth time. The species is kept.
 
+## On a swap
+
+`replace(index, spec, { keepClock })` stands a chosen individual in one slot the same way (`discard`, `place`) and leaves the rest of the board where it
+stands. With `keepClock`, the old clock and the display-side easing carry over when the two move the same way (`sameMotion` — the same species and ghost
+state, the same roll, the same motion rig): the editor asks for it on every edit, so a creature redrawn in another material or colour keeps walking
+mid-step. A different rig gets a clock of its own — a clock solves actions off the dims it was born with.
+
 ## Where it commonly breaks
 
 - Raise headGroup.position.y without lowering the head geometry by `-neckY` and it **goes up twice**. Same for the face — the face mesh takes `-faceCy` and faceGroup takes `faceCy - neckY`. Lower it by `-neckY` instead and the turn's axis drops to the neck and the squash goes wrong

@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Sketch } from "../stroke.js";
 import { MARKS } from "../character/vocabulary/palette.js";   // the hover mark takes the palette's own red (palette.js imports nothing — no cycle)
 import { makeCreature } from "../character/index.js";
+import { isGhost } from "../character/spec.js";
 import { makeNoise, makeRng } from "../rng.js";
 import { makePaperMaterial, setGrainScale } from "./paper.js";
 import { attachPost } from "./post.js";
@@ -295,10 +296,22 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     if (hoverFade.to === 0 && opacity <= 0.001) dropHoverMark();
   }
 
+  // Two individuals that move the same way: the same species and ghost state (the motion table), the same
+  // roll (the clock's key — its rng stream and phases) and the same motion rig (the shoulders, limb lengths
+  // and body anchors the clock solves actions onto). An edit to a surface — a material, a step, a colour, a
+  // paint — leaves all four alone; a change of form, length or proportion moves the rig.
+  function sameMotion(a, b) {
+    return a.clock && b.clock && a.spec.species === b.spec.species && isGhost(a.spec) === isGhost(b.spec) &&
+      a.spec.roll === b.spec.roll && JSON.stringify(a.motionRig) === JSON.stringify(b.motionRig);
+  }
+
   // One slot, swapped for an individual the caller chose. Everything else on the board is left exactly where
   // it stands: rebuilding the whole board to change one cell discards all 35 rigs, resets every clock to its
   // birth and drops the high fives' cooldowns, which reads as the board blinking off and on.
-  function replace(index, spec) {
+  // `keepClock`: when the new individual moves the same way as the old one (sameMotion), the old clock and the
+  // display-side easing carry over, so a creature redrawn in another material keeps walking mid-step instead
+  // of being born again. A different rig gets a clock of its own — a clock solves off the dims it was born with.
+  function replace(index, spec, { keepClock = false } = {}) {
     const old = creatures[index];
     if (!old) return;
     // A five in progress needs no release here: the pairing notices the item is gone on its next tick, the
@@ -306,6 +319,11 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     discard(old);
     const item = spec.kind === "house" ? buildHouse(spec) : buildCreature(spec, noise, clockNow);
     item.generation = old.generation;
+    if (keepClock && sameMotion(old, item)) {
+      item.clock = old.clock;
+      item.lastState = old.lastState;
+      item.dropEase = old.dropEase;
+    }
     place(item, index);
     creatures[index] = item;
   }
