@@ -392,6 +392,9 @@ function renderMaterials() {
   add.addEventListener("click", addMaterial);
   strip.appendChild(add);
   mat.previews.replaceChildren(strip);
+  // The row scrolls sideways; the card being edited stays in view
+  const on = strip.querySelector(".pv.on");
+  if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
 
   const s = surfaceOf(selected);
   const own = extraOf(spec, selected);
@@ -680,6 +683,8 @@ function renderPart() {
         card.classList.toggle("on", key === wears);
         wearStrip.appendChild(card);
       });
+      const on = wearStrip.querySelector(".pv.on");
+      if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
     }
     wearNote.textContent = wears ? "" : `${part} wears no material — a mark, an object with a colour of its own, or flat by rule`;
   }

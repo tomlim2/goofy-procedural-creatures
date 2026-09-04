@@ -374,7 +374,12 @@ body.how { height: auto; }
 .field canvas.preview { display: block; width: 72px; height: 72px; }
 /* A material card — the ball and its name together, the card itself the button: MATERIALS' previews (the one being edited
    framed) and, under a part, the picker of what the part wears (the one it wears framed). The others sit bare on the panel */
+/* The material cards run in one row and scroll sideways, the way the part tabs do — a hand adds materials, and the
+   row does not fold. The + at the end shows the row goes on; the card being edited is scrolled into view (editor.js) */
+.previews .strip, .wear .strip { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 4px; scrollbar-width: none; }
+.previews .strip::-webkit-scrollbar, .wear .strip::-webkit-scrollbar { display: none; }
 .previews .strip { gap: 6px; }
+.pv { flex: 0 0 auto; }
 .pv { display: grid; justify-items: center; gap: 2px; padding: 6px 10px 4px; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; }
 .pv:hover { background: rgba(43, 39, 36, 0.06); }
 .pv.on { border-color: var(--ink); background: #f8f3e8; color: inherit; box-shadow: 0 1px 6px rgba(43, 39, 36, 0.12); }
