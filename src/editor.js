@@ -645,7 +645,29 @@ function gridOf(name, slot) {
 // The open part's controls, from the spec: its tab framed, the form previews (rebuilt when the part changes), and
 // for a part with no material of its own the paint boxes, drawn in the individual's own colours with the one it
 // currently takes ringed. A box the individual does not have (a pop on one without) is not offered
+// **The card holds still.** Opening another part swaps in a grid of another height — eyes are five rows, a
+// brow two — and the deck, scrolled to the card, lost that height under its scroll position and the card
+// jumped. The card's place on screen is measured before and put back after; when what is below it is too
+// short to scroll that far, the deck is given the room at its foot. Nothing is drawn on a tab click: the
+// grids are built once and kept (gridOf), and the creature is not touched
+function holdInPlace(card, change) {
+  const deck = card && card.closest(".deck");
+  if (!deck) { change(); return; }
+  const before = card.getBoundingClientRect().top;
+  change();
+  const drift = card.getBoundingClientRect().top - before;
+  if (Math.abs(drift) < 0.5) return;
+  const want = deck.scrollTop + drift;
+  deck.style.paddingBottom = "0px";
+  const room = deck.scrollHeight - deck.clientHeight;
+  if (want > room) deck.style.paddingBottom = `${Math.ceil(want - room)}px`;
+  deck.scrollTop = want;
+}
+
 function renderPart() {
+  holdInPlace(partsBox.querySelector(".partCard"), renderPartBody);
+}
+function renderPartBody() {
   for (const slot of PART_SLOTS) tabs[slot].item.hidden = !partApplies(slot, spec.species);
   if (!partApplies(part, spec.species)) part = PART_SLOTS[0];   // the open part left with the species — back to the head
   for (const slot of PART_SLOTS) tabs[slot].item.classList.toggle("on", slot === part);
