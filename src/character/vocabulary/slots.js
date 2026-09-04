@@ -117,7 +117,7 @@ export const SLOTS = {
   // draw/body.js surfaceHand) and is independent of it: a graphite head and a graphite body can still sit two steps apart.
   // A late slot, the last one — it costs one draw at the very end and nothing before it moves
   bodyDensity: ["same", "black", "hatch", "scribble", "stipple", "light"],
-  // The brow's length — its own axis, like a limb's: short · medium · long of the eye it sits over (medium is what every
+  // The brow's length — its own axis, like a limb's: short · medium · long of the eye it sits over, 0.65 · 1 · 1.45 (medium is what every
   // brow was before the slot existed). A late slot, so nothing rolled before it moves; the two brows never meet whatever
   // the length (face.js drawBrow)
   browLength: ["short", "medium", "long"]

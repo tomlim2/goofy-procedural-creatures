@@ -289,7 +289,8 @@ export function drawWhiskers(ink, spec, box) {
   }
 }
 
-const BROW_LENGTH = { short: 0.8, medium: 1, long: 1.25 };
+// Wide apart on purpose: at 0.8 and 1.25 the three read as one length on the board; medium stays what every brow was
+const BROW_LENGTH = { short: 0.65, medium: 1, long: 1.45 };
 export function drawBrow(ink, spec, box, eyes, kindOverride) {
   const kind = kindOverride || spec.parts.brow;
   if (kind === "none") return;
