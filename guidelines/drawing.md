@@ -154,8 +154,9 @@ the body directly, everything else through `paintPart` in `draw/body.js`. A crea
 and one hand may well reach for a second tool between them. The head's side is the head, the ears and their insides, the horns, the
 hair, the hat, the muzzle, the nose and the face; the body's is the torso, the arms and hands, the sleeves, the legs and boots, and
 the tail with its ends (`paintPart(…, { body: true })`). `materialOf(spec, where)` in `draw/body.js` is the one place either is
-named. The **density is not split**: one hand, one pressure, whichever tool it holds. A skin, fur or cloth surface (the
-ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes the creature's value step — one
+named. The density splits on the same line: the head's side draws at the `density` slot, the body's at `bodyDensity` unless that
+says `same` (`surfaceHand(spec, where)`, the one place a step is read). A skin, fur or cloth surface (the
+ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes its side's value step — one
 mass on a dog, a cat or an imp (`surfaceHand`), its own color's on a human. A detail or an object — the hats,
 the inner ear, the eyes (whites, pupils, irises, highlights, the static eyes, the star and heart eyes, the angry
 eye), the nose, the mouth's inside, teeth and tongue, the blush, the eye patch, the cheek and
@@ -240,7 +241,7 @@ row is the same material on a **dark ground**, which is where the rule above is 
 | `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | the `material` slot (1) |
 
 The head takes the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)
-§ surface) — and the body takes it too unless `bodyMaterial` names another (§ what takes the goofy material), both at one **value step**. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
+§ surface) — and the body takes it too unless `bodyMaterial` names another (§ what takes the goofy material), each at a **value step** — the head's `density`, the body's `bodyDensity` or the head's. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
 the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34. A goofy material renders a
 step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → coarse dabs → one thin set three gaps apart),
 ink, oil and charcoal lay down more or less of their texture.
@@ -258,9 +259,10 @@ part's colour and nudged a step by a three-value hand, which meant half the ladd
 76% of imps on black, and a third of the hand did nothing at all because the scale had no step left to give. The colour still
 decides the marks' **tone** (`contrast` — light marks on a dark ground), and the step decides how many.
 
-One step for the whole creature, head and body and ears and hat alike: one hand, one pressure — the tool may change between the head
-and the body, the pressure does not (`surfaceHand` in `draw/body.js` — the one place a surface's step is worked out, and `materialOf`
-the one place a material is named). The medium page draws each textured
+One step per side: the head, its ears and its hat at the head's; the torso, limbs and tail at the body's — which is the head's on
+five creatures in six (`bodyDensity` = `same`) and a step of its own on the rest, the way the tool may change at the same line
+(`surfaceHand(spec, where)` in `draw/body.js` — the one place a surface's step is worked out, and `materialOf` the one place a
+material is named). The medium page draws each textured
 goofy material as a row of the five steps. Every other fill is FLAT.
 
 One hand, but not one throw of the dice: **a texture's roll is the part's own**, its place and size on the board folded into the

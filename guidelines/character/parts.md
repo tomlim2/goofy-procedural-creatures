@@ -480,17 +480,26 @@ The **body's** goofy material when it is not the head's: **same** (weight 9 — 
 of the four. A face and a torso are two surfaces and one hand may reach for a second tool between them. The head's side of the line
 is the head, the ears, the horns, the hair, the hat, the muzzle, the nose and the face; the body's is the torso, the arms and hands,
 the sleeves, the legs and boots, and the tail. Around a quarter of creatures come out split, and one in twelve with two *textured*
-materials. The **density** is not split — one hand, one pressure ([../drawing.md](../drawing.md) § what takes the goofy material).
+materials. The density splits along the same line, on its own slot (`bodyDensity`, below).
 
 ### density (5) — a late slot
 
 How dark the goofy material draws this creature — **the value step itself**, one of the five, evenly weighted:
 **black · hatch · scribble · stipple · light** (`medium/materials.js` `VALUES`). The roll picks it, so every step turns up on every
-species — a pale skin can be hatched black and a black one grazed light. Nothing on flat. Everything the creature fills draws at
-that one step, head and body alike ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
+species — a pale skin can be hatched black and a black one grazed light. Nothing on flat. Everything on the head's side draws at
+that one step, and the body's side too unless `bodyDensity` names another ([../drawing.md](../drawing.md) § the goofy material). The texture is always a tone of the part's own color, so the palette rules hold; the base stays
 opaque, so neighbours still hide each other. Everything the creature fills takes a goofy material — the head, the body, the ears and their insides, the muzzle, the
 hands, boots and sleeves, the tail, the hats, the eyes, the nose, the mouth — the head's or, where `bodyMaterial` splits them, the
 body's ([../drawing.md](../drawing.md) § what takes the goofy material). The contour is not part of it (the goofy outline, PENCIL_STROKE).
+
+### bodyDensity (6) — a late slot, the last
+
+The **body's** value step when it is not the head's: **same** (weight 10 — one pressure through on five boards in six) or one of the
+five steps at 0.5 each. It splits along the same line as `bodyMaterial` — the head's side keeps `density`, the body's side (the
+torso, the arms and hands, the sleeves, the legs and boots, the tail) takes this — and is independent of it: a graphite head and a
+graphite body can sit two steps apart, and a body of another tool can still share the head's pressure. `surfaceHand(spec, where)`
+in `draw/body.js` is the one place a step is read, as `materialOf` is for the tool. The last of the late slots, so it costs one draw
+at the very end and nothing before it moves; a file without it draws as `same`.
 
 ### tailDeco (7) — a late slot, the rex's
 

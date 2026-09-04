@@ -92,7 +92,7 @@ export const SLOTS = {
   // The **body's** goofy material — `same` for one tool over the whole creature, or one of the five for a body made of something else
   // than the head. A face and a torso are two surfaces (skin and cloth already have two colors), and one hand may well reach for a
   // second tool between them. Everything on the head follows `material` — ears, horns, hair, a hat, the muzzle; everything on the body
-  // follows this one — the limbs, the hands, the boots, the sleeves, the tail. The **density** is not split: one hand, one pressure
+  // follows this one — the limbs, the hands, the boots, the sleeves, the tail. The density may split the same way (`bodyDensity`, below)
   bodyMaterial: ["same", "graphite", "ink", "oil", "charcoal"],
   // The **density** — how dark the goofy material draws this creature: **the value step itself**, picked by the roll from the five
   // (medium/materials.js VALUES: black · hatch · scribble · stipple · light). It used to be a hand (lighter/normal/darker) that moved
@@ -111,13 +111,18 @@ export const SLOTS = {
   // skinny lanky · narrow slim · medium · wide broad · small a small torso (narrow and short both).
   // The leg stance (how far they open) and the shoulder position follow it: a narrow body draws the legs together, a wide one opens them.
   // On a quad it is body length and thickness: narrow a short body, wide a long body (dachshund, munchkin), skinny a thin body, small a small body.
-  build: ["skinny", "narrow", "medium", "wide", "small"]
+  build: ["skinny", "narrow", "medium", "wide", "small"],
+  // The **body's** density — `same` for one pressure over the whole creature, or one of the five steps for a body drawn
+  // darker or lighter than the head. It splits along the same line as `bodyMaterial` (the head's side and the body's —
+  // draw/body.js surfaceHand) and is independent of it: a graphite head and a graphite body can still sit two steps apart.
+  // A late slot, the last one — it costs one draw at the very end and nothing before it moves
+  bodyDensity: ["same", "black", "hatch", "scribble", "stipple", "light"]
 };
 
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing rolls keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -154,6 +159,8 @@ export const DEFAULT_BIAS = {
   tailDeco: [["none", 1]],   // the rex carries its own weights; everyone else forbids the lot
   ghost: [["none", 24], ["white", 1]],   // 1 in 25 — about 1.4 on a board of 35
   density: [["black", 1], ["hatch", 1], ["scribble", 1], ["stipple", 1], ["light", 1]],
+  // One pressure through on most of the board, like the tool (bodyMaterial); a body at its own step is about one in five
+  bodyDensity: [["same", 10], ["black", 0.5], ["hatch", 0.5], ["scribble", 0.5], ["stipple", 0.5], ["light", 0.5]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],
