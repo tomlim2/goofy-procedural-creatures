@@ -45,7 +45,10 @@ values up large. For judging the form of a single part. Where census is numbers,
 **Colour belongs to the material.** The BASE SKIN MATERIAL is what the creature is made of before any part
 goes on — a colour (the skin box), a material and a density — and is not a part. Its card reads like a 3D
 program's material panel: a ball previewing the three together, the four materials as sample balls in the
-creature's own colour and density, the density as a stepped slider, then the colour. The body wears a material of
+creature's own colour and density, the density as a stepped slider, then the colour. MATERIALS holds every
+material the creature wears — the two the roll deals (the main and the body's) and any number added with **+**,
+each a name, a texture, a density and a colour of its own — and a part is put in any of them under PART →
+material. The body wears a material of
 its own: its colour (the cloth box) and its material, or the base skin's. Then a part at a time: open one and
 the deck shows only what it has — its form, the body's material, and for a part with no material of its own
 (the hair, the headgear) which of the creature's own colours it is painted from — plus the palette those

@@ -17,13 +17,28 @@ export const WEAR_DEFAULTS = {
 // The parts that wear a material, in the editor's order.
 export const WEARABLE = Object.keys(WEAR_DEFAULTS);
 
-// Which material a part wears — the hand's choice, or the drawing's own. null for a part that wears none.
-export function wearOf(spec, part) {
-  return (spec.wear && spec.wear[part]) || WEAR_DEFAULTS[part] || null;
+// Beyond the two the roll deals, a hand may add materials of its own in the editor: `spec.materials` is a map,
+// key → { name, texture, density, colour }, keyed m1, m2 … in the order they were added. A part wears one by its
+// key in `wear`, and the material carries its colour with it (colour belongs to the material). The generator
+// never writes any; a file carries them.
+export const extraOf = (spec, key) => (spec && spec.materials && key && spec.materials[key]) || null;
+
+// Every material the individual wears, in the editor's order: the main, the body's, then the hand's own.
+export function materialKeys(spec) {
+  return ["main", "body", ...Object.keys((spec && spec.materials) || {})];
 }
 
-// The drawing's side for a part — "body" for the body's material, "head" for the main. draw/body.js materialOf and
-// surfaceHand take the side; a part hands in its name and gets its side here
+// Which material a part wears — the hand's choice, or the drawing's own. null for a part that wears none. A key
+// that names nothing (a file from elsewhere) falls back to the drawing's own.
+export function wearOf(spec, part) {
+  const worn = spec.wear && spec.wear[part];
+  if (worn === "main" || worn === "body" || extraOf(spec, worn)) return worn;
+  return WEAR_DEFAULTS[part] || null;
+}
+
+// The drawing's side for a part — "body" for the body's material, "head" for the main, or the key of one of the
+// hand's own. draw/body.js materialOf and surfaceHand take the side; a part hands in its name and gets its side here
 export function sideOf(spec, part) {
-  return wearOf(spec, part) === "body" ? "body" : "head";
+  const worn = wearOf(spec, part);
+  return worn === "body" ? "body" : worn && worn !== "main" ? worn : "head";
 }

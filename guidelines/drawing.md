@@ -153,8 +153,8 @@ the body directly, everything else through `paintPart` in `draw/body.js`. A crea
 `bodyMaterial` slot, `same` on three quarters of them. A face and a torso are two surfaces (skin and cloth are already two colors),
 and one hand may well reach for a second tool between them. The head's side is the head, the ears and their insides, the horns, the
 hair, the hat, the muzzle, the nose and the face; the body's is the torso, the arms and hands, the sleeves, the legs and boots, and
-the tail with its ends. Which of the two a part takes is its **wear** (`vocabulary/wear.js`): the head's side the main and the body's
-side the body's by default, and the editor may put a part in the other (`spec.wear[part]`); a part hands its name to `paintPart` and
+the tail with its ends. Which a part takes is its **wear** (`vocabulary/wear.js`): the head's side the main and the body's
+side the body's by default, and the editor may put a part in the other, or in one of the hand's own materials — `spec.materials`, each a texture, a density and a colour that comes with it (`spec.wear[part]`); a part hands its name to `paintPart` and
 `sideOf` turns it into the side. `materialOf(spec, where)` in `draw/body.js` is the one place either is
 named. The density splits on the same line: the head's side draws at the `density` slot, the body's at `bodyDensity` unless that
 says `same` (`surfaceHand(spec, where)`, the one place a step is read). A skin, fur or cloth surface (the

@@ -8,6 +8,8 @@
 //
 // One region per part for now: a part is one colour. Parts that paint more than one thing (a hat with a band,
 // a sleeve and a hand) are inspected one at a time before they get a second region.
+import { wearOf, extraOf } from "./wear.js";
+
 export const PAINT_DEFAULTS = {
   head: "skin",
   ears: "skin",
@@ -24,9 +26,13 @@ export function paintKey(spec, part) {
   return (spec.paint && spec.paint[part]) || PAINT_DEFAULTS[part];
 }
 
-// The colour itself. A key the palette does not carry (a pop on an individual without one) falls back to the
-// part's default box, so a saved choice never paints with nothing.
+// The colour itself. A part in one of the hand's own materials takes that material's colour — colour belongs
+// to the material (wear.js) — unless the creature is a ghost, whose one pale tone is the palette's. Otherwise a
+// key the palette does not carry (a pop on an individual without one) falls back to the part's default box, so
+// a saved choice never paints with nothing.
 export function paintOf(spec, part) {
+  const extra = extraOf(spec, wearOf(spec, part));
+  if (extra && extra.colour && !(spec.parts && spec.parts.ghost && spec.parts.ghost !== "none")) return extra.colour;
   const key = paintKey(spec, part);
   const color = key === "pop" ? spec.palette.pop && spec.palette.pop.color : spec.palette[key];
   return color || spec.palette[PAINT_DEFAULTS[part]];

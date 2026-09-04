@@ -118,6 +118,12 @@ material (PART → the part → MATERIAL). A part hands its name to `paintPart` 
 `materialOf` and `surfaceHand` read (draw/body.js). A part not in `WEARABLE` — a mark, an object with a colour of
 its own, the flat whites of the eyes — wears nothing and is offered nothing.
 
+Beyond the two, a hand may add materials of its own in the editor (MATERIALS → +): `spec.materials` is a map,
+`m1`, `m2` … → `{ name, texture, density, colour }`, and a part wears one by its key in `wear`. Such a material
+carries its colour with it — a part in it is painted that colour, not from a box (paint.js paintOf, body.js
+paintPart) — and a ghost's one pale tone still wins. The generator never writes any; a file carries them, and a
+key that names nothing falls back to the drawing's own.
+
 ## Identity
 
 `identity` in `species.js`. The species invariants census checks.
