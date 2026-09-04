@@ -289,6 +289,7 @@ export function drawWhiskers(ink, spec, box) {
   }
 }
 
+const BROW_LENGTH = { short: 0.8, medium: 1, long: 1.25 };
 export function drawBrow(ink, spec, box, eyes, kindOverride) {
   const kind = kindOverride || spec.parts.brow;
   if (kind === "none") return;
@@ -298,7 +299,12 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
     if (patched(spec, eye)) continue;
     // Brows go above the eyes, but inside the head — on a big eye like a cyclops, 1.9× up is outside the head (on the paper) and it disappears
     const y = Math.min(eye.y + eye.r * (eye.side === 0 ? 1.35 : 1.9), box.headCy + box.headRy * 0.84);
-    const half = Math.max(eye.r * 1.15, 0.022);   // even on a small eye a brow is at least brow-length
+    // The brow's length is its own slot — short · medium · long of the eye (medium is what every brow was) — and
+    // on a small eye a brow is at least brow-length. However long, the two never meet: a pair is capped short
+    // of the midline between the eyes, so a wide brow on close-set eyes does not read as one brow
+    const k = BROW_LENGTH[spec.parts.browLength] || 1;
+    let half = Math.max(eye.r * 1.15 * k, 0.022);
+    if (eyes.length === 2) half = Math.max(Math.min(half, Math.abs(eyes[1].x - eyes[0].x) / 2 - eye.r * 0.12), eye.r * 0.4);
     let left = y;
     let right = y;
     if (kind === "angry") {

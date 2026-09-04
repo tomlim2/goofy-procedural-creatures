@@ -438,12 +438,33 @@ function renderMaterials() {
 // (NORMAL, then GHOST), not in the part list.
 const STATE_SLOT = "ghost";
 const stateName = (value) => (value === "none" ? "NORMAL" : "GHOST");
-const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT);
+// **A part's properties.** The numbers that shape a part (its proportions) and the slots that are not a form
+// but a measure or a manner of it — a length, a build, a position, a pattern — live under the part, in its
+// PROPERTY tab, not in a card of their own and not as parts on the tab strip. `r` is a proportion slider,
+// `sl` a slot: a segmented row up to four values, a dropdown past that. The hand (the wobble) stays its own card
+const r = (key, label) => ({ key, kind: "range", label });
+const sl = (key, label) => ({ key, kind: "slot", label });
+const PROPERTIES = {
+  head: [r("headScale", "size"), r("headWide", "width"), r("headLumps", "lumps"), r("headLump", "lump")],
+  eyes: [r("eyeSize", "size"), r("eyeGap", "gap"), r("eyeHeight", "height"), r("eyeSizeSkew", "size skew"), r("eyeHeightSkew", "height skew")],
+  brow: [sl("browLength", "length")],
+  nose: [r("noseDrop", "drop")],
+  mouth: [sl("mouthPos", "position"), sl("mouthSize", "size"), r("mouthDrop", "drop")],
+  body: [sl("build", "build"), sl("pattern", "pattern"), r("bodyScale", "scale"), r("bodyWide", "width"), r("bodyLen", "length")],
+  arms: [sl("armLength", "length"), r("armSpread", "spread")],
+  legs: [sl("legLength", "length"), r("legLength", "stretch")],
+  tail: [sl("tailLength", "length"), sl("tailSkin", "skin"), sl("tailDeco", "deco"), r("tailLift", "lift")]
+};
+// The slots that are a property of a part, and so leave the tab strip
+const PROPERTY_SLOTS = Object.values(PROPERTIES).flat().filter((p) => p.kind === "slot").map((p) => p.key);
+const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT && !PROPERTY_SLOTS.includes(slot));
 let part = PART_SLOTS[0];
 const tabs = {};        // part → { item, canvas } — the icon tabs down the left
 let formsBox = null;    // where the open part's preview grid stands
-let mode = "shape";     // under the open part: shape (its forms) or material (which of the creature's materials it wears)
+let mode = "shape";     // under the open part: shape (its forms), material (which of the creature's materials it wears) or property
 const modeTabs = {};    // mode → the tab button
+let propBox = null;     // the PROPERTY panel: the open part's sliders and slot rows
+const propPanels = {};  // part → { box, sync } — built once per part, synced on render (a slider rebuilt mid-drag loses the drag)
 let wearBox = null;     // the MATERIAL panel: the creature's materials as cards, the one this part wears framed
 let wearStrip = null;   // the cards — + first, then one per material — rebuilt on render, since a hand adds materials
 let wearNote = null;    // for a part that wears none
@@ -515,8 +536,8 @@ function buildParts() {
   const modes = document.createElement("div");
   modes.className = "tabs modes";
   modes.setAttribute("role", "tablist");
-  modes.setAttribute("aria-label", "Shape or material");
-  for (const name of ["shape", "material"]) {
+  modes.setAttribute("aria-label", "Shape, material or property");
+  for (const name of ["shape", "material", "property"]) {
     const tab = document.createElement("button");
     tab.type = "button";
     tab.className = "tab mode";
@@ -544,8 +565,70 @@ function buildParts() {
   wearNote.className = "readout";
   wearBox.appendChild(wearNote);
   panel.appendChild(wearBox);
+  // PROPERTY — the part's own numbers and measures (PROPERTIES); the panel for the open part stands here
+  propBox = document.createElement("div");
+  propBox.className = "props fields";
+  panel.appendChild(propBox);
   card.appendChild(panel);
   partsBox.appendChild(card);
+}
+
+// The PROPERTY panel of one part, built once: a slider per proportion (PROPORTION_RANGE), and per slot a
+// segmented row of its values, or a dropdown when there are more than four. `sync` puts the spec's values in
+function propPanelOf(name) {
+  if (propPanels[name]) return propPanels[name];
+  const box = document.createElement("div");
+  box.className = "fields";
+  const syncs = [];
+  for (const prop of PROPERTIES[name] || []) {
+    const row = prop.kind === "range" ? field(box, prop.label) : fieldRow(box, prop.label);
+    if (prop.kind === "range") {
+      const [min, max] = PROPORTION_RANGE[prop.key];
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = String(min);
+      slider.max = String(max);
+      slider.step = prop.key === "headLumps" ? "1" : max - min <= 0.4 ? "0.005" : "0.01";
+      slider.setAttribute("aria-label", `${name} ${prop.label}`);
+      slider.addEventListener("input", () => {
+        spec = { ...spec, proportions: { ...spec.proportions, [prop.key]: Number(slider.value) } };
+        render();
+      });
+      row.appendChild(slider);
+      const readout = document.createElement("output");
+      readout.className = "readout";
+      row.appendChild(readout);
+      syncs.push(() => {
+        slider.value = String(spec.proportions[prop.key]);
+        readout.textContent = Number(spec.proportions[prop.key]).toFixed(prop.key === "headLumps" ? 0 : 2);
+      });
+    } else if (SLOTS[prop.key].length <= 4) {
+      const seg = document.createElement("div");
+      seg.className = "seg";
+      seg.setAttribute("role", "group");
+      seg.setAttribute("aria-label", `${name} ${prop.label}`);
+      const buttons = {};
+      for (const value of SLOTS[prop.key]) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = value;
+        b.addEventListener("click", () => { spec = derive({ ...spec, parts: { ...spec.parts, [prop.key]: value } }); render(); });
+        seg.appendChild(b);
+        buttons[value] = b;
+      }
+      row.appendChild(seg);
+      syncs.push(() => { for (const value of Object.keys(buttons)) buttons[value].classList.toggle("on", value === spec.parts[prop.key]); });
+    } else {
+      const select = document.createElement("select");
+      select.setAttribute("aria-label", `${name} ${prop.label}`);
+      for (const value of SLOTS[prop.key]) addOption(select, value, value);
+      select.addEventListener("change", () => { spec = derive({ ...spec, parts: { ...spec.parts, [prop.key]: select.value } }); render(); });
+      row.appendChild(select);
+      syncs.push(() => { select.value = spec.parts[prop.key]; });
+    }
+  }
+  propPanels[name] = { box, sync: () => { for (const f of syncs) f(); } };
+  return propPanels[name];
 }
 
 // **The legend is painted once, ahead, and kept.** One queue of paint jobs, one build per frame, so the deck never
@@ -682,10 +765,20 @@ function renderPartBody() {
   }
   for (const value of SLOTS[part]) grid.forms[value].item.classList.toggle("on", value === spec.parts[part]);
 
-  // SHAPE or MATERIAL under the part
+  // SHAPE, MATERIAL or PROPERTY under the part. A part with no properties has the tab greyed, and a mode it
+  // cannot show falls back to its shape
+  const hasProps = !!PROPERTIES[part];
+  modeTabs.property.disabled = !hasProps;
+  if (mode === "property" && !hasProps) mode = "shape";
   for (const name of Object.keys(modeTabs)) modeTabs[name].classList.toggle("on", name === mode);
   formsBox.hidden = mode !== "shape";
   wearBox.hidden = mode !== "material";
+  propBox.hidden = mode !== "property";
+  if (mode === "property") {
+    const panel = propPanelOf(part);
+    if (propBox.firstChild !== panel.box) propBox.replaceChildren(panel.box);
+    panel.sync();
+  }
   if (mode === "material") {
     // One row per region of the part — an eye is a pupil and a white, each in a material of its own; most
     // parts are one surface and get one unnamed row
@@ -770,9 +863,11 @@ function paletteRow(parent, key, label = key) {
   return row;
 }
 
+// The HAND card — the wobble (how much every stroke shakes) beside the WOBBLE button that rolls the hand. Every
+// other proportion is a property of its part, under the part
 function buildProportions() {
   proportionsBox.innerHTML = "";
-  for (const key of Object.keys(PROPORTION_RANGE)) {
+  for (const key of ["wobble"]) {
     const [min, max] = PROPORTION_RANGE[key];
     const row = field(proportionsBox, key);
     const slider = document.createElement("input");

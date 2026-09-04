@@ -116,13 +116,17 @@ export const SLOTS = {
   // darker or lighter than the head. It splits along the same line as `bodyMaterial` (the head's side and the body's —
   // draw/body.js surfaceHand) and is independent of it: a graphite head and a graphite body can still sit two steps apart.
   // A late slot, the last one — it costs one draw at the very end and nothing before it moves
-  bodyDensity: ["same", "black", "hatch", "scribble", "stipple", "light"]
+  bodyDensity: ["same", "black", "hatch", "scribble", "stipple", "light"],
+  // The brow's length — its own axis, like a limb's: short · medium · long of the eye it sits over (medium is what every
+  // brow was before the slot existed). A late slot, so nothing rolled before it moves; the two brows never meet whatever
+  // the length (face.js drawBrow)
+  browLength: ["short", "medium", "long"]
 };
 
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing rolls keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -161,6 +165,7 @@ export const DEFAULT_BIAS = {
   density: [["black", 1], ["hatch", 1], ["scribble", 1], ["stipple", 1], ["light", 1]],
   // One pressure through on most of the board, like the tool (bodyMaterial); a body at its own step is about one in five
   bodyDensity: [["same", 10], ["black", 0.5], ["hatch", 0.5], ["scribble", 0.5], ["stipple", 0.5], ["light", 0.5]],
+  browLength: [["short", 1], ["medium", 2], ["long", 1]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],

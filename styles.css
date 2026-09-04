@@ -378,6 +378,11 @@ body.how { height: auto; }
    a hand adds materials and the rows fold with no gap left at the right; under a part the + is the first card */
 .wear > .strip { display: grid; gap: 4px; padding: 0; }
 .wear .strip .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 4px; padding: 2px; }
+/* PROPERTY under a part — a slider or a row of values per property; a part with none has the tab greyed */
+.props { padding: 6px 4px 2px; }
+.props .field .seg button { padding: 4px 2px; font-size: 11px; letter-spacing: 0.02em; }
+.tab.mode[disabled] { opacity: 0.35; cursor: default; }
+.tab.mode[disabled]:hover { background: transparent; }
 /* A part with more than one surface names each row — an eye's pupil, then its white */
 .wear .regionName { font-size: 10px; letter-spacing: 0.18em; color: rgba(43, 39, 36, 0.55); font-weight: 600; margin-top: 4px; }
 /* MATERIALS' previews run in one row and scroll sideways, the way the part tabs do — the card being edited is

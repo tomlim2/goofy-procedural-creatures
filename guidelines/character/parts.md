@@ -81,6 +81,15 @@ if only one side is smaller or higher it reads as a mistake rather than "a small
 none / flat / angry (inner end down) / worry (inner end up). **Subject to state switching** — rest and alt are both baked and
 the clock toggles them. The alt table: none→flat, flat→worry, angry→flat, worry→flat.
 
+
+### browLength — the brow's length (3)
+
+A late slot (the last), so nothing rolled before it moves. **short · medium · long** — 0.8 · 1 · 1.25 of the
+eye it sits over (medium is exactly the length every brow had before the slot). Whatever the length, a pair
+never meets: each brow is capped short of the midline between the eyes, so a long brow on close-set eyes does
+not read as one brow. In the editor it is the brow's first property (PART → brow → property), not a part of
+its own.
+
 ### eyewear (5)
 none / glasses (two circles plus arms, the lens radius = the eye × 1.45) / goggles (big circles plus a strap round the head, × 1.75) / patch (a patch over one eye plus a diagonal strap) / monocle (one big circle plus a cord).
 Glasses and goggles are **dropped when the two lenses overlap** (an individual whose eyes are close — they are never forced smaller to fit, `makeCreature` sets none once the proportions are settled).

@@ -50,8 +50,9 @@ as cards in a row, a ball previewing the selected one's colour, texture and dens
 sample balls in that colour and density, the density as a stepped slider, then the colour. A part is put in
 any of them under PART → material — the pupils in a blue of their own and the whites in a yellow, the hair hatched while the skin is oil —
 where **+** makes a new one for that part (a copy of what it had on, worn at once) and MATERIALS opens it for
-editing. Then a part at a time: open one and the deck shows its forms and its material, plus the
-proportions. The palette is one set of every colour the vocabulary knows, and every key — the base, a cloth, a
+editing. Then a part at a time: open one and the deck shows its forms, its material, and its properties — the
+sizes, lengths, positions and manners that are its own (a head's lumps, an eye's gap, a brow's length, a
+leg's length, a tail's skin); the HAND card is the wobble alone. The palette is one set of every colour the vocabulary knows, and every key — the base, a cloth, a
 hair, the ink — picks from all of it; the generator's per-key pools are the board's odds, not this screen's
 limits. A species' forbidden values and the constraint pass
 are reported under NOTES and **not** applied, so it can make creatures the board never will — which is also why
