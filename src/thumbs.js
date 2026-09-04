@@ -81,6 +81,15 @@ const NODES_OF = {
   tail: { tail: true }, tailSkin: { tail: true }, tailLength: { tail: true }, tailDeco: { tail: true }
 };
 
+// The world bounds of what is visible — the part alone, once isolated. null when nothing is drawn (a value of none)
+const box = new THREE.Box3();
+function visibleBounds(root) {
+  root.updateMatrixWorld(true);
+  box.makeEmpty();
+  root.traverseVisible((o) => { if (o.isMesh && o.geometry) box.expandByObject(o); });
+  return box.isEmpty() ? null : box;
+}
+
 // Shows the part's nodes and nothing else. A part not listed shows the whole creature
 function isolate(item, part) {
   const want = NODES_OF[part];
@@ -108,7 +117,13 @@ export function paintParts(views, spec) {
   scene.add(item.group);
   for (const v of views) {
     isolate(item, v.part);
-    const { cx, cy, half } = frameOf(spec, v.part);
+    // Framed on the part's own bounds, square, with a margin — a brow fills its thumbnail instead of lying as a thin
+    // line in a face-sized frame, and its line comes out heavier with it. The region frame is the fallback for a value
+    // that draws nothing
+    const b = visibleBounds(item.group);
+    const { cx, cy, half } = b
+      ? { cx: (b.min.x + b.max.x) / 2, cy: (b.min.y + b.max.y) / 2, half: Math.max(b.max.x - b.min.x, b.max.y - b.min.y, 0.05) * 0.58 }
+      : frameOf(spec, v.part);
     camera.left = cx - half;
     camera.right = cx + half;
     camera.top = cy + half;

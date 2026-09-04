@@ -304,32 +304,55 @@ body.how { height: auto; }
 /* One column that can never grow past the deck (minmax(0, 1fr)): a card's minimum width used to widen the track and push
    every card's right edge under the scrollbar. The cards fit the column; what does not fit a card wraps or clips inside it */
 .editor .deck { width: 244px; max-height: calc(100vh - 76px); overflow-y: scroll; overflow-x: hidden; scrollbar-gutter: stable; padding-right: 2px; grid-template-columns: minmax(0, 1fr); }
-/* The editor's scrollbars are always there — the deck's and the part strip's. The platform's overlay bar came and went with
-   the hand, and a bar that appears is a thing that moved. A drawn bar (::-webkit-scrollbar) is never an overlay, so it stays;
-   the gutter is reserved (overflow-y: scroll, scrollbar-gutter) so nothing shifts when a card grows past the fold either.
+/* The editor's one scrollbar, the deck's, is always there. The platform's overlay bar came and went with the hand, and a
+   bar that appears is a thing that moved. A drawn bar (::-webkit-scrollbar) is never an overlay, so it stays; the gutter is
+   reserved (overflow-y: scroll, scrollbar-gutter) so nothing shifts when a card grows past the fold either.
    No scrollbar-width / scrollbar-color here: in Chromium the standard properties win over ::-webkit-scrollbar and keep the
    bar an overlay, which is the bar that comes and goes */
-.editor .deck::-webkit-scrollbar, .editor .tabs::-webkit-scrollbar { width: 7px; }
-.editor .deck::-webkit-scrollbar-track, .editor .tabs::-webkit-scrollbar-track { background: transparent; }
-.editor .deck::-webkit-scrollbar-thumb, .editor .tabs::-webkit-scrollbar-thumb { background: rgba(43, 39, 36, 0.28); border-radius: 4px; border: 1px solid transparent; background-clip: padding-box; }
-.editor .deck::-webkit-scrollbar-thumb:hover, .editor .tabs::-webkit-scrollbar-thumb:hover { background: rgba(43, 39, 36, 0.45); background-clip: padding-box; }
+.editor .deck::-webkit-scrollbar { width: 7px; }
+.editor .deck::-webkit-scrollbar-track { background: transparent; }
+.editor .deck::-webkit-scrollbar-thumb { background: rgba(43, 39, 36, 0.28); border-radius: 4px; border: 1px solid transparent; background-clip: padding-box; }
+.editor .deck::-webkit-scrollbar-thumb:hover { background: rgba(43, 39, 36, 0.45); background-clip: padding-box; }
 .editor summary { cursor: pointer; list-style: none; }
 .editor summary::-webkit-details-marker { display: none; }
 .editor summary h2 { display: inline; }
 .editor summary::after { content: " +"; opacity: 0.45; }
 .editor details[open] summary::after { content: " –"; }
 .fields { display: grid; gap: 4px; margin-top: 6px; }
-/* The PART card — icon tabs down the left (this creature cropped to each part, thumbs.js), the open part's form previews as a
-   grid on the right (the creature drawn with each value), the current tab and the current form framed as cards */
-.partCard { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px; align-items: start; }
-.tabs { display: flex; flex-direction: column; gap: 2px; max-height: 340px; overflow-y: scroll; scrollbar-gutter: stable; padding-right: 2px; }
-.tab, .form { display: grid; justify-items: center; gap: 1px; padding: 3px 2px 2px; min-width: 0; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; font-size: 8px; letter-spacing: 0.04em; line-height: 1.2; }
+/* The PART card, the way a browser holds its tabs: a darker strip across the top with the part tabs in one row (each
+   part alone, thumbs.js), the open tab a lighter shape with rounded top corners that is one piece with the panel under it —
+   no line between — and the others flat on the strip. The panel holds the open part's form previews (each value alone),
+   the current one framed. The strip scrolls sideways by trackpad and by opening a part; like a browser's it shows no bar */
+.partCard { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; align-items: start; }
+.tabs { display: flex; flex-wrap: nowrap; gap: 1px; overflow-x: scroll; overflow-y: hidden; padding: 4px 4px 0; background: rgba(43, 39, 36, 0.08); border-radius: 5px 5px 0 0; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: 0 0 40px; width: 40px; border-radius: 5px 5px 0 0; }
+/* Under the open part, two more tabs — SHAPE and MATERIAL — the same kind of strip, text only, on the part's panel.
+   The panel shows the part's form previews (and its paint row), or the creature's materials as cards to pick the
+   part's from (spec.wear) — a picker, not the MATERIALS panel; that stays in its own card */
+.modes { background: rgba(43, 39, 36, 0.045); border-radius: 0; padding-top: 3px; }
+.modes .mode { flex: 0 0 auto; width: auto; padding: 4px 12px 3px; font-size: 10px; letter-spacing: 0.14em; }
+.modes .mode.on { font-weight: 700; }
+.modePanel { background: #f8f3e8; border-radius: 0 0 5px 5px; padding: 6px 4px 4px; display: grid; gap: 6px; }
+.modePanel > [hidden] { display: none; }   /* the display rules on the panel's children would otherwise beat the hidden attribute */
+.wear .strip { gap: 8px; }
+.wear .pv { padding: 4px 8px 3px; }
+.wear .ball.preview { width: 48px; height: 48px; }
+.wear .pv[hidden] { display: none; }
+.formsSlot { background: transparent; padding: 0; }
+.tab, .form { display: grid; justify-items: center; gap: 1px; padding: 4px 2px 3px; min-width: 0; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; font-size: 8px; letter-spacing: 0.04em; line-height: 1.2; }
+.tab { border: 0; padding-bottom: 4px; }
 .tab span, .form span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.6; }
-.tab:hover, .form:hover { background: rgba(43, 39, 36, 0.06); }
-.tab.on, .form.on { border-color: var(--ink); background: #f8f3e8; color: inherit; }
+.tab:hover { background: rgba(43, 39, 36, 0.06); }
+.form:hover { background: rgba(43, 39, 36, 0.06); }
+/* the panel's ground — the tab and the panel read as one piece. `color: inherit` on purpose: the generic button.on rule
+   turns text paper-coloured, which on a paper-coloured tab made the open tab's name vanish */
+.tab.on { background: #f8f3e8; color: inherit; }
+.form.on { border-color: var(--ink); background: #f2ecdf; color: inherit; }
 .tab.on span, .form.on span { opacity: 1; font-weight: 700; }
 .tab canvas, .form canvas { display: block; }
-.forms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+.tab[hidden], .form[hidden] { display: none; }   /* the display rule above would otherwise beat the hidden attribute — a tail tab on a human stayed as an empty slot */
+.forms { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
 .form { font-size: 9px; }
 
 /* The state dropdown (NORMAL · GHOST) sits under the species one in the same card */
@@ -349,17 +372,17 @@ body.how { height: auto; }
 /* Material balls (src/balls.js) — a 3D program's shader ball. The preview is colour, material and density
    together; a sample is one material in the creature's own colour and density, ringed when it is the one. */
 .field canvas.preview { display: block; width: 72px; height: 72px; }
-/* MATERIALS' previews — one card per surface the creature wears (main, the body): the ball and its name together, the card
-   itself the button. The one being edited is framed as a card; the others sit bare on the panel */
+/* A material card — the ball and its name together, the card itself the button: MATERIALS' previews (the one being edited
+   framed) and, under a part, the picker of what the part wears (the one it wears framed). The others sit bare on the panel */
 .previews .strip { gap: 6px; }
-.previews .pv { display: grid; justify-items: center; gap: 2px; padding: 6px 10px 4px; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; }
-.previews .pv:hover { background: rgba(43, 39, 36, 0.06); }
-.previews .pv.on { border-color: var(--ink); background: #f8f3e8; color: inherit; box-shadow: 0 1px 6px rgba(43, 39, 36, 0.12); }
-.previews .ball.preview { width: 72px; height: 72px; border-radius: 50%; }
-.previews .ball.preview canvas { display: block; }
+.pv { display: grid; justify-items: center; gap: 2px; padding: 6px 10px 4px; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; }
+.pv:hover { background: rgba(43, 39, 36, 0.06); }
+.pv.on { border-color: var(--ink); background: #f8f3e8; color: inherit; box-shadow: 0 1px 6px rgba(43, 39, 36, 0.12); }
+.ball.preview { width: 72px; height: 72px; border-radius: 50%; }
+.ball.preview canvas { display: block; }
 /* The material's name under its ball — main, then mat1, mat2 … the one being edited at full ink */
-.previews .cap { font-size: 10px; letter-spacing: 0.14em; opacity: 0.5; }
-.previews .pv.on .cap { opacity: 1; font-weight: 700; }
+.cap { font-size: 10px; letter-spacing: 0.14em; opacity: 0.5; }
+.pv.on .cap { opacity: 1; font-weight: 700; }
 /* A section of the card — three lines: its name, what is applied (on a line of its own), the control */
 .sect { display: grid; margin-top: 8px; font-size: 10px; letter-spacing: 0.18em; color: rgba(43, 39, 36, 0.55); font-weight: 600; }
 .sect .val { font-size: 12px; letter-spacing: 0.04em; font-weight: 400; color: var(--ink); opacity: 0.8; font-variant-numeric: tabular-nums; }

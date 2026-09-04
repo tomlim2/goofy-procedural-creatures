@@ -21,6 +21,7 @@ import {
   deriveSpec, readCreature, creatureJson, isHouse,
   SLOTS, SPECIES, PAINTABLE, paintKey
 } from "./character/index.js";
+import { WEARABLE, wearOf } from "./character/vocabulary/wear.js";
 import { PALETTE } from "./character/vocabulary/palette.js";
 import { bindSeg, addOption, randomRoll, runLoop, download } from "./ui.js";
 import { paintBall } from "./balls.js";
@@ -193,21 +194,24 @@ const SURFACES = ["base", "body"];
 // What a preview is called under its ball. The first is the main material; every material after it is numbered
 // mat1, mat2 … until it is given a name (a spec carries none yet — `materialNames[side]` is where one would go)
 const captionOf = (side, i) => (side === "base" ? "main" : (spec.materialNames && spec.materialNames[side]) || `mat${i}`);
-// Which parts wear which surface (drawing.md § what takes the goofy material) — the head side and the body
-// side. Listed only when the creature has the part (a slot at none, a quad's arms, a tailless biped's tail)
-const SURFACE_PARTS = { base: ["head", "ears", "horns", "hair", "headgear", "nose"], body: ["body", "arms", "legs", "tail"] };
+// The surface's key in the wear map (vocabulary/wear.js): the main material is "main", the body's "body"
+const WEAR_KEY = { base: "main", body: "body" };
 let surface = "base";
 const mat = { previews: {}, sect: {}, strips: {}, density: null, colourRows: {} };
 
-function presentParts(side) {
+// Is this part on the creature at all — a slot at none, a quad's arms, a tailless biped's tail are not
+function present(slot) {
   const identity = (SPECIES.find((s) => s.name === spec.species) || {}).identity || {};
   const quad = identity.skeleton === "quad";
-  return SURFACE_PARTS[side].filter((slot) => {
-    if (slot === "arms") return !quad && spec.parts.arms !== "none";
-    if (slot === "tail") return identity.tail === true;
-    if (slot === "legs" || slot === "body" || slot === "head") return true;
-    return spec.parts[slot] !== undefined && spec.parts[slot] !== "none";
-  });
+  if (slot === "arms") return !quad && spec.parts.arms !== "none";
+  if (slot === "tail") return identity.tail === true;
+  if (slot === "legs" || slot === "body" || slot === "head") return true;
+  return spec.parts[slot] !== undefined && spec.parts[slot] !== "none";
+}
+// The parts that wear this surface (wear.js — the drawing's side by default, the hand's choice when it put a
+// part in the other material), of those the creature has
+function presentParts(side) {
+  return WEARABLE.filter((slot) => wearOf(spec, slot) === WEAR_KEY[side] && present(slot));
 }
 
 // A section of the card, three lines: its name, what is applied (a line of its own), then the control
@@ -349,6 +353,11 @@ const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(
 let part = PART_SLOTS[0];
 const tabs = {};        // part → { item, canvas } — the icon tabs down the left
 let formsBox = null;    // where the open part's preview grid stands
+let mode = "shape";     // under the open part: shape (its forms) or material (which of the creature's materials it wears)
+const modeTabs = {};    // mode → the tab button
+let wearBox = null;     // the MATERIAL panel: the creature's materials as cards, the one this part wears framed
+const wearCards = {};   // "main" / "body" → { item, canvas, cap }
+let wearNote = null;    // for a part that wears none
 const grids = {};       // `${species}/${part}` → { box, forms: value → { item, canvas } } — each grid built and painted once, kept
 let gridKey = null;     // the grid standing in formsBox
 const tabImages = {};   // species → slot → an offscreen canvas of the painted icon — painted once, blitted back on return
@@ -365,7 +374,7 @@ function partApplies(slot, name) {
   return true;
 }
 const TAB_SIZE = 34;    // CSS pixels — the icon on a part tab
-const FORM_SIZE = 44;   // CSS pixels — a form preview: three to a row inside the card, with the strip beside them
+const FORM_SIZE = 44;   // CSS pixels — a form preview: four to a row under the tabs
 
 // **The part is picked by its picture, and the pictures are a legend.** A tab per part down the left, each an icon
 // of the part, and the open part's forms as a grid of previews, each one value drawn, the current one framed. The
@@ -415,11 +424,28 @@ function buildParts() {
     tabs[slot] = { item, canvas };
   }
   card.appendChild(strip);
+  // Under the part: SHAPE — its forms and, for a painted part, its paint — or MATERIAL — which of the creature's
+  // materials it wears. The same kind of strip, and one panel that shows one of them
+  const modes = document.createElement("div");
+  modes.className = "tabs modes";
+  modes.setAttribute("role", "tablist");
+  modes.setAttribute("aria-label", "Shape or material");
+  for (const name of ["shape", "material"]) {
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = "tab mode";
+    tab.setAttribute("role", "tab");
+    tab.textContent = name;
+    tab.addEventListener("click", () => { mode = name; renderPart(); });
+    modes.appendChild(tab);
+    modeTabs[name] = tab;
+  }
+  card.appendChild(modes);
+  const panel = document.createElement("div");
+  panel.className = "modePanel";
   formsBox = document.createElement("div");   // the open part's grid stands here; the grids themselves are kept (gridOf)
   formsBox.className = "formsSlot";
-  card.appendChild(formsBox);
-  partsBox.appendChild(card);
-
+  panel.appendChild(formsBox);
   paintRow = document.createElement("div");
   paintRow.className = "field swatches";
   const name = document.createElement("span");
@@ -428,7 +454,41 @@ function buildParts() {
   paintStrip = document.createElement("div");
   paintStrip.className = "strip";
   paintRow.appendChild(paintStrip);
-  partsBox.appendChild(paintRow);
+  panel.appendChild(paintRow);
+  // MATERIAL — the creature's materials, as the cards MATERIALS shows, here only to be picked from: the part's
+  // material is whichever is framed, and a click puts the part in the other (spec.wear). Editing a material is
+  // MATERIALS' business, in one place
+  wearBox = document.createElement("div");
+  wearBox.className = "wear";
+  const cards = document.createElement("div");
+  cards.className = "strip";
+  for (const key of ["main", "body"]) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "pv";
+    item.setAttribute("aria-label", `${key === "main" ? "the main material" : "the body's material"}`);
+    item.addEventListener("click", () => {
+      spec = derive({ ...spec, wear: { ...(spec.wear || {}), [part]: key } });
+      render();
+    });
+    const ball = document.createElement("div");
+    ball.className = "ball preview";
+    const canvas = document.createElement("canvas");
+    ball.appendChild(canvas);
+    item.appendChild(ball);
+    const cap = document.createElement("span");
+    cap.className = "cap";
+    item.appendChild(cap);
+    cards.appendChild(item);
+    wearCards[key] = { item, canvas, cap };
+  }
+  wearBox.appendChild(cards);
+  wearNote = document.createElement("output");
+  wearNote.className = "readout";
+  wearBox.appendChild(wearNote);
+  panel.appendChild(wearBox);
+  card.appendChild(panel);
+  partsBox.appendChild(card);
 }
 
 // **The legend is painted once, ahead, and kept.** One queue of paint jobs, one build per frame, so the deck never
@@ -527,7 +587,7 @@ function renderPart() {
   for (const slot of PART_SLOTS) tabs[slot].item.hidden = !partApplies(slot, spec.species);
   if (!partApplies(part, spec.species)) part = PART_SLOTS[0];   // the open part left with the species — back to the head
   for (const slot of PART_SLOTS) tabs[slot].item.classList.toggle("on", slot === part);
-  tabs[part].item.scrollIntoView({ block: "nearest" });   // the strip scrolls; the open tab stays in its window
+  tabs[part].item.scrollIntoView({ block: "nearest", inline: "nearest" });   // the strip scrolls sideways; the open tab stays in view
   const key = `${spec.species}/${part}`;
   const grid = gridOf(spec.species, part);
   if (thumbSpecies !== spec.species) {   // a new species is a new legend — or one kept from before
@@ -543,8 +603,28 @@ function renderPart() {
   }
   for (const value of SLOTS[part]) grid.forms[value].item.classList.toggle("on", value === spec.parts[part]);
 
+  // SHAPE or MATERIAL under the part
+  for (const name of Object.keys(modeTabs)) modeTabs[name].classList.toggle("on", name === mode);
+  formsBox.hidden = mode !== "shape";
+  wearBox.hidden = mode !== "material";
+  if (mode === "material") {
+    const wears = wearOf(spec, part);
+    const { material, density } = spec.parts;
+    const bodyMaterial = spec.parts.bodyMaterial && spec.parts.bodyMaterial !== "same" ? spec.parts.bodyMaterial : material;
+    const bodyDensity = spec.parts.bodyDensity && spec.parts.bodyDensity !== "same" ? spec.parts.bodyDensity : density;
+    paintBall(wearCards.main.canvas, { color: spec.palette0.skin, material, density, phase: 0, size: 48 });
+    paintBall(wearCards.body.canvas, { color: spec.palette0.cloth, material: bodyMaterial, density: bodyDensity, phase: 40, size: 48 });
+    wearCards.main.cap.textContent = captionOf("base", 0);
+    wearCards.body.cap.textContent = captionOf("body", 1);
+    for (const key of Object.keys(wearCards)) {
+      wearCards[key].item.classList.toggle("on", key === wears);
+      wearCards[key].item.hidden = !wears;
+    }
+    wearNote.textContent = wears ? "" : `${part} wears no material — a mark, an object with a colour of its own, or flat by rule`;
+  }
+
   const paintable = PAINTED.includes(part);
-  paintRow.hidden = !paintable;
+  paintRow.hidden = mode !== "shape" || !paintable;
   paintStrip.innerHTML = "";
   if (!paintable) return;
   const current = paintKey(spec, part);
