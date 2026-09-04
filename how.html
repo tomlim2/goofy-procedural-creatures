@@ -148,17 +148,23 @@ material</b>: it is something on the animal, not part of the surface, and under 
 hands over the path and the colour (<code>fills.paint(path, "FLAT", { color, offset })</code>); it never picks a technique, and
 every tone the texture adds is a shade of the part's colour.</p>
 
-<p>A creature has <b>one</b>, its <code>material</code> slot — GRAPHITE, CHARCOAL, OIL or INK — and it
-fills everything the creature fills. FLAT, the fill-up with nothing laid on it, is not one of them: it is what the whites of the eyes
-are filled with, not something a creature is made of. Or <b>two</b>: <code>bodyMaterial</code> gives the body one of its own on about a quarter of
-them — a face and a torso are two surfaces, and one hand may reach for a second tool between them. The head's side is the head, the
-ears, the horns, the hair, the hat, the muzzle and the face; the body's is the torso, the arms and hands, the sleeves, the legs and
-boots, and the tail. The <b>density</b> is not split: one hand, one pressure, whichever tool it holds. <b>pattern</b> rides along
-too.</p>
+<p><b>A material is three things</b>, and the editor's MATERIALS card lays them out in that order. A <b>texture</b> — which of the
+five techniques fills the area: GRAPHITE, CHARCOAL, OIL, INK or WATERCOLOUR (the <code>material</code> slot). A <b>density</b> — which of the five
+value steps it is laid at, low to high (the <code>density</code> slot). A <b>colour</b> — the box the surface is painted from. FLAT,
+the fill-up with nothing laid on it, is not a texture a creature can be made of: it is what the whites of the eyes are filled with.</p>
 
-<p>Every entry in <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/materials.js"><code>GOOFY_MATERIALS</code></a>
-gets a row of shader balls — the same ball at the five <b>value</b> steps, <b>black · hatch · scribble · stipple · light</b>, named
-for the way graphite makes each. <b>A step is in the colour first and the marks second</b>: it pulls the base toward the
+<p>A creature wears <b>two</b> materials. The <b>main</b> one covers the head's side — the head, the ears, the horns, the hair, the
+hat, the muzzle and the face — in the skin box's colour. The <b>body's</b> covers the torso, the arms and hands, the sleeves, the
+legs and boots, and the tail, in the cloth box's colour, with a texture and a density of its own (<code>bodyMaterial</code>,
+<code>bodyDensity</code>). A face and a torso are two surfaces, and one hand may reach for a second tool, or press differently,
+between them: the roll hands the body the main's texture on three creatures in four and the main's density on four in five, and
+its own on the rest. <b>pattern</b> rides along too.</p>
+
+<h3>the five textures, at the five densities</h3>
+
+<p>Every texture in <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/materials.js"><code>GOOFY_MATERIALS</code></a>
+gets a row of shader balls — the same ball at the five <b>density</b> steps, <b>light · stipple · scribble · hatch · black</b> from
+low to high, named for the way graphite makes each. <b>A step is in the colour first and the marks second</b>: it pulls the base toward the
 technique's own tone and lays the marks on top, because a mark fine enough to be pretty up close falls under a device pixel on a
 board. The step is the creature's <b>density</b> slot — one of the five, picked by the roll, so every step turns up on every
 species; the colour decides the marks' tone, the step how many.</p>

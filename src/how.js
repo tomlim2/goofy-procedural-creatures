@@ -229,7 +229,7 @@ IN_USE.forEach(({ key, label, box, draw }) => {
 });
 
 // Shader balls — one row per entry of GOOFY_MATERIALS, like a 3D material preview: the same ball in the same color at the five value
-// steps (black · hatch · scribble · stipple · light), filled the goofy material's way at each — the contour is the board's outline,
+// steps (light · stipple · scribble · hatch · black — low density to high), filled the goofy material's way at each — the contour is the board's outline,
 // the board's contour; a goofy material is only the filling. FLAT has no texture, so one ball.
 // A textured entry gets **the same five steps again underneath, on a dark ground**: a mark has to be lighter than what it is drawn
 // on, so there every technique turns around and lays its marks light, and the step pulls the colour the other way (materials.js
@@ -237,14 +237,15 @@ IN_USE.forEach(({ key, label, box, draw }) => {
 const DARK_GROUND = DARKS[2];
 Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
   const m = GOOFY_MATERIALS[name];
-  const steps = m.texture ? VALUES.map((_, k) => k) : [2];
+  // Low density on the left, high on the right — VALUES lists the steps dark to light, so the row runs them the other way
+  const steps = m.texture ? VALUES.map((_, k) => k).reverse() : [2];
   const grounds = m.texture ? [FILLS[2], DARK_GROUND] : [FILLS[2]];
   const el = document.createElement("figure");
   el.dataset.fig = `material:${name}`;
   if (m.texture) el.className = "wide";
   // The row is named, not just its density steps — the ball alone does not say which of the five goofy
   // materials it is, and the density labels underneath read as the whole legend without it
-  const kind = m.texture ? m.texture.kind : "no texture — the fill-up alone";
+  const kind = m.texture ? `texture · ${m.texture.kind}` : "no texture — the fill-up alone";
   // FLAT's one ball needs no step label (its name is the heading now, and the step does not touch it)
   const subs = m.texture
     ? `<div class="subs">${steps.map((k) => `<span>${VALUES[k].name} · ${VALUES[k].v}</span>`).join("")}</div>`

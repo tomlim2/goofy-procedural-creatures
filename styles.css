@@ -339,15 +339,10 @@ body.how { height: auto; }
 /* A section of the card — three lines: its name, what is applied (on a line of its own), the control */
 .sect { display: grid; margin-top: 8px; font-size: 10px; letter-spacing: 0.18em; color: rgba(43, 39, 36, 0.55); font-weight: 600; }
 .sect .val { font-size: 12px; letter-spacing: 0.04em; font-weight: 400; color: var(--ink); opacity: 0.8; font-variant-numeric: tabular-nums; }
-/* The density row — the slider, and on the body the = button that hands the step back to the main's (hidden on the main) */
-.field.density.bare { grid-template-columns: 1fr auto; align-items: center; column-gap: 8px; }
-.field.density .same { padding: 2px 7px; font-size: 10px; line-height: 1.4; }
 .balls .ball { display: block; width: 28px; height: 28px; padding: 0; border: 0; background: transparent; border-radius: 50%; position: relative; }
 .balls .ball canvas { display: block; }
 .balls .ball:hover { background: rgba(43, 39, 36, 0.06); }
 .balls .ball.on { outline: 2px solid var(--ink); outline-offset: 1px; }
-/* The body's "main material's" — the same ball the base card shows, marked so it reads as a reference, not a fifth material */
-.balls .ball.same::after { content: "="; position: absolute; right: -3px; bottom: -5px; font-size: 9px; line-height: 1; opacity: 0.55; }
 /* A swatch is the colour itself, so the only state it can show is a ring around it. */
 .swatch { width: 16px; height: 16px; padding: 0; border: 1px solid var(--line); line-height: 1; }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 1px; }

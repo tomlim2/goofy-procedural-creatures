@@ -78,13 +78,20 @@ const scene = createScene(canvas);
 // as settled as a rolled one before it is drawn.
 const derive = deriveSpec;
 
-// A creature made here starts from its roll, with one rule of this screen laid over it: the body's material
-// and density follow the main until a hand picks one. The generator rolls a body material and step of its own
-// for the board; on this screen nothing has been chosen yet, so the body wears the main's surface at the
-// main's pressure. A file opened here keeps whatever it says.
+// **On this screen every material is its own.** The board rolls a body that may follow the main's tool or step
+// (`same` in bodyMaterial / bodyDensity — one hand through); here that is resolved into the value it stands for
+// when a creature enters, by roll or by file, so from then on editing the main moves the main and nothing else.
+// The drawing is the same either way; what is saved carries the resolved values.
+function asOwn(next) {
+  const p = next.parts;
+  const bodyMaterial = p.bodyMaterial && p.bodyMaterial !== "same" ? p.bodyMaterial : p.material;
+  const bodyDensity = p.bodyDensity && p.bodyDensity !== "same" ? p.bodyDensity : p.density;
+  return derive({ ...next, parts: { ...p, bodyMaterial, bodyDensity } });
+}
+
+// A creature made here starts from its roll, its body's material and step its own (asOwn).
 function regenerate() {
-  const made = makeCreature(roll, species);
-  spec = derive({ ...made, parts: { ...made.parts, bodyMaterial: "same", bodyDensity: "same" } });
+  spec = asOwn(makeCreature(roll, species));
 }
 
 // **What the rules would have done.** Run on a copy so nothing is applied: the species' forbid table first (it
@@ -135,7 +142,9 @@ function field(parent, label) {
 // The slots the MATERIALS card owns — the main material and its density, the body's material and its density
 const MATERIAL_SLOTS = ["material", "density", "bodyMaterial", "bodyDensity"];
 const MATERIALS = SLOTS.material;    // graphite · ink · oil · charcoal
-const DENSITIES = SLOTS.density;     // black · hatch · scribble · stipple · light — the steps, dark to light
+// The density scale as the slider lays it: **low on the left, high on the right** — light · stipple · scribble · hatch · black.
+// The slot lists the steps the other way round (dark to light, medium/materials.js VALUES); that order is the roll's and stays
+const DENSITIES = [...SLOTS.density].reverse();
 
 // A row that is not a <label>: a label activates its first button on any click, and these rows hold many.
 function fieldRow(parent, label, className = "field") {
@@ -149,8 +158,8 @@ function fieldRow(parent, label, className = "field") {
   parent.appendChild(row);
   return row;
 }
-// A strip of sample balls, one per material name; "same" is the body's "main material's".
-function ballStrip(parent, names, onPick) {
+// A strip of sample balls, one per texture name
+function ballStrip(parent, names, onPick, kind = "texture") {
   const row = fieldRow(parent, null, "field balls");
   const strip = document.createElement("div");
   strip.className = "strip";
@@ -158,9 +167,9 @@ function ballStrip(parent, names, onPick) {
   for (const name of names) {
     const item = document.createElement("button");
     item.type = "button";
-    item.className = name === "same" ? "ball same" : "ball";
-    item.title = name === "same" ? "main's" : name;
-    item.setAttribute("aria-label", `texture ${item.title}`);
+    item.className = "ball";
+    item.title = name;
+    item.setAttribute("aria-label", `${kind} ${name}`);
     const canvas = document.createElement("canvas");
     item.appendChild(canvas);
     item.addEventListener("click", () => onPick(name));
@@ -174,14 +183,14 @@ function ballStrip(parent, names, onPick) {
 // ---- MATERIALS ------------------------------------------------------------------------------------------
 //
 // **Every material the creature wears, in one card.** A creature is made of two surfaces: the main material
-// (`material` — everything on the head side takes it) and the body (`bodyMaterial` — everything hanging off
-// the torso; `same` means it follows the main). Each is a material in the 3D sense — a colour, a technique
-// and the density it is laid at — and each gets a preview ball at the top of the card. **The previews are
-// the selection**: click one and the rows below edit that surface — its sample balls (the body's include the
-// main's own, marked =), its density (the body's is `bodyDensity` — the slider sets a step of its own, = hands
-// it back to the main's), its colour — and a line names the parts that wear it. Nothing on the body's surface is
-// painted with a different colour; the parts that take a paint of their own (hair, a hat) still wear the
-// main's technique, so they are listed under it.
+// (`material` and `density` — everything on the head side takes it) and the body's (`bodyMaterial` and
+// `bodyDensity` — everything hanging off the torso). Each is a material in the 3D sense — a texture, the
+// density it is laid at and a colour — and **each is its own**: nothing here says one follows the other
+// (asOwn). Each gets a preview card at the top; **the previews are the selection**: click one and the sections
+// below edit that material — its name, the parts that wear it, its texture (the sample balls), its density
+// (a slider, low to high), its colour (the skin box for the main, the cloth box for the body). Nothing on the body's
+// surface is painted with a different colour; the parts that take a paint of their own (hair, a hat) still
+// wear the main's texture, so they are listed under it.
 const SURFACES = ["base", "body"];
 // What a preview is called under its ball. The first is the main material; every material after it is numbered
 // mat1, mat2 … until it is given a name (a spec carries none yet — `materialNames[side]` is where one would go)
@@ -189,9 +198,8 @@ const captionOf = (side, i) => (side === "base" ? "main" : (spec.materialNames &
 // Which parts wear which surface (drawing.md § what takes the goofy material) — the head side and the body
 // side. Listed only when the creature has the part (a slot at none, a quad's arms, a tailless biped's tail)
 const SURFACE_PARTS = { base: ["head", "ears", "horns", "hair", "headgear", "nose"], body: ["body", "arms", "legs", "tail"] };
-const BODY_MATERIALS = ["same", ...MATERIALS];
 let surface = "base";
-const mat = { previews: {}, sect: {}, strips: {}, density: null, densityRow: null, densitySame: null, colourRows: {} };
+const mat = { previews: {}, sect: {}, strips: {}, density: null, colourRows: {} };
 
 function presentParts(side) {
   const identity = (SPECIES.find((s) => s.name === spec.species) || {}).identity || {};
@@ -249,21 +257,21 @@ function buildMaterials() {
   mat.sect.name = section(baseBox, "NAME");
   mat.sect.uses = section(baseBox, "USED BY");
 
-  // TEXTURE — the applied one on its line, the samples under it: the main's four, the body's four plus the
-  // main material's own (=)
+  // TEXTURE — the applied one on its line, the four samples under it, one strip per material
   mat.sect.texture = section(baseBox, "TEXTURE");
   mat.strips.base = ballStrip(baseBox, MATERIALS, (name) => {
     spec = derive({ ...spec, parts: { ...spec.parts, material: name } });
     render();
   });
-  mat.strips.body = ballStrip(baseBox, BODY_MATERIALS, (name) => {
+  mat.strips.body = ballStrip(baseBox, MATERIALS, (name) => {
     spec = derive({ ...spec, parts: { ...spec.parts, bodyMaterial: name } });
     render();
   });
 
-  // DENSITY — the main's is the creature's `density`; the body's is `bodyDensity`, a step of its own or the main's (=)
+  // DENSITY — the main's is `density`, the body's `bodyDensity`: one slider, low on the left and high on the right,
+  // writing whichever is selected. (Five sample balls, one per step, were tried: at 28px the steps of a wash all look alike)
   mat.sect.density = section(baseBox, "DENSITY");
-  mat.densityRow = fieldRow(baseBox, null, "field density");
+  const densityRow = field(baseBox, null);
   mat.density = document.createElement("input");
   mat.density.type = "range";
   mat.density.min = "0";
@@ -275,18 +283,7 @@ function buildMaterials() {
     spec = derive({ ...spec, parts: { ...spec.parts, [slot]: DENSITIES[Number(mat.density.value)] } });
     render();
   });
-  mat.densityRow.appendChild(mat.density);
-  mat.densitySame = document.createElement("button");   // the body only: back to the main's step
-  mat.densitySame.type = "button";
-  mat.densitySame.className = "same";
-  mat.densitySame.textContent = "=";
-  mat.densitySame.title = "main's";
-  mat.densitySame.setAttribute("aria-label", "density main's");
-  mat.densitySame.addEventListener("click", () => {
-    spec = derive({ ...spec, parts: { ...spec.parts, bodyDensity: "same" } });
-    render();
-  });
-  mat.densityRow.appendChild(mat.densitySame);
+  densityRow.appendChild(mat.density);
 
   // COLOUR — the base's is the skin box, the body's the cloth box
   mat.sect.colour = section(baseBox, "COLOUR");
@@ -296,10 +293,9 @@ function buildMaterials() {
 
 function renderMaterials() {
   const { material, density } = spec.parts;
-  const own = spec.parts.bodyMaterial || "same";
-  const bodyMaterial = own === "same" ? material : own;
-  const ownDensity = spec.parts.bodyDensity || "same";
-  const bodyDensity = ownDensity === "same" ? density : ownDensity;
+  // Its own on this screen (asOwn); a `same` is still read as what it stands for, in case one reaches here
+  const bodyMaterial = spec.parts.bodyMaterial && spec.parts.bodyMaterial !== "same" ? spec.parts.bodyMaterial : material;
+  const bodyDensity = spec.parts.bodyDensity && spec.parts.bodyDensity !== "same" ? spec.parts.bodyDensity : density;
   // Both previews, whichever is selected — the card shows every material the creature wears
   paintBall(mat.previews.base.canvas, { color: spec.palette0.skin, material, density, phase: 0, size: 72 });
   paintBall(mat.previews.body.canvas, { color: spec.palette0.cloth, material: bodyMaterial, density: bodyDensity, phase: 40, size: 72 });
@@ -312,7 +308,7 @@ function renderMaterials() {
   mat.sect.name.textContent = captionOf(surface, SURFACES.indexOf(surface));
   mat.sect.uses.textContent = presentParts(surface).join(" · ");
 
-  mat.sect.texture.textContent = isBase ? material : `${own === "same" ? "main's " : ""}${bodyMaterial}`;
+  mat.sect.texture.textContent = isBase ? material : bodyMaterial;
   mat.strips.base.row.hidden = !isBase;
   mat.strips.body.row.hidden = isBase;
   if (isBase) {
@@ -322,17 +318,16 @@ function renderMaterials() {
       b.item.classList.toggle("on", name === material);
     });
   } else {
-    BODY_MATERIALS.forEach((name, i) => {
+    MATERIALS.forEach((name, i) => {
       const b = mat.strips.body.balls[name];
-      paintBall(b.canvas, { color: spec.palette0.cloth, material: name === "same" ? material : name, density: bodyDensity, phase: 41 + i });
-      b.item.classList.toggle("on", name === own);
+      paintBall(b.canvas, { color: spec.palette0.cloth, material: name, density: bodyDensity, phase: 41 + i });
+      b.item.classList.toggle("on", name === bodyMaterial);
     });
   }
 
-  mat.sect.density.textContent = isBase ? density : `${bodyDensity}${ownDensity === "same" ? " · main's" : ""}`;
-  mat.density.value = String(Math.max(0, DENSITIES.indexOf(isBase ? density : bodyDensity)));
-  mat.densitySame.hidden = isBase;
-  mat.densitySame.classList.toggle("on", !isBase && ownDensity === "same");
+  const step = isBase ? density : bodyDensity;
+  mat.sect.density.textContent = step;
+  mat.density.value = String(Math.max(0, DENSITIES.indexOf(step)));
 
   const box = isBase ? "skin" : "cloth";
   mat.sect.colour.textContent = `${box} ${spec.palette0[box] || ""}`;
@@ -341,7 +336,7 @@ function renderMaterials() {
 }
 
 // The body is clothing: what is put on it brings its own surface (bodyMaterial) and its own pressure (bodyDensity),
-// and `same` means it follows the main. Those slots leave the part list; they are edited in MATERIALS.
+// each its own on this screen (asOwn). Those slots leave the part list; they are edited in MATERIALS.
 // **Colour belongs to the material.** The main material is a colour (the skin box), a material and a
 // density; the body's material is its own colour (the cloth box) and its own material, or the main material's. So
 // these parts take no paint row: their colour is their material's. Only a part with no material of its own —
@@ -531,7 +526,8 @@ function save() {
   download(`${spec.species}.json`, creatureJson(spec));
 }
 
-// A loaded spec is drawn as it is — the same file the board saves from a cell, or a board file's one cell. It
+// A loaded spec is drawn as it is (a body's `same` resolved into what it stands for — asOwn — draws the same) —
+// the same file the board saves from a cell, or a board file's one cell. It
 // is only checked for what the drawing cannot do without (character/file.js), and the reason it was refused
 // takes the status label's place.
 function load(text) {
@@ -540,7 +536,7 @@ function load(text) {
     statusLabel.textContent = read.error || "NOT A CREATURE";
     return;
   }
-  spec = read.spec;
+  spec = asOwn(read.spec);
   species = spec.species;
   render();
 }
