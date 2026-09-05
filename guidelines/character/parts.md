@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 231 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 230 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -116,11 +116,11 @@ An eyepatch is always a **black** fill (an object) — on an imp's ink-black hea
 laps onto the other eye — decided once the proportions are settled). An eyepatch is also **dropped on mismatched eyes** — cover one side of an individual whose eye size (`eyeSizeSkew` > 0.09) or height (`eyeHeightSkew` > 0.03) is noticeably different and the remaining
 eye looks oddly large or high on its own, which reads as a mistake (set to none after the proportions are settled; patchSide is cleared too).
 
-### hair — three slots: hairFront (6) · hairBack (10) · hairTop (13)
+### hair — three slots: hairFront (6) · hairBack (9) · hairTop (13)
 `hair.js` — hair is **three slots combined freely**: the **front** (앞머리 — what falls over the forehead), the **back** (뒷머리 —
 what hangs behind and beside the head) and the **top** (정수리 — what sits on the crown). `hairFront` stands where the one
 `hair` slot of 26 values stood, so the roll's count is unchanged; `hairBack` and `hairTop` are late slots. A file from before
-opens as the same style (`file.js OLD_HAIR`: bob → back bob, bangs → front blunt, spikes → top spikes, bobSwept → swept + bob …).
+opens as the same style (`file.js OLD_HAIR`: bob → back bob, bangs → front blunt, spikes → top spikes, bobSwept → swept + bob, verylong → long …).
 Hair is drawn across **three layers** (`drawHair(layers)`): **back hair** (0.4 — behind the head, the body and the legs, so only
 what lies outside the silhouette shows) · **on the scalp** (crown 2.06 — above the head ink and below the face, at the horns' depth)
 · **over the face** (front 6.55 — the brows and mouth at 6.6 are drawn above it, and a hat at 6.58 sits on the hair). On a face turn
@@ -154,7 +154,6 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 | bob | A mass behind the head to the ear, a straight hem, a little flare |
 | mop | To the jaw, shaggy — a lumpier dome (6 lumps), a wider flare |
 | long | To the shoulder with a little flare (behind the body — what shows is outside the silhouette) |
-| verylong | long, and the sheets falling beside the face to the hip (`backSheets`), the middle of the chest left clear |
 | sheets | The side sheets alone — a pair running from under the cheeks (`SHEET_TOP`) to frayed, tasselled ends level with the hip (`box.legTop`) — landmarks rather than fixed multiples of `ry`, so the length scales with each build |
 | twintails / twintailsBall | Two tails (`fillStrip` ribbons) tied high at the sides, hanging back, each with a tie; Ball: a filled round bunch at the ends |
 | ponytail | One ribbon tied behind the crown on one side (per individual), rising and hanging back, with a tie |

@@ -114,18 +114,12 @@ const backMass = (h, hem, flare, { grow = [1.16, 1.08], lumps = 4, amount = 0.05
   back.contour(poly, { color: h.lineInk });
 };
 
-// There is no 장발 in this family, and the reason is a rule, not a taste: **two filled sheets flanking a gap
-// down the middle of the TORSO is a silhouette to stay away from.** The long back hung a sheet at each side
-// from the shoulder to the chest, and the narrow strip left between them framed the torso — which tapers and
-// ends round — into an obscene shape on slim, skin-coloured bodies. The fur curtains (long, verylong) do not
-// have the problem: they are open scribble, they hang from the whole head outline rather than two side lobes,
-// and verylong deliberately skips the strokes over the middle of the chest. If a filled 장발 is wanted, the
-// mass has to read as ONE piece across the back, never as a pair
-
-// Where each piece stops on the side of the face. The reference head measures a bare gap between them — the
-// fringe's last hair at y233, the sheets' first at y282, 48 rows of skin in between — but the fringe reads
-// better on these proportions carried down to the jaw, so it keeps the longer run and the two overlap.
-const FRINGE_END = (h) => h.cy - h.ry * 0.82;   // down past the cheek, about the jaw line
+// **No 장발 (a dome plus two side sheets to the chest).** Two filled sheets flanking a gap down the middle of the TORSO is a
+// silhouette to stay away from: the long back once hung a sheet at each side from the shoulder to the chest, and the narrow strip
+// left between them framed the torso — which tapers and ends round — into an obscene shape on slim, skin-coloured bodies. A
+// back that put the shoulder-length mass and the sheets together (verylong) was tried and taken out by eye. The sheets on
+// their own (below) are fine: they hang beside the HEAD and the face, not the torso
+const FRINGE_END = (h) => h.cy - h.ry * 0.82;   // down past the cheek, about the jaw line — where the front's locks stop
 const SHEET_TOP = (h) => h.cy - h.ry * 0.55;    // mid-cheek, about the nose — the sheets start here
 
 // The sheets back (뒷머리) — a pair of sheets falling at the sides of the FACE to frayed, tasselled ends.
@@ -501,8 +495,7 @@ export const BACKS = {
   bob: (h) => backMass(h, h.cy - h.ry * 0.72, 1.02, { grow: [1.14, 1.07], lumps: 4, amount: 0.05 }),          // to the ear, straight
   mop: (h) => backMass(h, h.cy - h.ry * 0.95, 1.06, { grow: [1.24, 1.12], lumps: 6, amount: 0.09 }),          // to the jaw, shaggy
   long: (h) => backMass(h, h.shoulder, 1.14),                                                                    // to the shoulder, a little flare
-  verylong: (h) => { backMass(h, h.shoulder, 1.14); backSheets(h); },                                           // …and the side sheets to the hip
-  sheets: backSheets,                                                                                            // the side sheets alone
+  sheets: backSheets,                                                                                            // the side sheets to the hip
   twintails: twintailsBack(false),
   twintailsBall: twintailsBack(true),
   ponytail: ponytailBack,

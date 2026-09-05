@@ -24,7 +24,7 @@ export const ARCHETYPES = [
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
       eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
       hairFront: [["none", 2], ["hairline", 2], ["blunt", 3], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5]],
-      hairBack: [["none", 3], ["bob", 3], ["long", 1.5], ["verylong", 1], ["ponytail", 1], ["sheets", 1]],
+      hairBack: [["none", 3], ["bob", 3], ["long", 1.5], ["ponytail", 1], ["sheets", 1]],
       hairTop: [["none", 5], ["helmet", 2], ["wisp", 2], ["curly", 2], ["cloud", 1]],   // the filled family — the neat, combed kinds suit the scholar
       headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet disabled
       mouth: [["line", 3], ["dot", 2], ["smile", 2], ["three", 1.5], ["frown", 1], ["smug", 1.5], ["bracket", 1]],
@@ -85,7 +85,7 @@ export const ARCHETYPES = [
     bias: {
       headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5], ["coronet", 0.8]],
       hairFront: [["none", 3], ["hairline", 2], ["swept", 1], ["blunt", 1]],
-      hairBack: [["none", 3], ["mop", 3], ["ponytail", 1], ["verylong", 0.8]],
+      hairBack: [["none", 3], ["mop", 3], ["ponytail", 1]],
       hairTop: [["none", 4], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["bun", 1.5], ["appleBig", 0.8], ["wisp", 1]],   // the filled family — a little, so it is not the scholar's alone
       eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
       mouth: [["wave", 3], ["line", 2], ["dot", 2], ["frown", 1.5], ["scribble", 1]],

@@ -31,14 +31,15 @@ export function deriveSpec(next) {
 
 // A file from before the rename: a creature's `seed` was its roll and `proportions.wobbleSeed` its hand.
 // The one `hair` slot of 26 values, split into three (front · back · top) — a file from before opens as the same style. A back
-// kind used to bring the cap down over the forehead; that is the `hairline` front now, so it comes along
+// kind used to bring the cap down over the forehead; that is the `hairline` front now, so it comes along. verylong (long and the
+// sheets together) is gone — it opens as long
 const OLD_HAIR = {
   none: {}, bob: { hairFront: "hairline", hairBack: "bob" }, spikes: { hairTop: "spikes" }, mop: { hairFront: "hairline", hairBack: "mop" }, mohawk: { hairTop: "mohawk" },
   tuft: { hairTop: "tuft" }, wisp: { hairTop: "wisp" }, scribble: { hairFront: "hairline", hairBack: "bob" }, sweep: { hairFront: "swept" },
   pigtails: { hairFront: "hairline", hairBack: "pigtails" }, curly: { hairTop: "curly" }, bangs: { hairFront: "blunt" }, longbob: { hairFront: "blunt", hairBack: "bob" },
   bun: { hairTop: "bun" }, helmet: { hairTop: "helmet" }, cloud: { hairTop: "cloud" }, hedgehog: { hairTop: "hedgehog" },
   long: { hairFront: "hairline", hairBack: "long" }, twintails: { hairFront: "hairline", hairBack: "twintails" }, ponytail: { hairFront: "hairline", hairBack: "ponytail" }, apple: { hairTop: "apple" },
-  verylong: { hairFront: "hairline", hairBack: "verylong" }, twintailsBall: { hairFront: "hairline", hairBack: "twintailsBall" }, appleBig: { hairTop: "appleBig" },
+  verylong: { hairFront: "hairline", hairBack: "long" }, twintailsBall: { hairFront: "hairline", hairBack: "twintailsBall" }, appleBig: { hairTop: "appleBig" },
   bobSwept: { hairFront: "swept", hairBack: "bob" }, sheetsSwept: { hairFront: "swept", hairBack: "sheets" }
 };
 function migrate(next) {
