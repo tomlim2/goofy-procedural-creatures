@@ -9,6 +9,7 @@ import { shade } from "../../color.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
 import { MARKS } from "../vocabulary/palette.js";
+import { TOP_KNOTS } from "../vocabulary/slots.js";
 
 // **The bands** — the only widths a part still names, because they are not lines: a hat's colour laid as a thick pencil stroke, a
 // fill in disguise (a band across the crown, and the brim's rim). Everything that *is* a line asks for a size instead
@@ -17,7 +18,7 @@ const BANDS = { hat: 0.03, brim: 0.055 };
 
 export function drawHeadgear(ink, fills, spec, box) {
   const kind = spec.parts.headgear;
-  if (kind === "none") return;
+  if (kind === "none" || TOP_KNOTS.includes(kind)) return;   // a bun or an apple top is headgear by slot but hair by drawing (hair.js drawTopKnot) — no hat under it
   const ink0 = spec.palette.ink;
   const pop = spec.palette.pop;
   // The hat's box: a pop aimed at the headgear wins as it always did, otherwise the accent — unless a hand has

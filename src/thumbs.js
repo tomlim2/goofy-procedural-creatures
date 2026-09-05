@@ -37,7 +37,7 @@ function gl() {
 
 // Which region a part is framed on. A slot not listed (a future one) gets the whole creature
 export const FRAME_OF = {
-  head: "head", hairFront: "head", hairBack: "head", hairTop: "head", headgear: "head", horns: "head", ears: "head",
+  head: "head", hairFront: "head", hairBack: "head", headgear: "head", horns: "head", ears: "head",
   eyes: "face", brow: "face", browLength: "face", eyewear: "face", nose: "face", face2: "face", mouth: "face", mouthPos: "face", mouthSize: "face",
   body: "body", pattern: "body", build: "body",
   arms: "arms", armLength: "arms",

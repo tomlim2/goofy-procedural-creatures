@@ -30,16 +30,16 @@ export function deriveSpec(next) {
 }
 
 // A file from before the rename: a creature's `seed` was its roll and `proportions.wobbleSeed` its hand.
-// The one `hair` slot of 26 values, split into three (front · back · top) — a file from before opens as the same style. A back
-// kind used to bring the cap down over the forehead; that is the `hairline` front now, so it comes along. verylong (long and the
-// sheets together) is gone — it opens as long
+// The one `hair` slot of 26 values, split into two (front · back) and headgear for a bun or an apple top — a file from before
+// opens as the same style. A back kind used to bring the cap down over the forehead; that is the `hairline` front now, so it
+// comes along. verylong (long and the sheets together) is gone — it opens as long
 const OLD_HAIR = {
   none: {}, bob: { hairFront: "hairline", hairBack: "bob" }, spikes: { hairBack: "spikes" }, mop: { hairFront: "hairline", hairBack: "mop" }, mohawk: { hairFront: "mohawk" },
   tuft: { hairFront: "tuft" }, wisp: { hairFront: "wisp" }, scribble: { hairFront: "hairline", hairBack: "bob" }, sweep: { hairFront: "swept" },
   pigtails: { hairFront: "hairline", hairBack: "pigtails" }, curly: { hairFront: "curly" }, bangs: { hairFront: "blunt" }, longbob: { hairFront: "blunt", hairBack: "bob" },
-  bun: { hairTop: "bun" }, helmet: { hairFront: "helmet" }, cloud: { hairFront: "cloud" }, hedgehog: { hairBack: "hedgehog" },
-  long: { hairFront: "hairline", hairBack: "long" }, twintails: { hairFront: "hairline", hairBack: "twintails" }, ponytail: { hairFront: "hairline", hairBack: "ponytail" }, apple: { hairTop: "apple" },
-  verylong: { hairFront: "hairline", hairBack: "long" }, twintailsBall: { hairFront: "hairline", hairBack: "bunsSide" }, appleBig: { hairTop: "appleBig" },
+  bun: { headgear: "bun" }, helmet: { hairFront: "helmet" }, cloud: { hairFront: "cloud" }, hedgehog: { hairBack: "hedgehog" },
+  long: { hairFront: "hairline", hairBack: "long" }, twintails: { hairFront: "hairline", hairBack: "twintails" }, ponytail: { hairFront: "hairline", hairBack: "ponytail" }, apple: { headgear: "apple" },
+  verylong: { hairFront: "hairline", hairBack: "long" }, twintailsBall: { hairFront: "hairline", hairBack: "bunsSide" }, appleBig: { headgear: "appleBig" },
   bobSwept: { hairFront: "swept", hairBack: "bob" }, sheetsSwept: { hairFront: "swept", hairBack: "sheets" }
 };
 function migrate(next) {
@@ -70,16 +70,22 @@ function migrate(next) {
   // A file from before hair was three slots: the old value names the same style in the new ones
   if (out.parts && (out.parts.hair !== undefined || out.parts.hairFront === undefined)) {
     const { hair, ...rest } = out.parts;
-    out.parts = { hairFront: "none", hairBack: "none", hairTop: "none", ...(OLD_HAIR[hair] || {}), ...rest };
+    const mapped = OLD_HAIR[hair] || {};
+    out.parts = { hairFront: "none", hairBack: "none", ...mapped, ...rest };
+    if (mapped.headgear && (rest.headgear === undefined || rest.headgear === "none")) out.parts.headgear = mapped.headgear;   // a bun or an apple top — headgear now
     if (out.parts.hairFront === undefined) out.parts.hairFront = "none";
     if (out.parts.hairBack === undefined) out.parts.hairBack = "none";
-    if (out.parts.hairTop === undefined) out.parts.hairTop = "none";
   }
-  // A file from when the crown cap, the spiked bands, the tufts, the curls and the hoods were top kinds: they are fronts now
-  if (out.parts && ["cap", "spikes", "mohawk", "hedgehog", "tuft", "wisp", "curly", "helmet", "cloud"].includes(out.parts.hairTop)) {
-    out.parts = { ...out.parts, hairFront: out.parts.hairTop, hairTop: "none" };
+  // A file from when hair had a top slot (hairTop): the crown cap, the spiked bands, the tufts, the curls and the hoods are fronts,
+  // the spiked rings backs, and a bun or an apple top headgear (worn like a hat, so a hat already on stays)
+  if (out.parts && out.parts.hairTop !== undefined) {
+    const { hairTop, ...rest } = out.parts;
+    out.parts = rest;
+    if (["cap", "mohawk", "tuft", "wisp", "curly", "helmet", "cloud"].includes(hairTop)) out.parts.hairFront = hairTop;
+    if (["spikes", "hedgehog"].includes(hairTop)) out.parts.hairBack = hairTop;
+    if (["bun", "apple", "appleBig"].includes(hairTop) && (out.parts.headgear === undefined || out.parts.headgear === "none")) out.parts.headgear = hairTop;
   }
-  // …and from when the spiked rings were fronts (or tops): they stand round the head from behind — backs
+  // …and from when the spiked rings were fronts: they stand round the head from behind — backs
   if (out.parts && ["spikes", "hedgehog"].includes(out.parts.hairFront)) out.parts = { ...out.parts, hairBack: out.parts.hairFront, hairFront: "none" };
   return out;
 }

@@ -5,7 +5,7 @@ import { Sketch } from "../../stroke.js";
 import { makeNoise, makeRng } from "../../rng.js";
 import { layout, eyeGeometry } from "./layout.js";
 import { drawHead, drawEars, drawPupEars, drawCatEars } from "./head.js";
-import { drawHair } from "./hair.js";
+import { drawHair, drawTopKnot } from "./hair.js";
 import { drawHeadgear, drawHorns } from "./headgear.js";
 import { drawEyes, drawFace2, drawEyewear, drawNose, drawWhiskers, RIG_EYES, patched } from "./face.js";
 import { drawBody } from "./body.js";
@@ -78,6 +78,7 @@ export function drawCreature(spec, variant = 0) {
     headPath   // the head's own drawn outline — a filled piece that sits ON the head (the scalp) follows it exactly (hair.js scalp)
   }, spec, box, noise);
   drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // the hat layer is above the ears — it covers their roots
+  drawTopKnot(L.hat.ink, L.hat.fills, spec, box, noise);   // a bun or an apple top — headgear that is hair, on the same layer, in the hair's colour
 
   // Only eyes whose pupil moves are passed along. A cyclops is alive too.
   const live = RIG_EYES.includes(spec.parts.eyes) ? eyes.filter((e) => !patched(spec, e)) : [];

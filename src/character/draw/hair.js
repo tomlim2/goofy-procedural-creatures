@@ -1,10 +1,11 @@
-// Hair — three slots, combined freely: the FRONT (hairFront — what falls over the forehead), the BACK (hairBack — what hangs
-// behind and beside the head) and the TOP (hairTop — what sits on the crown). Every piece is **filled**: the boundary drawn
-// first, a closed form, and the inside painted with the hair's material, contoured in the pencil's dark ink — the same pen as
-// a hat. A scalp cap is drawn under any front or back (its hairline the front kind's); the strand kinds (spikes, tufts, the
-// apple tops, curls) are small filled shapes too — a spike a wedge, a strand a leaf, a curl a disc — since a hair drawn as a
-// bare line beside a filled head read as a smudge. drawHair (the end of the file) composes the three; the tables FRONTS ·
-// BACKS · TOPS are 1:1 with slots.js
+// Hair — two slots, combined freely: the FRONT (hairFront — what sits on the head itself, in front of it: the fringes, the
+// crown cap, the mohawk, tufts, curls, the hoods) and the BACK (hairBack — what hangs behind and beside the head, the spiked
+// rings among it). A bun and the apple tops are headgear (worn on the crown like a hat, never with one) and are drawn here too,
+// on the hat layer (drawTopKnot). Every piece is **filled**: the boundary drawn first, a closed form, and the inside painted
+// with the hair's material, contoured in the pencil's dark ink — the same pen as a hat. The scalp cap is the front's (down to
+// its hairline); the strand kinds (spikes, tufts, the apple tops, curls) are small filled shapes too — a spike a wedge, a
+// strand a leaf, a curl a disc — since a hair drawn as a bare line beside a filled head read as a smudge. drawHair (the end of
+// the file) composes the two; the tables FRONTS · BACKS are 1:1 with slots.js
 //
 // Hair is drawn across **three layers** — layers = { back, crown, front } (ink sketches), and the filled
 // family also gets each layer's fills sketch (backFills, crownFills, frontFills — the fur kinds never fill):
@@ -508,7 +509,7 @@ const appleOfF = (size) => (h) => {
   crown.line([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: h.lineInk });   // the tie
 };
 
-// The three tables — 1:1 with slots.js SLOTS.hairFront · hairBack · hairTop (none draws nothing of its own)
+// The tables — 1:1 with slots.js SLOTS.hairFront · hairBack (none draws nothing of its own); KNOTS below with the headgear's bun and apple tops
 export const FRONTS = {
   hairline: () => {},       // the plain fringe — the cap itself down to a straight hairline; drawHair draws the cap
   blunt: bangsPanel,        // the straight fringe as a panel, its hem ragged
@@ -537,7 +538,9 @@ export const BACKS = {
   spikes: spikedBand({ span: 0.95, count: 11, len0: 0.06, lenVar: 0.09, behind: true }),    // long wedges round the upper half
   hedgehog: spikedBand({ span: 0.9, count: 15, len0: 0.05, lenVar: 0.07, behind: true })    // short and many — a hedgehog's back
 };
-export const TOPS = {   // what is tied ON the crown
+// What is tied ON the crown — a bun, the apple tops. Headgear values (worn like a hat, never with one), drawn on the hat layer
+// in the hair's colour: drawCreature calls drawTopKnot for them after the hats
+const KNOTS = {
   bun: bunTop,
   apple: appleOfF(2),
   appleBig: appleOfF(3.4)
@@ -551,29 +554,36 @@ export const TOPS = {   // what is tied ON the crown
 const FRONT_CAP = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6, cap: 0.7 };
 const DOME_BACKS = new Set(["bob", "mop", "long"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
 
-export function drawHair(layers, spec, box, noise) {
-  const front = spec.parts.hairFront || "none", back = spec.parts.hairBack || "none", top = spec.parts.hairTop || "none";
-  if (front === "none" && back === "none" && top === "none") return;
-  // The hair's own colour (palette.hair — HAIRS, or a POP when one is aimed here). It used to be palette.ink,
-  // which is why every head on the board wore the same black
+// The hair's context for a set of layers — the colours (the hair box, the board's ink for the contour, a tone of the hair for
+// the strands inside) and the head's measures
+function hairContext(layers, spec, box, noise) {
   const hairColor = paintOf(spec, "hair") || spec.palette.ink;   // paint: the hair's box, or one a hand chose
-  const ink0 = hairColor;
-  const h = {
+  return {
     ...layers,
     spec, box, noise,
-    ink0,
+    ink0: hairColor,
     lineInk: spec.palette.ink,   // the filled family's contour — the board's outline, dark whatever the hair is
     // The strands drawn INSIDE a filled shape are a tone of the hair itself, not the board's ink: dark ink on
     // dark hair is the "on the same colour" way of vanishing. Light hair deepens, dark hair tints
-    grainInk: luminance(hairColor) < 105
-      ? tint(hairColor, 0.42)
-      : deepen(hairColor, 0.4),
+    grainInk: luminance(hairColor) < 105 ? tint(hairColor, 0.42) : deepen(hairColor, 0.4),
     rx: box.headRx, ry: box.headRy, cy: box.headCy,
     shoulder: box.bodyTop - 0.02   // the floor back hair comes down to (the shoulder)
   };
+}
+
+// A bun or an apple top — headgear, drawn on the hat layer (ink, fills) in the hair's colour
+export function drawTopKnot(ink, fills, spec, box, noise) {
+  const draw = KNOTS[spec.parts.headgear];
+  if (!draw) return;
+  draw(hairContext({ crown: ink, crownFills: fills }, spec, box, noise));
+}
+
+export function drawHair(layers, spec, box, noise) {
+  const front = spec.parts.hairFront || "none", back = spec.parts.hairBack || "none";
+  if (front === "none" && back === "none") return;
+  const h = hairContext(layers, spec, box, noise);
   if (BACKS[back]) BACKS[back](h);                                   // behind the head first
   const capLine = FRONT_CAP[front];
   if (capLine !== undefined) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
-  if (TOPS[top]) TOPS[top](h);                                       // on the crown
   if (FRONTS[front]) FRONTS[front](h);                               // over the face, last
 }

@@ -458,11 +458,11 @@ const PROPERTIES = {
 };
 // The slots that are a property of a part, and so leave the tab strip
 const PROPERTY_SLOTS = Object.values(PROPERTIES).flat().filter((p) => p.kind === "slot").map((p) => p.key);
-// The three hair slots sit together on the strip, after the front (the roll keeps the back and the top at the end of SLOTS as late slots)
-const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT && !PROPERTY_SLOTS.includes(slot) && slot !== "hairBack" && slot !== "hairTop")
-  .flatMap((slot) => (slot === "hairFront" ? ["hairFront", "hairBack", "hairTop"] : [slot]));
-// What a part tab is called — the slot's own name, but the three hair slots are long for a 40px tab
-const TAB_LABEL = { hairFront: "bangs", hairBack: "back", hairTop: "top" };
+// The two hair slots sit together on the strip, after the front (the roll keeps the back at the end of SLOTS as a late slot)
+const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT && !PROPERTY_SLOTS.includes(slot) && slot !== "hairBack")
+  .flatMap((slot) => (slot === "hairFront" ? ["hairFront", "hairBack"] : [slot]));
+// What a part tab is called — the slot's own name, but the hair slots are long for a 40px tab
+const TAB_LABEL = { hairFront: "bangs", hairBack: "back" };
 let part = PART_SLOTS[0];
 const tabs = {};        // part → { item, canvas } — the icon tabs down the left
 let formsBox = null;    // where the open part's preview grid stands
@@ -496,7 +496,7 @@ const FORM_SIZE = 44;   // CSS pixels — a form preview: four to a row under th
 // left alone. Rendering them off the
 // live creature on every edit was tried: a build per slider tick, and icons that changed under the hand
 const REFERENCE_ROLL = 4242;
-const REFERENCE_PARTS = { headgear: "none", eyewear: "none", hairFront: "none", hairBack: "none", hairTop: "none", face2: "none", pattern: "none", ghost: "none", tailDeco: "none", brow: "none", nose: "none", material: "graphite", density: "light" };
+const REFERENCE_PARTS = { headgear: "none", eyewear: "none", hairFront: "none", hairBack: "none", face2: "none", pattern: "none", ghost: "none", tailDeco: "none", brow: "none", nose: "none", material: "graphite", density: "light" };
 // A tab shows its part at a value that has something to show: the reference's own unless that is none, then the
 // slot's first value that is not
 const representativeOf = (name, slot) => {

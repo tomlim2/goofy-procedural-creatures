@@ -32,7 +32,7 @@ for (const sp of SPECIES) {
   for (const c of bySpecies[sp.name] || []) {
     const where = `${sp.name} roll=${c.roll}`;
     if (id.horns && !id.horns.includes(c.parts.horns)) violations.push(`${where}: horns=${c.parts.horns} (allowed: ${id.horns.join("/")})`);
-    for (const k of ["hairFront", "hairBack", "hairTop"]) if (id[k] && !id[k].includes(c.parts[k])) violations.push(`${where}: ${k}=${c.parts[k]} (allowed: ${id[k].join("/")})`);
+    for (const k of ["hairFront", "hairBack"]) if (id[k] && !id[k].includes(c.parts[k])) violations.push(`${where}: ${k}=${c.parts[k]} (allowed: ${id[k].join("/")})`);
     if (id.brow && !id.brow.includes(c.parts.brow)) violations.push(`${where}: brow=${c.parts.brow} (allowed: ${id.brow.join("/")})`);
     if (id.ears && !id.ears.includes(c.parts.ears)) violations.push(`${where}: ears=${c.parts.ears} (allowed: ${id.ears.join("/")})`);
     if (id.eyes?.not && id.eyes.not.includes(c.parts.eyes)) violations.push(`${where}: eyes=${c.parts.eyes} forbidden`);

@@ -31,18 +31,19 @@ export const SLOTS = {
   // a filled panel over the forehead made the values read as one and its lower edge read as a hat's brim.
   // The 장발 pair (a dome plus two side sheets to the chest) was **removed**, not disabled: the two sheets left a
   // narrow gap down the middle and the torso hung through it to a rounded end — the silhouette read obscene
-  // **Hair is three slots**, combined freely (draw/hair.js): the FRONT (앞머리 — what falls over the forehead), the BACK
-  // (뒷머리 — what hangs behind and beside the head) and the TOP (정수리 — what sits on the crown). Every piece is filled. A scalp
-  // cap is drawn under any front or back, its hairline the front kind's. hairFront stands where the one `hair` slot stood, so
-  // the roll's count is unchanged; hairBack and hairTop are late slots (the end of LATE_SLOTS). The 26 old values map onto
-  // the three (character/file.js OLD_HAIR)
+  // **Hair is two slots**, combined freely (draw/hair.js): the FRONT (앞머리 — what sits on the head itself, in front of it) and
+  // the BACK (뒷머리 — what hangs behind and beside the head). Every piece is filled. hairFront stands where the one `hair` slot
+  // stood, so the roll's count is unchanged; hairBack is a late slot (the end of LATE_SLOTS). The 26 old values map onto the
+  // two, and onto headgear for a bun or an apple top (character/file.js OLD_HAIR)
   // The front is everything that sits on the head itself, in front of it: the fringes (hairline — the cap itself down to a straight
   // hairline, no piece of its own · blunt · swept · curtain · sideLock), the crown cap alone (cap), the mohawk, the tufts, the
-  // curls and the two hoods. The top keeps only what is tied ON the crown — a bun, the apple tops; the spiked rings (spikes ·
-  // hedgehog) stand round the head from behind it and are backs
+  // curls and the two hoods; the spiked rings (spikes · hedgehog) stand round the head from behind it and are backs. A bun and the
+  // apple tops are headgear — worn on the crown like a hat, never with one
   hairFront: ["none", "hairline", "blunt", "swept", "curtain", "sideLock", "cap", "mohawk", "tuft", "wisp", "curly", "helmet", "cloud"],
   // bonnet (the frilly bonnet) is **disabled** — the asset stays but it is in no bias (it never gets drawn)
-  headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet", "crown", "halo", "cone", "coronet"],
+  // …and what is tied on the crown, worn like a hat and never with one: a bun, the apple tops (TOP_KNOTS below — they were a hair
+  // slot of their own, hairTop). Hair by colour and drawing (draw/hair.js drawTopKnot), headgear by slot
+  headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet", "crown", "halo", "cone", "coronet", "bun", "apple", "appleBig"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
   // round, pointy and fold come in three sizes — default (small) · Mid (medium, 1.4×) · Big (large, 1.8×). Same shape, different size only.
   // Cat crown ears, dog ears and human/imp side ears all use the same multipliers
@@ -141,15 +142,17 @@ export const SLOTS = {
   // at the sides (bunsSide) · ponytail · pigtails, two small bunches · the spiked rings — a zigzag of wedges standing round the head's
   // upper half from behind it, spikes long and few, hedgehog short and many. (verylong — long and the sheets together — was removed;
   // twintailsBall, tails with balls at the ends, became the buns)
-  hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "bunsTop", "bunsLow", "bunsSide", "ponytail", "pigtails", "spikes", "hedgehog"],
-  // The top of the hair — what is tied on the crown: a bun, the apple tops
-  hairTop: ["none", "bun", "apple", "appleBig"]
+  hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "bunsTop", "bunsLow", "bunsSide", "ponytail", "pigtails", "spikes", "hedgehog"]
 };
+
+// Headgear that is hair — a bun, the apple tops: tied on the crown, worn like a hat and never with one, so they live in the
+// headgear slot; but they cover nothing, so the hat rules leave the hair under them alone, and the hat drawer skips them
+export const TOP_KNOTS = ["bun", "apple", "appleBig"];
 
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing rolls keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale", "hairBack", "hairTop"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale", "hairBack"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -163,8 +166,7 @@ export const DEFAULT_BIAS = {
   // Three slots, each with a common none, so a creature seldom wears all three at once and about one in fourteen wears nothing
   hairFront: [["none", 3], ["hairline", 3], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5], ["cap", 1], ["mohawk", 1], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],
   hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["sheets", 1.2], ["twintails", 1], ["bunsTop", 0.8], ["bunsLow", 0.6], ["bunsSide", 0.7], ["ponytail", 1.2], ["pigtails", 1.2], ["spikes", 2], ["hedgehog", 1.2]],
-  hairTop: [["none", 6], ["bun", 1], ["apple", 1], ["appleBig", 0.7]],
-  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1], ["coronet", 1]],   // bonnet disabled
+  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1], ["coronet", 1], ["bun", 1], ["apple", 1], ["appleBig", 0.7]],   // bonnet disabled
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3], ["perk", 0.7], ["perkMid", 0.3]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1], ["arch", 1], ["peak", 0.8], ["wave", 0.6], ["bushy", 0.7], ["raised", 0.6], ["mono", 0.35], ["dot", 0.6]],

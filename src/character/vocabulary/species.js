@@ -48,7 +48,7 @@ export const SPECIES = [
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
       hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none", spikes: "none", hedgehog: "none" },
-      hairTop: { bun: "none", apple: "none", appleBig: "none" },
+      headgear: { bun: "none", apple: "none", appleBig: "none" },   // a bun or an apple top is hair, and their fur is not hair
       brow: { flat: "none", angry: "none", worry: "none", arch: "none", peak: "none", wave: "none", bushy: "none", raised: "none", mono: "none", dot: "none" },   // animals have no brows (which blocks the alt brow of a state switch too)
       legLength: { verylong: "long" }
     },
@@ -56,7 +56,7 @@ export const SPECIES = [
       ears: ["flap", "long", "pointy", "pointyMid", "round", "roundMid", "fold", "foldMid", "perk", "perkMid"],   // dog ears — a floppy ear by default, no none and no huge ear
       skeleton: "quad",
       horns: ["none"],
-      hairFront: ["none"], hairBack: ["none"], hairTop: ["none"],
+      hairFront: ["none"], hairBack: ["none"],
       brow: ["none"],
       eyes: { not: ["cyclops"] },
       legLength: { not: ["verylong"] },
@@ -69,7 +69,7 @@ export const SPECIES = [
       // Ears — hanging lobes (flap, long) by default, with perked (pointy), round (round) and folded (fold) mixed in
       ears: [["flap", 4], ["long", 3], ["pointy", 1.2], ["pointyMid", 0.8], ["round", 1], ["roundMid", 0.5], ["fold", 1], ["foldMid", 0.6], ["perk", 1.2], ["perkMid", 0.6]],
       horns: [["none", 1]],
-      hairFront: [["none", 1]], hairBack: [["none", 1]], hairTop: [["none", 1]],
+      hairFront: [["none", 1]], hairBack: [["none", 1]],
       // Hats — a cap mostly, the odd beret, crown or halo. No helmet or pot (they cover the scalp whole and bury the
       // standing ears) and no band (it crosses the ear roots)
       headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.5]],
@@ -97,7 +97,7 @@ export const SPECIES = [
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
       hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none", spikes: "none", hedgehog: "none" },
-      hairTop: { bun: "none", apple: "none", appleBig: "none" },
+      headgear: { bun: "none", apple: "none", appleBig: "none" },   // a bun or an apple top is hair, and their fur is not hair
       brow: { flat: "none", angry: "none", worry: "none", arch: "none", peak: "none", wave: "none", bushy: "none", raised: "none", mono: "none", dot: "none" },
       legLength: { verylong: "long" }
     },
@@ -105,7 +105,7 @@ export const SPECIES = [
       ears: ["pointy", "pointyMid", "pointyBig"],   // triangular crown ears only (the reference) — no round, folded or floppy ears, and no none
       skeleton: "quad",
       horns: ["none"],
-      hairFront: ["none"], hairBack: ["none"], hairTop: ["none"],
+      hairFront: ["none"], hairBack: ["none"],
       brow: ["none"],
       eyes: { not: ["cyclops"] },
       legLength: { not: ["verylong"] },
@@ -118,7 +118,7 @@ export const SPECIES = [
       // Triangular ears only — default · narrow and tall (Mid) · wide and big (Big). The reference has no round, folded or floppy ears
       ears: [["pointy", 3], ["pointyMid", 2], ["pointyBig", 1.5]],
       horns: [["none", 1]],
-      hairFront: [["none", 1]], hairBack: [["none", 1]], hairTop: [["none", 1]],
+      hairFront: [["none", 1]], hairBack: [["none", 1]],
       headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.5]],
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
       // Nose — cats read the slot as cat noses (face.js catNose): dot a small triangle · wedge a heart · hook triangle + philtrum · long a wide nose with a long philtrum · none nothing
@@ -145,7 +145,7 @@ export const SPECIES = [
       eyes: { cyclops: "dot" },
       hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
       hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none", spikes: "none", hedgehog: "none" },
-      hairTop: { bun: "none", apple: "none", appleBig: "none" },
+      headgear: { bun: "none", apple: "none", appleBig: "none" },   // a bun or an apple top is hair, and their fur is not hair
       // The arms are tiny and stubby, always — every form folds to the little fists
       arms: { stick: "stubby", sleeve: "stubby", mitten: "stubby", none: "stubby" },
       armLength: { long: "medium" },
@@ -154,7 +154,7 @@ export const SPECIES = [
     identity: {
       ears: ["none"],
       skeleton: "biped",
-      hairFront: ["none"], hairBack: ["none"], hairTop: ["none"],
+      hairFront: ["none"], hairBack: ["none"],
       eyes: { not: ["cyclops"] },
       arms: true,
       armLength: ["medium"],
@@ -167,7 +167,7 @@ export const SPECIES = [
       // Dragon horns — the maid-dragon mapping lives in drawHorns (the way of drawing differs by species)
       horns: [["none", 3], ["curved", 2], ["antenna", 1.5], ["straight", 1.5], ["ram", 1.5], ["nub", 1], ["crown", 1]],
       ears: [["none", 1]],
-      hairFront: [["none", 1]], hairBack: [["none", 1]], hairTop: [["none", 1]],
+      hairFront: [["none", 1]], hairBack: [["none", 1]],
       headgear: [["none", 9], ["cap", 0.5], ["crown", 0.4], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.4]],
       eyewear: [["none", 7], ["monocle", 1], ["patch", 1]],
       // A blocky head for the jaw to live in
@@ -213,7 +213,7 @@ export const SPECIES = [
     bias: {
       horns: [["curved", 3], ["straight", 2], ["antenna", 2], ["ram", 2], ["crown", 2], ["nub", 1]],
       ears: [["none", 5], ["pointy", 2]],
-      hairFront: [["none", 1]], hairBack: [["none", 6], ["spikes", 2]], hairTop: [["none", 1]],
+      hairFront: [["none", 1]], hairBack: [["none", 6], ["spikes", 2]],
       headgear: [["none", 1]],
       eyewear: [["none", 6], ["patch", 2], ["goggles", 1]],
       eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2], ["soft", 2]],

@@ -7,7 +7,7 @@
 //   3. proportion jitter — most of the silhouette variety comes from continuous values
 
 import { makeRng } from "../rng.js";
-import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES, HAIR_POOL } from "./vocabulary/index.js";
+import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES, HAIR_POOL, TOP_KNOTS } from "./vocabulary/index.js";
 import { shade, luminance, tint, hexToRgb } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
@@ -64,28 +64,33 @@ const settled = (roll, n) => (Math.imul((roll ^ (n * 0x27d4eb2d)) >>> 0, 0x9e377
 
 // It takes no rng: every decision in here is either a fixed overwrite or settled() off the roll
 // The rules on the **late** slots — run after they are rolled (makeCreature draws LATE_SLOTS after applyConstraints, so a rule
-// written there would never see them). Hair is three slots (front · back · top), the back and the top late. Every rule here
-// is a fixed overwrite, never a roll (the rule at the top of this file)
+// written there would never see them). Hair is two slots (front · back), the back late. Every rule here is a fixed overwrite,
+// never a roll (the rule at the top of this file)
 export function applyLateConstraints(parts) {
+  const hat = parts.headgear !== "none" && parts.headgear !== "halo" && !TOP_KNOTS.includes(parts.headgear);   // a thing that covers the head
   // A helmet or a pot covers the head: there is nowhere for hair to squeeze out
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
-    parts.hairFront = "none"; parts.hairBack = "none"; parts.hairTop = "none";
-  } else if (parts.headgear !== "none" && parts.headgear !== "halo") {
-    // (not the halo — it floats above the head and covers nothing, so any hair keeps)
+    parts.hairFront = "none"; parts.hairBack = "none";
+  } else if (hat) {
+    // (not the halo — it floats above the head and covers nothing — and not a bun or an apple top, which are hair themselves)
     // With a hat or a band the fringes and the back keep — bangs and a bob's hem come out from under a hat — but what stands
-    // up through the hat cannot: a bun and the apple tops (the top slot), the spiked bands (the front slot) go. The hoods and
-    // the hedgehog suit a band (the reference) and only a band
-    if (["bun", "apple", "appleBig"].includes(parts.hairTop)) parts.hairTop = "none";
+    // up through the hat cannot: the mohawk goes, and the spiked rings; the hoods and the hedgehog suit a band (the
+    // reference) and only a band
     const through = ["mohawk", "cloud", "helmet"];
     if (parts.headgear === "band") through.splice(1, 2);   // cloud and the hood stay under a band
     if (through.includes(parts.hairFront)) parts.hairFront = "none";
-    // the spiked rings (backs) poke up round a hat; the hedgehog's short ones suit a band (the reference) and only a band
     if (parts.hairBack === "spikes" || (parts.hairBack === "hedgehog" && parts.headgear !== "band")) parts.hairBack = "none";
   }
-  // A mohawk, a bun or an apple top wears nothing (with a hat on they are already gone, above — this is the bare head's rule)
-  if (["bun", "apple", "appleBig"].includes(parts.hairTop) || parts.hairFront === "mohawk") parts.headgear = "none";
+  // A mohawk wears nothing on the crown, a bun or an apple top included (with a hat on it is already gone, above)
+  if (parts.hairFront === "mohawk") parts.headgear = "none";
   // A mohawk is the whole hair — nothing behind it
   if (parts.hairFront === "mohawk") parts.hairBack = "none";
+  // Crown horns take up the crown: nothing worn there, and no hair but a tuft
+  if (parts.horns === "crown") {
+    parts.headgear = "none";
+    if (parts.hairFront !== "tuft") parts.hairFront = "none";
+    parts.hairBack = "none";
+  }
   // A back never draws the cap (draw/hair.js): a back with no front and no crown top hangs behind a bare head, and the roll
   // leaves it so — the three slots are independent, and what the front is is the front slot's alone
   return parts;
@@ -111,11 +116,8 @@ export function applyConstraints(parts, speciesName, roll) {
   // Eyewear does not work on a cyclops.
   if (parts.eyes === "cyclops") parts.eyewear = "none";
 
-  // Crown horns take up the crown.
-  if (parts.horns === "crown") {
-    parts.headgear = "none";
-    if (!["none", "tuft"].includes(parts.hair)) parts.hair = "none";
-  }
+  // Crown horns take up the crown — the hair's part of it is applyLateConstraints' (the back is a late slot)
+  if (parts.horns === "crown") parts.headgear = "none";
 
   // Eyewear overlaps the eyes, so it often covers the brows.
   if ((parts.eyewear === "glasses" || parts.eyewear === "goggles") && settled(roll, 3) < 0.6) {
