@@ -441,7 +441,7 @@ const STATE_SLOT = "ghost";
 const stateName = (value) => (value === "none" ? "NORMAL" : "GHOST");
 // **A part's properties.** The numbers that shape a part (its proportions) and the slots that are not a form
 // but a measure or a manner of it — a length, a build, a position, a pattern — live under the part, in its
-// PROPERTY tab, not in a card of their own and not as parts on the tab strip. `r` is a proportion slider,
+// PROPERTY section, under SHAPE and MATERIAL, not in a card of their own and not as parts on the tab strip. `r` is a proportion slider,
 // `sl` a slot: a segmented row up to four values, a dropdown past that. The hand (the wobble) stays its own card
 const r = (key, label) => ({ key, kind: "range", label });
 const sl = (key, label) => ({ key, kind: "slot", label });
@@ -464,17 +464,14 @@ const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(
 // What a part tab is called — the slot's own name, but the hair slots are long for a 40px tab
 const TAB_LABEL = { hairFront: "bangs", hairBack: "back" };
 let part = PART_SLOTS[0];
-const tabs = {};        // part → { item, canvas } — the icon tabs down the left
-let formsBox = null;    // where the open part's preview grid stands
-let mode = "shape";     // under the open part: shape (its forms), material (which of the creature's materials it wears) or property
-const modeTabs = {};    // mode → the tab button
-let propBox = null;     // the PROPERTY panel: the open part's sliders and slot rows
+const tabs = {};        // part → { item, canvas } — the icon tabs across the top
+let shape = null;       // SHAPE — the dropdown: the form the part has (its picture, its name) on the line, the part's forms listed under it when open
+let wearBox = null;     // MATERIAL — one dropdown per surface of the part: what it wears on the line, the creature's materials under it; laid on render
+const heads = {};       // section → the ruled heading over it (PROPERTY's hides with its panel on a part that has none)
+let propBox = null;     // PROPERTY — the open part's sliders and slot rows, standing open under the two
 const propPanels = {};  // part → { box, sync } — built once per part, synced on render (a slider rebuilt mid-drag loses the drag)
-let wearBox = null;     // the MATERIAL panel: the creature's materials as cards, the one this part wears framed
-let wearStrip = null;   // the cards — + first, then one per material — rebuilt on render, since a hand adds materials
-let wearNote = null;    // for a part that wears none
-const grids = {};       // `${species}/${part}` → { box, forms: value → { item, canvas } } — each grid built and painted once, kept
-let gridKey = null;     // the grid standing in formsBox
+const menus = {};       // `${species}/${part}` → { box, forms: value → { item, canvas, painted } } — each list built and painted once, kept
+let menuKey = null;     // the list standing in the SHAPE dropdown
 const tabImages = {};   // species → slot → an offscreen canvas of the painted icon — painted once, blitted back on return
 // The boxes a part may be painted from. `pattern2` is a mark, not a surface; `ink` is the line, never a fill
 // Which parts a species draws at all — a tail only where the identity has one, arms only on a biped (the same
@@ -486,10 +483,11 @@ function partApplies(slot, name) {
   return true;
 }
 const TAB_SIZE = 34;    // CSS pixels — the icon on a part tab
-const FORM_SIZE = 44;   // CSS pixels — a form preview: four to a row under the tabs
+const FORM_SIZE = 44;   // CSS pixels — a form's picture: on its row of the SHAPE list, and on the line
+const BALL_SIZE = 36;   // CSS pixels — a material's ball on a MATERIAL line or row
 
 // **The part is picked by its picture, and the pictures are a legend.** A tab per part down the left, each an icon
-// of the part, and the open part's forms as a grid of previews, each one value drawn, the current one framed. The
+// of the part, and the open part's forms as a list of pictures, each one value drawn, the current one framed. The
 // pictures are not the creature being edited: they are a **reference individual** of the species — one fixed roll
 // with the parts that share a layer quieted (no hat, no hair, no eyewear, no nose, no pattern) — drawn once with
 // **everything but the part hidden** (thumbs.js — the real drawing, framed on the region the part lives in) and
@@ -511,6 +509,97 @@ function referenceOf(name) {
   }
   return references[name];
 }
+// **A dropdown.** What the part has on, on one line — its picture, then its name, a caret at the end — and a click on
+// the line opens the list of what it could have under it, every row the same way: picture, then name. One is open at a
+// time; a pick, a click anywhere else or Escape closes it. The list opens **in the flow of the card**, not over it: the
+// deck is a scroller with its sides clipped, and a layer floated over it would be cut at the deck's edge. The rows are
+// 44px pictures, so past six of them the list scrolls inside itself, the current one brought into view. `fill`, when a
+// dropdown has one, lays the rows on each opening — the material lists change as a hand adds materials
+let openDrop = null;
+function dropdown(parent, label) {
+  const box = document.createElement("div");
+  box.className = "drop";
+  const pick = document.createElement("button");
+  pick.type = "button";
+  pick.className = "pick";
+  pick.setAttribute("aria-haspopup", "listbox");
+  pick.setAttribute("aria-expanded", "false");
+  pick.setAttribute("aria-label", label);
+  const thumb = document.createElement("span");
+  thumb.className = "thumb";
+  const name = document.createElement("span");
+  name.className = "name";
+  const caret = document.createElement("span");
+  caret.className = "caret";
+  caret.textContent = "▾";
+  caret.setAttribute("aria-hidden", "true");
+  pick.append(thumb, name, caret);
+  const menu = document.createElement("div");
+  menu.className = "menu";
+  menu.hidden = true;
+  box.append(pick, menu);
+  parent.appendChild(box);
+  const d = { box, pick, thumb, name, menu, fill: null, open: false };
+  pick.addEventListener("click", () => setOpen(d, !d.open));
+  return d;
+}
+function setOpen(d, on) {
+  if (on && openDrop && openDrop !== d) setOpen(openDrop, false);
+  d.open = on;
+  d.menu.hidden = !on;
+  d.pick.setAttribute("aria-expanded", String(on));
+  openDrop = on ? d : openDrop === d ? null : openDrop;
+  if (!on) return;
+  if (d.fill) d.fill();
+  const current = d.menu.querySelector(".opt.on");
+  if (current) d.menu.scrollTop = current.offsetTop - (d.menu.clientHeight - current.offsetHeight) / 2;
+  revealInDeck(d.box);
+}
+document.addEventListener("pointerdown", (event) => { if (openDrop && !openDrop.box.contains(event.target)) setOpen(openDrop, false); });
+window.addEventListener("keydown", (event) => { if (event.key === "Escape" && openDrop) setOpen(openDrop, false); });
+// Scrolls the deck so an opened dropdown is in view — down by what runs past the deck's foot, never past the line itself
+function revealInDeck(el) {
+  const deck = el.closest(".deck");
+  if (!deck) return;
+  const r = el.getBoundingClientRect();
+  const s = deck.getBoundingClientRect();
+  if (r.bottom > s.bottom) deck.scrollTop += Math.min(r.bottom - s.bottom, Math.max(0, r.top - s.top));
+}
+// One row of a dropdown — a picture, then a name
+function option(picture, text, onPick) {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.className = "opt";
+  item.setAttribute("role", "option");
+  const thumb = document.createElement("span");
+  thumb.className = "thumb";
+  thumb.appendChild(picture);
+  const name = document.createElement("span");
+  name.className = "name";
+  name.textContent = text;
+  item.append(thumb, name);
+  item.addEventListener("click", onPick);
+  return item;
+}
+// A ruled heading over a section of the part's panel
+function heading(parent, name) {
+  const head = document.createElement("div");
+  head.className = "group";
+  head.textContent = name;
+  parent.appendChild(head);
+  return head;
+}
+// A material's ball, painted — the picture on a MATERIAL line or row
+function ballOf(key, size, phase) {
+  const s = surfaceOf(key);
+  const ball = document.createElement("span");
+  ball.className = "ball preview";
+  const canvas = document.createElement("canvas");
+  ball.appendChild(canvas);
+  paintBall(canvas, { color: s.colour, material: s.texture, density: s.density, phase, size });
+  return ball;
+}
+
 function buildParts() {
   partsBox.innerHTML = "";
   const card = document.createElement("div");
@@ -536,41 +625,23 @@ function buildParts() {
     tabs[slot] = { item, canvas };
   }
   card.appendChild(strip);
-  // Under the part: SHAPE — its forms and, for a painted part, its paint — or MATERIAL — which of the creature's
-  // materials it wears. The same kind of strip, and one panel that shows one of them
-  const modes = document.createElement("div");
-  modes.className = "tabs modes";
-  modes.setAttribute("role", "tablist");
-  modes.setAttribute("aria-label", "Shape, material or property");
-  for (const name of ["shape", "material", "property"]) {
-    const tab = document.createElement("button");
-    tab.type = "button";
-    tab.className = "tab mode";
-    tab.setAttribute("role", "tab");
-    tab.textContent = name;
-    tab.addEventListener("click", () => { mode = name; renderPart(); });
-    modes.appendChild(tab);
-    modeTabs[name] = tab;
-  }
-  card.appendChild(modes);
+  // Under the part, its panel — three sections, each under a ruled heading. SHAPE: the form it has, and the part's forms
+  // under it (menuOf — one list per species and part, built once and kept). MATERIAL: which of the creature's materials
+  // it wears — the materials MATERIALS shows, here only to be picked from: a pick puts the part in another (spec.wear),
+  // and editing a material stays MATERIALS' business, in one place. PROPERTY: the part's own numbers and measures
+  // (PROPERTIES), standing open. Three text tabs swapping one panel between them were tried first: the thing wanted was
+  // always on the other tab, and a form and a material each read fine on one line
   const panel = document.createElement("div");
-  panel.className = "modePanel";
-  formsBox = document.createElement("div");   // the open part's grid stands here; the grids themselves are kept (gridOf)
-  formsBox.className = "formsSlot";
-  panel.appendChild(formsBox);
-  // MATERIAL — the creature's materials, as the cards MATERIALS shows, here only to be picked from: the part's
-  // material is whichever is framed, and a click puts the part in another (spec.wear). Editing a material is
-  // MATERIALS' business, in one place. The cards are laid on render — a hand adds materials
+  panel.className = "partPanel";
+  heads.shape = heading(panel, "shape");
+  shape = dropdown(panel, "shape");
+  shape.canvas = document.createElement("canvas");   // the current form's picture — the list's row for it, blitted
+  shape.thumb.appendChild(shape.canvas);
+  heads.material = heading(panel, "material");
   wearBox = document.createElement("div");
   wearBox.className = "wear";
-  wearStrip = document.createElement("div");
-  wearStrip.className = "strip";
-  wearBox.appendChild(wearStrip);
-  wearNote = document.createElement("output");
-  wearNote.className = "readout";
-  wearBox.appendChild(wearNote);
   panel.appendChild(wearBox);
-  // PROPERTY — the part's own numbers and measures (PROPERTIES); the panel for the open part stands here
+  heads.property = heading(panel, "property");
   propBox = document.createElement("div");
   propBox.className = "props fields";
   panel.appendChild(propBox);
@@ -640,8 +711,8 @@ function propPanelOf(name) {
 // **The legend is painted once, ahead, and kept.** One queue of paint jobs, one build per frame, so the deck never
 // freezes: when a species comes on the stage its tabs go in first (a build per tab, into offscreen canvases that are
 // blitted onto the tabs — coming back to the species blits them again and builds nothing), then the open part's
-// preview grid, then every other part's grid in tab order, so by the time a tab is clicked its previews are
-// there. Opening a part whose previews are still pending moves them to the front. Nothing is painted on an edit,
+// list of forms, then every other part's list in tab order, so by the time a tab is clicked its pictures are
+// there. Opening a part whose pictures are still pending moves them to the front. Nothing is painted on an edit,
 // and nothing twice
 let thumbSpecies = null;
 const queue = [];        // [{ key, run }] — key is `${species}/${part}` (or `${species}/tabs`)
@@ -686,54 +757,52 @@ function paintTabs() {
     });
   }
 }
-// Every part's grid for the species, built and queued ahead — the open part's first (renderPart prioritises it)
+// Every part's list for the species, built and queued ahead — the open part's first (renderPart prioritises it)
 function prepaint(name) {
-  for (const slot of PART_SLOTS) if (partApplies(slot, name)) gridOf(name, slot);
+  for (const slot of PART_SLOTS) if (partApplies(slot, name)) menuOf(name, slot);
 }
-// The preview grid of a part for a species — built and its paints queued the first time, kept after
-function gridOf(name, slot) {
+// The list of a part's forms for a species — what the SHAPE dropdown opens: a row per value, its picture then its name.
+// Built and its paints queued the first time, kept after. A row painted for the open part's current value goes onto the
+// SHAPE line as it lands
+function menuOf(name, slot) {
   const key = `${name}/${slot}`;
-  if (grids[key]) return grids[key];
+  if (menus[key]) return menus[key];
   const box = document.createElement("div");
-  box.className = "forms";
+  box.className = "opts";
   box.setAttribute("role", "listbox");
-  box.setAttribute("aria-label", "Form");
+  box.setAttribute("aria-label", `${slot} form`);
   const forms = {};
   for (const value of SLOTS[slot]) {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = "form";
-    item.title = value;
-    item.setAttribute("role", "option");
-    item.setAttribute("aria-label", `${slot} ${value}`);
     const canvas = document.createElement("canvas");
-    item.appendChild(canvas);
-    const cap = document.createElement("span");
-    cap.textContent = value;
-    item.appendChild(cap);
-    item.addEventListener("click", () => {
+    const item = option(canvas, value, () => {
+      setOpen(shape, false);
       spec = derive({ ...spec, parts: { ...spec.parts, [slot]: value } });
       render();
     });
+    item.title = value;
+    item.setAttribute("aria-label", `${slot} ${value}`);
     box.appendChild(item);
-    forms[value] = { item, canvas };
+    forms[value] = { item, canvas, painted: false };
   }
-  grids[key] = { box, forms };
+  menus[key] = { box, forms };
   const at = referenceOf(name);
   for (const value of SLOTS[slot]) {
-    enqueue(key, () => paintPart(forms[value].canvas, derive({ ...at, parts: { ...at.parts, [slot]: value } }), slot, FORM_SIZE));
+    enqueue(key, () => {
+      paintPart(forms[value].canvas, derive({ ...at, parts: { ...at.parts, [slot]: value } }), slot, FORM_SIZE);
+      forms[value].painted = true;
+      if (menuKey === key && spec.parts[slot] === value) blit(forms[value].canvas, shape.canvas);
+    });
   }
-  return grids[key];
+  return menus[key];
 }
 
-// The open part's controls, from the spec: its tab framed, the form previews (rebuilt when the part changes), and
-// for a part with no material of its own the paint boxes, drawn in the individual's own colours with the one it
-// currently takes ringed. A box the individual does not have (a pop on one without) is not offered
-// **The card holds still.** Opening another part swaps in a grid of another height — eyes are five rows, a
-// brow two — and the deck, scrolled to the card, lost that height under its scroll position and the card
+// The open part's controls, from the spec: its tab framed, its form on the SHAPE line (the list under it swapped when
+// the part changes), its materials on the MATERIAL lines, its properties open under them
+// **The card holds still.** Opening another part swaps in a panel of another height — eyes have five properties, a
+// brow one — and the deck, scrolled to the card, lost that height under its scroll position and the card
 // jumped. The card's place on screen is measured before and put back after; when what is below it is too
 // short to scroll that far, the deck is given the room at its foot. Nothing is drawn on a tab click: the
-// grids are built once and kept (gridOf), and the creature is not touched
+// lists are built once and kept (menuOf), and the creature is not touched
 function holdInPlace(card, change) {
   const deck = card && card.closest(".deck");
   if (!deck) { change(); return; }
@@ -757,80 +826,97 @@ function renderPartBody() {
   for (const slot of PART_SLOTS) tabs[slot].item.classList.toggle("on", slot === part);
   revealInRow(tabs[part].item.parentElement, tabs[part].item);   // the strip scrolls sideways; the open tab stays in view — the row alone
   const key = `${spec.species}/${part}`;
-  const grid = gridOf(spec.species, part);
+  const menu = menuOf(spec.species, part);
   if (thumbSpecies !== spec.species) {   // a new species is a new legend — or one kept from before
     thumbSpecies = spec.species;
     paintTabs();
     prioritise(`${spec.species}/tabs`);
     prepaint(spec.species);
   }
-  if (gridKey !== key) {
-    formsBox.replaceChildren(grid.box);
-    gridKey = key;
+  if (menuKey !== key) {
+    if (openDrop) setOpen(openDrop, false);   // another part is another panel — whatever was open closes
+    shape.menu.replaceChildren(menu.box);
+    menuKey = key;
     prioritise(key);
   }
-  for (const value of SLOTS[part]) grid.forms[value].item.classList.toggle("on", value === spec.parts[part]);
+  // SHAPE — the current form on the line, its row framed in the list. The line's picture is the row's, blitted — blank
+  // until that row is painted, when the paint job puts it there
+  const value = spec.parts[part];
+  for (const v of SLOTS[part]) {
+    menu.forms[v].item.classList.toggle("on", v === value);
+    menu.forms[v].item.setAttribute("aria-selected", String(v === value));
+  }
+  shape.name.textContent = value;
+  shape.pick.title = `${part}: ${value}`;
+  const current = menu.forms[value];
+  if (current && current.painted) blit(current.canvas, shape.canvas);
+  else {
+    shape.canvas.width = shape.canvas.height = 1;
+    shape.canvas.style.width = shape.canvas.style.height = `${FORM_SIZE}px`;
+  }
 
-  // SHAPE, MATERIAL or PROPERTY under the part. A part with no properties has the tab greyed, and a mode it
-  // cannot show falls back to its shape
+  renderWear();
+
+  // PROPERTY — open under the two; a part with none has no section
   const hasProps = !!PROPERTIES[part];
-  modeTabs.property.disabled = !hasProps;
-  if (mode === "property" && !hasProps) mode = "shape";
-  for (const name of Object.keys(modeTabs)) modeTabs[name].classList.toggle("on", name === mode);
-  formsBox.hidden = mode !== "shape";
-  wearBox.hidden = mode !== "material";
-  propBox.hidden = mode !== "property";
-  if (mode === "property") {
+  heads.property.hidden = !hasProps;
+  propBox.hidden = !hasProps;
+  if (hasProps) {
     const panel = propPanelOf(part);
     if (propBox.firstChild !== panel.box) propBox.replaceChildren(panel.box);
     panel.sync();
   }
-  if (mode === "material") {
-    // One row per region of the part — an eye is a pupil and a white, each in a material of its own; most
-    // parts are one surface and get one unnamed row
-    wearStrip.replaceChildren();
-    const regions = regionsOf(part).filter((region) => wearOf(spec, region));
-    for (const region of regions) {
-      const wears = wearOf(spec, region);
-      if (regions.length > 1) {
-        const label = document.createElement("span");
-        label.className = "regionName";
-        label.textContent = REGION_LABEL[region] || region;
-        wearStrip.appendChild(label);
-      }
-      const row = document.createElement("div");
-      row.className = "strip";
-      // + first — a new material for this region: a copy of what it has on, worn at once, opened in MATERIALS
-      const add = document.createElement("button");
-      add.type = "button";
-      add.className = "pv add";
-      add.title = `a new material for the ${REGION_LABEL[region] || region} — a copy of what it has on`;
-      add.setAttribute("aria-label", `a new material for the ${REGION_LABEL[region] || region}`);
+}
+// MATERIAL — one dropdown per surface of the part (an eye is a pupil and a white, each in a material of its own; most
+// parts are one surface and get one unnamed line): the material it wears on the line and, opened, **+** first — a new
+// material for this surface, a copy of what it has on, worn at once and opened in MATERIALS — then one row per material
+// the creature has. Laid on every render: a hand adds materials, renames them, recolours them
+function renderWear() {
+  if (openDrop && wearBox.contains(openDrop.box)) openDrop = null;   // being rebuilt — gone with the old rows
+  wearBox.replaceChildren();
+  const regions = regionsOf(part).filter((region) => wearOf(spec, region));
+  for (const region of regions) {
+    const wears = wearOf(spec, region);
+    const label = REGION_LABEL[region] || region;
+    if (regions.length > 1) {
+      const cap = document.createElement("span");
+      cap.className = "regionName";
+      cap.textContent = label;
+      wearBox.appendChild(cap);
+    }
+    const d = dropdown(wearBox, `${label} material`);
+    d.menu.setAttribute("role", "listbox");
+    d.thumb.appendChild(ballOf(wears, BALL_SIZE, 0));
+    d.name.textContent = captionOf(wears);
+    d.pick.title = `${label} wears ${captionOf(wears)}`;
+    d.fill = () => {
+      d.menu.replaceChildren();
       const plus = document.createElement("span");
       plus.className = "plus";
       plus.setAttribute("aria-hidden", "true");
       plus.textContent = "+";
-      add.appendChild(plus);
-      const cap = document.createElement("span");
-      cap.className = "cap";
-      cap.textContent = "new";
-      add.appendChild(cap);
-      add.addEventListener("click", () => addMaterialFor(region));
-      row.appendChild(add);
+      const add = option(plus, "new material", () => addMaterialFor(region));
+      add.classList.add("add");
+      add.title = `a new material for the ${label} — a copy of what it has on`;
+      d.menu.appendChild(add);
       materialKeys(spec).forEach((key, i) => {
-        const card = materialCard(key, 48, i * 40, (picked) => {
-          spec = derive({ ...spec, wear: { ...(spec.wear || {}), [region]: picked } });
+        const row = option(ballOf(key, BALL_SIZE, i * 40), captionOf(key), () => {
+          spec = derive({ ...spec, wear: { ...(spec.wear || {}), [region]: key } });
           render();
         });
-        card.setAttribute("aria-label", `${REGION_LABEL[region] || region} wears ${captionOf(key)}`);
-        card.classList.toggle("on", key === wears);
-        row.appendChild(card);
+        row.classList.toggle("on", key === wears);
+        row.setAttribute("aria-selected", String(key === wears));
+        row.setAttribute("aria-label", `${label} wears ${captionOf(key)}`);
+        d.menu.appendChild(row);
       });
-      wearStrip.appendChild(row);
-    }
-    wearNote.textContent = regions.length ? "" : `${part} wears no material — a mark, an object with a colour of its own`;
+    };
   }
-
+  if (!regions.length) {
+    const note = document.createElement("output");
+    note.className = "readout";
+    note.textContent = `${part} wears no material — a mark, an object with a colour of its own`;
+    wearBox.appendChild(note);
+  }
 }
 
 // One row of a palette box's pool — the swatches a key may be picked from: the main material's colour (the skin

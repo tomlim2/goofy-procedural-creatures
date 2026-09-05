@@ -331,38 +331,54 @@ body.how { height: auto; }
 .fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; margin-top: 6px; }   /* one column that never grows past the card: an auto track took the width of the widest row (a row of four buttons) and every row with it, and a slider ran out of the card */
 /* The PART card, the way a browser holds its tabs: a darker strip across the top with the part tabs in one row (each
    part alone, thumbs.js), the open tab a lighter shape with rounded top corners that is one piece with the panel under it —
-   no line between — and the others flat on the strip. The panel holds the open part's form previews (each value alone),
-   the current one framed. The strip scrolls sideways by trackpad and by opening a part; like a browser's it shows no bar */
+   no line between — and the others flat on the strip. The strip scrolls sideways by trackpad and by opening a part; like a
+   browser's it shows no bar */
 .partCard { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; align-items: start; }
 .tabs { display: flex; flex-wrap: nowrap; gap: 1px; overflow-x: scroll; overflow-y: hidden; padding: 4px 4px 0; background: rgba(43, 39, 36, 0.08); border-radius: 5px 5px 0 0; }
 .tabs::-webkit-scrollbar { display: none; }
-.tab { flex: 0 0 40px; width: 40px; border-radius: 5px 5px 0 0; }
-/* Under the open part, two more tabs — SHAPE and MATERIAL — the same kind of strip, text only, on the part's panel.
-   The panel shows the part's form previews (and its paint row), or the creature's materials as cards to pick the
-   part's from (spec.wear) — a picker, not the MATERIALS panel; that stays in its own card */
-.modes { background: rgba(43, 39, 36, 0.045); border-radius: 0; padding-top: 3px; overflow: hidden; }
-/* Three text tabs that share the strip — each a third of it, so the third never runs off the card (at 12px of padding a side the
-   three needed 238px of a 209px strip, and PROPERTY was cut to PROPERT) */
-.modes .mode { flex: 1 1 0; min-width: 0; width: auto; padding: 4px 4px 3px; font-size: 10px; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.modes .mode.on { font-weight: 700; }
-.modePanel { background: #f8f3e8; border-radius: 0 0 5px 5px; padding: 6px 4px 4px; display: grid; gap: 6px; }
-.wear .strip { gap: 8px; }
-.wear .pv { padding: 4px 8px 3px; }
-.wear .ball.preview { width: 48px; height: 48px; }
-.formsSlot { background: transparent; padding: 0; }
-.tab, .form { display: grid; justify-items: center; gap: 1px; padding: 4px 2px 3px; min-width: 0; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; font-size: 8px; letter-spacing: 0.04em; line-height: 1.2; }
-.tab { border: 0; padding-bottom: 4px; }
-.tab span, .form span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.6; }
+.tab { flex: 0 0 40px; width: 40px; display: grid; justify-items: center; gap: 1px; padding: 4px 2px 4px; min-width: 0; border: 0; border-radius: 5px 5px 0 0; background: transparent; color: inherit; cursor: pointer; font-size: 8px; letter-spacing: 0.04em; line-height: 1.2; }
+.tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.6; }
 .tab:hover { background: rgba(43, 39, 36, 0.06); }
-.form:hover { background: rgba(43, 39, 36, 0.06); }
 /* the panel's ground — the tab and the panel read as one piece. `color: inherit` on purpose: the generic button.on rule
    turns text paper-coloured, which on a paper-coloured tab made the open tab's name vanish */
 .tab.on { background: #f8f3e8; color: inherit; }
-.form.on { border-color: var(--ink); background: #f2ecdf; color: inherit; }
-.tab.on span, .form.on span { opacity: 1; font-weight: 700; }
-.tab canvas, .form canvas { display: block; max-width: 100%; height: auto; }   /* until thumbs.js paints it a canvas is 300×150 — kept inside its cell */
-.forms { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
-.form { font-size: 9px; }
+.tab.on span { opacity: 1; font-weight: 700; }
+.tab canvas { display: block; max-width: 100%; height: auto; }   /* until thumbs.js paints it a canvas is 300×150 — kept inside its cell */
+/* Under the strip, the open part's panel: three sections, each under a ruled heading — SHAPE, MATERIAL, PROPERTY. SHAPE and
+   MATERIAL are one line each, a dropdown: what the part has on (its picture, then its name, a caret at the end), and a click
+   on the line opens the list of what it could have under it, every row the same way — picture, then name. PROPERTY stands
+   open. Three text tabs swapping one panel between them (SHAPE · MATERIAL · PROPERTY) were tried first: the thing wanted was
+   always on the other tab, and a form and a material each read fine on one line */
+.partPanel { background: #f8f3e8; border-radius: 0 0 5px 5px; padding: 2px 4px 6px; display: grid; gap: 4px; }
+.partPanel .group { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; color: rgba(43, 39, 36, 0.5); }
+.partPanel .group::after { content: ""; flex: 1; border-top: 1px solid rgba(43, 39, 36, 0.12); }
+/* The dropdown — the line (.pick) and, opened, the list (.menu) in the flow of the card under it, not floated over it: the deck
+   clips its sides, and a layer over it would be cut at the deck's edge. Past six rows the list scrolls inside itself */
+.drop { display: grid; gap: 2px; }
+.pick, .opt { display: grid; align-items: center; gap: 0 8px; padding: 2px 8px 2px 2px; text-align: left; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; font-size: 11px; letter-spacing: 0.04em; line-height: 1.3; }
+.pick { grid-template-columns: 44px minmax(0, 1fr) auto; border-color: var(--line); background: #f2ecdf; }
+.opt { grid-template-columns: 44px minmax(0, 1fr); }
+.pick:hover, .opt:hover { background: rgba(43, 39, 36, 0.06); }
+.pick[aria-expanded="true"] { border-color: var(--ink); }
+.pick .thumb, .opt .thumb { display: grid; place-items: center; width: 44px; height: 44px; }
+.pick canvas, .opt canvas { display: block; max-width: 100%; max-height: 100%; }   /* a canvas not yet painted is 300×150 — kept inside its cell */
+.pick .name, .opt .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick .caret { font-size: 12px; opacity: 0.6; }
+.pick[aria-expanded="true"] .caret { transform: rotate(180deg); }
+.menu, .opts { display: grid; gap: 1px; }
+.menu { position: relative; max-height: 312px; overflow-y: auto; padding: 2px; border: 1px solid var(--line); background: #f2ecdf; scrollbar-width: thin; }
+.opt .name { opacity: 0.75; }
+.opt.on { border-color: var(--ink); background: #f8f3e8; color: inherit; }   /* color: inherit against button.on's paper-coloured text, as on .tab.on */
+.opt.on .name { opacity: 1; font-weight: 700; }
+/* A material's ball on its line or row — smaller than MATERIALS' previews, centred in the 44px cell the form pictures take */
+.pick .ball.preview, .opt .ball.preview { width: 36px; height: 36px; }
+/* + — a new material for the part, first row of what it may wear, its ball an empty ring the size of the others */
+.opt.add .plus { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1px dashed var(--line); font-size: 18px; line-height: 1; opacity: 0.55; }
+.opt.add:hover .plus { opacity: 1; border-style: solid; }
+/* MATERIAL — a dropdown per surface; a part with more than one names each (an eye's pupil, then its white) */
+.wear { display: grid; gap: 3px; }
+.wear .regionName { font-size: 10px; letter-spacing: 0.18em; color: rgba(43, 39, 36, 0.55); font-weight: 600; margin-top: 2px; }
+.wear .readout { font-size: 11px; opacity: 0.6; }
 
 /* The state dropdown (NORMAL · GHOST) sits under the species one in the same card */
 #stateSel { margin-top: 6px; }
@@ -381,17 +397,13 @@ body.how { height: auto; }
    together; a sample is one material in the creature's own colour and density, ringed when it is the one. */
 .field canvas.preview { display: block; width: 72px; height: 72px; }
 /* A material card — the ball and its name together, the card itself the button: MATERIALS' previews (the one being edited
-   framed) and, under a part, the picker of what the part wears (the one it wears framed). The others sit bare on the panel */
-/* The material cards fill the width — a grid of as many columns as fit, the cards stretched to share the row, so
-   a hand adds materials and the rows fold with no gap left at the right; under a part the + is the first card */
-.wear > .strip { display: grid; gap: 4px; padding: 0; }
-.wear .strip .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 4px; padding: 2px; }
-/* PROPERTY under a part — a slider or a row of values per property; a part with none has the tab greyed.
+   framed). The others sit bare on the panel */
+/* PROPERTY under a part — a slider or a row of values per property; a part with none has no section.
    A property is a block, not a row: its name on a line of its own (the material panel's section type), a slider's reading
    at the right end of that line, and the control under it at the full width of the panel. In a 74px name column the
    values had 113px between them — three buttons overflowed by 7px, LONG · MEDIUM · SHORT · VERYLONG by 73 — and the
    grid, taking the widest row's width, ran the sliders out of the card with them */
-.props { padding: 6px 4px 2px; gap: 8px; }
+.props { padding: 2px 0 0; gap: 8px; }
 .props .field { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name reading" "control control"; gap: 3px 8px; align-items: baseline; }
 .props .field > span { grid-area: name; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: rgba(43, 39, 36, 0.55); opacity: 1; }
 .props .field .readout { grid-area: reading; grid-column: auto; font-size: 11px; letter-spacing: 0.04em; opacity: 0.8; }
@@ -399,10 +411,6 @@ body.how { height: auto; }
 .props .field .seg button { min-width: 0; padding: 4px 2px; font-size: 11px; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Four values go two by two — four in a row is 46px a button, and VERYLONG is 47px of letters */
 .props .field .seg[data-count="4"] { display: grid; grid-template-columns: 1fr 1fr; }
-.tab.mode[disabled] { opacity: 0.35; cursor: default; }
-.tab.mode[disabled]:hover { background: transparent; }
-/* A part with more than one surface names each row — an eye's pupil, then its white */
-.wear .regionName { font-size: 10px; letter-spacing: 0.18em; color: rgba(43, 39, 36, 0.55); font-weight: 600; margin-top: 4px; }
 /* MATERIALS' previews run in one row and scroll sideways, the way the part tabs do — the card being edited is
    scrolled into view (editor.js) */
 .previews .strip { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: 3px; padding: 0 1px 2px; scrollbar-width: none; }
@@ -422,10 +430,6 @@ body.how { height: auto; }
 /* + beside a card's title — MATERIALS' new material. Small, round, at the end of the title line */
 .card h2 .plus { margin-left: auto; width: 18px; height: 18px; padding: 0; border: 1px solid var(--line); border-radius: 50%; font-size: 13px; line-height: 1; letter-spacing: 0; color: var(--ink); opacity: 0.6; display: grid; place-items: center; }
 .card h2 .plus:hover { opacity: 1; background: rgba(43, 39, 36, 0.06); }
-/* + — a new material for the part, first of the cards of what it may wear, its ball an empty ring the size of the
-   others */
-.pv.add .plus { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px dashed var(--line); font-size: 22px; line-height: 1; opacity: 0.55; }
-.pv.add:hover .plus { opacity: 1; border-style: solid; }
 /* NAME is typed over its line — the same line the other sections read their value on */
 .sect input.val { font: inherit; font-size: 12px; letter-spacing: 0.04em; color: var(--ink); background: transparent; border: 0; border-bottom: 1px dashed var(--line); padding: 0; width: 100%; outline: none; }
 .sect input.val:focus { border-bottom-style: solid; border-bottom-color: var(--ink); }
