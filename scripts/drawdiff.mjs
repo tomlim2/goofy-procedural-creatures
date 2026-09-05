@@ -3,7 +3,7 @@
 //   node scripts/drawdiff.mjs main     # compare against another ref
 //
 // snapshot.mjs hashes one board (35 creatures) per layer, so it never visits every slot value. When drawing code moves in a big way (splitting files, turning it into a table),
-// run this — it hashes and compares 11 layers × 2 boil variants + limbs + tail bones + brow/mouth states, sketch by sketch. diff 0 means the drawing is unchanged.
+// run this — it hashes and compares 11 layers × 2 boil variants + limbs (× 2 boil variants, and their joints' places) + tail bones + brow/mouth states, sketch by sketch. diff 0 means the drawing is unchanged.
 // The old tree is extracted into a temp folder with `git archive` and node_modules (three) is linked beside it. Specs (makeCreature) are compared too.
 
 import { createHash } from "node:crypto";
@@ -72,20 +72,28 @@ try {
         if (hash(a[k].ink) !== hash(b[k].ink) || hash(a[k].fills) !== hash(b[k].fills)) note(`${label} ${k} variant ${v}`);
       }
     }
-    const la = oldM.limbSketches(specOld), lb = newM.limbSketches(spec);
-    if (la.length !== lb.length) note(`${label} limb count`);
-    // A jointed limb is **three** sketches, not one — the upper bone (sketch), the lower one (lowerSketch: a
-    // forearm, a shin) and the foot on its own ankle (footSketch). Only the upper was compared here, so the
-    // gate was blind to two thirds of every arm and leg: a change that moved every toe on the board came out
-    // at 0. `knee` rides along too — it is not geometry, but it is what the scene folds the leg by
-    else la.forEach((l, i) => {
-      for (const part of ["sketch", "lowerSketch", "footSketch"]) {
-        if (!l[part] && !lb[i][part]) continue;
-        n += 1;
-        if (!l[part] || !lb[i][part] || hash(l[part]) !== hash(lb[i][part])) note(`${label} limb ${i} ${part}`);
-      }
-      if (l.knee !== lb[i].knee) note(`${label} limb ${i} knee ${l.knee} → ${lb[i].knee}`);
-    });
+    // The limbs in **two boil frames**, like the layers: frame 0 alone hid a knee that sat somewhere else in frames 1
+    // and 2 (the joint's place read the boiling noise), so the leg stepped at the knee with every boil and the gate said 0
+    for (const v of [0, 1]) {
+      const la = oldM.limbSketches(specOld, v), lb = newM.limbSketches(spec, v);
+      if (la.length !== lb.length) { note(`${label} limb count variant ${v}`); continue; }
+      // A jointed limb is **three** sketches, not one — the upper bone (sketch), the lower one (lowerSketch: a
+      // forearm, a shin) and the foot on its own ankle (footSketch). Only the upper was compared here, so the
+      // gate was blind to two thirds of every arm and leg: a change that moved every toe on the board came out
+      // at 0. `knee` rides along too — it is not geometry, but it is what the scene folds the leg by — and so do the
+      // joints' places (pivot, elbow, ankle): the scene hangs the lower bone and the foot from them, not from the sketch
+      la.forEach((l, i) => {
+        for (const part of ["sketch", "lowerSketch", "footSketch"]) {
+          if (!l[part] && !lb[i][part]) continue;
+          n += 1;
+          if (!l[part] || !lb[i][part] || hash(l[part]) !== hash(lb[i][part])) note(`${label} limb ${i} ${part} variant ${v}`);
+        }
+        if (l.knee !== lb[i].knee) note(`${label} limb ${i} knee ${l.knee} → ${lb[i].knee} variant ${v}`);
+        for (const joint of ["pivot", "elbow", "ankle"]) {
+          if (JSON.stringify(l[joint]) !== JSON.stringify(lb[i][joint])) note(`${label} limb ${i} ${joint} variant ${v}`);
+        }
+      });
+    }
     const ta = oldM.tailSketch(specOld), tb = newM.tailSketch(spec);
     ta.sketches.forEach((s, i) => { n += 1; if (!tb.sketches[i] || hash(s) !== hash(tb.sketches[i])) note(`${label} tail ${i}`); });
     for (const part of ["brow", "mouth"]) {

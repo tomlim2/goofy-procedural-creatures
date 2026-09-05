@@ -108,7 +108,9 @@ upper bone (`sketch`), the lower one (`lowerSketch` — a forearm, a shin) and t
 (`footSketch`), plus `knee`, which is not geometry but is what the scene folds the leg by. Comparing the upper
 bone alone left the gate blind to two thirds of every limb: a change that moved every toe on the board came out
 at **0 differences**. All three are compared now. The lesson generalises — when a part returns more than one
-sketch, check that the gate hashes all of them.
+sketch, check that the gate hashes all of them. And in more than one **boil frame**: the limbs were hashed in frame 0
+alone, and a knee that sat somewhere else in frames 1 and 2 (the joint's place read the boiling noise) came out at 0
+too. The limbs are compared in two frames now, like the layers.
 
 `drawdiff` compares sketches — the triangles a part hands to the GPU — and is blind to everything after them: the
 scene (a mesh's opacity, the parallax depths, render order) and the shaders (the paper, the sheet pass). For those,

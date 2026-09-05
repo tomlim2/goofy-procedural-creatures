@@ -369,6 +369,13 @@ that is what a pencil line on paper does; it is not the character doing somethin
 toggles are split into POSE (the rig) and INK (the lines). When judging motion, turn the boil noise off with
 INK STILL and watch the joints alone.
 
+**The frames share one skeleton.** Only the hand boils — where a joint sits (a biped's knee and ankle, a quad's lean)
+is the individual's and the same in every frame, because the scene hangs every frame's bones from frame 0's joints
+(`scene/rig.js limbFrames[0]`). `limbSketches` reads a joint's place off `shape`, frame 0's noise whatever the frame,
+and only the strokes off the boiling `noise`. Drawn off the boiling noise, frames 1 and 2 put the thigh's end up to a
+width from where the shin hung and the leg stepped at the knee with every boil — and neither `drawdiff` nor the
+snapshot saw it, both hashing the limbs in frame 0 alone (drawdiff hashes two frames now).
+
 ## Every individual has a different hand
 
 `proportions.wobble` is the per-individual hand-shake multiplier. Some have to come out neat and some a mess

@@ -47,6 +47,12 @@ function armDims(spec, box) {
 export function limbSketches(spec, variant = 0) {
   const rng = makeRng(((spec.proportions.hand + 303) ^ (variant * 0x9e3779b9)) >>> 0);
   const noise = makeNoise(rng);
+  // The hand boils — each frame (variant) draws with a noise of its own — but the **skeleton does not**: where a knee or an
+  // ankle sits is the individual's, the same in every frame, because the scene hangs every frame's shin from frame 0's knee
+  // (scene/rig.js limbFrames[0]). Taken off the boiling noise, frames 1 and 2 drew the thigh to a knee of their own, up to a
+  // width from where the shin hung, and the leg stepped at the knee with every boil. So a joint's place reads `shape`, frame 0's
+  // noise whatever the frame, and only the strokes read `noise`
+  const shape = makeNoise(makeRng((spec.proportions.hand + 303) >>> 0));
   const box = layout(spec);
   const p = spec.proportions;
   const ink0 = spec.palette.ink;
@@ -72,7 +78,7 @@ export function limbSketches(spec, variant = 0) {
     [front - gap / 2, front + gap / 2, back - gap / 2, back + gap / 2].forEach((x, i) => {
       const s = make();
       const len = hipY;
-      const lean = noise(i * 7.1) * 0.012;
+      const lean = shape(i * 7.1) * 0.012;   // the skeleton's — every frame the same
       if (kind === "float") {
         // Floating feet — just the feet, with no leg line. Joint jitter makes them bob about. No knee to bend
         dot(s, lean + 0.006, -len + 0.014, 0.024, skin, "legs");
@@ -197,7 +203,7 @@ export function limbSketches(spec, variant = 0) {
       limbs.push({ sketch: s, lowerSketch: sh, pivot: [x, hipY], elbow: [kneeX, -kneeH], kind: "leg", side, index: side < 0 ? 0 : 1, behind: false });
       continue;
     } else {
-      const nx = noise(side * 3.3) * 0.02;
+      const nx = shape(side * 3.3) * 0.02;   // the skeleton's — every frame the same
       kneeX = nx * KNEE_SPLIT;
       s.line([[0, 0], [kneeX, -kneeH]], { color: ink0, joint: [false, true] });
       footX = nx - kneeX;
