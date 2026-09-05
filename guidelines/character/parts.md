@@ -132,7 +132,7 @@ smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline down to 
 eye band). **The cap is the front slot's, or a crown top's — a back never draws one**: a back is only what hangs behind the head,
 one piece on the back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the
 seam showed). With a front the cap comes down to that kind's hairline; under a crown top (cap · bun · spikes · hedgehog) it stops
-at the crown (0.78 of the head above its centre, the forehead bare). A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
+at the crown (0.7 of the head above its centre, the forehead bare — at 0.78 the cap alone read as a skullcap). A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
 over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
 wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
 from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
@@ -144,8 +144,8 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 | none | Nothing in front — no cap unless a crown top brings one |
 | hairline | The plain fringe — the cap itself coming down over the forehead to a straight hairline (0.5 of the head above its centre), no piece of its own. What every back kind used to bring with it; a file from before gets it with its back |
 | blunt | The straight fringe — a panel over the forehead on the front layer, rooted inside the cap so the two read as one mass (its top edge lies in the cap's fill and draws no line; its sides and its ragged hem do). The hem clears the brow and never enters the eye band |
-| swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down past the temples to the jaw line where there is a lane outside the widest eye. Which side is per individual |
-| curtain | A middle parting — two sweeps framing the face, the parting gap showing the forehead up to the hairline |
+| swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down past the temples to the jaw line where there is a lane outside the widest eye (a fifth of the head's half-height clear of it — closer, the near lock sat on a big eye's outer line). Which side is per individual |
+| curtain | A middle parting — two sweeps framing the face, the parting gap showing the forehead up to the hairline; the tips drop past the brow but never into the eye band (`eyeSafeY`, no grace — with one they grazed a big eye's white on a turned face) |
 | sideLock | One lock falling from a parting down one cheek to the jaw line (the side per individual), the other side bare |
 
 | hairBack | How |

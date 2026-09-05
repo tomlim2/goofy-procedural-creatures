@@ -204,7 +204,7 @@ const fillStrip = (h, fills, spine, widths, phase = 0) => {
 const frontCurtain = (h) => {
   const { front, frontFills, spec, box, rx, ry, cy } = h;
   const brow = browLine(spec, box);
-  const tipY = Math.max(brow - ry * 0.24, eyeSafeY(h) - ry * 0.1);   // the tips may drop past the brow, but a turned wide-set eye must clear them (the strip is narrow — a 0.1·ry grace)
+  const tipY = Math.max(brow - ry * 0.24, eyeSafeY(h));   // the tips may drop past the brow but never into the eye band: with a 0.1·ry grace they grazed a big eye's white on a turned face
   for (const side of [-1, 1]) {
     const spine = [
       [side * rx * 0.1, cy + ry * 0.8],
@@ -241,7 +241,7 @@ const frontSwept = (h) => {
   // the face). A very wide-set eye leaves no lane, and then the locks stop at the temple as before
   const eyes = eyeGeometry(spec, box);
   const eyeOuter = Math.max(...eyes.map((e) => Math.abs(e.x) + e.r));
-  const lockX = Math.max(eyeOuter + ry * 0.12, rx * 0.9);
+  const lockX = Math.max(eyeOuter + ry * 0.2, rx * 0.9);   // a fifth of the head's half-height clear of the eye — at 0.12 the near lock sat on a big eye's outer line
   const runsDown = lockX < rx * 1.04;
   const W = [ry * 0.08, ry * 0.18, ry * 0.2, ry * 0.15, ry * 0.1, ry * 0.05];   // interpolated over the spine
 
@@ -304,7 +304,7 @@ const sideLock = (h) => {
   const side = spec.roll % 2 ? 1 : -1;
   const eyes = eyeGeometry(spec, box);
   const eyeOuter = Math.max(...eyes.map((e) => Math.abs(e.x) + e.r));
-  const lockX = Math.max(eyeOuter + ry * 0.12, rx * 0.9);
+  const lockX = Math.max(eyeOuter + ry * 0.2, rx * 0.9);   // the swept's lane
   const spine = [[side * rx * 0.2, cy + ry * 0.94], [side * rx * 0.5, cy + ry * 0.8], [side * rx * 0.78, Math.max(browLine(spec, box) + ry * 0.12, eyeSafeY(h))]];
   if (lockX < rx * 1.04) spine.push([side * lockX, cy + ry * 0.06], [side * lockX, FRINGE_END(h)]);
   front.contour(fillStrip(h, frontFills, spine, [ry * 0.07, ry * 0.15, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 11), { color: h.lineInk });
@@ -531,11 +531,11 @@ export const TOPS = {
   cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true })
 };
 // **A back is only what hangs behind the head.** The scalp cap — the piece IN FRONT of the head, on the crown layer — is the
-// front slot's (down to the front kind's hairline) or a crown top's (cap · bun · the spiked bands, at CROWN — 0.78 of the head
-// above its centre, the forehead bare); a back never draws one. Drawn with the back it was two pieces for one hairstyle, a
+// front slot's (down to the front kind's hairline) or a crown top's (cap · bun · the spiked bands, at CROWN — 0.7 of the head
+// above its centre, the forehead bare; at 0.78 the cap alone read as a skullcap rather than hair); a back never draws one. Drawn with the back it was two pieces for one hairstyle, a
 // mass behind and a cap in front, and the seam between them showed. The hoods cover the crown themselves and want no cap
 const HAIRLINE = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6 };
-const CROWN = 0.78;
+const CROWN = 0.7;
 const CAP_TOPS = { cap: CROWN, bun: 0.82, spikes: CROWN, hedgehog: CROWN };
 const DOME_BACKS = new Set(["bob", "mop", "long", "verylong"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
 
