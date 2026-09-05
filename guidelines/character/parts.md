@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 232 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 32 slots, 231 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -116,12 +116,14 @@ An eyepatch is always a **black** fill (an object) — on an imp's ink-black hea
 laps onto the other eye — decided once the proportions are settled). An eyepatch is also **dropped on mismatched eyes** — cover one side of an individual whose eye size (`eyeSizeSkew` > 0.09) or height (`eyeHeightSkew` > 0.03) is noticeably different and the remaining
 eye looks oddly large or high on its own, which reads as a mistake (set to none after the proportions are settled; patchSide is cleared too).
 
-### hair — three slots: hairFront (13) · hairBack (13) · hairTop (4)
-`hair.js` — hair is **three slots combined freely**: the **front** (앞머리 — everything on the head itself, in front of it: the
-fringes, the crown cap, the mohawk, tufts, curls, the hoods), the **back** (뒷머리 — what hangs behind and beside the head, the
-spiked rings among it) and the **top** (정수리 — what is tied on the crown: a bun, the apple tops). `hairFront` stands where the one
-`hair` slot of 26 values stood, so the roll's count is unchanged; `hairBack` and `hairTop` are late slots. A file from before
-opens as the same style (`file.js OLD_HAIR`: bob → back bob, bangs → front blunt, spikes → top spikes, bobSwept → swept + bob, verylong → long, twintailsBall → bunsSide …).
+### hair — two slots: hairFront (13) · hairBack (13)
+`hair.js` — hair is **two slots combined freely**: the **front** (앞머리 — everything on the head itself, in front of it: the
+fringes, the crown cap, the mohawk, tufts, curls, the hoods) and the **back** (뒷머리 — what hangs behind and beside the head, the
+spiked rings among it). What is tied ON the crown — a bun, the apple tops — is **headgear** (§ headgear, `TOP_KNOTS`): worn like a
+hat and never with one, drawn on the hat layer in the hair's colour (`drawTopKnot`); the hat drawer skips them. `hairFront` stands
+where the one `hair` slot of 26 values stood, so the roll's count is unchanged; `hairBack` is a late slot. A file from before opens
+as the same style (`file.js OLD_HAIR`: bob → back bob, bangs → front blunt, spikes → back spikes, bun → headgear bun, bobSwept →
+swept + bob, verylong → long, twintailsBall → bunsSide …).
 Hair is drawn across **three layers** (`drawHair(layers)`): **back hair** (0.4 — behind the head, the body and the legs, so only
 what lies outside the silhouette shows) · **on the scalp** (crown 2.06 — above the head ink and below the face, at the horns' depth)
 · **over the face** (front 6.55 — the brows and mouth at 6.6 are drawn above it, and a hat at 6.58 sits on the hair). On a face turn
@@ -133,7 +135,7 @@ smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline down to 
 eye band). **The cap is the front's — a back never draws one**: a back is only what hangs behind the head, one piece on the
 back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the seam showed). The
 fringes bring the cap down to their hairline; the crown cap stops at the crown (0.7 of the head above its centre, the forehead
-bare — at 0.78 the cap alone read as a skullcap); the strand fronts, the hoods and the top bring none. A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
+bare — at 0.78 the cap alone read as a skullcap); the strand fronts and the hoods bring none. A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
 over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
 wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
 from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
@@ -168,17 +170,12 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 | pigtails | Two filled bunches at the sides, behind the ears, each with a tie |
 | spikes / hedgehog | **Spiked rings** — a zigzag of filled wedges standing round the head's upper half from **behind** it (the back layer: the head covers the band's inside, only the wedges past the outline show): spikes 11 long ones over 0.95π · hedgehog 15 short ones over 0.9π |
 
-| hairTop | How |
-| --- | --- |
-| none | |
-| bun | The round bunch on top and nothing else — no cap under it, no pin; 0.096 wide (twice its first size), its bottom tucked a little into the crown. It cannot wear a hat |
-| apple / appleBig | An apple top — a bunch rising like an apple stem in the middle of the crown: 4 leaves in a fan plus a tie (size 2) · 6 leaves 1.7× as long and thick plus a long tie (size 3.4) — both twice their first size. No hat |
-
 **The rules** (`spec.js applyLateConstraints` — on the late slots, after they are rolled; fixed overwrites, never a roll): a helmet or
-a pot on the head clears all three · with any other hat or a band the fringes and the back keep (bangs and a bob's hem come out from
-under a hat) but what stands up through it goes — a bun and the apple tops (top), the mohawk (front), the spiked rings (back);
-the hedgehog, the cloud and the hood stay under a band only · a mohawk, a bun or an apple top wears no hat · a mohawk has no back. A back with no front hangs behind a bare
-head, and the roll leaves it so — the three slots are independent. cat, pup and rex forbid every
+a pot on the head clears both · with any other hat or a band (a bun or an apple top is not a hat — it covers nothing) the fringes and
+the back keep (bangs and a bob's hem come out from under a hat) but what stands up through it goes — the mohawk (front), the spiked
+rings (back); the hedgehog, the cloud and the hood stay under a band only · a mohawk wears nothing on the crown (a bun or an apple
+top included) · a mohawk has no back · crown horns take the crown (no headgear, no hair but a tuft). A back with no front hangs behind
+a bare head, and the roll leaves it so — the two slots are independent. cat, pup and rex forbid every
 value → none (their fur is not hair). The roll deals each slot its own common none; with the hat rule clearing most tops, about two humans in five are bald (it was
 one in three with the one slot) and about one in sixteen wears all three. Imps stay three in four bald, spikes their one top.
 
@@ -214,6 +211,14 @@ crown (a band on the crown of the head with a zigzag of four points — a crumpl
 halo (a thin ink ring floating clear above the head — ink only, a mark rather than a thing with a colour; **the one headgear that keeps every hairstyle**, `applyConstraints` exempts it because it covers nothing) /
 cone (a party cone — a tall crumpled triangle on the crown leaning to one side, a pom a shade lighter at the tip) /
 coronet (the monkey's little crown, measured off the reference: **four** spikes on a band about a quarter of the head's half-width — where the paper `crown` spans nearly all of it — the spikes **splaying outward** to 1.7× the band, and their tips at four **different** heights (0.80 · 1.00 · 0.93 · 0.87 of the tallest, the ripple running either way per individual), which is most of what keeps it from reading as a stamped icon. The reference's spikes rise 0.93·ry over the skull and the cell ceiling here allows about 0.45, so the height is the board's and only the proportions are the reference's). It is **filled in pieces** for the same reason the paper crown is: the V notches between the spikes are concave and a fan from the centre crosses them. The color is accent or pop.
+
+**Hair worn like a hat — `bun` · `apple` · `appleBig` (`TOP_KNOTS`).** What is tied on the crown is headgear by slot, since it is
+worn where a hat is and never with one, but hair by colour and drawing: `drawTopKnot` (hair.js) paints it on the hat layer in the
+hair's colour after the hats, and the hat drawer skips it. bun — the round bunch on top and nothing else, no cap under it, no pin,
+0.096 wide with its bottom tucked a little into the crown · apple / appleBig — a bunch rising like an apple stem in the middle of
+the crown, 4 leaves in a fan plus a tie (size 2) · 6 leaves 1.7× as long and thick plus a long tie (size 3.4). They cover nothing,
+so the hat rules leave the hair under them alone; a mohawk takes them off as it takes any hat off; cat, pup and rex forbid them
+as they forbid all hair.
 
 **They all sit above the brow line** — measured from the top edge of the eyes (including eyewear, goggle, patch and monocle rims), so they never cover an individual whose eyes are set high; and their width follows the head outline's
 half-width at that height, fitting the head's size and shape. A hat is a separate layer **in front of** the head (fills 2.14, ink 2.16 — it covers the outline, hair, horns and the ears' roots but cannot cover the eyes or eyewear,
