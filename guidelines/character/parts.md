@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 230 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 231 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -116,7 +116,7 @@ An eyepatch is always a **black** fill (an object) — on an imp's ink-black hea
 laps onto the other eye — decided once the proportions are settled). An eyepatch is also **dropped on mismatched eyes** — cover one side of an individual whose eye size (`eyeSizeSkew` > 0.09) or height (`eyeHeightSkew` > 0.03) is noticeably different and the remaining
 eye looks oddly large or high on its own, which reads as a mistake (set to none after the proportions are settled; patchSide is cleared too).
 
-### hair — three slots: hairFront (5) · hairBack (10) · hairTop (13)
+### hair — three slots: hairFront (6) · hairBack (10) · hairTop (13)
 `hair.js` — hair is **three slots combined freely**: the **front** (앞머리 — what falls over the forehead), the **back** (뒷머리 —
 what hangs behind and beside the head) and the **top** (정수리 — what sits on the crown). `hairFront` stands where the one
 `hair` slot of 26 values stood, so the roll's count is unchanged; `hairBack` and `hairTop` are late slots. A file from before
@@ -129,8 +129,9 @@ each layer shifts by its depth ([../rig.md](../rig.md) § fake 3D depth).
 **Every piece is filled** — the boundary drawn first, a closed form, the inside painted with the hair's material and contoured in the
 pencil's dark ink, the same pen as a hat (`paintPart` + `contour`); a hair drawn as a bare pen line beside a filled head read as a
 smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline down to a hairline, easing to side lobes that never enter the
-eye band — drawn under any front or back, its hairline the front kind's, or the top's, or 0.52 of the head above its centre), a
-**back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
+eye band — drawn under any front or back; **what covers the forehead is the front slot's**: with a front the cap comes down to
+that kind's hairline, without one it stops at the crown (0.78 of the head above its centre — the top of the head and the temples,
+the forehead bare), so a back is only what hangs behind and a top only what sits on the crown), a **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
 over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
 wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
 from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
@@ -139,7 +140,8 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 
 | hairFront | How |
 | --- | --- |
-| none | |
+| none | The forehead bare — the cap, if any, stops at the crown |
+| hairline | The plain fringe — the cap itself coming down over the forehead to a straight hairline (0.5 of the head above its centre), no piece of its own. What every back kind used to bring with it; a file from before gets it with its back |
 | blunt | The straight fringe — a panel over the forehead on the front layer, rooted inside the cap so the two read as one mass (its top edge lies in the cap's fill and draws no line; its sides and its ragged hem do). The hem clears the brow and never enters the eye band |
 | swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down past the temples to the jaw line where there is a lane outside the widest eye. Which side is per individual |
 | curtain | A middle parting — two sweeps framing the face, the parting gap showing the forehead up to the hairline |
@@ -160,7 +162,7 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 | hairTop | How |
 | --- | --- |
 | none | |
-| cap | The plain scalp cap and nothing else — for a creature with no front and no back |
+| cap | The crown cap alone — the top of the head and the temples, the forehead bare — for a creature with no front and no back |
 | bun | One bunch on top and a pin, over a thin cap (the hairline high on the crown). It cannot wear a hat |
 | apple / appleBig | An apple top — a bunch rising like an apple stem in the middle of the crown: 4 leaves in a fan plus a tie · 6 leaves 1.7× long and thick plus a long tie. No hat |
 | spikes / hedgehog | **Spiked bands** — a zigzag of filled wedges standing off the head's outline over a scalp cap, only the zigzag drawing a line: spikes 11 over the whole upper half (0.95π) · hedgehog 15 short ones (0.9π) and a second row of short strokes inside the cap in the hair's own tone |

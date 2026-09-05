@@ -491,7 +491,8 @@ const appleOfF = (size) => (h) => {
 
 // The three tables — 1:1 with slots.js SLOTS.hairFront · hairBack · hairTop (none draws nothing of its own)
 export const FRONTS = {
-  blunt: bangsPanel,        // the straight fringe, its hem ragged
+  hairline: () => {},       // the plain fringe — the cap itself down to a straight hairline; drawHair draws the cap
+  blunt: bangsPanel,        // the straight fringe as a panel, its hem ragged
   swept: frontSwept,        // a deep side parting, both locks running down past the temples
   curtain: frontCurtain,    // a middle parting, two sweeps framing the face
   sideLock                  // one lock down one cheek
@@ -521,10 +522,13 @@ export const TOPS = {
   helmet: hood({ grow: 1.06, lumps: 3, amount: 0.04, grain: true }),
   cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true })
 };
-// The scalp cap goes under any front or back and under these tops; its hairline is the front kind's, or the top's when there
-// is no front, or a plain 0.52 of the head above its centre. The hoods cover the crown themselves and want none
-const HAIRLINE = { blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6 };
-const CAP_TOPS = { cap: 0.52, bun: 0.82, spikes: 0.55, hedgehog: 0.5 };
+// The scalp cap goes under any front or back and under these tops. **What covers the forehead is the front slot's**: with a
+// front the cap comes down to that kind's hairline; without one it stops at the crown (CROWN, 0.78 of the head above its
+// centre — the top of the head and the temples, the forehead bare), so a back is only what hangs behind and a top only what
+// sits on the crown. The hoods cover the crown themselves and want no cap
+const HAIRLINE = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6 };
+const CROWN = 0.78;
+const CAP_TOPS = { cap: CROWN, bun: 0.82, spikes: CROWN, hedgehog: CROWN };
 const DOME_BACKS = new Set(["bob", "mop", "long", "verylong"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
 
 export function drawHair(layers, spec, box, noise) {
@@ -549,7 +553,7 @@ export function drawHair(layers, spec, box, noise) {
   };
   if (BACKS[back]) BACKS[back](h);                                   // behind the head first
   const hoodOn = top === "helmet" || top === "cloud";
-  const capLine = HAIRLINE[front] ?? CAP_TOPS[top] ?? 0.52;
+  const capLine = HAIRLINE[front] ?? CAP_TOPS[top] ?? CROWN;
   if (!hoodOn && (front !== "none" || back !== "none" || CAP_TOPS[top] !== undefined)) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
   if (TOPS[top]) TOPS[top](h);                                       // on the crown
   if (FRONTS[front]) FRONTS[front](h);                               // over the face, last

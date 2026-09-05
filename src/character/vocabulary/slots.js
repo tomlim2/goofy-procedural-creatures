@@ -36,7 +36,9 @@ export const SLOTS = {
   // cap is drawn under any front or back, its hairline the front kind's. hairFront stands where the one `hair` slot stood, so
   // the roll's count is unchanged; hairBack and hairTop are late slots (the end of LATE_SLOTS). The 26 old values map onto
   // the three (character/file.js OLD_HAIR)
-  hairFront: ["none", "blunt", "swept", "curtain", "sideLock"],
+  // hairline — the plain fringe: the cap itself coming down over the forehead to a straight hairline, no piece of its own. Without a
+  // front the cap stops at the crown (draw/hair.js), so what covers the forehead is always the front slot's
+  hairFront: ["none", "hairline", "blunt", "swept", "curtain", "sideLock"],
   // bonnet (the frilly bonnet) is **disabled** — the asset stays but it is in no bias (it never gets drawn)
   headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet", "crown", "halo", "cone", "coronet"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
@@ -154,7 +156,7 @@ export const DEFAULT_BIAS = {
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
     ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
   // Three slots, each with a common none, so a creature seldom wears all three at once and about one in fourteen wears nothing
-  hairFront: [["none", 4], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5]],
+  hairFront: [["none", 3], ["hairline", 3], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5]],
   hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["verylong", 0.8], ["sheets", 1.2], ["twintails", 1], ["twintailsBall", 0.7], ["ponytail", 1.2], ["pigtails", 1.2]],
   hairTop: [["none", 6], ["cap", 1], ["bun", 1], ["apple", 1], ["appleBig", 0.7], ["spikes", 2], ["mohawk", 1], ["hedgehog", 1.2], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1], ["coronet", 1]],   // bonnet disabled
