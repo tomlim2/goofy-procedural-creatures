@@ -237,7 +237,8 @@ export function drawFace2(ink, fills, spec, box, eyes) {
     // and read as a bruise on a warm skin), with one sagging line a little under its edge — the bag, its own line
     // so the eye's lower edge and the bag read as two. Two bare lines, which this was, read as wrinkles or smile
     // lines and not as tiredness. The moon hugs the eye's lower half just inside its edge and dips a third of a
-    // radius under it — deeper, it was a grey patch bigger than a small eye's dot; it is filled with the head's
+    // radius under it — deeper, it was a grey patch bigger than a small eye's dot — and its horns thin to nothing at
+    // the eye's corners, a crescent; it is filled with the head's
     // goofy material like the muzzle is, so on graphite it hatches and on charcoal it dusts. On a dark skin darker
     // reads as nothing, so the moon is lighter there instead, the face-ink rule, and by enough to be seen. Under
     // a patch there is no eye to be tired
@@ -252,22 +253,31 @@ export function drawFace2(ink, fills, spec, box, eyes) {
       if (patched(spec, eye)) continue;
       const r = eye.r;
       const n = 8;
-      const upper = Array.from({ length: n + 1 }, (_, i) => {   // outer corner to outer corner, left to right
-        const t = i / n;
+      // The moon's edge at t (outer corner 0 → outer corner 1, left to right), pushed `out` radii away from the eye. Under an
+      // eyeball it runs along the eyeball's lower edge and is pushed outward from the eye's centre, so a deeper edge is the
+      // same arc a little wider and the two meet at the corners — pushed straight down instead, the deeper edge was a flat
+      // floor under the arc and the moon a cup with straight sides. Under a mark it is a shallow curve and down is down
+      const edge = (t, out) => {
         if (ball) {
-          const a = Math.PI + t * Math.PI;                        // along the eyeball's lower edge, just inside it
-          return [eye.x + Math.cos(a) * r * W, eye.y + Math.sin(a) * r * W];
+          const a = Math.PI + t * Math.PI;
+          const rr = r * (W + out);
+          return [eye.x + Math.cos(a) * rr, eye.y + Math.sin(a) * rr];
         }
-        return [eye.x + (t * 2 - 1) * r * W, eye.y - r * (0.62 + 0.1 * Math.sin(t * Math.PI))];   // a shallow curve under the mark's foot
-      });
-      const lower = Array.from({ length: n + 1 }, (_, i) => {   // back along a deeper arc, right to left
+        return [eye.x + (t * 2 - 1) * r * W, eye.y - r * (0.62 + 0.1 * Math.sin(t * Math.PI) + out)];
+      };
+      const upper = Array.from({ length: n + 1 }, (_, i) => edge(i / n, 0));   // along the eye, left to right
+      const lower = Array.from({ length: n + 1 }, (_, i) => {                  // back along the deeper edge, right to left — deepest under the centre, nothing at the corners
         const t = 1 - i / n;
-        const x = eye.x + (t * 2 - 1) * r * W;
-        const top = ball ? W : 0.62 + 0.1 * Math.sin(t * Math.PI);
-        return [x, eye.y - r * (top + DEPTH * Math.sin(t * Math.PI))];   // deepest under the centre
+        return edge(t, DEPTH * Math.sin(t * Math.PI));
       });
       paintPart(fills, spec, [...upper, ...lower], tone, { own: true, part: "head" });
-      const bag = lower.slice().reverse().map(([x, y]) => [x, y - r * BAG]);   // the bag — a little under the moon, left to right
+      // The bag — a line a little under the moon's deeper edge, left to right. Under an eyeball that edge climbs the eye's sides
+      // to its corners, and a line following it the whole way drew a bowl round the eye; the bag is the half that runs under it
+      const [b0, b1] = ball ? [0.25, 0.75] : [0, 1];
+      const bag = Array.from({ length: n + 1 }, (_, i) => {
+        const t = b0 + (b1 - b0) * (i / n);
+        return edge(t, DEPTH * Math.sin(t * Math.PI) + BAG);
+      });
       ink.line(bag, { color: ink0, size: "S" });
     }
     return;
