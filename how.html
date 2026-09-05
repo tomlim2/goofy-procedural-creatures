@@ -164,19 +164,20 @@ its own on the rest. <b>pattern</b> rides along too.</p>
 
 <p>Every texture in <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/materials.js"><code>GOOFY_MATERIALS</code></a>
 gets a row of shader balls — the same ball at the five <b>density</b> steps, <b>light · stipple · scribble · hatch · black</b> from
-low to high, named for the way graphite makes each. <b>A step is in the colour first and the marks second</b>: it pulls the base toward the
-technique's own tone and lays the marks on top, because a mark fine enough to be pretty up close falls under a device pixel on a
-board. The step is the creature's <b>density</b> slot — one of the five, picked by the roll, so every step turns up on every
+low to high, named for the way graphite makes each. <b>A step is an amount, and never a tone of the ground</b>: it says how much of
+its texture a material lays down — how many rules, scratches, dabs, specks and sweeps — and the ground stays the part's colour at every
+step (it used to be pulled toward the technique's own tone as well, and a creature's palette colour darkened as its density rose).
+The step is the creature's <b>density</b> slot — one of the five, picked by the roll, so every step turns up on every
 species; the colour decides the marks' tone, the step how many.</p>
 
 <p>A mark has to be lighter than what it is drawn on, so on a <b>dark ground</b> every technique turns around — the <b>lower
 row</b> of each pair.</p>
 
-<p><b>A mark is a light.</b> Ink's scratches, graphite's rules and oil's paint are all drawn in the same tone — the ground
-<b>tinted</b>, its own hue carried toward white — so they come <i>up</i> out of the surface, and the step's work goes into the ground
-underneath them. Every tone stays in the part's own family: a blue part gets lighter and deeper blues, where mixing toward the light
-ink to lighten turned its marks grey. Charcoal alone keeps dark marks; one technique going the other way is what keeps the four
-apart.</p>
+<p><b>A mark's tone is the technique's, and it does not move with the step.</b> Ink's scratches are the ink taken away — the ground
+<b>tinted</b>, its own hue carried toward white; graphite's rules and charcoal's specks are deeper than the ground they are laid on;
+oil's paint is a spread either side of it, two tones a little deeper and two lighter, so paint reads as paint and the part keeps its
+colour under any amount of it. Every tone stays in the part's own family: a blue part gets lighter and deeper blues, where mixing
+toward the light ink to lighten turned its marks grey.</p>
 
 <p>And no mark is ever <b>white</b>. A lighter tone is the colour <b>tinted</b> — its own hue carried toward white — never a multiply,
 which clips: ink's scratches on a pale part came out <code>#ffffff</code> and ran across a cream creature as hard white lines. A
