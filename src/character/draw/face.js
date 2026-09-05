@@ -223,6 +223,9 @@ export function drawEyes(ink, fills, spec, box, eyes) {
   }
 }
 
+// The eye kinds that draw an eyeball — the rig's live eyes, and the static kinds that paint a white (the slit,
+// side, hollow, half and the lidded three above). The rest are marks: a dot, an X, an arc, a spiral, a line
+const EYEBALL_KINDS = new Set([...RIG_EYES, "slit", "side", "hollow", "half", "lidded", "sharp", "soft"]);
 export function drawFace2(ink, fills, spec, box, eyes) {
   const kind = spec.parts.face2;
   if (kind === "none") return;
@@ -240,19 +243,28 @@ export function drawFace2(ink, fills, spec, box, eyes) {
     // a patch there is no eye to be tired
     const skin = paintOf(spec, "head");
     const tone = isDark(skin) ? tint(skin, 0.4) : mix(shade(skin, 0.8), "#6f5f7f", 0.09);
-    const W = 0.95, DEPTH = 0.35, BAG = 0.08;
+    // A moon hugs an eyeball. An eye that is only a mark — an X, a dot, a sleepy arc, a spiral — has none to hug,
+    // and the moon under it read as a bowl floating in the face with the mark's ends poking into it. Under a
+    // mark the circle is a shallow shadow instead: a flat crescent tucked under the mark's foot
+    const ball = EYEBALL_KINDS.has(spec.parts.eyes);
+    const W = ball ? 0.95 : 0.85, DEPTH = ball ? 0.35 : 0.25, BAG = 0.08;
     for (const eye of eyes) {
       if (patched(spec, eye)) continue;
       const r = eye.r;
       const n = 8;
-      const upper = Array.from({ length: n + 1 }, (_, i) => {   // along the eye's lower edge, just inside it, outer corner to outer corner
-        const a = Math.PI + (i / n) * Math.PI;                    // π … 2π: the lower half, left to right
-        return [eye.x + Math.cos(a) * r * W, eye.y + Math.sin(a) * r * W];
+      const upper = Array.from({ length: n + 1 }, (_, i) => {   // outer corner to outer corner, left to right
+        const t = i / n;
+        if (ball) {
+          const a = Math.PI + t * Math.PI;                        // along the eyeball's lower edge, just inside it
+          return [eye.x + Math.cos(a) * r * W, eye.y + Math.sin(a) * r * W];
+        }
+        return [eye.x + (t * 2 - 1) * r * W, eye.y - r * (0.62 + 0.1 * Math.sin(t * Math.PI))];   // a shallow curve under the mark's foot
       });
       const lower = Array.from({ length: n + 1 }, (_, i) => {   // back along a deeper arc, right to left
         const t = 1 - i / n;
         const x = eye.x + (t * 2 - 1) * r * W;
-        return [x, eye.y - r * (W + DEPTH * Math.sin(t * Math.PI))];   // deepest under the centre
+        const top = ball ? W : 0.62 + 0.1 * Math.sin(t * Math.PI);
+        return [x, eye.y - r * (top + DEPTH * Math.sin(t * Math.PI))];   // deepest under the centre
       });
       paintPart(fills, spec, [...upper, ...lower], tone, { own: true, part: "head" });
       const bag = lower.slice().reverse().map(([x, y]) => [x, y - r * BAG]);   // the bag — a little under the moon, left to right
