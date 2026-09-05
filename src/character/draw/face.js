@@ -230,29 +230,33 @@ export function drawFace2(ink, fills, spec, box, eyes) {
 
   if (kind === "circles") {
     // Dark circles — the shorthand every cartoon and manga uses for the tired: a **shaded half-moon** under each
-    // eye, darker than the skin and pulled a little toward blue (the pigment is bluish, and the manga colours it
-    // so outright), with one sagging line along its lower edge — the bag. Two bare lines, which this was, read as
-    // wrinkles or smile lines and not as tiredness. The moon hugs the eye's lower half from a hair outside its
-    // edge and dips to about half a radius under it; it is filled with the head's goofy material like the muzzle
-    // is, so on graphite it hatches and on charcoal it dusts. On a dark skin darker reads as nothing, so the moon
-    // is a shade lighter there instead, the face-ink rule. Under a patch there is no eye to be tired
+    // eye, a shadow of the skin (darker, a breath of violet — the blue the manga colours it was tried at a fifth
+    // and read as a bruise on a warm skin), with one sagging line a little under its edge — the bag, its own line
+    // so the eye's lower edge and the bag read as two. Two bare lines, which this was, read as wrinkles or smile
+    // lines and not as tiredness. The moon hugs the eye's lower half just inside its edge and dips a third of a
+    // radius under it — deeper, it was a grey patch bigger than a small eye's dot; it is filled with the head's
+    // goofy material like the muzzle is, so on graphite it hatches and on charcoal it dusts. On a dark skin darker
+    // reads as nothing, so the moon is lighter there instead, the face-ink rule, and by enough to be seen. Under
+    // a patch there is no eye to be tired
     const skin = paintOf(spec, "head");
-    const tone = isDark(skin) ? tint(skin, 0.22) : mix(shade(skin, 0.74), "#59749b", 0.22);
+    const tone = isDark(skin) ? tint(skin, 0.4) : mix(shade(skin, 0.8), "#6f5f7f", 0.09);
+    const W = 0.95, DEPTH = 0.35, BAG = 0.08;
     for (const eye of eyes) {
       if (patched(spec, eye)) continue;
       const r = eye.r;
       const n = 8;
-      const upper = Array.from({ length: n + 1 }, (_, i) => {   // along the eye's lower edge, a hair outside it, outer corner to outer corner
+      const upper = Array.from({ length: n + 1 }, (_, i) => {   // along the eye's lower edge, just inside it, outer corner to outer corner
         const a = Math.PI + (i / n) * Math.PI;                    // π … 2π: the lower half, left to right
-        return [eye.x + Math.cos(a) * r * 1.02, eye.y + Math.sin(a) * r * 1.02];
+        return [eye.x + Math.cos(a) * r * W, eye.y + Math.sin(a) * r * W];
       });
-      const lower = Array.from({ length: n + 1 }, (_, i) => {   // back along a wider, deeper arc, right to left
+      const lower = Array.from({ length: n + 1 }, (_, i) => {   // back along a deeper arc, right to left
         const t = 1 - i / n;
-        const x = eye.x + (t * 2 - 1) * r * 1.02;
-        return [x, eye.y - r * (1.02 + 0.5 * Math.sin(t * Math.PI))];   // deepest under the centre
+        const x = eye.x + (t * 2 - 1) * r * W;
+        return [x, eye.y - r * (W + DEPTH * Math.sin(t * Math.PI))];   // deepest under the centre
       });
       paintPart(fills, spec, [...upper, ...lower], tone, { own: true, part: "head" });
-      ink.line(lower.slice().reverse(), { color: ink0, size: "S" });   // the bag — the moon's lower edge, drawn left to right
+      const bag = lower.slice().reverse().map(([x, y]) => [x, y - r * BAG]);   // the bag — a little under the moon, left to right
+      ink.line(bag, { color: ink0, size: "S" });
     }
     return;
   }
