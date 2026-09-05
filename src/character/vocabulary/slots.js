@@ -37,9 +37,10 @@ export const SLOTS = {
   // the roll's count is unchanged; hairBack and hairTop are late slots (the end of LATE_SLOTS). The 26 old values map onto
   // the three (character/file.js OLD_HAIR)
   // The front is everything that sits on the head itself, in front of it: the fringes (hairline — the cap itself down to a straight
-  // hairline, no piece of its own · blunt · swept · curtain · sideLock), the crown cap alone (cap), the spiked bands, the tufts,
-  // the curls and the two hoods. The top keeps only what is tied ON the crown — a bun, the apple tops
-  hairFront: ["none", "hairline", "blunt", "swept", "curtain", "sideLock", "cap", "spikes", "mohawk", "hedgehog", "tuft", "wisp", "curly", "helmet", "cloud"],
+  // hairline, no piece of its own · blunt · swept · curtain · sideLock), the crown cap alone (cap), the mohawk, the tufts, the
+  // curls and the two hoods. The top keeps only what is tied ON the crown — a bun, the apple tops; the spiked rings (spikes ·
+  // hedgehog) stand round the head from behind it and are backs
+  hairFront: ["none", "hairline", "blunt", "swept", "curtain", "sideLock", "cap", "mohawk", "tuft", "wisp", "curly", "helmet", "cloud"],
   // bonnet (the frilly bonnet) is **disabled** — the asset stays but it is in no bias (it never gets drawn)
   headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet", "crown", "halo", "cone", "coronet"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
@@ -137,9 +138,10 @@ export const SLOTS = {
   eyeScale: ["small", "medium", "large"],
   // The back of the hair — bob to the ear · mop to the jaw, shaggy · long to the shoulder · sheets the side sheets to the hip ·
   // twintails · the twin buns — two big balls and nothing else, tied on top of the head (bunsTop), low behind the jaw (bunsLow) or out
-  // at the sides (bunsSide) · ponytail · pigtails, two small bunches. (verylong — long and the sheets together — was removed;
+  // at the sides (bunsSide) · ponytail · pigtails, two small bunches · the spiked rings — a zigzag of wedges standing round the head's
+  // upper half from behind it, spikes long and few, hedgehog short and many. (verylong — long and the sheets together — was removed;
   // twintailsBall, tails with balls at the ends, became the buns)
-  hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "bunsTop", "bunsLow", "bunsSide", "ponytail", "pigtails"],
+  hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "bunsTop", "bunsLow", "bunsSide", "ponytail", "pigtails", "spikes", "hedgehog"],
   // The top of the hair — what is tied on the crown: a bun, the apple tops
   hairTop: ["none", "bun", "apple", "appleBig"]
 };
@@ -159,8 +161,8 @@ export const DEFAULT_BIAS = {
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
     ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
   // Three slots, each with a common none, so a creature seldom wears all three at once and about one in fourteen wears nothing
-  hairFront: [["none", 3], ["hairline", 3], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5], ["cap", 1], ["spikes", 2], ["mohawk", 1], ["hedgehog", 1.2], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],
-  hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["sheets", 1.2], ["twintails", 1], ["bunsTop", 0.8], ["bunsLow", 0.6], ["bunsSide", 0.7], ["ponytail", 1.2], ["pigtails", 1.2]],
+  hairFront: [["none", 3], ["hairline", 3], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5], ["cap", 1], ["mohawk", 1], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],
+  hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["sheets", 1.2], ["twintails", 1], ["bunsTop", 0.8], ["bunsLow", 0.6], ["bunsSide", 0.7], ["ponytail", 1.2], ["pigtails", 1.2], ["spikes", 2], ["hedgehog", 1.2]],
   hairTop: [["none", 6], ["bun", 1], ["apple", 1], ["appleBig", 0.7]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1], ["coronet", 1]],   // bonnet disabled
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],

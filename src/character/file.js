@@ -34,10 +34,10 @@ export function deriveSpec(next) {
 // kind used to bring the cap down over the forehead; that is the `hairline` front now, so it comes along. verylong (long and the
 // sheets together) is gone — it opens as long
 const OLD_HAIR = {
-  none: {}, bob: { hairFront: "hairline", hairBack: "bob" }, spikes: { hairFront: "spikes" }, mop: { hairFront: "hairline", hairBack: "mop" }, mohawk: { hairFront: "mohawk" },
+  none: {}, bob: { hairFront: "hairline", hairBack: "bob" }, spikes: { hairBack: "spikes" }, mop: { hairFront: "hairline", hairBack: "mop" }, mohawk: { hairFront: "mohawk" },
   tuft: { hairFront: "tuft" }, wisp: { hairFront: "wisp" }, scribble: { hairFront: "hairline", hairBack: "bob" }, sweep: { hairFront: "swept" },
   pigtails: { hairFront: "hairline", hairBack: "pigtails" }, curly: { hairFront: "curly" }, bangs: { hairFront: "blunt" }, longbob: { hairFront: "blunt", hairBack: "bob" },
-  bun: { hairTop: "bun" }, helmet: { hairFront: "helmet" }, cloud: { hairFront: "cloud" }, hedgehog: { hairFront: "hedgehog" },
+  bun: { hairTop: "bun" }, helmet: { hairFront: "helmet" }, cloud: { hairFront: "cloud" }, hedgehog: { hairBack: "hedgehog" },
   long: { hairFront: "hairline", hairBack: "long" }, twintails: { hairFront: "hairline", hairBack: "twintails" }, ponytail: { hairFront: "hairline", hairBack: "ponytail" }, apple: { hairTop: "apple" },
   verylong: { hairFront: "hairline", hairBack: "long" }, twintailsBall: { hairFront: "hairline", hairBack: "bunsSide" }, appleBig: { hairTop: "appleBig" },
   bobSwept: { hairFront: "swept", hairBack: "bob" }, sheetsSwept: { hairFront: "swept", hairBack: "sheets" }
@@ -79,6 +79,8 @@ function migrate(next) {
   if (out.parts && ["cap", "spikes", "mohawk", "hedgehog", "tuft", "wisp", "curly", "helmet", "cloud"].includes(out.parts.hairTop)) {
     out.parts = { ...out.parts, hairFront: out.parts.hairTop, hairTop: "none" };
   }
+  // …and from when the spiked rings were fronts (or tops): they stand round the head from behind — backs
+  if (out.parts && ["spikes", "hedgehog"].includes(out.parts.hairFront)) out.parts = { ...out.parts, hairBack: out.parts.hairFront, hairFront: "none" };
   return out;
 }
 

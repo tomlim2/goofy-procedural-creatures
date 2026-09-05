@@ -46,8 +46,8 @@ export const SPECIES = [
       eyes: { cyclops: "dot" },
       // Dogs have no horns and no hair — all none (it is fur, not hair)
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", spikes: "none", mohawk: "none", hedgehog: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
-      hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none" },
+      hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
+      hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none", spikes: "none", hedgehog: "none" },
       hairTop: { bun: "none", apple: "none", appleBig: "none" },
       brow: { flat: "none", angry: "none", worry: "none", arch: "none", peak: "none", wave: "none", bushy: "none", raised: "none", mono: "none", dot: "none" },   // animals have no brows (which blocks the alt brow of a state switch too)
       legLength: { verylong: "long" }
@@ -95,8 +95,8 @@ export const SPECIES = [
       // Cat ear boundary — floppy ears and none become crown ears
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
-      hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", spikes: "none", mohawk: "none", hedgehog: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
-      hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none" },
+      hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
+      hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none", spikes: "none", hedgehog: "none" },
       hairTop: { bun: "none", apple: "none", appleBig: "none" },
       brow: { flat: "none", angry: "none", worry: "none", arch: "none", peak: "none", wave: "none", bushy: "none", raised: "none", mono: "none", dot: "none" },
       legLength: { verylong: "long" }
@@ -143,8 +143,8 @@ export const SPECIES = [
     forbid: {
       ears: { round: "none", roundMid: "none", roundBig: "none", pointy: "none", pointyMid: "none", pointyBig: "none", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "none", perkMid: "none", perkBig: "none" },
       eyes: { cyclops: "dot" },
-      hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", spikes: "none", mohawk: "none", hedgehog: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
-      hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none" },
+      hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
+      hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none", spikes: "none", hedgehog: "none" },
       hairTop: { bun: "none", apple: "none", appleBig: "none" },
       // The arms are tiny and stubby, always — every form folds to the little fists
       arms: { stick: "stubby", sleeve: "stubby", mitten: "stubby", none: "stubby" },
@@ -213,7 +213,7 @@ export const SPECIES = [
     bias: {
       horns: [["curved", 3], ["straight", 2], ["antenna", 2], ["ram", 2], ["crown", 2], ["nub", 1]],
       ears: [["none", 5], ["pointy", 2]],
-      hairFront: [["none", 6], ["spikes", 2]], hairBack: [["none", 1]], hairTop: [["none", 1]],
+      hairFront: [["none", 1]], hairBack: [["none", 6], ["spikes", 2]], hairTop: [["none", 1]],
       headgear: [["none", 1]],
       eyewear: [["none", 6], ["patch", 2], ["goggles", 1]],
       eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2], ["soft", 2]],

@@ -11,8 +11,8 @@ export const ARCHETYPES = [
       ears: [["pointy", 2], ["pointyMid", 1], ["flap", 2], ["round", 2], ["none", 1]],
       mouth: [["grimace", 3], ["grin", 2], ["wave", 2], ["open", 2], ["line", 1]],
       nose: [["wedge", 3], ["hook", 2], ["dot", 2], ["broad", 1.5], ["none", 1]],
-      hairFront: [["none", 3], ["hairline", 2], ["swept", 1], ["spikes", 3], ["hedgehog", 2], ["mohawk", 2], ["tuft", 2]],
-      hairBack: [["none", 4], ["mop", 2]],
+      hairFront: [["none", 3], ["hairline", 2], ["swept", 1], ["mohawk", 2], ["tuft", 2]],
+      hairBack: [["none", 4], ["mop", 2], ["spikes", 3], ["hedgehog", 2]],
       hairTop: [["none", 3]],
       head: [["round", 3], ["wide", 2], ["square", 2], ["pear", 1]]
     }
@@ -39,8 +39,8 @@ export const ARCHETYPES = [
       headgear: [["helmet", 4], ["cap", 3], ["band", 2], ["pot", 2], ["none", 1]],
       eyewear: [["patch", 3], ["goggles", 3], ["none", 3]],
       head: [["square", 3], ["block", 2], ["round", 2], ["wide", 1]],
-      hairFront: [["none", 3], ["hairline", 2], ["swept", 1], ["spikes", 2], ["mohawk", 1.5], ["hedgehog", 1.5]],
-      hairBack: [["none", 3], ["mop", 2]],
+      hairFront: [["none", 3], ["hairline", 2], ["swept", 1], ["mohawk", 1.5]],
+      hairBack: [["none", 3], ["mop", 2], ["spikes", 2], ["hedgehog", 1.5]],
       hairTop: [["none", 3]],
       arms: [["sleeve", 3], ["stick", 2]],
       legs: [["boots", 4], ["stick", 2], ["stub", 1]]
@@ -57,8 +57,8 @@ export const ARCHETYPES = [
       build: [["narrow", 2], ["skinny", 2], ["medium", 1]],
       legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
       arms: [["stick", 3], ["mitten", 2]],
-      hairFront: [["none", 3], ["hairline", 2], ["blunt", 1.5], ["curtain", 1], ["wisp", 2], ["tuft", 1.5], ["curly", 1], ["cloud", 1], ["spikes", 1]],
-      hairBack: [["none", 4], ["pigtails", 2], ["twintails", 1.5], ["bunsTop", 1], ["bunsSide", 0.7]],
+      hairFront: [["none", 3], ["hairline", 2], ["blunt", 1.5], ["curtain", 1], ["wisp", 2], ["tuft", 1.5], ["curly", 1], ["cloud", 1]],
+      hairBack: [["none", 4], ["pigtails", 2], ["twintails", 1.5], ["bunsTop", 1], ["bunsSide", 0.7], ["spikes", 1]],
       hairTop: [["none", 4], ["apple", 1], ["appleBig", 1]],   // the filled family — the parted curtain is the pretty one
       nose: [["none", 4], ["dot", 3], ["hook", 1]]
     }

@@ -420,12 +420,13 @@ const outlineAt = (h, angle) => {
   return best;
 };
 // A spiked band round the crown — the outer edge a zigzag of wedges standing out from the head's outline, the inner edge the
-// outline itself, a little inside. On a cap (`onCap` — drawHair fills the scalp under it) only the zigzag draws a line, the
-// inner edge lying in the cap's fill; without one (the mohawk) the band is the whole hair and is contoured all round — its
-// inner edge is the head's own line, so that is one line, not two
-const spikedBand = ({ span, count, len0, lenVar, onCap = false, inner = false }) => (h) => {
-  const { crown, crownFills, spec, noise, cy } = h;
-  const cap = onCap ? 1 : undefined;
+// outline itself, a little inside. The mohawk is a band on the crown layer, on the head: the whole hair, contoured all round —
+// its inner edge is the head's own line, so that is one line, not two. The spiked rings (spikes · hedgehog) are **backs**: the
+// band on the back layer, behind the head, so only the wedges standing out past the outline show and the head covers the rest
+const spikedBand = ({ span, count, len0, lenVar, behind = false }) => (h) => {
+  const layer = behind ? h.back : h.crown, fills = behind ? h.backFills : h.crownFills;
+  const { spec, noise, cy } = h;
+  const cap = undefined;
   const zig = [];
   const inside = [];
   for (let i = 0; i < count; i += 1) {
@@ -446,17 +447,8 @@ const spikedBand = ({ span, count, len0, lenVar, onCap = false, inner = false })
     inside.push([base[0] * (cap !== undefined ? 0.9 : 1), cy + (base[1] - cy) * (cap !== undefined ? 0.9 : 1)]);
   }
   const poly = [...zig, ...inside.reverse()];
-  paintPart(crownFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });
-  if (cap !== undefined) crown.line(zig, { color: h.lineInk });
-  else crown.contour(poly, { color: h.lineInk });
-  if (inner) {   // the hedgehog's second row — short strokes inside the cap, in the hair's own tone
-    for (let i = 0; i < 10; i += 1) {
-      const a = Math.PI * (0.5 + 0.72 * (i / 9 - 0.5));
-      const r = outlineAt(h, a);
-      const from = [r[0] * 0.72, cy + (r[1] - cy) * 0.72];
-      crown.line([from, [from[0] + Math.cos(a) * 0.045, from[1] + Math.sin(a) * 0.045]], { color: h.grainInk, size: "S" });
-    }
-  }
+  paintPart(fills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });
+  layer.contour(poly, { color: h.lineInk });
 };
 // A leaf — one strand as a thin filled ribbon along a curve, from a root to a point
 const leaf = (h, ink, fills, root, tip, width, phase) => {
@@ -504,9 +496,7 @@ export const FRONTS = {
   curtain: frontCurtain,    // a middle parting, two sweeps framing the face
   sideLock,                 // one lock down one cheek
   cap: () => {},            // the crown cap alone — drawHair draws it
-  spikes: spikedBand({ span: 0.95, count: 11, len0: 0.06, lenVar: 0.09, onCap: true }),
   mohawk: spikedBand({ span: 0.35, count: 7, len0: 0.06, lenVar: 0.09 }),
-  hedgehog: spikedBand({ span: 0.9, count: 15, len0: 0.05, lenVar: 0.07, onCap: true, inner: true }),
   tuft: tuftsOf(4),
   wisp: tuftsOf(7),
   curly: curlyF,
@@ -523,7 +513,9 @@ export const BACKS = {
   bunsLow: twinBuns({ x: 0.92, y: -0.4, r: 0.34 }),   // low, behind the jaw
   bunsSide: twinBuns({ x: 1.08, y: 0.22, r: 0.36 }),  // out at the sides, ear height
   ponytail: ponytailBack,
-  pigtails: pigtailsBack
+  pigtails: pigtailsBack,
+  spikes: spikedBand({ span: 0.95, count: 11, len0: 0.06, lenVar: 0.09, behind: true }),    // long wedges round the upper half
+  hedgehog: spikedBand({ span: 0.9, count: 15, len0: 0.05, lenVar: 0.07, behind: true })    // short and many — a hedgehog's back
 };
 export const TOPS = {   // what is tied ON the crown
   bun: bunTop,
@@ -531,12 +523,12 @@ export const TOPS = {   // what is tied ON the crown
   appleBig: appleOfF(1.7)
 };
 // **A back is only what hangs behind the head.** The scalp cap — the piece IN FRONT of the head, on the crown layer — is the
-// front's: the fringes bring it down to their hairline, the crown cap and the spiked bands stop it at 0.7 of the head above its
-// centre (the forehead bare; at 0.78 the cap alone read as a skullcap rather than hair), and the strand fronts (mohawk, tufts,
-// curls) and the hoods bring none — a mohawk stands on a bare head, a hood covers the crown itself. A bun on the top brings a
+// front's: the fringes bring it down to their hairline, the crown cap stops at 0.7 of the head above its centre (the forehead
+// bare; at 0.78 the cap alone read as a skullcap rather than hair), and the strand fronts (mohawk, tufts, curls) and the hoods
+// bring none — a mohawk stands on a bare head, a hood covers the crown itself. A bun on the top brings a
 // thin cap of its own when the front brings none. A back never draws one: drawn with the back it was two pieces for one
 // hairstyle, a mass behind and a cap in front, and the seam between them showed
-const FRONT_CAP = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6, cap: 0.7, spikes: 0.7, hedgehog: 0.7 };
+const FRONT_CAP = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6, cap: 0.7 };
 const TOP_CAP = { bun: 0.82 };
 const DOME_BACKS = new Set(["bob", "mop", "long"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
 

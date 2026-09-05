@@ -76,9 +76,11 @@ export function applyLateConstraints(parts) {
     // up through the hat cannot: a bun and the apple tops (the top slot), the spiked bands (the front slot) go. The hoods and
     // the hedgehog suit a band (the reference) and only a band
     if (["bun", "apple", "appleBig"].includes(parts.hairTop)) parts.hairTop = "none";
-    const through = ["spikes", "mohawk", "hedgehog", "cloud", "helmet"];
-    if (parts.headgear === "band") through.splice(through.indexOf("hedgehog"), 3);   // hedgehog, cloud and the hood stay under a band
+    const through = ["mohawk", "cloud", "helmet"];
+    if (parts.headgear === "band") through.splice(1, 2);   // cloud and the hood stay under a band
     if (through.includes(parts.hairFront)) parts.hairFront = "none";
+    // the spiked rings (backs) poke up round a hat; the hedgehog's short ones suit a band (the reference) and only a band
+    if (parts.hairBack === "spikes" || (parts.hairBack === "hedgehog" && parts.headgear !== "band")) parts.hairBack = "none";
   }
   // A mohawk, a bun or an apple top wears nothing (with a hat on they are already gone, above — this is the bare head's rule)
   if (["bun", "apple", "appleBig"].includes(parts.hairTop) || parts.hairFront === "mohawk") parts.headgear = "none";
