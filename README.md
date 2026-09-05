@@ -50,7 +50,7 @@ as cards in a row, a ball previewing the selected one's colour, texture and dens
 sample balls in that colour and density, the density as a stepped slider, then the colour. A part is put in
 any of them under PART → material — the pupils in a blue of their own and the whites in a yellow, the hair hatched while the skin is oil —
 where **+** makes a new one for that part (a copy of what it had on, worn at once) and MATERIALS opens it for
-editing. Then a part at a time: open one and the deck shows its shape and its material, one line each — click the
+editing. PART, above MATERIALS on the deck, works a part at a time: open one and the deck shows its shape and its material, one line each — click the
 line and the choices drop down, each its picture then its name — and its properties open under them: the
 sizes, lengths, positions and manners that are its own (a head's lumps, an eye's gap, a brow's length, a
 leg's length, a tail's skin); the HAND card is the wobble alone. The palette is one set of every colour the vocabulary knows, and every key — the base, a cloth, a
