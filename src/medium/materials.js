@@ -243,7 +243,9 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
   const f = m.texture;
 
   // **The step is an amount.** It says how much of its texture a material lays down — how many rules, scratches, dabs, specks and
-  // sweeps, and how they are laid — and nothing about the ground: **the ground is the part's colour at every step.** It used to be
+  // sweeps, and how they are laid — and nothing about the ground: **the ground is the part's colour at every step.** Nor about the
+  // mark: a mark is the same mark at every step, one width and one tone — the light step's — and a black step is that mark many
+  // times over, never a fatter or a darker one (a wider line renders as a darker colour). It used to be
   // pulled toward the technique's own tone by the step (graphite and charcoal darkened it, ink and the wash paled it, oil painted it
   // deeper) so the five steps would survive the board's scale, where the fine marks fall under a device pixel; and so a creature's
   // palette colour darkened as its density rose, and a skin at black was not the skin the palette named. The marks carry the step now,
@@ -290,6 +292,11 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         // Graphite, step by step: black — cross-hatching, two sets of rules, close and dark · hatch — one set · scribble — wavy
         // rules, nearly level · stipple — dots · light — one set three gaps apart, thin and pale. Every rule is pencil strokes with gaps, the hand lifting
         const tone = contrast(f.tone);   // graphite — deeper than the ground it is laid on; on a dark ground lighter, by as much (contrast)
+        // **One pencil for every step** — the light step's thin line, at the light step's tone. A black step is that line many times
+        // over, never a fatter one: a fatter line renders as a darker colour (a hairline is mostly antialiasing, a full-pixel line is
+        // the tone itself), and the rules of the dense steps came out a shade darker than the light step's though drawn in the same
+        // tone. The step is how many rules and how they are laid; the mark itself does not change
+        const width = f.width * 0.6;
         const liftedRule = (pts, i, width) => {   // the polyline drawn as a few pencil strokes with small gaps — the hand lifts and comes down again
           const lens = [0];
           for (let k = 1; k < pts.length; k += 1) lens.push(lens[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
@@ -317,10 +324,10 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         };
         const hatchAt = (angle, gap, width) => rules(points, angle, gap, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => liftedRule([p, q], i, width));
         if (V.name === "black") {
-          hatchAt(f.angle + swing, f.gap * 0.75, f.width * 1.1);
-          hatchAt(f.angle + swing - 0.95, f.gap * 0.8, f.width);
+          hatchAt(f.angle + swing, f.gap * 0.75, width);
+          hatchAt(f.angle + swing - 0.95, f.gap * 0.8, width);
         } else if (V.name === "hatch") {
-          hatchAt(f.angle + swing, f.gap, f.width);
+          hatchAt(f.angle + swing, f.gap, width);
         } else if (V.name === "scribble") {
           // wavy rules, nearly level — the pencil going side to side
           rules(points, 0.08 + swing * 0.5, f.gap * f.scribble.gap, (i) => (u(i) - 0.5) * 0.5).forEach(([p, q], i) => {
@@ -333,14 +340,14 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
               const wave = Math.sin((t / f.scribble.wave) * TAU + i * 1.7) * f.scribble.amp;
               pts.push([p[0] + dx * t - dy * wave, p[1] + dy * t + dx * wave]);
             }
-            liftedRule(pts, i + 500, f.width);
+            liftedRule(pts, i + 500, width);
           });
         } else if (V.name === "stipple") {
-          dust(sketch, points, b, { per: 1500, size: [0.0018, 0.003] }, h, contrast(1 - (1 - f.tone) * 0.85), holdTag);
+          dust(sketch, points, b, { per: 1500, size: [0.0018, 0.003] }, h, tone, holdTag);
         } else {
-          // light — the pencil barely touches: one set of rules three gaps apart, thin and pale. Not a bare ground: half the
-          // board's surfaces land on this step, and a material that lays nothing there is a material you cannot see
-          hatchAt(f.angle + swing + 0.14, f.gap * 3.2, f.width * 0.6);
+          // light — the pencil barely touches: one set of rules three gaps apart. Not a bare ground: half the board's surfaces
+          // land on this step, and a material that lays nothing there is a material you cannot see
+          hatchAt(f.angle + swing + 0.14, f.gap * 3.2, width);
         }
         break;
       }
@@ -353,7 +360,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         // The scratch is the colour **watered** — the ink taken away. Never a white line, and on a colour with no light left to water
         // (`waters` above) the scratch goes the one way it can show: deeper. One tone at every step; the step is how many
         const tone = waters ? contrast(f.tone) : deepen(color, 0.14);
-        const width = f.width * (0.6 + open * 0.5);
+        const width = f.width * 0.9;   // one scratch at every step — the step is how many, never how wide (a wider line renders darker)
         for (let i = 0; i < Math.round(f.lines * open); i += 1) {
           const angle = u(i) * Math.PI;
           const o = (u(i + 50) - 0.5) * b.r * 1.4;
@@ -527,7 +534,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         const runStart = Math.floor(h(81) * inset.length);
         const run = [];
         for (let k = 0; k <= runLen; k += 1) run.push(inset[(runStart + k) % inset.length]);
-        sketch.pencil(run, { color: contrast(f.edge.tone), width: Math.min(f.lineMax, f.edge.width * (0.7 + weight * 0.6)), breathe: 0.5, paper: color, skinT: markTag });   // one tone; the loaded steps draw it wider
+        sketch.pencil(run, { color: contrast(f.edge.tone), width: Math.min(f.lineMax, f.edge.width), breathe: 0.5, paper: color, skinT: markTag });   // one line at every step; the loaded steps run it further (runLen), never wider
         // The glaze — a second wash over one side, wet on dry. A large lobe pushed off-centre to the side the part chooses, a little
         // deeper than the ground, its inner boundary a soft hard edge (the line stops where the contour cuts the lobe). Only once
         // there is pigment enough for a second coat to show

@@ -249,7 +249,10 @@ board (a 7×5 cell puts 144 device pixels in a world unit, the fine marks fall u
 luminance apart); but the pull meant a creature's palette colour darkened as its density rose — a skin at black was not the skin the
 palette named. The pull is gone: what a surface reads at is what the overpainting makes of it, and the marks stay **as fine as the
 hand would draw them** (coarsening them until they could carry a value on their own turns a small part into blotches and a face into
-camouflage). **The step is the creature's own**: the `density` slot holds one of the five outright and the roll picks it (`stepOf`), so every
+camouflage). **And a mark is the same mark at every step** — one width and one tone, the light step's; a black step is that mark many
+times over, never a fatter or a darker one. Graphite's dense steps used to draw their rules up to 1.1 of the width against the light
+step's 0.6, and a wider line renders as a darker colour (a hairline is mostly antialiasing), so the marks came out a shade stronger
+as the density rose though drawn in one tone. **The step is the creature's own**: the `density` slot holds one of the five outright and the roll picks it (`stepOf`), so every
 step is reachable on every creature — a pale skin can be hatched black and a black one grazed light. It used to be read off the
 part's colour and nudged a step by a three-value hand, which meant half the ladder was unreachable: 59% of humans landed on light,
 76% of imps on black, and a third of the hand did nothing at all because the scale had no step left to give. The colour still
