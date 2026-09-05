@@ -502,7 +502,16 @@ export const FRONTS = {
   blunt: bangsPanel,        // the straight fringe as a panel, its hem ragged
   swept: frontSwept,        // a deep side parting, both locks running down past the temples
   curtain: frontCurtain,    // a middle parting, two sweeps framing the face
-  sideLock                  // one lock down one cheek
+  sideLock,                 // one lock down one cheek
+  cap: () => {},            // the crown cap alone — drawHair draws it
+  spikes: spikedBand({ span: 0.95, count: 11, len0: 0.06, lenVar: 0.09, onCap: true }),
+  mohawk: spikedBand({ span: 0.35, count: 7, len0: 0.06, lenVar: 0.09 }),
+  hedgehog: spikedBand({ span: 0.9, count: 15, len0: 0.05, lenVar: 0.07, onCap: true, inner: true }),
+  tuft: tuftsOf(4),
+  wisp: tuftsOf(7),
+  curly: curlyF,
+  helmet: hood({ grow: 1.06, lumps: 3, amount: 0.04, grain: true }),
+  cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true })
 };
 export const BACKS = {
   bob: (h) => backMass(h, h.cy - h.ry * 0.72, 1.02, { grow: [1.14, 1.07], lumps: 4, amount: 0.05 }),          // to the ear, straight
@@ -516,28 +525,20 @@ export const BACKS = {
   ponytail: ponytailBack,
   pigtails: pigtailsBack
 };
-export const TOPS = {
-  cap: () => {},   // the plain scalp cap — drawHair draws it
+export const TOPS = {   // what is tied ON the crown
   bun: bunTop,
   apple: appleOfF(1),
-  appleBig: appleOfF(1.7),
-  spikes: spikedBand({ span: 0.95, count: 11, len0: 0.06, lenVar: 0.09, onCap: true }),
-  mohawk: spikedBand({ span: 0.35, count: 7, len0: 0.06, lenVar: 0.09 }),
-  hedgehog: spikedBand({ span: 0.9, count: 15, len0: 0.05, lenVar: 0.07, onCap: true, inner: true }),
-  tuft: tuftsOf(4),
-  wisp: tuftsOf(7),
-  curly: curlyF,
-  helmet: hood({ grow: 1.06, lumps: 3, amount: 0.04, grain: true }),
-  cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true })
+  appleBig: appleOfF(1.7)
 };
 // **A back is only what hangs behind the head.** The scalp cap — the piece IN FRONT of the head, on the crown layer — is the
-// front slot's (down to the front kind's hairline) or a crown top's (cap · bun · the spiked bands, at CROWN — 0.7 of the head
-// above its centre, the forehead bare; at 0.78 the cap alone read as a skullcap rather than hair); a back never draws one. Drawn with the back it was two pieces for one hairstyle, a
-// mass behind and a cap in front, and the seam between them showed. The hoods cover the crown themselves and want no cap
-const HAIRLINE = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6 };
-const CROWN = 0.7;
-const CAP_TOPS = { cap: CROWN, bun: 0.82, spikes: CROWN, hedgehog: CROWN };
-const DOME_BACKS = new Set(["bob", "mop", "long", "verylong"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
+// front's: the fringes bring it down to their hairline, the crown cap and the spiked bands stop it at 0.7 of the head above its
+// centre (the forehead bare; at 0.78 the cap alone read as a skullcap rather than hair), and the strand fronts (mohawk, tufts,
+// curls) and the hoods bring none — a mohawk stands on a bare head, a hood covers the crown itself. A bun on the top brings a
+// thin cap of its own when the front brings none. A back never draws one: drawn with the back it was two pieces for one
+// hairstyle, a mass behind and a cap in front, and the seam between them showed
+const FRONT_CAP = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6, cap: 0.7, spikes: 0.7, hedgehog: 0.7 };
+const TOP_CAP = { bun: 0.82 };
+const DOME_BACKS = new Set(["bob", "mop", "long"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
 
 export function drawHair(layers, spec, box, noise) {
   const front = spec.parts.hairFront || "none", back = spec.parts.hairBack || "none", top = spec.parts.hairTop || "none";
@@ -560,9 +561,8 @@ export function drawHair(layers, spec, box, noise) {
     shoulder: box.bodyTop - 0.02   // the floor back hair comes down to (the shoulder)
   };
   if (BACKS[back]) BACKS[back](h);                                   // behind the head first
-  const hoodOn = top === "helmet" || top === "cloud";
-  const capLine = HAIRLINE[front] ?? CAP_TOPS[top] ?? CROWN;
-  if (!hoodOn && (front !== "none" || CAP_TOPS[top] !== undefined)) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
+  const capLine = FRONT_CAP[front] ?? (front === "helmet" || front === "cloud" ? undefined : TOP_CAP[top]);
+  if (capLine !== undefined) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
   if (TOPS[top]) TOPS[top](h);                                       // on the crown
   if (FRONTS[front]) FRONTS[front](h);                               // over the face, last
 }

@@ -72,20 +72,18 @@ export function applyLateConstraints(parts) {
     parts.hairFront = "none"; parts.hairBack = "none"; parts.hairTop = "none";
   } else if (parts.headgear !== "none" && parts.headgear !== "halo") {
     // (not the halo — it floats above the head and covers nothing, so any hair keeps)
-    // With a hat or a band the front and the back keep — bangs and a bob's hem come out from under a hat — but a top that
-    // stands up through the hat cannot: a bun, an apple top, a spiked band go. The hoods and the hedgehog suit a band (the
-    // reference) and only a band
-    const through = ["bun", "apple", "appleBig", "spikes", "mohawk", "hedgehog", "cloud"];
-    if (parts.headgear === "band") through.splice(through.indexOf("hedgehog"), 2);   // hedgehog and cloud stay under a band
-    if (through.includes(parts.hairTop)) parts.hairTop = "none";
-    if (parts.hairTop === "helmet" && parts.headgear !== "band") parts.hairTop = "none";   // a hood under a hat is two hats
+    // With a hat or a band the fringes and the back keep — bangs and a bob's hem come out from under a hat — but what stands
+    // up through the hat cannot: a bun and the apple tops (the top slot), the spiked bands (the front slot) go. The hoods and
+    // the hedgehog suit a band (the reference) and only a band
+    if (["bun", "apple", "appleBig"].includes(parts.hairTop)) parts.hairTop = "none";
+    const through = ["spikes", "mohawk", "hedgehog", "cloud", "helmet"];
+    if (parts.headgear === "band") through.splice(through.indexOf("hedgehog"), 3);   // hedgehog, cloud and the hood stay under a band
+    if (through.includes(parts.hairFront)) parts.hairFront = "none";
   }
   // A mohawk, a bun or an apple top wears nothing (with a hat on they are already gone, above — this is the bare head's rule)
-  if (["mohawk", "bun", "apple", "appleBig"].includes(parts.hairTop)) parts.headgear = "none";
-  // A spiked top or a hood has no bangs: the spikes stand where a fringe would root, and a hood covers the forehead itself.
-  // A mohawk is the whole hair — nothing behind it either
-  if (["spikes", "mohawk", "hedgehog", "helmet", "cloud"].includes(parts.hairTop)) parts.hairFront = "none";
-  if (parts.hairTop === "mohawk") parts.hairBack = "none";
+  if (["bun", "apple", "appleBig"].includes(parts.hairTop) || parts.hairFront === "mohawk") parts.headgear = "none";
+  // A mohawk is the whole hair — nothing behind it
+  if (parts.hairFront === "mohawk") parts.hairBack = "none";
   // A back never draws the cap (draw/hair.js): a back with no front and no crown top hangs behind a bare head, and the roll
   // leaves it so — the three slots are independent, and what the front is is the front slot's alone
   return parts;

@@ -116,9 +116,10 @@ An eyepatch is always a **black** fill (an object) — on an imp's ink-black hea
 laps onto the other eye — decided once the proportions are settled). An eyepatch is also **dropped on mismatched eyes** — cover one side of an individual whose eye size (`eyeSizeSkew` > 0.09) or height (`eyeHeightSkew` > 0.03) is noticeably different and the remaining
 eye looks oddly large or high on its own, which reads as a mistake (set to none after the proportions are settled; patchSide is cleared too).
 
-### hair — three slots: hairFront (6) · hairBack (11) · hairTop (13)
-`hair.js` — hair is **three slots combined freely**: the **front** (앞머리 — what falls over the forehead), the **back** (뒷머리 —
-what hangs behind and beside the head) and the **top** (정수리 — what sits on the crown). `hairFront` stands where the one
+### hair — three slots: hairFront (15) · hairBack (11) · hairTop (4)
+`hair.js` — hair is **three slots combined freely**: the **front** (앞머리 — everything on the head itself, in front of it: the
+fringes, the crown cap, the spiked bands, tufts, curls, the hoods), the **back** (뒷머리 — what hangs behind and beside the head) and
+the **top** (정수리 — what is tied on the crown: a bun, the apple tops). `hairFront` stands where the one
 `hair` slot of 26 values stood, so the roll's count is unchanged; `hairBack` and `hairTop` are late slots. A file from before
 opens as the same style (`file.js OLD_HAIR`: bob → back bob, bangs → front blunt, spikes → top spikes, bobSwept → swept + bob, verylong → long, twintailsBall → bunsSide …).
 Hair is drawn across **three layers** (`drawHair(layers)`): **back hair** (0.4 — behind the head, the body and the legs, so only
@@ -129,10 +130,11 @@ each layer shifts by its depth ([../rig.md](../rig.md) § fake 3D depth).
 **Every piece is filled** — the boundary drawn first, a closed form, the inside painted with the hair's material and contoured in the
 pencil's dark ink, the same pen as a hat (`paintPart` + `contour`); a hair drawn as a bare pen line beside a filled head read as a
 smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline down to a hairline, easing to side lobes that never enter the
-eye band). **The cap is the front slot's, or a crown top's — a back never draws one**: a back is only what hangs behind the head,
-one piece on the back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the
-seam showed). With a front the cap comes down to that kind's hairline; under a crown top (cap · bun · spikes · hedgehog) it stops
-at the crown (0.7 of the head above its centre, the forehead bare — at 0.78 the cap alone read as a skullcap). A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
+eye band). **The cap is the front's — a back never draws one**: a back is only what hangs behind the head, one piece on the
+back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the seam showed). The
+fringes bring the cap down to their hairline; the crown cap and the spiked bands stop it at the crown (0.7 of the head above its
+centre, the forehead bare — at 0.78 the cap alone read as a skullcap); the strand fronts and the hoods bring none; a bun brings a
+thin cap of its own when the front brings none. A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
 over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
 wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
 from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
@@ -141,12 +143,19 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 
 | hairFront | How |
 | --- | --- |
-| none | Nothing in front — no cap unless a crown top brings one |
+| none | Nothing in front — no cap unless a bun brings its thin one |
 | hairline | The plain fringe — the cap itself coming down over the forehead to a straight hairline (0.5 of the head above its centre), no piece of its own. What every back kind used to bring with it; a file from before gets it with its back |
 | blunt | The straight fringe — a panel over the forehead on the front layer, rooted inside the cap so the two read as one mass (its top edge lies in the cap's fill and draws no line; its sides and its ragged hem do). The hem clears the brow and never enters the eye band |
 | swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down past the temples to the jaw line where there is a lane outside the widest eye (a fifth of the head's half-height clear of it — closer, the near lock sat on a big eye's outer line). Which side is per individual |
 | curtain | A middle parting — two sweeps framing the face, the parting gap showing the forehead up to the hairline; the tips drop past the brow but never into the eye band (`eyeSafeY`, no grace — with one they grazed a big eye's white on a turned face) |
 | sideLock | One lock falling from a parting down one cheek to the jaw line (the side per individual), the other side bare |
+| cap | The crown cap alone — the top of the head and the temples, the forehead bare |
+| spikes / hedgehog | **Spiked bands** — a zigzag of filled wedges standing off the head's outline over a scalp cap, only the zigzag drawing a line: spikes 11 over the whole upper half (0.95π) · hedgehog 15 short ones (0.9π) and a second row of short strokes inside the cap in the hair's own tone |
+| mohawk | A spiked band of 7 over a narrow span (0.35π) on a bare head, contoured all round, its inner edge the head's own line. The whole hair — nothing behind it |
+| tuft / wisp | A few **leaves** — each strand a thin filled ribbon from a root on the crown to a point (4 / 7) |
+| curly | 7 small filled discs along the crown |
+| helmet | The hood (bowl) type — a mass a little bigger than the head (×1.06) from the crown down to the brow at the front and below the ears at the sides, on the front layer, the hem never into the eye band; strokes in the hair's own tone falling from the crown toward the hem |
+| cloud | The curly cloud — the same hood ×1.2 with a scalloped outline (9 lumps), small curls contoured along its edge and a few loops inside in the hair's own tone |
 
 | hairBack | How |
 | --- | --- |
@@ -163,22 +172,14 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 | hairTop | How |
 | --- | --- |
 | none | |
-| cap | The crown cap alone — the top of the head and the temples, the forehead bare — for a creature with no front and no back |
 | bun | One bunch on top and a pin, over a thin cap (the hairline high on the crown). It cannot wear a hat |
 | apple / appleBig | An apple top — a bunch rising like an apple stem in the middle of the crown: 4 leaves in a fan plus a tie · 6 leaves 1.7× long and thick plus a long tie. No hat |
-| spikes / hedgehog | **Spiked bands** — a zigzag of filled wedges standing off the head's outline over a scalp cap, only the zigzag drawing a line: spikes 11 over the whole upper half (0.95π) · hedgehog 15 short ones (0.9π) and a second row of short strokes inside the cap in the hair's own tone |
-| mohawk | A spiked band of 7 over a narrow span (0.35π) on a bare head, contoured all round, its inner edge the head's own line. The whole hair — no front, no back |
-| tuft / wisp | A few **leaves** — each strand a thin filled ribbon from a root on the crown to a point (4 / 7) |
-| curly | 7 small filled discs along the crown |
-| helmet | The hood (bowl) type — a mass a little bigger than the head (×1.06) from the crown down to the brow at the front and below the ears at the sides, on the front layer, the hem never into the eye band; strokes in the hair's own tone falling from the crown toward the hem |
-| cloud | The curly cloud — the same hood ×1.2 with a scalloped outline (9 lumps), small curls contoured along its edge and a few loops inside in the hair's own tone |
 
 **The rules** (`spec.js applyLateConstraints` — on the late slots, after they are rolled; fixed overwrites, never a roll): a helmet or
-a pot on the head clears all three · with any other hat or a band the front and the back keep (bangs and a bob's hem come out from
-under a hat) but a top that stands up through it goes — bun, the apple tops, spikes, mohawk; hedgehog and cloud stay under a band
-only, the hood under a band only · a mohawk, a bun or an apple top wears no hat · a spiked top or a hood has no front (the spikes
-stand where a fringe would root; a hood covers the forehead itself) · a mohawk has no back either. A back with no front and no crown top hangs behind a
-bare head, and the roll leaves it so — the three slots are independent. cat, pup and rex forbid every
+a pot on the head clears all three · with any other hat or a band the fringes and the back keep (bangs and a bob's hem come out from
+under a hat) but what stands up through it goes — a bun and the apple tops (top), the spiked bands (front); hedgehog, cloud and
+the hood stay under a band only · a mohawk, a bun or an apple top wears no hat · a mohawk has no back. A back with no front hangs behind a bare
+head, and the roll leaves it so — the three slots are independent. cat, pup and rex forbid every
 value → none (their fur is not hair). The roll deals each slot its own common none; with the hat rule clearing most tops, about two humans in five are bald (it was
 one in three with the one slot) and about one in sixteen wears all three. Imps stay three in four bald, spikes their one top.
 
