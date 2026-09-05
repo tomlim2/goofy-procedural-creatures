@@ -39,7 +39,7 @@ const OLD_HAIR = {
   pigtails: { hairFront: "hairline", hairBack: "pigtails" }, curly: { hairTop: "curly" }, bangs: { hairFront: "blunt" }, longbob: { hairFront: "blunt", hairBack: "bob" },
   bun: { hairTop: "bun" }, helmet: { hairTop: "helmet" }, cloud: { hairTop: "cloud" }, hedgehog: { hairTop: "hedgehog" },
   long: { hairFront: "hairline", hairBack: "long" }, twintails: { hairFront: "hairline", hairBack: "twintails" }, ponytail: { hairFront: "hairline", hairBack: "ponytail" }, apple: { hairTop: "apple" },
-  verylong: { hairFront: "hairline", hairBack: "long" }, twintailsBall: { hairFront: "hairline", hairBack: "twintailsBall" }, appleBig: { hairTop: "appleBig" },
+  verylong: { hairFront: "hairline", hairBack: "long" }, twintailsBall: { hairFront: "hairline", hairBack: "bunsSide" }, appleBig: { hairTop: "appleBig" },
   bobSwept: { hairFront: "swept", hairBack: "bob" }, sheetsSwept: { hairFront: "swept", hairBack: "sheets" }
 };
 function migrate(next) {

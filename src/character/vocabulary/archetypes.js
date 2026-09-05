@@ -58,7 +58,7 @@ export const ARCHETYPES = [
       legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
       arms: [["stick", 3], ["mitten", 2]],
       hairFront: [["none", 3], ["hairline", 2], ["blunt", 1.5], ["curtain", 1]],
-      hairBack: [["none", 4], ["pigtails", 2], ["twintails", 1.5], ["twintailsBall", 1]],
+      hairBack: [["none", 4], ["pigtails", 2], ["twintails", 1.5], ["bunsTop", 1], ["bunsSide", 0.7]],
       hairTop: [["none", 4], ["wisp", 2], ["tuft", 1.5], ["apple", 1], ["appleBig", 1], ["curly", 1], ["cloud", 1], ["spikes", 1]],   // the filled family — the parted curtain is the pretty one
       nose: [["none", 4], ["dot", 3], ["hook", 1]]
     }

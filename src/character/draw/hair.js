@@ -372,15 +372,28 @@ const hood = ({ grow, lumps, amount, grain = false, curls = false }) => (h) => {
   }
 };
 
-// Twintails — two tails tied high at the sides, hanging back, each with a tie; with ball, a round bunch at the end
-const twintailsBack = (ball) => (h) => {
+// Twintails — two tails tied high at the sides, hanging back, each with a tie
+const twintailsBack = (h) => {
   const { back, rx, ry, cy, spec } = h;
   for (const side of [-1, 1]) {
     const tx = side * rx * 0.95, ty = cy + ry * 0.35;
-    const spine = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - (ball ? 0.27 : 0.3)]];
-    tailPiece(h, spine, [0.018, 0.03, 0.028, ball ? 0.02 : 0.01], spec.roll * 0.0029 + side * 5);
+    const spine = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - 0.3]];
+    tailPiece(h, spine, [0.018, 0.03, 0.028, 0.01], spec.roll * 0.0029 + side * 5);
     back.line([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: h.lineInk });   // the tie
-    if (ball) blobPiece(h, back, h.backFills, tx + side * 0.05, ty - 0.34, 0.057, 0.06, spec.roll * 0.0037 + side);
+  }
+};
+// The twin buns — two big balls and nothing else (the reference's space buns), behind the head, each with a tie across its
+// neck where it meets the head. Where they are tied is the kind: on top of the head, low behind the jaw, or out at the sides
+const twinBuns = ({ x, y, r }) => (h) => {
+  const { back, backFills, rx, ry, cy, spec } = h;
+  for (const side of [-1, 1]) {
+    const bx = side * rx * x, by = cy + ry * y, br = ry * r;
+    blobPiece(h, back, backFills, bx, by, br, br * 0.94, spec.roll * 0.0043 + side * 7);
+    // the tie — a short line across the neck, on the ball's edge toward the head's centre
+    const dx = -bx, dy = cy - by, l = Math.hypot(dx, dy) || 1;
+    const nx = bx + (dx / l) * br * 0.85, ny = by + (dy / l) * br * 0.85;
+    const tx = -dy / l, ty = dx / l;
+    back.line([[nx - tx * br * 0.45, ny - ty * br * 0.45], [nx + tx * br * 0.45, ny + ty * br * 0.45]], { color: h.lineInk });
   }
 };
 // Ponytail — tied on one side behind the crown (per individual), rising and hanging back
@@ -496,8 +509,10 @@ export const BACKS = {
   mop: (h) => backMass(h, h.cy - h.ry * 0.95, 1.06, { grow: [1.24, 1.12], lumps: 6, amount: 0.09 }),          // to the jaw, shaggy
   long: (h) => backMass(h, h.shoulder, 1.14),                                                                    // to the shoulder, a little flare
   sheets: backSheets,                                                                                            // the side sheets to the hip
-  twintails: twintailsBack(false),
-  twintailsBall: twintailsBack(true),
+  twintails: twintailsBack,
+  bunsTop: twinBuns({ x: 0.72, y: 0.98, r: 0.4 }),    // tied on top of the head, at the corners of the crown
+  bunsLow: twinBuns({ x: 0.92, y: -0.4, r: 0.34 }),   // low, behind the jaw
+  bunsSide: twinBuns({ x: 1.08, y: 0.22, r: 0.36 }),  // out at the sides, ear height
   ponytail: ponytailBack,
   pigtails: pigtailsBack
 };

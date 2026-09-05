@@ -23,7 +23,7 @@ export const SLOTS = {
   // Hair is not filled as an area but drawn as a scribble, back and forth with the pen.
   // The reference's kid row includes: a bowl cut with a fringe (bangs) · a bob down to the jaw at the sides (longbob) · a topknot on the crown (bun)
   // Reference volume types: helmet a hood-like mass (a big mass wrapping crown to brow and over the ears) · cloud curly cloud (a big mass with a scalloped outline) · hedgehog a hedgehog (short spikes over the whole crown)
-  // What the back hair layer made possible: long straight hair to the shoulders · twintails · twintailsBall twintails with round ends ·
+  // What the back hair layer made possible: long straight hair to the shoulders · twintails · the twin buns ·
   // ponytail · apple an apple top (a small nub on the crown) · appleBig a big apple top
   // The filled family — hair as a SHAPE, the inside painted with the goofy material like a hat, not scribbled fur (draw/hair.js § the filled family).
   // Two values, told apart by the BACK: bobSwept a 단발 mass to just under the chin · sheetsSwept a pair
@@ -135,8 +135,10 @@ export const SLOTS = {
   // it, so two mediums are not the same eye; the slot is the step a hand picks. A late slot, so nothing rolled before it moves
   eyeScale: ["small", "medium", "large"],
   // The back of the hair — bob to the ear · mop to the jaw, shaggy · long to the shoulder · sheets the side sheets to the hip ·
-  // twintails, with a ball at the ends · ponytail · pigtails, two bunches. (verylong — long and the sheets together — was removed)
-  hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "twintailsBall", "ponytail", "pigtails"],
+  // twintails · the twin buns — two big balls and nothing else, tied on top of the head (bunsTop), low behind the jaw (bunsLow) or out
+  // at the sides (bunsSide) · ponytail · pigtails, two small bunches. (verylong — long and the sheets together — was removed;
+  // twintailsBall, tails with balls at the ends, became the buns)
+  hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "bunsTop", "bunsLow", "bunsSide", "ponytail", "pigtails"],
   // The top of the hair — cap a plain scalp cap · bun · the apple tops · the spiked bands · tufts · curls · the two hoods
   hairTop: ["none", "cap", "bun", "apple", "appleBig", "spikes", "mohawk", "hedgehog", "tuft", "wisp", "curly", "helmet", "cloud"]
 };
@@ -157,7 +159,7 @@ export const DEFAULT_BIAS = {
     ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
   // Three slots, each with a common none, so a creature seldom wears all three at once and about one in fourteen wears nothing
   hairFront: [["none", 3], ["hairline", 3], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5]],
-  hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["sheets", 1.2], ["twintails", 1], ["twintailsBall", 0.7], ["ponytail", 1.2], ["pigtails", 1.2]],
+  hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["sheets", 1.2], ["twintails", 1], ["bunsTop", 0.8], ["bunsLow", 0.6], ["bunsSide", 0.7], ["ponytail", 1.2], ["pigtails", 1.2]],
   hairTop: [["none", 6], ["cap", 1], ["bun", 1], ["apple", 1], ["appleBig", 0.7], ["spikes", 2], ["mohawk", 1], ["hedgehog", 1.2], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1], ["coronet", 1]],   // bonnet disabled
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
