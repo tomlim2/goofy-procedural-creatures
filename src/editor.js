@@ -779,8 +779,7 @@ function menuOf(name, slot) {
       spec = derive({ ...spec, parts: { ...spec.parts, [slot]: value } });
       render();
     });
-    item.title = value;
-    item.setAttribute("aria-label", `${slot} ${value}`);
+    item.setAttribute("aria-label", `${slot} ${value}`);   // no title: the name is on the row, and a tooltip said it again over it
     box.appendChild(item);
     forms[value] = { item, canvas, painted: false };
   }
