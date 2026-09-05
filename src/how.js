@@ -232,8 +232,8 @@ IN_USE.forEach(({ key, label, box, draw }) => {
 // steps (light · stipple · scribble · hatch · black — low density to high), filled the goofy material's way at each — the contour is the board's outline,
 // the board's contour; a goofy material is only the filling. FLAT has no texture, so one ball.
 // A textured entry gets **the same five steps again underneath, on a dark ground**: a mark has to be lighter than what it is drawn
-// on, so there every technique turns around and lays its marks light, and the step pulls the colour the other way (materials.js
-// contrast, pull). One dark ball at the end of the row could only show it at one step; the scale is the point
+// on, so there every technique turns around and lays its marks light (materials.js contrast). One dark ball at the end of the row
+// could only show it at one step; the scale is the point
 const DARK_GROUND = DARKS[2];
 Object.keys(GOOFY_MATERIALS).forEach((name, i) => {
   const m = GOOFY_MATERIALS[name];
