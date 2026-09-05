@@ -453,7 +453,7 @@ white wedges and the side lines broke into dashes at every bend (0.014 units on 
 tie it to a bone's own span and adding bones makes every bend sharper rather than smoother — twice as many joints, each with half the reach (a hook went from 1270 to 1556
 degrees of turn per unit of tail). The scene bends it as a
 `SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side lines'
-ends are **joints** (`line(…, { joint })`: no overshoot, no thinning); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick). A tube's tip
+ends are **joints** (`line(…, { joint })`: no overshoot, no thinning, and the end lands exactly on its point — [../drawing.md](../drawing.md) § the outline); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick). A tube's tip
 **tapers to a point** under the lines over 1.6 end-widths (a brush end — a disc and an arc of line were ink on ink) except block, which stays square.
 **Color and pattern.** The tail is the body's color (a quad's `cloth` — the head color or a tone of it), at the head's value step like the rest of the mass. A tube carries the creature's
 **pattern** (the `pattern` slot, [../drawing.md](../drawing.md) § what takes the goofy material) along itself — stripes as **rings**, dots and spots along the spine, hatch across it — in the

@@ -77,6 +77,9 @@ function tagAlong(points, skinT, u, total) {
   return skinT[0] + (skinT[skinT.length - 1] - skinT[0]) * f;
 }
 
+// 0 → 1 with a level start and end (smoothstep), clamped
+const smooth = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u));
+
 export const PENCIL = {
   step: 0.01,                          // re-sample spacing (world) — about 2.3 px at board scale; theirs max(2.2, w·.9) px
   wander: 0.0045,                      // the spine's wander amplitude (world), × the individual's wobble
@@ -90,6 +93,12 @@ export const PENCIL = {
   stub: 0.05,                          // a line this short keeps its ends and sheds nothing — the overshoot would run it half again
                                        // to twice as long, and a crumb or a bite is the size of the whole mark. Every dot and dash is one
   tip: 0.35,                           // the width left at the very end of an overshoot — a blunt lift, never a needle
+  // **the joint** — an end handed over as a joint (pencil's `joint`) lands ON its point, at the plain width: the spine's
+  // wander and the width's jitter and breathing ease to nothing over `fade` (world) from that end. The bone that meets it
+  // there does the same, so the two are one line through the pivot however far it folds. Left loose, each end wandered its
+  // own way off the pivot (up to 0.4 widths, measured over every biped leg) and breathed its own width, and a leg had a
+  // step at the knee — one rail continuous, the other stepping out by half a width
+  joint: { fade: 0.03 },
   // **the lift** — the pen comes up. In **world units**, not in widths: a hold does not change with the size, so the same kind
   // at S, M and L has to skip in the same places for the same length. Measured in widths the gaps grew with the line —
   // a hairline came out finely dashed and a fat one broke twice — and the three sizes read as three different holds.
@@ -165,7 +174,8 @@ export class Sketch {
   // The pencil — every number in PENCIL (above). closed draws a seamless loop: no overshoot, and the sines snapped to whole cycles
   // so the seam is continuous. paper is the color the bites take — pass the fill's color when the line runs over a fill.
   // Unlike stroke(), the quads share per-point normals, so the ribbon never cracks at a corner. Not for dots — the overshoot lengthens them.
-  // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc) gets no overshoot and no thinning
+  // joint = [start, end]: an end that meets another line or a fill's edge (the tail's root, the tip's arc, a leg's knee) gets no overshoot
+  // and no thinning, and lands exactly on its point at the plain width — the wander and the breathing ease in from it (PENCIL.joint)
   pencil(points, { color: color0 = "#2b2724", width = 0.012, passes = 1, closed = false, lift = null, breathe: breath = 1, anatomy = null, paper = PAPER, joint = null, skinT = null } = {}) {
     let color = color0;
     const P = PENCIL;
@@ -264,6 +274,17 @@ export class Sketch {
         return closed || (from > F.edge && from + g < span - F.edge);
       } : null;
 
+      // A joint end is pinned: pin(i) is 0 at the end and eases to 1 over PENCIL.joint.fade of the line (never more than half of it),
+      // and both the spine's wander and the width's swing are scaled by it below. A closed loop has no ends
+      const fade = Math.min(P.joint.fade, L / 2);
+      const pin = (i) => {
+        if (closed || !joint) return 1;
+        let k = 1;
+        if (joint[0]) k = Math.min(k, smooth(s[i] / fade));
+        if (joint[1]) k = Math.min(k, smooth((L - s[i]) / fade));
+        return k;
+      };
+      const wPlain = width * (isGhost ? P.ghost.width : 1);   // the width asked for, before this stroke's own jitter — what a joint end lands at
       // Per-point normals (cyclic on a loop), shared by the quads on either side
       const normals = [];
       for (let i = 0; i < n; i += 1) {
@@ -276,7 +297,7 @@ export class Sketch {
       }
       // The spine wanders along its normals on two sines per length
       const path = spine.map(([x, y], i) => {
-        const off = slip + wander * (P.drift.amp * Math.sin(s[i] * f1 + p1) + P.waver.amp * Math.sin(s[i] * f2 + p2));
+        const off = (slip + wander * (P.drift.amp * Math.sin(s[i] * f1 + p1) + P.waver.amp * Math.sin(s[i] * f2 + p2))) * pin(i);
         return [x + normals[i][0] * off, y + normals[i][1] * off];
       });
       // The half width — breathing, and thinning only inside the overshoot tails
@@ -291,7 +312,8 @@ export class Sketch {
         let tip = 1;
         if (!closed && s[i] < tail0) tip = dome(s[i] / tail0);
         else if (!closed && L - s[i] < tail1) tip = dome((L - s[i]) / tail1);
-        halves.push((w / 2) * Math.max(0.08, k) * tip);
+        const pk = pin(i);   // at a joint end the plain width, unbreathing; the stroke's own width and swing come in over the fade
+        halves.push(((wPlain + (w - wPlain) * pk) / 2) * Math.max(0.08, 1 + (k - 1) * pk) * tip);
       }
       // The skin tag along the line — the arc fraction between the overshoot tails, so the tails take the ends' tags
       const tagAt = (i) => (skinT ? tagAlong(points, skinT, Math.max(0, Math.min(L - tail0 - tail1, s[i] - tail0)), L - tail0 - tail1) : NaN);
