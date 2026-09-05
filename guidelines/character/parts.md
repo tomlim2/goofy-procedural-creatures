@@ -123,11 +123,10 @@ Hair is drawn across **three layers** (`drawHair(layers)`): **back hair** (back 
 On a face turn (fake 3D) each layer shifts by its **depth** — bangs and the scalp +0.12 (a little toward the face), back hair −0.12 (behind the head, so the other way) ([../rig.md](../rig.md) § fake 3D depth).
 That is what gives long hair, twintails and a ponytail (behind) and bangs and side curtains (in front).
 
-**Two families.** Every hair that is a *mass* is a **filled** piece — the boundary drawn first, a closed form, the inside painted
-with the hair's material and contoured in the pencil's dark ink, the same pen as a hat (`paintPart` + `contour`): bob · mop ·
-scribble · sweep · pigtails · bangs · longbob · bun · helmet · cloud · long · verylong · twintails · twintailsBall · ponytail ·
-bobSwept · sheetsSwept. What is *strands* by nature has no inside to fill and stays **fur**, drawn with the pen: spikes · mohawk ·
-hedgehog · tuft · wisp · curly · apple · appleBig. The filled pieces are built from a few parts — the **scalp** (`scalp`: the head's
+**One family: every hair is a filled piece** — the boundary drawn first, a closed form, the inside painted with the hair's
+material and contoured in the pencil's dark ink, the same pen as a hat (`paintPart` + `contour`). The masses (caps, hoods, long
+hair, tails) are built from a few parts; the strand kinds are small filled shapes — a spike a wedge, a strand a leaf, a curl a
+disc — because a hair drawn as a bare pen line beside a filled head read as a smudge. The parts — the **scalp** (`scalp`: the head's
 own drawn outline down to a hairline, easing to side lobes that never enter the eye band), a **back mass** (`backMass`: a dome a
 little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel** over the forehead (bangs), **tails**
 (`fillStrip` along a spine) and **blobs** (a bun, a bunch). A piece with side lobes or a ragged hem is not visible from its centre,
@@ -145,16 +144,16 @@ the notches onto the face.
 | twintails | Twintails, filled — the scalp cap and two tails (`fillStrip` ribbons) tied high at the sides, hanging back, each with a tie |
 | twintailsBall | Twintails with **a round bunch at the end** of each tail, a filled blob |
 | ponytail | A ponytail, filled — the scalp cap and one ribbon tied behind the crown on one side (per individual), rising and hanging back, with a tie |
-| apple | An apple top — a small bunch rising like an apple stem in the middle of the crown (crown, 4 strands) plus a tie. No hat |
-| appleBig | A big apple top — 6 strands, 1.7× long and thick, spreading wide, plus a long tie. No hat |
-| hedgehog | A hedgehog — short spikes over **the whole** crown (an outline row of 15 plus an inner row of 10, radial) |
+| apple | An apple top — a small bunch rising like an apple stem in the middle of the crown: 4 leaves in a fan plus a tie. It cannot wear a hat |
+| appleBig | A big apple top — 6 leaves, 1.7× long and thick, spreading wide, plus a long tie. No hat |
+| hedgehog | A hedgehog — a spiked band of 15 short wedges over the whole crown (0.9π) over a scalp cap, and a second row of short strokes inside the cap in the hair's own tone |
 | bangs | Bangs, filled — the scalp cap and a panel over the forehead on the front layer (under a hat), rooted inside the cap so the two read as one mass: the panel's top edge lies in the cap's fill and draws no line, its sides and its ragged hem do. The hem clears the brow and never enters the eye band |
 | longbob | bangs, and two filled panels down the cheeks to the jaw line, outside the widest eye (front — over the face; a very wide-set eye leaves no lane, and then the bangs alone) |
 | bun | A bun, filled — a thin cap (the hairline high on the crown), one bunch on top and a pin. It cannot wear a hat |
-| spikes / mohawk | Short strokes reaching out from the crown (11 / 7, narrow) |
-| tuft / wisp | A few strands (4 / 7) |
+| spikes / mohawk | **Spiked bands** — a zigzag of filled wedges standing out from the head's outline, the valleys on the outline (`spikedBand`). spikes: 11 over the whole upper half (0.95π) over a scalp cap, only the zigzag drawing a line · mohawk: 7 over a narrow span (0.35π) on a bare head, the band contoured all round, its inner edge the head's own line |
+| tuft / wisp | A few **leaves** — each strand a thin filled ribbon from a root on the crown to a point (4 / 7) |
 | pigtails | Two filled bunches at the sides (back — behind the ears), each with a tie, and a light cap |
-| curly | 7 small circles along the crown |
+| curly | 7 small filled discs along the crown |
 | bobSwept / sheetsSwept | **Where the filled family began** — hair as a SHAPE, the boundary first and the inside painted like a hat (`paintPart`); every mass kind is drawn this way now (above). The two are told apart by the **back**: **bobSwept** a 단발 mass to just under the chin with a small A-line flare · **sheetsSwept** a pair running from just under the cheeks (`SHEET_TOP`) down to frayed, tasselled ends level with the **hip** (`box.legTop`) — landmarks rather than fixed multiples of `ry`, so the length scales with each build. A scalp piece (crown) fills the head's own top to the hairline, following **the head's own drawn outline** (`headPath`, the very path `drawHead` inked, lumps and all — a copy grown 5% lay a band of hair colour outside the head's line down both temples, with no line of its own at the edge); without it the crown is bare skin and reads as balding. **Neither draws a fringe.** Four values once carried a filled panel over the forehead and it did more harm than good — they read as one value, and the panel's lower edge is a long straight line the eye takes for a hat's brim. `frontBlunt` / `frontCurtain` / `frontSwept` are still in `hair.js`, unused, until a fringe that works is found. The fill is the creature's **hair colour** (`palette.hair` — the HAIRS bag, or a pop aimed here) and the outline stays pencil-dark. **Every face-covering piece is clamped by `eyeSafeY`** — the highest eye's top plus the travel a face turn has left (≈0.14·ry) plus the pencil's bite: these fills are opaque, and dark ink drawn on a dark fill is just as gone |
 
 **There is no filled 장발, and that is a rule rather than a gap.** A long back was built (the dome plus a sheet hanging at each side to the chest) and **removed**: the two sheets left a narrow strip open down the middle, and the torso showing through it — narrow, tapering, ending round — made an obscene silhouette on slim, skin-coloured bodies. (`sheets` runs past the torso too, but it is not the same shape: it hangs far outside the body — out to 1.44·rx against a torso half-width of 0.4–1.0·rx — so background shows either side and the torso is never framed into a shaft. The removed pair hugged it.) The fur curtains (`long`, `verylong`) do not have the problem: they are open scribble rather than opaque fill, they hang from the whole head outline instead of two side lobes, and `verylong` deliberately skips the strokes over the middle of the chest. **Two filled masses flanking a gap over the TORSO is a shape to stay away from** — a filled 장발 has to read as one piece across the back, never as a pair. `sheets` is a pair and is fine, because of where it stops: it straddles the **head**, its hem clearing the jaw by a hair, so what shows between the two is the face. (Its hem is not clamped to the shoulder — `bodyTop` is measured *above* the chin on every build, so that clamp would shrink the sheets to nothing; back hair drawing at 0.4, under the body, is what covers the rest.)

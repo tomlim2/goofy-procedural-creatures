@@ -1,9 +1,7 @@
-// Hair — 26 kinds. Docs: guidelines/character/parts.md § hair
-// Two families. **Filled** — every hair that is a mass: the boundary drawn first, a closed form, and the inside painted with
-// the hair's material, contoured in the pencil's dark ink, the same pen as a hat (bob · mop · scribble · sweep · pigtails ·
-// bangs · longbob · bun · helmet · cloud · long · verylong · twintails · twintailsBall · ponytail · bobSwept · sheetsSwept).
-// **Fur** — what is strands by nature and has no inside to fill, drawn with the pen: spikes · mohawk · hedgehog · tuft · wisp
-// · curly · apple · appleBig
+// Hair — 26 kinds, every one a **filled** piece: the boundary drawn first, a closed form, and the inside painted with the
+// hair's material, contoured in the pencil's dark ink — the same pen as a hat. The masses (caps, hoods, long hair, tails) are
+// built from the family's parts below; the strand kinds (spikes, tufts, the apple tops, curls) are small filled shapes too —
+// a spike a wedge, a strand a leaf, a curl a disc — since a hair drawn as a bare line beside a filled head read as a smudge
 //
 // Hair is drawn across **three layers** — layers = { back, crown, front } (ink sketches), and the filled
 // family also gets each layer's fills sketch (backFills, crownFills, frontFills — the fur kinds never fill):
@@ -20,59 +18,6 @@ import { headShape, eyeGeometry } from "./layout.js";
 import { browLine } from "./head.js";
 import { paintPart } from "./body.js";
 import { luminance, tint, deepen } from "../../color.js";
-
-// Apple top — a bunch right in the middle of the crown rising like an apple stem. The hair is smooth, with one tie. size 1 the small one (four strands) · 1.7 the big one (six strands, long and thick)
-const appleOf = (size) => (h) => {
-  const { crown, ink0, ry, cy } = h;
-  const bx = 0.005, by = cy + ry * 1.0;
-  const count = size > 1 ? 6 : 4, spread = size > 1 ? 0.15 : 0.1;   // strand count and spread (× π)
-  for (let i = 0; i < count; i += 1) {
-    const a = Math.PI * (0.5 + spread * (i - (count - 1) / 2));
-    crown.line([[bx, by], [bx + Math.cos(a) * 0.05 * size, by + Math.sin(a) * 0.055 * size + 0.01]], { color: ink0 });
-  }
-  crown.line([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: ink0 });   // the tie
-};
-
-// Spiky hair. hedgehog puts short spikes radially over **the whole** crown (an outline row plus an inner row) — it reads as a mass, like a hedgehog's back.
-// rings: [radius multiplier, count, spread (× π), base length, length variation]
-const spiky = (rings) => (h) => {
-  const { crown, ink0, rx, ry, cy, noise, spec } = h;
-  for (const [rad, count, span, len0, lenVar] of rings) {
-    for (let i = 0; i < count; i += 1) {
-      const t = count === 1 ? 0 : i / (count - 1);
-      const angle = Math.PI * (0.5 + span * (t - 0.5));
-      const bx = Math.cos(angle) * rx * rad;
-      const by = cy + Math.sin(angle) * ry * rad;
-      const len = len0 + Math.abs(noise(i * 3.1 + rad * 7 + spec.roll * 0.001)) * lenVar;
-      crown.line([[bx, by], [bx + Math.cos(angle) * len, by + Math.sin(angle) * len]], { color: ink0 });
-    }
-  }
-};
-
-// Curly — small circular bunches along the crown
-function curly(h) {
-  const { crown, ink0, rx, ry, cy, noise } = h;
-  for (let i = 0; i < 7; i += 1) {
-    const k = i / 6;
-    const angle = Math.PI * (0.8 - 0.6 * k);
-    const bx = Math.cos(angle) * rx * 0.88;
-    const by = cy + Math.sin(angle) * ry * 0.92;
-    const r = 0.03 + noise(i * 4.4) * 0.012;
-    crown.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0 });
-  }
-}
-
-// A few strands — wisp seven, tuft four
-const strands = (count) => (h) => {
-  const { crown, ink0, rx, ry, cy, noise } = h;
-  for (let i = 0; i < count; i += 1) {
-    const t = i / count;
-    const angle = Math.PI * (0.25 + 0.5 * t);
-    const bx = Math.cos(angle) * rx * 0.8;
-    const by = cy + Math.sin(angle) * ry * 0.9;
-    crown.line([[bx, by], [bx + noise(i * 5.5) * 0.07, by + 0.09 + t * 0.03]], { color: ink0, size: "S" });
-  }
-};
 
 // ---- The filled family — hair as SHAPES, not fur ---------------------------------------------------------
 // The two kinds below (bobSwept · sheetsSwept) are built the other way round from
@@ -520,19 +465,109 @@ const ponytailF = (h) => {
   back.line([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: h.lineInk });   // the tie
 };
 
+
+// ---- The strand kinds, filled -----------------------------------------------------------------------------
+// The nearest point of the head's drawn outline at an angle round the head's centre (0 = the right, π/2 = the crown)
+const outlineAt = (h, angle) => {
+  const path = h.headPath || grownOutline(h, 1, 1, 3, 0.04);
+  let best = path[0], bd = Infinity;
+  for (const p of path) {
+    let d = Math.abs(Math.atan2(p[1] - h.cy, p[0]) - angle);
+    if (d > Math.PI) d = Math.PI * 2 - d;
+    if (d < bd) { bd = d; best = p; }
+  }
+  return best;
+};
+// A spiked band round the crown — the outer edge a zigzag of wedges standing out from the head's outline, the inner edge the
+// outline itself, a little inside. With `cap` the scalp is filled under it to a hairline and only the zigzag draws a line
+// (the inner edge lies in the cap's fill); without one (the mohawk) the band is the whole hair and is contoured all round —
+// its inner edge is the head's own line, so that is one line, not two
+const spikedBand = ({ span, count, len0, lenVar, cap, inner = false }) => (h) => {
+  const { crown, crownFills, spec, noise, cy, ry } = h;
+  if (cap !== undefined) scalp(h, cy + ry * cap, false);
+  const zig = [];
+  const inside = [];
+  for (let i = 0; i < count; i += 1) {
+    const t = count === 1 ? 0.5 : i / (count - 1);
+    const a = Math.PI * (0.5 + span * (t - 0.5));
+    const base = outlineAt(h, a);
+    const len = len0 + Math.abs(noise(i * 3.1 + span * 7 + spec.roll * 0.001)) * lenVar;
+    const tip = [base[0] + Math.cos(a) * len, base[1] + Math.sin(a) * len];
+    if (i > 0) {   // the valley between two spikes sits on the outline, a hair inside it
+      const am = Math.PI * (0.5 + span * ((t - 0.5 / (count - 1)) - 0.5));
+      const v = outlineAt(h, am);
+      zig.push([v[0] * 0.995, cy + (v[1] - cy) * 0.995]);
+    } else {
+      zig.push([base[0] * 0.995, cy + (base[1] - cy) * 0.995]);
+    }
+    zig.push(tip);
+    if (i === count - 1) zig.push([base[0] * 0.995, cy + (base[1] - cy) * 0.995]);
+    inside.push([base[0] * (cap !== undefined ? 0.9 : 1), cy + (base[1] - cy) * (cap !== undefined ? 0.9 : 1)]);
+  }
+  const poly = [...zig, ...inside.reverse()];
+  paintPart(crownFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });
+  if (cap !== undefined) crown.line(zig, { color: h.lineInk });
+  else crown.contour(poly, { color: h.lineInk });
+  if (inner) {   // the hedgehog's second row — short strokes inside the cap, in the hair's own tone
+    for (let i = 0; i < 10; i += 1) {
+      const a = Math.PI * (0.5 + 0.72 * (i / 9 - 0.5));
+      const r = outlineAt(h, a);
+      const from = [r[0] * 0.72, cy + (r[1] - cy) * 0.72];
+      crown.line([from, [from[0] + Math.cos(a) * 0.045, from[1] + Math.sin(a) * 0.045]], { color: h.grainInk, size: "S" });
+    }
+  }
+};
+// A leaf — one strand as a thin filled ribbon along a curve, from a root to a point
+const leaf = (h, ink, fills, root, tip, width, phase) => {
+  const mid = [(root[0] + tip[0]) / 2 + (tip[1] - root[1]) * 0.08, (root[1] + tip[1]) / 2];
+  ink.contour(fillStrip(h, fills, [root, mid, tip], [width * 0.6, width, width * 0.15], phase), { color: h.lineInk });
+};
+// A few leaves standing off the crown — tuft four, wisp seven
+const tuftsOf = (count) => (h) => {
+  const { crown, crownFills, rx, ry, cy, noise, spec } = h;
+  for (let i = 0; i < count; i += 1) {
+    const t = i / count;
+    const a = Math.PI * (0.25 + 0.5 * t);
+    const root = [Math.cos(a) * rx * 0.8, cy + Math.sin(a) * ry * 0.9];
+    leaf(h, crown, crownFills, root, [root[0] + noise(i * 5.5) * 0.07, root[1] + 0.09 + t * 0.03], 0.011, spec.roll * 0.0019 + i);
+  }
+};
+// Curly — seven small discs along the crown
+const curlyF = (h) => {
+  const { crown, crownFills, rx, ry, cy, noise, spec } = h;
+  for (let i = 0; i < 7; i += 1) {
+    const k = i / 6;
+    const a = Math.PI * (0.8 - 0.6 * k);
+    const r = 0.03 + noise(i * 4.4) * 0.012;
+    blobPiece(h, crown, crownFills, Math.cos(a) * rx * 0.88, cy + Math.sin(a) * ry * 0.92, r, r, spec.roll * 0.0023 + i);
+  }
+};
+// Apple top — a bunch rising from the middle of the crown like an apple stem, leaves in a fan with one tie. size 1 the small
+// one (four leaves) · 1.7 the big one (six, long and thick)
+const appleOfF = (size) => (h) => {
+  const { crown, crownFills, ry, cy, spec } = h;
+  const bx = 0.005, by = cy + ry * 1.0;
+  const count = size > 1 ? 6 : 4, spread = size > 1 ? 0.15 : 0.1;
+  for (let i = 0; i < count; i += 1) {
+    const a = Math.PI * (0.5 + spread * (i - (count - 1) / 2));
+    leaf(h, crown, crownFills, [bx, by - 0.006], [bx + Math.cos(a) * 0.05 * size, by + Math.sin(a) * 0.055 * size + 0.01], 0.012 * size, spec.roll * 0.0033 + i);
+  }
+  crown.line([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: h.lineInk });   // the tie
+};
+
 // Kind → drawing function. 1:1 with the names in slots.js SLOTS.hair (none has none)
 export const HAIR = {
   bob: filledCap({ hairline: 0.48, hem: 0.72, flare: 1.02, grow: [1.14, 1.07], lumps: 4, amount: 0.05 }),
   mop: filledCap({ hairline: 0.4, hem: 0.95, flare: 1.06, grow: [1.24, 1.12], lumps: 6, amount: 0.09, ragged: 0.07 }),
   scribble: filledCap({ hairline: 0.5, hem: 0.6, flare: 1, grow: [1.18, 1.1], lumps: 7, amount: 0.08, wave: 0.045 }),
   sweep: filledCap({ hairline: 0.55, slant: 0.28 }),
-  spikes: spiky([[0.95, 11, 0.95, 0.06, 0.09]]),
-  mohawk: spiky([[0.95, 7, 0.35, 0.06, 0.09]]),
-  hedgehog: spiky([[0.96, 15, 0.9, 0.05, 0.07], [0.74, 10, 0.72, 0.045, 0.05]]),
-  tuft: strands(4),
-  wisp: strands(7),
+  spikes: spikedBand({ span: 0.95, count: 11, len0: 0.06, lenVar: 0.09, cap: 0.55 }),
+  mohawk: spikedBand({ span: 0.35, count: 7, len0: 0.06, lenVar: 0.09 }),
+  hedgehog: spikedBand({ span: 0.9, count: 15, len0: 0.05, lenVar: 0.07, cap: 0.5, inner: true }),
+  tuft: tuftsOf(4),
+  wisp: tuftsOf(7),
   pigtails: pigtailsHair,
-  curly,
+  curly: curlyF,
   bangs: bangsHair,
   longbob: longbobHair,
   bun: bunHair,
@@ -543,8 +578,8 @@ export const HAIR = {
   twintails: twintailsF(false),
   twintailsBall: twintailsF(true),
   ponytail: ponytailF,
-  apple: appleOf(1),
-  appleBig: appleOf(1.7),
+  apple: appleOfF(1),
+  appleBig: appleOfF(1.7),
   bobSwept: filledHair("bob", "swept"),
   sheetsSwept: filledHair("sheets", "swept")
 };
