@@ -201,22 +201,29 @@ adds is a tone of the part's color **in its own family** — `tint` and `deepen`
 it is, so a blue part gets lighter and deeper blues. Lightening by mixing toward the light ink was tried and dropped: a blue part's
 marks came out grey and a red part's pink-beige, and a mark stopped belonging to the thing it was drawn on. Multiplying up
 (`shade` × >1) keeps the hue but clips a saturated color into neon, which is why neither is used for the light side.
-**A mark's tone is the technique's, and it does not move with the step.** Ink's scratches are the ink taken away — the ground
-**tinted**, its own hue carried toward white (`opened` in `materials.js`; on a **dark** ground the tint is damped to 0.55 — a deep
-ground carries the same tint much further up, and a light mark came out bright grey on a near-black part, a stripe rather than a line).
-Graphite's rules and charcoal's specks are **deeper** than the ground they are laid on — that is what graphite and charcoal are — and
-so are the watercolour's dried edge, pool rims and granulation, because dried pigment is deeper than the wash it came out of; its
-blooms are lights. Oil's paint is a spread either side of the ground, two tones a little deeper and two lighter, so paint reads as
-paint and the part keeps its colour under any amount of it. On a **dark** color every mark goes lighter (`contrast` in
-`materials.js`), by as much as the technique asked for either way: there is nothing below a dark ground to draw with. Only the amount
-is mirrored, never the direction — mirroring the direction turned ink's light scratches into marks *darker* than the ground they were
-scratched into, so a dark creature with a textured material read as a solid blob.
+**A mark is a light**: ink's scratches, graphite's rules and oil's paint are all drawn in the
+same tint of the ground, so they come *up* out of the surface, and the step's work goes into the ground
+underneath them (`opened` and `pull` in `materials.js`). How far the tint reaches depends on what it is laid on: on a **dark** ground
+it is damped to 0.55 — a deep ground carries the same tint much further up, and graphite's rules came out bright grey on a near-black
+part, a stripe rather than a pencil line — and oil's spread of paint is pulled back to 0.68 on a **light** one, where the ground is
+already pale and the top of the spread ran all the way to a cream white (a bleach rather than thinned paint).
+Charcoal keeps dark marks — its specks are the grain of a dark
+crumb — and so do the watercolour's dried edge, pool rims and granulation, because dried pigment is deeper than the wash it came
+out of; its pools are lights like the rest. A technique that goes the other way is part of what keeps the five apart. Where a technique's own direction still stands it is
+its ground's: graphite and charcoal deepen theirs, ink lightens its own (its scratches take the ink away). On a **dark** color every mark goes lighter (`contrast` in `materials.js`), by as much as the technique asked for either
+way: there is nothing below a dark ground to draw with. Only the amount is mirrored, never the direction — mirroring the direction
+turned ink's light scratches into marks *darker* than the ground they were scratched into, and oil's darker half of the spread
+vanished into a black body, so a dark creature with a textured material read as a solid blob. On a dark color the base is pulled
+only **half** as far as on a light one: a mark's tone there is a light one, and pulling a dark part as far toward it as a light part
+goes toward its shade washes the part out.
 
 **No mark is ever white.** A lighter tone is the color **tinted** — its own hue carried toward white — never a multiply, which clips: on
 a pale part ink's scratches came out `#ffffff` and ran across a cream creature as hard white lines. And a color with no room left to
-water (within 45 of luminance of the light ink) is scratched the one way a scratch can show there — **deeper**. Ink is the one
-technique this touches — it is the one whose marks go lighter on a light ground — and its `tone` in the table is a scratch's own mild
-watering. A part names a
+water (within 45 of luminance of the light ink) is inked the other way round: its ground is laid on **deeper** the more solid the
+step, and the scratch opens back toward the part's own color. Ink is the one technique this touches — it is the one whose marks go
+lighter on a light ground — and it names both tones in the table: `tone`, a scratch's own mild watering, and `wash`, how pale a
+**fully** scratched ground goes. They are two things and reading the second off the first left ink's five steps within four shades
+of each other. A part names a
 goofy material and hands over the path and the color: `fills.paint(path, "FLAT", { color, offset })`.
 
 The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws, so a misspelt goofy material cannot silently draw
@@ -229,11 +236,11 @@ row is the same material on a **dark ground**, which is where the rule above is 
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |
 | `FLAT` | `flat` — the fill-up, the fan from the centre | — | not in the `material` slot: the whites of the eyes (`paintPart(…, { flat: true })`) and nothing else. A creature is always made of one of the four below |
-| `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, deeper than the ground they are laid on (`tone`); the step is the technique — cross-hatch · hatch · a wavy scribble · stipple · one thin set | the `material` slot (1.5) |
-| `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer. On a color too pale to water the scratch goes deeper — the one way it can show there | the `material` slot (0.8) |
-| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, cut flat by the contour, in a spread of four tones either side of the ground (`washes`), two a little deeper and two lighter, the same at every step — the step is how much paint | the `material` slot (1) |
+| `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, **in the light ink scratches with** (`mark`) over a ground the step deepens (`tone`) | the `material` slot (1.5) |
+| `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter. On a color too pale to water it runs the other way — the ground laid on deeper, the scratch opening back to the color | the `material` slot (0.8) |
+| `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, cut flat by the contour, in a spread of four **waterings of the ground** (`washes`) — the same light, and on a dark ground the whole spread drops so the first of them go on darker than the ground | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | the `material` slot (1) |
-| `WATERCOLOUR` | `flat` | `wash` — the brush and how the wash dries. **Strokes** first: broad sweeps across the part along the hand's swing, each a rounded stroke a shade deeper than the ground, trailing off one end in dry bristle marks — one or two at a light step, the brush going back over itself at a loaded one, the sweeps overlapping and stacking deeper where they cross. Then the drying: **blooms** (backruns — one to three, the size of a brush touch: a pale centre fading out through nested lobes, the pushed-out pigment gathered as a soft deeper arc on **one side**, and the whole bloom gone round once with a broken hairline, in dashes, faint — a sketch showing through the wash), the **edge** (pigment walks to where the wash stops drying — a thin deeper line just inside the contour along a **run** of it, never all the way round), **granulation** (fine deeper specks, more in the loaded steps), and at the loaded steps a **glaze** (a second wash over one side, wet on dry — a lobe a little deeper with a soft hard edge where it stops) and sometimes a **drip** (a run of paint straight down from the bloom, tapering to a bead); at the thin steps **dry brush** (a band of pale flecks where the brush skipped the tooth). The ground is the part's colour at every step; the step is how loaded the brush is. A wash never draws closed dark cells — a first wash ringed every pool and ran the edge the whole way round, and the network read as cracked earth; an earlier one still had many small blooms and read as camouflage | the `material` slot (0.9) |
+| `WATERCOLOUR` | `flat` | `wash` — the brush and how the wash dries. **Strokes** first: broad sweeps across the part along the hand's swing, each a rounded stroke a shade off the ground, trailing off one end in dry bristle marks — one or two at a light step, the brush going back over itself at a loaded one, the sweeps overlapping. Then the drying: **blooms** (backruns — one to three, the size of a brush touch: a pale centre fading out through nested lobes, the pushed-out pigment gathered as a soft deeper arc on **one side**, and the whole bloom gone round once with a broken hairline, in dashes, faint — a sketch showing through the wash), the **edge** (pigment walks to where the wash stops drying — a thin deeper line just inside the contour along a **run** of it, never all the way round), **granulation** (fine deeper specks, more in the loaded steps), and at the loaded steps a **glaze** (a second wash over one side, wet on dry — a lobe a little deeper with a soft hard edge where it stops) and sometimes a **drip** (a run of paint straight down from the bloom, tapering to a bead); at the thin steps **dry brush** (a band of pale flecks where the brush skipped the tooth). The ground is the pigment thinned: the step pulls it paler (`wash`), like ink's. A wash never draws closed dark cells — a first wash ringed every pool and ran the edge the whole way round, and the network read as cracked earth; an earlier one still had many small blooms and read as camouflage | the `material` slot (0.9) |
 
 The head takes the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)
 § surface) — and the body takes it too unless `bodyMaterial` names another (§ what takes the goofy material), each at a **value step** — the head's `density`, the body's `bodyDensity` or the head's. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
@@ -241,18 +248,14 @@ the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0
 step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → coarse dabs → one thin set three gaps apart),
 ink, oil and charcoal lay down more or less of their texture.
 
-**A step is an amount, and never a tone of the ground.** It says how much of its texture a material lays down — how many rules,
-scratches, dabs, specks and sweeps, and how they are laid (graphite changes technique step by step; charcoal's dust runs 0.58× to
-1.5× of its density, oil's paint 0.33× to 1.25×) — and **the ground is the part's colour at every step**. It used to pull the ground
-toward the technique's own tone as well, by `pull` × how far the step went, because value carried by marks alone did not survive the
-board (a 7×5 cell puts 144 device pixels in a world unit, the fine marks fall under one there, and the five steps measured 0.7~4.4 of
-luminance apart); but the pull meant a creature's palette colour darkened as its density rose — a skin at black was not the skin the
-palette named. The pull is gone: what a surface reads at is what the overpainting makes of it, and the marks stay **as fine as the
-hand would draw them** (coarsening them until they could carry a value on their own turns a small part into blotches and a face into
-camouflage). **And a mark is the same mark at every step** — one width and one tone, the light step's; a black step is that mark many
-times over, never a fatter or a darker one. Graphite's dense steps used to draw their rules up to 1.1 of the width against the light
-step's 0.6, and a wider line renders as a darker colour (a hairline is mostly antialiasing), so the marks came out a shade stronger
-as the density rose though drawn in one tone. **The step is the creature's own**: the `density` slot holds one of the five outright and the roll picks it (`stepOf`), so every
+**A step is in the colour first and the marks second.** It pulls the base toward the technique's own tone — graphite and charcoal
+darken it, ink lightens it (its scratches take the ink away), oil paints it — by the texture's `pull` × how far the step goes, and
+*then* lays its marks on top. Value carried by marks alone cannot survive the board: a 7×5 cell puts 144 device pixels in a world
+unit, the fine marks come out at half of one there, and the five steps measured **0.7~4.4 of luminance apart on three of the four
+materials** — one flat colour to the eye, indistinguishable from FLAT. Coarsening the marks until they could carry a value on their
+own was tried and dropped: it turns a small part into blotches and a face into camouflage. A flat fill never falls under a pixel,
+so the colour carries the value and the marks stay **as fine as the hand would draw them** — the medium, not the tone. The steps
+measure 18~40 apart on a light ground now. **The step is the creature's own**: the `density` slot holds one of the five outright and the roll picks it (`stepOf`), so every
 step is reachable on every creature — a pale skin can be hatched black and a black one grazed light. It used to be read off the
 part's colour and nudged a step by a three-value hand, which meant half the ladder was unreachable: 59% of humans landed on light,
 76% of imps on black, and a third of the hand did nothing at all because the scale had no step left to give. The colour still
