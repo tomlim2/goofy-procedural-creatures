@@ -231,7 +231,7 @@ curved 2 · antenna/straight/ram 1.5 · nub/crown 1 — about three rexes in fou
 ### ears (15)
 none / round · roundMid · roundBig / pointy · pointyMid · pointyBig / flap (an arc hanging down) / long (a long lobe) / fold · foldMid · foldBig / perk · perkMid · perkBig.
 round, pointy, fold and perk come in **three sizes** (1 · 1.4 · 1.8×, the same shape) — strip the Mid/Big off the value name and you have the shape (`earKind`, `EAR_SIZE`).
-**fold folds on one side only** — the other is a standing ear (which side folds is per individual, from `hand`, with no rng). Differing left from right is what makes it doglike. **perk** stands on both sides.
+**fold folds on one side only** — the other is a standing ear (which side folds is per individual, from `hand`, with no rng). Differing left from right is what makes it doglike. **perk** stands on both sides — an upright ear beside the head, leaning a little out, the base tucked behind the head; **flap** is mirrored by side (the same arc on both sides once put the left ear's bulge into the head).
 
 **The per-species boundary** — which species gets which ear is drawn by `forbid.ears` in `species.js` (overwritten after the draw) and `identity.ears` (checked by census).
 

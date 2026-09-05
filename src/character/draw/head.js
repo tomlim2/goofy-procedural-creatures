@@ -1,7 +1,7 @@
 // Head — the outline, ears, anchors on the outline, the brow line. Hair is hair.js; hats and horns are headgear.js. Docs: guidelines/character/parts.md § head
 
 import { paintOf } from "../vocabulary/paint.js";
-import { blobPath, arcPath } from "../../shape.js";
+import { blobPath, arcPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry, TAU } from "./layout.js";
 import { shade, isDark, mix } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
@@ -83,9 +83,24 @@ export function drawEars(ink, fills, spec, box) {
         [x + side * 0.05 * size, y - 0.01 * size],
         [x + side * 0.015 * size, y - 0.03 * size]
       ], { color: spec.palette.ink });
+    } else if (kind === "perk") {
+      // perk — an upright ear standing beside the head, leaning a little out, the tip blunt; the base tucked inside the
+      // head (the layer is behind it). Three sizes. It used to fall through to the flap below, unsized and unmirrored
+      const ear = crumple([
+        [x - side * 0.012, y - 0.03 * size],
+        [x + side * 0.036 * size, y + 0.005 * size],
+        [x + side * 0.032 * size, y + 0.085 * size],
+        [x + side * 0.012 * size, y + 0.125 * size],
+        [x - side * 0.012, y + 0.05 * size]
+      ], 0.002, spec.roll * 0.0017 + side * 3);
+      paintPart(fills, spec, ear, skin, { part: "ears" });
+      ink.contour(ear, { color: spec.palette.ink });
     } else {
-      // flap — an ear hanging downward
-      const flap = arcPath(x, y, 0.05, 0.09, -Math.PI * 0.6, Math.PI * 0.6);
+      // flap — an ear hanging downward, an arc bulging out from the side of the head. **Mirrored by side**: the same arc on
+      // both sides put the left ear's bulge into the head, so the left showed as a sliver and read as a mistake
+      const flap = side > 0
+        ? arcPath(x, y, 0.05, 0.09, -Math.PI * 0.6, Math.PI * 0.6)
+        : arcPath(x, y, 0.05, 0.09, Math.PI * 0.4, Math.PI * 1.6);
       paintPart(fills, spec, flap, skin, { part: "ears" });
       ink.line(flap, { color: spec.palette.ink });
     }
