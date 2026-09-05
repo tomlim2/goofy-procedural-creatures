@@ -30,6 +30,16 @@ export function deriveSpec(next) {
 }
 
 // A file from before the rename: a creature's `seed` was its roll and `proportions.wobbleSeed` its hand.
+// The one `hair` slot of 26 values, split into three (front · back · top) — a file from before opens as the same style
+const OLD_HAIR = {
+  none: {}, bob: { hairBack: "bob" }, spikes: { hairTop: "spikes" }, mop: { hairBack: "mop" }, mohawk: { hairTop: "mohawk" },
+  tuft: { hairTop: "tuft" }, wisp: { hairTop: "wisp" }, scribble: { hairBack: "bob" }, sweep: { hairFront: "swept" },
+  pigtails: { hairBack: "pigtails" }, curly: { hairTop: "curly" }, bangs: { hairFront: "blunt" }, longbob: { hairFront: "blunt", hairBack: "bob" },
+  bun: { hairTop: "bun" }, helmet: { hairTop: "helmet" }, cloud: { hairTop: "cloud" }, hedgehog: { hairTop: "hedgehog" },
+  long: { hairBack: "long" }, twintails: { hairBack: "twintails" }, ponytail: { hairBack: "ponytail" }, apple: { hairTop: "apple" },
+  verylong: { hairBack: "verylong" }, twintailsBall: { hairBack: "twintailsBall" }, appleBig: { hairTop: "appleBig" },
+  bobSwept: { hairFront: "swept", hairBack: "bob" }, sheetsSwept: { hairFront: "swept", hairBack: "sheets" }
+};
 function migrate(next) {
   if (!next || typeof next !== "object") return next;
   const out = { ...next };
@@ -55,6 +65,14 @@ function migrate(next) {
   }
   // A file from before the eyeScale slot: its eyes are the medium step (the eye every creature had before the slot)
   if (out.parts && out.parts.eyeScale === undefined) out.parts = { ...out.parts, eyeScale: "medium" };
+  // A file from before hair was three slots: the old value names the same style in the new ones
+  if (out.parts && (out.parts.hair !== undefined || out.parts.hairFront === undefined)) {
+    const { hair, ...rest } = out.parts;
+    out.parts = { hairFront: "none", hairBack: "none", hairTop: "none", ...(OLD_HAIR[hair] || {}), ...rest };
+    if (out.parts.hairFront === undefined) out.parts.hairFront = "none";
+    if (out.parts.hairBack === undefined) out.parts.hairBack = "none";
+    if (out.parts.hairTop === undefined) out.parts.hairTop = "none";
+  }
   return out;
 }
 

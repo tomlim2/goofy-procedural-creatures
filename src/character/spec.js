@@ -63,34 +63,38 @@ export function applyForbid(parts, speciesName) {
 const settled = (roll, n) => (Math.imul((roll ^ (n * 0x27d4eb2d)) >>> 0, 0x9e3779b1) >>> 9) / 8388608;
 
 // It takes no rng: every decision in here is either a fixed overwrite or settled() off the roll
+// The rules on the **late** slots — run after they are rolled (makeCreature draws LATE_SLOTS after applyConstraints, so a rule
+// written there would never see them). Hair is three slots (front · back · top), the back and the top late. Every rule here
+// is a fixed overwrite, never a roll (the rule at the top of this file)
+export function applyLateConstraints(parts) {
+  // A helmet or a pot covers the head: there is nowhere for hair to squeeze out
+  if (parts.headgear === "helmet" || parts.headgear === "pot") {
+    parts.hairFront = "none"; parts.hairBack = "none"; parts.hairTop = "none";
+  } else if (parts.headgear !== "none" && parts.headgear !== "halo") {
+    // (not the halo — it floats above the head and covers nothing, so any hair keeps)
+    // With a hat or a band the front and the back keep — bangs and a bob's hem come out from under a hat — but a top that
+    // stands up through the hat cannot: a bun, an apple top, a spiked band go. The hoods and the hedgehog suit a band (the
+    // reference) and only a band
+    const through = ["bun", "apple", "appleBig", "spikes", "mohawk", "hedgehog", "cloud"];
+    if (parts.headgear === "band") through.splice(through.indexOf("hedgehog"), 2);   // hedgehog and cloud stay under a band
+    if (through.includes(parts.hairTop)) parts.hairTop = "none";
+    if (parts.hairTop === "helmet" && parts.headgear !== "band") parts.hairTop = "none";   // a hood under a hat is two hats
+  }
+  // A mohawk, a bun or an apple top wears nothing (with a hat on they are already gone, above — this is the bare head's rule)
+  if (["mohawk", "bun", "apple", "appleBig"].includes(parts.hairTop)) parts.headgear = "none";
+  // A spiked top or a hood has no bangs: the spikes stand where a fringe would root, and a hood covers the forehead itself.
+  // A mohawk is the whole hair — nothing behind it either
+  if (["spikes", "mohawk", "hedgehog", "helmet", "cloud"].includes(parts.hairTop)) parts.hairFront = "none";
+  if (parts.hairTop === "mohawk") parts.hairBack = "none";
+  return parts;
+}
+
 export function applyConstraints(parts, speciesName, roll) {
   // The species forbid table is applied first. It has to come first so the later constraints (antennae removing ears, and so on)
   // do not misfire on a forbidden value.
   applyForbid(parts, speciesName);
 
-  // A helmet or a pot covers the head. There is nowhere for hair to squeeze out.
-  if (parts.headgear === "helmet" || parts.headgear === "pot") {
-    parts.hair = "none";
-  } else if (parts.headgear !== "none" && parts.headgear !== "halo" && parts.hair !== "none") {
-    // (not the halo — it floats above the head and covers nothing, so any hair keeps)
-    // With a hat or a band, only short hair is kept (bangs, a side bob and the hood type may come out from under a hat). A band also suits the cloud and hedgehog types (the reference)
-    const short = ["bob", "wisp", "sweep", "tuft", "scribble", "curly", "bangs", "longbob", "helmet", "long", "verylong", "twintails", "twintailsBall", "ponytail",
-      "bobSwept", "sheetsSwept"];   // back hair comes out from under a hat — the filled family's hem too
-    if (parts.headgear === "band") short.push("cloud", "hedgehog");
-    // **Deterministically, not by re-rolling** — the rule at the top of this file, which this one line used
-    // to break. `rng.pick(short)` fired only when the drawn hair was unusable, so the number of rng calls
-    // depended on the hair AND on the headgear; edit either pool and some rolls flip whether it fires, which
-    // shifts every draw after it and hands those individuals a different face, body and palette. Measured
-    // three times in one branch — adding a hair value moved 5 creatures in 600, removing two moved 2, adding
-    // a headgear value moved 6 — and every one of them had flipped exactly here. A hash of the roll picks the
-    // replacement now: no rng call at all, so the count cannot move whatever the pools do
-    if (!short.includes(parts.hair)) {
-      parts.hair = short[Math.floor(settled(roll, 4) * short.length) % short.length];
-    }
-  }
-
-  // A mohawk or a bun wears nothing.
-  if (parts.hair === "mohawk" || parts.hair === "bun" || parts.hair === "apple" || parts.hair === "appleBig") parts.headgear = "none";
+  // The hair's rules are applyLateConstraints — the back and the top are late slots, rolled after this runs
 
   // With antennae there are no ears as well. The silhouette gets messy.
   if (parts.horns === "antenna" && settled(roll, 1) < 0.75) parts.ears = "none";
@@ -345,6 +349,7 @@ export function makeCreature(roll, speciesName = "human") {
   // The species forbid runs once more — so it applies to these slots too.
   for (const slot of LATE_SLOTS) parts[slot] = pickSlot(rng, species, archetype, slot);
   applyForbid(parts, species.name);
+  applyLateConstraints(parts);
 
   // **A ghost collapses to one tone.** Skin, cloth, hair, accent and the lizard's second scale all become the
   // same colour, and any pop is dropped — an accent is the opposite of what this is. The tone is picked off

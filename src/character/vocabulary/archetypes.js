@@ -11,7 +11,9 @@ export const ARCHETYPES = [
       ears: [["pointy", 2], ["pointyMid", 1], ["flap", 2], ["round", 2], ["none", 1]],
       mouth: [["grimace", 3], ["grin", 2], ["wave", 2], ["open", 2], ["line", 1]],
       nose: [["wedge", 3], ["hook", 2], ["dot", 2], ["broad", 1.5], ["none", 1]],
-      hair: [["spikes", 3], ["hedgehog", 2], ["mop", 2], ["mohawk", 2], ["tuft", 2], ["none", 2]],
+      hairFront: [["none", 4], ["swept", 1]],
+      hairBack: [["none", 4], ["mop", 2]],
+      hairTop: [["spikes", 3], ["hedgehog", 2], ["mohawk", 2], ["tuft", 2], ["none", 3]],
       head: [["round", 3], ["wide", 2], ["square", 2], ["pear", 1]]
     }
   },
@@ -21,8 +23,9 @@ export const ARCHETYPES = [
     bias: {
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
       eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
-      hair: [["bob", 3], ["helmet", 2], ["bangs", 2], ["longbob", 1.5], ["long", 1.5], ["verylong", 1], ["ponytail", 1], ["wisp", 2], ["curly", 2], ["cloud", 1], ["sweep", 2], ["none", 2],
-        ["bobSwept", 2.5]],   // the filled family — the neat, combed kinds suit the scholar
+      hairFront: [["none", 3], ["blunt", 3], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5]],
+      hairBack: [["none", 3], ["bob", 3], ["long", 1.5], ["verylong", 1], ["ponytail", 1], ["sheets", 1]],
+      hairTop: [["none", 5], ["helmet", 2], ["wisp", 2], ["curly", 2], ["cloud", 1]],   // the filled family — the neat, combed kinds suit the scholar
       headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet disabled
       mouth: [["line", 3], ["dot", 2], ["smile", 2], ["three", 1.5], ["frown", 1], ["smug", 1.5], ["bracket", 1]],
       nose: [["long", 3], ["hook", 3], ["dot", 1]],
@@ -36,7 +39,9 @@ export const ARCHETYPES = [
       headgear: [["helmet", 4], ["cap", 3], ["band", 2], ["pot", 2], ["none", 1]],
       eyewear: [["patch", 3], ["goggles", 3], ["none", 3]],
       head: [["square", 3], ["block", 2], ["round", 2], ["wide", 1]],
-      hair: [["scribble", 3], ["mohawk", 1.5], ["spikes", 2], ["hedgehog", 1.5], ["none", 2]],
+      hairFront: [["none", 4], ["swept", 1]],
+      hairBack: [["none", 3], ["mop", 2]],
+      hairTop: [["none", 3], ["spikes", 2], ["mohawk", 1.5], ["hedgehog", 1.5]],
       arms: [["sleeve", 3], ["stick", 2]],
       legs: [["boots", 4], ["stick", 2], ["stub", 1]]
     }
@@ -52,8 +57,9 @@ export const ARCHETYPES = [
       build: [["narrow", 2], ["skinny", 2], ["medium", 1]],
       legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
       arms: [["stick", 3], ["mitten", 2]],
-      hair: [["none", 2], ["wisp", 2], ["tuft", 1.5], ["pigtails", 2], ["twintails", 1.5], ["twintailsBall", 1], ["apple", 1], ["appleBig", 1], ["curly", 1], ["cloud", 1], ["spikes", 1],
-        ["sheetsSwept", 1.8], ["bobSwept", 1.5]],   // the filled family — the parted curtain is the pretty one
+      hairFront: [["none", 4], ["blunt", 1.5], ["curtain", 1]],
+      hairBack: [["none", 4], ["pigtails", 2], ["twintails", 1.5], ["twintailsBall", 1]],
+      hairTop: [["none", 4], ["wisp", 2], ["tuft", 1.5], ["apple", 1], ["appleBig", 1], ["curly", 1], ["cloud", 1], ["spikes", 1]],   // the filled family — the parted curtain is the pretty one
       nose: [["none", 4], ["dot", 3], ["hook", 1]]
     }
   },
@@ -62,7 +68,9 @@ export const ARCHETYPES = [
     weight: 2,
     bias: {
       head: [["wide", 4], ["round", 3], ["pear", 2]],
-      hair: [["none", 3], ["tuft", 2], ["mop", 1], ["helmet", 1]],
+      hairFront: [["none", 1]],
+      hairBack: [["none", 5], ["mop", 1]],
+      hairTop: [["none", 3], ["tuft", 2], ["helmet", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
       body: [["bean", 4], ["dress", 2]],
       build: [["wide", 3], ["medium", 1]],
@@ -76,8 +84,9 @@ export const ARCHETYPES = [
     weight: 2,
     bias: {
       headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5], ["coronet", 0.8]],
-      hair: [["scribble", 3], ["mop", 2], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["bun", 1.5], ["appleBig", 0.8], ["ponytail", 1], ["verylong", 0.8], ["none", 2], ["wisp", 1],
-        ["sheetsSwept", 1.4], ["bobSwept", 1]],   // the filled family — a little, so it is not the scholar's alone
+      hairFront: [["none", 4], ["swept", 1], ["blunt", 1]],
+      hairBack: [["none", 3], ["mop", 3], ["ponytail", 1], ["verylong", 0.8]],
+      hairTop: [["none", 4], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["bun", 1.5], ["appleBig", 0.8], ["wisp", 1]],   // the filled family — a little, so it is not the scholar's alone
       eyes: [["half", 3], ["sleepy", 3], ["cross", 2], ["ring", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
       mouth: [["wave", 3], ["line", 2], ["dot", 2], ["frown", 1.5], ["scribble", 1]],
       body: [["dress", 3], ["bean", 2]]

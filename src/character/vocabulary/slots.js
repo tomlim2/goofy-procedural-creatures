@@ -31,9 +31,12 @@ export const SLOTS = {
   // a filled panel over the forehead made the values read as one and its lower edge read as a hat's brim.
   // The 장발 pair (a dome plus two side sheets to the chest) was **removed**, not disabled: the two sheets left a
   // narrow gap down the middle and the torso hung through it to a rounded end — the silhouette read obscene
-  hair: ["none", "bob", "spikes", "mop", "mohawk", "tuft", "wisp", "scribble", "sweep", "pigtails", "curly", "bangs", "longbob", "bun", "helmet", "cloud", "hedgehog",
-    "long", "twintails", "ponytail", "apple", "verylong", "twintailsBall", "appleBig",
-    "bobSwept", "sheetsSwept"],
+  // **Hair is three slots**, combined freely (draw/hair.js): the FRONT (앞머리 — what falls over the forehead), the BACK
+  // (뒷머리 — what hangs behind and beside the head) and the TOP (정수리 — what sits on the crown). Every piece is filled. A scalp
+  // cap is drawn under any front or back, its hairline the front kind's. hairFront stands where the one `hair` slot stood, so
+  // the roll's count is unchanged; hairBack and hairTop are late slots (the end of LATE_SLOTS). The 26 old values map onto
+  // the three (character/file.js OLD_HAIR)
+  hairFront: ["none", "blunt", "swept", "curtain", "sideLock"],
   // bonnet (the frilly bonnet) is **disabled** — the asset stays but it is in no bias (it never gets drawn)
   headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet", "crown", "halo", "cone", "coronet"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
@@ -128,13 +131,18 @@ export const SLOTS = {
   // The eye's size in three steps — small · medium · large, 0.78 · 1 · 1.28 of the eye the individual rolled (draw/layout.js
   // eyeGeometry; medium is the eye every creature had before the slot). The continuous proportion `eyeSize` still rolls under
   // it, so two mediums are not the same eye; the slot is the step a hand picks. A late slot, so nothing rolled before it moves
-  eyeScale: ["small", "medium", "large"]
+  eyeScale: ["small", "medium", "large"],
+  // The back of the hair — bob to the ear · mop to the jaw, shaggy · long to the shoulder · verylong that and the side sheets to
+  // the hip · sheets the side sheets alone · twintails, with a ball at the ends · ponytail · pigtails, two bunches
+  hairBack: ["none", "bob", "mop", "long", "verylong", "sheets", "twintails", "twintailsBall", "ponytail", "pigtails"],
+  // The top of the hair — cap a plain scalp cap · bun · the apple tops · the spiked bands · tufts · curls · the two hoods
+  hairTop: ["none", "cap", "bun", "apple", "appleBig", "spikes", "mohawk", "hedgehog", "tuft", "wisp", "curly", "helmet", "cloud"]
 };
 
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing rolls keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale", "hairBack", "hairTop"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -145,9 +153,10 @@ export const DEFAULT_BIAS = {
   // When there is no species or archetype bias. cyclops is not here (it only comes from the imp bias)
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
     ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
-  hair: [["none", 3], ["bob", 2], ["mop", 2], ["scribble", 2], ["sweep", 2], ["spikes", 2], ["tuft", 2], ["wisp", 2], ["pigtails", 1.5], ["curly", 1.5], ["mohawk", 1], ["bangs", 2], ["longbob", 1.5], ["bun", 1], ["helmet", 2], ["cloud", 1.5], ["hedgehog", 1.5], ["long", 1.5], ["twintails", 1], ["ponytail", 1.5], ["apple", 1],
-    ["verylong", 1], ["twintailsBall", 0.8], ["appleBig", 0.7],
-    ["bobSwept", 1.4], ["sheetsSwept", 1.4]],
+  // Three slots, each with a common none, so a creature seldom wears all three at once and about one in fourteen wears nothing
+  hairFront: [["none", 4], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5]],
+  hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["verylong", 0.8], ["sheets", 1.2], ["twintails", 1], ["twintailsBall", 0.7], ["ponytail", 1.2], ["pigtails", 1.2]],
+  hairTop: [["none", 6], ["cap", 1], ["bun", 1], ["apple", 1], ["appleBig", 0.7], ["spikes", 2], ["mohawk", 1], ["hedgehog", 1.2], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],
   headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1], ["coronet", 1]],   // bonnet disabled
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3], ["perk", 0.7], ["perkMid", 0.3]],

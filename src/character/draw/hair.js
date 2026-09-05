@@ -1,7 +1,10 @@
-// Hair — 26 kinds, every one a **filled** piece: the boundary drawn first, a closed form, and the inside painted with the
-// hair's material, contoured in the pencil's dark ink — the same pen as a hat. The masses (caps, hoods, long hair, tails) are
-// built from the family's parts below; the strand kinds (spikes, tufts, the apple tops, curls) are small filled shapes too —
-// a spike a wedge, a strand a leaf, a curl a disc — since a hair drawn as a bare line beside a filled head read as a smudge
+// Hair — three slots, combined freely: the FRONT (hairFront — what falls over the forehead), the BACK (hairBack — what hangs
+// behind and beside the head) and the TOP (hairTop — what sits on the crown). Every piece is **filled**: the boundary drawn
+// first, a closed form, and the inside painted with the hair's material, contoured in the pencil's dark ink — the same pen as
+// a hat. A scalp cap is drawn under any front or back (its hairline the front kind's); the strand kinds (spikes, tufts, the
+// apple tops, curls) are small filled shapes too — a spike a wedge, a strand a leaf, a curl a disc — since a hair drawn as a
+// bare line beside a filled head read as a smudge. drawHair (the end of the file) composes the three; the tables FRONTS ·
+// BACKS · TOPS are 1:1 with slots.js
 //
 // Hair is drawn across **three layers** — layers = { back, crown, front } (ink sketches), and the filled
 // family also gets each layer's fills sketch (backFills, crownFills, frontFills — the fur kinds never fill):
@@ -165,31 +168,6 @@ const backSheets = (h) => {
   }
 };
 
-// Blunt bangs — one panel rooted high on the crown, the hem a straight 일자 line above the brow (a light jag,
-// so the pencil has something to bite), plus a few comb strands. The hem clears the brow line by 0.08·ry and
-// the side corners never dip under it: a face turn shifts the eyes up to 0.14·ry against the bangs (the face
-// moves at 1, the bangs layer at its 0.12 parallax) and the panel is OPAQUE — the fur fringe leaked scribble
-// pixels through, this leaks nothing, so what it covers on a turned face is gone
-const frontBlunt = (h) => {
-  const { front, frontFills, spec, box, rx, ry, cy, noise } = h;
-  const brow = browLine(spec, box);
-  const hemY = Math.max(brow + ry * 0.08, eyeSafeY(h));
-  const cornerY = hemY + ry * 0.01;
-  const arcFloor = Math.max(cy + ry * 0.3, hemY + ry * 0.02);   // arc ends below the hem would hang side wings into the eye band
-  const arc = grownOutline(h, 1.0, 1.0, 3, 0.03).filter(([, y]) => y >= arcFloor).sort(arcSort(cy));
-  const hem = [];
-  for (let i = 0; i <= 6; i += 1) {
-    const x = -rx * 0.78 + (i / 6) * rx * 1.56;
-    hem.push([x, hemY + Math.abs(noise(i * 3.7 + spec.roll * 0.002)) * ry * 0.04]);
-  }
-  const poly = crumple([...arc, [-rx * 0.8, cornerY], ...hem, [rx * 0.8, cornerY]], 0.0025, spec.roll * 0.0017);
-  paintPart(frontFills, spec, poly, h.ink0, { part: "hair", own: true });
-  front.contour(poly, { color: h.lineInk });
-  for (const sx of [-0.34, 0.1, 0.44]) {
-    front.line([[sx * rx, cy + ry * 0.5], [sx * rx * 1.05, hemY + ry * 0.1]], { color: h.grainInk, size: "S" });
-  }
-};
-
 // A ribbon along a spine, filled fan-safe — a curved crescent fanned as one polygon spills across its own
 // concave notch (the crown's filled-in-pieces rule), so each segment is painted as its own convex quad.
 // Returns the outer boundary for the contour
@@ -296,26 +274,6 @@ const frontSwept = (h) => {
   // stray whisker rather than as the hair's grain. The mass's own contour carries the shape.
 };
 
-// back kind × front kind → one hair value.
-//   backs  bob a 단발 mass to just under the chin · sheets a pair falling beside the FACE to frayed ends
-//   fronts blunt the straight 일자 hem · curtain a middle parting · swept one deep side parting across the brow
-// The scalp's hairline in the middle is the front kind's business: a parting has to show the forehead up to
-// it, a solid panel hides it
-const HAIRLINE = { curtain: 0.55, swept: 0.66 };
-const filledHair = (backKind, frontKind) => (h) => {
-  const line = HAIRLINE[frontKind];
-  // Every back gets the scalp. It follows the head's own drawn outline (h.headPath — a square skull keeps its
-  // corners and a lumpy one its lumps), and without it the crown is bare skin between the fringe and the sheets —
-  // which does not read as a hairstyle, it reads as balding
-  scalp(h, line === undefined ? undefined : h.cy + h.ry * line, backKind === "sheets");
-  if (backKind === "sheets") backSheets(h);
-  else backMass(h, h.cy - h.ry * 1.14, 1.06);
-  // **No fringe piece.** All four of these carried a filled panel over the forehead and it did more harm than
-  // good: four values that read as one, and a slab whose lower edge the eye takes for a hat's brim. What tells
-  // them apart now is the scalp's own hairline (HAIRLINE above) — blunt sits low over the forehead, curtain
-  // mid, swept high. frontBlunt / frontCurtain / frontSwept are kept below, unused, until that is settled
-};
-
 
 // ---- The filled family, the rest — the kinds that used to be fur -----------------------------------------
 // Every piece here is painted `concave` (stroke.js fillPolygon): a cap with side lobes, a hood, a ragged sheet are not
@@ -329,21 +287,6 @@ const blobPiece = (h, ink, fills, x, y, bx, by, phase) => {
 };
 // A tail — a ribbon along a spine on the back layer, contoured
 const tailPiece = (h, spine, widths, phase) => h.back.contour(fillStrip(h, h.backFills, spine, widths, phase), { color: h.lineInk });
-
-// The caps — bob · mop · scribble · sweep: the scalp to a hairline and, all but sweep, a mass behind the head falling to a
-// hem. Told apart by the hairline and how far the back falls: bob ear-length and straight · mop jaw-length and shaggy (a
-// ragged hairline, a lumpier mass) · scribble a wavy hairline and a wavy mass, the pencil gone side to side · sweep a
-// hairline slanting across the brow from one temple (which one is per individual, like the parting) and nothing behind
-const filledCap = ({ hairline, slant = 0, ragged = 0, wave = 0, hem, flare = 1, grow, lumps, amount }) => (h) => {
-  const { cy, ry, rx, spec, noise } = h;
-  const side = spec.roll % 2 ? 1 : -1;
-  const front = slant ? (x) => cy + ry * (hairline + slant * side * (x / rx)) : cy + ry * hairline;
-  const hemAt = ragged ? (x, y) => y + Math.abs(noise(x * 23 + spec.roll * 0.002)) * ry * ragged
-    : wave ? (x, y) => y + Math.sin((x / rx) * Math.PI * 3.5 + spec.roll * 0.01) * ry * wave
-    : undefined;
-  scalp(h, front, hem === undefined, hemAt);
-  if (hem !== undefined) backMass(h, cy - ry * hem, flare, { grow, lumps, amount });
-};
 
 // Bangs — the cap, and a panel over the forehead on the front layer (a hat sits above it), rooted inside the cap so the two
 // read as one mass: the panel's top edge lies in the cap's fill and draws no line, its sides and its ragged hem do. The
@@ -359,33 +302,30 @@ const bangsPanel = (h) => {
   front.line(poly, { color: h.lineInk });   // open — the top edge, inside the cap, draws no line
   for (const sx of [-0.4, -0.05, 0.3]) front.line([[sx * rx, top - ry * 0.04], [sx * rx * 1.04, hemY + ry * 0.12]], { color: h.grainInk, size: "S" });
 };
-const bangsHair = (h) => { scalp(h, h.cy + h.ry * 0.58, true); bangsPanel(h); };
-// longbob — bangs, and two panels down the cheeks to the jaw line, outside the widest eye (over the face, and opaque)
-const longbobHair = (h) => {
-  bangsHair(h);
+// A side lock — one lock falling from a parting down one cheek to the jaw line, the side per individual; the other side bare.
+// The lock runs outside the widest eye (it is opaque, over the face); a very wide-set eye leaves no lane, and then it stops at
+// the temple
+const sideLock = (h) => {
   const { front, frontFills, spec, box, rx, ry, cy } = h;
+  const side = spec.roll % 2 ? 1 : -1;
   const eyes = eyeGeometry(spec, box);
   const eyeOuter = Math.max(...eyes.map((e) => Math.abs(e.x) + e.r));
-  const lockX = Math.max(eyeOuter + ry * 0.1, rx * 0.86);
-  if (lockX > rx * 1.06) return;   // a very wide-set eye leaves no lane beside it — the bangs alone
-  for (const side of [-1, 1]) {
-    const spine = [[side * rx * 0.74, cy + ry * 0.64], [side * lockX, cy + ry * 0.18], [side * (lockX + rx * 0.03), cy - ry * 0.35], [side * (lockX + rx * 0.05), FRINGE_END(h)]];
-    front.contour(fillStrip(h, frontFills, spine, [ry * 0.06, ry * 0.11, ry * 0.11, ry * 0.08], spec.roll * 0.0027 + side * 3), { color: h.lineInk });
-  }
+  const lockX = Math.max(eyeOuter + ry * 0.12, rx * 0.9);
+  const spine = [[side * rx * 0.2, cy + ry * 0.94], [side * rx * 0.5, cy + ry * 0.8], [side * rx * 0.78, Math.max(browLine(spec, box) + ry * 0.12, eyeSafeY(h))]];
+  if (lockX < rx * 1.04) spine.push([side * lockX, cy + ry * 0.06], [side * lockX, FRINGE_END(h)]);
+  front.contour(fillStrip(h, frontFills, spine, [ry * 0.07, ry * 0.15, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 11), { color: h.lineInk });
 };
 
-// Bun — a thin cap (the hairline high on the crown), one bunch on top and a pin
-const bunHair = (h) => {
+// Bun — one bunch on top and a pin (the thin cap under it is drawHair's)
+const bunTop = (h) => {
   const { crown, cy, ry, spec } = h;
-  scalp(h, cy + ry * 0.82, true);
   const bx = 0.01, by = cy + ry * 1.05;
   blobPiece(h, crown, h.crownFills, bx, by, 0.048, 0.042, spec.roll * 0.0031);
   crown.line([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: h.lineInk, size: "S" });   // the pin
 };
-// Pigtails — a light crown and two bunches at the sides, behind the ears, each with a tie
-const pigtailsHair = (h) => {
+// Pigtails — two bunches at the sides, behind the ears, each with a tie
+const pigtailsBack = (h) => {
   const { rx, ry, cy, spec } = h;
-  scalp(h, cy + ry * 0.74, true);
   for (const side of [-1, 1]) {
     const bx = side * rx * 1.02, by = cy + ry * 0.3;
     blobPiece(h, h.back, h.backFills, bx, by, 0.045, 0.06, spec.roll * 0.0021 + side);
@@ -438,14 +378,9 @@ const hood = ({ grow, lumps, amount, grain = false, curls = false }) => (h) => {
   }
 };
 
-// long — the cap, and a mass behind the head falling to the shoulder with a little flare · verylong — that, and the
-// sheets falling beside the face to the hip (backSheets), the middle of the chest left clear
-const longHairF = (h) => { scalp(h, h.cy + h.ry * 0.62, false); backMass(h, h.shoulder, 1.14); };
-const veryLongF = (h) => { longHairF(h); backSheets(h); };
 // Twintails — two tails tied high at the sides, hanging back, each with a tie; with ball, a round bunch at the end
-const twintailsF = (ball) => (h) => {
+const twintailsBack = (ball) => (h) => {
   const { back, rx, ry, cy, spec } = h;
-  scalp(h, cy + ry * 0.62, true);
   for (const side of [-1, 1]) {
     const tx = side * rx * 0.95, ty = cy + ry * 0.35;
     const spine = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - (ball ? 0.27 : 0.3)]];
@@ -455,9 +390,8 @@ const twintailsF = (ball) => (h) => {
   }
 };
 // Ponytail — tied on one side behind the crown (per individual), rising and hanging back
-const ponytailF = (h) => {
+const ponytailBack = (h) => {
   const { back, rx, ry, cy, spec } = h;
-  scalp(h, cy + ry * 0.62, true);
   const s = spec.roll % 2 ? 1 : -1;
   const px0 = s * rx * 0.25, py0 = cy + ry * 0.92;
   const spine = [[px0, py0], [px0 + s * 0.06, py0 + 0.06], [px0 + s * 0.13, py0 + 0.02], [px0 + s * 0.15, py0 - 0.14], [px0 + s * 0.11, py0 - 0.3]];
@@ -479,12 +413,12 @@ const outlineAt = (h, angle) => {
   return best;
 };
 // A spiked band round the crown — the outer edge a zigzag of wedges standing out from the head's outline, the inner edge the
-// outline itself, a little inside. With `cap` the scalp is filled under it to a hairline and only the zigzag draws a line
-// (the inner edge lies in the cap's fill); without one (the mohawk) the band is the whole hair and is contoured all round —
-// its inner edge is the head's own line, so that is one line, not two
-const spikedBand = ({ span, count, len0, lenVar, cap, inner = false }) => (h) => {
-  const { crown, crownFills, spec, noise, cy, ry } = h;
-  if (cap !== undefined) scalp(h, cy + ry * cap, false);
+// outline itself, a little inside. On a cap (`onCap` — drawHair fills the scalp under it) only the zigzag draws a line, the
+// inner edge lying in the cap's fill; without one (the mohawk) the band is the whole hair and is contoured all round — its
+// inner edge is the head's own line, so that is one line, not two
+const spikedBand = ({ span, count, len0, lenVar, onCap = false, inner = false }) => (h) => {
+  const { crown, crownFills, spec, noise, cy } = h;
+  const cap = onCap ? 1 : undefined;
   const zig = [];
   const inside = [];
   for (let i = 0; i < count; i += 1) {
@@ -555,44 +489,52 @@ const appleOfF = (size) => (h) => {
   crown.line([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: h.lineInk });   // the tie
 };
 
-// Kind → drawing function. 1:1 with the names in slots.js SLOTS.hair (none has none)
-export const HAIR = {
-  bob: filledCap({ hairline: 0.48, hem: 0.72, flare: 1.02, grow: [1.14, 1.07], lumps: 4, amount: 0.05 }),
-  mop: filledCap({ hairline: 0.4, hem: 0.95, flare: 1.06, grow: [1.24, 1.12], lumps: 6, amount: 0.09, ragged: 0.07 }),
-  scribble: filledCap({ hairline: 0.5, hem: 0.6, flare: 1, grow: [1.18, 1.1], lumps: 7, amount: 0.08, wave: 0.045 }),
-  sweep: filledCap({ hairline: 0.55, slant: 0.28 }),
-  spikes: spikedBand({ span: 0.95, count: 11, len0: 0.06, lenVar: 0.09, cap: 0.55 }),
-  mohawk: spikedBand({ span: 0.35, count: 7, len0: 0.06, lenVar: 0.09 }),
-  hedgehog: spikedBand({ span: 0.9, count: 15, len0: 0.05, lenVar: 0.07, cap: 0.5, inner: true }),
-  tuft: tuftsOf(4),
-  wisp: tuftsOf(7),
-  pigtails: pigtailsHair,
-  curly: curlyF,
-  bangs: bangsHair,
-  longbob: longbobHair,
-  bun: bunHair,
-  helmet: hood({ grow: 1.06, lumps: 3, amount: 0.04, grain: true }),
-  cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true }),
-  long: longHairF,
-  verylong: veryLongF,
-  twintails: twintailsF(false),
-  twintailsBall: twintailsF(true),
-  ponytail: ponytailF,
+// The three tables — 1:1 with slots.js SLOTS.hairFront · hairBack · hairTop (none draws nothing of its own)
+export const FRONTS = {
+  blunt: bangsPanel,        // the straight fringe, its hem ragged
+  swept: frontSwept,        // a deep side parting, both locks running down past the temples
+  curtain: frontCurtain,    // a middle parting, two sweeps framing the face
+  sideLock                  // one lock down one cheek
+};
+export const BACKS = {
+  bob: (h) => backMass(h, h.cy - h.ry * 0.72, 1.02, { grow: [1.14, 1.07], lumps: 4, amount: 0.05 }),          // to the ear, straight
+  mop: (h) => backMass(h, h.cy - h.ry * 0.95, 1.06, { grow: [1.24, 1.12], lumps: 6, amount: 0.09 }),          // to the jaw, shaggy
+  long: (h) => backMass(h, h.shoulder, 1.14),                                                                    // to the shoulder, a little flare
+  verylong: (h) => { backMass(h, h.shoulder, 1.14); backSheets(h); },                                           // …and the side sheets to the hip
+  sheets: backSheets,                                                                                            // the side sheets alone
+  twintails: twintailsBack(false),
+  twintailsBall: twintailsBack(true),
+  ponytail: ponytailBack,
+  pigtails: pigtailsBack
+};
+export const TOPS = {
+  cap: () => {},   // the plain scalp cap — drawHair draws it
+  bun: bunTop,
   apple: appleOfF(1),
   appleBig: appleOfF(1.7),
-  bobSwept: filledHair("bob", "swept"),
-  sheetsSwept: filledHair("sheets", "swept")
+  spikes: spikedBand({ span: 0.95, count: 11, len0: 0.06, lenVar: 0.09, onCap: true }),
+  mohawk: spikedBand({ span: 0.35, count: 7, len0: 0.06, lenVar: 0.09 }),
+  hedgehog: spikedBand({ span: 0.9, count: 15, len0: 0.05, lenVar: 0.07, onCap: true, inner: true }),
+  tuft: tuftsOf(4),
+  wisp: tuftsOf(7),
+  curly: curlyF,
+  helmet: hood({ grow: 1.06, lumps: 3, amount: 0.04, grain: true }),
+  cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true })
 };
+// The scalp cap goes under any front or back and under these tops; its hairline is the front kind's, or the top's when there
+// is no front, or a plain 0.52 of the head above its centre. The hoods cover the crown themselves and want none
+const HAIRLINE = { blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6 };
+const CAP_TOPS = { cap: 0.52, bun: 0.82, spikes: 0.55, hedgehog: 0.5 };
+const DOME_BACKS = new Set(["bob", "mop", "long", "verylong"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
 
 export function drawHair(layers, spec, box, noise) {
-  const kind = spec.parts.hair;
-  const draw = HAIR[kind];
-  if (!draw) return;   // none (or an unknown value)
+  const front = spec.parts.hairFront || "none", back = spec.parts.hairBack || "none", top = spec.parts.hairTop || "none";
+  if (front === "none" && back === "none" && top === "none") return;
   // The hair's own colour (palette.hair — HAIRS, or a POP when one is aimed here). It used to be palette.ink,
   // which is why every head on the board wore the same black
   const hairColor = paintOf(spec, "hair") || spec.palette.ink;   // paint: the hair's box, or one a hand chose
   const ink0 = hairColor;
-  draw({
+  const h = {
     ...layers,
     spec, box, noise,
     ink0,
@@ -604,5 +546,11 @@ export function drawHair(layers, spec, box, noise) {
       : deepen(hairColor, 0.4),
     rx: box.headRx, ry: box.headRy, cy: box.headCy,
     shoulder: box.bodyTop - 0.02   // the floor back hair comes down to (the shoulder)
-  });
+  };
+  if (BACKS[back]) BACKS[back](h);                                   // behind the head first
+  const hoodOn = top === "helmet" || top === "cloud";
+  const capLine = HAIRLINE[front] ?? CAP_TOPS[top] ?? 0.52;
+  if (!hoodOn && (front !== "none" || back !== "none" || CAP_TOPS[top] !== undefined)) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
+  if (TOPS[top]) TOPS[top](h);                                       // on the crown
+  if (FRONTS[front]) FRONTS[front](h);                               // over the face, last
 }

@@ -17,7 +17,7 @@
 
 import { createScene } from "./scene/index.js";
 import {
-  makeCreature, applyForbid, applyConstraints,
+  makeCreature, applyForbid, applyConstraints, applyLateConstraints,
   deriveSpec, readCreature, creatureJson, isHouse,
   SLOTS, SPECIES
 } from "./character/index.js";
@@ -105,6 +105,7 @@ function notes() {
   }
   const constrained = { ...spec.parts };
   applyConstraints(constrained, spec.species, spec.roll);
+  applyLateConstraints(constrained);   // the hair's rules — on the late slots, after the rest
   for (const slot of Object.keys(constrained)) {
     if (constrained[slot] !== spec.parts[slot] && forbidden[slot] === spec.parts[slot]) {
       out.push(`the rules would take ${slot} = ${spec.parts[slot]} to ${constrained[slot]}`);
@@ -457,7 +458,11 @@ const PROPERTIES = {
 };
 // The slots that are a property of a part, and so leave the tab strip
 const PROPERTY_SLOTS = Object.values(PROPERTIES).flat().filter((p) => p.kind === "slot").map((p) => p.key);
-const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT && !PROPERTY_SLOTS.includes(slot));
+// The three hair slots sit together on the strip, after the front (the roll keeps the back and the top at the end of SLOTS as late slots)
+const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT && !PROPERTY_SLOTS.includes(slot) && slot !== "hairBack" && slot !== "hairTop")
+  .flatMap((slot) => (slot === "hairFront" ? ["hairFront", "hairBack", "hairTop"] : [slot]));
+// What a part tab is called — the slot's own name, but the three hair slots are long for a 40px tab
+const TAB_LABEL = { hairFront: "bangs", hairBack: "back", hairTop: "top" };
 let part = PART_SLOTS[0];
 const tabs = {};        // part → { item, canvas } — the icon tabs down the left
 let formsBox = null;    // where the open part's preview grid stands
@@ -491,7 +496,7 @@ const FORM_SIZE = 44;   // CSS pixels — a form preview: four to a row under th
 // left alone. Rendering them off the
 // live creature on every edit was tried: a build per slider tick, and icons that changed under the hand
 const REFERENCE_ROLL = 4242;
-const REFERENCE_PARTS = { headgear: "none", eyewear: "none", hair: "none", face2: "none", pattern: "none", ghost: "none", tailDeco: "none", brow: "none", nose: "none", material: "graphite", density: "light" };
+const REFERENCE_PARTS = { headgear: "none", eyewear: "none", hairFront: "none", hairBack: "none", hairTop: "none", face2: "none", pattern: "none", ghost: "none", tailDeco: "none", brow: "none", nose: "none", material: "graphite", density: "light" };
 // A tab shows its part at a value that has something to show: the reference's own unless that is none, then the
 // slot's first value that is not
 const representativeOf = (name, slot) => {
@@ -524,7 +529,7 @@ function buildParts() {
     const canvas = document.createElement("canvas");
     item.appendChild(canvas);
     const cap = document.createElement("span");
-    cap.textContent = slot;
+    cap.textContent = TAB_LABEL[slot] || slot;
     item.appendChild(cap);
     item.addEventListener("click", () => { part = slot; renderPart(); });
     strip.appendChild(item);

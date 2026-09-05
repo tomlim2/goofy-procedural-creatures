@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 31 slots, 228 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 230 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -116,51 +116,67 @@ An eyepatch is always a **black** fill (an object) — on an imp's ink-black hea
 laps onto the other eye — decided once the proportions are settled). An eyepatch is also **dropped on mismatched eyes** — cover one side of an individual whose eye size (`eyeSizeSkew` > 0.09) or height (`eyeHeightSkew` > 0.03) is noticeably different and the remaining
 eye looks oddly large or high on its own, which reads as a mistake (set to none after the proportions are settled; patchSide is cleared too).
 
-### hair (26)
-`hair.js` — one drawing function per kind (the `HAIR` table: name → function). New hair means adding one function and putting the name in `SLOTS.hair`.
-Hair is drawn across **three layers** (`drawHair(layers)`): **back hair** (back — behind the head and face, 1.55 → only what shows outside the silhouette and above the shoulders) ·
-**on the scalp** (crown 2.06 — above the head ink and below the face, at the same depth as the horns) · **bangs** (front 6.55 — drawn over the face; the brows and mouth at 6.6 are drawn above the bangs).
-On a face turn (fake 3D) each layer shifts by its **depth** — bangs and the scalp +0.12 (a little toward the face), back hair −0.12 (behind the head, so the other way) ([../rig.md](../rig.md) § fake 3D depth).
-That is what gives long hair, twintails and a ponytail (behind) and bangs and side curtains (in front).
+### hair — three slots: hairFront (5) · hairBack (10) · hairTop (13)
+`hair.js` — hair is **three slots combined freely**: the **front** (앞머리 — what falls over the forehead), the **back** (뒷머리 —
+what hangs behind and beside the head) and the **top** (정수리 — what sits on the crown). `hairFront` stands where the one
+`hair` slot of 26 values stood, so the roll's count is unchanged; `hairBack` and `hairTop` are late slots. A file from before
+opens as the same style (`file.js OLD_HAIR`: bob → back bob, bangs → front blunt, spikes → top spikes, bobSwept → swept + bob …).
+Hair is drawn across **three layers** (`drawHair(layers)`): **back hair** (0.4 — behind the head, the body and the legs, so only
+what lies outside the silhouette shows) · **on the scalp** (crown 2.06 — above the head ink and below the face, at the horns' depth)
+· **over the face** (front 6.55 — the brows and mouth at 6.6 are drawn above it, and a hat at 6.58 sits on the hair). On a face turn
+each layer shifts by its depth ([../rig.md](../rig.md) § fake 3D depth).
 
-**One family: every hair is a filled piece** — the boundary drawn first, a closed form, the inside painted with the hair's
-material and contoured in the pencil's dark ink, the same pen as a hat (`paintPart` + `contour`). The masses (caps, hoods, long
-hair, tails) are built from a few parts; the strand kinds are small filled shapes — a spike a wedge, a strand a leaf, a curl a
-disc — because a hair drawn as a bare pen line beside a filled head read as a smudge. The parts — the **scalp** (`scalp`: the head's
-own drawn outline down to a hairline, easing to side lobes that never enter the eye band), a **back mass** (`backMass`: a dome a
-little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel** over the forehead (bangs), **tails**
-(`fillStrip` along a spine) and **blobs** (a bun, a bunch). A piece with side lobes or a ragged hem is not visible from its centre,
-so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the fill spilled across
-the notches onto the face.
+**Every piece is filled** — the boundary drawn first, a closed form, the inside painted with the hair's material and contoured in the
+pencil's dark ink, the same pen as a hat (`paintPart` + `contour`); a hair drawn as a bare pen line beside a filled head read as a
+smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline down to a hairline, easing to side lobes that never enter the
+eye band — drawn under any front or back, its hairline the front kind's, or the top's, or 0.52 of the head above its centre), a
+**back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
+over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
+wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
+from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
+fill spilled across the notches onto the face. **Every face-covering piece is clamped by `eyeSafeY`** — the highest eye's top plus
+the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark ink drawn on a dark fill is just as gone.
 
-| Value | How |
+| hairFront | How |
 | --- | --- |
 | none | |
-| bob / mop / scribble / sweep | **Filled caps** — the scalp to a hairline and, all but sweep, a back mass falling behind the head. Told apart by the hairline and how far the back falls: **bob** ear-length, a straight hairline · **mop** jaw-length and shaggy — a ragged hairline, a lumpier mass · **scribble** a wavy hairline and a wavy mass, the pencil gone side to side · **sweep** a hairline slanting across the brow from one temple (which one is per individual) and nothing behind |
-| helmet | The hood (bowl) type, filled — a mass a little bigger than the head (×1.06) from the crown down to the brow at the front and below the ears at the sides, on the front layer (a hat sits above it), the hem never into the eye band; strokes in the hair's own tone falling from the crown toward the hem |
-| cloud | The curly cloud type, filled — the same hood ×1.2 with a scalloped outline (9 lumps), small curls contoured along its edge and a few loops inside in the hair's own tone |
-| long | Long hair, filled — the scalp cap and a back mass falling to the shoulder with a little flare (back — behind the head and body, so what shows is what lies outside the silhouette) |
-| verylong | Very long hair, filled — long, and the sheets falling beside the face to the hip (`backSheets`), the middle of the chest left clear |
-| twintails | Twintails, filled — the scalp cap and two tails (`fillStrip` ribbons) tied high at the sides, hanging back, each with a tie |
-| twintailsBall | Twintails with **a round bunch at the end** of each tail, a filled blob |
-| ponytail | A ponytail, filled — the scalp cap and one ribbon tied behind the crown on one side (per individual), rising and hanging back, with a tie |
-| apple | An apple top — a small bunch rising like an apple stem in the middle of the crown: 4 leaves in a fan plus a tie. It cannot wear a hat |
-| appleBig | A big apple top — 6 leaves, 1.7× long and thick, spreading wide, plus a long tie. No hat |
-| hedgehog | A hedgehog — a spiked band of 15 short wedges over the whole crown (0.9π) over a scalp cap, and a second row of short strokes inside the cap in the hair's own tone |
-| bangs | Bangs, filled — the scalp cap and a panel over the forehead on the front layer (under a hat), rooted inside the cap so the two read as one mass: the panel's top edge lies in the cap's fill and draws no line, its sides and its ragged hem do. The hem clears the brow and never enters the eye band |
-| longbob | bangs, and two filled panels down the cheeks to the jaw line, outside the widest eye (front — over the face; a very wide-set eye leaves no lane, and then the bangs alone) |
-| bun | A bun, filled — a thin cap (the hairline high on the crown), one bunch on top and a pin. It cannot wear a hat |
-| spikes / mohawk | **Spiked bands** — a zigzag of filled wedges standing out from the head's outline, the valleys on the outline (`spikedBand`). spikes: 11 over the whole upper half (0.95π) over a scalp cap, only the zigzag drawing a line · mohawk: 7 over a narrow span (0.35π) on a bare head, the band contoured all round, its inner edge the head's own line |
+| blunt | The straight fringe — a panel over the forehead on the front layer, rooted inside the cap so the two read as one mass (its top edge lies in the cap's fill and draws no line; its sides and its ragged hem do). The hem clears the brow and never enters the eye band |
+| swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down past the temples to the jaw line where there is a lane outside the widest eye. Which side is per individual |
+| curtain | A middle parting — two sweeps framing the face, the parting gap showing the forehead up to the hairline |
+| sideLock | One lock falling from a parting down one cheek to the jaw line (the side per individual), the other side bare |
+
+| hairBack | How |
+| --- | --- |
+| none | |
+| bob | A mass behind the head to the ear, a straight hem, a little flare |
+| mop | To the jaw, shaggy — a lumpier dome (6 lumps), a wider flare |
+| long | To the shoulder with a little flare (behind the body — what shows is outside the silhouette) |
+| verylong | long, and the sheets falling beside the face to the hip (`backSheets`), the middle of the chest left clear |
+| sheets | The side sheets alone — a pair running from under the cheeks (`SHEET_TOP`) to frayed, tasselled ends level with the hip (`box.legTop`) — landmarks rather than fixed multiples of `ry`, so the length scales with each build |
+| twintails / twintailsBall | Two tails (`fillStrip` ribbons) tied high at the sides, hanging back, each with a tie; Ball: a filled round bunch at the ends |
+| ponytail | One ribbon tied behind the crown on one side (per individual), rising and hanging back, with a tie |
+| pigtails | Two filled bunches at the sides, behind the ears, each with a tie |
+
+| hairTop | How |
+| --- | --- |
+| none | |
+| cap | The plain scalp cap and nothing else — for a creature with no front and no back |
+| bun | One bunch on top and a pin, over a thin cap (the hairline high on the crown). It cannot wear a hat |
+| apple / appleBig | An apple top — a bunch rising like an apple stem in the middle of the crown: 4 leaves in a fan plus a tie · 6 leaves 1.7× long and thick plus a long tie. No hat |
+| spikes / hedgehog | **Spiked bands** — a zigzag of filled wedges standing off the head's outline over a scalp cap, only the zigzag drawing a line: spikes 11 over the whole upper half (0.95π) · hedgehog 15 short ones (0.9π) and a second row of short strokes inside the cap in the hair's own tone |
+| mohawk | A spiked band of 7 over a narrow span (0.35π) on a bare head, contoured all round, its inner edge the head's own line. The whole hair — no front, no back |
 | tuft / wisp | A few **leaves** — each strand a thin filled ribbon from a root on the crown to a point (4 / 7) |
-| pigtails | Two filled bunches at the sides (back — behind the ears), each with a tie, and a light cap |
 | curly | 7 small filled discs along the crown |
-| bobSwept / sheetsSwept | **Where the filled family began** — hair as a SHAPE, the boundary first and the inside painted like a hat (`paintPart`); every mass kind is drawn this way now (above). The two are told apart by the **back**: **bobSwept** a 단발 mass to just under the chin with a small A-line flare · **sheetsSwept** a pair running from just under the cheeks (`SHEET_TOP`) down to frayed, tasselled ends level with the **hip** (`box.legTop`) — landmarks rather than fixed multiples of `ry`, so the length scales with each build. A scalp piece (crown) fills the head's own top to the hairline, following **the head's own drawn outline** (`headPath`, the very path `drawHead` inked, lumps and all — a copy grown 5% lay a band of hair colour outside the head's line down both temples, with no line of its own at the edge); without it the crown is bare skin and reads as balding. **Neither draws a fringe.** Four values once carried a filled panel over the forehead and it did more harm than good — they read as one value, and the panel's lower edge is a long straight line the eye takes for a hat's brim. `frontBlunt` / `frontCurtain` / `frontSwept` are still in `hair.js`, unused, until a fringe that works is found. The fill is the creature's **hair colour** (`palette.hair` — the HAIRS bag, or a pop aimed here) and the outline stays pencil-dark. **Every face-covering piece is clamped by `eyeSafeY`** — the highest eye's top plus the travel a face turn has left (≈0.14·ry) plus the pencil's bite: these fills are opaque, and dark ink drawn on a dark fill is just as gone |
+| helmet | The hood (bowl) type — a mass a little bigger than the head (×1.06) from the crown down to the brow at the front and below the ears at the sides, on the front layer, the hem never into the eye band; strokes in the hair's own tone falling from the crown toward the hem |
+| cloud | The curly cloud — the same hood ×1.2 with a scalloped outline (9 lumps), small curls contoured along its edge and a few loops inside in the hair's own tone |
 
-**There is no filled 장발, and that is a rule rather than a gap.** A long back was built (the dome plus a sheet hanging at each side to the chest) and **removed**: the two sheets left a narrow strip open down the middle, and the torso showing through it — narrow, tapering, ending round — made an obscene silhouette on slim, skin-coloured bodies. (`sheets` runs past the torso too, but it is not the same shape: it hangs far outside the body — out to 1.44·rx against a torso half-width of 0.4–1.0·rx — so background shows either side and the torso is never framed into a shaft. The removed pair hugged it.) The fur curtains (`long`, `verylong`) do not have the problem: they are open scribble rather than opaque fill, they hang from the whole head outline instead of two side lobes, and `verylong` deliberately skips the strokes over the middle of the chest. **Two filled masses flanking a gap over the TORSO is a shape to stay away from** — a filled 장발 has to read as one piece across the back, never as a pair. `sheets` is a pair and is fine, because of where it stops: it straddles the **head**, its hem clearing the jaw by a hair, so what shows between the two is the face. (Its hem is not clamped to the shoulder — `bodyTop` is measured *above* the chin on every build, so that clamp would shrink the sheets to nothing; back hair drawing at 0.4, under the body, is what covers the rest.)
-
-Only humans have hair (dogs, cats and the rex are all none via forbid; imps get spikes/none). Bangs, the side bob, the hood type, long hair (long, verylong), twintails (and Ball), the ponytail and the filled family (bobSwept, sheetsSwept) count as hair that may come out
-from under a hat or band; cloud and hedgehog go with a band only; and mohawk, bun and the apple tops (apple, appleBig) take no hat. No hair covers the eyes — the front stops at the brow line and the sides go to the ear
-([rules.md](rules.md)).
+**The rules** (`spec.js applyLateConstraints` — on the late slots, after they are rolled; fixed overwrites, never a roll): a helmet or
+a pot on the head clears all three · with any other hat or a band the front and the back keep (bangs and a bob's hem come out from
+under a hat) but a top that stands up through it goes — bun, the apple tops, spikes, mohawk; hedgehog and cloud stay under a band
+only, the hood under a band only · a mohawk, a bun or an apple top wears no hat · a spiked top or a hood has no front (the spikes
+stand where a fringe would root; a hood covers the forehead itself) · a mohawk has no back either. cat, pup and rex forbid every
+value → none (their fur is not hair). The roll deals each slot its own common none; with the hat rule clearing most tops, about two humans in five are bald (it was
+one in three with the one slot) and about one in sixteen wears all three. Imps stay three in four bald, spikes their one top.
 
 ### ghost (2) — every species but the imp, about 1 in 25
 
