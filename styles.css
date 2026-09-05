@@ -311,6 +311,9 @@ body.how { height: auto; }
 /* One column that can never grow past the deck (minmax(0, 1fr)): a card's minimum width used to widen the track and push
    every card's right edge under the scrollbar. The cards fit the column; what does not fit a card wraps or clips inside it */
 .editor .deck { width: 244px; max-height: calc(100vh - 76px); overflow-y: scroll; overflow-x: hidden; scrollbar-gutter: stable; padding-right: 2px; grid-template-columns: minmax(0, 1fr); }
+/* The editor's cards keep less at the sides than the other decks' — 8px against 12: the deck is 244px with a scrollbar in it, and
+   every row on it (the material previews, the palette, the part tabs) wants the width more than the card wants its margin */
+.editor .card { padding: 8px 8px; }
 /* The editor's one scrollbar, the deck's, is always there. The platform's overlay bar came and went with the hand, and a
    bar that appears is a thing that moved. A drawn bar (::-webkit-scrollbar) is never an overlay, so it stays; the gutter is
    reserved (overflow-y: scroll, scrollbar-gutter) so nothing shifts when a card grows past the fold either.
