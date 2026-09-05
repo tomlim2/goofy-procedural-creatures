@@ -296,7 +296,8 @@ function revealInRow(row, item) {
   else if (r.right > s.right) row.scrollLeft += r.right - s.right;
 }
 
-// A section of the card, three lines: its name, what is applied (a line of its own), then the control
+// A label line of the card — its name in small capitals, the current value at the right end (filled on render), the
+// control under it. Every card reads this way (styles.css .sect)
 function section(parent, name) {
   const head = document.createElement("div");
   head.className = "sect";
@@ -467,7 +468,6 @@ let part = PART_SLOTS[0];
 const tabs = {};        // part → { item, canvas } — the icon tabs across the top
 let shape = null;       // SHAPE — the dropdown: the form the part has (its picture, its name) on the line, the part's forms listed under it when open
 let wearBox = null;     // MATERIAL — one dropdown per surface of the part: what it wears on the line, the creature's materials under it; laid on render
-const heads = {};       // section → the ruled heading over it (PROPERTY's hides with its panel on a part that has none)
 let propBox = null;     // PROPERTY — the open part's sliders and slot rows, standing open under the two
 const propPanels = {};  // part → { box, sync } — built once per part, synced on render (a slider rebuilt mid-drag loses the drag)
 const menus = {};       // `${species}/${part}` → { box, forms: value → { item, canvas, painted } } — each list built and painted once, kept
@@ -581,14 +581,6 @@ function option(picture, text, onPick) {
   item.addEventListener("click", onPick);
   return item;
 }
-// A ruled heading over a section of the part's panel
-function heading(parent, name) {
-  const head = document.createElement("div");
-  head.className = "group";
-  head.textContent = name;
-  parent.appendChild(head);
-  return head;
-}
 // A material's ball, painted — the picture on a MATERIAL line or row
 function ballOf(key, size, phase) {
   const s = surfaceOf(key);
@@ -625,23 +617,21 @@ function buildParts() {
     tabs[slot] = { item, canvas };
   }
   card.appendChild(strip);
-  // Under the part, its panel — three sections, each under a ruled heading. SHAPE: the form it has, and the part's forms
-  // under it (menuOf — one list per species and part, built once and kept). MATERIAL: which of the creature's materials
-  // it wears — the materials MATERIALS shows, here only to be picked from: a pick puts the part in another (spec.wear),
-  // and editing a material stays MATERIALS' business, in one place. PROPERTY: the part's own numbers and measures
-  // (PROPERTIES), standing open. Three text tabs swapping one panel between them were tried first: the thing wanted was
-  // always on the other tab, and a form and a material each read fine on one line
+  // Under the part, its panel — SHAPE: the form it has, and the part's forms under it (menuOf — one list per species and
+  // part, built once and kept). MATERIAL: which of the creature's materials it wears — the materials MATERIALS shows,
+  // here only to be picked from: a pick puts the part in another (spec.wear), and editing a material stays MATERIALS'
+  // business, in one place. Then its properties — the part's own numbers and measures (PROPERTIES) — standing open,
+  // each under a label line of its own. Three text tabs swapping one panel between them were tried first: the thing
+  // wanted was always on the other tab, and a form and a material each read fine on one line
   const panel = document.createElement("div");
   panel.className = "partPanel";
-  heads.shape = heading(panel, "shape");
+  section(panel, "SHAPE");
   shape = dropdown(panel, "shape");
   shape.canvas = document.createElement("canvas");   // the current form's picture — the list's row for it, blitted
   shape.thumb.appendChild(shape.canvas);
-  heads.material = heading(panel, "material");
-  wearBox = document.createElement("div");
+  wearBox = document.createElement("div");   // the MATERIAL line(s) and their dropdowns, laid on render
   wearBox.className = "wear";
   panel.appendChild(wearBox);
-  heads.property = heading(panel, "property");
   propBox = document.createElement("div");
   propBox.className = "props fields";
   panel.appendChild(propBox);
@@ -856,9 +846,8 @@ function renderPartBody() {
 
   renderWear();
 
-  // PROPERTY — open under the two; a part with none has no section
+  // The properties — open under the two; a part with none has none
   const hasProps = !!PROPERTIES[part];
-  heads.property.hidden = !hasProps;
   propBox.hidden = !hasProps;
   if (hasProps) {
     const panel = propPanelOf(part);
@@ -877,12 +866,7 @@ function renderWear() {
   for (const region of regions) {
     const wears = wearOf(spec, region);
     const label = REGION_LABEL[region] || region;
-    if (regions.length > 1) {
-      const cap = document.createElement("span");
-      cap.className = "regionName";
-      cap.textContent = label;
-      wearBox.appendChild(cap);
-    }
+    section(wearBox, regions.length > 1 ? `MATERIAL · ${label}` : "MATERIAL");   // a part with more than one surface names each
     const d = dropdown(wearBox, `${label} material`);
     d.menu.setAttribute("role", "listbox");
     d.thumb.appendChild(ballOf(wears, BALL_SIZE, 0));
@@ -910,12 +894,7 @@ function renderWear() {
       });
     };
   }
-  if (!regions.length) {
-    const note = document.createElement("output");
-    note.className = "readout";
-    note.textContent = `${part} wears no material — a mark, an object with a colour of its own`;
-    wearBox.appendChild(note);
-  }
+  if (!regions.length) section(wearBox, "MATERIAL").textContent = "none — a mark with a colour of its own";
 }
 
 // One row of a palette box's pool — the swatches a key may be picked from: the main material's colour (the skin
@@ -954,8 +933,8 @@ function paletteRow(parent, key, label = key) {
   return row;
 }
 
-// The HAND card — the wobble (how much every stroke shakes) beside the WOBBLE button that rolls the hand. Every
-// other proportion is a property of its part, under the part
+// The HAND card — NEW HAND rolls the hand (the same individual drawn by another), and under it the wobble: how much
+// every stroke shakes. Every other proportion is a property of its part, under the part
 function buildProportions() {
   proportionsBox.innerHTML = "";
   for (const key of ["wobble"]) {
