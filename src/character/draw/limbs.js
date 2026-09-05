@@ -260,8 +260,9 @@ export function limbSketches(spec, variant = 0) {
       lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, joint: [true, true] });
       dot(lower, side * 0.006, -lowerLen - 0.006, 0.022, skin, "arms");
     } else if (armKind === "stubby") {
-      // Two short thick bones plus a fist
-      upper.line([[0, 0], [side * 0.004, -upperLen]], { color: ink0, joint: [false, true] });
+      // Two short thick bones plus a fist. The upper ends on the elbow pivot (0.006 out, like the stick's) — drawn to 0.004
+      // it stopped 0.002 to one side of where the forearm hangs, a step of a tenth of a width at the elbow
+      upper.line([[0, 0], [side * 0.006, -upperLen]], { color: ink0, joint: [false, true] });
       lower.line([[0, 0], [side * 0.004, -lowerLen]], { color: ink0, joint: [true, true] });
       dot(lower, side * 0.006, -lowerLen - 0.004, 0.02, skin, "arms");
     } else {
