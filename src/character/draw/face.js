@@ -289,8 +289,10 @@ export function drawWhiskers(ink, spec, box) {
   }
 }
 
-// Wide apart on purpose: at 0.8 and 1.25 the three read as one length on the board; medium stays what every brow was
-const BROW_LENGTH = { short: 0.65, medium: 1, long: 1.45 };
+// The scale runs short: long is the length every brow had before the slot (1.15 of the eye), medium two thirds of
+// it, short well under half — brows were too long in general, and a step up from the old length was never wanted.
+// The three sit wide apart on purpose: closer steps read as one length on the board
+const BROW_LENGTH = { short: 0.4, medium: 0.65, long: 1 };
 // A brow's line sampled along its length: `f(t)` in [-1, 1] is the rise above the brow line in eye radii, t from the
 // inner end (toward the nose) to the outer. `n` steps, so a curve is a curve and not a tent. The points always run
 // left to right whatever the side — the pen's shake and taper follow the stroke's direction, and a brow drawn
@@ -322,7 +324,7 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
     const r = Math.max(a.r, b.r);
     const y = Math.min(Math.max(a.y, b.y) + r * 1.9, box.headCy + box.headRy * 0.84);
     const k = BROW_LENGTH[spec.parts.browLength] || 1;
-    const reach = Math.max(r * 1.15 * k, 0.022);
+    const reach = Math.max(r * 1.15, 0.022) * k;
     const left = Math.min(a.x, b.x) - reach, right = Math.max(a.x, b.x) + reach;
     const mid = (left + right) / 2, halfW = (right - left) / 2;
     ink.line(browPath(mid, y, halfW, 1, r, (t) => 0.12 * (1 - t * t), 9), { color: ink0 });   // the faintest arch, so it reads as one brow and not a ruled line
@@ -333,17 +335,27 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
     if (patched(spec, eye)) continue;
     // Brows go above the eyes, but inside the head — on a big eye like a cyclops, 1.9× up is outside the head (on the paper) and it disappears
     let y = Math.min(eye.y + eye.r * (eye.side === 0 ? 1.35 : 1.9), box.headCy + box.headRy * 0.84);
-    // The brow's length is its own slot — short · medium · long of the eye (medium is what every brow was) — and
-    // on a small eye a brow is at least brow-length. However long, the two never meet: a pair is capped short
-    // of the midline between the eyes, so a wide brow on close-set eyes does not read as one brow
+    // The brow's length is its own slot — short · medium · long — and on a small eye a brow is at least brow-length.
+    // However long, the two never meet: a brow whose inner end would cross the midline between the eyes is slid
+    // **outward** until it clears it — a long brow reaches past the eye's outer corner, as long brows do — and only
+    // one that would then run off the head is shortened. Capping the length instead made medium and long the same
+    // brow on every close-set face
     const k = BROW_LENGTH[spec.parts.browLength] || 1;
-    let half = Math.max(eye.r * 1.15 * k, 0.022);
-    if (eyes.length === 2) half = Math.max(Math.min(half, Math.abs(eyes[1].x - eyes[0].x) / 2 - eye.r * 0.12), eye.r * 0.4);
+    let half = Math.max(eye.r * 1.15, 0.022) * k;   // the floor first, then the length — so a short brow on a small eye is still short
     // The inner end of a brow is toward the nose: t = -1 sits at x - side·half. A cyclops has no nose side; its one
     // brow has always been drawn as a left eye's (the inner end on the right), and stays so
     const side = eye.side === 0 ? -1 : eye.side;
     const r = eye.r;
-    const line = (f, n) => ink.line(browPath(eye.x, y, half, side, r, f, n), { color: ink0 });
+    let xc = eye.x;
+    if (eyes.length === 2) {
+      const innerLimit = (eyes[0].x + eyes[1].x) / 2 + side * r * 0.12;          // the midline, a hair to this eye's side
+      const outerLimit = box.headCx + side * box.headRx * 0.92;                   // the head's edge
+      const overflow = side * (innerLimit - (xc - side * half));
+      if (overflow > 0) xc += side * overflow;                                     // slide out until the inner end clears the midline
+      const spill = side * ((xc + side * half) - outerLimit);
+      if (spill > 0) { half = Math.max(half - spill / 2, r * 0.3); xc = innerLimit + side * half; }   // off the head: shorten, inner end held
+    }
+    const line = (f, n) => ink.line(browPath(xc, y, half, side, r, f, n), { color: ink0 });
 
     if (kind === "flat") line(() => 0, 1);
     else if (kind === "angry") line((t) => -0.2 * (1 - t), 1);          // inner end down 0.4r — the straight stroke it always was

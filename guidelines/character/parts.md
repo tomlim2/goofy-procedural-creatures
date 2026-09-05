@@ -91,9 +91,10 @@ bushy→angry, raised→flat, mono→flat, dot→worry; anger is angry for all b
 
 ### browLength — the brow's length (3)
 
-A late slot (the last), so nothing rolled before it moves. **short · medium · long** — 0.65 · 1 · 1.45 of the
-eye it sits over (medium is exactly the length every brow had before the slot; the two ends sit wide apart on
-purpose — at 0.8 and 1.25 the three read as one length on the board). Whatever the length, a pair
+A late slot (the last), so nothing rolled before it moves. **short · medium · long** — 0.4 · 0.65 · 1 of the
+length every brow had before the slot (1.15 of the eye): long is that length, medium two thirds of it, short
+well under half. The scale runs short on purpose — brows were too long in general — and the steps sit wide
+apart, since closer ones read as one length on the board. Whatever the length, a pair
 never meets: each brow is capped short of the midline between the eyes, so a long brow on close-set eyes does
 not read as one brow. In the editor it is the brow's first property (PART → brow → property), not a part of
 its own.
