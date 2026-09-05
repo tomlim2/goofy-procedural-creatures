@@ -446,7 +446,7 @@ const r = (key, label) => ({ key, kind: "range", label });
 const sl = (key, label) => ({ key, kind: "slot", label });
 const PROPERTIES = {
   head: [r("headScale", "size"), r("headWide", "width"), r("headLumps", "lumps"), r("headLump", "lump")],
-  eyes: [r("eyeSize", "size"), r("eyeGap", "gap"), r("eyeHeight", "height"), r("eyeSizeSkew", "size skew"), r("eyeHeightSkew", "height skew")],
+  eyes: [sl("eyeScale", "size"), r("eyeGap", "gap"), r("eyeHeight", "height"), r("eyeSizeSkew", "size skew"), r("eyeHeightSkew", "height skew")],
   brow: [sl("browLength", "length")],
   nose: [r("noseDrop", "drop")],
   mouth: [sl("mouthPos", "position"), sl("mouthSize", "size"), r("mouthDrop", "drop")],

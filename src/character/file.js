@@ -53,6 +53,8 @@ function migrate(next) {
     for (const [from, to] of Object.entries(box)) if (names[from]) { names[to] = names[from]; delete names[from]; }
     out.materialNames = names;
   }
+  // A file from before the eyeScale slot: its eyes are the medium step (the eye every creature had before the slot)
+  if (out.parts && out.parts.eyeScale === undefined) out.parts = { ...out.parts, eyeScale: "medium" };
   return out;
 }
 

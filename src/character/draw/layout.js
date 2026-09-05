@@ -95,11 +95,14 @@ export function layout(spec) {
   return { quad: false, legTop, bodyH, bodyW, bodyCx: 0, bodyTop, headRx, headRy, headCy };
 }
 
+// The eyeScale slot's steps — medium is the eye every creature had before the slot; a file without the slot draws medium
+export const EYE_SCALE = { small: 0.78, medium: 1, large: 1.28 };
 export function eyeGeometry(spec, box) {
   const p = spec.proportions;
   const gap = box.headRx * p.eyeGap;
-  // wide (a big eye) is 1.3× ring — two eyes must not be identical with only different names
-  const base = box.headRy * p.eyeSize * 1.35 * (spec.parts.eyes === "wide" ? 1.3 : 1);
+  // wide (a big eye) is 1.3× ring — two eyes must not be identical with only different names. The eyeScale slot steps the
+  // whole eye (small · medium · large); the guardrails below still fit the pair to the head
+  const base = box.headRy * p.eyeSize * 1.35 * (spec.parts.eyes === "wide" ? 1.3 : 1) * (EYE_SCALE[spec.parts.eyeScale] || 1);
   const y = box.headCy + box.headRy * p.eyeHeight;
 
   // A cyclops has just one, in the middle

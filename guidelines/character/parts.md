@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 28 slots, 207 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 31 slots, 228 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -98,6 +98,16 @@ apart, since closer ones read as one length on the board. Whatever the length, a
 never meets: each brow is capped short of the midline between the eyes, so a long brow on close-set eyes does
 not read as one brow. In the editor it is the brow's first property (PART → brow → property), not a part of
 its own.
+
+### eyeScale — the eye's size (3)
+
+A late slot (the last), so nothing rolled before it moves. **small · medium · large** — 0.78 · 1 · 1.28 of the eye
+the individual rolled (`draw/layout.js` eyeGeometry): medium is the eye every creature had before the slot, and a
+file without the slot draws medium. The continuous `eyeSize` proportion still rolls under it, so two mediums are not
+the same eye; the slot is the step a hand picks, and the step the roll deals (small 1 · medium 2 · large 1). The
+pair is still fitted to the head by the guardrails — a large pair on a narrow head opens its gap and shrinks
+together — and everything hung on the eye (brows, glasses, dark circles, the whites) scales with it. In the editor
+it is the eyes' first property (PART → eyes → property), in place of the size slider.
 
 ### eyewear (5)
 none / glasses (two circles plus arms, the lens radius = the eye × 1.45) / goggles (big circles plus a strap round the head, × 1.75) / patch (a patch over one eye plus a diagonal strap) / monocle (one big circle plus a cord).

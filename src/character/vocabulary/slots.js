@@ -124,13 +124,17 @@ export const SLOTS = {
   // The brow's length — its own axis, like a limb's: short · medium · long, 0.4 · 0.65 · 1 of the brow every eye had (long is what every
   // brow was before the slot existed). A late slot, so nothing rolled before it moves; the two brows never meet whatever
   // the length (face.js drawBrow)
-  browLength: ["short", "medium", "long"]
+  browLength: ["short", "medium", "long"],
+  // The eye's size in three steps — small · medium · large, 0.78 · 1 · 1.28 of the eye the individual rolled (draw/layout.js
+  // eyeGeometry; medium is the eye every creature had before the slot). The continuous proportion `eyeSize` still rolls under
+  // it, so two mediums are not the same eye; the slot is the step a hand picks. A late slot, so nothing rolled before it moves
+  eyeScale: ["small", "medium", "large"]
 };
 
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing rolls keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -170,6 +174,7 @@ export const DEFAULT_BIAS = {
   // One pressure through on most of the board, like the tool (bodyMaterial); a body at its own step is about one in five
   bodyDensity: [["same", 10], ["black", 0.5], ["hatch", 0.5], ["scribble", 0.5], ["stipple", 0.5], ["light", 0.5]],
   browLength: [["short", 1], ["medium", 2], ["long", 1]],
+  eyeScale: [["small", 1], ["medium", 2], ["large", 1]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],
