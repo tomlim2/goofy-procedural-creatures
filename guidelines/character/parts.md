@@ -133,8 +133,7 @@ smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline down to 
 eye band). **The cap is the front's — a back never draws one**: a back is only what hangs behind the head, one piece on the
 back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the seam showed). The
 fringes bring the cap down to their hairline; the crown cap stops at the crown (0.7 of the head above its centre, the forehead
-bare — at 0.78 the cap alone read as a skullcap); the strand fronts and the hoods bring none; a bun brings a
-thin cap of its own when the front brings none. A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
+bare — at 0.78 the cap alone read as a skullcap); the strand fronts, the hoods and the top bring none. A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
 over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
 wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
 from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
@@ -143,7 +142,7 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 
 | hairFront | How |
 | --- | --- |
-| none | Nothing in front — no cap unless a bun brings its thin one |
+| none | Nothing in front — no cap |
 | hairline | The plain fringe — the cap itself coming down over the forehead to a straight hairline (0.5 of the head above its centre), no piece of its own. What every back kind used to bring with it; a file from before gets it with its back |
 | blunt | The straight fringe — a panel over the forehead on the front layer, rooted inside the cap so the two read as one mass (its top edge lies in the cap's fill and draws no line; its sides and its ragged hem do). The hem clears the brow and never enters the eye band |
 | swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down past the temples to the jaw line where there is a lane outside the widest eye (a fifth of the head's half-height clear of it — closer, the near lock sat on a big eye's outer line). Which side is per individual |
@@ -154,7 +153,7 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 | tuft / wisp | A few **leaves** — each strand a thin filled ribbon from a root on the crown to a point (4 / 7) |
 | curly | 7 small filled discs along the crown |
 | helmet | The hood (bowl) type — a mass a little bigger than the head (×1.06) from the crown down to the brow at the front and below the ears at the sides, on the front layer, the hem never into the eye band; strokes in the hair's own tone falling from the crown toward the hem |
-| cloud | The curly cloud — the same hood ×1.2 with a scalloped outline (9 lumps), small curls contoured along its edge and a few loops inside in the hair's own tone |
+| cloud | The curly cloud — the reference's afro: a hood ×1.18 whose silhouette is a run of 14 round bumps with cusps between them, the hairline edge 7 bumps too (each hanging to the brow line, never into the eye band), and the curls a few sparse open hooks — three quarters of a turn — in the ink just inside the edge and in the hair's own tone deeper in. Never a ring inside the fill: rings read as spots, and with a straight hem the whole thing read as a spotted helmet |
 
 | hairBack | How |
 | --- | --- |
@@ -172,8 +171,8 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 | hairTop | How |
 | --- | --- |
 | none | |
-| bun | One bunch on top and a pin, over a thin cap (the hairline high on the crown). It cannot wear a hat |
-| apple / appleBig | An apple top — a bunch rising like an apple stem in the middle of the crown: 4 leaves in a fan plus a tie · 6 leaves 1.7× long and thick plus a long tie. No hat |
+| bun | The round bunch on top and nothing else — no cap under it, no pin; 0.096 wide (twice its first size), its bottom tucked a little into the crown. It cannot wear a hat |
+| apple / appleBig | An apple top — a bunch rising like an apple stem in the middle of the crown: 4 leaves in a fan plus a tie (size 2) · 6 leaves 1.7× as long and thick plus a long tie (size 3.4) — both twice their first size. No hat |
 
 **The rules** (`spec.js applyLateConstraints` — on the late slots, after they are rolled; fixed overwrites, never a roll): a helmet or
 a pot on the head clears all three · with any other hat or a band the fringes and the back keep (bangs and a bob's hem come out from

@@ -16,7 +16,7 @@
 // A function takes h (the context): { back, crown, front, spec, box, noise, ink0 (the hair color), rx, ry, cy (the head's half-width, half-height and centre), shoulder (the floor for back hair) }
 
 import { paintOf } from "../vocabulary/paint.js";
-import { blobPath, crumple } from "../../shape.js";
+import { blobPath, arcPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { browLine } from "./head.js";
 import { paintPart } from "./body.js";
@@ -310,12 +310,11 @@ const sideLock = (h) => {
   front.contour(fillStrip(h, frontFills, spine, [ry * 0.07, ry * 0.15, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 11), { color: h.lineInk });
 };
 
-// Bun — one bunch on top and a pin (the thin cap under it is drawHair's)
+// Bun — the round bunch on top and nothing else (no cap under it, no pin: the bunch alone is the bun). Twice the size it
+// was, its bottom tucked a little into the crown so it sits on the head rather than floating over it
 const bunTop = (h) => {
   const { crown, cy, ry, spec } = h;
-  const bx = 0.01, by = cy + ry * 1.05;
-  blobPiece(h, crown, h.crownFills, bx, by, 0.048, 0.042, spec.roll * 0.0031);
-  crown.line([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: h.lineInk, size: "S" });   // the pin
+  blobPiece(h, crown, h.crownFills, 0.01, cy + ry + 0.05, 0.096, 0.084, spec.roll * 0.0031);
 };
 // Pigtails — two bunches at the sides, behind the ears, each with a tie
 const pigtailsBack = (h) => {
@@ -329,8 +328,10 @@ const pigtailsBack = (h) => {
 
 // The hood types — a mass a little bigger than the head, from the crown down to the brow at the front and below the ears
 // at the sides, on the front layer (a hat sits above it); the hem never enters the eye band. helmet straight — a smooth
-// outline and strokes falling from the crown toward the hem · cloud curly — a scalloped outline with curls along it
-const hood = ({ grow, lumps, amount, grain = false, curls = false }) => (h) => {
+// outline, a straight hem and strokes falling from the crown toward the hem · cloud curly — the reference's afro: the
+// silhouette is a run of round bumps with cusps between them ALL the way round, the hairline edge too, and the curls are a
+// few sparse open hooks near the edge. It was rings inside the fill and a straight hem, which read as a spotted helmet
+const hood = ({ grow, lumps, amount, grain = false, curls = false, scallop = null }) => (h) => {
   const { front, frontFills, spec, box, rx, ry, cy, noise } = h;
   const safe = eyeSafeY(h);
   const mid = Math.max(browLine(spec, box) + ry * 0.04, safe);
@@ -340,9 +341,28 @@ const hood = ({ grow, lumps, amount, grain = false, curls = false }) => (h) => {
     const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
     return mid * (1 - k) + sideBottom * k;
   };
-  const outer = grownOutline(h, grow, grow, lumps, amount).filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
+  let outer;
+  if (scallop) {
+    // round bumps round the whole silhouette — |sin| puts a cusp between every two — turned a little per individual
+    const pts = [];
+    for (let i = 0; i < 120; i += 1) {
+      const a = (i / 120) * Math.PI * 2;
+      const k = 1 + scallop.amp * Math.abs(Math.sin((scallop.bumps * a) / 2 + spec.roll * 0.013));
+      pts.push([Math.cos(a) * rx * grow * k, cy + Math.sin(a) * ry * grow * k]);
+    }
+    outer = pts.filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
+  } else {
+    outer = grownOutline(h, grow, grow, lumps, amount).filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
+  }
   const hem = [];
-  for (let i = 0; i <= 16; i += 1) { const x = -rx * grow * 0.97 + (i / 16) * rx * grow * 1.94; hem.push([x, bottomAt(x) + Math.abs(noise(i * 3.3 + spec.roll * 0.002)) * ry * 0.035]); }
+  const M = scallop ? 42 : 16;
+  for (let i = 0; i <= M; i += 1) {
+    const x = -rx * grow * 0.97 + (i / M) * rx * grow * 1.94;
+    const base = bottomAt(x);
+    // the cloud's hem is bumps too — each hanging down to the line, a cusp between; the helmet's a straight line with a light jag
+    const y = scallop ? base + ry * scallop.hemAmp * (1 - Math.abs(Math.sin(Math.PI * (i / M) * scallop.hemBumps))) : base + Math.abs(noise(i * 3.3 + spec.roll * 0.002)) * ry * 0.035;
+    hem.push([x, y]);
+  }
   const poly = [...outer, ...hem];
   paintPart(frontFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });
   front.contour(poly, { color: h.lineInk });
@@ -355,19 +375,19 @@ const hood = ({ grow, lumps, amount, grain = false, curls = false }) => (h) => {
       front.line([[x, top], [x + x * 0.04, (top + bottom) / 2], [x + x * 0.09, bottom]], { color: h.grainInk, size: "S" });
     }
   }
-  if (curls) {   // small curls along the scalloped edge, and a few loops inside in the hair's own tone
-    for (let i = 0; i < 11; i += 1) {
-      const a = Math.PI * (1 - i / 10);
-      const bx = Math.cos(a) * rx * grow * 0.96, by = cy + Math.sin(a) * ry * grow * 0.96;
-      if (by < bottomAt(bx) + ry * 0.04) continue;
-      const r = 0.026 + noise(i * 4.4 + spec.roll * 0.002) * 0.01;
-      front.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: h.lineInk });
+  if (curls) {
+    // the curls — sparse open hooks, three quarters of a turn each: a few in the dark ink just inside the silhouette, where the
+    // reference puts them, and a few in the hair's own tone deeper in. Never a closed ring — a ring inside a fill is a spot
+    const hook = (px, py, r, a0, color) => front.line(arcPath(px, py, r, r, a0, a0 + Math.PI * 1.5, 10), { color, size: "S" });
+    for (let i = 0; i < 7; i += 1) {
+      const a = Math.PI * (0.1 + 0.8 * (i / 6));
+      const px = Math.cos(a) * rx * grow * 0.86, py = cy + Math.sin(a) * ry * grow * 0.86;
+      if (py < bottomAt(px) + ry * 0.1) continue;
+      hook(px, py, ry * (0.045 + Math.abs(noise(i * 2.3 + spec.roll * 0.003)) * 0.015), a + Math.PI * (0.4 + Math.abs(noise(i * 5.1)) * 0.6), h.lineInk);
     }
-    for (let i = 0; i < 6; i += 1) {
-      const a = Math.PI * (0.85 - 0.7 * (i / 5));
-      const bx = Math.cos(a) * rx * 0.6, by = cy + Math.sin(a) * ry * 0.75;
-      const r = 0.018 + noise(i * 3.3 + 7) * 0.006;
-      front.contour(blobPath(bx, by, r, r * 0.9, { lumps: 3, amount: 0.2, noise: null }), { color: h.grainInk, size: "S" });
+    for (let i = 0; i < 3; i += 1) {
+      const a = Math.PI * (0.75 - 0.5 * (i / 2));
+      hook(Math.cos(a) * rx * 0.5, cy + Math.sin(a) * ry * 0.78, ry * 0.04, a + Math.PI * 0.6, h.grainInk);
     }
   }
 };
@@ -475,8 +495,8 @@ const curlyF = (h) => {
     blobPiece(h, crown, crownFills, Math.cos(a) * rx * 0.88, cy + Math.sin(a) * ry * 0.92, r, r, spec.roll * 0.0023 + i);
   }
 };
-// Apple top — a bunch rising from the middle of the crown like an apple stem, leaves in a fan with one tie. size 1 the small
-// one (four leaves) · 1.7 the big one (six, long and thick)
+// Apple top — a bunch rising from the middle of the crown like an apple stem, leaves in a fan with one tie. size 2 the small
+// one (four leaves) · 3.4 the big one (six, long and thick) — both twice what they were
 const appleOfF = (size) => (h) => {
   const { crown, crownFills, ry, cy, spec } = h;
   const bx = 0.005, by = cy + ry * 1.0;
@@ -501,7 +521,7 @@ export const FRONTS = {
   wisp: tuftsOf(7),
   curly: curlyF,
   helmet: hood({ grow: 1.06, lumps: 3, amount: 0.04, grain: true }),
-  cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true })
+  cloud: hood({ grow: 1.18, curls: true, scallop: { bumps: 14, amp: 0.07, hemBumps: 7, hemAmp: 0.06 } })
 };
 export const BACKS = {
   bob: (h) => backMass(h, h.cy - h.ry * 0.72, 1.02, { grow: [1.14, 1.07], lumps: 4, amount: 0.05 }),          // to the ear, straight
@@ -519,17 +539,16 @@ export const BACKS = {
 };
 export const TOPS = {   // what is tied ON the crown
   bun: bunTop,
-  apple: appleOfF(1),
-  appleBig: appleOfF(1.7)
+  apple: appleOfF(2),
+  appleBig: appleOfF(3.4)
 };
 // **A back is only what hangs behind the head.** The scalp cap — the piece IN FRONT of the head, on the crown layer — is the
 // front's: the fringes bring it down to their hairline, the crown cap stops at 0.7 of the head above its centre (the forehead
 // bare; at 0.78 the cap alone read as a skullcap rather than hair), and the strand fronts (mohawk, tufts, curls) and the hoods
-// bring none — a mohawk stands on a bare head, a hood covers the crown itself. A bun on the top brings a
-// thin cap of its own when the front brings none. A back never draws one: drawn with the back it was two pieces for one
+// bring none — a mohawk stands on a bare head, a hood covers the crown itself; the top brings none either (a bun is the round
+// bunch alone). A back never draws one: drawn with the back it was two pieces for one
 // hairstyle, a mass behind and a cap in front, and the seam between them showed
 const FRONT_CAP = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6, cap: 0.7 };
-const TOP_CAP = { bun: 0.82 };
 const DOME_BACKS = new Set(["bob", "mop", "long"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
 
 export function drawHair(layers, spec, box, noise) {
@@ -553,7 +572,7 @@ export function drawHair(layers, spec, box, noise) {
     shoulder: box.bodyTop - 0.02   // the floor back hair comes down to (the shoulder)
   };
   if (BACKS[back]) BACKS[back](h);                                   // behind the head first
-  const capLine = FRONT_CAP[front] ?? (front === "helmet" || front === "cloud" ? undefined : TOP_CAP[top]);
+  const capLine = FRONT_CAP[front];
   if (capLine !== undefined) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
   if (TOPS[top]) TOPS[top](h);                                       // on the crown
   if (FRONTS[front]) FRONTS[front](h);                               // over the face, last
