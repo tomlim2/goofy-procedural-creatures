@@ -201,9 +201,10 @@ function rules(points, angle, gap, jitter) {
 // "texture" draws that channel alone. strip: [left, right] — the base is cut as a strip between the two rails instead of a fan from the
 // centre (a tube that bones will bend: the tail); the contour (points) still clips the texture. Every tone is a shade of the part's color —
 // the goofy material knows no colors of its own
-export function paintWith(sketch, points, name, { color, only, pattern, value, strip, stripT, skinT } = {}) {
+export function paintWith(sketch, points, name, { color, only, pattern, value, strip, stripT, skinT, concave } = {}) {
   // stripT(i) / skinT: the skin tags of the base — per rung of a strip, or one t for a fill (a bead on the tail); the texture's marks stay untagged
-  const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, stripT) : sketch.fill(points, c, skinT));
+  // concave: a base that is not visible from its centre (a hair cap with side lobes) is ear-clipped rather than fanned (stroke.js fillPolygon)
+  const base = (c) => (strip ? sketch.fillStrip(strip[0], strip[1], c, stripT) : concave ? sketch.fillPolygon(points, c, skinT) : sketch.fill(points, c, skinT));
   const m = GOOFY_MATERIALS[name];
   if (!m) throw new Error(`unknown goofy material: ${name}`);
   const step = value === undefined ? valueStep(color) : value;

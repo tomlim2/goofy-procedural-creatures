@@ -391,6 +391,49 @@ export class Sketch {
     }
   }
 
+  // Area fill for a shape that is NOT visible from its centre — a cap with side lobes, a hood, a ragged sheet (the filled hair,
+  // hair.js). Ear clipping: the polygon is cut into triangles by taking off one convex corner at a time whose triangle holds no
+  // other vertex. The fan above spilled across such a shape's concave notches onto whatever lay there (a face). Only the hair
+  // asks for it (materials.js paintWith `concave`); every other shape on the board is star-shaped and keeps the fan
+  fillPolygon(points, color, skinT = NaN) {
+    this.skinT = skinT;
+    const rgb = hexToRgb(color);
+    let pts = points.filter((p, i) => { const q = points[(i + 1) % points.length]; return Math.hypot(p[0] - q[0], p[1] - q[1]) > 1e-9; });
+    if (pts.length < 3) return;
+    const area2 = pts.reduce((s, p, i) => { const q = pts[(i + 1) % pts.length]; return s + p[0] * q[1] - q[0] * p[1]; }, 0);
+    if (area2 < 0) pts = pts.slice().reverse();   // counter-clockwise, so a convex corner turns left
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const strictlyInside = (p, a, b, c) => cross(a, b, p) > 1e-12 && cross(b, c, p) > 1e-12 && cross(c, a, p) > 1e-12;
+    let guard = 0;
+    while (pts.length > 3 && guard++ < 50000) {
+      let cut = false;
+      for (let i = 0; i < pts.length; i += 1) {
+        const n = pts.length;
+        const a = pts[(i + n - 1) % n], b = pts[i], c = pts[(i + 1) % n];
+        if (cross(a, b, c) <= 1e-12) continue;   // a reflex or a flat corner is no ear
+        let clear = true;
+        for (let k = 0; k < n && clear; k += 1) {
+          if (k === i || k === (i + n - 1) % n || k === (i + 1) % n) continue;
+          const p = pts[k];
+          // only a reflex vertex can lie inside an ear — a convex one never does, so it is not tested
+          if (cross(pts[(k + n - 1) % n], p, pts[(k + 1) % n]) > 1e-12) continue;
+          if (strictlyInside(p, a, b, c)) clear = false;
+        }
+        if (!clear) continue;
+        this.triangle(a[0], a[1], b[0], b[1], c[0], c[1], rgb);
+        pts.splice(i, 1);
+        cut = true;
+        break;
+      }
+      if (!cut) break;   // a self-crossing outline — what is left is fanned, as before
+    }
+    if (pts.length >= 3) {
+      let cx = 0, cy = 0;
+      for (const [x, y] of pts) { cx += x / pts.length; cy += y / pts.length; }
+      for (let i = 0; i < pts.length; i += 1) { const a = pts[i], b = pts[(i + 1) % pts.length]; this.triangle(cx, cy, a[0], a[1], b[0], b[1], rgb); }
+    }
+  }
+
   // The scribble — hair is not filled as an area but drawn back and forth with the pen (the reference's hair works this way).
   // The growth constants are GOOFY_FUR.SCRIBBLE's; fur() is the named way in
   scribble(points, { color = "#2b2724", passes = 14, width = 0.009, spread = 0.05, root = -0.25, reach = 0.85, scatter = 0.4, wave = 0.4, lean = 0.4, waveLean = 0.3, paper = PAPER } = {}) {

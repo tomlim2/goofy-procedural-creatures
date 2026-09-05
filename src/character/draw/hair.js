@@ -1,4 +1,9 @@
-// Hair — 28 kinds. Docs: guidelines/character/parts.md § hair
+// Hair — 26 kinds. Docs: guidelines/character/parts.md § hair
+// Two families. **Filled** — every hair that is a mass: the boundary drawn first, a closed form, and the inside painted with
+// the hair's material, contoured in the pencil's dark ink, the same pen as a hat (bob · mop · scribble · sweep · pigtails ·
+// bangs · longbob · bun · helmet · cloud · long · verylong · twintails · twintailsBall · ponytail · bobSwept · sheetsSwept).
+// **Fur** — what is strands by nature and has no inside to fill, drawn with the pen: spikes · mohawk · hedgehog · tuft · wisp
+// · curly · apple · appleBig
 //
 // Hair is drawn across **three layers** — layers = { back, crown, front } (ink sketches), and the filled
 // family also gets each layer's fills sketch (backFills, crownFills, frontFills — the fur kinds never fill):
@@ -10,93 +15,11 @@
 // A function takes h (the context): { back, crown, front, spec, box, noise, ink0 (the hair color), rx, ry, cy (the head's half-width, half-height and centre), shoulder (the floor for back hair) }
 
 import { paintOf } from "../vocabulary/paint.js";
-import { blobPath, arcPath, crumple } from "../../shape.js";
+import { blobPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { browLine } from "./head.js";
 import { paintPart } from "./body.js";
 import { luminance, tint, deepen } from "../../color.js";
-
-// A scribble cap covering the crown — several kinds share the same shape. depth is how far down the sides it comes (0.5 = ear height)
-// **Hair is drawn at L**, the goofy fur's thickest — every fur on the head, cap, tail, bun and bangs alike. It used to run S~L by kind,
-// and the thin ones read as a smudge beside the head's own line rather than as strands
-const cap = (h, depth, steps, passes, spread) => {
-  const arc = arcPath(0, h.cy, h.rx * 0.98, h.ry * 0.98, Math.PI * (0.5 + depth), Math.PI * (0.5 - depth), steps);
-  h.crown.fur(arc, "SCRIBBLE", { color: h.ink0, passes, size: "L", spread });
-};
-
-// Hanging hair (curtains) — each stroke starts **on the head outline** and flows down: the middle strokes start near the crown, the side strokes at ear height,
-// so it reads as a mass laid on the head and flowing down. Start every stroke at the same height (a straight horizontal top edge, constant width) and it becomes **a folding screen**.
-//   hem the hem's y · grow the multiplier for spreading outward on the way down (against the head half-width) · inner strokes starting inside this (× rx) are skipped (to leave the chest clear) · count strokes per side
-function curtain(h, hem, { grow = 1.14, inner = 0, count = 15, size = "S" }) {
-  const { back, ink0, rx, ry, cy, noise, spec } = h;
-  const shape = headShape(spec);
-  const n = 2 + shape.square;
-  // A point on the head outline (a superellipse). a: 0 = the right side, π/2 = the crown
-  const outline = (a) => {
-    const c = Math.cos(a), s = Math.sin(a);
-    const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
-    const uy = Math.sign(s) * Math.pow(Math.abs(s), 2 / n);
-    return [ux * rx * (1 - shape.taper * uy), cy + uy * ry];
-  };
-  for (const side of [-1, 1]) {
-    for (let i = 0; i < count; i += 1) {
-      const t = i / (count - 1);                       // 0 = toward the crown · 1 = the side (ear height)
-      const base = Math.PI * 0.5 * (1 - t * 0.97);     // crown (π/2) → side (≈0.015π)
-      const a = side > 0 ? base : Math.PI - base;
-      const [ox, oy] = outline(a);
-      if (Math.abs(ox) < inner * rx) continue;         // the front of the chest is left clear (very long hair)
-      const top = oy - ry * 0.02;                      // starts slightly inside the outline — embedded in the head
-      const jag = Math.abs(noise(i * 7.3 + side * 2.1 + spec.roll * 0.002)) * (cy - hem) * 0.12;
-      const bottom = hem + jag;
-      // Outward on the way down — the further to the side the more (the tip is x·grow). The middle strokes fall almost straight
-      const endX = ox * grow;
-      const midX = ox + (endX - ox) * 0.4;
-      back.line([[ox, top], [midX, (top + bottom) * 0.5], [endX, bottom]], { color: ink0, size });
-    }
-    // The outer outline — from the side of the head (ear height) to the hem. It flows slightly away from the head
-    const [ex, ey] = outline(side > 0 ? 0.06 : Math.PI - 0.06);
-    back.line([[ex, ey], [ex * (grow * 0.98), (ey + hem) * 0.5], [ex * grow, hem]], { color: ink0 });   // the side lock is the fuller one — M against the curtain's S
-  }
-}
-
-// Hair with a back layer (long hair, twintails, ponytail) — a crown cap (crown) plus hair falling behind (back)
-function longHair(h) {
-  cap(h, 0.52, 22, 12, h.ry * 0.24);
-  // Long straight hair — from the head outline to the shoulders. It only spreads slightly around the shoulders
-  curtain(h, h.shoulder, { grow: 1.14, count: 15 });
-}
-// Very long straight hair — down to mid-torso. It comes over the shoulders on both sides of the face and flows down beside the chest (the middle of the chest is left clear — covering the whole board makes it a cape)
-function veryLong(h) {
-  cap(h, 0.52, 22, 12, h.ry * 0.24);
-  curtain(h, (h.box.bodyTop + h.box.legTop) / 2, { grow: 1.2, inner: 0.5, count: 17 });
-}
-// Twintails — two bunches tied high on either side of the head, hanging back. With ball, a round bunch at the ends
-const twintailsOf = (ball) => (h) => {
-  const { back, ink0, rx, ry, cy } = h;
-  cap(h, 0.52, 22, 12, ry * 0.24);
-  for (const side of [-1, 1]) {
-    const tx = side * rx * 0.95, ty = cy + ry * 0.35;
-    const tail = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - 0.3]];
-    back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, size: "L", spread: 0.028 });
-    back.line([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: ink0 });   // the tie
-    if (ball) {
-      // The end bunch — a round scribble mass at the end of the tail plus an outline
-      const bx = tx + side * 0.05, by = ty - 0.34;
-      back.fur(arcPath(bx, by, 0.05, 0.055, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 9, size: "L", spread: 0.032 });
-      back.contour(blobPath(bx, by, 0.057, 0.06, { lumps: 4, amount: 0.15, noise: null }), { color: ink0 });
-    }
-  }
-};
-function ponytail(h) {
-  const { back, ink0, rx, ry, cy, spec } = h;
-  cap(h, 0.52, 22, 12, ry * 0.24);
-  // Ponytail — tied as one behind the crown, rising up and hanging back (which side it is tied on is per individual)
-  const s = spec.roll % 2 ? 1 : -1;
-  const px0 = s * rx * 0.25, py0 = cy + ry * 0.92;
-  const tail = [[px0, py0], [px0 + s * 0.06, py0 + 0.06], [px0 + s * 0.13, py0 + 0.02], [px0 + s * 0.15, py0 - 0.14], [px0 + s * 0.11, py0 - 0.3]];
-  back.fur(tail, "SCRIBBLE", { color: ink0, passes: 12, size: "L", spread: 0.026 });
-  back.line([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: ink0 });   // the tie
-}
 
 // Apple top — a bunch right in the middle of the crown rising like an apple stem. The hair is smooth, with one tie. size 1 the small one (four strands) · 1.7 the big one (six strands, long and thick)
 const appleOf = (size) => (h) => {
@@ -126,74 +49,6 @@ const spiky = (rings) => (h) => {
   }
 };
 
-// Volume types — a mass slightly bigger than the head wraps from the crown down to **the brow line** at the front and below the ears at the sides (the reference's hood and cloud types).
-// Not filled as an area: helmet uses dense vertical strokes (straight hair), cloud a scalloped outline plus loop scribbles (curls). It cannot cover the eyes — the lower boundary is the brow line
-const voluminous = (kind) => (h) => {
-  const { back, crown, front, ink0, rx, ry, cy, noise, spec, box } = h;
-  const brow = browLine(spec, box);
-  const shape = headShape(spec);
-  const grow = kind === "cloud" ? 1.2 : 1.06;
-  const sideBottom = cy - ry * 0.45;   // the floor for side hair (below the ear)
-  // The outer boundary — the upper part of a closed curve grown along the head outline shape (sideBottom at the sides, down to brow within the front x)
-  const outer = blobPath(0, cy, rx * grow, ry * grow, { lumps: kind === "cloud" ? 9 : 3, amount: kind === "cloud" ? 0.13 : 0.04, noise: null, square: shape.square, taper: shape.taper });
-  // The lower boundary — the brow line in the middle, easing **smoothly** to below the ear toward the sides (a step there reads as a square box)
-  const bottomAt = (x) => {
-    const u = Math.abs(x) / rx;
-    const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
-    return brow * (1 - k) + sideBottom * k;
-  };
-  const upper = outer.filter(([x, y]) => y >= bottomAt(x));
-  upper.sort((a, b) => Math.atan2(a[1] - cy, a[0]) - Math.atan2(b[1] - cy, b[0]));
-  // The outer outline — the upper arc of a mass bigger than the head. **The back hair layer** (behind the head) — only what comes outside the head silhouette shows
-  if (kind === "cloud") back.line(upper, { color: ink0 });
-  else back.line(upper, { color: ink0 });
-  if (kind === "helmet") {
-    // The hair's grain — dense strokes falling from the crown. From the upper boundary to the lower one (the brow line in the middle → below the ear at the sides),
-    // with ragged tips (no straight line drawn along the hem — that would make it a helmet with a brim), spreading slightly outward toward the sides
-    const step = 0.012;
-    const topAt = (x) => {
-      const u = Math.min(0.999, Math.abs(x) / (rx * grow));
-      return cy + ry * grow * Math.pow(1 - Math.pow(u, 2 + shape.square), 1 / (2 + shape.square));
-    };
-    for (let x = -rx * grow + step * 0.5; x < rx * grow; x += step) {
-      const top = topAt(x) - 0.004;
-      const jag = (noise(x * 40 + spec.roll * 0.003) * 0.9 + 0.3) * ry * 0.09;   // −0.05ry ~ +0.11ry
-      const bottom = bottomAt(x) + jag;
-      if (top - bottom < 0.02) continue;
-      const fan = x * 0.08;   // outward on the way down
-      // The front (|x| < 0.8rx) is the bangs covering the forehead → the over-the-face layer; the sides are the scalp layer
-      const target = Math.abs(x) < rx * 0.8 ? front : crown;
-      target.line([[x, top], [x + fan * 0.5, (top + bottom) / 2], [x + fan + noise(x * 17) * 0.004, bottom]], { color: ink0, size: "S" });
-    }
-  } else {
-    // The cloud type — the inside filled with loop scribbles (curls) and small loops along the scalloped edge
-    const arc = arcPath(0, cy, rx * 1.02, ry * 1.0, Math.PI * 1.04, -Math.PI * 0.04, 24);
-    crown.fur(arc, "SCRIBBLE", { color: ink0, passes: 20, size: "L", spread: ry * 0.36 });
-    for (let i = 0; i < 11; i += 1) {
-      const k = i / 10;
-      const angle = Math.PI * (1.0 - 1.0 * k);
-      const bx = Math.cos(angle) * rx * grow * 0.96;
-      const by = cy + Math.sin(angle) * ry * grow * 0.96;
-      if (by < bottomAt(bx)) continue;
-      const r = 0.03 + noise(i * 4.4 + spec.roll * 0.002) * 0.012;
-      back.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: ink0 });
-    }
-  }
-};
-
-// Two bunches — two bunches tied at the sides of the head (behind the head, behind the ears) plus a light crown
-function pigtails(h) {
-  const { back, ink0, rx, ry, cy } = h;
-  for (const side of [-1, 1]) {
-    const bx = side * rx * 1.02;
-    const by = cy + ry * 0.3;
-    back.fur(arcPath(bx, by, 0.045, 0.06, Math.PI * 0.5, Math.PI * 2.5, 12), "SCRIBBLE", { color: ink0, passes: 7, size: "L", spread: 0.03 });
-    back.line([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: ink0 });
-  }
-  // A light crown — an arc smaller than the cap (0.9)
-  h.crown.fur(arcPath(0, cy, rx * 0.9, ry * 0.9, Math.PI * 0.72, Math.PI * 0.28, 10), "SCRIBBLE", { color: ink0, passes: 5, size: "L", spread: ry * 0.12 });
-}
-
 // Curly — small circular bunches along the crown
 function curly(h) {
   const { crown, ink0, rx, ry, cy, noise } = h;
@@ -216,56 +71,6 @@ const strands = (count) => (h) => {
     const bx = Math.cos(angle) * rx * 0.8;
     const by = cy + Math.sin(angle) * ry * 0.9;
     crown.line([[bx, by], [bx + noise(i * 5.5) * 0.07, by + 0.09 + t * 0.03]], { color: ink0, size: "S" });
-  }
-};
-
-// Bangs — a crown scribble plus dense vertical strokes covering the forehead (a bowl cut with a ragged fringe). Only down to the brow line —
-// the hem is the brow line (only above eyewear and goggle rims, the same calculation as a hat brim). longbob is a bob coming down the sides to the jaw line
-const fringe = (kind) => (h) => {
-  const { front, ink0, rx, ry, cy, noise, spec, box } = h;
-  const fringeBottom = browLine(spec, box);
-  cap(h, 0.42, 20, 11, ry * 0.2);
-  // A forehead band — a zigzag running up and down, overlaid as a scribble into a dense mass of bangs. The lower vertices are the ragged hem
-  const teeth = 8;
-  const zig = [];
-  for (let i = 0; i <= teeth * 2; i += 1) {
-    const t = (i / (teeth * 2)) * 2 - 1;
-    const x = t * rx * 0.74;
-    const top = cy + ry * (0.78 - t * t * 0.14);
-    const bottom = fringeBottom + Math.abs(noise(i * 2.7 + spec.roll * 0.002)) * ry * 0.09;
-    zig.push([x, i % 2 === 0 ? top : bottom]);
-  }
-  front.fur(zig, "SCRIBBLE", { color: ink0, passes: 6, size: "L", spread: 0.014 });   // bangs — over the face
-  if (kind === "longbob") {
-    // A bob coming down the sides to the jaw line — thick vertical scribbles wrapping both sides of the face (the bangs layer — over the cheeks and ears)
-    for (const side of [-1, 1]) {
-      const x = side * rx * 0.9;
-      const col = [[x - side * 0.03, cy + ry * 0.62], [x + side * 0.02, cy + ry * 0.1], [x + side * 0.03, cy - ry * 0.7]];
-      front.fur(col, "SCRIBBLE", { color: ink0, passes: 14, size: "L", spread: 0.045 });
-    }
-  }
-};
-
-// Bun — thinly covers the crown with one bunch on top plus a hairpin stroke
-function bun(h) {
-  const { crown, ink0, ry, cy } = h;
-  cap(h, 0.32, 16, 7, ry * 0.14);
-  const bx = 0.01, by = cy + ry * 1.05;
-  crown.fur(arcPath(bx, by, 0.045, 0.04, 0, Math.PI * 2, 14), "SCRIBBLE", { color: ink0, passes: 8, size: "L", spread: 0.028 });
-  crown.contour(blobPath(bx, by, 0.048, 0.042, { lumps: 4, amount: 0.15, noise: null }), { color: ink0 });
-  crown.line([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: ink0, size: "S" });
-}
-
-// bob / mop / scribble / sweep — a scribble covering the scalp. It has to have **volume**, like the reference: the arc comes down to the side of the head
-// (ear height, depth 0.6) and the scribble spreads wide. The end coming down the side covers the ear without reaching the eyes (the eyes are within x ±0.4rx), and the spread toward the crown is above the brow line.
-// depth how far down the sides it comes · passes the number of back-and-forths · spread the spread (× ry) · size the strand's size (medium/fur.js FUR_SIZES) · backCap one more layer behind the head (volume outside the silhouette)
-const mopCap = ({ depth, passes, spread, backCap = true }) => (h) => {
-  const { back, ink0, rx, ry, cy } = h;
-  cap(h, depth, 22, passes, ry * spread);
-  // Back hair — one more arc, slightly bigger than the head, **behind** it (volume poking outside the silhouette). sweep has none
-  if (backCap) {
-    const arc = arcPath(0, cy, rx * 1.1, ry * 1.08, Math.PI * (0.5 + depth + 0.05), Math.PI * (0.5 - depth - 0.05), 22);
-    back.fur(arc, "SCRIBBLE", { color: ink0, passes: 8, size: "L", spread: ry * 0.16 });
   }
 };
 
@@ -317,21 +122,26 @@ const eyeSafeY = (h) => {
 // The middle boundary is the front kind's business: under a blunt panel it sits a shade above the
 // bangs hem (the doubled line hides under the panel); behind a curtain parting it rises high — the parting
 // gap has to show the forehead's skin up to the hairline, or the parting reads as one solid panel
-const scalp = (h, frontY, topLine) => {
+// frontY: the hairline's y in the middle — a number, or a function of x for a hairline that slants (sweep). hemAt(x, y): the hem
+// pulled off its smooth line — ragged (mop) or wavy (scribble)
+const scalp = (h, frontY, topLine, hemAt) => {
   const { crown, crownFills, spec, box, rx, ry, cy } = h;
   const brow = frontY ?? browLine(spec, box) + ry * 0.1;
+  const frontAt = (x) => (typeof brow === "function" ? brow(x) : brow);
   const sideBottom = Math.max(cy - ry * 0.45, eyeSafeY(h));
   const bottomAt = (x) => {
     const u = Math.abs(x) / rx;
     const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
-    return brow * (1 - k) + sideBottom * k;
+    const base = frontAt(x) * (1 - k) + sideBottom * k;
+    return hemAt ? hemAt(x, base) : base;
   };
   const outline = h.headPath || grownOutline(h, 1.0, 1.0, 3, 0.04);   // the head's drawn path; a caller without one gets the head shape at 1
   const upper = outline.filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
   const hem = [];
-  for (let i = 0; i <= 10; i += 1) { const x = -rx * 0.97 + (i / 10) * rx * 1.94; hem.push([x, bottomAt(x)]); }
+  const N = hemAt ? 24 : 10;   // a jagged or wavy hem needs the points to show it
+  for (let i = 0; i <= N; i += 1) { const x = -rx * 0.97 + (i / N) * rx * 1.94; hem.push([x, bottomAt(x)]); }
   const poly = [...upper, ...hem];   // right → crown → left, then the hairline left → right
-  paintPart(crownFills, spec, poly, h.ink0, { part: "hair", own: true });
+  paintPart(crownFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });   // a cap with side lobes is not visible from its centre
   // **Only the hairline gets a line when a mass sits behind the skull.** The scalp's top arc is the head's own
   // line, and the mass behind carries the silhouette a little outside it in the same colour, so the arc needs no
   // line of its own there. With nothing behind (the sheets back) the arc is re-inked with the hairline — the same
@@ -342,9 +152,9 @@ const scalp = (h, frontY, topLine) => {
 
 // The back mass — the grown dome falling to a hem. bob wears it alone (hem just under the chin, a small
 // A-line flare); long wears it cut at the chin and hangs the side sheets from it
-const backMass = (h, hem, flare) => {
+const backMass = (h, hem, flare, { grow = [1.16, 1.08], lumps = 4, amount = 0.05 } = {}) => {
   const { back, backFills, spec, rx, ry, cy } = h;
-  const arc = grownOutline(h, 1.16, 1.08, 4, 0.05).filter(([, y]) => y >= cy - ry * 0.05).sort(arcSort(cy));
+  const arc = grownOutline(h, grow[0], grow[1], lumps, amount).filter(([, y]) => y >= cy - ry * 0.05).sort(arcSort(cy));
   const [rx0] = arc[0];
   const [lx0] = arc[arc.length - 1];
   const poly = crumple([...arc,
@@ -352,7 +162,7 @@ const backMass = (h, hem, flare) => {
     [lx0 * 0.6, hem], [0, hem + ry * 0.015], [rx0 * 0.6, hem - ry * 0.01],
     [rx0 * flare, hem + ry * 0.03], [rx0 * 1.02, cy - ry * 0.6]
   ], 0.0035, spec.roll * 0.0011);
-  paintPart(backFills, spec, poly, h.ink0, { part: "hair", own: true });
+  paintPart(backFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });
   back.contour(poly, { color: h.lineInk });
 };
 
@@ -402,7 +212,7 @@ const backSheets = (h) => {
       ...rag,
       [side * rx * 0.56, top - span * 0.5]
     ], 0.004, spec.roll * 0.0015 + side * 4);
-    paintPart(backFills, spec, poly, h.ink0, { part: "hair", own: true });
+    paintPart(backFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });   // the tassels are notches — fanned, they filled in
     back.contour(poly, { color: h.lineInk });
     for (const k of [1.02, 1.26]) {   // the strand grain — following the splay, out where the sheet actually shows
       back.line([[side * rx * (k * 0.8), top - ry * 0.04], [side * rx * k, hem + span * 0.22]], { color: h.grainInk, size: "S" });
@@ -561,29 +371,178 @@ const filledHair = (backKind, frontKind) => (h) => {
   // mid, swept high. frontBlunt / frontCurtain / frontSwept are kept below, unused, until that is settled
 };
 
+
+// ---- The filled family, the rest — the kinds that used to be fur -----------------------------------------
+// Every piece here is painted `concave` (stroke.js fillPolygon): a cap with side lobes, a hood, a ragged sheet are not
+// visible from their centre, and the fan from the centre spilled across their notches onto the face
+
+// One filled blob — a bun, a bunch, the ball at a twintail's end
+const blobPiece = (h, ink, fills, x, y, bx, by, phase) => {
+  const p = blobPath(x, y, bx, by, { lumps: 4, amount: 0.15, noise: null, phase });
+  paintPart(fills, h.spec, p, h.ink0, { part: "hair", own: true });
+  ink.contour(p, { color: h.lineInk });
+};
+// A tail — a ribbon along a spine on the back layer, contoured
+const tailPiece = (h, spine, widths, phase) => h.back.contour(fillStrip(h, h.backFills, spine, widths, phase), { color: h.lineInk });
+
+// The caps — bob · mop · scribble · sweep: the scalp to a hairline and, all but sweep, a mass behind the head falling to a
+// hem. Told apart by the hairline and how far the back falls: bob ear-length and straight · mop jaw-length and shaggy (a
+// ragged hairline, a lumpier mass) · scribble a wavy hairline and a wavy mass, the pencil gone side to side · sweep a
+// hairline slanting across the brow from one temple (which one is per individual, like the parting) and nothing behind
+const filledCap = ({ hairline, slant = 0, ragged = 0, wave = 0, hem, flare = 1, grow, lumps, amount }) => (h) => {
+  const { cy, ry, rx, spec, noise } = h;
+  const side = spec.roll % 2 ? 1 : -1;
+  const front = slant ? (x) => cy + ry * (hairline + slant * side * (x / rx)) : cy + ry * hairline;
+  const hemAt = ragged ? (x, y) => y + Math.abs(noise(x * 23 + spec.roll * 0.002)) * ry * ragged
+    : wave ? (x, y) => y + Math.sin((x / rx) * Math.PI * 3.5 + spec.roll * 0.01) * ry * wave
+    : undefined;
+  scalp(h, front, hem === undefined, hemAt);
+  if (hem !== undefined) backMass(h, cy - ry * hem, flare, { grow, lumps, amount });
+};
+
+// Bangs — the cap, and a panel over the forehead on the front layer (a hat sits above it), rooted inside the cap so the two
+// read as one mass: the panel's top edge lies in the cap's fill and draws no line, its sides and its ragged hem do. The
+// hem clears the brow and never enters the eye band (the panel is opaque)
+const bangsPanel = (h) => {
+  const { front, frontFills, spec, box, rx, ry, cy, noise } = h;
+  const hemY = Math.max(browLine(spec, box) + ry * 0.04, eyeSafeY(h));
+  const top = cy + ry * 0.66;
+  const hem = [];
+  for (let i = 0; i <= 8; i += 1) hem.push([-rx * 0.76 + (i / 8) * rx * 1.52, hemY + Math.abs(noise(i * 2.7 + spec.roll * 0.002)) * ry * 0.09]);
+  const poly = [[-rx * 0.8, top], [-rx * 0.82, hemY + ry * 0.06], ...hem, [rx * 0.82, hemY + ry * 0.06], [rx * 0.8, top]];
+  paintPart(frontFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });
+  front.line(poly, { color: h.lineInk });   // open — the top edge, inside the cap, draws no line
+  for (const sx of [-0.4, -0.05, 0.3]) front.line([[sx * rx, top - ry * 0.04], [sx * rx * 1.04, hemY + ry * 0.12]], { color: h.grainInk, size: "S" });
+};
+const bangsHair = (h) => { scalp(h, h.cy + h.ry * 0.58, true); bangsPanel(h); };
+// longbob — bangs, and two panels down the cheeks to the jaw line, outside the widest eye (over the face, and opaque)
+const longbobHair = (h) => {
+  bangsHair(h);
+  const { front, frontFills, spec, box, rx, ry, cy } = h;
+  const eyes = eyeGeometry(spec, box);
+  const eyeOuter = Math.max(...eyes.map((e) => Math.abs(e.x) + e.r));
+  const lockX = Math.max(eyeOuter + ry * 0.1, rx * 0.86);
+  if (lockX > rx * 1.06) return;   // a very wide-set eye leaves no lane beside it — the bangs alone
+  for (const side of [-1, 1]) {
+    const spine = [[side * rx * 0.74, cy + ry * 0.64], [side * lockX, cy + ry * 0.18], [side * (lockX + rx * 0.03), cy - ry * 0.35], [side * (lockX + rx * 0.05), FRINGE_END(h)]];
+    front.contour(fillStrip(h, frontFills, spine, [ry * 0.06, ry * 0.11, ry * 0.11, ry * 0.08], spec.roll * 0.0027 + side * 3), { color: h.lineInk });
+  }
+};
+
+// Bun — a thin cap (the hairline high on the crown), one bunch on top and a pin
+const bunHair = (h) => {
+  const { crown, cy, ry, spec } = h;
+  scalp(h, cy + ry * 0.82, true);
+  const bx = 0.01, by = cy + ry * 1.05;
+  blobPiece(h, crown, h.crownFills, bx, by, 0.048, 0.042, spec.roll * 0.0031);
+  crown.line([[bx - 0.07, by + 0.02], [bx + 0.06, by - 0.01]], { color: h.lineInk, size: "S" });   // the pin
+};
+// Pigtails — a light crown and two bunches at the sides, behind the ears, each with a tie
+const pigtailsHair = (h) => {
+  const { rx, ry, cy, spec } = h;
+  scalp(h, cy + ry * 0.74, true);
+  for (const side of [-1, 1]) {
+    const bx = side * rx * 1.02, by = cy + ry * 0.3;
+    blobPiece(h, h.back, h.backFills, bx, by, 0.045, 0.06, spec.roll * 0.0021 + side);
+    h.back.line([[bx - side * 0.02, by + 0.05], [bx + side * 0.01, by + 0.075]], { color: h.lineInk });   // the tie
+  }
+};
+
+// The hood types — a mass a little bigger than the head, from the crown down to the brow at the front and below the ears
+// at the sides, on the front layer (a hat sits above it); the hem never enters the eye band. helmet straight — a smooth
+// outline and strokes falling from the crown toward the hem · cloud curly — a scalloped outline with curls along it
+const hood = ({ grow, lumps, amount, grain = false, curls = false }) => (h) => {
+  const { front, frontFills, spec, box, rx, ry, cy, noise } = h;
+  const safe = eyeSafeY(h);
+  const mid = Math.max(browLine(spec, box) + ry * 0.04, safe);
+  const sideBottom = Math.max(cy - ry * 0.45, safe);
+  const bottomAt = (x) => {
+    const u = Math.abs(x) / rx;
+    const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
+    return mid * (1 - k) + sideBottom * k;
+  };
+  const outer = grownOutline(h, grow, grow, lumps, amount).filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
+  const hem = [];
+  for (let i = 0; i <= 16; i += 1) { const x = -rx * grow * 0.97 + (i / 16) * rx * grow * 1.94; hem.push([x, bottomAt(x) + Math.abs(noise(i * 3.3 + spec.roll * 0.002)) * ry * 0.035]); }
+  const poly = [...outer, ...hem];
+  paintPart(frontFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });
+  front.contour(poly, { color: h.lineInk });
+  if (grain) {   // straight hair — strokes falling from the crown, fanning a little outward, to a ragged end above the hem
+    for (let x = -rx * grow * 0.85; x < rx * grow * 0.86; x += 0.028) {
+      const u = Math.min(0.999, Math.abs(x) / (rx * grow));
+      const top = cy + ry * grow * Math.sqrt(1 - u * u) - ry * 0.06;
+      const bottom = bottomAt(x) + ry * (0.05 + Math.abs(noise(x * 31 + spec.roll * 0.003)) * 0.08);
+      if (top - bottom < ry * 0.15) continue;
+      front.line([[x, top], [x + x * 0.04, (top + bottom) / 2], [x + x * 0.09, bottom]], { color: h.grainInk, size: "S" });
+    }
+  }
+  if (curls) {   // small curls along the scalloped edge, and a few loops inside in the hair's own tone
+    for (let i = 0; i < 11; i += 1) {
+      const a = Math.PI * (1 - i / 10);
+      const bx = Math.cos(a) * rx * grow * 0.96, by = cy + Math.sin(a) * ry * grow * 0.96;
+      if (by < bottomAt(bx) + ry * 0.04) continue;
+      const r = 0.026 + noise(i * 4.4 + spec.roll * 0.002) * 0.01;
+      front.contour(blobPath(bx, by, r, r, { lumps: 4, amount: 0.25, noise: null }), { color: h.lineInk });
+    }
+    for (let i = 0; i < 6; i += 1) {
+      const a = Math.PI * (0.85 - 0.7 * (i / 5));
+      const bx = Math.cos(a) * rx * 0.6, by = cy + Math.sin(a) * ry * 0.75;
+      const r = 0.018 + noise(i * 3.3 + 7) * 0.006;
+      front.contour(blobPath(bx, by, r, r * 0.9, { lumps: 3, amount: 0.2, noise: null }), { color: h.grainInk, size: "S" });
+    }
+  }
+};
+
+// long — the cap, and a mass behind the head falling to the shoulder with a little flare · verylong — that, and the
+// sheets falling beside the face to the hip (backSheets), the middle of the chest left clear
+const longHairF = (h) => { scalp(h, h.cy + h.ry * 0.62, false); backMass(h, h.shoulder, 1.14); };
+const veryLongF = (h) => { longHairF(h); backSheets(h); };
+// Twintails — two tails tied high at the sides, hanging back, each with a tie; with ball, a round bunch at the end
+const twintailsF = (ball) => (h) => {
+  const { back, rx, ry, cy, spec } = h;
+  scalp(h, cy + ry * 0.62, true);
+  for (const side of [-1, 1]) {
+    const tx = side * rx * 0.95, ty = cy + ry * 0.35;
+    const spine = [[tx, ty], [tx + side * 0.05, ty - 0.06], [tx + side * 0.06, ty - 0.18], [tx + side * 0.04, ty - (ball ? 0.27 : 0.3)]];
+    tailPiece(h, spine, [0.018, 0.03, 0.028, ball ? 0.02 : 0.01], spec.roll * 0.0029 + side * 5);
+    back.line([[tx - side * 0.012, ty + 0.03], [tx + side * 0.03, ty - 0.02]], { color: h.lineInk });   // the tie
+    if (ball) blobPiece(h, back, h.backFills, tx + side * 0.05, ty - 0.34, 0.057, 0.06, spec.roll * 0.0037 + side);
+  }
+};
+// Ponytail — tied on one side behind the crown (per individual), rising and hanging back
+const ponytailF = (h) => {
+  const { back, rx, ry, cy, spec } = h;
+  scalp(h, cy + ry * 0.62, true);
+  const s = spec.roll % 2 ? 1 : -1;
+  const px0 = s * rx * 0.25, py0 = cy + ry * 0.92;
+  const spine = [[px0, py0], [px0 + s * 0.06, py0 + 0.06], [px0 + s * 0.13, py0 + 0.02], [px0 + s * 0.15, py0 - 0.14], [px0 + s * 0.11, py0 - 0.3]];
+  tailPiece(h, spine, [0.02, 0.03, 0.03, 0.026, 0.012], spec.roll * 0.0041);
+  back.line([[px0 - s * 0.01, py0 - 0.02], [px0 + s * 0.035, py0 + 0.03]], { color: h.lineInk });   // the tie
+};
+
 // Kind → drawing function. 1:1 with the names in slots.js SLOTS.hair (none has none)
 export const HAIR = {
-  bob: mopCap({ depth: 0.56, passes: 14, spread: 0.26 }),
-  mop: mopCap({ depth: 0.62, passes: 20, spread: 0.3 }),
-  scribble: mopCap({ depth: 0.6, passes: 22, spread: 0.26 }),
-  sweep: mopCap({ depth: 0.4, passes: 14, spread: 0.18, backCap: false }),
+  bob: filledCap({ hairline: 0.48, hem: 0.72, flare: 1.02, grow: [1.14, 1.07], lumps: 4, amount: 0.05 }),
+  mop: filledCap({ hairline: 0.4, hem: 0.95, flare: 1.06, grow: [1.24, 1.12], lumps: 6, amount: 0.09, ragged: 0.07 }),
+  scribble: filledCap({ hairline: 0.5, hem: 0.6, flare: 1, grow: [1.18, 1.1], lumps: 7, amount: 0.08, wave: 0.045 }),
+  sweep: filledCap({ hairline: 0.55, slant: 0.28 }),
   spikes: spiky([[0.95, 11, 0.95, 0.06, 0.09]]),
   mohawk: spiky([[0.95, 7, 0.35, 0.06, 0.09]]),
   hedgehog: spiky([[0.96, 15, 0.9, 0.05, 0.07], [0.74, 10, 0.72, 0.045, 0.05]]),
   tuft: strands(4),
   wisp: strands(7),
-  pigtails,
+  pigtails: pigtailsHair,
   curly,
-  bangs: fringe("bangs"),
-  longbob: fringe("longbob"),
-  bun,
-  helmet: voluminous("helmet"),
-  cloud: voluminous("cloud"),
-  long: longHair,
-  verylong: veryLong,
-  twintails: twintailsOf(false),
-  twintailsBall: twintailsOf(true),
-  ponytail,
+  bangs: bangsHair,
+  longbob: longbobHair,
+  bun: bunHair,
+  helmet: hood({ grow: 1.06, lumps: 3, amount: 0.04, grain: true }),
+  cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true }),
+  long: longHairF,
+  verylong: veryLongF,
+  twintails: twintailsF(false),
+  twintailsBall: twintailsF(true),
+  ponytail: ponytailF,
   apple: appleOf(1),
   appleBig: appleOf(1.7),
   bobSwept: filledHair("bob", "swept"),

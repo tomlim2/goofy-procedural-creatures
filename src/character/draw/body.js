@@ -42,7 +42,7 @@ export function surfaceHand(spec, where = "head") {
 // `part` names the part painting, and its side follows what it wears (vocabulary/wear.js sideOf — the main material or
 // the body's, by default the head's side and the body's side); `body` is the older word for the body's side, kept for
 // the callers that are not a part of their own
-export function paintPart(fills, spec, path, color, { own = false, flat = false, body = false, part = null, strip, stripT, skinT } = {}) {
+export function paintPart(fills, spec, path, color, { own = false, flat = false, body = false, part = null, strip, stripT, skinT, concave = false } = {}) {
   const where = part ? wearOf(spec, part) : body ? "cloth" : "skin";
   // Colour belongs to the material. A part in its own box is painted the colour the drawing chose for it (a tone
   // of the box, a lid a shade darker); moved by a hand to another box or a material of its own, that one's
@@ -53,6 +53,7 @@ export function paintPart(fills, spec, path, color, { own = false, flat = false,
   if (strip) options.strip = strip;   // a tube's base cut as a strip between its rails (the tail — bones bend it)
   if (stripT) options.stripT = stripT;   // …tagged per rung with its t along the spine (the skin reads its bones from the tag)
   if (skinT !== undefined) options.skinT = skinT;   // a fill at one t of the spine (a bead, a tuft, a pom)
+  if (concave) options.concave = true;   // a shape not visible from its centre (the filled hair's caps and sheets) — ear-clipped, not fanned
   fills.paint(path, flat ? "FLAT" : materialOf(spec, where), options);   // flat: a fill that is never textured by rule. body: it hangs off the torso, so it takes the body's material
 }
 

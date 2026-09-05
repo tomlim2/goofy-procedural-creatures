@@ -230,7 +230,7 @@ row is the same material on a **dark ground**, which is where the rule above is 
 
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |
-| `FLAT` | `flat` — the fill-up, the fan from the centre | — | not in the `material` slot: the whites of the eyes (`paintPart(…, { flat: true })`) and nothing else. A creature is always made of one of the four below |
+| `FLAT` | `flat` — the fill-up, the fan from the centre (ear-clipped instead for a shape not visible from its centre — the filled hair's caps and sheets, `paintPart(…, { concave: true })`) | — | not in the `material` slot: the whites of the eyes (`paintPart(…, { flat: true })`) and nothing else. A creature is always made of one of the four below |
 | `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, **in the light ink scratches with** (`mark`) over the part's colour | the `material` slot (1.5) |
 | `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter | the `material` slot (0.8) |
 | `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, cut flat by the contour, in a spread of four **waterings of the ground** (`washes`) — the same light, and on a dark ground the whole spread drops so the first of them go on darker than the ground | the `material` slot (1) |
