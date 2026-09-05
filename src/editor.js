@@ -605,6 +605,7 @@ function propPanelOf(name) {
     } else if (SLOTS[prop.key].length <= 4) {
       const seg = document.createElement("div");
       seg.className = "seg";
+      seg.dataset.count = String(SLOTS[prop.key].length);   // four values go two by two (styles.css .props)
       seg.setAttribute("role", "group");
       seg.setAttribute("aria-label", `${name} ${prop.label}`);
       const buttons = {};

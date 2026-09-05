@@ -318,7 +318,7 @@ body.how { height: auto; }
 .editor summary h2 { display: inline; }
 .editor summary::after { content: " +"; opacity: 0.45; }
 .editor details[open] summary::after { content: " –"; }
-.fields { display: grid; gap: 4px; margin-top: 6px; }
+.fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; margin-top: 6px; }   /* one column that never grows past the card: an auto track took the width of the widest row (a row of four buttons) and every row with it, and a slider ran out of the card */
 /* The PART card, the way a browser holds its tabs: a darker strip across the top with the part tabs in one row (each
    part alone, thumbs.js), the open tab a lighter shape with rounded top corners that is one piece with the panel under it —
    no line between — and the others flat on the strip. The panel holds the open part's form previews (each value alone),
@@ -330,8 +330,10 @@ body.how { height: auto; }
 /* Under the open part, two more tabs — SHAPE and MATERIAL — the same kind of strip, text only, on the part's panel.
    The panel shows the part's form previews (and its paint row), or the creature's materials as cards to pick the
    part's from (spec.wear) — a picker, not the MATERIALS panel; that stays in its own card */
-.modes { background: rgba(43, 39, 36, 0.045); border-radius: 0; padding-top: 3px; }
-.modes .mode { flex: 0 0 auto; width: auto; padding: 4px 12px 3px; font-size: 10px; letter-spacing: 0.14em; }
+.modes { background: rgba(43, 39, 36, 0.045); border-radius: 0; padding-top: 3px; overflow: hidden; }
+/* Three text tabs that share the strip — each a third of it, so the third never runs off the card (at 12px of padding a side the
+   three needed 238px of a 209px strip, and PROPERTY was cut to PROPERT) */
+.modes .mode { flex: 1 1 0; min-width: 0; width: auto; padding: 4px 4px 3px; font-size: 10px; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .modes .mode.on { font-weight: 700; }
 .modePanel { background: #f8f3e8; border-radius: 0 0 5px 5px; padding: 6px 4px 4px; display: grid; gap: 6px; }
 .modePanel > [hidden] { display: none; }   /* the display rules on the panel's children would otherwise beat the hidden attribute */
@@ -361,7 +363,9 @@ body.how { height: auto; }
 /* display: grid above beats the browser's own [hidden]; said again so a hidden row (a paint row on a part that
    takes no paint) really goes, label and all. */
 .field[hidden] { display: none; }
+.field > * { min-width: 0; }
 .field > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.7; }
+.field input[type="range"] { margin: 0; box-sizing: border-box; }   /* the platform's range carries a margin of its own, and at width 100% it ran a pixel past the card */
 .field select, .field input[type="range"] { min-width: 0; width: 100%; }
 .field .readout { grid-column: 2; font-variant-numeric: tabular-nums; opacity: 0.5; }
 .field.swatches { grid-template-columns: 74px 1fr; align-items: start; }
@@ -378,9 +382,19 @@ body.how { height: auto; }
    a hand adds materials and the rows fold with no gap left at the right; under a part the + is the first card */
 .wear > .strip { display: grid; gap: 4px; padding: 0; }
 .wear .strip .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 4px; padding: 2px; }
-/* PROPERTY under a part — a slider or a row of values per property; a part with none has the tab greyed */
-.props { padding: 6px 4px 2px; }
-.props .field .seg button { padding: 4px 2px; font-size: 11px; letter-spacing: 0.02em; }
+/* PROPERTY under a part — a slider or a row of values per property; a part with none has the tab greyed.
+   A property is a block, not a row: its name on a line of its own (the material panel's section type), a slider's reading
+   at the right end of that line, and the control under it at the full width of the panel. In a 74px name column the
+   values had 113px between them — three buttons overflowed by 7px, LONG · MEDIUM · SHORT · VERYLONG by 73 — and the
+   grid, taking the widest row's width, ran the sliders out of the card with them */
+.props { padding: 6px 4px 2px; gap: 8px; }
+.props .field { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name reading" "control control"; gap: 3px 8px; align-items: baseline; }
+.props .field > span { grid-area: name; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: rgba(43, 39, 36, 0.55); opacity: 1; }
+.props .field .readout { grid-area: reading; grid-column: auto; font-size: 11px; letter-spacing: 0.04em; opacity: 0.8; }
+.props .field .seg, .props .field select, .props .field input[type="range"] { grid-area: control; }
+.props .field .seg button { min-width: 0; padding: 4px 2px; font-size: 11px; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Four values go two by two — four in a row is 46px a button, and VERYLONG is 47px of letters */
+.props .field .seg[data-count="4"] { display: grid; grid-template-columns: 1fr 1fr; }
 .tab.mode[disabled] { opacity: 0.35; cursor: default; }
 .tab.mode[disabled]:hover { background: transparent; }
 /* A part with more than one surface names each row — an eye's pupil, then its white */
