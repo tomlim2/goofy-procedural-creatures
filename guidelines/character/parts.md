@@ -129,9 +129,10 @@ each layer shifts by its depth ([../rig.md](../rig.md) § fake 3D depth).
 **Every piece is filled** — the boundary drawn first, a closed form, the inside painted with the hair's material and contoured in the
 pencil's dark ink, the same pen as a hat (`paintPart` + `contour`); a hair drawn as a bare pen line beside a filled head read as a
 smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline down to a hairline, easing to side lobes that never enter the
-eye band — drawn under any front or back; **what covers the forehead is the front slot's**: with a front the cap comes down to
-that kind's hairline, without one it stops at the crown (0.78 of the head above its centre — the top of the head and the temples,
-the forehead bare), so a back is only what hangs behind and a top only what sits on the crown), a **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
+eye band). **The cap is the front slot's, or a crown top's — a back never draws one**: a back is only what hangs behind the head,
+one piece on the back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the
+seam showed). With a front the cap comes down to that kind's hairline; under a crown top (cap · bun · spikes · hedgehog) it stops
+at the crown (0.78 of the head above its centre, the forehead bare). A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
 over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
 wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
 from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
@@ -140,7 +141,7 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 
 | hairFront | How |
 | --- | --- |
-| none | The forehead bare — the cap, if any, stops at the crown |
+| none | Nothing in front — no cap unless a crown top brings one |
 | hairline | The plain fringe — the cap itself coming down over the forehead to a straight hairline (0.5 of the head above its centre), no piece of its own. What every back kind used to bring with it; a file from before gets it with its back |
 | blunt | The straight fringe — a panel over the forehead on the front layer, rooted inside the cap so the two read as one mass (its top edge lies in the cap's fill and draws no line; its sides and its ragged hem do). The hem clears the brow and never enters the eye band |
 | swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down past the temples to the jaw line where there is a lane outside the widest eye. Which side is per individual |
@@ -176,7 +177,8 @@ the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark 
 a pot on the head clears all three · with any other hat or a band the front and the back keep (bangs and a bob's hem come out from
 under a hat) but a top that stands up through it goes — bun, the apple tops, spikes, mohawk; hedgehog and cloud stay under a band
 only, the hood under a band only · a mohawk, a bun or an apple top wears no hat · a spiked top or a hood has no front (the spikes
-stand where a fringe would root; a hood covers the forehead itself) · a mohawk has no back either. cat, pup and rex forbid every
+stand where a fringe would root; a hood covers the forehead itself) · a mohawk has no back either. A back with no front and no crown top hangs behind a
+bare head, and the roll leaves it so — the three slots are independent. cat, pup and rex forbid every
 value → none (their fur is not hair). The roll deals each slot its own common none; with the hat rule clearing most tops, about two humans in five are bald (it was
 one in three with the one slot) and about one in sixteen wears all three. Imps stay three in four bald, spikes their one top.
 

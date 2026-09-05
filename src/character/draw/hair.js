@@ -522,10 +522,10 @@ export const TOPS = {
   helmet: hood({ grow: 1.06, lumps: 3, amount: 0.04, grain: true }),
   cloud: hood({ grow: 1.2, lumps: 9, amount: 0.13, curls: true })
 };
-// The scalp cap goes under any front or back and under these tops. **What covers the forehead is the front slot's**: with a
-// front the cap comes down to that kind's hairline; without one it stops at the crown (CROWN, 0.78 of the head above its
-// centre — the top of the head and the temples, the forehead bare), so a back is only what hangs behind and a top only what
-// sits on the crown. The hoods cover the crown themselves and want no cap
+// **A back is only what hangs behind the head.** The scalp cap — the piece IN FRONT of the head, on the crown layer — is the
+// front slot's (down to the front kind's hairline) or a crown top's (cap · bun · the spiked bands, at CROWN — 0.78 of the head
+// above its centre, the forehead bare); a back never draws one. Drawn with the back it was two pieces for one hairstyle, a
+// mass behind and a cap in front, and the seam between them showed. The hoods cover the crown themselves and want no cap
 const HAIRLINE = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6 };
 const CROWN = 0.78;
 const CAP_TOPS = { cap: CROWN, bun: 0.82, spikes: CROWN, hedgehog: CROWN };
@@ -554,7 +554,7 @@ export function drawHair(layers, spec, box, noise) {
   if (BACKS[back]) BACKS[back](h);                                   // behind the head first
   const hoodOn = top === "helmet" || top === "cloud";
   const capLine = HAIRLINE[front] ?? CAP_TOPS[top] ?? CROWN;
-  if (!hoodOn && (front !== "none" || back !== "none" || CAP_TOPS[top] !== undefined)) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
+  if (!hoodOn && (front !== "none" || CAP_TOPS[top] !== undefined)) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
   if (TOPS[top]) TOPS[top](h);                                       // on the crown
   if (FRONTS[front]) FRONTS[front](h);                               // over the face, last
 }

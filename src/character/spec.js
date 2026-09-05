@@ -86,6 +86,8 @@ export function applyLateConstraints(parts) {
   // A mohawk is the whole hair — nothing behind it either
   if (["spikes", "mohawk", "hedgehog", "helmet", "cloud"].includes(parts.hairTop)) parts.hairFront = "none";
   if (parts.hairTop === "mohawk") parts.hairBack = "none";
+  // A back never draws the cap (draw/hair.js): a back with no front and no crown top hangs behind a bare head, and the roll
+  // leaves it so — the three slots are independent, and what the front is is the front slot's alone
   return parts;
 }
 
