@@ -309,6 +309,11 @@ const eyeSafeY = (h) => {
 
 // The scalp — the upper head filled to the hairline, easing toward below-the-ear at the sides (voluminous's
 // easing) but never into the eye band (eyeSafeY — high-set or wide-set eyes pull the side lobes up).
+// Its outer edge is **the head's own drawn outline** (h.headPath — the very path drawHead inked, lumps and all), not a
+// grown copy of the head shape: the scalp sits in FRONT of the head (the crown layer), and grown 5% it lay a band of hair
+// colour outside the head's ink line down both temples, with the head's line running through the hair and no line of its
+// own at the edge — the same-colour way of vanishing (a dark contour on dark hair). On the head's own path the fill stays
+// inside the head's line and the contour re-inks that same line
 // The middle boundary is the front kind's business: under a blunt panel it sits a shade above the
 // bangs hem (the doubled line hides under the panel); behind a curtain parting it rises high — the parting
 // gap has to show the forehead's skin up to the hairline, or the parting reads as one solid panel
@@ -321,15 +326,16 @@ const scalp = (h, frontY, topLine) => {
     const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
     return brow * (1 - k) + sideBottom * k;
   };
-  const upper = grownOutline(h, 1.05, 1.04, 3, 0.04).filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
+  const outline = h.headPath || grownOutline(h, 1.0, 1.0, 3, 0.04);   // the head's drawn path; a caller without one gets the head shape at 1
+  const upper = outline.filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
   const hem = [];
   for (let i = 0; i <= 10; i += 1) { const x = -rx * 0.97 + (i / 10) * rx * 1.94; hem.push([x, bottomAt(x)]); }
   const poly = [...upper, ...hem];   // right → crown → left, then the hairline left → right
   paintPart(crownFills, spec, poly, h.ink0, { part: "hair", own: true });
-  // **Only the hairline gets a line when a mass sits behind the skull.** The scalp's top arc runs a hair
-  // inside that mass's own arc, and both being drawn put two dark lines side by side over one patch of hair.
-  // The mass carries the silhouette there and its fill is the same colour, so the arc needs no line of its
-  // own. With nothing behind (the sheets back) that arc IS the silhouette and keeps its contour
+  // **Only the hairline gets a line when a mass sits behind the skull.** The scalp's top arc is the head's own
+  // line, and the mass behind carries the silhouette a little outside it in the same colour, so the arc needs no
+  // line of its own there. With nothing behind (the sheets back) the arc is re-inked with the hairline — the same
+  // path the head drew, so it is one line, not two
   if (topLine) crown.contour(poly, { color: h.lineInk });
   else crown.line(hem, { color: h.lineInk });
 };
@@ -543,9 +549,9 @@ const frontSwept = (h) => {
 const HAIRLINE = { curtain: 0.55, swept: 0.66 };
 const filledHair = (backKind, frontKind) => (h) => {
   const line = HAIRLINE[frontKind];
-  // Every back gets the scalp. It follows the head's own outline (grownOutline reads headShape, so a square
-  // skull keeps its corners), and without it the crown is bare skin between the fringe and the sheets — which
-  // does not read as a hairstyle, it reads as balding
+  // Every back gets the scalp. It follows the head's own drawn outline (h.headPath — a square skull keeps its
+  // corners and a lumpy one its lumps), and without it the crown is bare skin between the fringe and the sheets —
+  // which does not read as a hairstyle, it reads as balding
   scalp(h, line === undefined ? undefined : h.cy + h.ry * line, backKind === "sheets");
   if (backKind === "sheets") backSheets(h);
   else backMass(h, h.cy - h.ry * 1.14, 1.06);

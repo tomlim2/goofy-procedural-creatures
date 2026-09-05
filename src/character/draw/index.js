@@ -74,7 +74,8 @@ export function drawCreature(spec, variant = 0) {
   // The fills go along too — the filled family paints hair shapes with the goofy material; the fur kinds leave them empty (an empty sketch stands no mesh up)
   drawHair({
     back: L.hairBack.ink, crown: L.hairCrown.ink, front: L.hairFront.ink,
-    backFills: L.hairBack.fills, crownFills: L.hairCrown.fills, frontFills: L.hairFront.fills
+    backFills: L.hairBack.fills, crownFills: L.hairCrown.fills, frontFills: L.hairFront.fills,
+    headPath   // the head's own drawn outline — a filled piece that sits ON the head (the scalp) follows it exactly (hair.js scalp)
   }, spec, box, noise);
   drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // the hat layer is above the ears — it covers their roots
 
