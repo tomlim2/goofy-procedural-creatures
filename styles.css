@@ -402,11 +402,11 @@ body.how { height: auto; }
 .wear .regionName { font-size: 10px; letter-spacing: 0.18em; color: rgba(43, 39, 36, 0.55); font-weight: 600; margin-top: 4px; }
 /* MATERIALS' previews run in one row and scroll sideways, the way the part tabs do — the card being edited is
    scrolled into view (editor.js) */
-.previews .strip { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: 6px; padding: 0 2px 2px; scrollbar-width: none; }
+.previews .strip { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: 3px; padding: 0 1px 2px; scrollbar-width: none; }
 .previews .strip::-webkit-scrollbar { display: none; }
-/* Tight on the vertical: the ball and its name close together, little over and under — the row is the tallest thing on the deck
-   and it was mostly air (6px over the ball, 2px between ball and name, 4px under, then the strip's own 4px) */
-.previews .pv { flex: 0 0 auto; padding: 2px 8px 1px; gap: 0; }
+/* Tight both ways: the ball and its name close together, little over, under and beside — the row is the tallest thing on the deck
+   and it was mostly air (6px over the ball, 2px between ball and name, 4px under, 10px a side, 6px between cards) */
+.previews .pv { flex: 0 0 auto; padding: 2px 3px 1px; gap: 0; }
 .previews .pv .cap { line-height: 1.2; }
 .pv { display: grid; justify-items: center; gap: 2px; padding: 6px 10px 4px; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; }
 .pv:hover { background: rgba(43, 39, 36, 0.06); }
