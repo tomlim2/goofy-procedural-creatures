@@ -6,6 +6,13 @@
 
 * { box-sizing: border-box; }
 
+/* hidden means gone. The browser's own [hidden] rule loses to any display rule of ours on the same element — a flex row, a
+   grid cell, a block button — and a thing meant to be hidden stayed in the layout: a tail tab on a human as an empty slot, a
+   paint row on a part that takes no paint, and the texture strip's flat ball on skin or cloth — hidden, still displayed, its
+   never-painted 300×150 canvas lying over the DENSITY slider and taking every drag meant for it. Said once, over everything,
+   instead of once more at every site it bit */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   height: 100%;
@@ -336,11 +343,9 @@ body.how { height: auto; }
 .modes .mode { flex: 1 1 0; min-width: 0; width: auto; padding: 4px 4px 3px; font-size: 10px; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .modes .mode.on { font-weight: 700; }
 .modePanel { background: #f8f3e8; border-radius: 0 0 5px 5px; padding: 6px 4px 4px; display: grid; gap: 6px; }
-.modePanel > [hidden] { display: none; }   /* the display rules on the panel's children would otherwise beat the hidden attribute */
 .wear .strip { gap: 8px; }
 .wear .pv { padding: 4px 8px 3px; }
 .wear .ball.preview { width: 48px; height: 48px; }
-.wear .pv[hidden] { display: none; }
 .formsSlot { background: transparent; padding: 0; }
 .tab, .form { display: grid; justify-items: center; gap: 1px; padding: 4px 2px 3px; min-width: 0; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; font-size: 8px; letter-spacing: 0.04em; line-height: 1.2; }
 .tab { border: 0; padding-bottom: 4px; }
@@ -352,17 +357,13 @@ body.how { height: auto; }
 .tab.on { background: #f8f3e8; color: inherit; }
 .form.on { border-color: var(--ink); background: #f2ecdf; color: inherit; }
 .tab.on span, .form.on span { opacity: 1; font-weight: 700; }
-.tab canvas, .form canvas { display: block; }
-.tab[hidden], .form[hidden] { display: none; }   /* the display rule above would otherwise beat the hidden attribute — a tail tab on a human stayed as an empty slot */
+.tab canvas, .form canvas { display: block; max-width: 100%; height: auto; }   /* until thumbs.js paints it a canvas is 300×150 — kept inside its cell */
 .forms { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
 .form { font-size: 9px; }
 
 /* The state dropdown (NORMAL · GHOST) sits under the species one in the same card */
 #stateSel { margin-top: 6px; }
 .field { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 6px; }
-/* display: grid above beats the browser's own [hidden]; said again so a hidden row (a paint row on a part that
-   takes no paint) really goes, label and all. */
-.field[hidden] { display: none; }
 .field > * { min-width: 0; }
 .field > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.7; }
 .field input[type="range"] { margin: 0; box-sizing: border-box; }   /* the platform's range carries a margin of its own, and at width 100% it ran a pixel past the card */
@@ -408,7 +409,7 @@ body.how { height: auto; }
 .pv:hover { background: rgba(43, 39, 36, 0.06); }
 .pv.on { border-color: var(--ink); background: #f8f3e8; color: inherit; box-shadow: 0 1px 6px rgba(43, 39, 36, 0.12); }
 .ball.preview { width: 72px; height: 72px; border-radius: 50%; }
-.ball.preview canvas { display: block; }
+.ball.preview canvas { display: block; width: 100%; height: 100%; }
 /* The material's name under its ball — main, then mat1, mat2 … the one being edited at full ink */
 .cap { font-size: 10px; letter-spacing: 0.14em; opacity: 0.5; }
 .pv.on .cap { opacity: 1; font-weight: 700; }
@@ -427,7 +428,7 @@ body.how { height: auto; }
 .sect { display: grid; margin-top: 8px; font-size: 10px; letter-spacing: 0.18em; color: rgba(43, 39, 36, 0.55); font-weight: 600; }
 .sect .val { font-size: 12px; letter-spacing: 0.04em; font-weight: 400; color: var(--ink); opacity: 0.8; font-variant-numeric: tabular-nums; }
 .balls .ball { display: block; width: 28px; height: 28px; padding: 0; border: 0; background: transparent; border-radius: 50%; position: relative; }
-.balls .ball canvas { display: block; }
+.balls .ball canvas { display: block; width: 100%; height: 100%; }   /* an unpainted canvas is 300×150 — inside its 28px button, never over the slider under it */
 .balls .ball:hover { background: rgba(43, 39, 36, 0.06); }
 .balls .ball.on { outline: 2px solid var(--ink); outline-offset: 1px; }
 /* A swatch is the colour itself, so the only state it can show is a ring around it. */
@@ -441,9 +442,6 @@ body.how { height: auto; }
    its cell onto the screen each frame, the way the gallery places its labels, so they follow the board through
    a resize. */
 .pin { position: fixed; z-index: 2; display: flex; align-items: center; gap: 4px; transform: translate(-50%, 0); }
-/* display: flex above beats the browser's own [hidden] rule, which would leave the pin standing at the
-   top-left of a fresh board before anything is clicked. Said again here so hidden means hidden. */
-.pin[hidden] { display: none; }
 /* On the same paper as the cards so they do not sink into the drawing behind them. */
 .pin button { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; background: #f2ecdf; }
 /* The glyph takes the button's ink, so it reads as drawn with the same pen as the board's chrome. */
