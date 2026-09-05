@@ -204,7 +204,7 @@ An imp gets no ghost (`ghost: { white: "none" }`): an imp's head is ink-black an
 
 The slot is last in `LATE_SLOTS`, so it costs one rng draw at the very end and nothing after it moves. Measured over 600 creatures: the ghosts changed palette, and every other creature changed **nothing at all** — not a part, not a proportion, not a colour.
 
-### headgear (11) — humans, dogs and cats; imps never (species bias)
+### headgear (14) — humans, dogs and cats; imps never (species bias). Three of them are hair (below)
 `drawHeadgear` in `headgear.js`. none / helmet (a dome from above the brows to over the crown plus a rim and a ridge) / cap (a crown dome plus a brim to one side) / band (a forehead band) / pot (a tub rising from above the brows to higher than the crown) /
 beret (a tilted disc plus a nub) / bonnet (a thick band crossing from eye level on both sides over the crown — **disabled**: it reads as frilly and is in no bias; assets and gallery only) /
 crown (a band on the crown of the head with a zigzag of four points — a crumpled hand-written polygon, top ≈ crown + 0.32·ry, under the cell ceiling) /
