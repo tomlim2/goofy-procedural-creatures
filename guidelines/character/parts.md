@@ -139,7 +139,7 @@ opaque ground covers that line — the hair's silhouette is its own, contoured w
 back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the seam showed). The
 fringes bring the cap down to their hairline; the crown cap stops at the crown (0.7 of the head above its centre, the forehead
 bare — at 0.78 the cap alone read as a skullcap); the strand fronts and the hoods bring none. A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
-over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
+over the forehead, **locks** and **tails** (`fillStrip` along a spine — painted as one shape: a quad at a time between rail points, each quad brought the material's own edge, a watercolour's rim or a hatch restarting, and a lock came out denser than the mass behind it in the same material), **blobs** (a bun, a bunch), **spiked bands** (a zigzag of
 wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
 from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
 fill spilled across the notches onto the face. **Every face-covering piece is clamped by `eyeSafeY`** — the highest eye's top plus
@@ -164,8 +164,8 @@ one part) and its rails along the crown as a second line just inside the cap's e
 | sideLock | One lock falling from a parting down the lane on one cheek to the jaw line (the side per individual), the other side bare |
 | cap | The crown cap alone — the top of the head and the temples, the forehead bare |
 | mohawk | A spiked band of 7 over a narrow span (0.35π) on a bare head, on the crown layer, contoured all round, its inner edge the head's own line. The whole hair — nothing behind it |
-| tuft / wisp | A few **leaves** — each strand a thin filled ribbon from a root on the crown to a point (4 / 7) |
-| curly | 7 small filled discs along the crown |
+| tuft / wisp | A few **leaves** — each strand a thin filled ribbon from a root on the crown to a point (4 / 7), rooted on the head's drawn outline and leaning between straight up and straight out from the head's centre |
+| curly | 7 small filled discs along the crown, each on the head's drawn outline, pulled in by most of its size so it straddles the line. The strand kinds sit on the outline (`outlineAt`), not on an ellipse round the head's centre: on a square head the ellipse runs well inside the corners, and a square head's curls floated in the face while its tufts never left the head |
 | helmet | The hood (bowl) type — a mass a little bigger than the head (×1.06) from the crown down to the brow at the front and below the ears at the sides, on the front layer, the hem never into the eye band; strokes in the hair's own tone falling from the crown toward the hem |
 | cloud | The curly cloud — the reference's afro: a hood ×1.18 whose silhouette is a run of 14 round bumps with cusps between them, the hairline edge 7 bumps too (each hanging to the brow line, never into the eye band), and the curls a few sparse open hooks — three quarters of a turn — in the ink just inside the edge and in the hair's own tone deeper in. Never a ring inside the fill: rings read as spots, and with a straight hem the whole thing read as a spotted helmet |
 

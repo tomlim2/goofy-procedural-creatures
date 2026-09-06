@@ -111,7 +111,8 @@ is, laid flat until a hand sets it a texture or a colour (`spec.materials.white`
 ink; an outline is not a surface. A part not listed — an eyepatch, cheeks, a pattern — is an object with a
 colour of its own, and wears none.
 
-The editor writes `spec.wear[part]` when a hand puts a part in another material, and `spec.materials[key]`:
+The editor writes `spec.wear[part]` when a hand puts a part in another material (the two hair slots are one surface, `hair` —
+`REGIONS` in wear.js maps both onto it, so the front and the back wear one material and either slot's tab picks it), and `spec.materials[key]`:
 for a box, a texture or density of its own (hair hatched while the skin is oil); for a material of the hand's
 own — `m1`, `m2` … made under a part (material → +) or beside MATERIALS — a name, a texture, a density and a
 colour that comes with it. **Colour belongs to the material** (`paintOf`, `markInkOf`, body.js `paintPart`):

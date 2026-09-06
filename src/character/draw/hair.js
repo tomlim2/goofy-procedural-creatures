@@ -229,10 +229,12 @@ const fillStrip = (h, fills, spine, widths, phase = 0) => {
     L.push([x - dy * (w + j), y + dx * (w + j)]);
     R.push([x + dy * (w - j), y - dx * (w - j)]);
   }
-  for (let i = 0; i + 1 < n; i += 1) {
-    paintPart(fills, h.spec, [L[i], L[i + 1], R[i + 1], R[i]], h.ink0, { part: "hair", own: true });
-  }
-  return [...L, ...R.slice().reverse()];
+  // Painted as **one** shape, ear-clipped (a ribbon bends, so it is not visible from its centre). It used to be painted a quad at a
+  // time between rail points, and each quad brought the material's own edge with it — a watercolour's rim, a hatch restarting —
+  // so a lock came out a run of darker cells, denser than the mass behind it drawn in the same material at the same step
+  const poly = [...L, ...R.slice().reverse()];
+  paintPart(fills, h.spec, poly, h.ink0, { part: "hair", own: true, concave: true });
+  return poly;
 };
 
 // A lock — a ribbon along a spine, filled, and outlined **only where it borders something else**: below the cap's hem (h.capHem —
@@ -543,24 +545,34 @@ const leaf = (h, ink, fills, root, tip, width, phase) => {
   const mid = [(root[0] + tip[0]) / 2 + (tip[1] - root[1]) * 0.08, (root[1] + tip[1]) / 2];
   ink.contour(fillStrip(h, fills, [root, mid, tip], [width * 0.6, width, width * 0.15], phase), { color: h.lineInk });
 };
-// A few leaves standing off the crown — tuft four, wisp seven
+// The strand kinds sit on **the head's drawn outline** (outlineAt), not on an ellipse round its centre: on a square head the
+// ellipse runs well inside the corners, and the curls of a square head floated in the face while its tufts never left the head
+// A few leaves standing off the crown — tuft four, wisp seven — each rooted a hair inside the outline and leaning between
+// straight up and straight out from the head's centre
 const tuftsOf = (count) => (h) => {
-  const { crown, crownFills, rx, ry, cy, noise, spec } = h;
+  const { crown, crownFills, cy, noise, spec } = h;
   for (let i = 0; i < count; i += 1) {
     const t = i / count;
     const a = Math.PI * (0.25 + 0.5 * t);
-    const root = [Math.cos(a) * rx * 0.8, cy + Math.sin(a) * ry * 0.9];
-    leaf(h, crown, crownFills, root, [root[0] + noise(i * 5.5) * 0.07, root[1] + 0.09 + t * 0.03], 0.011, spec.roll * 0.0019 + i);
+    const [ox, oy] = outlineAt(h, a);
+    const d = Math.hypot(ox, oy - cy) || 1;
+    const ux = (ox / d) * 0.5, uy = ((oy - cy) / d) * 0.5 + 0.5;   // half radial, half up
+    const un = Math.hypot(ux, uy) || 1;
+    const root = [ox - (ox / d) * 0.012, oy - ((oy - cy) / d) * 0.012];
+    const len = 0.09 + t * 0.03;
+    leaf(h, crown, crownFills, root, [root[0] + (ux / un) * len + noise(i * 5.5) * 0.04, root[1] + (uy / un) * len], 0.011, spec.roll * 0.0019 + i);
   }
 };
-// Curly — seven small discs along the crown
+// Curly — seven small discs along the crown, each on the outline, pulled in by most of its size so it straddles the line
 const curlyF = (h) => {
-  const { crown, crownFills, rx, ry, cy, noise, spec } = h;
+  const { crown, crownFills, cy, noise, spec } = h;
   for (let i = 0; i < 7; i += 1) {
     const k = i / 6;
     const a = Math.PI * (0.8 - 0.6 * k);
     const r = 0.03 + noise(i * 4.4) * 0.012;
-    blobPiece(h, crown, crownFills, Math.cos(a) * rx * 0.88, cy + Math.sin(a) * ry * 0.92, r, r, spec.roll * 0.0023 + i);
+    const [ox, oy] = outlineAt(h, a);
+    const d = Math.hypot(ox, oy - cy) || 1;
+    blobPiece(h, crown, crownFills, ox - (ox / d) * r * 0.8, oy - ((oy - cy) / d) * r * 0.8, r, r, spec.roll * 0.0023 + i);
   }
 };
 // Apple top — a bunch rising from the middle of the crown like an apple stem, leaves in a fan with one tie. size 2 the small

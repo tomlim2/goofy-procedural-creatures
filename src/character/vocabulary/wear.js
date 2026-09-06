@@ -30,11 +30,12 @@ export const WEAR_DEFAULTS = {
   eyes: "ink", eyeWhite: "white", brow: "ink", mouth: "ink",
   body: "cloth", arms: "cloth", legs: "cloth", tail: "cloth"
 };
-// A part with more than one surface: its regions, in the editor's order, and what the editor calls them
-export const REGIONS = { eyes: ["eyes", "eyeWhite"] };
+// A part with more than one surface: its regions, in the editor's order, and what the editor calls them. The two hair slots
+// are the other way round — two parts, one surface: the front and the back are drawn in the one `hair` material
+export const REGIONS = { eyes: ["eyes", "eyeWhite"], hairFront: ["hair"], hairBack: ["hair"] };
 export const REGION_LABEL = { eyes: "pupil", eyeWhite: "white" };
 export const regionsOf = (part) => REGIONS[part] || [part];
-// The part a region belongs to — a region stands on the creature when its part does
+// The part a region belongs to — a region stands on the creature when its part does (the hair's when either hair slot does)
 export const partOf = (region) => Object.keys(REGIONS).find((part) => REGIONS[part].includes(region)) || region;
 
 // The parts that wear a material, in the editor's order.

@@ -277,6 +277,7 @@ function present(region) {
   const quad = identity.skeleton === "quad";
   if (slot === "arms") return !quad && spec.parts.arms !== "none";
   if (slot === "tail") return identity.tail === true;
+  if (region === "hair") return spec.parts.hairFront !== "none" || spec.parts.hairBack !== "none";   // one surface, two slots
   if (slot === "legs" || slot === "body" || slot === "head" || slot === "mouth") return true;
   return spec.parts[slot] !== undefined && spec.parts[slot] !== "none";
 }
