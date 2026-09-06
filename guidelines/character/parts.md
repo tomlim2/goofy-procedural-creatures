@@ -140,16 +140,22 @@ over the forehead, **locks** and **tails** (`fillStrip` along a spine), **blobs*
 wedges off the head's outline) and **leaves** (a strand as a thin ribbon). A piece with side lobes or a ragged hem is not visible
 from its centre, so its base is ear-clipped, not fanned (`paintPart(…, { concave: true })` → `stroke.js fillPolygon`) — fanned, the
 fill spilled across the notches onto the face. **Every face-covering piece is clamped by `eyeSafeY`** — the highest eye's top plus
-the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark ink drawn on a dark fill is just as gone.
+the travel a face turn has left (≈0.14·ry): these fills are opaque, and dark ink drawn on a dark fill is just as gone. **A lock that
+runs down beside the face runs down the lane** (`laneX` — swept's two, sideLock's one, the curtain's tips): outside the widest eye
+(its rim counted) by a fifth of the head's half-height, never inside the temple (0.9·rx), no further out than just past the head's
+silhouette (1.08·rx) unless the eye needs it — with eyes that fill the face the lock hangs beside the head rather than not at all
+(a sixth of humans left no lane inside the head, and a lock that stopped at the temple lay inside the cap: not there). **A lock's spine
+only falls** (`falling`): the tip keeps its safe height and the points above rise to meet it — with fixed middles and a clamped tip
+the ribbon dived, climbed and fell again, a fold that read as a knot at the temple, its lower rail grazing the eye.
 
 | hairFront | How |
 | --- | --- |
 | none | Nothing in front — no cap |
 | hairline | The plain fringe — the cap itself coming down over the forehead to a straight hairline (0.5 of the head above its centre), no piece of its own. What every back kind used to bring with it; a file from before gets it with its back |
-| blunt | The straight fringe — a panel over the forehead on the front layer, rooted inside the cap so the two read as one mass (its top edge lies in the cap's fill and draws no line; its sides and its ragged hem do). The hem clears the brow and never enters the eye band |
-| swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down past the temples to the jaw line where there is a lane outside the widest eye (a fifth of the head's half-height clear of it — closer, the near lock sat on a big eye's outer line). Which side is per individual |
-| curtain | A middle parting — two sweeps framing the face, the parting gap showing the forehead up to the hairline; the tips drop past the brow but never into the eye band (`eyeSafeY`, no grace — with one they grazed a big eye's white on a turned face) |
-| sideLock | One lock falling from a parting down one cheek to the jaw line (the side per individual), the other side bare |
+| blunt | The straight fringe — a panel over the forehead on the front layer, rooted inside the cap so the two read as one mass (its top edge lies in the cap's fill and draws no line; its sides and its ragged hem do). The hem clears the brow and never enters the eye band; under a high hem the panel keeps its height and the cap's hairline follows the hem (a shade above it) — with a fixed cap the hem was pushed up past it on a sixth of humans, the cap showed under the panel, and blunt was the cap |
+| swept | A deep side parting: the fringe starts at one temple and sweeps across the brow, both locks running down the lane past the temples to the jaw line. Which side is per individual |
+| curtain | A middle parting — two sweeps framing the face: each leaves the forehead above the eye band (`eyeSafeY`, no grace — with one they grazed a big eye's white on a turned face) and runs down the lane beside the eye to eye level, so the two frame the eyes; the parting gap shows the forehead up to the hairline. Ending where they left the forehead, the sweeps sat on the crown inside the cap on a third of humans, and the curtain was the cap with two lines on it |
+| sideLock | One lock falling from a parting down the lane on one cheek to the jaw line (the side per individual), the other side bare |
 | cap | The crown cap alone — the top of the head and the temples, the forehead bare |
 | mohawk | A spiked band of 7 over a narrow span (0.35π) on a bare head, on the crown layer, contoured all round, its inner edge the head's own line. The whole hair — nothing behind it |
 | tuft / wisp | A few **leaves** — each strand a thin filled ribbon from a root on the crown to a point (4 / 7) |

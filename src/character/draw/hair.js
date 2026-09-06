@@ -20,6 +20,7 @@ import { paintOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { browLine } from "./head.js";
+import { LENS_SCALE } from "./face.js";
 import { paintPart } from "./body.js";
 import { luminance, tint, deepen } from "../../color.js";
 
@@ -59,6 +60,26 @@ const grownOutline = (h, gx, gy, lumps, amount) => {
 const eyeSafeY = (h) => {
   const eyes = eyeGeometry(h.spec, h.box);
   return Math.max(...eyes.map((e) => e.y + e.r)) + h.ry * 0.22;
+};
+// The lane a lock runs down beside the face — swept's two, sideLock's one, the curtain's tips. Outside the widest eye (a lock
+// is opaque, and the front layer is above the face): clear of its rim by a fifth of the head's half-height, never inside the
+// temple (0.9·rx), and no further out than just past the head's silhouette (1.08·rx) unless the eye needs it — the widest lock
+// is 0.2·ry across, and its inner rail has to clear the eye whatever the head's shape. With eyes that fill the face the lock
+// hangs beside the head rather than not at all: the locks used to stop at the temple when the eyes left no lane inside the
+// head (a sixth of humans), and a lock that stops at the temple lies inside the cap and is not there
+const laneX = (h) => {
+  const { spec, box, rx, ry } = h;
+  const rim = LENS_SCALE[spec.parts.eyewear] || (spec.parts.eyewear === "monocle" ? 1.5 : spec.parts.eyewear === "patch" ? 1.35 : 1);
+  const eyeOuter = Math.max(...eyeGeometry(spec, box).map((e) => Math.abs(e.x) + e.r * rim));
+  return Math.max(rx * 0.9, Math.min(eyeOuter + ry * 0.2, rx * 1.08), eyeOuter + ry * 0.12);
+};
+// A spine that only falls: each point at least `gap` above the next, lifted from the tip back — the tip keeps its safe height
+// and the middle rises to meet it. The fringes' spines had fixed middles and a tip clamped above the eye band, and on a
+// high-eyed head the ribbon dived to the middle, climbed to the clamp and fell again — a fold that read as a knot at the
+// temple, and a lower rail that grazed the eye
+const falling = (spine, gap) => {
+  for (let i = spine.length - 1; i > 0; i -= 1) spine[i - 1][1] = Math.max(spine[i - 1][1], spine[i][1] + gap);
+  return spine;
 };
 
 // The scalp — the upper head filled to the hairline, easing toward below-the-ear at the sides (voluminous's
@@ -198,25 +219,29 @@ const fillStrip = (h, fills, spine, widths, phase = 0) => {
   return [...L, ...R.slice().reverse()];
 };
 
-// Curtain bangs — the pretty one: parted in the middle, two sweeps framing the face. Each sweep is a ribbon
-// from the part down past the temple; the parting gap widens downward (the forehead shows, with the scalp's
-// hairline across it), and the tips drop past the brow only beside the eyes — the side zone the browLine
-// rule leaves open
+// Curtain bangs — the pretty one: parted in the middle, two sweeps framing the face. Each sweep is a ribbon from the part
+// out over the forehead, leaving it above the eye band (eyeSafeY — with a 0.1·ry grace they grazed a big eye's white on a
+// turned face), then down the lane beside the eye to eye level, so the two of them frame the eyes. The parting gap widens
+// downward: the forehead shows, with the scalp's hairline across it. The sweeps used to end where they left the forehead —
+// on a high-eyed head that is up on the crown, inside the cap, and the curtain was the cap with two lines on it (a third of
+// humans)
 const frontCurtain = (h) => {
   const { front, frontFills, spec, box, rx, ry, cy } = h;
-  const brow = browLine(spec, box);
-  const tipY = Math.max(brow - ry * 0.24, eyeSafeY(h));   // the tips may drop past the brow but never into the eye band: with a 0.1·ry grace they grazed a big eye's white on a turned face
+  const leaveY = Math.max(browLine(spec, box) - ry * 0.24, eyeSafeY(h));   // where a sweep leaves the forehead
+  const lane = laneX(h);
+  const endY = Math.min(leaveY - ry * 0.16, cy + ry * 0.06);               // down the lane to eye level
   for (const side of [-1, 1]) {
-    const spine = [
+    const spine = falling([
       [side * rx * 0.1, cy + ry * 0.8],
       [side * rx * 0.38, cy + ry * 0.6],
       [side * rx * 0.62, cy + ry * 0.3],
-      [side * rx * 0.8, Math.max(brow + ry * 0.08, tipY + ry * 0.16)],   // the rail under this point dips ~half its width — keep it tied above the tip
-      [side * rx * 0.9, tipY]
-    ];
-    const boundary = fillStrip(h, frontFills, spine, [ry * 0.1, ry * 0.17, ry * 0.19, ry * 0.14, ry * 0.04], spec.roll * 0.0017 + side * 2);
+      [side * rx * 0.8, leaveY + ry * 0.14],
+      [side * Math.min(rx * 0.9, lane), leaveY],
+      [side * lane, endY]
+    ], ry * 0.06);
+    const boundary = fillStrip(h, frontFills, spine, [ry * 0.1, ry * 0.17, ry * 0.19, ry * 0.14, ry * 0.1, ry * 0.04], spec.roll * 0.0017 + side * 2);
     front.contour(boundary, { color: h.lineInk });
-    front.line([[side * rx * 0.24, cy + ry * 0.62], [side * rx * 0.6, brow + ry * 0.16]], { color: h.grainInk, size: "S" });
+    front.line([spine[1], spine[3]], { color: h.grainInk, size: "S" });   // one grain stroke along the sweep — between two spine points, so it stays in the ribbon
   }
 };
 
@@ -238,29 +263,26 @@ const frontSwept = (h) => {
   const px = side * rx * 0.22;                                // the part — 2:3 across the head's width
   const py = cy + ry * 0.96;
   const stop = FRINGE_END(h);   // both locks run down to here
-  // The lane the side locks run down: outside the widest eye (they are opaque, and the front layer is above
-  // the face). A very wide-set eye leaves no lane, and then the locks stop at the temple as before
-  const eyes = eyeGeometry(spec, box);
-  const eyeOuter = Math.max(...eyes.map((e) => Math.abs(e.x) + e.r));
-  const lockX = Math.max(eyeOuter + ry * 0.2, rx * 0.9);   // a fifth of the head's half-height clear of the eye — at 0.12 the near lock sat on a big eye's outer line
-  const runsDown = lockX < rx * 1.04;
-  const W = [ry * 0.08, ry * 0.18, ry * 0.2, ry * 0.15, ry * 0.1, ry * 0.05];   // interpolated over the spine
+  const lane = laneX(h);        // the lane the side locks run down — outside the widest eye, beside the head when the eyes fill it
+  const W = [ry * 0.08, ry * 0.18, ry * 0.2, ry * 0.15, ry * 0.1, ry * 0.05];
 
-  const far = [                                               // the long side (3) — across the brow, then down
+  const far = falling([                                       // the long side (3) — across the brow, then down
     [px, py],
     [-side * rx * 0.14, cy + ry * 0.9],
     [-side * rx * 0.52, cy + ry * 0.66],
-    [-side * rx * 0.82, Math.max(brow + ry * 0.06, safe)]
-  ];
-  if (runsDown) far.push([-side * lockX, cy + ry * 0.06], [-side * lockX, stop]);
+    [-side * rx * 0.82, Math.max(brow + ry * 0.06, safe)],
+    [-side * lane, cy + ry * 0.06],
+    [-side * lane, stop]
+  ], ry * 0.04);
   front.contour(fillStrip(h, frontFills, far, W, spec.roll * 0.0019), { color: h.lineInk });
 
-  const near = [                                              // the short side (2) — straight down the near side
+  const near = falling([                                      // the short side (2) — straight down the near side
     [px, py],
     [side * rx * 0.5, cy + ry * 0.82],
-    [side * rx * 0.76, Math.max(brow + ry * 0.14, safe)]
-  ];
-  if (runsDown) near.push([side * lockX, cy + ry * 0.08], [side * lockX, stop]);
+    [side * rx * 0.76, Math.max(brow + ry * 0.14, safe)],
+    [side * lane, cy + ry * 0.08],
+    [side * lane, stop]
+  ], ry * 0.04);
   front.contour(fillStrip(h, frontFills, near, [ry * 0.07, ry * 0.14, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 7),
     { color: h.lineInk });
 
@@ -285,11 +307,14 @@ const tailPiece = (h, spine, widths, phase) => h.back.contour(fillStrip(h, h.bac
 
 // Bangs — the cap, and a panel over the forehead on the front layer (a hat sits above it), rooted inside the cap so the two
 // read as one mass: the panel's top edge lies in the cap's fill and draws no line, its sides and its ragged hem do. The
-// hem clears the brow and never enters the eye band (the panel is opaque)
+// hem clears the brow and never enters the eye band (the panel is opaque). Under a high hem the panel keeps its height —
+// its top rises with the hem into the cap, and the cap's hairline for blunt follows the hem too (FRONT_CAP): a hem pushed
+// up past a fixed cap left the cap showing under it, and blunt was the cap (a sixth of humans)
+const bangsHem = (h) => Math.max(browLine(h.spec, h.box) + h.ry * 0.04, eyeSafeY(h));
 const bangsPanel = (h) => {
-  const { front, frontFills, spec, box, rx, ry, cy, noise } = h;
-  const hemY = Math.max(browLine(spec, box) + ry * 0.04, eyeSafeY(h));
-  const top = cy + ry * 0.66;
+  const { front, frontFills, spec, rx, ry, cy, noise } = h;
+  const hemY = bangsHem(h);
+  const top = Math.max(cy + ry * 0.66, hemY + ry * 0.18);
   const hem = [];
   for (let i = 0; i <= 8; i += 1) hem.push([-rx * 0.76 + (i / 8) * rx * 1.52, hemY + Math.abs(noise(i * 2.7 + spec.roll * 0.002)) * ry * 0.09]);
   const poly = [[-rx * 0.8, top], [-rx * 0.82, hemY + ry * 0.06], ...hem, [rx * 0.82, hemY + ry * 0.06], [rx * 0.8, top]];
@@ -298,16 +323,15 @@ const bangsPanel = (h) => {
   for (const sx of [-0.4, -0.05, 0.3]) front.line([[sx * rx, top - ry * 0.04], [sx * rx * 1.04, hemY + ry * 0.12]], { color: h.grainInk, size: "S" });
 };
 // A side lock — one lock falling from a parting down one cheek to the jaw line, the side per individual; the other side bare.
-// The lock runs outside the widest eye (it is opaque, over the face); a very wide-set eye leaves no lane, and then it stops at
-// the temple
+// The lock runs down the lane (laneX) — outside the widest eye, since it is opaque and over the face
 const sideLock = (h) => {
   const { front, frontFills, spec, box, rx, ry, cy } = h;
   const side = spec.roll % 2 ? 1 : -1;
-  const eyes = eyeGeometry(spec, box);
-  const eyeOuter = Math.max(...eyes.map((e) => Math.abs(e.x) + e.r));
-  const lockX = Math.max(eyeOuter + ry * 0.2, rx * 0.9);   // the swept's lane
-  const spine = [[side * rx * 0.2, cy + ry * 0.94], [side * rx * 0.5, cy + ry * 0.8], [side * rx * 0.78, Math.max(browLine(spec, box) + ry * 0.12, eyeSafeY(h))]];
-  if (lockX < rx * 1.04) spine.push([side * lockX, cy + ry * 0.06], [side * lockX, FRINGE_END(h)]);
+  const lane = laneX(h);
+  const spine = falling([
+    [side * rx * 0.2, cy + ry * 0.94], [side * rx * 0.5, cy + ry * 0.8], [side * rx * 0.78, Math.max(browLine(spec, box) + ry * 0.12, eyeSafeY(h))],
+    [side * lane, cy + ry * 0.06], [side * lane, FRINGE_END(h)]
+  ], ry * 0.04);
   front.contour(fillStrip(h, frontFills, spine, [ry * 0.07, ry * 0.15, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 11), { color: h.lineInk });
 };
 
@@ -551,7 +575,13 @@ const KNOTS = {
 // bring none — a mohawk stands on a bare head, a hood covers the crown itself; the top brings none either (a bun is the round
 // bunch alone). A back never draws one: drawn with the back it was two pieces for one
 // hairstyle, a mass behind and a cap in front, and the seam between them showed
-const FRONT_CAP = { hairline: 0.5, blunt: 0.58, swept: 0.66, curtain: 0.55, sideLock: 0.6, cap: 0.7 };
+// Each is the hairline's height over the head's centre, in ry; blunt's follows its panel's hem (a shade above it, so the
+// panel's top always lies in the cap) — the others are fixed
+const FRONT_CAP = {
+  hairline: () => 0.5,
+  blunt: (h) => Math.max(0.58, (bangsHem(h) - h.cy) / h.ry + 0.08),
+  swept: () => 0.66, curtain: () => 0.55, sideLock: () => 0.6, cap: () => 0.7
+};
 const DOME_BACKS = new Set(["bob", "mop", "long"]);   // a mass behind the skull carries the silhouette — the cap draws only its hairline
 
 // The hair's context for a set of layers — the colours (the hair box, the board's ink for the contour, a tone of the hair for
@@ -584,6 +614,6 @@ export function drawHair(layers, spec, box, noise) {
   const h = hairContext(layers, spec, box, noise);
   if (BACKS[back]) BACKS[back](h);                                   // behind the head first
   const capLine = FRONT_CAP[front];
-  if (capLine !== undefined) scalp(h, h.cy + h.ry * capLine, !DOME_BACKS.has(back));
+  if (capLine) scalp(h, h.cy + h.ry * capLine(h), !DOME_BACKS.has(back));
   if (FRONTS[front]) FRONTS[front](h);                               // over the face, last
 }
