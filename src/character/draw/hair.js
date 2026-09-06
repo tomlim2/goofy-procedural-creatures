@@ -84,28 +84,44 @@ const falling = (spine, gap) => {
 
 // The scalp — the upper head filled to the hairline, easing toward below-the-ear at the sides (voluminous's
 // easing) but never into the eye band (eyeSafeY — high-set or wide-set eyes pull the side lobes up).
-// Its outer edge is **the head's own drawn outline** (h.headPath — the very path drawHead inked, lumps and all), not a
-// grown copy of the head shape: the scalp sits in FRONT of the head (the crown layer), and grown 5% it lay a band of hair
-// colour outside the head's ink line down both temples, with the head's line running through the hair and no line of its
-// own at the edge — the same-colour way of vanishing (a dark contour on dark hair). On the head's own path the fill stays
-// inside the head's line and the contour re-inks that same line
+// Its outer edge is **the head's own drawn outline, puffed** (h.headPath — the very path drawHead inked, lumps and all — pushed
+// out from the head's centre by up to 8% at the crown, easing to nothing below the temples). Hair has volume: on the head's own
+// path the scalp was a skin of hair colour with the head's line for an edge and a hem across the forehead, and that is a cap,
+// not hair — with a mass behind, the head's line ran through the hair between the two as a seam. The scalp sits in FRONT of
+// the head (the crown layer, above the head ink), so the puff's opaque ground covers that line: the hair's silhouette is its
+// own, contoured where nothing stands behind it, and with a dome behind (bob · mop · long) the puff merges into the mass and
+// only the hairline gets a line. The puff eases to the head's own path low on the sides, so the lobes end on the skin, not
+// beside it. The hairline is not ruler-straight either: it rises a little toward the temples, a forehead's own arc
 // The middle boundary is the front kind's business: under a blunt panel it sits a shade above the
 // bangs hem (the doubled line hides under the panel); behind a curtain parting it rises high — the parting
 // gap has to show the forehead's skin up to the hairline, or the parting reads as one solid panel
 // frontY: the hairline's y in the middle — a number, or a function of x for a hairline that slants (sweep). hemAt(x, y): the hem
 // pulled off its smooth line — ragged (mop) or wavy (scribble)
-const scalp = (h, frontY, topLine, hemAt) => {
-  const { crown, crownFills, spec, box, rx, ry, cy } = h;
+// A path pushed out from the head's centre — by `amount` at the crown, easing (smoothstep) to nothing at the temple level (0.15·ry
+// above the centre) and below: the volume hair has over the skull, tucked back into the head at the sides
+const puffed = (h, path, amount) => path.map(([x, y]) => {
+  const q = Math.min(1, Math.max(0, (y - h.cy - h.ry * 0.15) / (h.ry * 0.85)));
+  const g = 1 + amount * q * q * (3 - 2 * q);
+  return [x * g, h.cy + (y - h.cy) * g];
+});
+// The scalp's hem — the hairline at the front (the forehead's arc: higher at the temples), easing from half-way out to the side
+// lobes' bottom at the edge. A function of x, so the locks can be clipped against it (lock)
+const scalpHem = (h, frontY, hemAt) => {
+  const { spec, box, rx, ry, cy } = h;
   const brow = frontY ?? browLine(spec, box) + ry * 0.1;
-  const frontAt = (x) => (typeof brow === "function" ? brow(x) : brow);
+  const frontAt = (x) => (typeof brow === "function" ? brow(x) : brow) + ry * 0.05 * (x / rx) ** 2;
   const sideBottom = Math.max(cy - ry * 0.45, eyeSafeY(h));
-  const bottomAt = (x) => {
+  return (x) => {
     const u = Math.abs(x) / rx;
     const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
     const base = frontAt(x) * (1 - k) + sideBottom * k;
     return hemAt ? hemAt(x, base) : base;
   };
-  const outline = h.headPath || grownOutline(h, 1.0, 1.0, 3, 0.04);   // the head's drawn path; a caller without one gets the head shape at 1
+};
+const scalp = (h, frontY, topLine, hemAt) => {
+  const { crown, crownFills, spec, rx, ry, cy } = h;
+  const bottomAt = scalpHem(h, frontY, hemAt);
+  const outline = puffed(h, h.headPath || grownOutline(h, 1.0, 1.0, 3, 0.04), 0.08);   // the head's drawn path, puffed; a caller without one gets the head shape
   const upper = outline.filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
   const hem = [];
   const N = hemAt ? 24 : 10;   // a jagged or wavy hem needs the points to show it
@@ -219,6 +235,35 @@ const fillStrip = (h, fills, spine, widths, phase = 0) => {
   return [...L, ...R.slice().reverse()];
 };
 
+// A lock — a ribbon along a spine, filled, and outlined **only where it borders something else**: below the cap's hem (h.capHem —
+// the cap the front brought, if any). A fringe's locks begin inside the cap, in hair of the same colour, and a closed contour
+// drew their whole boundary there — the ribbon's start edge as a short straight stroke standing in the hair at the parting (two
+// where two locks leave one part), and the rails along the crown as a second line just inside the cap's own edge. What shows is
+// the hem side of each lock where it crosses the forehead, the tip, and both rails down the lane. The boundary is subdivided
+// first so a clipped line starts at the hem, not at the next rail point
+const lock = (h, spine, widths, phase) => {
+  const boundary = fillStrip(h, h.frontFills, spine, widths, phase);
+  const shown = h.capHem ? ([x, y]) => y < h.capHem(x) : () => true;
+  let run = [];
+  const flush = () => { if (run.length > 1) h.front.line(run, { color: h.lineInk }); run = []; };
+  for (const p of subdivide(boundary, 0.012)) { if (shown(p)) run.push(p); else flush(); }
+  flush();
+};
+// A polyline with no segment longer than `step` — points inserted along the long ones
+const subdivide = (points, step) => {
+  const out = [];
+  for (let i = 0; i < points.length; i += 1) {
+    const [x, y] = points[i];
+    if (i > 0) {
+      const [px, py] = points[i - 1];
+      const n = Math.ceil(Math.hypot(x - px, y - py) / step);
+      for (let k = 1; k < n; k += 1) out.push([px + ((x - px) * k) / n, py + ((y - py) * k) / n]);
+    }
+    out.push([x, y]);
+  }
+  return out;
+};
+
 // Curtain bangs — the pretty one: parted in the middle, two sweeps framing the face. Each sweep is a ribbon from the part
 // out over the forehead, leaving it above the eye band (eyeSafeY — with a 0.1·ry grace they grazed a big eye's white on a
 // turned face), then down the lane beside the eye to eye level, so the two of them frame the eyes. The parting gap widens
@@ -226,7 +271,7 @@ const fillStrip = (h, fills, spine, widths, phase = 0) => {
 // on a high-eyed head that is up on the crown, inside the cap, and the curtain was the cap with two lines on it (a third of
 // humans)
 const frontCurtain = (h) => {
-  const { front, frontFills, spec, box, rx, ry, cy } = h;
+  const { front, spec, box, rx, ry, cy } = h;
   const leaveY = Math.max(browLine(spec, box) - ry * 0.24, eyeSafeY(h));   // where a sweep leaves the forehead
   const lane = laneX(h);
   const endY = Math.min(leaveY - ry * 0.16, cy + ry * 0.06);               // down the lane to eye level
@@ -239,8 +284,7 @@ const frontCurtain = (h) => {
       [side * Math.min(rx * 0.9, lane), leaveY],
       [side * lane, endY]
     ], ry * 0.06);
-    const boundary = fillStrip(h, frontFills, spine, [ry * 0.1, ry * 0.17, ry * 0.19, ry * 0.14, ry * 0.1, ry * 0.04], spec.roll * 0.0017 + side * 2);
-    front.contour(boundary, { color: h.lineInk });
+    lock(h, spine, [ry * 0.1, ry * 0.17, ry * 0.19, ry * 0.14, ry * 0.1, ry * 0.04], spec.roll * 0.0017 + side * 2);
     front.line([spine[1], spine[3]], { color: h.grainInk, size: "S" });   // one grain stroke along the sweep — between two spine points, so it stays in the ribbon
   }
 };
@@ -251,7 +295,7 @@ const frontCurtain = (h) => {
 // part to low at the far tip, so the forehead shows as a wedge under it rather than a band — and both ends
 // stay above eyeSafeY, since the panel is opaque
 const frontSwept = (h) => {
-  const { front, frontFills, spec, box, rx, ry, cy } = h;
+  const { spec, box, rx, ry, cy } = h;
   const brow = browLine(spec, box);
   const side = spec.roll % 2 ? 1 : -1;                        // which side the parting falls on
   const safe = eyeSafeY(h);
@@ -274,7 +318,7 @@ const frontSwept = (h) => {
     [-side * lane, cy + ry * 0.06],
     [-side * lane, stop]
   ], ry * 0.04);
-  front.contour(fillStrip(h, frontFills, far, W, spec.roll * 0.0019), { color: h.lineInk });
+  lock(h, far, W, spec.roll * 0.0019);
 
   const near = falling([                                      // the short side (2) — straight down the near side
     [px, py],
@@ -283,8 +327,7 @@ const frontSwept = (h) => {
     [side * lane, cy + ry * 0.08],
     [side * lane, stop]
   ], ry * 0.04);
-  front.contour(fillStrip(h, frontFills, near, [ry * 0.07, ry * 0.14, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 7),
-    { color: h.lineInk });
+  lock(h, near, [ry * 0.07, ry * 0.14, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 7);
 
   // No grain lines on this fringe. They were drawn from the part across the sweep, but a straight line between
   // two points on a curved mass leaves the fill and lands on the bare face, where a hair stroke reads as a
@@ -325,14 +368,14 @@ const bangsPanel = (h) => {
 // A side lock — one lock falling from a parting down one cheek to the jaw line, the side per individual; the other side bare.
 // The lock runs down the lane (laneX) — outside the widest eye, since it is opaque and over the face
 const sideLock = (h) => {
-  const { front, frontFills, spec, box, rx, ry, cy } = h;
+  const { spec, box, rx, ry, cy } = h;
   const side = spec.roll % 2 ? 1 : -1;
   const lane = laneX(h);
   const spine = falling([
     [side * rx * 0.2, cy + ry * 0.94], [side * rx * 0.5, cy + ry * 0.8], [side * rx * 0.78, Math.max(browLine(spec, box) + ry * 0.12, eyeSafeY(h))],
     [side * lane, cy + ry * 0.06], [side * lane, FRINGE_END(h)]
   ], ry * 0.04);
-  front.contour(fillStrip(h, frontFills, spine, [ry * 0.07, ry * 0.15, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 11), { color: h.lineInk });
+  lock(h, spine, [ry * 0.07, ry * 0.15, ry * 0.13, ry * 0.1, ry * 0.05], spec.roll * 0.0023 + 11);
 };
 
 // Bun — the round bunch on top and nothing else (no cap under it, no pin: the bunch alone is the bun). Twice the size it
@@ -614,6 +657,7 @@ export function drawHair(layers, spec, box, noise) {
   const h = hairContext(layers, spec, box, noise);
   if (BACKS[back]) BACKS[back](h);                                   // behind the head first
   const capLine = FRONT_CAP[front];
+  h.capHem = capLine ? scalpHem(h, h.cy + h.ry * capLine(h)) : null;   // the locks are outlined only below it (lock)
   if (capLine) scalp(h, h.cy + h.ry * capLine(h), !DOME_BACKS.has(back));
   if (FRONTS[front]) FRONTS[front](h);                               // over the face, last
 }

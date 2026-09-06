@@ -131,8 +131,11 @@ each layer shifts by its depth ([../rig.md](../rig.md) § fake 3D depth).
 
 **Every piece is filled** — the boundary drawn first, a closed form, the inside painted with the hair's material and contoured in the
 pencil's dark ink, the same pen as a hat (`paintPart` + `contour`); a hair drawn as a bare pen line beside a filled head read as a
-smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline down to a hairline, easing to side lobes that never enter the
-eye band). **The cap is the front's — a back never draws one**: a back is only what hangs behind the head, one piece on the
+smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline **puffed** — pushed out from the head's centre by up to 8% at
+the crown, easing to nothing below the temples — down to a hairline that rises a little toward the temples, easing to side lobes that
+never enter the eye band. On the head's own path it was a skin of hair colour with the head's line for an edge and a ruler-straight hem,
+which is a cap, not hair, and with a mass behind the head's line ran between the two as a seam; the puff sits above the head ink and its
+opaque ground covers that line — the hair's silhouette is its own, contoured where nothing stands behind it, merging into a dome behind). **The cap is the front's — a back never draws one**: a back is only what hangs behind the head, one piece on the
 back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the seam showed). The
 fringes bring the cap down to their hairline; the crown cap stops at the crown (0.7 of the head above its centre, the forehead
 bare — at 0.78 the cap alone read as a skullcap); the strand fronts and the hoods bring none. A **back mass** (`backMass`: a dome a little bigger than the head falling behind it to a hem), **sheets** (`backSheets`), a **panel**
@@ -146,7 +149,10 @@ runs down beside the face runs down the lane** (`laneX` — swept's two, sideLoc
 silhouette (1.08·rx) unless the eye needs it — with eyes that fill the face the lock hangs beside the head rather than not at all
 (a sixth of humans left no lane inside the head, and a lock that stopped at the temple lay inside the cap: not there). **A lock's spine
 only falls** (`falling`): the tip keeps its safe height and the points above rise to meet it — with fixed middles and a clamped tip
-the ribbon dived, climbed and fell again, a fold that read as a knot at the temple, its lower rail grazing the eye.
+the ribbon dived, climbed and fell again, a fold that read as a knot at the temple, its lower rail grazing the eye. **A lock is
+outlined only where it borders something else** (`lock`): below the cap's hem — the hem side across the forehead, the tip, both rails
+down the lane. Contoured whole, its start edge stood in the cap as a short straight stroke at the parting (two where two locks leave
+one part) and its rails along the crown as a second line just inside the cap's edge.
 
 | hairFront | How |
 | --- | --- |
