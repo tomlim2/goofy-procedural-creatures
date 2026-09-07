@@ -31,8 +31,25 @@ export function nearestOf(hex, pool = PALETTE) {
 }
 // A tone of a colour, in the palette: shade it, then take the nearest entry (which may be the colour itself)
 const toned = (hex, factor) => nearestOf(shade(hex, factor));
-// The entries that read against a colour — at least 40 of luminance away from it
-const readsAgainst = (hex) => PALETTE.filter((c) => Math.abs(luminance(c) - luminance(hex)) >= 40);
+// **How far apart two colours have to be to read against each other** — in luminance. One number, three uses: the
+// pool a colour may be pulled into (readsAgainst), the test that says it has to be (reads), and the pull itself
+// (apart). It was written out at each
+const READS = 40;
+const reads = (a, b, apartBy = READS) => Math.abs(luminance(a) - luminance(b)) >= apartBy;
+// The entries that read against a colour
+const readsAgainst = (hex) => PALETTE.filter((c) => reads(c, hex));
+// **A colour pulled apart from the one it sits on**, so the two read: shaded away — down off a light ground, up
+// off a dark one — and snapped back to the palette, out of the entries that already read against it. Left where it
+// lands the pair is a mass with no edge either way. The rex's second scale against the cloth and a hair pop
+// against the skin both take it, at their own steps
+const apart = (hex, against, [down, up]) =>
+  reads(hex, against) ? hex : nearestOf(shade(hex, luminance(against) > 140 ? down : up), readsAgainst(against));
+// **The body's tone follows the head** — the same three-way on every species that wears its own colour: the head's
+// colour outright, or a palette tone one step either side of it. What differs is the dice and the two steps, so
+// those are the arguments; it was the same three lines on the imp, the dog and cat, and the rex
+const bodyTone = (base, dice, tones) => (dice === 0 ? base : toned(base, tones[dice - 1]));
+// The dice the imp and the animals throw: half the time the head's colour outright, else one tone or the other
+const step3 = (r) => (r < 0.5 ? 0 : r < 0.8 ? 1 : 2);
 
 function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
@@ -331,18 +348,14 @@ export function makeCreature(roll, speciesName = "human") {
   if (species.name === "imp") {
     // Imps: the head is one of the 9 DARKS (ink, brown-grey, grey-blue, purple-black…). Half the time the body is exactly the head color; otherwise a tone in the same family
     palette.skin = darkHead;
-    if (bodyRoll < 0.5) palette.cloth = darkHead;
-    else if (bodyRoll < 0.8) palette.cloth = toned(darkHead, 1.35);   // the palette colour nearest a slightly lighter tone
-    else palette.cloth = toned(darkHead, 0.75);                        // …nearest a slightly darker one
+    palette.cloth = bodyTone(darkHead, step3(bodyRoll), [1.35, 0.75]);   // the head's colour, or the palette entry nearest a lighter tone, or a darker one
     // The ink goes darker than the head — so the outline is not lost in it
     palette.ink = IMP_INK;
   } else if (species.name === "pup" || species.name === "cat") {
     // Black-ish fur (about 1/3) — individuals with a color accent on the skin are left alone (the accent winning stands out more on the board)
     if (darkFur && !(palette.pop && palette.pop.target === "skin")) palette.skin = darkFur;
     // Dogs and cats: half the time the body is exactly the head (fur) color; otherwise a tone in the same family
-    if (bodyRoll < 0.5) palette.cloth = palette.skin;
-    else if (bodyRoll < 0.8) palette.cloth = toned(palette.skin, 0.9);   // the palette colour nearest a slightly darker tone
-    else palette.cloth = toned(palette.skin, 1.06);                       // …nearest a slightly lighter one
+    palette.cloth = bodyTone(palette.skin, step3(bodyRoll), [0.9, 1.06]);   // the fur's colour, or the palette entry nearest a darker tone, or a lighter one
   } else if (species.name === "rex") {
     // The rex: the head and body are a vivid scale color (SCALES) and the pattern is drawn in a SECOND scale
     // color (pattern2 — draw/body.js patternOf), never the ink: that pair is the species' whole point.
@@ -351,13 +364,11 @@ export function makeCreature(roll, speciesName = "human") {
     const scaleIdx = Math.min(SCALES.length - 1, Math.floor(bodyRoll * SCALES.length));
     if (!(palette.pop && palette.pop.target === "skin")) palette.skin = SCALES[scaleIdx];
     const darkIdx = Math.max(0, DARKS.indexOf(darkHead));
-    if (darkIdx % 3 === 0) palette.cloth = palette.skin;
-    else if (darkIdx % 3 === 1) palette.cloth = toned(palette.skin, 0.88);   // the palette colour nearest a slightly darker tone
-    else palette.cloth = toned(palette.skin, 1.1);                            // …nearest a slightly lighter one
+    palette.cloth = bodyTone(palette.skin, darkIdx % 3, [0.88, 1.1]);   // the scale's colour, or the palette entry nearest a darker tone, or a lighter one — the dice is the dark pick, not bodyRoll
     // The second scale — a different entry, stepped from the first by the dark pick; pulled apart in tone
     // when the two land too close for the pattern to read
     let second = SCALES[(scaleIdx + 1 + (darkIdx % (SCALES.length - 1))) % SCALES.length];
-    if (Math.abs(luminance(second) - luminance(palette.cloth)) < 40) second = nearestOf(shade(second, luminance(palette.cloth) > 140 ? 0.72 : 1.35), readsAgainst(palette.cloth));
+    second = apart(second, palette.cloth, [0.72, 1.35]);
     palette.pattern2 = second;
   }
 
@@ -371,20 +382,24 @@ export function makeCreature(roll, speciesName = "human") {
   // at the hair still wins — that is the accent's whole job
   const hairRoll = (Math.imul((proportions.hand ^ 0x27d4eb2d) >>> 0, 0x9e3779b1) >>> 9) % HAIR_POOL.length;
   let hair = HAIR_POOL[hairRoll];
-  if (Math.abs(luminance(hair) - luminance(palette.skin)) < 45) {
-    // Step along the pool to the first entry that reads against this head. Brightening the colour instead
-    // (shade × 2.4) clipped its channels and threw out raw yellows and near-whites — exactly the colours the
-    // pool is curated to keep off this paper. Every hair on the board is a HAIRS entry or a POP, nothing else
+  // A hair wants to be a little further from its head than anything else does (45, not the usual 40) — it is a
+  // mass laid straight on the skin, with no line of its own between them
+  const HAIR_READS = 45;
+  if (!reads(hair, palette.skin, HAIR_READS)) {
+    // **Walked, not shaded.** Step along the pool to the first entry that reads against this head; brightening the
+    // colour instead (shade × 2.4) clipped its channels and threw out raw yellows and near-whites — exactly the
+    // colours the pool is curated to keep off this paper. So this one does not take `apart`. Every hair on the
+    // board is a HAIRS entry or a POP, nothing else
     for (let i = 1; i <= HAIR_POOL.length; i += 1) {
       const alt = HAIR_POOL[(hairRoll + i) % HAIR_POOL.length];
-      if (Math.abs(luminance(alt) - luminance(palette.skin)) >= 45) { hair = alt; break; }
+      if (reads(alt, palette.skin, HAIR_READS)) { hair = alt; break; }
     }
   }
   if (palette.pop && palette.pop.target === "hair") {
     // The accent wins, but it still has to be seen: a pop that lands on the head's own luminance is a mass
     // with no edge. Pulled apart in tone the way the rex's second scale is, so it stays the accent colour
     hair = palette.pop.color;
-    if (Math.abs(luminance(hair) - luminance(palette.skin)) < 40) hair = nearestOf(shade(hair, luminance(palette.skin) > 140 ? 0.7 : 1.4), readsAgainst(palette.skin));
+    hair = apart(hair, palette.skin, [0.7, 1.4]);
   }
   palette.hair = hair;
 
