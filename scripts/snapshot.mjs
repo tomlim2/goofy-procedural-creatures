@@ -7,7 +7,7 @@
 
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import { TICK_FPS } from "../src/tick.js";
 
@@ -15,9 +15,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 const label = process.argv[2] || "before";
 
-const { makeGrid } = await import(join(root, "src/character/index.js"));
-const draw = await import(join(root, "src/character/index.js"));
-const clocks = await import(join(root, "src/motion/index.js"));
+const { makeGrid } = await import(pathToFileURL(join(root, "src/character/index.js")).href);
+const draw = await import(pathToFileURL(join(root, "src/character/index.js")).href);
+const clocks = await import(pathToFileURL(join(root, "src/motion/index.js")).href);
 
 const hash = (obj) => createHash("sha1").update(JSON.stringify(obj)).digest("hex").slice(0, 12);
 const round = (a) => Array.from(a, (v) => Math.round(v * 1e5) / 1e5);

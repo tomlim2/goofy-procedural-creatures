@@ -5,12 +5,12 @@
 //
 // Catches things like "cyclops eyes are leaking into humans" before they are asked about. Do not eyeball it, count it.
 
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
-const { makeGrid, SLOTS, SPECIES, limbSketches, tailSketch, eyeGeometry, layout, OVERLAP } = await import(join(root, "src/character/index.js"));
+const { makeGrid, SLOTS, SPECIES, limbSketches, tailSketch, eyeGeometry, layout, OVERLAP } = await import(pathToFileURL(join(root, "src/character/index.js")).href);
 
 const args = process.argv.slice(2);
 const onlySlot = args.includes("--slot") ? args[args.indexOf("--slot") + 1] : null;

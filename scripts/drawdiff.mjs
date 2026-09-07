@@ -30,8 +30,17 @@ if (!modules) { console.error("could not find node_modules/three"); process.exit
 
 const tmp = mkdtempSync(join(tmpdir(), "menagerie-drawdiff-"));
 try {
-  execSync(`git archive ${ref} ${prefix} | tar -x -C "${tmp}"`, { cwd: repoRoot, shell: "/bin/sh" });
-  symlinkSync(modules, join(tmp, "node_modules"), "dir");
+  // Only the module tree is taken: it is all that is imported, and the repo's one symlink (AGENTS.md) is a file
+  // windows cannot unpack. package.json comes with it — without its `type: module` the old src reads as CommonJS
+  const inTree = (p) => (prefix ? `${prefix}/${p}` : p);
+  // Written to a file and then unpacked, rather than piped — windows has tar but no shell to pipe with
+  const archive = join(tmp, "tree.tar");
+  execSync(`git archive --format=tar -o "${archive}" ${ref} ${inTree("package.json")} ${inTree("src")}`, { cwd: repoRoot });
+  execSync("tar -x -f tree.tar", { cwd: tmp });   // unpacked from inside, so no absolute path reaches tar — windows' rewrites one
+  rmSync(archive, { force: true });
+  // A directory symlink asks for elevation on windows; a junction does the same job without it
+  try { symlinkSync(modules, join(tmp, "node_modules"), "dir"); }
+  catch { symlinkSync(modules, join(tmp, "node_modules"), "junction"); }
   const oldRoot = join(tmp, prefix);
 
   const oldM = await import(pathToFileURL(join(oldRoot, "src/character/index.js")).href);
