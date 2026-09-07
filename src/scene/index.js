@@ -17,9 +17,15 @@ import { BIND_STATE } from "../motion/index.js";
 import { makeHifives } from "./hifive.js";
 import { makeSparks } from "./spark.js";
 
-// Cell size — the box one individual stands in. The floor line is 0.16 above the bottom of the box (slotPosition). The gallery uses it too, to work out label positions
+// Cell size — the box one individual stands in. The gallery uses it too, to work out label positions
 export const CELL_W = 1.0;
 export const CELL_H = 1.35;
+// **The floor line** — how far above the bottom of its cell an individual's soles stand (slotPosition). Everything
+// that has to meet the ground reads it: the drawn floor line, the board's pin, the gallery's captions. It was four
+// literals, and the cell's ceiling — what a head, a hat and a hair are checked against in character/draw — is
+// CELL_H minus it
+export const FLOOR = 0.16;
+export const CELL_CEILING = CELL_H - FLOOR;
 
 // The reference board for paper grain. Whatever the grid is, the grain is drawn as it would look on a screen of this size (9×6 looks best).
 const PAPER_GRID = [9, 6];
@@ -154,7 +160,7 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     const height = rows * CELL_H;
     const col = index % columns;
     const row = Math.floor(index / columns);
-    return [-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 1) + 0.16];
+    return [-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 1) + FLOOR];
   }
 
   // Each individual gets a render order block — the layers within it (0.5~6.6) stay as they are and index × ORDER_STRIDE is added.
@@ -210,7 +216,7 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     const height = rows * CELL_H;
     const groundSketch = new Sketch(noise, 1.4);
     for (let row = 0; row < rows; row += 1) {
-      const y = height / 2 - CELL_H * (row + 1) + 0.16;
+      const y = height / 2 - CELL_H * (row + 1) + FLOOR;
       groundSketch.line([[-width / 2 + 0.1, y], [width / 2 - 0.1, y]], { color: "#4a423a" });
     }
     ground = new THREE.Mesh(groundSketch.build(), inkMaterial(0.72));

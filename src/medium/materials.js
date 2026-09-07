@@ -410,6 +410,10 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         break;
       }
       case "wash": {
+        // Every line of a wash is clamped to `lineMax` — the rim band, the dried edge, the glaze's edge, the
+        // bristles and the drip. The rule is in the table's own comment; it was enforced by hand at each of the
+        // five, so a sixth line would have compiled, drawn, and been wrong
+        const lw = (w) => Math.min(f.lineMax, w);
         // How a wash dries. The step is the pigment's strength: at black the wash is loaded — a firm dried edge, heavy granulation,
         // one bloom; at light it is mostly water — a faint edge, hardly any grain, and the blooms large and pale, the one thing there
         // is to see. The ground is the part's colour at every step
@@ -449,7 +453,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
               const from = half - hw * 0.4, to = half + hw * (0.3 + 1.1 * h(216 + i * 5 + k * 11));
               const a = [cx + dx * from + nx * off, cy + dy * from + ny * off], c = [cx + dx * to + nx * off, cy + dy * to + ny * off];
               holdTag();
-              for (const [p, q] of clipSegment(a, c, points)) capsule(sketch, p, q, Math.min(f.lineMax, 0.0026), rgb, false, true);
+              for (const [p, q] of clipSegment(a, c, points)) capsule(sketch, p, q, lw(0.0026), rgb, false, true);
             }
           }
         }
@@ -479,7 +483,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
           const span = Math.round(outer.length * f.rim.arc);
           holdTag();
           for (let k = start; k < start + span; k += 1) {
-            for (const [p, q] of clipSegment(outer[k % outer.length], outer[(k + 1) % outer.length], points)) capsule(sketch, p, q, Math.min(f.lineMax, f.rim.width), rimRgb, false, false);
+            for (const [p, q] of clipSegment(outer[k % outer.length], outer[(k + 1) % outer.length], points)) capsule(sketch, p, q, lw(f.rim.width), rimRgb, false, false);
           }
           // The whole bloom, once, with the pencil's broken — faint, and only the part of it that lies inside the contour: the
           // vertices inside are gathered into runs, each run one open line; a bloom wholly inside is one closed loop
@@ -537,7 +541,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
         const runStart = Math.floor(h(81) * inset.length);
         const run = [];
         for (let k = 0; k <= runLen; k += 1) run.push(inset[(runStart + k) % inset.length]);
-        sketch.pencil(run, { color: contrast(1 - (1 - f.edge.tone) * (0.5 + weight * 0.7)), width: Math.min(f.lineMax, f.edge.width * (0.7 + weight * 0.6)), breathe: 0.5, paper: ground, skinT: markTag });
+        sketch.pencil(run, { color: contrast(1 - (1 - f.edge.tone) * (0.5 + weight * 0.7)), width: lw(f.edge.width * (0.7 + weight * 0.6)), breathe: 0.5, paper: ground, skinT: markTag });
         // The glaze — a second wash over one side, wet on dry. A large lobe pushed off-centre to the side the part chooses, a little
         // deeper than the ground, its inner boundary a soft hard edge (the line stops where the contour cuts the lobe). Only once
         // there is pigment enough for a second coat to show
@@ -549,7 +553,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
           fillClipped(sketch, glaze, points, contrast(1 - (1 - f.glaze.tone) * (0.6 + weight * 0.6)));
           const glazeRgb = hexToRgb(contrast(f.glaze.edgeTone));
           for (let k = 0; k < glaze.length; k += 1) {
-            for (const [p, q] of clipSegment(glaze[k], glaze[(k + 1) % glaze.length], points)) capsule(sketch, p, q, Math.min(f.lineMax, f.glaze.edgeWidth), glazeRgb, false, false);
+            for (const [p, q] of clipSegment(glaze[k], glaze[(k + 1) % glaze.length], points)) capsule(sketch, p, q, lw(f.glaze.edgeWidth), glazeRgb, false, false);
           }
         }
         // The drip — a run of paint down from the bloom, tapering to a bead at the bottom. Sometimes, and only where the wash is
@@ -563,7 +567,7 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
           const n = 6;
           for (let k = 0; k < n; k += 1) {   // a few pieces, each thinner than the last, so the run tapers
             const a = [sx + (h(87 + k) - 0.5) * 0.002, sy - (len * k) / n], c = [sx + (h(88 + k) - 0.5) * 0.002, sy - (len * (k + 1)) / n];
-            for (const [p, q] of clipSegment(a, c, points)) capsule(sketch, p, q, Math.min(f.lineMax, f.drip.width) * (1 - k / (n + 1)), dripRgb, false, false);
+            for (const [p, q] of clipSegment(a, c, points)) capsule(sketch, p, q, lw(f.drip.width) * (1 - k / (n + 1)), dripRgb, false, false);
           }
           const bead = blobPath(sx, sy - len - f.drip.width * 0.6, f.drip.width * 1.1, f.drip.width * 1.3, { lumps: 3, amount: 0.1, noise, phase: ph * 0.02 + 9.1 });
           fillClipped(sketch, bead, points, contrast(f.rim.tone), 0.0015);

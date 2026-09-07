@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
-const { makeGrid, SLOTS, SPECIES, limbSketches, tailSketch, eyeGeometry, layout } = await import(join(root, "src/character/index.js"));
+const { makeGrid, SLOTS, SPECIES, limbSketches, tailSketch, eyeGeometry, layout, OVERLAP } = await import(join(root, "src/character/index.js"));
 
 const args = process.argv.slice(2);
 const onlySlot = args.includes("--slot") ? args[args.indexOf("--slot") + 1] : null;
@@ -48,7 +48,7 @@ for (const sp of SPECIES) {
       const eyes = eyeGeometry(c, layout(c));
       if (eyes.length === 2) {
         const d = Math.hypot(eyes[1].x - eyes[0].x, eyes[1].y - eyes[0].y);
-        if (d < (eyes[0].r + eyes[1].r) * 0.7 - 1e-6) violations.push(`${where}: eyes overlap too much (distance ${d.toFixed(3)} < 70% of radius sum ${((eyes[0].r + eyes[1].r) * 0.7).toFixed(3)})`);
+        if (d < (eyes[0].r + eyes[1].r) * OVERLAP - 1e-6) violations.push(`${where}: eyes overlap too much (distance ${d.toFixed(3)} < ${Math.round(OVERLAP * 100)}% of radius sum ${((eyes[0].r + eyes[1].r) * OVERLAP).toFixed(3)})`);
       }
     }
     if (id.arms !== undefined || id.tail !== undefined || id.skeleton) {

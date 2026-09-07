@@ -107,6 +107,10 @@ export function layout(spec) {
 
 // The eyeScale slot's steps — medium is the eye every creature had before the slot; a file without the slot draws medium
 export const EYE_SCALE = { small: 0.78, medium: 1, large: 1.28 };
+// **How far two eyes may overlap** — their centres no closer than this share of the sum of their radii. The guardrail
+// below opens the gap to it, and `scripts/census.mjs` checks the board against it; the gate carried its own copy of
+// the number it was checking
+export const OVERLAP = 0.7;
 export function eyeGeometry(spec, box) {
   const p = spec.proportions;
   const gap = box.headRx * p.eyeGap;
@@ -130,7 +134,6 @@ export function eyeGeometry(spec, box) {
   // Guardrail — the two eyes overlap **only slightly** (centre distance ≥ 70% of the sum of the radii). Closer than that and the gap is opened; with no room to open it (the head width) both eyes
   // shrink together. Where they overlap, the larger eye covers the smaller from in front (the eye order block in scene/rig.js) — no crossing outlines are left
   let g = gap;
-  const OVERLAP = 0.7;
   const need = (rL + rR) * OVERLAP + 0.004;
   if (2 * g < need) g = need / 2;
   const room = box.headRx * 0.94;

@@ -6,7 +6,7 @@
 // fix= pins one other slot — for combinations like "every leg type on short legs".
 
 import * as THREE from "three";
-import { createScene, CELL_W, CELL_H } from "./scene/index.js";
+import { createScene, CELL_W, CELL_H, FLOOR } from "./scene/index.js";
 import { makeCreature, SLOTS, SPECIES, ghostPalette, ghostOutline, ghostInk } from "./character/index.js";
 import { bindSeg, addOption, randomRoll, runLoop } from "./ui.js";
 
@@ -88,7 +88,7 @@ function build() {
   cells = values.map((value, index) => {
     const col = index % cols;
     const row = Math.floor(index / cols);
-    return { value, x: -width / 2 + CELL_W * (col + 0.5), y: height / 2 - CELL_H * (row + 1) + 0.16 - 0.12 };
+    return { value, x: -width / 2 + CELL_W * (col + 0.5), y: height / 2 - CELL_H * (row + 1) + FLOOR - 0.12 };
   });
   labelsBox.innerHTML = "";
   for (const cell of cells) {

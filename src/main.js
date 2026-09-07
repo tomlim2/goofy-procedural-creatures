@@ -6,7 +6,7 @@
 // controls and nothing else: it does not remember a board, SAVE does (guidelines/determinism.md).
 
 import * as THREE from "three";
-import { createScene, CELL_W, CELL_H } from "./scene/index.js";
+import { createScene, CELL_W, CELL_H, FLOOR } from "./scene/index.js";
 import { boardCells, makeBoard, readCreature, readBoard, creatureJson, boardJson } from "./character/index.js";
 import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS } from "./motion/index.js";
 import { addOption, randomRoll, runLoop, download } from "./ui.js";
@@ -208,7 +208,7 @@ function placePin() {
   const col = selected % columns;
   const row = Math.floor(selected / columns);
   // The ground line of the row sits at +0.16 above the cell's bottom edge; the pin hangs just under it.
-  pick.set(-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 1) + 0.16 - 0.03, 0).project(scene.camera);
+  pick.set(-width / 2 + CELL_W * (col + 0.5), height / 2 - CELL_H * (row + 1) + FLOOR - 0.03, 0).project(scene.camera);
   const box = canvas.getBoundingClientRect();
   pin.style.left = `${box.left + (pick.x * 0.5 + 0.5) * box.width}px`;
   pin.style.top = `${box.top + (-pick.y * 0.5 + 0.5) * box.height}px`;
