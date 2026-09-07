@@ -140,7 +140,11 @@ each layer shifts by its depth ([../rig.md](../rig.md) § fake 3D depth).
 pencil's dark ink, the same pen as a hat (`paintPart` + `contour`); a hair drawn as a bare pen line beside a filled head read as a
 smudge. The parts: the **scalp** (`scalp`: the head's own drawn outline **puffed** — pushed out from the head's centre by up to 8% at
 the crown, easing to nothing below the temples — down to a hairline that rises a little toward the temples, easing to side lobes that
-never enter the eye band. On the head's own path it was a skin of hair colour with the head's line for an edge and a ruler-straight hem,
+never enter the eye band; the hem's ends sit on the hair's outline, never past it (run out to 0.97·rx whatever the head's width at that
+height, they stood past a head narrow there — a pear at the brow — as a brim's corners). **Hair does not narrow with the skull** (`untapered`): on an egg or a pear the taper toward the crown is
+undone above the temple level — fully at the crown, easing in from the temples — so the dome is round over any head while the sides
+and hem still follow it; hugging the narrow top, the cap read as a beret on the wider face. The masses behind (`backMass`) and the
+hoods take the same; the strands stand on the head's real line. On the head's own path it was a skin of hair colour with the head's line for an edge and a ruler-straight hem,
 which is a cap, not hair, and with a mass behind the head's line ran between the two as a seam; the puff sits above the head ink and its
 opaque ground covers that line — the hair's silhouette is its own, contoured where nothing stands behind it, merging into a dome behind). **The cap is the front's — a back never draws one**: a back is only what hangs behind the head, one piece on the
 back layer (drawn with the back it was two pieces for one hairstyle, a mass behind and a cap in front, and the seam showed). The
@@ -235,7 +239,10 @@ coronet (the monkey's little crown, measured off the reference: **four** spikes 
 worn where a hat is and never with one, but hair by colour and drawing: `drawTopKnot` (hair.js) paints it on the hat layer in the
 hair's colour after the hats, and the hat drawer skips it. bun — the round bunch on top and nothing else, no cap under it, no pin,
 0.096 wide with its bottom tucked a little into the crown · apple / appleBig — a bunch rising like an apple stem in the middle of
-the crown, 4 leaves in a fan plus a tie (size 2) · 6 leaves 1.7× as long and thick plus a long tie (size 3.4). They cover nothing,
+the crown, 4 leaves in a fan plus a tie (size 2) · 6 leaves 1.7× as long and thick plus a long tie (size 3.4). The fan is **one
+shape**: one line runs tip, valley, tip from one end of the tie to the other, the valleys half-way back to the tie, and the leaves
+are told apart inside by a stroke in the hair's own tone from the tie toward each valley; the tips differ a little in length per
+leaf and per individual. Each leaf closed with a line of its own, it was a pineapple's crown. They cover nothing,
 so the hat rules leave the hair under them alone; a mohawk takes them off as it takes any hat off; cat, pup and rex forbid them
 as they forbid all hair.
 

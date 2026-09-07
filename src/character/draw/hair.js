@@ -97,6 +97,22 @@ const falling = (spine, gap) => {
 // gap has to show the forehead's skin up to the hairline, or the parting reads as one solid panel
 // frontY: the hairline's y in the middle — a number, or a function of x for a hairline that slants (sweep). hemAt(x, y): the hem
 // pulled off its smooth line — ragged (mop) or wavy (scribble)
+// Hair does not narrow with the skull. An egg or a pear tapers toward the crown, and hair grown from that path hugged the
+// narrow top and read as a beret on the wider face. Above the temple level the taper is undone: each point's x put back to
+// the round head's (blobPath narrowed it by 1 − taper·uy, shape.js), fully at the crown and easing in from the temple level
+// on the same ramp the puff rides — so the hair's dome is round over any skull while its sides and hem still follow the
+// head. Only a taper toward the crown (positive); a head wider at the top (tall) keeps its width. The scalp, the masses
+// behind (backMass) and the hoods take it; the strands (outlineAt) stand on the head's real line
+const untapered = (h, path) => {
+  const taper = Math.max(0, headShape(h.spec).taper);
+  if (!taper) return path;
+  return path.map(([x, y]) => {
+    const q = Math.min(1, Math.max(0, (y - h.cy - h.ry * 0.15) / (h.ry * 0.85)));
+    const s = q * q * (3 - 2 * q);
+    const uy = Math.max(-1, Math.min(1, (y - h.cy) / h.ry));
+    return [x * (1 + (1 / (1 - taper * uy) - 1) * s), y];
+  });
+};
 // A path pushed out from the head's centre — by `amount` at the crown, easing (smoothstep) to nothing at the temple level (0.15·ry
 // above the centre) and below: the volume hair has over the skull, tucked back into the head at the sides
 const puffed = (h, path, amount) => path.map(([x, y]) => {
@@ -118,14 +134,36 @@ const scalpHem = (h, frontY, hemAt) => {
     return hemAt ? hemAt(x, base) : base;
   };
 };
+// An outline's half-width at a height, on one side: the two of its points bracketing that height there, interpolated
+const halfWidthAt = (outline, y, sign) => {
+  const side = outline.filter(([x]) => Math.sign(x) === sign).sort((p, q) => p[1] - q[1]);
+  if (!side.length) return 0;
+  if (y <= side[0][1]) return Math.abs(side[0][0]);
+  for (let i = 1; i < side.length; i += 1) {
+    if (y > side[i][1]) continue;
+    const [x0, y0] = side[i - 1], [x1, y1] = side[i];
+    const t = y1 === y0 ? 0 : (y - y0) / (y1 - y0);
+    return Math.abs(x0 + (x1 - x0) * t);
+  }
+  return Math.abs(side[side.length - 1][0]);
+};
 const scalp = (h, frontY, topLine, hemAt) => {
   const { crown, crownFills, spec, rx, ry, cy } = h;
   const bottomAt = scalpHem(h, frontY, hemAt);
-  const outline = puffed(h, h.headPath || grownOutline(h, 1.0, 1.0, 3, 0.04), 0.08);   // the head's drawn path, puffed; a caller without one gets the head shape
+  const outline = puffed(h, untapered(h, h.headPath || grownOutline(h, 1.0, 1.0, 3, 0.04)), 0.08);   // the head's drawn path, its taper undone above the temples, puffed; a caller without one gets the head shape
   const upper = outline.filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
+  // The hem, its ends **on the outline** — run out to 0.97·rx whatever the head's width at that height, they stood past a head
+  // narrow there (a pear at the brow) as a brim's corners, and the cap read as a helmet
   const hem = [];
   const N = hemAt ? 24 : 10;   // a jagged or wavy hem needs the points to show it
-  for (let i = 0; i <= N; i += 1) { const x = -rx * 0.97 + (i / N) * rx * 1.94; hem.push([x, bottomAt(x)]); }
+  for (let i = 0; i <= N; i += 1) {
+    const x = -rx * 0.97 + (i / N) * rx * 1.94;
+    const y = bottomAt(x);
+    const w = halfWidthAt(outline, y, x < 0 ? -1 : 1);
+    const p = [Math.sign(x) * Math.min(Math.abs(x), w), y];
+    const last = hem[hem.length - 1];
+    if (!last || Math.hypot(p[0] - last[0], p[1] - last[1]) > 1e-4) hem.push(p);   // the clamped ends fall on one point — kept once
+  }
   const poly = [...upper, ...hem];   // right → crown → left, then the hairline left → right
   paintPart(crownFills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });   // a cap with side lobes is not visible from its centre
   // **Only the hairline gets a line when a mass sits behind the skull.** The scalp's top arc is the head's own
@@ -140,7 +178,7 @@ const scalp = (h, frontY, topLine, hemAt) => {
 // A-line flare); long wears it cut at the chin and hangs the side sheets from it
 const backMass = (h, hem, flare, { grow = [1.16, 1.08], lumps = 4, amount = 0.05 } = {}) => {
   const { back, backFills, spec, rx, ry, cy } = h;
-  const arc = grownOutline(h, grow[0], grow[1], lumps, amount).filter(([, y]) => y >= cy - ry * 0.05).sort(arcSort(cy));
+  const arc = untapered(h, grownOutline(h, grow[0], grow[1], lumps, amount)).filter(([, y]) => y >= cy - ry * 0.05).sort(arcSort(cy));
   const [rx0] = arc[0];
   const [lx0] = arc[arc.length - 1];
   const poly = crumple([...arc,
@@ -422,7 +460,7 @@ const hood = ({ grow, lumps, amount, grain = false, curls = false, scallop = nul
     }
     outer = pts.filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
   } else {
-    outer = grownOutline(h, grow, grow, lumps, amount).filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
+    outer = untapered(h, grownOutline(h, grow, grow, lumps, amount)).filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
   }
   const hem = [];
   const M = scallop ? 42 : 16;
@@ -575,16 +613,36 @@ const curlyF = (h) => {
     blobPiece(h, crown, crownFills, ox - (ox / d) * r * 0.8, oy - ((oy - cy) / d) * r * 0.8, r, r, spec.roll * 0.0023 + i);
   }
 };
-// Apple top — a bunch rising from the middle of the crown like an apple stem, leaves in a fan with one tie. size 2 the small
-// one (four leaves) · 3.4 the big one (six, long and thick) — both twice what they were
+// Apple top — a bunch rising from the middle of the crown like an apple stem: **one shape**, a fan of leaves under one line
+// — the outer edge runs tip, valley, tip, from the tie's one end to the other, open at the base where the tie is — and the
+// leaves told apart inside by a stroke in the hair's own tone from the tie toward each valley, stopping short of it. Drawn
+// as leaves each closed with a line of its own it was a pineapple's crown: petals laid on the head. size 2 the small one
+// (four leaves) · 3.4 the big one (six, long and thick). The tips differ a little in length per leaf and per individual —
+// the same length on every leaf read as a stamp
 const appleOfF = (size) => (h) => {
-  const { crown, crownFills, ry, cy, spec } = h;
+  const { crown, crownFills, ry, cy, spec, noise } = h;
   const bx = 0.005, by = cy + ry * 1.0;
   const count = size > 1 ? 6 : 4, spread = size > 1 ? 0.15 : 0.1;
+  const tips = [];
   for (let i = 0; i < count; i += 1) {
     const a = Math.PI * (0.5 + spread * (i - (count - 1) / 2));
-    leaf(h, crown, crownFills, [bx, by - 0.006], [bx + Math.cos(a) * 0.05 * size, by + Math.sin(a) * 0.055 * size + 0.01], 0.012 * size, spec.roll * 0.0033 + i);
+    const k = 1 + noise(i * 4.7 + spec.roll * 0.0011) * 0.22;
+    tips.push([bx + Math.cos(a) * 0.05 * size * k, by + Math.sin(a) * 0.055 * size * k + 0.01]);
   }
+  const edge = [[bx - 0.016 * size, by - 0.004]];   // the left end of the tie
+  const valleys = [];
+  tips.forEach((tip, i) => {
+    edge.push(tip);
+    if (i === tips.length - 1) return;
+    const next = tips[i + 1];
+    const v = [bx + ((tip[0] + next[0]) / 2 - bx) * 0.48, by + ((tip[1] + next[1]) / 2 - by) * 0.48];   // between two tips, half-way back to the tie
+    valleys.push(v);
+    edge.push(v);
+  });
+  edge.push([bx + 0.016 * size, by - 0.004]);   // the right end
+  paintPart(crownFills, spec, edge, h.ink0, { part: "hair", own: true, concave: true });   // the fill closes it along the tie
+  crown.line(edge, { color: h.lineInk });   // one line, tip and valley, open at the base — the tie is that edge
+  for (const v of valleys) crown.line([[bx, by - 0.002], [bx + (v[0] - bx) * 0.8, by + (v[1] - by) * 0.8]], { color: h.grainInk, size: "S" });
   crown.line([[bx - 0.018 * size, by - 0.006], [bx + 0.018 * size, by - 0.002]], { color: h.lineInk });   // the tie
 };
 
