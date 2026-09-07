@@ -250,6 +250,45 @@ function gloomify(parts, species, archetype, roll) {
 // and the sim that gates it
 export function isGhost(spec) { return !!(spec && spec.parts && spec.parts.ghost && spec.parts.ghost !== "none"); }
 
+// **Settles what follows from the parts** — the last step of a roll, and the same step for a spec edited by hand
+// or read from a file, so what reaches the drawing is always settled the one way. A ghost has empty eyes, wears
+// one pale tone and breaks every line; a dark face takes light marks.
+//
+// A **dark** ghost turns its ink light as well: a dark outline on a dark body is no outline at all, and the broken
+// stroke the kind exists for would be invisible. The face ink then follows the board's own rule (head luminance
+// < 120 → light), which is exactly "the face marks in the opposite tone".
+//
+// The imp clause in the face ink is a species fact — an imp's head is ink-black and that IS the species — but it
+// stops being true of a **ghost** imp: its colour collapsed to one pale tone like everything else, and the light
+// ink then drew its mouth and its under-eye circles in near-white on near-white and they disappeared. The
+// shortcut only holds while the head really is dark. An imp is forbidden the ghost slot on the board — but the
+// parts gallery draws a species' forbidden values too, and that is the tool this repo judges form in.
+//
+// It lives here, beside the ghost functions it calls and the roll that ends with it. Written out in makeCreature
+// as well it was the same five steps twice, and the gallery's third hand-rolled copy had already lost the face
+// ink's imp clause — on the very screen the clause was written for.
+export function deriveSpec(next) {
+  const parts = { ...next.parts };
+  if (parts.ghost !== "none") parts.eyes = "hollow";   // a ghost has empty eyes — nothing is looking back
+  const palette = { ...ghostPalette(next.palette0, parts.ghost, next.proportions.hand) };
+  // **One field order, whichever door the spec came through** — a roll, an edit, a file. The six settled fields
+  // are taken off `next` and written back in this order, so two identical creatures serialise the same however
+  // they were made; `rest` carries whatever else rode along (a hand's materials, wear and names). Taking them off
+  // also means a spec that is already settled cannot leak its stale values back in through the spread
+  const { roll, palette0, species, archetype, proportions,
+    parts: _parts, palette: _palette, outline: _outline, lineInk: _lineInk, faceInk: _faceInk, ...rest } = next;
+  return {
+    roll,
+    // Every line this creature draws is the BROKEN hold. It rides on the spec so each Sketch made for it can
+    // take it (stroke.js), which is what keeps it to this creature — BOARD_LINES is the whole board's switch
+    outline: ghostOutline(parts.ghost),
+    lineInk: ghostInk(parts.ghost),   // every line black on a ghost (medium/outlines.js sketch.inkColor)
+    palette0, species, archetype, parts, proportions, palette,
+    faceInk: (species === "imp" && !isGhost({ parts })) || luminance(palette.skin) < 120 ? MARKS.light : null,
+    ...rest
+  };
+}
+
 export function makeCreature(roll, speciesName = "human") {
   const rng = makeRng(roll);
   const species = SPECIES.find((s) => s.name === speciesName) || SPECIES[0];
@@ -358,16 +397,9 @@ export function makeCreature(roll, speciesName = "human") {
   // **A ghost collapses to one tone.** Skin, cloth, hair, accent and the lizard's second scale all become the
   // same colour, and any pop is dropped — an accent is the opposite of what this is. The tone is picked off
   // hand (no rng), so the slot cost one draw at the very end of the sequence and nothing after it moved.
-  // A **dark** ghost turns its ink light as well: a dark outline on a dark body is no outline at all, and the
-  // broken stroke this kind exists for would be invisible. faceInk then follows the board's own rule (head
-  // luminance < 120 → light), which is exactly "the face marks in the opposite tone".
-  // The goofy material is untouched, so the surface still hatches, dabs or speckles over the flat colour
-  const palette0 = { ...palette };            // the palette before the ghost collapse — the gallery re-applies from here
-  Object.assign(palette, ghostPalette(palette0, parts.ghost, proportions.hand));
-  // Every line this creature draws is the BROKEN hold. It rides on the spec so each Sketch made for it can
-  // take it (stroke.js), which is what keeps it to this creature — BOARD_LINES is the whole board's switch
-  const outline = ghostOutline(parts.ghost);
-  const lineInk = ghostInk(parts.ghost);   // every line black on a ghost (medium/outlines.js sketch.inkColor)
+  // The goofy material is untouched, so the surface still hatches, dabs or speckles over the flat colour.
+  // The collapse itself, the outline hold, the line ink and the face ink are `deriveSpec`'s, at the return below
+  const palette0 = { ...palette };            // the palette before the ghost collapse — every screen re-applies from here
   // A ghost's eyes are always **hollow** — the empty eye, a white and a rim with the pupil taken out. Nothing
   // is looking back, which is the whole idea. A deterministic overwrite (no rng), and it lands here rather
   // than in applyConstraints because `ghost` is a late slot and is not drawn yet when that runs. It has to be
@@ -397,26 +429,9 @@ export function makeCreature(roll, speciesName = "human") {
   // If the patch dropped out here, patchSide is cleared too (so the eye and brow do not skip that side)
   if (hadPatch && parts.eyewear !== "patch") parts.patchSide = 99;
 
-  return {
-    roll,
-    outline,
-    lineInk,
-    palette0,
-    species: species.name,
-    archetype: archetype.name,
-    parts,
-    proportions,
-    palette,
-    // Face ink — when the head color is dark (imp ink-black, or blue, green and red-brown accent skins: luminance < 120) the features are drawn in light ink instead of black.
-    // Otherwise a black line is lost on a deep color and the eyes and mouth do not read.
-    // The imp clause is a species fact — an imp's head is ink-black and that IS the species — but it stops being
-    // true of a **ghost** imp: its colour collapsed to one pale tone like everything else, and the light ink then
-    // drew its mouth and its under-eye circles in near-white on near-white and they disappeared. The shortcut
-    // only holds while the head really is dark; a pale one falls through to the luminance rule like any other.
-    // (An imp is forbidden the ghost slot on the board — but the parts gallery draws a species' forbidden values
-    // too, and that is the tool this repo judges form in)
-    faceInk: (species.name === "imp" && !isGhost({ parts })) || luminance(palette.skin) < 120 ? MARKS.light : null
-  };
+  // The roll ends the way every other door into a spec ends — deriveSpec, above: the hollow eyes, the collapsed
+  // palette, the outline hold, the line ink and the face ink, all off palette0
+  return deriveSpec({ roll, palette0, species: species.name, archetype: archetype.name, parts, proportions });
 }
 
 // Roll placement for the grid.

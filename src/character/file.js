@@ -7,27 +7,13 @@
 
 import { SPECIES } from "./vocabulary/index.js";
 import { MARKS } from "./vocabulary/palette.js";
-import { ghostPalette, ghostOutline, ghostInk, isGhost } from "./spec.js";
+import { deriveSpec } from "./spec.js";
+export { deriveSpec };
 import { luminance } from "../color.js";
 
 export const BOARD_FILE = "board";
 
 export const isHouse = (spec) => !!spec && spec.kind === "house";
-
-// Settles what follows from the parts. A ghost has empty eyes, wears one pale tone and breaks every line; a
-// dark face takes light marks. `makeCreature` does this at the end of a roll; this is the same step for a spec
-// that was edited by hand or read from a file, so what reaches the drawing is always a settled spec.
-export function deriveSpec(next) {
-  const parts = { ...next.parts };
-  if (parts.ghost !== "none") parts.eyes = "hollow";   // a ghost has empty eyes — nothing is looking back
-  const palette = { ...ghostPalette(next.palette0, parts.ghost, next.proportions.hand) };
-  return {
-    ...next, parts, palette,
-    outline: ghostOutline(parts.ghost),
-    lineInk: ghostInk(parts.ghost),
-    faceInk: (next.species === "imp" && !isGhost({ parts })) || luminance(palette.skin) < 120 ? MARKS.light : null
-  };
-}
 
 // A file from before the rename: a creature's `seed` was its roll and `proportions.wobbleSeed` its hand.
 // The one `hair` slot of 26 values, split into two (front · back) and headgear for a bun or an apple top — a file from before

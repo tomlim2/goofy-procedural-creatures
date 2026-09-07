@@ -7,7 +7,7 @@
 
 import * as THREE from "three";
 import { createScene, CELL_W, CELL_H, FLOOR } from "./scene/index.js";
-import { makeCreature, SLOTS, SPECIES, ghostPalette, ghostOutline, ghostInk } from "./character/index.js";
+import { makeCreature, SLOTS, SPECIES, deriveSpec } from "./character/index.js";
 import { bindSeg, addOption, randomRoll, runLoop } from "./ui.js";
 
 const canvas = document.getElementById("stage");
@@ -63,19 +63,12 @@ function build() {
   window.history.replaceState(null, "", `?slot=${slot}&species=${species}${fix ? `&fix=${fix.slot}:${fix.value}` : ""}${picked.length ? `&values=${picked.join(",")}` : ""}`);
 
   const base = makeCreature(roll, species);
-  // Swapping a part is enough for every slot but one: `ghost` collapses the whole palette and breaks every
-  // line, and those are decided when the spec is built. Re-derive them from the pre-ghost palette the spec
-  // carries, or the row would draw three identical creatures in whatever the base individual happened to be
-  const specs = values.map((value) => {
-    const parts = { ...base.parts, ...fixed, [slot]: value };
-    if (parts.ghost !== "none") parts.eyes = "hollow";   // the same overwrite spec.js makes (a ghost has empty eyes)
-    return {
-      ...base, parts,
-      palette: ghostPalette(base.palette0 || base.palette, parts.ghost, base.proportions.hand),
-      outline: ghostOutline(parts.ghost),
-      lineInk: ghostInk(parts.ghost)
-    };
-  });
+  // Swapping a part is enough for every slot but one: `ghost` collapses the whole palette, breaks every line and
+  // decides the face's ink, and those are settled when the spec is built. `deriveSpec` is that step — the same one
+  // a roll ends with and an edit goes through, so a row here is settled exactly as the board settles it. Written
+  // out by hand instead, this copy had lost the face ink entirely, and a ghost imp drew its face in the wrong tone
+  // on the very screen that clause was written for
+  const specs = values.map((value) => deriveSpec({ ...base, parts: { ...base.parts, ...fixed, [slot]: value } }));
   // Column count follows the canvas aspect — laid out in a single row the individuals come out too small
   const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
   const cols = Math.max(1, Math.min(values.length, Math.round(Math.sqrt(values.length * aspect * (CELL_H / CELL_W)))));
