@@ -33,7 +33,7 @@ git tag v0.1.0 && git push origin v0.1.0
 `node serve.mjs [port] [ref]` — the port can also come from `PORT` (so two sessions can each run one), and the ref (HEAD by default)
 is extracted once at start and served under `/base/` for the pixel diff page.
 
-`/debug.html` — **the debug screen**. The main page has only BOARD, EXPORT, SPECIES and GRID; to touch the pose, ink, actions or regen, come here.
+`/debug.html` — **the debug screen**. The main page has only BOARD, EXPORT, SPECIES and GRID; to touch the pose, ink, actions, the high five or regen, come here.
 The drawing is the same and only the control cards differ (the same `src/main.js`). Nothing links here from the main page — you type the address.
 To go back, press **MENAGERIE** in the header.
 
@@ -94,8 +94,9 @@ scroll sideways (main and debug screens; gallery and audit assume a desktop widt
 | POSE MOTION / BIND / `B` | BIND pins the rig to the bind pose (T). For judging form and parts |
 | INK BOIL / STILL / `I` | STILL stops the lines boiling. A separate axis from pose — it removes the noise when judging motion |
 | ACTION AUTO / IDLE / SLEEP / SIT / WALK / an action | Forces one action (that layer only; the others idle) — arms (waving, arms up, arms crossed, a salute…, bipeds), body (hopping in place, everyone), quad (scratching, wagging). SLEEP lies quads down to sleep, SIT sits them (quad actions still follow their schedule — they scratch and wag while sitting), and WALK walks everyone — out from home and back (arm actions still follow their schedule). AUTO lets the layers overlap, with dogs and cats sleeping and sitting now and then and everyone walking now and then. IDLE is every layer idle and awake |
+| HIGH FIVE AUTO / RUSH | A pair fives every 300~720 s, so a screen sits quiet for minutes. RUSH divides that wait (and a fresh board's first) by 60. Only the waiting is shortened — the pair logic, the hurry over, the wind-up and the slap are the board's own. It is settled when the scene is built, so the button reloads the page with the value in the address |
 | REGEN STILL / LIVE / `S` | STILL by default. Turn LIVE on and individuals are replaced on their own clocks (6~14 s), as in the reference |
-| SPECIES ALL / HUMAN / CAT / PUP / IMP | ALL is the fixed lanes. The rest are that species only — for judging color and part distribution |
+| SPECIES ALL / HUMAN / CAT / PUP / IMP / REX / HOUSE | ALL is the fixed lanes. The rest are that species only — for judging color and part distribution. HOUSE is not a creature but the other category, a board of them a street |
 | EXPORT PNG | Downloads the current screen as a PNG. The canvas pixels as they are (at screen resolution) with only a signature laid on top — MENAGERIE bottom-right. The file is named `menagerie.png` |
 | GRID 1×1 / 5×4 / 7×5 / 9×6 | 1×1 stands a single creature (the view is doubled, so it is half the screen) — for looking at one part on screen. The paper grain is pinned to the 9×6 board regardless of the grid |
 
@@ -106,7 +107,7 @@ Anything at its default is left off — the address of an untouched screen carri
 /?grid=1x1&species=cat&pose=bind&ink=still&action=wave
 ```
 
-`grid` `pose` `ink` `live` `species` `action` — exactly the controls in the table above, and the values are the buttons' `data-*` (for ACTION, the list's values).
+`grid` `pose` `ink` `live` `species` `action` `five` — exactly the controls in the table above, and the values are the buttons' `data-*` (for ACTION, the list's values).
 A value not in the list, and **a value whose card is not on that screen**, is ignored — `pose=bind` falls off on the main page (it is used on the debug screen).
 The board itself is never in the address — it is rolled fresh, and kept as a file. Press **MENAGERIE** in the header to go back to the main page (the same on the debug, gallery and audit screens).
 
@@ -148,6 +149,8 @@ node scripts/snapshot.mjs before       # before a refactor — records specs, ge
 node scripts/snapshot.mjs after        # after — diff 0 means behaviour is unchanged
 
 node scripts/drawdiff.mjs [ref]        # for drawing refactors — compares the working tree against a git ref (HEAD by default) over every slot value × species × roll. 0 means the drawing is unchanged
+
+node scripts/hifive-sim.mjs            # how often pairs land a high five, and whether the palms meet — the real pair logic over real clocks, both palms run back through FK at contact
 ```
 
 ## The layers that make variety
