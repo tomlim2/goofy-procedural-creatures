@@ -1,13 +1,12 @@
 // Body — torso and markings. Docs: guidelines/character/parts.md § body
 
-import { paintOf } from "../vocabulary/paint.js";
+import { paintOf, markInkOf } from "../vocabulary/paint.js";
 import { blobPath, crumple } from "../../shape.js";
 import { stepOf } from "../../medium/materials.js";
 import { shade, isDark, luminance } from "../../color.js";
 import { MARKS } from "../vocabulary/palette.js";
 import { isGhost } from "../spec.js";
-import { sideOf, wearOf, surfaceOf, colourOf, WEAR_DEFAULTS, BOXES } from "../vocabulary/wear.js";
-const BOXES_SET = new Set(BOXES);
+import { wearOf, surfaceOf } from "../vocabulary/wear.js";
 
 // The creature's goofy material, by name — **the one place a material is named**. `where` is the half of the creature asking: the
 // head's is the `material` slot, the body's is `bodyMaterial` unless that says `same` (most of them). Everything standing on the head
@@ -39,17 +38,18 @@ export function surfaceHand(spec, where = "head") {
 // Paints a part's surface with the creature's goofy material — the one way in for every skin, fur and cloth surface that is not the head or
 // the body (ears, the muzzle, hands, boots, sleeves, the tail, hats): guidelines/drawing.md § what takes the goofy material. The value step
 // is the side's — the head's `density`, or on the body's side the body's own when `bodyDensity` names one.
-// `part` names the part painting, and its side follows what it wears (vocabulary/wear.js sideOf — the main material or
+// `part` names the part painting, and the material it wears follows from it (vocabulary/wear.js wearOf — the main material or
 // the body's, by default the head's side and the body's side); `body` is the older word for the body's side, kept for
 // the callers that are not a part of their own
-export function paintPart(fills, spec, path, color, { own = false, flat = false, body = false, part = null, strip, stripT, skinT, concave = false } = {}) {
+export function paintPart(fills, spec, path, color, { own = false, flat = false, body = false, part = null, pattern, strip, stripT, skinT, concave = false } = {}) {
   const where = part ? wearOf(spec, part) : body ? "cloth" : "skin";
   // Colour belongs to the material. A part in its own box is painted the colour the drawing chose for it (a tone
-  // of the box, a lid a shade darker); moved by a hand to another box or a material of its own, that one's
-  // colour. A ghost's one pale tone wins over a hand's own colour (spec.js ghostPalette); a box's is already a ghost's
-  const moved = part && where !== WEAR_DEFAULTS[part];
-  const worn = moved ? colourOf(spec, where) : null;
-  const options = { color: worn && (BOXES_SET.has(where) || !isGhost(spec)) ? worn : color, ...surfaceHand(spec, where) };
+  // of the box, a lid a shade darker); moved by a hand to another box or a material of its own, that one's colour
+  // — which is `markInkOf` (vocabulary/paint.js), the module that owns "what colour, if a hand moved it". A ghost's
+  // one pale tone wins over a hand's own colour there; a box's is already a ghost's. The rule was written out here
+  // as well, character for character, and paint.js is where it belongs
+  const options = { color: markInkOf(spec, part, color), ...surfaceHand(spec, where) };
+  if (pattern) options.pattern = pattern;   // the rex's second scale, laid in the torso's base (patternOf)
   if (strip) options.strip = strip;   // a tube's base cut as a strip between its rails (the tail — bones bend it)
   if (stripT) options.stripT = stripT;   // …tagged per rung with its t along the spine (the skin reads its bones from the tag)
   if (skinT !== undefined) options.skinT = skinT;   // a fill at one t of the spine (a bead, a tuft, a pom)
@@ -75,7 +75,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     const path = blobPath(cx, cy, box.bodyW, (box.bodyTop - box.legTop) / 2, {
       lumps: 4, amount: 0.1, noise, phase: spec.proportions.hand * 0.02
     });
-    fills.paint(path, materialOf(spec, sideOf(spec, "body")), { color: paintOf(spec, "body"), pattern: patternOf(spec), ...surfaceHand(spec, sideOf(spec, "body")) });   // the goofy material (the material slot; flat when absent) at the creature's value step, the pattern in its base
+    paintPart(fills, spec, path, paintOf(spec, "body"), { part: "body", pattern: patternOf(spec) });   // the goofy material at the creature's value step, the pattern in its base
     // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
     ink.contour(path, { color: spec.palette.ink });   // the goofy outline (stroke.js GOOFY_OUTLINES)
     return { path, top: box.bodyTop, bottom: box.legTop, w: box.bodyW, cx };
@@ -100,7 +100,7 @@ export function drawBody(ink, fills, spec, box, noise) {
     });
   }
 
-  fills.paint(path, materialOf(spec, sideOf(spec, "body")), { color: paintOf(spec, "body"), pattern: patternOf(spec), ...surfaceHand(spec, sideOf(spec, "body")) });   // the goofy material (the material slot; flat when absent) at the creature's value step, the pattern in its base
+  paintPart(fills, spec, path, paintOf(spec, "body"), { part: "body", pattern: patternOf(spec) });   // the goofy material at the creature's value step, the pattern in its base
   // No shading here — it is the light's job (guidelines/drawing.md § the light), not the surface's
   ink.contour(path, { color: ink0 });   // the goofy outline (stroke.js GOOFY_OUTLINES)
   return { path, top, bottom, w, cx: 0 };

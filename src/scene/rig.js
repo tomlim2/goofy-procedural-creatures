@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { paintPart } from "../character/draw/body.js";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, isGhost, STATIC_EYE_KEYS } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath, isGhost, STATIC_EYE_KEYS } from "../character/index.js";
 import { Sketch } from "../stroke.js";
 import { blobPath, arcPath } from "../shape.js";
 import { makeClock, bindArm } from "../motion/index.js";
@@ -39,7 +39,7 @@ function lidSketches(eye, ink, noise, style, spec) {
   const shut = mark(new Sketch(noise, s.shutWobble));
   shut.line(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink });
   const smile = mark(new Sketch(noise, 0.5));
-  smile.line(arcPath(0, -eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink });
+  smile.line(smileArchPath(0, 0, eye.r), { color: ink });   // the happy eye's own arch (character/draw/face.js) — one path, so the two cannot drift
   // Anger — the fierce eye (an inward-down slanted lid plus a glaring dot). While angry, the open eye is switched off and this stands instead (character/draw/face.js angryEyeSketch)
   const angry = mark(new Sketch(noise, 0.5));
   angryEyeSketch(angry, eye, ink, spec);

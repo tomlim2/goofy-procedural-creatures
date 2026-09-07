@@ -5,9 +5,8 @@ import { blobPath, arcPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry, TAU } from "./layout.js";
 import { shade, isDark, mix } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
-import { materialOf, surfaceHand, paintPart } from "./body.js";
+import { paintPart } from "./body.js";
 import { MARKS, blushOf } from "../vocabulary/palette.js";
-import { sideOf } from "../vocabulary/wear.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -22,7 +21,7 @@ export function drawHead(ink, fills, spec, box, noise) {
   });
 
   // The material slot — the creature's goofy material: how the head is filled. A spec without the slot (an older tree's, in drawdiff) is flat, like every late slot's default
-  fills.paint(path, materialOf(spec, sideOf(spec, "head")), { color: paintOf(spec, "head"), ...surfaceHand(spec, sideOf(spec, "head")) });
+  paintPart(fills, spec, path, paintOf(spec, "head"), { part: "head" });
 
   // No shading on the head — it is the light's job (guidelines/drawing.md § the light), not the surface's
 

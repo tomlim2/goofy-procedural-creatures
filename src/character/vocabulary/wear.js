@@ -62,11 +62,6 @@ export function wearOf(spec, part) {
   return WEAR_DEFAULTS[part] || null;
 }
 
-// The drawing's word for a part's side, kept for the callers that ask by it: now the key of what the part wears
-export function sideOf(spec, part) {
-  return wearOf(spec, part);
-}
-
 // A material's colour: a box's is the palette's (a pop's its colour; a box the palette lacks is null), a hand's
 // own its own.
 export function colourOf(spec, key) {

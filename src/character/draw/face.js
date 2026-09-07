@@ -141,8 +141,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       // A flat two-dash eye — an expressionless dash. It droops slightly on the outside
       ink.line([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0 });
     } else if (kind === "happy") {
-      // An always-smiling eye ^^ — an arch bulging upward (the same shape as the happy state's smile arch, always on here)
-      ink.line(arcPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.92, eye.r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10), { color: ink0 });
+      // An always-smiling eye ^^ — the smile arch, always on here (smileArchPath: the same path the ^^ state stands up)
+      ink.line(smileArchPath(eye.x, eye.y, eye.r), { color: ink0 });
     } else if (kind === "squeeze") {
       // >_< — eyes screwed shut. A bracket pointing toward the nose (left eye >, right eye <)
       const inward = -eye.side;
@@ -412,6 +412,10 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
 
 // The lens radius = the eye radius × a multiplier. spec.js uses the same value when deciding whether the two lenses overlap.
 export const LENS_SCALE = { glasses: 1.45, goggles: 1.75 };
+// The ^^ smile arch — an arch bulging upward over the eye. **One path, two callers**: the `happy` eye kind wears it
+// always (drawEyes), and the scene stands it up as the shut lid for the ^^ state on every other kind (scene/rig.js).
+// Written out in both places, changing the happy eye left every other creature's ^^ on the old arch
+export const smileArchPath = (cx, cy, r) => arcPath(cx, cy - r * 0.12, r * 0.92, r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10);
 
 export function drawEyewear(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyewear;
@@ -602,7 +606,7 @@ export function drawNose(ink, fills, spec, box, eyes) {
 // The nose's lower end — the upper limit for the mouth's position. With no nose, the (startle-widened) eye's lower edge or slightly below the head's centre
 export function noseBottomY(spec, box, eyes) {
   const kind = spec.parts.nose;
-  if (spec.species === "pup") return muzzleGeometry(spec, box).noseY - muzzleGeometry(spec, box).noseR;
+  if (spec.species === "pup") { const m = muzzleGeometry(spec, box); return m.noseY - m.noseR; }   // one call: it re-rolls a hash and two tones
   if (kind === "none") return Math.min(eyeFloor(spec, eyes, 0) - 0.01, box.headCy - box.headRy * 0.04);
   if (spec.species !== "cat") {   // area noses — they give the lower edge from their own coordinates (a cat reads even these values as a catNose triangle, so it uses the constants below)
     if (kind === "bulb") return bulbShape(spec, box, eyes).bottom;

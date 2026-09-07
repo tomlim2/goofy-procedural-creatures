@@ -122,15 +122,24 @@ const puffed = (h, path, amount) => path.map(([x, y]) => {
 });
 // The scalp's hem — the hairline at the front (the forehead's arc: higher at the temples), easing from half-way out to the side
 // lobes' bottom at the edge. A function of x, so the locks can be clipped against it (lock)
-const scalpHem = (h, frontY, hemAt) => {
-  const { spec, box, rx, ry, cy } = h;
-  const brow = frontY ?? browLine(spec, box) + ry * 0.1;
-  const frontAt = (x) => (typeof brow === "function" ? brow(x) : brow) + ry * 0.05 * (x / rx) ** 2;
+// The sideways ramp every hem rides: the front line out to half the head's width, then easing (smoothstep over the
+// last 48%) to the side lobes' bottom at the edge — the lobes never entering the eye band. The scalp and the hoods
+// both take it; it was written out in both, the same eleven tokens
+const hemRamp = (h, frontAt) => {
+  const { rx, ry, cy } = h;
   const sideBottom = Math.max(cy - ry * 0.45, eyeSafeY(h));
   return (x) => {
     const u = Math.abs(x) / rx;
     const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
-    const base = frontAt(x) * (1 - k) + sideBottom * k;
+    return frontAt(x) * (1 - k) + sideBottom * k;
+  };
+};
+const scalpHem = (h, frontY, hemAt) => {
+  const { spec, box, rx, ry } = h;
+  const brow = frontY ?? browLine(spec, box) + ry * 0.1;
+  const ramp = hemRamp(h, (x) => (typeof brow === "function" ? brow(x) : brow) + ry * 0.05 * (x / rx) ** 2);
+  return (x) => {
+    const base = ramp(x);
     return hemAt ? hemAt(x, base) : base;
   };
 };
@@ -441,14 +450,8 @@ const pigtailsBack = (h) => {
 // few sparse open hooks near the edge. It was rings inside the fill and a straight hem, which read as a spotted helmet
 const hood = ({ grow, lumps, amount, grain = false, curls = false, scallop = null }) => (h) => {
   const { front, frontFills, spec, box, rx, ry, cy, noise } = h;
-  const safe = eyeSafeY(h);
-  const mid = Math.max(browLine(spec, box) + ry * 0.04, safe);
-  const sideBottom = Math.max(cy - ry * 0.45, safe);
-  const bottomAt = (x) => {
-    const u = Math.abs(x) / rx;
-    const k = u <= 0.5 ? 0 : u >= 0.98 ? 1 : (() => { const q = (u - 0.5) / 0.48; return q * q * (3 - 2 * q); })();
-    return mid * (1 - k) + sideBottom * k;
-  };
+  const mid = Math.max(browLine(spec, box) + ry * 0.04, eyeSafeY(h));
+  const bottomAt = hemRamp(h, () => mid);   // a hood's front line is flat — the scalp's rises toward the temples
   let outer;
   if (scallop) {
     // round bumps round the whole silhouette — |sin| puts a cusp between every two — turned a little per individual
@@ -554,7 +557,6 @@ const outlineAt = (h, angle) => {
 const spikedBand = ({ span, count, len0, lenVar, behind = false }) => (h) => {
   const layer = behind ? h.back : h.crown, fills = behind ? h.backFills : h.crownFills;
   const { spec, noise, cy } = h;
-  const cap = undefined;
   const zig = [];
   const inside = [];
   for (let i = 0; i < count; i += 1) {
@@ -572,7 +574,7 @@ const spikedBand = ({ span, count, len0, lenVar, behind = false }) => (h) => {
     }
     zig.push(tip);
     if (i === count - 1) zig.push([base[0] * 0.995, cy + (base[1] - cy) * 0.995]);
-    inside.push([base[0] * (cap !== undefined ? 0.9 : 1), cy + (base[1] - cy) * (cap !== undefined ? 0.9 : 1)]);
+    inside.push([base[0], base[1]]);   // the band's inner edge is the outline itself
   }
   const poly = [...zig, ...inside.reverse()];
   paintPart(fills, spec, poly, h.ink0, { part: "hair", own: true, concave: true });
