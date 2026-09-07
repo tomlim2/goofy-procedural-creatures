@@ -5,7 +5,7 @@ import { Sketch, resample } from "../../stroke.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart, patternOf } from "./body.js";
 import { makeNoise, makeRng } from "../../rng.js";
-import { layout, BUILD } from "./layout.js";
+import { layout, BUILD, shoulderY } from "./layout.js";
 import { shade, tint, luminance } from "../../color.js";
 import { SPECIES } from "../vocabulary/species.js";
 import { MARKS, POPS } from "../vocabulary/palette.js";
@@ -29,7 +29,7 @@ function armDims(spec, box) {
   const reach = ARM_BASE * spec.proportions.armSpread * (ARM_LENGTH_SCALE[spec.parts.armLength] || 1);
   return {
     x: box.bodyW * (SHOULDER_X[spec.parts.body] || 0.85),   // shoulder x (the right arm. The left is -x)
-    y: box.bodyTop - (box.bodyTop - box.legTop) * 0.22,     // shoulder y
+    y: shoulderY(box),                                       // shoulder y — the shoulder line (layout.js; the head's chin never goes below it)
     upper: reach * 0.48,
     lower: reach * 0.52
   };

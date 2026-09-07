@@ -27,6 +27,10 @@ export const BUILD = {
 
 // The ceiling for a biped's head top. Hair and hats have to fit inside the 1.19 left after taking the floor line (0.16) off the cell height of 1.35
 export const MAX_HEAD_TOP = 1.05;
+// The shoulder line — where a biped's arms pivot (limbs.js armDims): 22% of the body's height under its top, on the torso's
+// outline. The head's chin never goes below it (layout)
+export const SHOULDER_DROP = 0.22;
+export const shoulderY = (box) => box.bodyTop - box.bodyH * SHOULDER_DROP;
 
 // Leg length multipliers (the legLength slot). Quads use the same table — a short quad is a dachshund. verylong is twice long (imp stilts)
 export const LEG_LENGTH = { long: 1, medium: 0.65, short: 0.3, verylong: 2 };
@@ -81,15 +85,21 @@ export function layout(spec) {
   const shape = headShape(spec);
   let headRy = 0.3 * p.headScale * shape.ry;
   let headRx = 0.3 * p.headScale * p.headWide * shape.rx;
-  let headCy = bodyTop + headRy * 0.72;
+  // The head sits on the torso sunk by 28% of its half-height — but its chin never below the shoulder line, where the arms
+  // pivot (shoulderY): a big head on a small body sank over the shoulders and the arms came out from under the chin. Such a
+  // head is lifted until its chin is on the line — the neck (the head's axis, bodyTop) stays where it is
+  const shoulder = bodyTop - bodyH * SHOULDER_DROP;
+  const seat = (ry) => Math.max(bodyTop + ry * 0.72, shoulder + ry);
+  let headCy = seat(headRy);
   // To fit inside the cell — if the head top passes MAX_HEAD_TOP, the head shrinks by that much (hair and hats stack on above it).
-  // A huge head plus long legs plus a big body would together pass the cell (1.19) and invade the row above
-  const top = headCy + headRy;
-  if (top > MAX_HEAD_TOP) {
-    const k = (MAX_HEAD_TOP - bodyTop) / (top - bodyTop);
-    headRy *= k;
-    headRx *= k;
-    headCy = bodyTop + headRy * 0.72;
+  // A huge head plus long legs plus a big body would together pass the cell (1.19) and invade the row above. The top is the
+  // higher of two lines in the half-height (sunk: bodyTop + 1.72·ry; lifted: shoulder + 2·ry), so the ceiling is solved on
+  // each and the lower half-height taken — that one puts the top exactly on the ceiling
+  if (headCy + headRy > MAX_HEAD_TOP) {
+    const ry = Math.min((MAX_HEAD_TOP - bodyTop) / 1.72, (MAX_HEAD_TOP - shoulder) / 2);
+    headRx *= ry / headRy;
+    headRy = ry;
+    headCy = seat(headRy);
   }
 
   return { quad: false, legTop, bodyH, bodyW, bodyCx: 0, bodyTop, headRx, headRy, headCy };

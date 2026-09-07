@@ -31,6 +31,13 @@ Built from `blobPath`'s superellipse (angularity), taper (the top/bottom width r
 
 Noise lumps (headLumps) are laid on top of the head. No shading — that is the light's job ([../drawing.md](../drawing.md) § the light).
 
+**Where it sits** (`layout`) — on the torso, sunk by 28% of its half-height, **but the chin never below the shoulder line**
+(`shoulderY` — 22% of the body's height under its top, where the arms pivot): a big head on a small body sank over the
+shoulders and the arms came out from under the chin, so such a head is lifted until its chin is on the line. The neck (the
+head's axis, `bodyTop`) stays put. A head whose top then passes `MAX_HEAD_TOP` (1.05) shrinks until it is on the ceiling — the
+ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A quad's head is laid on the front of the body
+(82% of its half-height above the back) and has no shoulder line.
+
 ### eyes — eye kinds (20)
 | Value | Drawing | Alive (pupil, blink) |
 | --- | --- | --- |
