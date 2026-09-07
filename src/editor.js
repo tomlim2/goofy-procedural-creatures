@@ -261,21 +261,22 @@ function addMaterial() {
   render();
 }
 
-// ---- NEW MATERIAL · EDIT MATERIAL — the dialog -------------------------------------------------------
+// ---- NEW MATERIAL · EDIT MATERIAL — the panel --------------------------------------------------------
 //
-// Under a part, the material list's two action rows open a dialog over the page rather than acting at once: **+**
-// makes a new material for the surface, **✎** edits the one it has on. The dialog is the same either way — the
-// ball the material is, then its three: TEXTURE (the sample balls), DENSITY (the slider, low to high), COLOUR
-// (the palette's swatches) — and CANCEL · MAKE (or SAVE) under them. **The creature previews it**: a new material
-// is made and worn the moment the dialog opens, and every pick is written to the spec and drawn (setSurface — a
-// box's colour into its palette box, skin's and cloth's texture and density into their slots, the rest into
-// spec.materials), so the head goes green as the swatch is clicked; MAKE and SAVE keep what stands, CANCEL, Escape
-// or a click off the card put the spec from before back. The rows are MATERIALS' own (ballStrip, swatchRow, the
-// .sect line), so the two read the same
+// Under a part, the material list's + and every ✎ open a panel beside the deck rather than acting at once: **+**
+// makes a new material for the surface and opens on it, **✎** opens on the material it stands by. The panel is the
+// same either way — the ball the material is, then its three: TEXTURE (the sample balls), DENSITY (the slider, low
+// to high), COLOUR (the palette's swatches). **A pick is the edit**: every one is written to the spec and drawn
+// (setSurface — a box's colour into its palette box, skin's and cloth's texture and density into their slots, the
+// rest into spec.materials), so the head goes green as the swatch is clicked, and there is nothing to confirm — a
+// pointer put down off the panel, or Escape, closes it, and what stands, stands. It had CANCEL · MAKE/SAVE and a
+// backdrop dimming the page: the buttons were a second step after a pick that was already the change, and the dim
+// hid the very colour just picked. So it is a plain dialog (show, not showModal) — no backdrop, the page under it
+// alive. The rows are MATERIALS' own (ballStrip, swatchRow, the .sect line), so the two read the same
 const draftDialog = document.getElementById("newMaterial");
 const draftBox = document.getElementById("newMaterialFields");
-let draft = null;   // { mode: "new" | "edit", region, key, before, selectedBefore } while the dialog is up
-const draftUi = { title: null, partLabel: null, part: null, ball: null, cap: null, sect: {}, strip: null, slider: null, swatches: null, keep: null };
+let draft = null;   // { mode: "new" | "edit", region, key } while the panel is up
+const draftUi = { title: null, partLabel: null, part: null, ball: null, cap: null, sect: {}, strip: null, slider: null, swatches: null };
 function buildDraft() {
   draftUi.title = document.getElementById("newMaterialTitle");
   draftUi.part = section(draftBox, "FOR");
@@ -304,62 +305,33 @@ function buildDraft() {
   row.appendChild(draftUi.slider);
   draftUi.sect.colour = section(draftBox, "COLOUR");
   draftUi.swatches = swatchRow(draftBox, (color) => setDraft("colour", color));
-  draftUi.keep = document.getElementById("newMaterialMake");
-  draftUi.keep.addEventListener("click", keepDraft);
-  document.getElementById("newMaterialCancel").addEventListener("click", cancelDraft);
-  // A click off the card — on the backdrop — is a cancel. The backdrop's clicks land on the dialog itself, as do the
-  // card's own padding's, so the point is tested against the card
-  draftDialog.addEventListener("click", (event) => {
-    if (event.target !== draftDialog) return;
-    const r = draftDialog.getBoundingClientRect();
-    if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) cancelDraft();
-  });
-  // Escape closes it. The platform closes a modal on Escape of its own accord (a close request), but not on every key
-  // the page is handed — driven from outside, the keydown reached the page and the dialog stood — so the key is taken here
-  draftDialog.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape") return;
-    event.preventDefault();
-    cancelDraft();
-  });
-  // The platform's own close request (its Escape) — a cancel; and closed any other way, the draft is settled as it stands.
-  // Settling is done on the spot, never left to the close event: that event is fired a task later, and a dialog reopened
-  // before it snapshotted the spec with the cancelled material still on it
-  draftDialog.addEventListener("cancel", () => settleDraft(false));
-  draftDialog.addEventListener("close", () => settleDraft());
+  // A pointer put down off the panel closes it — the dropdowns' rule — and so does Escape, from anywhere on the page
+  // (a plain dialog gets no close request of its own). A pen put down while the panel is up closes it here and opens
+  // it again on its own material with the click
+  document.addEventListener("pointerdown", (event) => { if (draftDialog.open && !draftDialog.contains(event.target)) closeDraft(); });
+  window.addEventListener("keydown", (event) => { if (event.key === "Escape" && draftDialog.open) closeDraft(); });
+  draftDialog.addEventListener("close", () => { draft = null; });
 }
-// The dialog going: kept, what stands on the creature stays; else the spec from before comes back, the previewed
-// material with it. Once — a draft settled is gone
-function settleDraft(keep = false) {
-  if (!draft) return;
-  if (!keep) {
-    spec = draft.before;
-    selected = draft.selectedBefore;
-    render();
-  }
-  draft = null;
-}
-function cancelDraft() {
-  settleDraft(false);
-  if (draftDialog.open) draftDialog.close();
-}
-// + under a part — a new material for the surface, a copy of what it has on, worn at once for the preview. ✎ — the
-// dialog on the material the surface has on (`key`). The dialog stands at the height of the region's MATERIAL line
+// + under a part — a new material for the surface, a copy of what it has on, worn at once. ✎ — the panel on the
+// material it stands by (`key`). The panel stands at the height of the region's MATERIAL line
 function openDraft(region, key = null) {
-  settleDraft();   // one still pending (its close event a task away) is settled before the next snapshot is taken
-  const before = spec, selectedBefore = selected;
   const mode = key ? "edit" : "new";
   if (!key) {
     key = newMaterial(surfaceOf(wearOf(spec, region)));
     spec = derive({ ...spec, wear: { ...(spec.wear || {}), [region]: key } });
   }
   selected = key;
-  draft = { mode, region, key, before, selectedBefore };
+  draft = { mode, region, key };
   render();
   renderDraft();
-  draftDialog.showModal();
+  if (!draftDialog.open) draftDialog.show();
   placeDraft();
 }
-// Where the dialog stands: beside the deck, at the height of the MATERIAL line it was opened from — next to where the
+function closeDraft() {
+  draft = null;
+  if (draftDialog.open) draftDialog.close();
+}
+// Where the panel stands: beside the deck, at the height of the MATERIAL line it was opened from — next to where the
 // hand just was — and inside the screen, the deck's inset kept from its foot. Not centred: centred, it covered the
 // creature to the last pixel and the preview was invisible; at the screen's far edge it stood a long way from the line.
 // The line is looked up by its region, not held: the render before this lays the MATERIAL lines anew, and the one the
@@ -377,14 +349,13 @@ function placeDraft() {
 }
 window.addEventListener("resize", () => { if (draftDialog.open) placeDraft(); });
 function setDraft(what, value) {
-  setSurface(draft.key, what, value);   // written and drawn — the creature is the preview
+  setSurface(draft.key, what, value);   // written and drawn — the creature shows it
   renderDraft();
 }
 function renderDraft() {
   const { mode, region, key } = draft;
   const edit = mode === "edit";
   draftUi.title.textContent = edit ? "EDIT MATERIAL" : "NEW MATERIAL";
-  draftUi.keep.textContent = edit ? "SAVE" : "MAKE";
   // FOR — the surface a new material is for; USED BY — every part an edited one is on (a box is on several)
   draftUi.partLabel.textContent = edit ? "USED BY" : "FOR";
   const label = REGION_LABEL[region] ? `${partOf(region)} ${REGION_LABEL[region]}` : region;
@@ -404,11 +375,6 @@ function renderDraft() {
   draftUi.slider.value = String(Math.max(0, DENSITIES.indexOf(s.density)));
   draftUi.sect.colour.textContent = s.colour || "";
   for (const dot of draftUi.swatches.querySelectorAll(".swatch")) dot.classList.toggle("on", dot.dataset.color === s.colour);
-}
-// MAKE · SAVE — what stands on the creature stays; MATERIALS is left open on it
-function keepDraft() {
-  settleDraft(true);
-  draftDialog.close();
 }
 
 // Is this part on the creature at all — a slot at none, a quad's arms, a tailless biped's tail are not
@@ -1248,7 +1214,7 @@ const pose = bindSeg(poseSeg, "pose", (value) => {
 });
 window.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
-  if (draftDialog.open) return;   // the dialog's keys are its own — R under it shuffled the creature away
+  if (draftDialog.open) return;   // the panel's keys are its own — R under it shuffled the creature away
   const key = event.key.toLowerCase();
   if (key === "r") document.getElementById("shuffle").click();
   if (key === "b") pose.set(bind ? "motion" : "bind");

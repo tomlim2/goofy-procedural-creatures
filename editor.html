@@ -75,17 +75,13 @@
     <ul id="notes" class="notes empty"></ul>
   </section>
 
-  <p class="hint">Species first, then parts · the rules are reported, not applied — what you pick is drawn · PART: pick a part by its picture; SHAPE is one line — click it and the forms drop down, each its picture then its name — its properties (its own sizes, lengths and manners) stand open under it, and MATERIAL, one line the same way, comes last · + at the top of a MATERIAL list opens NEW MATERIAL — its texture, density and colour, drawn on the creature as you pick, then MAKE or CANCEL — and ✎ at the right of a material's row opens the same on that material, SAVE or CANCEL · MATERIALS shows every surface the creature wears — click a ball to edit that one and see which parts take it; each surface is a material of its own · HAND is the hand that draws — a new one, and its wobble · SAVE writes the whole spec — the file the board's pin opens into a cell · R shuffle · B pose</p>
+  <p class="hint">Species first, then parts · the rules are reported, not applied — what you pick is drawn · PART: pick a part by its picture; SHAPE is one line — click it and the forms drop down, each its picture then its name — its properties (its own sizes, lengths and manners) stand open under it, and MATERIAL, one line the same way, comes last · + at the top of a MATERIAL list opens NEW MATERIAL beside the deck — its texture, density and colour, each pick drawn on the creature at once; click away or Escape when done — and ✎ at the end of the MATERIAL line or of a material's row opens the same on that material · MATERIALS shows every surface the creature wears — click a ball to edit that one and see which parts take it; each surface is a material of its own · HAND is the hand that draws — a new one, and its wobble · SAVE writes the whole spec — the file the board's pin opens into a cell · R shuffle · B pose</p>
 </aside>
 
-<!-- NEW MATERIAL · EDIT MATERIAL — the dialog + and a row's ✎ under a part open (editor.js openDraft): the material's three, then CANCEL · MAKE or SAVE -->
+<!-- NEW MATERIAL · EDIT MATERIAL — the panel + and a ✎ under a part open (editor.js openDraft): the material's three, each pick the edit -->
 <dialog id="newMaterial" class="modal card" aria-labelledby="newMaterialTitle">
   <h2 id="newMaterialTitle">NEW MATERIAL</h2>
   <div id="newMaterialFields" class="fields"></div>
-  <div class="row seg modalButtons">
-    <button type="button" id="newMaterialCancel">CANCEL</button>
-    <button type="button" id="newMaterialMake" class="on">MAKE</button>
-  </div>
 </dialog>
 
 <noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>

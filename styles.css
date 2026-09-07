@@ -462,17 +462,14 @@ body.how { height: auto; }
 .balls .ball canvas { display: block; width: 100%; height: 100%; }   /* an unpainted canvas is 300×150 — inside its 28px button, never over the slider under it */
 .balls .ball:hover { background: rgba(43, 39, 36, 0.06); }
 .balls .ball.on { outline: 2px solid var(--ink); outline-offset: 1px; }
-/* NEW MATERIAL · EDIT MATERIAL — the dialog + and a row's ✎ under a part open (editor.js openDraft): one more card, floated over the
-   page by the platform's modal with its backdrop dimming the rest — lightly, the creature behind it is the preview. So it is
-   not centred, where the creature stands (centred, it covered the creature to the last pixel and the preview was invisible):
-   it stands beside the deck, at the height of the MATERIAL line it was opened from (editor.js placeDraft sets its place —
-   left and top, the margin cleared), the deck's width. The ball and the material's three in MATERIALS' own rows (.pv, .sect,
-   .balls, .swatches); CANCEL · MAKE or SAVE under them */
-.modal { width: 244px; max-width: calc(100vw - 32px); color: var(--ink); }
-.modal::backdrop { background: rgba(43, 39, 36, 0.18); }
+/* NEW MATERIAL · EDIT MATERIAL — the panel + and a ✎ under a part open (editor.js openDraft): one more card, floated over the
+   page — a plain dialog, not a modal: no backdrop (a dim over the page hid the very colour just picked) and the page under
+   it alive. It stands beside the deck, at the height of the MATERIAL line it was opened from (editor.js placeDraft sets its
+   place — left and top, the margin cleared), the deck's width, above the deck. The ball and the material's three in
+   MATERIALS' own rows (.pv, .sect, .balls, .swatches); a pick is the edit, and there are no buttons */
+.modal { position: fixed; z-index: 20; width: 244px; max-width: calc(100vw - 32px); color: var(--ink); }
 .modal .draft { justify-self: center; cursor: default; }
 .modal .draft:hover { background: #f8f3e8; }
-.modal .modalButtons { margin-top: 10px; }
 /* A swatch is the colour itself, so the only state it can show is a ring around it. */
 .swatch { width: 16px; height: 16px; padding: 0; border: 1px solid var(--line); line-height: 1; }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 1px; }
