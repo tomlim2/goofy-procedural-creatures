@@ -46,29 +46,35 @@ export function drawHeadgear(ink, fills, spec, box) {
     return { path: [[w, line], ...upper, [-w, line]], w };
   };
 
-  if (kind === "band") {
-    // Headband — just above the brows, poking slightly outside the outline
+  // The hat itself — one entry per kind (HEADGEAR, below), `pot` when the value is one this table does not know
+  (HEADGEAR[kind] || HEADGEAR.pot)({ ink, fills, spec, box, ink0, pop, accent, rx, ry, cy, brow, halfW, crown, tiltSide, shape, cover });
+}
+
+// **One entry per hat**, the way every other part of the drawing is a table (mouth.js MOUTH, hair.js FRONTS and
+// BACKS, KNOTS): the branch chain this was made it the one part guidelines/character/rules.md § change three
+// files could not name a table for. Each takes the hat's context — the colours, the head's measures, the brow
+// line it sits above, and the two shapes every hat is cut from (halfW, cover) — and destructures what it uses,
+// as hair.js's entries do. `pot` is the fall-through: an unknown value draws a pot rather than nothing
+const HEADGEAR = {
+  // Headband — just above the brows, poking slightly outside the outline
+  band: ({ ink, ink0, accent, ry, brow, halfW }) => {
     const y = brow + ry * 0.08;
     const w = halfW(y) * 1.05;
     // The band — the hat's color laid as a thick pencil stroke: a fill in disguise, not a line, so it stays outside the goofy outline
     ink.pencil([[-w, y], [w, y + 0.006]], { color: accent, width: BANDS.hat });
     ink.line([[-w, y + 0.014], [w, y + 0.02]], { color: ink0, size: "S" });
-    return;
-  }
-
-  if (kind === "helmet") {
-    // Helmet — covers from above the brows to the crown along the head shape (1.1×). A lower rim plus a centre ridge
+  },
+  // Helmet — covers from above the brows to the crown along the head shape (1.1×). A lower rim plus a centre ridge
+  helmet: ({ ink, fills, spec, ink0, accent, ry, brow, crown, shape, cover }) => {
     const bottom = brow;
     const { path, w } = cover(1.1, bottom);
     paintPart(fills, spec, path, accent, { part: "headgear", own: true });   // a hat takes the creature's goofy material at its own color's step
     ink.contour(path, { color: ink0 });
     ink.line([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0 });
     ink.line([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, size: "S" });
-    return;
-  }
-
-  if (kind === "cap") {
-    // Baseball cap — a dome following the head shape (1.04×) plus a brim out to one side (the brow line). The brim droops slightly
+  },
+  // Baseball cap — a dome following the head shape (1.04×) plus a brim out to one side (the brow line). The brim droops slightly
+  cap: ({ ink, fills, spec, ink0, accent, ry, brow, tiltSide, shape, cover }) => {
     const bottom = brow + ry * 0.05;
     const { path, w } = cover(1.04, bottom);
     paintPart(fills, spec, path, accent, { part: "headgear", own: true });   // a hat takes the creature's goofy material at its own color's step
@@ -76,11 +82,9 @@ export function drawHeadgear(ink, fills, spec, box) {
     const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
     paintPart(fills, spec, brim, accent, { part: "headgear", own: true });
     ink.contour(brim, { color: ink0 });
-    return;
-  }
-
-  if (kind === "beret") {
-    // Beret — a flat disc laid on the crown at a tilt, plus a nub
+  },
+  // Beret — a flat disc laid on the crown at a tilt, plus a nub
+  beret: ({ ink, fills, spec, ink0, accent, rx, ry, cy, brow, crown, tiltSide }) => {
     const tilt = tiltSide * 0.16;
     const bx = -tilt * rx * 0.8;
     const by = Math.max(cy + ry * 0.82, brow + ry * 0.35);
@@ -91,14 +95,12 @@ export function drawHeadgear(ink, fills, spec, box) {
     paintPart(fills, spec, disc, accent, { part: "headgear", own: true });
     ink.contour(disc, { color: ink0 });
     ink.line([[bx, by + ry * 0.3], [bx + 0.012, by + ry * 0.42]], { color: ink0 });
-    return;
-  }
-
-  if (kind === "crown") {
-    // Crown — a band sitting on the crown of the head with a zigzag of points, the reference's scribbled paper crown.
-    // Hand-written polygon, so it goes through crumple (guidelines/drawing.md § nothing raw).
-    // **Filled in pieces** — the band and each spike on its own. fill() is a fan from the centre and assumes a shape
-    // visible from it; the V notches between the spikes are concave, and fanned as one polygon the fill crossed them
+  },
+  // Crown — a band sitting on the crown of the head with a zigzag of points, the reference's scribbled paper crown.
+  // Hand-written polygon, so it goes through crumple (guidelines/drawing.md § nothing raw).
+  // **Filled in pieces** — the band and each spike on its own. fill() is a fan from the centre and assumes a shape
+  // visible from it; the V notches between the spikes are concave, and fanned as one polygon the fill crossed them
+  crown: ({ ink, fills, spec, ink0, accent, rx, ry, cy, brow, halfW, crown, shape }) => {
     const by = Math.max(cy + ry * 0.7, brow + ry * 0.3);
     const w = Math.max(halfW(by) * 0.98, rx * 0.55);
     const bandH = ry * 0.14;
@@ -117,24 +119,22 @@ export function drawHeadgear(ink, fills, spec, box) {
     for (let i = 0; i < SPIKES; i += 1) outline.push(peak(i), [vx(i + 1), by + bandH]);
     outline[outline.length - 1] = [w, by + bandH];
     ink.contour(crumple(outline, 0.004, phase), { color: ink0 });
-    return;
-  }
-
-  if (kind === "coronet") {
-    // The monkey's crown. It is **one tall body with V notches cut into its top**, not a band with triangles
-    // stood on it — that was the first reading and it came out as a squat strip. Measured off the reference
-    // head (500 px, skull ry ≈ 138, head half-width 72 at the crown's base):
-    //   the body is a trapezoid **narrower at the bottom than the top** (base half 16 px, top half 21 px) and
-    //   is about as TALL as it is wide (42 px each way) — that squareness is the "long body" of it ·
-    //   the notches cut down two thirds of the crown's height, leaving the body a third ·
-    //   the tips evenly spaced across ±1.5× the base half-width, so the outer two overhang the body ·
-    //   the tips sit at DIFFERENT heights (the ripple runs either way per individual) — most of what keeps
-    //   it from reading as a stamped icon. The reference has four; three reads better at this size.
-    // The reference stands 0.93·ry over the skull and this cell allows about 0.45, so the crown is scaled to
-    // the board, and the aspect is kept as far as it can be — narrowed rather than squashed, because
-    // squashing is what loses the long body. Narrowed all the way to the reference's ratio it turned into a
-    // sliver, so it sits between: about 1.9 tall to 1 wide against the reference's 2.3.
-    // One polygon, filled in pieces — the notches are concave and a fan from the centre crosses them.
+  },
+  // The monkey's crown. It is **one tall body with V notches cut into its top**, not a band with triangles
+  // stood on it — that was the first reading and it came out as a squat strip. Measured off the reference
+  // head (500 px, skull ry ≈ 138, head half-width 72 at the crown's base):
+  //   the body is a trapezoid **narrower at the bottom than the top** (base half 16 px, top half 21 px) and
+  //   is about as TALL as it is wide (42 px each way) — that squareness is the "long body" of it ·
+  //   the notches cut down two thirds of the crown's height, leaving the body a third ·
+  //   the tips evenly spaced across ±1.5× the base half-width, so the outer two overhang the body ·
+  //   the tips sit at DIFFERENT heights (the ripple runs either way per individual) — most of what keeps
+  //   it from reading as a stamped icon. The reference has four; three reads better at this size.
+  // The reference stands 0.93·ry over the skull and this cell allows about 0.45, so the crown is scaled to
+  // the board, and the aspect is kept as far as it can be — narrowed rather than squashed, because
+  // squashing is what loses the long body. Narrowed all the way to the reference's ratio it turned into a
+  // sliver, so it sits between: about 1.9 tall to 1 wide against the reference's 2.3.
+  // One polygon, filled in pieces — the notches are concave and a fan from the centre crosses them.
+  coronet: ({ ink, fills, spec, ink0, accent, ry, cy, brow, halfW, crown, tiltSide, shape }) => {
     const by = Math.max(cy + ry * 0.78, brow + ry * 0.3);
     // **Every measurement hangs off the base half-width**, the way the reference's do, so the proportions hold
     // whatever shape the head is. Tying the heights to ry instead let a wide head flatten the body back into
@@ -170,12 +170,10 @@ export function drawHeadgear(ink, fills, spec, box) {
     }
     outline.push([topW, by + bodyH]);
     ink.contour(crumple(outline, 0.003, phase), { color: ink0 });
-    return;
-  }
-
-  if (kind === "cone") {
-    // Party cone — a tall triangle sitting on the crown, leaning a little to one side, a pom at the tip.
-    // One convex triangle, so the fan fill is safe as it is; crumpled like every hand-written polygon
+  },
+  // Party cone — a tall triangle sitting on the crown, leaning a little to one side, a pom at the tip.
+  // One convex triangle, so the fan fill is safe as it is; crumpled like every hand-written polygon
+  cone: ({ ink, fills, spec, ink0, accent, rx, ry, cy, brow, halfW, crown, tiltSide }) => {
     const by = Math.max(cy + ry * 0.68, brow + ry * 0.3);
     const w = Math.max(halfW(by) * 0.42, rx * 0.26);   // narrow — a party cone, not a tent
     const apex = [tiltSide * rx * 0.12, by + ry * 0.66];   // pom top ≈ crown + 0.34·ry — under the 1.19 cell ceiling
@@ -185,12 +183,10 @@ export function drawHeadgear(ink, fills, spec, box) {
     const pom = blobPath(apex[0], apex[1] + 0.012, 0.019, 0.019, { lumps: 3, amount: 0.18, noise: null });
     paintPart(fills, spec, pom, shade(accent, 1.3), { part: "headgear", own: true });   // the pom a step lighter, so it reads off the cone
     ink.contour(pom, { color: ink0, size: "S" });
-    return;
-  }
-
-  if (kind === "halo") {
-    // Halo — a thin ring floating above the head, nothing else. Ink only: it is a mark, not a thing with a colour.
-    // It covers nothing, which is why it is the one headgear that keeps every hairstyle (spec.js applyConstraints)
+  },
+  // Halo — a thin ring floating above the head, nothing else. Ink only: it is a mark, not a thing with a colour.
+  // It covers nothing, which is why it is the one headgear that keeps every hairstyle (spec.js applyConstraints)
+  halo: ({ ink, spec, ink0, rx, ry, crown, tiltSide }) => {
     const tilt = tiltSide * 0.06;
     const hy = crown + ry * 0.28;   // ring top ≈ crown + 0.38·ry — floats clear of the lumpiest scalp, under the ceiling
     const cos = Math.cos(tilt);
@@ -198,11 +194,9 @@ export function drawHeadgear(ink, fills, spec, box) {
     const ring = blobPath(0, 0, rx * 0.44, ry * 0.11, { lumps: 3, amount: 0.06, noise: null })
       .map(([x, y]) => [x * cos - y * sin, hy + x * sin + y * cos]);
     ink.contour(ring, { color: ink0 });
-    return;
-  }
-
-  if (kind === "bonnet") {
-    // Bonnet — a thick band wrapping the head. It crosses over the crown from eye level on both sides
+  },
+  // Bonnet — a thick band wrapping the head. It crosses over the crown from eye level on both sides
+  bonnet: ({ ink, ink0, accent, rx, ry, cy, crown }) => {
     const rim = arcPath(0, cy, rx * 1.2, ry * 1.14, Math.PI * 1.02, -Math.PI * 0.02, 26);
     // The brim — the hat's color as a thick pencil stroke along the rim: a band, not a line (see the band above)
     ink.pencil(rim, { color: accent, width: BANDS.brim });
@@ -211,18 +205,20 @@ export function drawHeadgear(ink, fills, spec, box) {
     for (const side of [-1, 1]) {
       ink.line([[side * rx * 1.2, cy - 0.01], [side * rx * 1.15, cy - 0.05]], { color: ink0 });
     }
-    return;
-  }
+  },
+  pot: ({ ink, fills, spec, ink0, accent, ry, brow, halfW, crown }) => {
 
-  // pot — a tub pulled down over the head. Starts above the brows and rises higher than the crown
-  const bottom = brow + ry * 0.12;
-  const w = halfW(bottom) * 0.9;
-  const top = crown + ry * 0.28;
-  const pot = crumple([[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]], 0.004, 5);
-  paintPart(fills, spec, pot, accent, { part: "headgear", own: true });
-  ink.contour(pot, { color: ink0 });
-  ink.line([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, size: "S" });
-}
+    // pot — a tub pulled down over the head. Starts above the brows and rises higher than the crown
+    const bottom = brow + ry * 0.12;
+    const w = halfW(bottom) * 0.9;
+    const top = crown + ry * 0.28;
+    const pot = crumple([[-w, bottom], [-w * 0.85, top], [w * 0.85, top], [w, bottom]], 0.004, 5);
+    paintPart(fills, spec, pot, accent, { part: "headgear", own: true });
+    ink.contour(pot, { color: ink0 });
+    ink.line([[-w * 0.9, bottom + (top - bottom) * 0.25], [w * 0.9, bottom + (top - bottom) * 0.27]], { color: ink0, size: "S" });
+  },
+};
+
 
 export function drawHorns(ink, fills, spec, box, noise) {
   const kind = spec.parts.horns;
