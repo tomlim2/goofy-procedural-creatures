@@ -109,6 +109,14 @@ export function jumpSpan(def) {
   return (def.antic || 0) + def.hops * def.dur + (def.settle || 0);
 }
 
+// **How long a five's swing takes to land** — from the wind-up beginning to the palms meeting. A contract across
+// modules, not a local sum: the scene tells the anchor when to recoil and smile (scene/hifive.js) and the mover's
+// arm reaches the other palm at the same instant (motion/index.js). Written out at all three, they could drift and
+// only scripts/hifive-sim.mjs would see it
+export function swingSpan(H = ACTIONS.hifive) {
+  return H.windup + H.antHold + H.strike;
+}
+
 // The jump curve. tau = time elapsed since the action started (the anticipation included).
 // Returns { hopY, dropK, flight } — envelopes, not angles: dropK (0~1) is how far into the crouch's
 // descent the body is (the clock turns it into a foot-planted leg solve). flight (0~1) is how far off the

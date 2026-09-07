@@ -17,7 +17,7 @@
 // last state) and node can drive it as-is to count firings (guidelines/motion/rules.md § count the firing
 // frequency).
 
-import { ACTIONS, ARM_POSES } from "../motion/index.js";
+import { ACTIONS, ARM_POSES, swingSpan } from "../motion/index.js";
 import { isGhost } from "../character/index.js";
 import { makeRng } from "../rng.js";
 
@@ -164,7 +164,7 @@ export function makeHifives({ rush = 1 } = {}) {
           // is told when, so its recoil and smile key to the same moment
           if (st.walkX === f.walkTo) {
             f.phase = "swing";
-            f.contactAt = t + ACTIONS.hifive.windup + ACTIONS.hifive.antHold + ACTIONS.hifive.strike;
+            f.contactAt = t + swingSpan();   // the mover's arm lands at the same instant (motion/actions.js)
             f.a.clock.hifive({ side: f.side, at: [f.point[0] - f.a.baseX, f.point[1] - f.a.baseY], impactAt: f.contactAt });
           }
         }

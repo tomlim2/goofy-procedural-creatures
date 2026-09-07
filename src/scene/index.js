@@ -10,7 +10,7 @@ import { makeNoise, makeRng } from "../rng.js";
 import { makePaperMaterial, setGrainScale } from "./paper.js";
 import { attachPost } from "./post.js";
 import { inkMaterial, disposeGroup, sketchMesh } from "./mesh.js";
-import { buildCreature, BOIL_FRAMES } from "./rig.js";
+import { buildCreature, BOIL_FRAMES, boilRate } from "./rig.js";
 import { applyState } from "./animate.js";
 import { drawHouse } from "../house/index.js";
 import { BIND_STATE } from "../motion/index.js";
@@ -80,9 +80,10 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
       frames.house.push(mesh);
       group.add(mesh);
     }
+    const boil = boilRate(spec.roll);   // a house boils at the board's own cadence (rig.js)
     return {
       static: true, group, frames, boilRanges: [], spec, limbs: [], lastState: null,
-      boilFps: (8 + (spec.roll % 5) * 0.5) / 15, boilOffset: spec.roll % BOIL_FRAMES,
+      boilFps: boil.fps, boilOffset: boil.offset,
       baseX: 0, baseY: 0, generation: 0, emojiRoot: new THREE.Group()
     };
   }

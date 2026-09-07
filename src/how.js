@@ -13,7 +13,7 @@ import { GOOFY_OUTLINES, BOARD_LINES, SIZE_NAMES } from "./medium/outlines.js";
 import { GOOFY_FUR } from "./medium/fur.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise } from "./rng.js";
-import { BOIL_FRAMES } from "./scene/rig.js";
+import { BOIL_FRAMES, boilRate } from "./scene/rig.js";
 import { runLoop, bindSeg } from "./ui.js";
 import { PAPER, INKS, FILLS, POPS, DARKS } from "./character/index.js";
 import { FURS, ACCENTS, MARKS } from "./character/vocabulary/palette.js";
@@ -298,6 +298,7 @@ document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
       subs.appendChild(span);
     }
   }
+  const boil = boilRate(index);   // staggered by the figure's place on the page, the way the board staggers by roll
   figures.push({
     el,
     canvas: el.querySelector("canvas"),
@@ -310,9 +311,9 @@ document.querySelectorAll("figure[data-fig]").forEach((el, index) => {
     // the ribbon shows its seams — the closed loop's taper pinch, the press fins — so a figure never
     // magnifies beyond 300 px per world unit; the canvas centres in its card instead of stretching
     maxW: Math.round((entry.zoom || 300) * (x1 - x0)),
-    // The board's own cadence (rig.js) — staggered so the page never flips all at once
-    boilFps: (8 + (index % 5) * 0.5) / 15,
-    boilOffset: index % BOIL_FRAMES,
+    // The board's own cadence (rig.js boilRate) — staggered so the page never flips all at once
+    boilFps: boil.fps,
+    boilOffset: boil.offset,
     width: 0
   });
 });

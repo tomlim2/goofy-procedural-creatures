@@ -10,6 +10,18 @@ import { sketchMesh, sketchMeshBoil } from "./mesh.js";
 import { MARKS } from "../character/vocabulary/palette.js";
 
 export const BOIL_FRAMES = 3;
+// **The boil's cadence, for anything that boils.** Slightly different per individual (about 0.53~0.67 fps — once
+// every 1.5~1.9 s); faster and the drawing looks like it is trembling. `n` is whatever keeps the individuals apart:
+// a creature's roll, a house's, the medium page's index — the board staggers so they never all flip at once. It
+// was written out at each of those three
+export const boilRate = (n) => ({ fps: (8 + (n % 5) * 0.5) / 15, offset: n % BOIL_FRAMES });
+// The tail's render order, its one pair: behind the body at rest, above the outline and the hair while raised.
+// guidelines/rig.md § the hierarchy is the single source for these numbers, and the raised one lived only in
+// animate.js — rig.js, which bakes the resting one, did not carry it
+export const TAIL_ORDER = { rest: 0.8, raised: 2.08 };
+// A limb's render order: a leg behind the body (above the floor line), an arm above the body's ink so the sleeve
+// covers the outline and the shoulder reads as embedded. The upper bone, the lower and the foot all take it
+export const limbOrder = (kind) => (kind === "leg" ? 1.2 : 2.5);
 
 // The fake 3D depth (z) — how many times the features' shift a layer moves on a face turn. 1 = the features (the front of the face), 0 = the head outline (the skull axis, no shift), negative = behind (the other way).
 // Set as **one number** per layer — how far forward or back it is *is* the shift. Layers meaning the same thing sharing a value is just a tag (front hair and the scalp),
@@ -47,6 +59,7 @@ function lidSketches(eye, ink, noise, style, spec) {
 }
 
 export function buildCreature(spec, noise, birth = 0) {
+  const boil = boilRate(spec.roll);   // the cadence this individual boils at (its fps and its offset)
   const group = new THREE.Group();
   const bodyGroup = new THREE.Group();
   const headGroup = new THREE.Group();
@@ -139,7 +152,7 @@ export function buildCreature(spec, noise, birth = 0) {
       tailGroup.add(b);
       return b;
     });
-    const boiled = sketchMeshBoil(tails.map((t) => [t.sketch]), 1, 0.8, 0, { skin: { weightsAt: tail.weightsAt, weightsOf: tail.weightsOf } });
+    const boiled = sketchMeshBoil(tails.map((t) => [t.sketch]), 1, TAIL_ORDER.rest, 0, { skin: { weightsAt: tail.weightsAt, weightsOf: tail.weightsOf } });
     tailGroup.add(boiled.mesh);
     tailGroup.updateMatrixWorld(true);           // the bind reads the bones' and the mesh's world matrices — the rest pose, in the same space
     boiled.mesh.bind(new THREE.Skeleton(bones));
@@ -166,7 +179,7 @@ export function buildCreature(spec, noise, birth = 0) {
     // A **leg goes behind the body** (1.2 — above the floor line at 1, below the body at 1.5). Its root sits inside the body outline
     // and the foot reaches back up to the hem, so drawn in front the root's line and the foot's fill lay on top of the torso.
     // An **arm** stays in front (2.5): its sleeve and hand have to cover the body outline for the shoulder to look embedded
-    front.add(boiledMesh((fl) => fl[li].sketch, 1, limb.kind === "leg" ? 1.2 : 2.5));
+    front.add(boiledMesh((fl) => fl[li].sketch, 1, limbOrder(limb.kind)));
     pivot.add(front);
 
     let elbow = null;
@@ -175,7 +188,7 @@ export function buildCreature(spec, noise, birth = 0) {
       // The shin stays on the leg layer (1.2, behind the body); the forearm on the arm layer (2.5)
       elbow = new THREE.Group();
       elbow.position.set(limb.elbow[0], limb.elbow[1], 0);
-      elbow.add(boiledMesh((fl) => fl[li].lowerSketch, 1, limb.kind === "leg" ? 1.2 : 2.5));
+      elbow.add(boiledMesh((fl) => fl[li].lowerSketch, 1, limbOrder(limb.kind)));
       front.add(elbow);
     }
 
@@ -185,7 +198,7 @@ export function buildCreature(spec, noise, birth = 0) {
     if (limb.footSketch && elbow) {
       foot = new THREE.Group();
       foot.position.set(limb.ankle[0], limb.ankle[1], 0);
-      foot.add(boiledMesh((fl) => fl[li].footSketch, 1, limb.kind === "leg" ? 1.2 : 2.5));
+      foot.add(boiledMesh((fl) => fl[li].footSketch, 1, limbOrder(limb.kind)));
       elbow.add(foot);
     }
 
@@ -362,8 +375,8 @@ export function buildCreature(spec, noise, birth = 0) {
     headRy: firstDrawn.box.headRy,
     headTop: firstDrawn.headTop,
     // The boil period. Slightly different per individual (about 0.53~0.67 fps — once every 1.5~1.9 s). Faster and the drawing looks like it is trembling
-    boilFps: (8 + (spec.roll % 5) * 0.5) / 15,
-    boilOffset: spec.roll % BOIL_FRAMES,
+    boilFps: boil.fps,
+    boilOffset: boil.offset,
     baseX: 0,
     baseY: 0,
     generation: 0,

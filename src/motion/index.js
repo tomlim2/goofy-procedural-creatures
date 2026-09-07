@@ -12,13 +12,13 @@ import { MOTION, ghostMotion } from "./table.js";
 import * as R from "./rhythm.js";
 import * as E from "./events.js";
 import * as S from "./states.js";
-import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, jumpSpan, sitPose, bindArm, solveArms, solveLeg } from "./actions.js";
+import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, jumpSpan, swingSpan, sitPose, bindArm, solveArms, solveLeg } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
 import { ramp, smoothstep, damp, approach, bump, envelope } from "./ease.js";
 import { TICK_FPS } from "../tick.js";
 
 export { MOTION } from "./table.js";
-export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms, solveLeg } from "./actions.js";
+export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms, solveLeg, swingSpan } from "./actions.js";
 export { EMOJI } from "./emoji.js";
 
 // The bind state — a character that has received no motion at all. Every value is still and at default: a biped's arms in a T-pose,
@@ -234,7 +234,7 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
         }
         if (t >= trip.start + trip.dur) {
           trip.x = trip.to; trip.start = -1; five.walkTo = null; five.hitAt = t;
-          five.impactAt = t + ACTIONS.hifive.windup + ACTIONS.hifive.antHold + ACTIONS.hifive.strike;
+          five.impactAt = t + swingSpan();
           modeName = "idle";
         }
       }
@@ -419,7 +419,7 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
             if (five.hitAt < 0) { tx = cx; ty = cy; }
             else {
               const tau = t - five.hitAt;
-              const S1 = H.windup, S2 = S1 + H.antHold, S3 = S2 + H.strike, S4 = S3 + H.overshoot;
+              const S1 = H.windup, S2 = S1 + H.antHold, S3 = swingSpan(H), S4 = S3 + H.overshoot;   // S3 is the contact — the same span the scene keys to
               if (tau < S1) {
                 const k = ramp(tau / S1);
                 tx = cx + (px - cx) * k; ty = cy + (py - cy) * k;

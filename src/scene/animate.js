@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { buildEmoji } from "./emoji.js";
 import { disposeGroup } from "./mesh.js";
-import { BOIL_FRAMES } from "./rig.js";
+import { BOIL_FRAMES, TAIL_ORDER } from "./rig.js";
 import { damp } from "../motion/ease.js";
 import { solveLeg } from "../motion/index.js";
 
@@ -91,7 +91,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     const front = raise > 0.5;
     if (item.tailFront !== front) {
       item.tailFront = front;
-      const order = (item.orderBase || 0) + (front ? 2.08 : 0.8);
+      const order = (item.orderBase || 0) + (front ? TAIL_ORDER.raised : TAIL_ORDER.rest);
       item.tailGroup.traverse((node) => { if (node.isMesh) node.renderOrder = order; });
     }
     // Two sets of joint target angles — bone directions (world angles). Raise (tailRaise): every joint up (π/2), or the raise pose (a ♥'s question mark).
