@@ -49,7 +49,7 @@ Adding one part means touching three places. Keep to the order.
 1. **`src/character/vocabulary/slots.js`** — put the name in `SLOTS`. The name has to match the branch key in `draw/` exactly
 2. **`src/character/vocabulary/`** — if needed, put weights in `DEFAULT_BIAS` in `slots.js` and in `bias` in `archetypes.js` / `species.js`
 3. **`src/character/draw/`** — add the branch in the file the part belongs to: outline and ears `head.js` · hair `hair.js` (one function in the `HAIR` table) ·
-   hats and horns `headgear.js` · eyes, eyewear, nose and cheeks `face.js` · the mouth `mouth.js` (one function in the `MOUTH` table — position and width come from `mouthPlacement`) · the body `body.js` · limbs and tail `limbs.js`.
+   hats and horns `headgear.js` (a hat is one entry in the `HEADGEAR` table; `pot` is the fall-through) · eyes, eyewear, nose and cheeks `face.js` · the mouth `mouth.js` (one function in the `MOUTH` table — position and width come from `mouthPlacement`) · the body `body.js` · limbs and tail `limbs.js`.
    A mouth also needs a place in the alt, angry and ^^ tables in `faceStates.js`
 
 `spec.js` is usually left alone. Only put something in `applyConstraints` when a new combination clashes with another part.
@@ -72,7 +72,7 @@ If six do not feel like enough, adding one is fine. But an archetype is a **disp
 ## What a drawing function has to keep to
 
 - **Never leave the cell.** In local coordinates y runs from 0 (the floor) to about 1.05 (the crown) and x stays within ±0.45. `layout()` clips a biped's head top at
-  `MAX_HEAD_TOP` (1.05) — so a huge head plus long legs plus a big body never invades the row above. Hair and a hat go above that, up to the cell ceiling of 1.19
+  `MAX_HEAD_TOP` (1.05) — so a huge head plus long legs plus a big body never invades the row above. Hair and a hat go above that, up to the cell ceiling — `CELL_CEILING` in `scene/index.js`, the cell's height less the floor line (`FLOOR`), 1.19
 - **Draw whatever touches the floor all the way to the floor.** Draw the legs short while leaving the feet at y=0 and only the feet float.
   Leg length comes from `hipY` — the same goes for a thick, short leg like `stub`
 - **Hair has volume but cannot cover the eyes.** Whatever comes down the front (|x| < 0.8·rx — bangs, the hood type, a hat) stops at `browLine(spec, box)` — the top edge of the eyes
@@ -94,10 +94,10 @@ mouth laid on top). The rules:
 - A dog's mouth follows not the face proportion but **above the muzzle, below the nose** (`muzzleGeometry`) — overlapping the nose mass makes it invisible
 - An open mouth's height is proportional to the head and **ends below the nose**. Brows go 1.9× the eye above it (1.35× on a cyclops) but **inside the head** (headCy + 0.84·ry)
 - The ink inside the eye rig (the ^^ arch, the sleep lid arch) is `faceInk` — draw black on an imp's ink-black head and it may as well not be there
-- **Two eyes overlap only slightly, and where they do the larger is in front.** `eyeGeometry` opens the centre distance to at least 70% of the sum of the radii (shrinking both eyes if there is no room), and where they overlap a per-eye render order block (back eye 3.0~3.35, front eye 3.5~3.85, `scene/rig.js`) has the larger eye cover the smaller one's rim and pupil —
+- **Two eyes overlap only slightly, and where they do the larger is in front.** `eyeGeometry` opens the centre distance to at least `OVERLAP` (70%, exported from `draw/layout.js`) of the sum of the radii (shrinking both eyes if there is no room), and where they overlap a per-eye render order block (back eye 3.0~3.35, front eye 3.5~3.85, `scene/rig.js`) has the larger eye cover the smaller one's rim and pupil —
   no crossing outlines are left. Static eyes have a layer per eye, but **the two layers share the same render order** (both fills 2.3, ink 2.4) — ink always comes after fills, so
   the back eye's outline rises above the front eye's white. Which is why static eyes with a white (hollow, the lidded set, half, side, slit) draw **their outline and lid line into the fills sketch (`fills`)** —
-  that is what lets the front eye's white cover the back eye's outline. `census --check` catches an overlap beyond 70%
+  that is what lets the front eye's white cover the back eye's outline. `census --check` catches an overlap beyond it — importing the same constant, not a copy of the number
 - **An eye that one stroke defines is left-right symmetric.** For sleepy, line, happy, squeeze, droop, cross, half and side, `eyeGeometry` sets the size and height skews (`eyeSizeSkew`, `eyeHeightSkew`) to 0 — one lid line or arch defines the eye, and if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". Mismatched eyes are only for eyes an outline defines (ring, wide, oval, hollow, the lidded set, slit) (`layout.js LINE_EYES`)
 - **Face ink is decided by the head color's luminance.** At head luminance < 120 (an imp's ink-black, a dog or cat with **black-ish fur**, or a blue, green or red-brown color accent landed on the skin) the features are drawn in light ink (`faceInk` #e9e3d5) instead of black — a black line on a deep color has no contrast and the eyes and mouth do not read. A dog's mouth is on a light muzzle, so it stays black.
   **Body markings follow the same rule** but are decided by the body color (`patternOf` in `draw/body.js` — so stripes and spots on a black-furred or imp body are not lost)

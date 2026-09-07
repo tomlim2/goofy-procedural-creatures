@@ -6,6 +6,14 @@ is what the board draws, what the editor edits, what SAVE writes and what OPEN r
 it, and the spec remembers the roll it came from as provenance, nothing more. A saved creature never needs
 its roll again.
 
+**A spec is settled in one place.** Whatever follows from the parts — a ghost's hollow eyes and its one pale
+tone, the broken outline it holds, the ink its lines take, and the face ink a dark head asks for — is
+`deriveSpec` in `src/character/spec.js`, beside the ghost functions it calls. Every door into a spec ends
+there: a roll (`makeCreature` returns through it), an edit (the editor), a file (`readCreature`), and a slot
+swapped for the parts gallery. It writes its six settled fields back in one order, so two identical creatures
+serialise the same however they were made. Written out at each door instead, the copies drift — the gallery's
+had already lost the face ink's imp clause, on the very screen that clause was written for.
+
 A **board** is a cast of specs. `boardCells(baseRoll, …)` grows a default cast from one roll — a fresh one
 on every load, and what every gate below stands a board up with — but that roll only **fills** the cells.
 What a hand does to a cell afterwards (REDRAW, BACK, a file opened into it) lives in the cast, and the cast

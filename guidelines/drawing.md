@@ -154,8 +154,10 @@ the body directly, everything else through `paintPart` in `draw/body.js`. A crea
 and one hand may well reach for a second tool between them. The head's side is the head, the ears and their insides, the horns, the
 hair, the hat, the muzzle, the nose and the face; the body's is the torso, the arms and hands, the sleeves, the legs and boots, and
 the tail with its ends. Which a part takes is its **wear** (`vocabulary/wear.js`): the box it was always painted from by default — a material is a palette box with a texture — and the editor may put a part in another box, or in one of the hand's own materials (`spec.materials`, each a texture, a density and a colour that comes with it), by `spec.wear[part]`; a part hands its name to `paintPart` and
-`sideOf` turns it into the side. `materialOf(spec, where)` in `draw/body.js` is the one place either is
-named. The density splits on the same line: the head's side draws at the `density` slot, the body's at `bodyDensity` unless that
+`wearOf` turns it into the material it wears. `materialOf(spec, where)` in `draw/body.js` is the one place either is
+named, and the colour that goes with it is `markInkOf` (`vocabulary/paint.js`) — `paintPart` calls it rather than
+saying the rule a second time. The torso and the head go through `paintPart` like everything else; they used to
+paint themselves by hand because it took no `pattern`, and it does now. The density splits on the same line: the head's side draws at the `density` slot, the body's at `bodyDensity` unless that
 says `same` (`surfaceHand(spec, where)`, the one place a step is read). A skin, fur or cloth surface (the
 ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes its side's value step — one
 mass on a dog, a cat or an imp (`surfaceHand`), its own color's on a human. A detail or an object — the hats,

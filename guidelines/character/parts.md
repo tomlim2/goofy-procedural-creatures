@@ -228,7 +228,9 @@ An imp gets no ghost (`ghost: { white: "none" }`): an imp's head is ink-black an
 The slot is last in `LATE_SLOTS`, so it costs one rng draw at the very end and nothing after it moves. Measured over 600 creatures: the ghosts changed palette, and every other creature changed **nothing at all** — not a part, not a proportion, not a colour.
 
 ### headgear (14) — humans, dogs and cats; imps never (species bias). Three of them are hair (below)
-`drawHeadgear` in `headgear.js`. none / helmet (a dome from above the brows to over the crown plus a rim and a ridge) / cap (a crown dome plus a brim to one side) / band (a forehead band) / pot (a tub rising from above the brows to higher than the crown) /
+`drawHeadgear` in `headgear.js` — one entry per kind in the `HEADGEAR` table, each handed the hat's context (the colours, the head's
+measures, the brow line it sits above, and the two shapes a hat is cut from: `halfW` for a band's width, `cover` for one that follows
+the skull); `pot` is the fall-through for a value the table does not know. none / helmet (a dome from above the brows to over the crown plus a rim and a ridge) / cap (a crown dome plus a brim to one side) / band (a forehead band) / pot (a tub rising from above the brows to higher than the crown) /
 beret (a tilted disc plus a nub) / bonnet (a thick band crossing from eye level on both sides over the crown — **disabled**: it reads as frilly and is in no bias; assets and gallery only) /
 crown (a band on the crown of the head with a zigzag of four points — a crumpled hand-written polygon, top ≈ crown + 0.32·ry, under the cell ceiling) /
 halo (a thin ink ring floating clear above the head — ink only, a mark rather than a thing with a colour; **the one headgear that keeps every hairstyle**, `applyConstraints` exempts it because it covers nothing) /

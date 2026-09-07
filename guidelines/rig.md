@@ -49,6 +49,9 @@ emojiRoot (the scene root, beside group)  ← the emoji. Not attached to the hea
 ```
 
 The numbers in parentheses are renderOrder. With `depthTest: false` these numbers *are* front-to-back. **This table is the single source** — update it here when adding a new mesh.
+In code they live in `rig.js`: `LAYERS` for the thirteen layers, `limbOrder(kind)` for a limb's, and `TAIL_ORDER` for the tail's pair
+(the raised one used to exist only in `animate.js`). The boil's cadence is `boilRate(n)` there too — creatures, houses and the medium
+page's figures all read it.
 These values are the layers **within** an individual. The scene gives each individual a block of `index × 10` on top (`scene/index.js stack`) — so when neighbours overlap (a huge head, walking),
 the individual in front (a lower row; within a row, the one to the right) is drawn above as a whole and layers never interleave. Every fill is **opaque** (body, head, face, front ears, hat), so
 the front individual hides the one behind completely, outline, color and shape. The emoji is 100000 (above every individual); paper 0 and the floor line 1 are unchanged.
