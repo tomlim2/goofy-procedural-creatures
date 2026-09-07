@@ -424,7 +424,7 @@ body.how { height: auto; }
 .props .field > span { grid-area: name; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: rgba(43, 39, 36, 0.55); opacity: 1; }
 .props .field .readout { grid-area: reading; grid-column: auto; font-size: 11px; letter-spacing: 0.04em; opacity: 0.8; text-align: right; }
 .props .field .seg, .props .field select, .props .field input[type="range"], .props .field > button { grid-area: control; }
-/* the values at the height of the deck's other segments (POSE, SPEC), a size down to fit three or four in the width */
+/* the values at the height of the deck's other segments (SPEC, VIEW's POSE), a size down to fit three or four in the width */
 .props .field .seg button { min-width: 0; padding: 6px 2px; font-size: 11px; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Four values go two by two — four in a row is 46px a button, and VERYLONG is 47px of letters */
 .props .field .seg[data-count="4"] { display: grid; grid-template-columns: 1fr 1fr; }

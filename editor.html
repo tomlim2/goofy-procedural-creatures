@@ -37,14 +37,6 @@
     <select id="stateSel" class="wide" aria-label="State" title="Normal, or a ghost — one pale tone, hollow eyes, only floats"></select>
   </section>
 
-  <section class="card">
-    <h2>POSE</h2>
-    <div class="row seg" id="poseSeg" role="group" aria-label="Pose">
-      <button data-pose="motion">MOTION</button>
-      <button data-pose="bind" class="on">BIND</button>
-    </div>
-  </section>
-
   <details class="card" open>
     <summary><h2>PART</h2></summary>
     <div id="parts" class="fields"></div>
@@ -75,7 +67,17 @@
     <ul id="notes" class="notes empty"></ul>
   </section>
 
-  <p class="hint">Species first, then parts · the rules are reported, not applied — what you pick is drawn · PART: pick a part by its picture; SHAPE is one line — click it and the forms drop down, each its picture then its name — its properties (its own sizes, lengths and manners) stand open under it, and MATERIAL, one line the same way, comes last · + at the top of a MATERIAL list opens NEW MATERIAL beside the deck — its texture, density and colour, each pick drawn on the creature at once; click away or Escape when done — and ✎ at the end of the MATERIAL line or of a material's row opens the same on that material · MATERIALS shows every surface the creature wears — click a ball to edit that one and see which parts take it; each surface is a material of its own · HAND is the hand that draws — a new one, and its wobble · SAVE writes the whole spec — the file the board's pin opens into a cell · R shuffle · B pose</p>
+  <!-- VIEW — how the creature is shown, not what is edited: the pose (the clock's motion, or the bind pose) is the
+       screen's, never the spec's, so it stands last, under everything that is -->
+  <section class="card">
+    <h2>VIEW</h2>
+    <div class="sect"><span>POSE</span></div>
+    <div class="row seg" id="poseSeg" role="group" aria-label="Pose">
+      <button data-pose="motion">MOTION</button>
+      <button data-pose="bind" class="on">BIND</button>
+    </div>
+  </section>
+
 </aside>
 
 <!-- NEW MATERIAL · EDIT MATERIAL — the panel + and a ✎ under a part open (editor.js openDraft): the material's three, each pick the edit -->
