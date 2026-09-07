@@ -348,27 +348,30 @@ body.how { height: auto; }
 .tab.on { background: #f8f3e8; color: inherit; }
 .tab.on span { opacity: 1; font-weight: 700; }
 .tab canvas { display: block; max-width: 100%; height: auto; }   /* until thumbs.js paints it a canvas is 300×150 — kept inside its cell */
-/* Under the strip, the open part's panel: SHAPE, MATERIAL and the properties, each under a label line (.sect — the deck's one
-   grammar). SHAPE and MATERIAL are a dropdown each: what the part has on (its picture, then its name, a caret at the end), and
-   a click on the line opens the list of what it could have under it, every row the same way — picture, then name. The
+/* Under the strip, the open part's panel: SHAPE, the properties, then MATERIAL, each under a label line (.sect — the deck's one
+   grammar). SHAPE and MATERIAL are a dropdown each: what the part has on (its picture, then its name — no caret: the line is
+   plainly a line to click), and a click on the line opens the list of what it could have under it, every row the same way —
+   picture, then name. The
    properties stand open. Three text tabs swapping one panel between them (SHAPE · MATERIAL · PROPERTY) were tried first: the
    thing wanted was always on the other tab, and a form and a material each read fine on one line */
 .partPanel { background: #f8f3e8; border-radius: 0 0 5px 5px; padding: 2px 4px 6px; display: grid; gap: 4px; }
-/* The dropdown — the line (.pick) and, opened, the list (.menu) in the flow of the card under it, not floated over it: the deck
-   clips its sides, and a layer over it would be cut at the deck's edge. Past six rows the list scrolls inside itself */
+/* The dropdown — the line (.pick) and, opened, the list (.menu) floated over the deck (position: fixed, put there by editor.js
+   `place`), the way a select's list is: in the flow of the card it pushed the properties down and pulled them back on every
+   pick, and the card's length went up and down with it. Fixed, its box is the viewport's, so the deck's overflow does not cut
+   it — as long as nothing over the deck takes a transform or a filter. Past six rows, or what the screen has room for, the
+   list scrolls inside itself; .up is a list opened over its line, its shadow thrown the other way */
 .drop { display: grid; gap: 2px; }
 .pick, .opt { display: grid; align-items: center; gap: 0 8px; padding: 2px 8px 2px 2px; text-align: left; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; font-size: 11px; letter-spacing: 0.04em; line-height: 1.3; }
-.pick { grid-template-columns: 44px minmax(0, 1fr) auto; border-color: var(--line); background: #f2ecdf; }
+.pick { grid-template-columns: 44px minmax(0, 1fr); border-color: var(--line); background: #f2ecdf; }
 .opt { grid-template-columns: 44px minmax(0, 1fr); }
 .pick:hover, .opt:hover { background: rgba(43, 39, 36, 0.06); }
 .pick[aria-expanded="true"] { border-color: var(--ink); }
 .pick .thumb, .opt .thumb { display: grid; place-items: center; width: 44px; height: 44px; }
 .pick canvas, .opt canvas { display: block; max-width: 100%; max-height: 100%; }   /* a canvas not yet painted is 300×150 — kept inside its cell */
 .pick .name, .opt .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pick .caret { font-size: 12px; opacity: 0.6; }
-.pick[aria-expanded="true"] .caret { transform: rotate(180deg); }
 .menu, .opts { display: grid; gap: 1px; }
-.menu { position: relative; max-height: 312px; overflow-y: auto; padding: 2px; border: 1px solid var(--line); background: #f2ecdf; scrollbar-width: thin; }
+.menu { position: fixed; z-index: 3; max-height: 312px; overflow-y: auto; padding: 2px; border: 1px solid var(--line); background: #f2ecdf; box-shadow: 0 6px 18px rgba(43, 39, 36, 0.18); scrollbar-width: thin; }
+.menu.up { box-shadow: 0 -4px 18px rgba(43, 39, 36, 0.18); }
 .opt .name { opacity: 0.75; }
 .opt.on { border-color: var(--ink); background: #f8f3e8; color: inherit; }   /* color: inherit against button.on's paper-coloured text, as on .tab.on */
 .opt.on .name { opacity: 1; font-weight: 700; }
@@ -377,6 +380,18 @@ body.how { height: auto; }
 /* + — a new material for the part, first row of what it may wear, its ball an empty ring the size of the others */
 .opt.add .plus { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1px dashed var(--line); font-size: 18px; line-height: 1; opacity: 0.55; }
 .opt.add:hover .plus { opacity: 1; border-style: solid; }
+/* ✎ — the pen that opens the dialog on a material (EDIT MATERIAL): at the right end of every row of a MATERIAL list, and at
+   the end of the MATERIAL line itself (the pen ends it). A line or a row is a
+   button and cannot hold one, so the pen is its own button beside the row (the row's frame ending before it), and over the
+   line's right end — absolute against .drop, whose position: relative makes no box for the fixed list (only a transform or
+   a filter would); the line keeps room at its end for it. The row picks, the line opens, the pen edits */
+.edit { padding: 0; border: 1px solid transparent; background: transparent; color: inherit; font-size: 14px; line-height: 1; opacity: 0.5; cursor: pointer; }
+.edit:hover { opacity: 1; background: rgba(43, 39, 36, 0.06); }
+.optRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px; align-items: stretch; }
+.optRow .edit { width: 30px; }
+.drop { position: relative; }
+.drop.hasPen .pick { padding-right: 40px; }
+.drop > .edit { position: absolute; right: 6px; top: 50%; margin-top: -14px; width: 28px; height: 28px; }
 /* MATERIAL — a label line and a dropdown per surface; a part with more than one names each (MATERIAL · PUPIL, then · WHITE) */
 .wear { display: grid; gap: 4px; }
 
@@ -447,6 +462,17 @@ body.how { height: auto; }
 .balls .ball canvas { display: block; width: 100%; height: 100%; }   /* an unpainted canvas is 300×150 — inside its 28px button, never over the slider under it */
 .balls .ball:hover { background: rgba(43, 39, 36, 0.06); }
 .balls .ball.on { outline: 2px solid var(--ink); outline-offset: 1px; }
+/* NEW MATERIAL · EDIT MATERIAL — the dialog + and a row's ✎ under a part open (editor.js openDraft): one more card, floated over the
+   page by the platform's modal with its backdrop dimming the rest — lightly, the creature behind it is the preview. So it is
+   not centred, where the creature stands (centred, it covered the creature to the last pixel and the preview was invisible):
+   it stands beside the deck, at the height of the MATERIAL line it was opened from (editor.js placeDraft sets its place —
+   left and top, the margin cleared), the deck's width. The ball and the material's three in MATERIALS' own rows (.pv, .sect,
+   .balls, .swatches); CANCEL · MAKE or SAVE under them */
+.modal { width: 244px; max-width: calc(100vw - 32px); color: var(--ink); }
+.modal::backdrop { background: rgba(43, 39, 36, 0.18); }
+.modal .draft { justify-self: center; cursor: default; }
+.modal .draft:hover { background: #f8f3e8; }
+.modal .modalButtons { margin-top: 10px; }
 /* A swatch is the colour itself, so the only state it can show is a ring around it. */
 .swatch { width: 16px; height: 16px; padding: 0; border: 1px solid var(--line); line-height: 1; }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 1px; }

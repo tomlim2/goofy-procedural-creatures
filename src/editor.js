@@ -245,29 +245,170 @@ function setName(key, name) {
   }
   render();
 }
-// A new material of the hand's own — a copy of `from` to start from, keyed after the last. Returns its key
-function newMaterial(from) {
+// A new material of the hand's own, laid with the three given, keyed after the last. Returns its key
+function newMaterial({ texture, density, colour }) {
   const keys = Object.keys(spec.materials || {});
   let n = 1;
   while (keys.includes(`m${n}`)) n += 1;
   const key = `m${n}`;
-  const { texture, density, colour } = surfaceOf(from);
   spec = { ...spec, materials: { ...(spec.materials || {}), [key]: { name: "", texture, density, colour } } };
   return key;
 }
 // + beside MATERIALS — a new material, a copy of the one being edited, worn by nothing yet; opened for editing
 function addMaterial() {
-  selected = newMaterial(selected);
+  selected = newMaterial(surfaceOf(selected));
   spec = derive(spec);
   render();
 }
-// + under a part — a new material, a copy of what the part had on; the part wears it from then on, and
-// MATERIALS opens it for editing
-function addMaterialFor(part) {
-  const key = newMaterial(wearOf(spec, part));
-  spec = derive({ ...spec, wear: { ...(spec.wear || {}), [part]: key } });
+
+// ---- NEW MATERIAL · EDIT MATERIAL — the dialog -------------------------------------------------------
+//
+// Under a part, the material list's two action rows open a dialog over the page rather than acting at once: **+**
+// makes a new material for the surface, **✎** edits the one it has on. The dialog is the same either way — the
+// ball the material is, then its three: TEXTURE (the sample balls), DENSITY (the slider, low to high), COLOUR
+// (the palette's swatches) — and CANCEL · MAKE (or SAVE) under them. **The creature previews it**: a new material
+// is made and worn the moment the dialog opens, and every pick is written to the spec and drawn (setSurface — a
+// box's colour into its palette box, skin's and cloth's texture and density into their slots, the rest into
+// spec.materials), so the head goes green as the swatch is clicked; MAKE and SAVE keep what stands, CANCEL, Escape
+// or a click off the card put the spec from before back. The rows are MATERIALS' own (ballStrip, swatchRow, the
+// .sect line), so the two read the same
+const draftDialog = document.getElementById("newMaterial");
+const draftBox = document.getElementById("newMaterialFields");
+let draft = null;   // { mode: "new" | "edit", region, key, before, selectedBefore } while the dialog is up
+const draftUi = { title: null, partLabel: null, part: null, ball: null, cap: null, sect: {}, strip: null, slider: null, swatches: null, keep: null };
+function buildDraft() {
+  draftUi.title = document.getElementById("newMaterialTitle");
+  draftUi.part = section(draftBox, "FOR");
+  draftUi.partLabel = draftUi.part.previousElementSibling;
+  const card = document.createElement("div");
+  card.className = "pv on draft";
+  const item = document.createElement("div");
+  item.className = "ball preview";
+  draftUi.ball = document.createElement("canvas");
+  item.appendChild(draftUi.ball);
+  draftUi.cap = document.createElement("span");
+  draftUi.cap.className = "cap";
+  card.append(item, draftUi.cap);
+  draftBox.appendChild(card);
+  draftUi.sect.texture = section(draftBox, "TEXTURE");
+  draftUi.strip = ballStrip(draftBox, ["flat", ...MATERIALS], (name) => setDraft("texture", name));
+  draftUi.sect.density = section(draftBox, "DENSITY");
+  const row = field(draftBox, null);
+  draftUi.slider = document.createElement("input");
+  draftUi.slider.type = "range";
+  draftUi.slider.min = "0";
+  draftUi.slider.max = String(DENSITIES.length - 1);
+  draftUi.slider.step = "1";
+  draftUi.slider.setAttribute("aria-label", "density");
+  draftUi.slider.addEventListener("input", () => setDraft("density", DENSITIES[Number(draftUi.slider.value)]));
+  row.appendChild(draftUi.slider);
+  draftUi.sect.colour = section(draftBox, "COLOUR");
+  draftUi.swatches = swatchRow(draftBox, (color) => setDraft("colour", color));
+  draftUi.keep = document.getElementById("newMaterialMake");
+  draftUi.keep.addEventListener("click", keepDraft);
+  document.getElementById("newMaterialCancel").addEventListener("click", cancelDraft);
+  // A click off the card — on the backdrop — is a cancel. The backdrop's clicks land on the dialog itself, as do the
+  // card's own padding's, so the point is tested against the card
+  draftDialog.addEventListener("click", (event) => {
+    if (event.target !== draftDialog) return;
+    const r = draftDialog.getBoundingClientRect();
+    if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) cancelDraft();
+  });
+  // Escape closes it. The platform closes a modal on Escape of its own accord (a close request), but not on every key
+  // the page is handed — driven from outside, the keydown reached the page and the dialog stood — so the key is taken here
+  draftDialog.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    cancelDraft();
+  });
+  // The platform's own close request (its Escape) — a cancel; and closed any other way, the draft is settled as it stands.
+  // Settling is done on the spot, never left to the close event: that event is fired a task later, and a dialog reopened
+  // before it snapshotted the spec with the cancelled material still on it
+  draftDialog.addEventListener("cancel", () => settleDraft(false));
+  draftDialog.addEventListener("close", () => settleDraft());
+}
+// The dialog going: kept, what stands on the creature stays; else the spec from before comes back, the previewed
+// material with it. Once — a draft settled is gone
+function settleDraft(keep = false) {
+  if (!draft) return;
+  if (!keep) {
+    spec = draft.before;
+    selected = draft.selectedBefore;
+    render();
+  }
+  draft = null;
+}
+function cancelDraft() {
+  settleDraft(false);
+  if (draftDialog.open) draftDialog.close();
+}
+// + under a part — a new material for the surface, a copy of what it has on, worn at once for the preview. ✎ — the
+// dialog on the material the surface has on (`key`). The dialog stands at the height of the region's MATERIAL line
+function openDraft(region, key = null) {
+  settleDraft();   // one still pending (its close event a task away) is settled before the next snapshot is taken
+  const before = spec, selectedBefore = selected;
+  const mode = key ? "edit" : "new";
+  if (!key) {
+    key = newMaterial(surfaceOf(wearOf(spec, region)));
+    spec = derive({ ...spec, wear: { ...(spec.wear || {}), [region]: key } });
+  }
   selected = key;
+  draft = { mode, region, key, before, selectedBefore };
   render();
+  renderDraft();
+  draftDialog.showModal();
+  placeDraft();
+}
+// Where the dialog stands: beside the deck, at the height of the MATERIAL line it was opened from — next to where the
+// hand just was — and inside the screen, the deck's inset kept from its foot. Not centred: centred, it covered the
+// creature to the last pixel and the preview was invisible; at the screen's far edge it stood a long way from the line.
+// The line is looked up by its region, not held: the render before this lays the MATERIAL lines anew, and the one the
+// pen was on is off the page by now
+const DRAFT_GAP = 12, DRAFT_EDGE = 18;
+function placeDraft() {
+  const deck = document.querySelector(".deck");
+  const d = deck ? deck.getBoundingClientRect() : { right: DRAFT_EDGE, top: DRAFT_EDGE };
+  const line = draft && wearBox && wearBox.querySelector(`.drop[data-region="${draft.region}"] .pick`);
+  const a = line ? line.getBoundingClientRect() : d;
+  const w = draftDialog.offsetWidth, h = draftDialog.offsetHeight;
+  const left = Math.max(DRAFT_EDGE, Math.min(d.right + DRAFT_GAP, window.innerWidth - DRAFT_EDGE - w));
+  const top = Math.max(d.top, Math.min(a.top, window.innerHeight - DRAFT_EDGE - h));
+  Object.assign(draftDialog.style, { margin: "0", left: `${left}px`, top: `${top}px`, right: "auto", bottom: "auto" });
+}
+window.addEventListener("resize", () => { if (draftDialog.open) placeDraft(); });
+function setDraft(what, value) {
+  setSurface(draft.key, what, value);   // written and drawn — the creature is the preview
+  renderDraft();
+}
+function renderDraft() {
+  const { mode, region, key } = draft;
+  const edit = mode === "edit";
+  draftUi.title.textContent = edit ? "EDIT MATERIAL" : "NEW MATERIAL";
+  draftUi.keep.textContent = edit ? "SAVE" : "MAKE";
+  // FOR — the surface a new material is for; USED BY — every part an edited one is on (a box is on several)
+  draftUi.partLabel.textContent = edit ? "USED BY" : "FOR";
+  const label = REGION_LABEL[region] ? `${partOf(region)} ${REGION_LABEL[region]}` : region;
+  draftUi.part.textContent = edit ? presentParts(key).join(" · ") || label : label;
+  draftUi.cap.textContent = captionOf(key);
+  const s = surfaceOf(key);
+  paintBall(draftUi.ball, { color: s.colour, material: s.texture, density: s.density, phase: 0, size: 72 });
+  draftUi.sect.texture.textContent = s.texture;
+  ["flat", ...MATERIALS].forEach((name, i) => {
+    const b = draftUi.strip.balls[name];
+    b.item.hidden = name === "flat" && (key === "skin" || key === "cloth");   // the two slots have no flat (MATERIALS does the same)
+    if (b.item.hidden) return;
+    paintBall(b.canvas, { color: s.colour, material: name, density: s.density, phase: 1 + i });
+    b.item.classList.toggle("on", name === s.texture);
+  });
+  draftUi.sect.density.textContent = s.density;
+  draftUi.slider.value = String(Math.max(0, DENSITIES.indexOf(s.density)));
+  draftUi.sect.colour.textContent = s.colour || "";
+  for (const dot of draftUi.swatches.querySelectorAll(".swatch")) dot.classList.toggle("on", dot.dataset.color === s.colour);
+}
+// MAKE · SAVE — what stands on the creature stays; MATERIALS is left open on it
+function keepDraft() {
+  settleDraft(true);
+  draftDialog.close();
 }
 
 // Is this part on the creature at all — a slot at none, a quad's arms, a tailless biped's tail are not
@@ -510,12 +651,18 @@ function referenceOf(name) {
   }
   return references[name];
 }
-// **A dropdown.** What the part has on, on one line — its picture, then its name, a caret at the end — and a click on
-// the line opens the list of what it could have under it, every row the same way: picture, then name. One is open at a
-// time; a pick, a click anywhere else or Escape closes it. The list opens **in the flow of the card**, not over it: the
-// deck is a scroller with its sides clipped, and a layer floated over it would be cut at the deck's edge. The rows are
-// 44px pictures, so past six of them the list scrolls inside itself, the current one brought into view. `fill`, when a
-// dropdown has one, lays the rows on each opening — the material lists change as a hand adds materials
+// **A dropdown.** What the part has on, on one line — its picture, then its name; no caret (the line is plainly a line
+// to click, and the MATERIAL line ends in its pen, renderWear) — and a click on the line opens the list of what it
+// could have under it, every row the same way: picture, then name. One is open at a
+// time; a pick, a click anywhere else or Escape closes it. The list **floats over the deck** (position: fixed, put
+// there by `place`), the way a select's does: opened in the flow of the card it pushed the properties down and pulled
+// them back on every pick, and the card's whole length went up and down with it. The deck clips what it scrolls, but
+// a fixed layer's box is the viewport's, not the deck's, so the list is not cut at the deck's edge — as long as
+// nothing over the deck takes a transform or a filter, which would make the deck its box again. The list goes under
+// the line when the screen has the room, over it when there is more room above; past six 44px rows, or what the room
+// holds, it scrolls inside itself, the current row brought into view; it follows its line while the deck scrolls and
+// closes when the line leaves the deck. `fill`, when a dropdown has one, lays the rows on each opening — the material
+// lists change as a hand adds materials
 let openDrop = null;
 function dropdown(parent, label) {
   const box = document.createElement("div");
@@ -530,11 +677,7 @@ function dropdown(parent, label) {
   thumb.className = "thumb";
   const name = document.createElement("span");
   name.className = "name";
-  const caret = document.createElement("span");
-  caret.className = "caret";
-  caret.textContent = "▾";
-  caret.setAttribute("aria-hidden", "true");
-  pick.append(thumb, name, caret);
+  pick.append(thumb, name);
   const menu = document.createElement("div");
   menu.className = "menu";
   menu.hidden = true;
@@ -552,20 +695,40 @@ function setOpen(d, on) {
   openDrop = on ? d : openDrop === d ? null : openDrop;
   if (!on) return;
   if (d.fill) d.fill();
+  place(d);
   const current = d.menu.querySelector(".opt.on");
   if (current) d.menu.scrollTop = current.offsetTop - (d.menu.clientHeight - current.offsetHeight) / 2;
-  revealInDeck(d.box);
 }
 document.addEventListener("pointerdown", (event) => { if (openDrop && !openDrop.box.contains(event.target)) setOpen(openDrop, false); });
 window.addEventListener("keydown", (event) => { if (event.key === "Escape" && openDrop) setOpen(openDrop, false); });
-// Scrolls the deck so an opened dropdown is in view — down by what runs past the deck's foot, never past the line itself
-function revealInDeck(el) {
-  const deck = el.closest(".deck");
-  if (!deck) return;
-  const r = el.getBoundingClientRect();
-  const s = deck.getBoundingClientRect();
-  if (r.bottom > s.bottom) deck.scrollTop += Math.min(r.bottom - s.bottom, Math.max(0, r.top - s.top));
+// Puts an open list where it goes: under its line and as wide as it, or over the line when the screen has more room
+// there than under; never taller than six rows or than the room, an edge kept from the screen's border
+const MENU_MAX = 312, MENU_GAP = 2, MENU_EDGE = 8;
+function place(d) {
+  const r = d.pick.getBoundingClientRect();
+  const m = d.menu;
+  m.style.left = `${r.left}px`;
+  m.style.width = `${r.width}px`;
+  m.style.maxHeight = "none";
+  const need = m.offsetHeight;
+  const below = window.innerHeight - MENU_EDGE - (r.bottom + MENU_GAP);
+  const above = r.top - MENU_GAP - MENU_EDGE;
+  const up = need > below && above > below;
+  m.style.maxHeight = `${Math.min(MENU_MAX, Math.max(44, up ? above : below))}px`;
+  m.style.top = up ? `${r.top - MENU_GAP - m.offsetHeight}px` : `${r.bottom + MENU_GAP}px`;
+  m.classList.toggle("up", up);
 }
+// The deck scrolls under an open list (scroll does not bubble — caught on the way down): the list follows its line, and
+// goes when the line has left the deck. A wheel over the list itself scrolls the list, not the deck
+document.addEventListener("scroll", (event) => {
+  if (!openDrop || event.target === openDrop.menu) return;
+  const deck = openDrop.box.closest(".deck");
+  const r = openDrop.pick.getBoundingClientRect();
+  const s = deck ? deck.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+  if (r.bottom < s.top || r.top > s.bottom) setOpen(openDrop, false);
+  else place(openDrop);
+}, true);
+window.addEventListener("resize", () => { if (openDrop) place(openDrop); });
 // One row of a dropdown — a picture, then a name
 function option(picture, text, onPick) {
   const item = document.createElement("button");
@@ -618,24 +781,25 @@ function buildParts() {
     tabs[slot] = { item, canvas };
   }
   card.appendChild(strip);
-  // Under the part, its panel — SHAPE: the form it has, and the part's forms under it (menuOf — one list per species and
-  // part, built once and kept). MATERIAL: which of the creature's materials it wears — the materials MATERIALS shows,
-  // here only to be picked from: a pick puts the part in another (spec.wear), and editing a material stays MATERIALS'
-  // business, in one place. Then its properties — the part's own numbers and measures (PROPERTIES) — standing open,
-  // each under a label line of its own. Three text tabs swapping one panel between them were tried first: the thing
-  // wanted was always on the other tab, and a form and a material each read fine on one line
+  // Under the part, its panel, in this order — SHAPE: the form it has, and the part's forms under it (menuOf — one list
+  // per species and part, built once and kept). Then its properties — the part's own numbers and measures (PROPERTIES)
+  // — standing open, each under a label line of its own: they belong to the form, so they follow it. Then MATERIAL:
+  // which of the creature's materials it wears — the materials MATERIALS shows, here to be picked from (a pick puts the
+  // part in another, spec.wear) or edited in place (the pen — the dialog); the material is the last thing put on a
+  // part, so it comes last. Three text tabs swapping one panel between them were tried first: the thing wanted was
+  // always on the other tab, and a form and a material each read fine on one line
   const panel = document.createElement("div");
   panel.className = "partPanel";
   section(panel, "SHAPE");
   shape = dropdown(panel, "shape");
   shape.canvas = document.createElement("canvas");   // the current form's picture — the list's row for it, blitted
   shape.thumb.appendChild(shape.canvas);
-  wearBox = document.createElement("div");   // the MATERIAL line(s) and their dropdowns, laid on render
-  wearBox.className = "wear";
-  panel.appendChild(wearBox);
   propBox = document.createElement("div");
   propBox.className = "props fields";
   panel.appendChild(propBox);
+  wearBox = document.createElement("div");   // the MATERIAL line(s) and their dropdowns, laid on render
+  wearBox.className = "wear";
+  panel.appendChild(wearBox);
   card.appendChild(panel);
   partsBox.appendChild(card);
 }
@@ -856,10 +1020,23 @@ function renderPartBody() {
     panel.sync();
   }
 }
+// ✎ — the pen that opens EDIT MATERIAL on a material: at the end of the MATERIAL line, and at the right end of every
+// row of its list
+function penFor(key, onClick) {
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.className = "edit";
+  edit.textContent = "✎";
+  edit.title = `edit ${captionOf(key)} — its texture, density and colour, on every part that wears it`;
+  edit.setAttribute("aria-label", `edit ${captionOf(key)}`);
+  edit.addEventListener("click", onClick);
+  return edit;
+}
 // MATERIAL — one dropdown per surface of the part (an eye is a pupil and a white, each in a material of its own; most
-// parts are one surface and get one unnamed line): the material it wears on the line and, opened, **+** first — a new
-// material for this surface, a copy of what it has on, worn at once and opened in MATERIALS — then one row per material
-// the creature has. Laid on every render: a hand adds materials, renames them, recolours them
+// parts are one surface and get one unnamed line): the material it wears on the line, ending in **✎** — the dialog
+// on it (EDIT MATERIAL, openDraft) — and, opened, **+** first — NEW MATERIAL, the dialog on a new
+// material for the surface — then one row per material the creature has, each with ✎ at its right end: the dialog on
+// that one. The row picks, the pen edits. Laid on every render: a hand adds materials, renames them, recolours them
 function renderWear() {
   if (openDrop && wearBox.contains(openDrop.box)) openDrop = null;   // being rebuilt — gone with the old rows
   wearBox.replaceChildren();
@@ -873,15 +1050,18 @@ function renderWear() {
     d.thumb.appendChild(ballOf(wears, BALL_SIZE, 0));
     d.name.textContent = captionOf(wears);
     d.pick.title = `${label} wears ${captionOf(wears)}`;
+    d.box.classList.add("hasPen");   // the line keeps room at its end for the pen (styles.css)
+    d.box.dataset.region = region;   // placeDraft finds the line by it
+    d.box.appendChild(penFor(wears, () => { setOpen(d, false); openDraft(region, wears); }));
     d.fill = () => {
       d.menu.replaceChildren();
       const plus = document.createElement("span");
       plus.className = "plus";
       plus.setAttribute("aria-hidden", "true");
       plus.textContent = "+";
-      const add = option(plus, "new material", () => addMaterialFor(region));
+      const add = option(plus, "new material", () => { setOpen(d, false); openDraft(region); });
       add.classList.add("add");
-      add.title = `a new material for the ${label} — a copy of what it has on`;
+      add.title = `a new material for the ${label} — its texture, density and colour, starting from what it has on`;
       d.menu.appendChild(add);
       materialKeys(spec).forEach((key, i) => {
         const row = option(ballOf(key, BALL_SIZE, i * 40), captionOf(key), () => {
@@ -891,7 +1071,10 @@ function renderWear() {
         row.classList.toggle("on", key === wears);
         row.setAttribute("aria-selected", String(key === wears));
         row.setAttribute("aria-label", `${label} wears ${captionOf(key)}`);
-        d.menu.appendChild(row);
+        const line = document.createElement("div");   // the row and its pen, side by side
+        line.className = "optRow";
+        line.append(row, penFor(key, () => { setOpen(d, false); openDraft(region, key); }));
+        d.menu.appendChild(line);
       });
     };
   }
@@ -1027,6 +1210,7 @@ for (const value of SLOTS[STATE_SLOT]) addOption(stateSel, value, stateName(valu
 buildMaterials();
 buildParts();
 buildProportions();
+buildDraft();
 
 // Changing the species draws a new individual of it. Every species has its own palette rules — an imp's head is
 // ink and a rex is two scale colours — so carrying the old colours across would give a creature no species
@@ -1064,6 +1248,7 @@ const pose = bindSeg(poseSeg, "pose", (value) => {
 });
 window.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
+  if (draftDialog.open) return;   // the dialog's keys are its own — R under it shuffled the creature away
   const key = event.key.toLowerCase();
   if (key === "r") document.getElementById("shuffle").click();
   if (key === "b") pose.set(bind ? "motion" : "bind");
