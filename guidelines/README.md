@@ -61,5 +61,8 @@ Looking good to the eye and being right are different things. There is a tool fo
 - Looking good to the eye and having the right distribution and frequency are different things. If you
   changed it, count it
 - The editor is the one screen whose creature is **not** something a roll could have made. It edits a spec
-  directly and reports the rules instead of applying them. What it saves is the spec, and the board's pin
+  directly and reports the rules instead of applying them — with one exception: a value the species' rule only
+  *renames* (a cat's `perkBig` is its `pointyBig`) is not offered, since its row would draw a duplicate; the row is
+  built and hidden, so a file that carries the value still finds it. A part whose every value the rule takes to none
+  — a cat's or an imp's hair, a human's horns — has no tab at all. What it saves is the spec, and the board's pin
   opens that same file into a cell. Nothing in it touches rng; the generator remains the only thing a roll drives

@@ -2,11 +2,12 @@
 
 import { paintOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
-import { headShape, eyeGeometry, TAU } from "./layout.js";
+import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark, mix } from "../../color.js";
 import { LENS_SCALE } from "./face.js";
 import { paintPart } from "./body.js";
 import { MARKS, blushOf } from "../vocabulary/palette.js";
+import { SPECIES } from "../vocabulary/species.js";
 
 export function drawHead(ink, fills, spec, box, noise) {
   const p = spec.proportions;
@@ -111,17 +112,35 @@ export function drawEars(ink, fills, spec, box) {
 // Drawn on the layer in front of the head (front) so the fill covers the head outline. Three proportions — pointy the default · pointyMid narrow and tall · pointyBig wide and big.
 // The inner ear is per individual: 60% a small inner triangle (a double line), 15% a dark fill, the rest none (tufts read as an owl and were dropped).
 // It follows the **normal** at the attachment point: the base is laid along the outline's tangent there (inset by 0.02), and the ear's axis is halfway between the normal and vertical
-// (half the normal's tilt, plus a slight left/right difference) — on a round head it opens out naturally, on a flat head it stands straight. The tip is slightly blunt.
+// (half the normal's tilt, plus a slight left/right difference) — on a round head it opens out naturally, on a flat head it stands straight.
+// **The tip is a dome** — `tip` is its radius, the apex at h, the sides meeting the circle where a straight side would touch it. A flat
+// top two points wide was a needle on the narrow ears, and with the sides bowed inward the ear was a thorn; the sides bow less now.
 // On a square head (square, block), sitting on the corner would make horns on a box, so it stands slightly inside it (θ 0.52).
-// round, fold, flap and long do not exist on cats (species forbid → pointy).
-//   pointy    the default triangle — sides slightly concave (a hand-drawn ear), a blunt tip
+// fold, flap, long and perk do not exist on cats (species forbid → pointy). **round does** — a dome most of the ear's width on convex
+// sides. The board never deals it (a cat's ears are the reference's triangles, species.js) but the editor draws what a hand picks,
+// and `round` fell back to `pointy` there: the one value named round drew the pointed ear
+//   pointy    the default triangle — sides a touch concave, a blunt round tip
 //   pointyMid a narrow, tall triangle — it opens further (+0.15 rad; the reference's long ears open about 30°)
 //   pointyBig a wide, low ear — a round tip and convex sides (the colored brown and grey cats' ears)
+//   round · roundMid · roundBig — the rounded ear, at the pointed family's three builds
 // The inner ear is per individual: double line 50% · ink fill 15% · one crease stroke 15% · none 20%.
 const CAT_EAR = {
-  pointy: { w: 0.05, h: 0.1, theta: 0.6, lean: 0, tip: 0.006, bow: -0.26 },
-  pointyMid: { w: 0.04, h: 0.14, theta: 0.55, lean: 0.15, tip: 0.005, bow: -0.22 },
-  pointyBig: { w: 0.062, h: 0.11, theta: 0.6, lean: -0.02, tip: 0.016, bow: 0.26 }
+  pointy: { w: 0.05, h: 0.1, theta: 0.6, lean: 0, tip: 0.012, bow: -0.08 },
+  pointyMid: { w: 0.04, h: 0.14, theta: 0.55, lean: 0.15, tip: 0.01, bow: -0.06 },
+  pointyBig: { w: 0.062, h: 0.11, theta: 0.6, lean: -0.02, tip: 0.02, bow: 0.26 },
+  round: { w: 0.05, h: 0.085, theta: 0.6, lean: 0, tip: 0.03, bow: 0.3 },
+  roundMid: { w: 0.046, h: 0.11, theta: 0.55, lean: 0.1, tip: 0.028, bow: 0.3 },
+  roundBig: { w: 0.066, h: 0.105, theta: 0.6, lean: -0.02, tip: 0.04, bow: 0.3 }
+};
+// The dome is sampled into TIP_STEPS points
+const TIP_STEPS = 6;
+// **A value the table has no ear for draws as the cat's own rule resolves it** (species.js forbid — the board's rule, so
+// this screen and the board agree): long and the Mid kinds as pointyMid, the Big kinds as pointyBig, the rest as pointy.
+// Every one of the nine used to fall to `pointy`, and the editor's list for a cat showed nine rows of the one ear
+const catEarKind = (value) => {
+  if (CAT_EAR[value]) return value;
+  const rule = ((SPECIES.find((s) => s.name === "cat") || {}).forbid || {}).ears || {};
+  return CAT_EAR[rule[value]] ? rule[value] : "pointy";
 };
 // A cat's ear is the one shape on a creature built from **straight runs** rather than a blob: it has to keep
 // its base on the head outline and its tip a point, so it cannot be a blobPath. Drawn as two runs with a
@@ -156,7 +175,7 @@ export function drawCatEars(ink, fills, spec, box) {
   if (spec.species !== "cat") return;
   const value = spec.parts.ears;
   if (value === "none") return;
-  const def = CAT_EAR[value] || CAT_EAR.pointy;
+  const def = CAT_EAR[catEarKind(value)];
   const rx = box.headRx, ry = box.headRy, cy = box.headCy;
   const ink0 = spec.palette.ink;
   const skin = spec.palette.skin;
@@ -182,62 +201,59 @@ export function drawCatEars(ink, fills, spec, box) {
     const normalTilt = Math.atan2(nx * side, ny);
     const lean = normalTilt * 0.5 + 0.02 + def.lean + ((hand >> (side > 0 ? 3 : 5)) % 3) * 0.02;
     const ax = side * Math.sin(lean), ay = Math.cos(lean);
-    // The base follows the tangent (to attach to the outline), inset inward. The tip is h along the axis, of width tip. The sides bow inward (−) or outward (+) by bow at their deepest
+    // The base follows the tangent (to attach to the outline), inset inward; a point of the ear is `v` across the
+    // axis and `hh` up it. The sides bow inward (−) or outward (+) by bow at their deepest
     const baseAt = (v, inset) => [bx + tx * v - nx * inset, by + ty * v - ny * inset];
-    const tipAt = (v) => [bx + ax * def.h + tx * v, by + ay * def.h + ty * v];
-    // One side's wobble — its depth, how many bends it takes and where they sit, all off hand. The two
-    // sides of one ear draw their own (a hand does not repeat itself), and so do the two ears
+    const alongAt = (v, hh) => [bx + ax * hh + tx * v, by + ay * hh + ty * v];
+    // One side's bend — its depth, which way, and where along the side it peaks, off hand. **One soft bend a
+    // side, never a wave**: `sin(π·k^skew)` is a single hump that is zero at both ends, its peak pushed toward the
+    // base (skew < 1) or the tip (skew > 1), so a side can lean once and no more. The wobble it replaces was a
+    // sine of up to two waves along a side (f 1.6~3.8) at up to 16% of the half-width, and on seven sample points
+    // that was two or three kinks on every side of every ear — a crumpled ear, and its inner ear crumpled
+    // differently on wobbles of its own. Now 3~7% and a hump; the pen's own shake does the hand-drawn part. The
+    // two sides of one ear and the two ears still draw their own
     const wobOf = (k) => ({
-      amp: def.w * (0.07 + earHash(k) * 0.09),
-      f: 1.6 + earHash(k + 40) * 2.2,
-      ph: earHash(k + 80) * TAU
+      amp: def.w * (0.03 + earHash(k) * 0.04) * (earHash(k + 40) < 0.5 ? -1 : 1),
+      skew: 0.7 + earHash(k + 80) * 0.7
     });
-    const sideAt = (v0, v1, k, wob) => {   // the point at k (0~1) between base v0 and tip v1, with the bow and the wobble
-      const [x0, y0] = baseAt(v0, 0);
-      const [x1, y1] = tipAt(v1);
-      const env = Math.sin(Math.PI * k);   // pins both ends — the base stays on the outline, the tip stays a point
-      const bow = def.bow * def.w * env * Math.sign(v0);
-      const off = bow + (wob ? wob.amp * Math.sin(k * wob.f * Math.PI + wob.ph) * env : 0);
-      return [x0 + (x1 - x0) * k + tx * off, y0 + (y1 - y0) * k + ty * off];
-    };
-    // A side as a run of points. base→tip; the right side is walked back for the path's winding
-    const sideRun = (v0, v1, wob) => {
-      const out = [];
-      for (let i = 1; i < SIDE_STEPS; i += 1) out.push(sideAt(v0, v1, i / SIDE_STEPS, wob));
-      return out;
+    const bendAt = (wob, k) => wob.amp * Math.sin(Math.PI * Math.pow(k, wob.skew));
+    // **The ear as one closed path** — up one side to the dome, round the dome, down the other. The dome is a
+    // circle of radius r with its apex at h; a side runs from the base to where a straight side would touch that
+    // circle (θ = π/2 − atan(w/h) off the axis), so the two join without a corner. `scale` is the inner ear's:
+    // the same shape inset — its width, height and radius scaled, and its bends the outer sides' own scaled with
+    // the width — so it is the ear inset, not a second shape crumpled on bends of its own. `baseK` and `inset`
+    // place the two base points (the ink's stand a shade wider and deeper than the fill's); `runInset` is where
+    // the sides themselves start
+    const earPath = (w, h, r, { inset, runInset, baseK = 1, scale = 1 }, wobL, wobR) => {
+      const theta = Math.PI / 2 - Math.atan(w / h);
+      const hEnd = h - r * (1 - Math.cos(theta)), vEnd = r * Math.sin(theta);
+      const sideAt = (v0, k, wob) => {   // the point at k (0~1) between the base at v0 and the dome's end on that side
+        const [x0, y0] = baseAt(v0, runInset);
+        const [x1, y1] = alongAt(Math.sign(v0) * vEnd, hEnd);
+        const env = Math.sin(Math.PI * k);   // pins both ends — the base stays on the outline, the side meets the dome
+        const off = def.bow * w * env * Math.sign(v0) + bendAt(wob, k) * scale;
+        return [x0 + (x1 - x0) * k + tx * off, y0 + (y1 - y0) * k + ty * off];
+      };
+      const run = (v0, wob) => {
+        const out = [];
+        for (let i = 1; i < SIDE_STEPS; i += 1) out.push(sideAt(v0, i / SIDE_STEPS, wob));
+        return out;
+      };
+      const dome = [];
+      for (let i = 0; i <= TIP_STEPS; i += 1) {
+        const th = -theta + (2 * theta * i) / TIP_STEPS;
+        dome.push(alongAt(r * Math.sin(th), h - r + r * Math.cos(th)));
+      }
+      return [baseAt(-w * baseK, inset), ...run(-w, wobL), ...dome, ...run(w, wobR).reverse(), baseAt(w * baseK, inset)];
     };
     const wobL = wobOf(side * 7 + 1);
     const wobR = wobOf(side * 7 + 2);
-    const left = sideRun(-def.w, -def.tip, wobL);
-    const right = sideRun(def.w, def.tip, wobR);
-    const path = [
-      baseAt(-def.w, 0.02), ...left, tipAt(-def.tip), tipAt(def.tip), ...right.slice().reverse(), baseAt(def.w, 0.02)
-    ];
-    paintPart(fills, spec, path, earFill, { part: "ears" });   // the ear is skin — the creature's goofy material
-    ink.line([
-      baseAt(-def.w * 1.02, 0.024), ...left, tipAt(-def.tip), tipAt(def.tip), ...right.slice().reverse(), baseAt(def.w * 1.02, 0.024)
-    ], { color: ink0 });
-    // The inner ear — **its base attaches to the ear's root** (float it above the root and it becomes a patch hanging mid-ear). Width 0.62× the ear, tip 0.7× the height.
-    // It rides the same curve as the ear around it (three points was a second ruler's triangle inside the first), on its own two wobbles
+    paintPart(fills, spec, earPath(def.w, def.h, def.tip, { inset: 0.02, runInset: 0 }, wobL, wobR), earFill, { part: "ears" });   // the ear is skin — the creature's goofy material
+    ink.line(earPath(def.w, def.h, def.tip, { inset: 0.024, runInset: 0, baseK: 1.02 }, wobL, wobR), { color: ink0 });
+    // The inner ear — **its base attaches to the ear's root** (float it above the root and it becomes a patch hanging mid-ear).
+    // Width 0.62× the ear, tip 0.7× the height, the same rounded shape inset on the outer sides' own bends
     const IN = 0.62, TIP_K = 0.7;
-    const innerTip = [bx + ax * def.h * TIP_K, by + ay * def.h * TIP_K];
-    const innerAt = (v0, k, wob) => {
-      const [x0, y0] = baseAt(v0 * def.w * IN, 0.012);
-      const env = Math.sin(Math.PI * k);
-      const bow = def.bow * def.w * IN * env * Math.sign(v0);
-      const off = bow + wob.amp * IN * Math.sin(k * wob.f * Math.PI + wob.ph) * env;
-      return [x0 + (innerTip[0] - x0) * k + tx * off, y0 + (innerTip[1] - y0) * k + ty * off];
-    };
-    const innerRun = (v0, wob) => {
-      const out = [];
-      for (let i = 1; i < SIDE_STEPS; i += 1) out.push(innerAt(v0, i / SIDE_STEPS, wob));
-      return out;
-    };
-    const innerBase = [
-      baseAt(-def.w * IN, 0.012), ...innerRun(-1, wobOf(side * 7 + 3)),
-      innerTip,
-      ...innerRun(1, wobOf(side * 7 + 4)).reverse(), baseAt(def.w * IN, 0.012)
-    ];
+    const innerBase = earPath(def.w * IN, def.h * TIP_K, def.tip * IN, { inset: 0.012, runInset: 0.012, scale: IN }, wobL, wobR);
     if (inner === "line") ink.line(innerBase, { color: earInnerInk, size: "S" });
     else if (inner === "dark") paintPart(fills, spec, innerBase, innerFill, { part: "ears", own: true });
     // The crease — one line from the middle of the root to half the ear's height (it reads as a fold mark)

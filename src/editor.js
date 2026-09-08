@@ -11,7 +11,9 @@
 //
 // The rules are reported, not enforced. A species' forbidden values and the constraint pass (a helmet takes
 // the hair, an eyepatch comes off overlapping eyes) are run on a **copy** and the differences are listed under
-// NOTES. What you picked is what gets drawn, so this screen can make individuals the board never will.
+// NOTES. What you picked is what gets drawn, so this screen can make individuals the board never will. The one
+// thing the rules do decide here is what a SHAPE list offers: a value the species' rule only renames (a cat's
+// perkBig is its pointyBig) is hidden, because its row drew a duplicate (menuOf)
 //
 //   editor.html?species=cat
 
@@ -585,9 +587,14 @@ const tabImages = {};   // species → slot → an offscreen canvas of the paint
 // Which parts a species draws at all — a tail only where the identity has one, arms only on a biped (the same
 // rule USED BY goes by). A tab for a part the species never draws would be an empty icon
 function partApplies(slot, name) {
-  const identity = (SPECIES.find((s) => s.name === name) || {}).identity || {};
+  const sp = SPECIES.find((s) => s.name === name) || {};
+  const identity = sp.identity || {};
   if (slot.startsWith("tail")) return identity.tail === true;
   if (slot === "arms" || slot === "armLength") return identity.skeleton !== "quad";
+  // A part whose every value the species' rule takes to none is a part the species does not have — a cat's or an
+  // imp's hair, a human's horns. Its tab offered one row, `none`
+  const rule = (sp.forbid || {})[slot];
+  if (rule && SLOTS[slot] && SLOTS[slot].every((v) => v === "none" || rule[v] === "none")) return false;
   return true;
 }
 const TAB_SIZE = 34;    // CSS pixels — the icon on a part tab
@@ -893,6 +900,11 @@ function menuOf(name, slot) {
   box.setAttribute("role", "listbox");
   box.setAttribute("aria-label", `${slot} form`);
   const forms = {};
+  // **A value the species' rule redirects is not offered.** On this species it is only another value's name — the
+  // board maps it (species.js forbid) and the drawing follows the same map — so its row drew a duplicate: a cat's
+  // ears listed nine rows of the one pointed ear. The row is built and hidden, not left out, so a spec that carries
+  // such a value (a file from elsewhere) still finds its row and shows its picture, and NOTES says what the rule does
+  const redirect = ((SPECIES.find((s) => s.name === name) || {}).forbid || {})[slot] || {};
   for (const value of SLOTS[slot]) {
     const canvas = document.createElement("canvas");
     const item = option(canvas, value, () => {
@@ -901,6 +913,7 @@ function menuOf(name, slot) {
       render();
     });
     item.setAttribute("aria-label", `${slot} ${value}`);   // no title: the name is on the row, and a tooltip said it again over it
+    item.hidden = redirect[value] !== undefined;
     box.appendChild(item);
     forms[value] = { item, canvas, painted: false };
   }

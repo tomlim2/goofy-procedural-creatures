@@ -91,8 +91,11 @@ export const SPECIES = [
       // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
       pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
       tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" },
-      ears: { flap: "pointy", long: "pointyMid", none: "pointy", round: "pointy", roundMid: "pointyBig", roundBig: "pointyBig", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
-      // Cat ear boundary — floppy ears and none become crown ears
+      ears: { flap: "pointy", long: "pointyMid", none: "pointy", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
+      // Cat ear boundary — floppy and folded ears and none become crown ears, by size. A **round** ear is not here: the
+      // drawing has one (head.js CAT_EAR) and the bias below never deals it, so the board keeps the reference's triangles
+      // while the editor draws a round cat when a hand picks one. Listed here it was redirected to pointy on the very screen
+      // that draws it
       eyes: { cyclops: "slit" },
       horns: { curved: "none", straight: "none", antenna: "none", nub: "none", ram: "none", crown: "none" },
       hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
@@ -102,7 +105,7 @@ export const SPECIES = [
       legLength: { verylong: "long" }
     },
     identity: {
-      ears: ["pointy", "pointyMid", "pointyBig"],   // triangular crown ears only (the reference) — no round, folded or floppy ears, and no none
+      ears: ["pointy", "pointyMid", "pointyBig"],   // triangular crown ears only on the board (the reference) — no folded or floppy ears, no none; the round ear the drawing has is the editor's, the bias never deals it
       skeleton: "quad",
       horns: ["none"],
       hairFront: ["none"], hairBack: ["none"],
@@ -201,19 +204,25 @@ export const SPECIES = [
       // census --check). Pale is the only ghost there is now, so imps simply do not get them
       ghost: { white: "none" },
       ears: { round: "none", roundMid: "none", roundBig: "none", pointyMid: "pointy", pointyBig: "pointy", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "pointy", perkMid: "pointy", perkBig: "pointy" },   // an imp ear is none or a small pointy one
-      tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" }   // the tail decoration is the rex's — imps have no tail anyway
+      tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" },   // the tail decoration is the rex's — imps have no tail anyway
+      // **An imp is bald** — no fringe on the head and nothing behind it. The spiked ring it wore one time in four was
+      // the one hair the species had, and it goes: a 도깨비 has horns, not hair. Both slots are forbidden outright, so
+      // the editor offers neither and the board deals neither
+      hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
+      hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none", spikes: "none", hedgehog: "none" }
     },
     identity: {
       ears: ["none", "pointy"],   // an imp ear is none or a small pointy one
       skeleton: "biped",
       darkHead: true,
       // arms unchecked — imps sometimes have no arms (arms none)
+      hairFront: ["none"], hairBack: ["none"],   // bald — horns are the imp's crown
       tail: false
     },
     bias: {
       horns: [["curved", 3], ["straight", 2], ["antenna", 2], ["ram", 2], ["crown", 2], ["nub", 1]],
       ears: [["none", 5], ["pointy", 2]],
-      hairFront: [["none", 1]], hairBack: [["none", 6], ["spikes", 2]],
+      hairFront: [["none", 1]], hairBack: [["none", 1]],   // bald (the forbid above says the same; the bias is what the roll draws from)
       headgear: [["none", 1]],
       eyewear: [["none", 6], ["patch", 2], ["goggles", 1]],
       eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2], ["soft", 2]],
