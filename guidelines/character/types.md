@@ -51,11 +51,11 @@ the ones that define that disposition. On the grid, a collision with the left or
 | Archetype | Weight | Disposition | Biased slots |
 | --- | --- | --- | --- |
 | **beast** | 3 | Horns, ears, teeth | horns(curved/straight), ears(pointy/flap), mouth(grimace/grin), nose(wedge/hook/broad), hair(spikes/hedgehog/mop), head(round/wide) |
-| **scholar** | 2 | Glasses, a bob, a beret | eyewear(glasses/monocle), eyes(dot/half/sleepy), hair(bob/helmet/bangs/longbob/wisp/curly/cloud/sweep), headgear(beret), mouth(line), nose(long/hook), horns(none) |
+| **scholar** | 2 | Glasses, a bob, a beret | eyewear(glasses/monocle), eyes(dot/half), pupil(sleepy), hair(bob/helmet/bangs/longbob/wisp/curly/cloud/sweep), headgear(beret), mouth(line), nose(long/hook), horns(none) |
 | **trooper** | 3 | A helmet, an eyepatch, stripes, boots | headgear(helmet/cap/band/pot), eyewear(patch/goggles), head(square/block), hair(scribble/spikes/hedgehog), pattern(stripes/patch/hatch), arms(sleeve/stick), legs(boots) |
 | **sprite** | 3 | Antennae, big eyes, long limbs | horns(antenna), eyes(wide/ring/spiral), head(tall/egg), body(tube), build(narrow/skinny), legs(stick/tiptoe), arms(stick/mitten), hair(none/wisp/tuft/pigtails), nose(none/dot) |
 | **blob** | 2 | Wide, bald, blunt limbs | head(wide/round/pear), hair(none/tuft/mop), eyes(dot/ring/half), body(bean/dress), build(wide), legs(stub), arms(stubby), horns(none/nub) |
-| **wanderer** | 2 | A band, sleepy eyes, hatching | headgear(band/pot/cap), hair(scribble/mop/curly/bun), eyes(half/sleepy/cross), pattern(hatch/stripes/patch), mouth(wave/line), body(dress/bean) |
+| **wanderer** | 2 | A band, sleepy eyes, hatching | headgear(band/pot/cap), hair(scribble/mop/curly/bun), eyes(half), pupil(sleepy/cross), pattern(hatch/stripes/patch), mouth(wave/line), body(dress/bean) |
 
 ## Proportion jitter (proportions)
 

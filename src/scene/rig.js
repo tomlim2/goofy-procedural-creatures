@@ -301,7 +301,7 @@ export function buildCreature(spec, noise, birth = 0) {
   // Every eye not hidden by a patch (static eyes included) — bakes the static eyes' closed-eye and startle-variant glyphs where the eye is
   const allEyes = eyeGeometry(spec, layout(spec)).filter((eye) => !patched(spec, eye));
 
-  // The closed eye of a static eye (dot, sleepy, cross, spiral, slit, half…) — sleep (the shut line), ^^ and a wink (the smile arch). There is no cover: **that eye's** static
+  // The closed eye of a static eye (dot, slit, half, the lidded set — and any eye a lid pupil closed) — sleep (the shut line), ^^ and a wink (the smile arch). There is no cover: **that eye's** static
   // layer (frames) is switched off (animate) and the arch stands instead — layers being per eye, only the winking side changes and the other eye stays. It pairs with a live eye's open/shut/smile
   const staticLids = [];
   for (const { key, eye } of firstDrawn.staticEyes) {

@@ -1,6 +1,8 @@
 // Dimensions and outlines. Pulls actual coordinates out of the spec. Every drawing function shares these values.
 // Docs: guidelines/character/parts.md § head, guidelines/rig.md § origin rules
 
+import { LID_PUPILS } from "../vocabulary/slots.js";
+
 export const TAU = Math.PI * 2;
 
 // The head outline dictionary. The head slot, which used to be drawn and never used, is consumed here.
@@ -125,9 +127,9 @@ export function eyeGeometry(spec, box) {
   }
 
   // Left and right are deliberately set slightly off. Symmetry reads as a geometric figure at once.
-  // But **eyes drawn with lines only** (sleepy, line, happy, squeeze, droop, cross, half, side) are symmetric — on a single-stroke eye, a different size or height
+  // But **eyes drawn with lines only** (droop, half, side — and any eye a lid pupil closes: the sleepy arc, the dash, the ^^) are symmetric — on a single-stroke eye, a different size or height
   // reads as a mistake rather than "a smaller eye" (eyes with whites and a pupil still read as eyes when mismatched)
-  const lineEye = LINE_EYES.includes(spec.parts.eyes);
+  const lineEye = LINE_EYES.includes(spec.parts.eyes) || LID_PUPILS.includes(spec.parts.pupil);
   const sizeSkew = lineEye ? 0 : p.eyeSizeSkew;
   const heightSkew = lineEye ? 0 : p.eyeHeightSkew;
   let rL = base * (1 - sizeSkew), rR = base * (1 + sizeSkew);
@@ -150,6 +152,6 @@ export function eyeGeometry(spec, box) {
     { side: 1, x: g, y: y - box.headRy * heightSkew, r: rR }
   ];
 }
-// Eyes drawn with lines only — kept left-right symmetric (eyeGeometry)
-export const LINE_EYES = ["sleepy", "line", "happy", "droop", "half", "side"];   // cross and squeeze left it: they sit in an eyeball now, and a pair of balls wants ring's asymmetry
+// Eye kinds drawn with lines only — kept left-right symmetric (eyeGeometry), as is any eye a lid pupil closes (LID_PUPILS)
+export const LINE_EYES = ["droop", "half", "side"];   // cross and squeeze left it: they sit in an eyeball now, and a pair of balls wants ring's asymmetry; the closed lids are pupils now
 

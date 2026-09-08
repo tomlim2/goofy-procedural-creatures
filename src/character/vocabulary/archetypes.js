@@ -21,7 +21,8 @@ export const ARCHETYPES = [
     weight: 2,
     bias: {
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
-      eyes: [["dot", 3], ["half", 2], ["sleepy", 2], ["ring", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
+      eyes: [["dot", 3], ["half", 2], ["ring", 1], ["oval", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
+      pupil: [["dot", 12], ["sleepy", 2.5], ["line", 1.5], ["happy", 1.5], ["cross", 1], ["squeeze", 1], ["spiral", 1], ["scrawl", 1.5]],   // the scholar's sleepy eyes — a lid, now the closed eyes are pupils
       hairFront: [["none", 2], ["hairline", 2], ["blunt", 3], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5], ["helmet", 2], ["wisp", 2], ["curly", 2], ["cloud", 1]],
       hairBack: [["none", 3], ["bob", 3], ["long", 1.5], ["ponytail", 1], ["sheets", 1]],
       headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet disabled
@@ -48,7 +49,7 @@ export const ARCHETYPES = [
     weight: 3,
     bias: {
       horns: [["antenna", 5], ["nub", 2], ["none", 2]],
-      eyes: [["wide", 4], ["ring", 3], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
+      eyes: [["wide", 4], ["ring", 3], ["oval", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
       head: [["tall", 3], ["round", 3], ["egg", 2], ["pear", 1]],
       body: [["tube", 3], ["bean", 2]],
       build: [["narrow", 2], ["skinny", 2], ["medium", 1]],
@@ -66,7 +67,7 @@ export const ARCHETYPES = [
       head: [["wide", 4], ["round", 3], ["pear", 2]],
       hairFront: [["none", 2], ["hairline", 1], ["tuft", 2], ["helmet", 1]],
       hairBack: [["none", 5], ["mop", 1]],
-      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
+      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["oval", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
       body: [["bean", 4], ["dress", 2]],
       build: [["wide", 3], ["medium", 1]],
       legs: [["stub", 4], ["stick", 1]],
@@ -81,7 +82,8 @@ export const ARCHETYPES = [
       headgear: [["band", 3], ["pot", 1], ["cap", 1], ["none", 5], ["coronet", 0.8], ["bun", 1.5], ["appleBig", 0.8]],
       hairFront: [["none", 3], ["hairline", 2], ["swept", 1], ["blunt", 1], ["helmet", 1.5], ["curly", 2], ["cloud", 1], ["wisp", 1]],
       hairBack: [["none", 3], ["mop", 3], ["ponytail", 1]],
-      eyes: [["half", 3], ["sleepy", 3], ["ring", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
+      eyes: [["half", 3], ["ring", 2], ["oval", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
+      pupil: [["dot", 12], ["sleepy", 3.5], ["line", 1.5], ["happy", 1.5], ["cross", 1.5], ["squeeze", 1], ["spiral", 1], ["scrawl", 1.5]],   // the wanderer's sleepy eyes, and its X
       mouth: [["wave", 3], ["line", 2], ["dot", 2], ["frown", 1.5], ["scribble", 1]],
       body: [["dress", 3], ["bean", 2]]
     }

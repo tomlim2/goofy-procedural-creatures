@@ -38,7 +38,7 @@ head's axis, `bodyTop`) stays put. A head whose top then passes `MAX_HEAD_TOP` (
 ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A quad's head is laid on the front of the body
 (82% of its half-height above the back) and has no shoulder line.
 
-### eyes — eye kinds (16)
+### eyes — eye kinds (13)
 | Value | Drawing | Alive (pupil, blink) |
 | --- | --- | --- |
 | ring | White + outline + pupil | ● the eye rig |
@@ -46,8 +46,6 @@ ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A 
 | cyclops | One central eye, 1.75× | ● (side 0) |
 | oval | A tall elliptical big eye — the white 0.82r × 1.22r (`EYE_SHAPE`), the lid at that height too | ● |
 | dot | A black dot | ✗ static |
-| line | A flat two-dash eye — an expressionless dash | ✗ |
-| happy | An always-smiling ^^ — the same shape as the happy state's smile arch, always on | ✗ (angry brow → flat) |
 | hollow | An empty eye — ring with **only the pupil taken out** (white + outline). The same on every species; an imp gets a white eye too | ✗ |
 | side | ¬_¬ a sideways glance — half-lidded (a lower arc plus a lid line, with **the white** inside the arc) and the pupil pushed to one side (the direction is per individual) | ✗ |
 | droop | ´･ω･` drooping outer corners — a dot eye plus a lid stroke falling outward (glum) | ✗ (angry → flat) |
@@ -55,7 +53,6 @@ ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A 
 ☆_☆ star eyes and ♥_♥ heart eyes are **not eye kinds** — they are startle variants (awe, smitten). When a startle event is the star or heart variant, the eyes are switched off for 4 seconds and the
 glyph is drawn in their place — a **substitution**, not a covering ([../motion/catalog.md](../motion/catalog.md) § the face, `scene/rig.js eyeFx`). Which is why static eyes are baked
 separately from the face frame (the `staticEyes` frame).
-| sleepy | An arc closed downward | ✗ |
 | half | Half-lidded — only the **lower arc** of the lid line + **the white** inside the arc + the lid line + the pupil below the line (a line across the whole circle smears into "a circle with a line through it") | ✗ |
 | lidded | A heavy lid — the outline plus a **thick, sagging lid line** across the eye (sagging in the middle); **below the line is the white, above it is skin**, with the pupil peeking out below the line. If half-lidded (half) is one stroke, this is an eye with a thick lid | ✗ |
 | sharp | lidded **tilted 0.34 rad toward the nose** — the outer corner lifts and the nose side drops, for a fierce impression | ✗ |
@@ -73,31 +70,44 @@ When there is a white, **the outline and lid line are drawn into the fills sketc
 only the impression should change. **Below the lid line is the white, above it is skin** (`palette.skin`), and the ink goes **only into the outline, lid line and pupil**:
 leave the top as white too and it reads as **one more white crescent** laid over the eye; fill the lid with ink and on a black head (an imp, black fur)
 it merges with the head, **leaving only the white crescent**, which does not read as an eye. The skin part is closed by joining the upper portion of the outline's point array (outside ±`asin(0.16)`) to the lid line. The lid line's thickness is proportional to the eye size (≤ 0.2r) — at a fixed thickness it covers the whole white on a small eye (a cat).
-Static eyes are baked in face ink (faceGroup) — so they follow the face turn. Only live eyes (`RIG_EYES`) are stood up as a separate eye rig (white, outline, pupil, lid, ^^, shut line).
-The seven newer ones (oval, line, happy, hollow, and the kaomoji squeeze, side, droop) do not yet split by species — they sit in every species and archetype
-bias at the same weight (1.5; hollow, squeeze, side and droop 1). (The triangle eye ◣_◢ was dropped because close-set eyes merged into one; ☆ and ♥ moved to startle variants; and the two
+Static eyes are baked in face ink (faceGroup) — so they follow the face turn. Only live eyes (`RIG_EYES` with the lid up — `eyesAlive`) are stood up as a separate eye rig (white, outline, pupil, lid, ^^, shut line); a live kind a lid pupil closed is baked static like the rest.
+The newer ones (oval, hollow, and the kaomoji side, droop) do not yet split by species — they sit in every species and archetype
+bias but the rex's at the same weight (oval 1.5; hollow, side and droop 1). The closed eyes — sleepy, line, happy — and the marks — squeeze, cross, spiral, scrawl — were eye kinds and are values of the `pupil` slot now (§ pupil). (The triangle eye ◣_◢ was dropped because close-set eyes merged into one; ☆ and ♥ moved to startle variants; and the two
 highlighted eyeball eyes — bead and ◕ sparkle — were dropped.)
-`LINE_EYES` (sleepy, line, happy, squeeze, droop, cross, half, side) are left-right symmetric — one stroke (a lid line or an arch) defines the eye, so
+`LINE_EYES` (droop, half, side) — and any eye a lid pupil closes (sleepy, line, happy: `LID_PUPILS`) — are left-right symmetric — one stroke (a lid line or an arch) defines the eye, so
 if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". half and side stay on this list even after gaining a white ([rules.md](rules.md)). An eye hidden by a patch is skipped with `patched(spec, eye)` — only when there is a patch (look at patchSide alone and the eye disappears along with a patch dropped late).
 
-### pupil — the pupil (5)
-**What sits in the eyeball**, a part of its own — the `pupil` slot, the last late slot. The eye kind is the ball and its lids;
-the pupil is drawn where that kind keeps it, by `pupilMark` (face.js): the rig's live eyes hand it the pupil mesh (so a mark
+### pupil — the pupil (8)
+**What sits in the eyeball — or the lid down over it**, a part of its own — the `pupil` slot, the last late slot. The eye kind is
+the ball; a mark is drawn where that kind keeps its pupil, by `pupilMark` (face.js): the rig's live eyes hand it the pupil mesh (so a mark
 still shrinks on a startle and follows the gaze), and side, half and the lidded three hand it their pupil's place under the lid.
+A lid closes the eye instead (`drawEyes`, before the ball is drawn).
 
 | Value | Drawing |
 | --- | --- |
 | dot | The round pupil — each eye kind's own, drawn exactly as it always was |
+| sleepy | **A lid** — an arc closed downward; the eye is shut |
+| line | A lid — a flat dash (-_-), expressionless; it droops slightly on the outside |
+| happy | A lid — the ^^ arch, the same path the ^^ state stands up (`smileArchPath`) |
 | cross | An X |
 | squeeze | The >_< bracket, pointing toward the nose |
 | spiral | A neat spiral winding inward in one stroke |
 | scrawl | A circle scribbled with a crayon — six loops, each drawn a bit past one turn, overlaid, each with its own centre, size (0.45~1.05×) and tilt; the thin pen |
 
 A mark reaches 0.55r in a live eye and 0.36r under a lid, in the board's ink (light face ink is lost on a white). **A mark needs
-an eyeball**: an eye with no ball (dot, the closed lids), the hollow eye (no pupil by definition) and the slit (its own pupil) are
-pinned to dot by `applyLateConstraints` (`NO_MARK_EYES`), and a ghost's hollow eyes with them. The four marks were eye kinds
-drawn at the eye's own size on the bare face — floating symbols an eye wide; a file from then opens as a ring eye with that
-pupil (`file.js migrate`). The dot is the one mark that stands without an eyeball, which is what `eyes: dot` is.
+an eyeball**: an eye with no ball (dot, droop), the hollow eye (no pupil by definition) and the slit (its own pupil) are
+pinned to dot by `applyLateConstraints` (`NO_MARK_EYES`, `MARK_PUPILS`), and a ghost's hollow eyes with them. The dot is the one
+mark that stands without an eyeball, which is what `eyes: dot` is.
+
+**A lid closes the eye** (`LID_PUPILS` — sleepy, line, happy): whatever the kind, no ball and no mark is drawn — the lid alone,
+one stroke in face ink at the eye's place (`drawEyes`, before the ball; a line, not a surface, so no material moves it). The kind
+still sets the size — a wide eye shuts wide, a cyclops shuts as one big arc — and the closed pair is left-right symmetric like
+every one-stroke eye (`eyeGeometry`). A live kind with its lid down is not alive: `eyesAlive` (face.js) is false and
+`drawCreature` bakes the eye static, so sleep, ^^ and a wink swap the lid for the state's glyph like on any static eye. Angry
+brows go flat over sleepy and happy (the flat dash keeps them — -_- under angry brows reads as annoyed). The rex never closes
+its eyes (its forbid takes the three lids to dot), and a ghost's hollow eyes stay open. All seven — the three lids and the four
+marks — were eye kinds drawn at the eye's own size on the bare face; a file from then opens as a ring eye with that pupil
+(`file.js migrate`).
 
 ### brow — brows (11)
 none / flat / angry (inner end down) / worry (inner end up) — the straight three — and the shapes the eye knows from brows

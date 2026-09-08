@@ -7,7 +7,7 @@ import { layout, eyeGeometry } from "./layout.js";
 import { drawHead, drawEars, drawPupEars, drawCatEars } from "./head.js";
 import { drawHair, drawTopKnot } from "./hair.js";
 import { drawHeadgear, drawHorns } from "./headgear.js";
-import { drawEyes, drawFace2, drawEyewear, drawNose, drawWhiskers, RIG_EYES, patched } from "./face.js";
+import { drawEyes, drawFace2, drawEyewear, drawNose, drawWhiskers, eyesAlive, patched } from "./face.js";
 import { drawBody } from "./body.js";
 
 export { facePartKinds, facePartSketch } from "./faceStates.js";
@@ -53,7 +53,7 @@ export function drawCreature(spec, variant = 0) {
   // Hair on the scalp is drawn at the same depth as the horns (2.06) but in its own layer — only the stroke phase carries on from the horns (the same wobble as when horns and hair shared one sketch)
   L.hairCrown.ink.phase = L.horns.ink.phase;
   L.hairCrown.fills.phase = L.horns.fills.phase;
-  // Static eyes — one layer each, smallest first (Back → Front), for eyes not hidden by a patch. Live eyes (RIG_EYES) are not drawn by drawEyes, so those layers come out empty
+  // Static eyes — one layer each, smallest first (Back → Front), for eyes not hidden by a patch. Live eyes (eyesAlive — a rig kind, its lid up) are not drawn by drawEyes, so those layers come out empty
   const staticEyes = [...eyes].filter((e) => !patched(spec, e)).sort((a, b) => a.r - b.r)
     .map((eye, i) => ({ key: STATIC_EYE_KEYS[i], side: eye.side, eye }));
   staticEyes.forEach(({ key, eye }, i) => {
@@ -80,14 +80,14 @@ export function drawCreature(spec, variant = 0) {
   drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // the hat layer is above the ears — it covers their roots
   drawTopKnot(L.hat.ink, L.hat.fills, spec, box, noise);   // a bun or an apple top — headgear that is hair, on the same layer, in the hair's colour
 
-  // Only eyes whose pupil moves are passed along. A cyclops is alive too.
-  const live = RIG_EYES.includes(spec.parts.eyes) ? eyes.filter((e) => !patched(spec, e)) : [];
+  // Only eyes whose pupil moves are passed along. A cyclops is alive too; an eye a lid pupil closed is not (face.js eyesAlive)
+  const live = eyesAlive(spec) ? eyes.filter((e) => !patched(spec, e)) : [];
 
   return {
     ...L,
     eyes: live,
     // Static eye layer ↔ eye — [{ key, side, eye }] smallest first. For a rig eye the layer is empty (rig.js uses this to stand shut eyes and startle variants up where the eye is)
-    staticEyes: RIG_EYES.includes(spec.parts.eyes) ? [] : staticEyes,
+    staticEyes: eyesAlive(spec) ? [] : staticEyes,
     box,
     // The head's rotation axis. The top of the body (around the chin).
     neckY: box.bodyTop,
