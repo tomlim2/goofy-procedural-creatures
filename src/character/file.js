@@ -53,6 +53,12 @@ function migrate(next) {
   }
   // A file from before the eyeScale slot: its eyes are the medium step (the eye every creature had before the slot)
   if (out.parts && out.parts.eyeScale === undefined) out.parts = { ...out.parts, eyeScale: "medium" };
+  // A file from before the pupil slot: the four marks were eye kinds — an X, the >_< bracket, a spiral, a scrawl drawn on
+  // the bare face. They are pupils in a ring eye now; every other eye keeps the round pupil
+  if (out.parts && out.parts.pupil === undefined) {
+    const mark = ["cross", "squeeze", "spiral", "scrawl"].includes(out.parts.eyes) ? out.parts.eyes : null;
+    out.parts = { ...out.parts, eyes: mark ? "ring" : out.parts.eyes, pupil: mark || "dot" };
+  }
   // A file from before hair was three slots: the old value names the same style in the new ones
   if (out.parts && (out.parts.hair !== undefined || out.parts.hairFront === undefined)) {
     const { hair, ...rest } = out.parts;

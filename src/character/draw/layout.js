@@ -151,5 +151,5 @@ export function eyeGeometry(spec, box) {
   ];
 }
 // Eyes drawn with lines only — kept left-right symmetric (eyeGeometry)
-export const LINE_EYES = ["sleepy", "line", "happy", "squeeze", "droop", "cross", "half", "side"];
+export const LINE_EYES = ["sleepy", "line", "happy", "droop", "half", "side"];   // cross and squeeze left it: they sit in an eyeball now, and a pair of balls wants ring's asymmetry
 

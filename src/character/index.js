@@ -5,9 +5,9 @@
 // Movement is not here. That is ../motion/.
 // Docs: guidelines/character/
 
-export { makeCreature, makeGrid, makeBoard, boardCells, cellRoll, laneSpecies, LANES, ghostPalette, ghostOutline, ghostInk, isGhost, deriveSpec, applyForbid, applyConstraints, applyLateConstraints } from "./spec.js";
+export { makeCreature, makeGrid, makeBoard, boardCells, cellRoll, laneSpecies, LANES, ghostPalette, ghostOutline, ghostInk, isGhost, deriveSpec, applyForbid, applyConstraints, applyLateConstraints, NO_MARK_EYES } from "./spec.js";
 export { readCreature, readBoard, creatureJson, boardJson, isHouse, BOARD_FILE } from "./file.js";
 export { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, BIND_ARM, tailSketch, LAYER_KEYS, HAIR_KEYS, STATIC_EYE_KEYS } from "./draw/index.js";
 export { layout, eyeGeometry, OVERLAP } from "./draw/layout.js";
-export { RIG_EYES, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath } from "./draw/face.js";
+export { RIG_EYES, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath, pupilMark } from "./draw/face.js";
 export { SLOTS, DEFAULT_BIAS, ARCHETYPES, SPECIES, PAPER, INKS, FILLS, ACCENTS, POPS, DARKS, paintOf, markInkOf } from "./vocabulary/index.js";

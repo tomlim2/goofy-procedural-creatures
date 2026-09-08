@@ -12,8 +12,8 @@ export const SLOTS = {
   //   lidded (flat) · sharp (tilted 0.34 rad toward the nose — the fierce look of a lifted outer corner) · soft (tilted the other way — the gentle look of a drooping outer corner)
   // From kaomoji: squeeze (>_< screwed shut) · side (¬_¬ a sideways glance) · droop (´･ω･` drooping outer corners). (The ◕ eyeball eye was dropped)
   // ☆_☆ and ♥_♥ are not eye kinds but startle variants (motion/events.js stepSurprise) — the eyes turn into them briefly
-  eyes: ["ring", "dot", "wide", "sleepy", "spiral", "cross", "half", "slit", "cyclops", "oval", "line", "happy", "hollow",
-    "squeeze", "side", "droop", "scrawl", "lidded", "sharp", "soft"],
+  eyes: ["ring", "dot", "wide", "sleepy", "half", "slit", "cyclops", "oval", "line", "happy", "hollow",
+    "side", "droop", "lidded", "sharp", "soft"],
   // Brows: the straight three (flat · angry · worry), then the shapes the eye knows from brows in the world — arch (a
   // rounded arch) · peak (a steep arch, up then down at the tail) · wave (the S: a dip, a rise, a taper) · bushy (three
   // strokes thick) · raised (one lifted and arched, the other flat — the skeptic) · mono (one brow across both eyes)
@@ -142,7 +142,15 @@ export const SLOTS = {
   // at the sides (bunsSide) · ponytail · pigtails, two small bunches · the spiked rings — a zigzag of wedges standing round the head's
   // upper half from behind it, spikes long and few, hedgehog short and many. (verylong — long and the sheets together — was removed;
   // twintailsBall, tails with balls at the ends, became the buns)
-  hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "bunsTop", "bunsLow", "bunsSide", "ponytail", "pigtails", "spikes", "hedgehog"]
+  hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "bunsTop", "bunsLow", "bunsSide", "ponytail", "pigtails", "spikes", "hedgehog"],
+  // **The pupil** — what sits in the eyeball. The eye kind is the ball and its lids; the pupil is a part of its own:
+  // dot (the round pupil every eye draws its own way) · cross (an X) · squeeze (the >_< bracket) · spiral · scrawl
+  // (a crayon's loops). The four marks used to be eye kinds drawn at the eye's own size on the bare face — floating
+  // symbols an eye wide; they are pupils now, at a pupil's reach inside the white, in the board's ink. Only the eyes
+  // that draw a round pupil take a mark — ring · wide · cyclops · oval, side · half and the lidded three; an eye with
+  // no ball (dot, the closed lids), the hollow eye (no pupil by definition) and the slit (its own pupil) are pinned to
+  // dot by spec.js. The one mark allowed without an eyeball is the dot, which is what `eyes: dot` is
+  pupil: ["dot", "cross", "squeeze", "spiral", "scrawl"]
 };
 
 // Headgear that is hair — a bun, the apple tops: tied on the crown, worn like a hat and never with one, so they live in the
@@ -152,7 +160,7 @@ export const TOP_KNOTS = ["bun", "apple", "appleBig"];
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing rolls keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale", "hairBack"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale", "hairBack", "pupil"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -161,8 +169,11 @@ export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mout
 // Which slots should have a common "none" and which should not is settled here.
 export const DEFAULT_BIAS = {
   // When there is no species or archetype bias. cyclops is not here (it only comes from the imp bias)
-  eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["spiral", 1], ["cross", 1], ["slit", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
-    ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1.5], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
+  eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["sleepy", 1.5], ["half", 1.5], ["slit", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1],
+    ["side", 1], ["droop", 1], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
+  // The pupil — the round one most of the time; a mark on about a quarter of the eyes that can take one, which is
+  // near what the four marks had as eye kinds (spiral 1 · cross 1 · squeeze 1 · scrawl 1.5 of the eyes' weight)
+  pupil: [["dot", 12], ["cross", 1], ["squeeze", 1], ["spiral", 1], ["scrawl", 1.5]],
   // Three slots, each with a common none, so a creature seldom wears all three at once and about one in fourteen wears nothing
   hairFront: [["none", 3], ["hairline", 3], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5], ["cap", 1], ["mohawk", 1], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],
   hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["sheets", 1.2], ["twintails", 1], ["bunsTop", 0.8], ["bunsLow", 0.6], ["bunsSide", 0.7], ["ponytail", 1.2], ["pigtails", 1.2], ["spikes", 2], ["hedgehog", 1.2]],

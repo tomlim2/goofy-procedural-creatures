@@ -83,7 +83,14 @@ const settled = (roll, n) => (Math.imul((roll ^ (n * 0x27d4eb2d)) >>> 0, 0x9e377
 // The rules on the **late** slots — run after they are rolled (makeCreature draws LATE_SLOTS after applyConstraints, so a rule
 // written there would never see them). Hair is two slots (front · back), the back late. Every rule here is a fixed overwrite,
 // never a roll (the rule at the top of this file)
+// The eye kinds that draw no round pupil for a mark to replace (see the pupil slot, vocabulary/slots.js)
+export const NO_MARK_EYES = ["dot", "sleepy", "line", "happy", "droop", "hollow", "slit"];
 export function applyLateConstraints(parts) {
+  // **A mark needs an eyeball.** The pupil slot's marks (an X, the bracket, a spiral, a scrawl) sit in a white; an eye
+  // with no ball (a bare dot, the closed lids), the hollow eye (no pupil by definition) and the slit (its own pupil)
+  // have nowhere to put one, so their pupil is the dot — the one mark that stands on its own. A fixed overwrite, no rng.
+  // Here and not in applyConstraints: the pupil is a late slot, not rolled yet when that runs
+  if (NO_MARK_EYES.includes(parts.eyes)) parts.pupil = "dot";
   const hat = parts.headgear !== "none" && parts.headgear !== "halo" && !TOP_KNOTS.includes(parts.headgear);   // a thing that covers the head
   // A helmet or a pot covers the head: there is nowhere for hair to squeeze out
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
@@ -128,7 +135,7 @@ export function applyConstraints(parts, speciesName, roll) {
   parts.patchSide = parts.eyewear === "patch" ? (settled(roll, 2) < 0.5 ? -1 : 1) : 99;
 
   // Angry brows on a closed eye leave the expression unreadable.
-  if (["sleepy", "happy", "squeeze", "droop"].includes(parts.eyes) && parts.brow === "angry") parts.brow = "flat";
+  if (["sleepy", "happy", "droop"].includes(parts.eyes) && parts.brow === "angry") parts.brow = "flat";
 
   // Eyewear does not work on a cyclops.
   if (parts.eyes === "cyclops") parts.eyewear = "none";
@@ -286,7 +293,7 @@ export function isGhost(spec) { return !!(spec && spec.parts && spec.parts.ghost
 // ink's imp clause — on the very screen the clause was written for.
 export function deriveSpec(next) {
   const parts = { ...next.parts };
-  if (parts.ghost !== "none") parts.eyes = "hollow";   // a ghost has empty eyes — nothing is looking back
+  if (parts.ghost !== "none") { parts.eyes = "hollow"; parts.pupil = "dot"; }   // a ghost has empty eyes — nothing is looking back, and no mark sits in an empty eye
   const palette = { ...ghostPalette(next.palette0, parts.ghost, next.proportions.hand) };
   // **One field order, whichever door the spec came through** — a roll, an edit, a file. The six settled fields
   // are taken off `next` and written back in this order, so two identical creatures serialise the same however

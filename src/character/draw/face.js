@@ -74,15 +74,74 @@ export function eyeFloor(spec, eyes, x) {
   return hit.length ? Math.min(...hit.map((e) => e.y - e.r * sy * 1.05)) : Infinity;
 }
 
+// **The pupil** — the `pupil` slot: what sits in the eyeball, drawn where that eye kind keeps its pupil. `dot` is the
+// round pupil, and every eye kind draws its own (the caller's `dot`), so a dot-pupil creature is drawn exactly as it
+// was; the marks are drawn here — an X, the >_< bracket (pointing toward the nose), a spiral winding in, a crayon's
+// six loops — centred at `at`, reaching `reach`, in the board's ink (light face ink is lost on a white), as lines into
+// the sketch the eye's white is in, so a larger eye's white still covers a smaller eye's mark. They were eye kinds,
+// drawn at the eye's own size on the bare face; an eye with no ball takes no mark (spec.js pins its pupil to dot).
+// The rig's live eyes call this too (scene/rig.js) — the pupil mesh is whatever mark the slot says, and it still
+// shrinks on a startle and follows the gaze
+export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot) {
+  const kind = spec.parts.pupil || "dot";
+  const dark = spec.palette.ink;
+  if (kind === "cross") {
+    sketch.line([[cx - reach, cy - reach], [cx + reach, cy + reach]], { color: dark });
+    sketch.line([[cx + reach, cy - reach], [cx - reach, cy + reach]], { color: dark });
+  } else if (kind === "squeeze") {
+    const inward = -(eye.side || 1);
+    sketch.line([[cx - inward * reach, cy + reach], [cx + inward * reach * 0.64, cy], [cx - inward * reach, cy - reach]], { color: dark });
+  } else if (kind === "spiral") {
+    const spiral = [];
+    for (let i = 0; i <= 40; i += 1) {
+      const t = i / 40;
+      const angle = t * TAU * 2.2;
+      const r = reach * (1 - t * 0.85);
+      spiral.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
+    }
+    sketch.line(spiral, { color: dark, size: "S" });
+  } else if (kind === "scrawl") {
+    // A circle scribbled with a crayon — six loops, each drawn a bit past one turn, overlaid; each has its own centre,
+    // size (0.45~1.05×) and tilt, so the strokes pass over each other and the ends never meet (an eye a child drew).
+    // Several turns in one stroke would be concentric and read as a spiral — that is spiral
+    const wob = sketch.noise;
+    const phase = (eye.side || 1) * 5.5 + spec.proportions.hand * 0.017;
+    for (let k = 0; k < 6; k += 1) {
+      const w1 = wob(phase + k * 3.7), w2 = wob(phase + 17 + k * 3.7), w3 = wob(phase + 41 + k * 3.7);
+      const ox = cx + reach * 0.17 * w1, oy = cy + reach * 0.15 * w2;
+      const grade = 0.45 + 0.6 * ((k * 0.37) % 1);
+      const rx = reach * Math.min(1.05, grade + 0.12 * w3);
+      const ry = reach * Math.min(1.05, grade + 0.12 * w1) * 0.92;
+      const tilt = w2 * 0.9;
+      const from = w3 * Math.PI;
+      const to = from + TAU + 0.8 + w1 * 0.6;   // one turn plus extra — the end passes the start
+      const pts = [];
+      for (let i = 0; i <= 24; i += 1) {
+        const a = from + (to - from) * (i / 24);
+        const x = Math.cos(a) * rx, y = Math.sin(a) * ry;
+        pts.push([ox + x * Math.cos(tilt) - y * Math.sin(tilt), oy + x * Math.sin(tilt) + y * Math.cos(tilt)]);
+      }
+      sketch.line(pts, { color: dark, size: "S" });   // the thin pen — a crayon's loops at a pupil's size clot under the broad one
+    }
+  } else dot();
+}
+
 export function drawEyes(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyes;
   // The eye's line is the face ink — an outline is not a surface, and no material moves it. The pupil is one
   // (part: "eyes" on its fills — paintPart takes the worn material's colour when a hand moved it) and the white
   // another (part: "eyeWhite", vocabulary/wear.js)
   const ink0 = spec.faceInk || spec.palette.ink;
-  // The ink of eyes laid on a white (slit, side, half, the lidded set) — drawn in light face ink it is lost on the white
+  // The ink of eyes laid on a white (slit, side, half, the lidded set, and the marks) — drawn in light face ink it is lost on the white
   const dark = spec.palette.ink;
-
+  // **The eyeball** — a white with its rim, a slightly crumpled circle, the crumple the creature's own (k keeps the kinds'
+  // crumples apart). The fill and the rim go into **the same sketch (fills)**: when two eyes overlap the later eye (the
+  // larger) covers the front eye's outline, so no crossing line is left. For that the eyes are drawn smallest first, below
+  const eyeball = (eye, k) => {
+    const path = blobPath(eye.x, eye.y, eye.r, eye.r, eyeWob(spec, eye, k, { noise: fills.noise }));
+    paintPart(fills, spec, path, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
+    fills.contour(path, { color: dark });   // the white's rim is black — being on the white, it is always visible
+  };
   // Drawn smallest first — when they overlap the larger eye is in front (so no crossing line appears on eyes like hollow, whose fill and outline share one sketch)
   for (const eye of [...eyes].sort((a, b) => a.r - b.r)) {
     if (patched(spec, eye)) continue;
@@ -91,44 +150,6 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 1, { amount: 0.2 })), ink0, { own: true, part: "eyes" });
     } else if (kind === "sleepy") {
       ink.line(arcPath(eye.x, eye.y, eye.r, eye.r * 0.7, Math.PI, TAU), { color: ink0 });
-    } else if (kind === "cross") {
-      ink.line([[eye.x - eye.r, eye.y - eye.r], [eye.x + eye.r, eye.y + eye.r]], { color: ink0 });
-      ink.line([[eye.x + eye.r, eye.y - eye.r], [eye.x - eye.r, eye.y + eye.r]], { color: ink0 });
-    } else if (kind === "scrawl") {
-      // A circle scribbled with a crayon — three and a half turns in one stroke, the radius and centre wavering each turn so the lines cross and overshoot.
-      // Unlike the neat spiral: the start and end do not meet and the strokes pass over each other (an eye a child drew with a crayon)
-      // Four loops, each drawn a bit past one turn, overlaid — each loop has its own centre, size and tilt, so the strokes pass over each other and the ends never meet.
-      // (Several turns in one stroke would be concentric and read as a spiral — that is spiral)
-      const wob = ink.noise;
-      const phase = eye.side * 5.5 + spec.proportions.hand * 0.017;
-      for (let k = 0; k < 6; k += 1) {
-        const w1 = wob(phase + k * 3.7), w2 = wob(phase + 17 + k * 3.7), w3 = wob(phase + 41 + k * 3.7);
-        const cx = eye.x + eye.r * 0.17 * w1;
-        const cy = eye.y + eye.r * 0.15 * w2;
-        // The loops step in size — big and small loops mix into an overdrawn mark (0.45~1.05×)
-        const grade = 0.45 + 0.6 * ((k * 0.37) % 1);
-        const rx = eye.r * Math.min(1.05, grade + 0.12 * w3);
-        const ry = eye.r * Math.min(1.05, grade + 0.12 * w1) * 0.92;
-        const tilt = w2 * 0.9;
-        const from = w3 * Math.PI;
-        const to = from + TAU + 0.8 + w1 * 0.6;   // one turn plus extra — the end passes the start
-        const pts = [];
-        for (let i = 0; i <= 24; i += 1) {
-          const a = from + (to - from) * (i / 24);
-          const x = Math.cos(a) * rx, y = Math.sin(a) * ry;
-          pts.push([cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]);
-        }
-        ink.line(pts, { color: ink0 });
-      }
-    } else if (kind === "spiral") {
-      const spiral = [];
-      for (let i = 0; i <= 40; i += 1) {
-        const t = i / 40;
-        const angle = t * TAU * 2.2;
-        const r = eye.r * (1 - t * 0.85);
-        spiral.push([eye.x + Math.cos(angle) * r, eye.y + Math.sin(angle) * r]);
-      }
-      ink.line(spiral, { color: ink0, size: "S" });
     } else if (kind === "slit") {
       // An almond outline plus a **filled** vertical pupil (a spindle). With a thin stroke, on a small eye the outline's two lines merge into a smear and the pupil does not read —
       // the almond is raised a little (0.7r) and the pupil filled as an area, so it reads as a cat eye from a distance.
@@ -143,10 +164,6 @@ export function drawEyes(ink, fills, spec, box, eyes) {
     } else if (kind === "happy") {
       // An always-smiling eye ^^ — the smile arch, always on here (smileArchPath: the same path the ^^ state stands up)
       ink.line(smileArchPath(eye.x, eye.y, eye.r), { color: ink0 });
-    } else if (kind === "squeeze") {
-      // >_< — eyes screwed shut. A bracket pointing toward the nose (left eye >, right eye <)
-      const inward = -eye.side;
-      ink.line([[eye.x - inward * eye.r * 0.7, eye.y + eye.r * 0.7], [eye.x + inward * eye.r * 0.45, eye.y], [eye.x - inward * eye.r * 0.7, eye.y - eye.r * 0.7]], { color: ink0 });
     } else if (kind === "side") {
       // ¬_¬ — a sideways glance. Half-lidded (a lower arc plus a lid line) but with the pupil pushed to one side (which side is per individual)
       const dir = spec.proportions.hand % 2 ? 1 : -1;
@@ -158,18 +175,15 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, arc, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
-      paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true, part: "eyes" });
+      pupilMark(fills, spec, eye, [eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12], eye.r * 0.36, () =>
+        paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true, part: "eyes" }));
     } else if (kind === "droop") {
       // ´･ω･` — drooping outer corners. A lid stroke falling outward over a dot eye (glum)
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 5, { amount: 0.2 })), ink0, { own: true, part: "eyes" });
       ink.line([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0 });
     } else if (kind === "hollow") {
-      // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket).
-      // The fill and outline are drawn per eye into **the same sketch (fills)** — when two eyes overlap the later eye (the larger) covers the front eye's outline (no crossing line).
-      // For that, smallest first: the larger eye is drawn later and so ends up in front
-      const path = blobPath(eye.x, eye.y, eye.r, eye.r, eyeWob(spec, eye, 6, { noise: fills.noise }));   // a slightly crumpled circle, its crumple the creature's own
-      paintPart(fills, spec, path, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
-      fills.contour(path, { color: dark });   // the white's rim is black — being on the white, it is always visible
+      // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket)
+      eyeball(eye, 6);
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
       // The heavy-lidded set — **the same eye at different tilts**: lidded flat · sharp tilted toward the nose (the fierce look of a lifted outer corner) ·
       // soft tilted the other way (the gentle look of a drooping outer corner). The tilt rotates the white, the lid line and the pupil together about the eye's centre —
@@ -203,7 +217,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       fills.contour(path, { color: dark });
       // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil
       const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
-      paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" });
+      pupilMark(fills, spec, eye, [eye.x + eye.r * gaze, eye.y - eye.r * 0.16], eye.r * 0.36, () =>
+        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" }));
       // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
       fills.line(lidLine, { color: dark });
     } else if (kind === "half") {
@@ -216,7 +231,8 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, arc, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
-      paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true, part: "eyes" });
+      pupilMark(fills, spec, eye, [eye.x, eye.y - eye.r * 0.12], eye.r * 0.36, () =>
+        paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true, part: "eyes" }));
     }
     // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
     // as separate meshes to move the startle (pupil shrink), gaze and lids.
@@ -224,7 +240,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
 }
 
 // The eye kinds that draw an eyeball — the rig's live eyes, and the static kinds that paint a white (the slit,
-// side, hollow, half and the lidded three above). The rest are marks: a dot, an X, an arc, a spiral, a line
+// side, hollow, half and the lidded three above). The rest are lines on the bare face: a dot, the closed lids
 const EYEBALL_KINDS = new Set([...RIG_EYES, "slit", "side", "hollow", "half", "lidded", "sharp", "soft"]);
 export function drawFace2(ink, fills, spec, box, eyes) {
   const kind = spec.parts.face2;

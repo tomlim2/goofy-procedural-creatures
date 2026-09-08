@@ -570,8 +570,8 @@ const PROPERTIES = {
 // The slots that are a property of a part, and so leave the tab strip
 const PROPERTY_SLOTS = Object.values(PROPERTIES).flat().filter((p) => p.kind === "slot").map((p) => p.key);
 // The two hair slots sit together on the strip, after the front (the roll keeps the back at the end of SLOTS as a late slot)
-const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT && !PROPERTY_SLOTS.includes(slot) && slot !== "hairBack")
-  .flatMap((slot) => (slot === "hairFront" ? ["hairFront", "hairBack"] : [slot]));
+const PART_SLOTS = Object.keys(SLOTS).filter((slot) => !MATERIAL_SLOTS.includes(slot) && slot !== STATE_SLOT && !PROPERTY_SLOTS.includes(slot) && slot !== "hairBack" && slot !== "pupil")
+  .flatMap((slot) => (slot === "hairFront" ? ["hairFront", "hairBack"] : slot === "eyes" ? ["eyes", "pupil"] : [slot]));   // a late slot lands at the end of SLOTS; its tab stands where it belongs — the back hair after the front, the pupil after the eyes
 // What a part tab is called — the slot's own name, but the hair slots are long for a 40px tab
 const TAB_LABEL = { hairFront: "bangs", hairBack: "back" };
 let part = PART_SLOTS[0];

@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { paintPart } from "../character/draw/body.js";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath, isGhost, STATIC_EYE_KEYS } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath, pupilMark, isGhost, STATIC_EYE_KEYS } from "../character/index.js";
 import { Sketch } from "../stroke.js";
 import { blobPath, arcPath } from "../shape.js";
 import { makeClock, bindArm } from "../motion/index.js";
@@ -273,7 +273,10 @@ export function buildCreature(spec, noise, birth = 0) {
     open.add(sketchMesh([white, rim], 1, o));
 
     const pupilSketch = new Sketch(noise, 0.4); pupilSketch.outline = spec.outline; pupilSketch.inkColor = spec.lineInk;
-    paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, eyeWob(spec, flat, 11, { amount: 0.12 })), spec.palette.ink, { own: true });
+    // The pupil — the round one, or the mark the `pupil` slot names (character/draw/face.js pupilMark); either is one
+    // mesh at the eye's centre, so the startle shrinks it and the gaze moves it the same
+    pupilMark(pupilSketch, spec, eye, [0, 0], eye.r * 0.55, () =>
+      paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, eyeWob(spec, flat, 11, { amount: 0.12 })), spec.palette.ink, { own: true }));
     const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
     open.add(pupil);
     rig.add(open);

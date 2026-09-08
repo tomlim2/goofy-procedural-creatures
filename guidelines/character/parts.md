@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 32 slots, 231 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 232 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -38,7 +38,7 @@ head's axis, `bodyTop`) stays put. A head whose top then passes `MAX_HEAD_TOP` (
 ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A quad's head is laid on the front of the body
 (82% of its half-height above the back) and has no shoulder line.
 
-### eyes — eye kinds (20)
+### eyes — eye kinds (16)
 | Value | Drawing | Alive (pupil, blink) |
 | --- | --- | --- |
 | ring | White + outline + pupil | ● the eye rig |
@@ -49,7 +49,6 @@ ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A 
 | line | A flat two-dash eye — an expressionless dash | ✗ |
 | happy | An always-smiling ^^ — the same shape as the happy state's smile arch, always on | ✗ (angry brow → flat) |
 | hollow | An empty eye — ring with **only the pupil taken out** (white + outline). The same on every species; an imp gets a white eye too | ✗ |
-| squeeze | >_< screwed shut — a bracket pointing toward the nose | ✗ (angry brow → flat) |
 | side | ¬_¬ a sideways glance — half-lidded (a lower arc plus a lid line, with **the white** inside the arc) and the pupil pushed to one side (the direction is per individual) | ✗ |
 | droop | ´･ω･` drooping outer corners — a dot eye plus a lid stroke falling outward (glum) | ✗ (angry → flat) |
 
@@ -58,12 +57,9 @@ glyph is drawn in their place — a **substitution**, not a covering ([../motion
 separately from the face frame (the `staticEyes` frame).
 | sleepy | An arc closed downward | ✗ |
 | half | Half-lidded — only the **lower arc** of the lid line + **the white** inside the arc + the lid line + the pupil below the line (a line across the whole circle smears into "a circle with a line through it") | ✗ |
-| spiral | A spiral — a neat spiral **winding inward in one stroke** | ✗ |
-| scrawl | A circle scribbled with a crayon — **six** loops, each drawn a bit past one turn, overlaid. Each loop has its own centre, size (0.45~1.05×) and tilt, so the strokes pass over each other and the ends never meet (a Mimikyu-ish scribbled eye). Unlike the spiral, it is not concentric | ✗ |
 | lidded | A heavy lid — the outline plus a **thick, sagging lid line** across the eye (sagging in the middle); **below the line is the white, above it is skin**, with the pupil peeking out below the line. If half-lidded (half) is one stroke, this is an eye with a thick lid | ✗ |
 | sharp | lidded **tilted 0.34 rad toward the nose** — the outer corner lifts and the nose side drops, for a fierce impression | ✗ |
 | soft | lidded **tilted 0.34 rad the other way** — the outer corner droops, for a gentle impression (the mirror of sharp) | ✗ |
-| cross | X | ✗ |
 | slit | An almond outline (half-height 0.7r) + **the white** inside the almond + a **filled** vertical spindle pupil (a thin stroke does not read when small) | ✗ |
 
 The lines and pupil of a static eye with a white (hollow, lidded, sharp, soft, half, side, slit) use **the dark palette ink** — being on a white, light face ink would be lost (imps included).
@@ -83,6 +79,25 @@ bias at the same weight (1.5; hollow, squeeze, side and droop 1). (The triangle 
 highlighted eyeball eyes — bead and ◕ sparkle — were dropped.)
 `LINE_EYES` (sleepy, line, happy, squeeze, droop, cross, half, side) are left-right symmetric — one stroke (a lid line or an arch) defines the eye, so
 if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". half and side stay on this list even after gaining a white ([rules.md](rules.md)). An eye hidden by a patch is skipped with `patched(spec, eye)` — only when there is a patch (look at patchSide alone and the eye disappears along with a patch dropped late).
+
+### pupil — the pupil (5)
+**What sits in the eyeball**, a part of its own — the `pupil` slot, the last late slot. The eye kind is the ball and its lids;
+the pupil is drawn where that kind keeps it, by `pupilMark` (face.js): the rig's live eyes hand it the pupil mesh (so a mark
+still shrinks on a startle and follows the gaze), and side, half and the lidded three hand it their pupil's place under the lid.
+
+| Value | Drawing |
+| --- | --- |
+| dot | The round pupil — each eye kind's own, drawn exactly as it always was |
+| cross | An X |
+| squeeze | The >_< bracket, pointing toward the nose |
+| spiral | A neat spiral winding inward in one stroke |
+| scrawl | A circle scribbled with a crayon — six loops, each drawn a bit past one turn, overlaid, each with its own centre, size (0.45~1.05×) and tilt; the thin pen |
+
+A mark reaches 0.55r in a live eye and 0.36r under a lid, in the board's ink (light face ink is lost on a white). **A mark needs
+an eyeball**: an eye with no ball (dot, the closed lids), the hollow eye (no pupil by definition) and the slit (its own pupil) are
+pinned to dot by `applyLateConstraints` (`NO_MARK_EYES`), and a ghost's hollow eyes with them. The four marks were eye kinds
+drawn at the eye's own size on the bare face — floating symbols an eye wide; a file from then opens as a ring eye with that
+pupil (`file.js migrate`). The dot is the one mark that stands without an eyeball, which is what `eyes: dot` is.
 
 ### brow — brows (11)
 none / flat / angry (inner end down) / worry (inner end up) — the straight three — and the shapes the eye knows from brows

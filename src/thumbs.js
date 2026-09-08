@@ -38,7 +38,7 @@ function gl() {
 // Which region a part is framed on. A slot not listed (a future one) gets the whole creature
 export const FRAME_OF = {
   head: "head", hairFront: "head", hairBack: "head", headgear: "head", horns: "head", ears: "head",
-  eyes: "face", brow: "face", browLength: "face", eyewear: "face", nose: "face", face2: "face", mouth: "face", mouthPos: "face", mouthSize: "face",
+  eyes: "face", pupil: "face", brow: "face", browLength: "face", eyewear: "face", nose: "face", face2: "face", mouth: "face", mouthPos: "face", mouthSize: "face",
   body: "body", pattern: "body", build: "body",
   arms: "arms", armLength: "arms",
   legs: "legs", legLength: "legs",
@@ -70,6 +70,7 @@ const NODES_OF = {
   hair: { layers: ["hairBack", "hairCrown", "hairFront"] },
   headgear: { layers: ["hat"] },
   eyes: { layers: ["staticEyeBack", "staticEyeFront"], eyes: true },
+  pupil: { layers: ["staticEyeBack", "staticEyeFront"], eyes: true },   // the pupil sits in the eyes' own layers and rig
   brow: { face: "brow" },
   eyewear: { layers: ["faceFront"] },
   nose: { layers: ["faceFront"] },

@@ -5,7 +5,7 @@
 //
 // What counts as correct (the expectation):
 //   brows (not none) · mouth · nose (muzzle) · eyewear · cheeks · whiskers (cats) — visible in every state
-//   static eyes (dot, sleepy, cross, spiral, slit, half) — for sleep, ^^, a wink (on that side) and anger, a substitute glyph shows instead (shut line / smile arc / fierce eye)
+//   static eyes (dot, sleepy, slit, half …) — for sleep, ^^, a wink (on that side) and anger, a substitute glyph shows instead (shut line / smile arc / fierce eye)
 //   the eye rig's pupil (ring, wide, cyclops) — closed during a blink, ^^, a wink (that side) and sleep, so it is left out then. In exchange,
 //   the shut line has to be visible then — an eye closing must not make the eye disappear from the face
 //   the ^^ arc — visible when happy or winking (that side) · the sleep lid — visible when asleep

@@ -75,7 +75,7 @@ export const SPECIES = [
       headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.5]],
       eyewear: [["none", 6], ["patch", 2], ["glasses", 1]],
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
-      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
+      eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["sleepy", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
       tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // dogs are thick or bushy (a spitz), and a rabbit-like pom too. wedge disabled
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
@@ -126,7 +126,8 @@ export const SPECIES = [
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
       // Nose — cats read the slot as cat noses (face.js catNose): dot a small triangle · wedge a heart · hook triangle + philtrum · long a wide nose with a long philtrum · none nothing
       nose: [["dot", 3], ["wedge", 2], ["hook", 2], ["long", 1], ["none", 1.5]],
-      eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["cross", 2], ["wide", 2], ["dot", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["scrawl", 1], ["lidded", 2], ["sharp", 2], ["soft", 2]],
+      eyes: [["half", 3], ["sleepy", 3], ["slit", 3], ["wide", 2], ["dot", 1], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 2], ["sharp", 2], ["soft", 2]],
+      pupil: [["dot", 8], ["cross", 2], ["squeeze", 1], ["scrawl", 1]],   // the marks the cat's eye kinds carried, as pupils now
       // Mouth — ω dominates, then the flipped ω (smug), a pursed 3, line and dot, a meowing o (meow), a peeking tongue (blep). No wave and no smile (4 reference rows)
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
@@ -215,8 +216,8 @@ export const SPECIES = [
       ears: ["none", "pointy"],   // an imp ear is none or a small pointy one
       skeleton: "biped",
       darkHead: true,
-      // arms unchecked — imps sometimes have no arms (arms none)
       hairFront: ["none"], hairBack: ["none"],   // bald — horns are the imp's crown
+      // arms unchecked — imps sometimes have no arms (arms none)
       tail: false
     },
     bias: {
@@ -225,7 +226,8 @@ export const SPECIES = [
       hairFront: [["none", 1]], hairBack: [["none", 1]],   // bald (the forbid above says the same; the bias is what the roll draws from)
       headgear: [["none", 1]],
       eyewear: [["none", 6], ["patch", 2], ["goggles", 1]],
-      eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["squeeze", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2], ["soft", 2]],
+      eyes: [["ring", 3], ["wide", 3], ["cyclops", 2], ["oval", 1.5], ["line", 1.5], ["happy", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 2], ["soft", 2]],
+      pupil: [["dot", 4], ["spiral", 2], ["cross", 2], ["scrawl", 2.5], ["squeeze", 1]],   // wild-eyed — the marks the imp's eye kinds carried, as pupils now
       nose: [["none", 4], ["dot", 2]],
       // Mouth — wide (a species multiplier of 1.3 plus wide). The tooth grid, a hatched mass, zigzag, big fangs, and shout/open with two tooth strips (5 reference rows)
       mouth: [["grimace", 3], ["scribble", 2], ["zigzag", 2], ["fangs", 3], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["smug", 1], ["line", 0.5]],
