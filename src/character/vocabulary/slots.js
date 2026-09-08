@@ -10,8 +10,8 @@ export const SLOTS = {
   //   a set of heavy lids (the same eye at different tilts — a white, a thick sagging lid line and a pupil):
   //   lidded (flat) · sharp (tilted 0.34 rad toward the nose — the fierce look of a lifted outer corner) · soft (tilted the other way — the gentle look of a drooping outer corner)
   // From kaomoji: side (¬_¬ a sideways glance) · droop (´･ω･` drooping outer corners). (The ◕ eyeball eye was dropped)
-  // The closed eyes (the sleepy arc, the flat dash, the ^^ arch) and the marks (an X, >_<, a spiral, a scrawl) are not
-  // kinds but values of the `pupil` slot, below — a closed eye is any kind with its lid down
+  // The closed eyes (the sleepy arc, the flat dash, the ^^ arch) and the symbols (an X, >_<, a spiral, a scrawl) are not
+  // kinds but values of the `pupil` slot, below — marks drawn small inside the eyeball
   // ☆_☆ and ♥_♥ are not eye kinds but startle variants (motion/events.js stepSurprise) — the eyes turn into them briefly
   eyes: ["ring", "dot", "wide", "half", "slit", "cyclops", "oval", "hollow",
     "side", "droop", "lidded", "sharp", "soft"],
@@ -144,22 +144,17 @@ export const SLOTS = {
   // upper half from behind it, spikes long and few, hedgehog short and many. (verylong — long and the sheets together — was removed;
   // twintailsBall, tails with balls at the ends, became the buns)
   hairBack: ["none", "bob", "mop", "long", "sheets", "twintails", "bunsTop", "bunsLow", "bunsSide", "ponytail", "pigtails", "spikes", "hedgehog"],
-  // **The pupil** — what sits in the eyeball, or the lid down over it. The eye kind is the ball; the pupil is a part
-  // of its own, in two families (LID_PUPILS · MARK_PUPILS below):
-  // dot (the round pupil every eye draws its own way) · the lids — sleepy (an arc closed downward) · line (a flat
-  // dash, -_-) · happy (the ^^ arch) — and the marks — cross (an X) · squeeze (the >_< bracket) · spiral · scrawl
-  // (a crayon's loops). All seven used to be eye kinds drawn at the eye's own size on the bare face. A **lid closes
-  // the eye**: whatever the kind, no ball and no mark is drawn, only the lid at the eye's place (the kind still sets
-  // the size — a wide eye shuts wide). A **mark sits in the white**, at a pupil's reach, in the board's ink, so only
-  // the eyes that draw a round pupil take one — ring · wide · cyclops · oval, side · half and the lidded three; an eye
-  // with no ball (dot, droop), the hollow eye (no pupil by definition) and the slit (its own pupil) are pinned to dot
-  // by spec.js. The one mark allowed without an eyeball is the dot, which is what `eyes: dot` is
+  // **The pupil** — what sits in the eyeball. The eye kind is the ball and its lids; the pupil is a part of its own:
+  // dot (the round pupil every eye draws its own way) · the little closed eyes — sleepy (an arc closed downward) ·
+  // line (a flat dash, -_-) · happy (the ^^ arch) — and the symbols — cross (an X) · squeeze (the >_< bracket) ·
+  // spiral · scrawl (a crayon's loops). All seven used to be eye kinds drawn at the eye's own size on the bare face;
+  // they are **marks** now, drawn small where the pupil is, at a pupil's reach inside the white, in the board's ink
+  // (a closed eye inside an open one — the kaomoji look). So only the eyes that draw a round pupil take one — ring ·
+  // wide · cyclops · oval, side · half and the lidded three; an eye with no ball (dot, droop), the hollow eye (no
+  // pupil by definition) and the slit (its own pupil) are pinned to dot by spec.js. The one mark allowed without an
+  // eyeball is the dot, which is what `eyes: dot` is
   pupil: ["dot", "sleepy", "line", "happy", "cross", "squeeze", "spiral", "scrawl"]
 };
-// The pupil's two families. A lid closes the eye — no ball, nothing alive, one stroke in face ink (draw/face.js drawEyes;
-// draw/index.js bakes the eye static); a mark needs an eyeball to sit in (spec.js NO_MARK_EYES)
-export const LID_PUPILS = ["sleepy", "line", "happy"];
-export const MARK_PUPILS = ["cross", "squeeze", "spiral", "scrawl"];
 
 // Headgear that is hair — a bun, the apple tops: tied on the crown, worn like a hat and never with one, so they live in the
 // headgear slot; but they cover nothing, so the hat rules leave the hair under them alone, and the hat drawer skips them
@@ -179,9 +174,8 @@ export const DEFAULT_BIAS = {
   // When there is no species or archetype bias. cyclops is not here (it only comes from the imp bias)
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["half", 1.5], ["slit", 1], ["oval", 1.5], ["hollow", 1],
     ["side", 1], ["droop", 1], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
-  // The pupil — the round one most of the time; a lid on about a fifth of the eyes, and a mark on about a quarter of
-  // the rest that can take one — what the seven had as eye kinds (sleepy · line · happy 1.5 each of the eyes' weight;
-  // spiral 1 · cross 1 · squeeze 1 · scrawl 1.5)
+  // The pupil — the round one most of the time; a mark on about two fifths of the eyes that can take one — what the
+  // seven had as eye kinds (sleepy · line · happy 1.5 each of the eyes' weight; spiral 1 · cross 1 · squeeze 1 · scrawl 1.5)
   pupil: [["dot", 12], ["sleepy", 1.3], ["line", 1.3], ["happy", 1.3], ["cross", 1], ["squeeze", 1], ["spiral", 1], ["scrawl", 1.5]],
   // Three slots, each with a common none, so a creature seldom wears all three at once and about one in fourteen wears nothing
   hairFront: [["none", 3], ["hairline", 3], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5], ["cap", 1], ["mohawk", 1], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],

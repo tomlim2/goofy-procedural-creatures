@@ -127,7 +127,7 @@ export const SPECIES = [
       // Nose — cats read the slot as cat noses (face.js catNose): dot a small triangle · wedge a heart · hook triangle + philtrum · long a wide nose with a long philtrum · none nothing
       nose: [["dot", 3], ["wedge", 2], ["hook", 2], ["long", 1], ["none", 1.5]],
       eyes: [["half", 3], ["slit", 3], ["wide", 2], ["dot", 1], ["oval", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 2], ["sharp", 2], ["soft", 2]],
-      pupil: [["dot", 8], ["sleepy", 2.2], ["line", 0.8], ["happy", 0.8], ["cross", 2], ["squeeze", 1], ["scrawl", 1]],   // the cat's closed eyes (a dozing cat, one in seven) and the marks its eye kinds carried, as pupils now
+      pupil: [["dot", 8], ["sleepy", 2.2], ["line", 0.8], ["happy", 0.8], ["cross", 2], ["squeeze", 1], ["scrawl", 1]],   // the little closed eyes (a dozing cat, one in seven) and the symbols its eye kinds carried — marks in the ball, as pupils now
       // Mouth — ω dominates, then the flipped ω (smug), a pursed 3, line and dot, a meowing o (meow), a peeking tongue (blep). No wave and no smile (4 reference rows)
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
@@ -147,7 +147,6 @@ export const SPECIES = [
     forbid: {
       ears: { round: "none", roundMid: "none", roundBig: "none", pointy: "none", pointyMid: "none", pointyBig: "none", flap: "none", long: "none", fold: "none", foldMid: "none", foldBig: "none", perk: "none", perkMid: "none", perkBig: "none" },
       eyes: { cyclops: "dot" },
-      pupil: { sleepy: "dot", line: "dot", happy: "dot" },   // never a closed eye — the small fierce eyes stay open (the eyes bias below has no lid; the pupil's lids are barred the same way)
       hairFront: { hairline: "none", blunt: "none", swept: "none", curtain: "none", sideLock: "none", cap: "none", mohawk: "none", tuft: "none", wisp: "none", curly: "none", helmet: "none", cloud: "none" },
       hairBack: { bob: "none", mop: "none", long: "none", sheets: "none", twintails: "none", bunsTop: "none", bunsLow: "none", bunsSide: "none", ponytail: "none", pigtails: "none", spikes: "none", hedgehog: "none" },
       headgear: { bun: "none", apple: "none", appleBig: "none" },   // a bun or an apple top is hair, and their fur is not hair

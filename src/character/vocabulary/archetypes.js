@@ -22,7 +22,7 @@ export const ARCHETYPES = [
     bias: {
       eyewear: [["glasses", 5], ["monocle", 2], ["goggles", 1], ["none", 1]],
       eyes: [["dot", 3], ["half", 2], ["ring", 1], ["oval", 1.5], ["hollow", 1], ["side", 1], ["droop", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
-      pupil: [["dot", 12], ["sleepy", 2.5], ["line", 1.5], ["happy", 1.5], ["cross", 1], ["squeeze", 1], ["spiral", 1], ["scrawl", 1.5]],   // the scholar's sleepy eyes — a lid, now the closed eyes are pupils
+      pupil: [["dot", 12], ["sleepy", 2.5], ["line", 1.5], ["happy", 1.5], ["cross", 1], ["squeeze", 1], ["spiral", 1], ["scrawl", 1.5]],   // the scholar's sleepy eyes — a mark in the ball, now the closed eyes are pupils
       hairFront: [["none", 2], ["hairline", 2], ["blunt", 3], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5], ["helmet", 2], ["wisp", 2], ["curly", 2], ["cloud", 1]],
       hairBack: [["none", 3], ["bob", 3], ["long", 1.5], ["ponytail", 1], ["sheets", 1]],
       headgear: [["none", 4], ["beret", 3], ["cap", 1]],   // bonnet disabled

@@ -7,7 +7,6 @@ import { blobPath, arcPath } from "../../shape.js";
 import { TAU } from "./layout.js";
 import { shade, luminance, isDark, mix, tint } from "../../color.js";
 import { MARKS, blushOf } from "../vocabulary/palette.js";
-import { LID_PUPILS } from "../vocabulary/slots.js";
 
 // Is this eye hidden by a patch — patchSide is only consulted when there is a patch (so the eye does not disappear along with a patch dropped by a gallery fix or a late constraint)
 export function patched(spec, eye) { return spec.parts.eyewear === "patch" && spec.parts.patchSide === eye.side; }
@@ -17,9 +16,6 @@ export const EYE_SHAPE = { oval: { sx: 0.82, sy: 1.22 } };
 export function eyeShape(spec) { return EYE_SHAPE[spec.parts.eyes] || { sx: 1, sy: 1 }; }
 // Live eyes (the ones stood up as a rig) — the rest are baked statically in face ink
 export const RIG_EYES = ["ring", "wide", "cyclops", "oval"];
-// Are this creature's eyes the rig's — a live kind, and not closed by a lid pupil (a closed eye is one stroke with
-// nothing to move; draw/index.js bakes it static like every other closed eye)
-export const eyesAlive = (spec) => RIG_EYES.includes(spec.parts.eyes) && !LID_PUPILS.includes(spec.parts.pupil);
 // The angle the heavy-lidded eye (lidded) is tilted by — sharp is the same eye rotated this much toward the nose, soft the other way (rad)
 const TILTED_LID = 0.34;
 // The white — paper white (the same value as scene/rig.js's live eyes and mouth.js's teeth)
@@ -81,12 +77,12 @@ export function eyeFloor(spec, eyes, x) {
 // **The pupil** — the `pupil` slot: what sits in the eyeball, drawn where that eye kind keeps its pupil. `dot` is the
 // round pupil, and every eye kind draws its own (the caller's `dot`), so a dot-pupil creature is drawn exactly as it
 // was; the marks are drawn here — an X, the >_< bracket (pointing toward the nose), a spiral winding in, a crayon's
-// six loops — centred at `at`, reaching `reach`, in the board's ink (light face ink is lost on a white), as lines into
-// the sketch the eye's white is in, so a larger eye's white still covers a smaller eye's mark. They were eye kinds,
-// drawn at the eye's own size on the bare face; an eye with no ball takes no mark (spec.js pins its pupil to dot).
-// The rig's live eyes call this too (scene/rig.js) — the pupil mesh is whatever mark the slot says, and it still
-// shrinks on a startle and follows the gaze. The slot's lids (sleepy, line, happy) never reach here: a lid closes
-// the eye before its ball is drawn (drawEyes), and a closed eye stands no rig
+// six loops, and the three little closed eyes (the sleepy arc, the flat dash, the ^^ arch — a shut eye drawn where
+// the pupil is, inside the open one) — centred at `at`, reaching `reach`, in the board's ink (light face ink is lost
+// on a white), as lines into the sketch the eye's white is in, so a larger eye's white still covers a smaller eye's
+// mark. They were eye kinds, drawn at the eye's own size on the bare face; an eye with no ball takes no mark
+// (spec.js pins its pupil to dot). The rig's live eyes call this too (scene/rig.js) — the pupil mesh is whatever
+// mark the slot says, and it still shrinks on a startle and follows the gaze
 export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot) {
   const kind = spec.parts.pupil || "dot";
   const dark = spec.palette.ink;
@@ -96,6 +92,13 @@ export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot) {
   } else if (kind === "squeeze") {
     const inward = -(eye.side || 1);
     sketch.line([[cx - inward * reach, cy + reach], [cx + inward * reach * 0.64, cy], [cx - inward * reach, cy - reach]], { color: dark });
+  } else if (kind === "sleepy") {
+    // The closed eyes, small — the same three strokes they were as eye kinds, at the pupil's reach instead of the eye's
+    sketch.line(arcPath(cx, cy, reach, reach * 0.7, Math.PI, TAU), { color: dark });   // an arc closed downward
+  } else if (kind === "line") {
+    sketch.line([[cx - reach * 0.95, cy + reach * 0.08], [cx + reach * 0.95, cy - reach * 0.08]], { color: dark });   // the flat dash — it droops slightly on one side
+  } else if (kind === "happy") {
+    sketch.line(smileArchPath(cx, cy, reach), { color: dark });   // the ^^ arch — the same path the ^^ state stands up
   } else if (kind === "spiral") {
     const spiral = [];
     for (let i = 0; i <= 40; i += 1) {
@@ -150,16 +153,6 @@ export function drawEyes(ink, fills, spec, box, eyes) {
   // Drawn smallest first — when they overlap the larger eye is in front (so no crossing line appears on eyes like hollow, whose fill and outline share one sketch)
   for (const eye of [...eyes].sort((a, b) => a.r - b.r)) {
     if (patched(spec, eye)) continue;
-
-    // **A lid pupil closes the eye** — no ball, no mark, whatever the kind: the lid alone at the eye's place, one stroke
-    // in face ink (a line, not a surface — no material moves it). The kind still set the size (a wide eye shuts wide)
-    if (LID_PUPILS.includes(spec.parts.pupil)) {
-      const lid = spec.parts.pupil;
-      if (lid === "sleepy") ink.line(arcPath(eye.x, eye.y, eye.r, eye.r * 0.7, Math.PI, TAU), { color: ink0 });   // an arc closed downward
-      else if (lid === "line") ink.line([[eye.x - eye.r * 0.95, eye.y + 0.003], [eye.x + eye.r * 0.95, eye.y - 0.003]], { color: ink0 });   // a flat dash — expressionless. It droops slightly on the outside
-      else ink.line(smileArchPath(eye.x, eye.y, eye.r), { color: ink0 });   // happy — the ^^ arch (smileArchPath: the same path the ^^ state stands up)
-      continue;
-    }
 
     if (kind === "dot") {
       paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 1, { amount: 0.2 })), ink0, { own: true, part: "eyes" });
@@ -241,14 +234,13 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       pupilMark(fills, spec, eye, [eye.x, eye.y - eye.r * 0.12], eye.r * 0.36, () =>
         paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true, part: "eyes" }));
     }
-    // ring / wide / cyclops / oval (RIG_EYES) are not drawn here — unless a lid pupil closed them, above. The scene stands
-    // the white, pupil and shut line up as separate meshes to move the startle (pupil shrink), gaze and lids.
+    // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
+    // as separate meshes to move the startle (pupil shrink), gaze and lids.
   }
 }
 
 // The eye kinds that draw an eyeball — the rig's live eyes, and the static kinds that paint a white (the slit,
-// side, hollow, half and the lidded three above). The rest are lines on the bare face: a dot, droop's dot under its
-// stroke — and any kind a lid pupil closes (drawFace2 asks both)
+// side, hollow, half and the lidded three above). The rest are dots on the bare face: a dot, droop's dot under its stroke
 const EYEBALL_KINDS = new Set([...RIG_EYES, "slit", "side", "hollow", "half", "lidded", "sharp", "soft"]);
 export function drawFace2(ink, fills, spec, box, eyes) {
   const kind = spec.parts.face2;
@@ -268,10 +260,10 @@ export function drawFace2(ink, fills, spec, box, eyes) {
     // a patch there is no eye to be tired
     const skin = paintOf(spec, "head");
     const tone = isDark(skin) ? tint(skin, 0.4) : mix(shade(skin, 0.8), "#6f5f7f", 0.09);
-    // A moon hugs an eyeball. An eye that is only a stroke — a dot, a closed lid (the sleepy arc, the dash, the ^^) —
-    // has none to hug, and the moon under it read as a bowl floating in the face with the stroke's ends poking into
-    // it. Under a stroke the circle is a shallow shadow instead: a flat crescent tucked under its foot
-    const ball = EYEBALL_KINDS.has(spec.parts.eyes) && !LID_PUPILS.includes(spec.parts.pupil);
+    // A moon hugs an eyeball. An eye that is only a dot has none to hug, and the moon under it read as a bowl floating
+    // in the face with the dot poking into it. Under a dot the circle is a shallow shadow instead: a flat crescent
+    // tucked under its foot (the marks sit in a ball, so they hug)
+    const ball = EYEBALL_KINDS.has(spec.parts.eyes);
     const W = ball ? 0.95 : 0.85, DEPTH = ball ? 0.35 : 0.25, BAG = 0.08;
     for (const eye of eyes) {
       if (patched(spec, eye)) continue;
@@ -436,8 +428,8 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
 
 // The lens radius = the eye radius × a multiplier. spec.js uses the same value when deciding whether the two lenses overlap.
 export const LENS_SCALE = { glasses: 1.45, goggles: 1.75 };
-// The ^^ smile arch — an arch bulging upward over the eye. **One path, two callers**: the `happy` pupil closes the eye
-// with it (drawEyes), and the scene stands it up as the shut lid for the ^^ state on every open eye (scene/rig.js).
+// The ^^ smile arch — an arch bulging upward over the eye. **One path, two callers**: the `happy` pupil draws it small
+// inside the eye (pupilMark), and the scene stands it up as the shut lid for the ^^ state on every eye (scene/rig.js).
 // Written out in both places, changing the happy eye left every other creature's ^^ on the old arch
 export const smileArchPath = (cx, cy, r) => arcPath(cx, cy - r * 0.12, r * 0.92, r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10);
 

@@ -7,7 +7,7 @@
 //   3. proportion jitter — most of the silhouette variety comes from continuous values
 
 import { makeRng } from "../rng.js";
-import { SLOTS, LATE_SLOTS, MARK_PUPILS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES, HAIR_POOL, TOP_KNOTS } from "./vocabulary/index.js";
+import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES, HAIR_POOL, TOP_KNOTS } from "./vocabulary/index.js";
 import { shade, luminance, tint, hexToRgb } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
 import { LENS_SCALE } from "./draw/face.js";
@@ -86,15 +86,12 @@ const settled = (roll, n) => (Math.imul((roll ^ (n * 0x27d4eb2d)) >>> 0, 0x9e377
 // The eye kinds that draw no round pupil for a mark to replace (see the pupil slot, vocabulary/slots.js)
 export const NO_MARK_EYES = ["dot", "droop", "hollow", "slit"];
 export function applyLateConstraints(parts) {
-  // **A mark needs an eyeball.** The pupil slot's marks (an X, the bracket, a spiral, a scrawl) sit in a white; an eye
-  // with no ball (a bare dot, droop's dot under its lid stroke), the hollow eye (no pupil by definition) and the slit
-  // (its own pupil) have nowhere to put one, so their pupil is the dot — the one mark that stands on its own. A lid
-  // (sleepy, line, happy) needs no ball — it closes the eye, whatever the kind — so it stays. A fixed overwrite, no rng.
-  // Here and not in applyConstraints: the pupil is a late slot, not rolled yet when that runs
-  if (NO_MARK_EYES.includes(parts.eyes) && MARK_PUPILS.includes(parts.pupil)) parts.pupil = "dot";
-  // Angry brows on a closed eye leave the expression unreadable (droop's rule is applyConstraints' — an eye kind; these
-  // two are the pupil's lids, a late slot). The flat dash keeps them: -_- under angry brows still reads (annoyed)
-  if ((parts.pupil === "sleepy" || parts.pupil === "happy") && parts.brow === "angry") parts.brow = "flat";
+  // **A mark needs an eyeball.** The pupil slot's marks (the little closed eyes, an X, the bracket, a spiral, a scrawl)
+  // sit in a white; an eye with no ball (a bare dot, droop's dot under its lid stroke), the hollow eye (no pupil by
+  // definition) and the slit (its own pupil) have nowhere to put one, so their pupil is the dot — the one mark that
+  // stands on its own. A fixed overwrite, no rng. Here and not in applyConstraints: the pupil is a late slot, not
+  // rolled yet when that runs
+  if (NO_MARK_EYES.includes(parts.eyes)) parts.pupil = "dot";
   const hat = parts.headgear !== "none" && parts.headgear !== "halo" && !TOP_KNOTS.includes(parts.headgear);   // a thing that covers the head
   // A helmet or a pot covers the head: there is nowhere for hair to squeeze out
   if (parts.headgear === "helmet" || parts.headgear === "pot") {
@@ -138,7 +135,8 @@ export function applyConstraints(parts, speciesName, roll) {
   // A cyclops has side 0, so the sentinel for "no patch" must not be 0.
   parts.patchSide = parts.eyewear === "patch" ? (settled(roll, 2) < 0.5 ? -1 : 1) : 99;
 
-  // Angry brows on a closed eye leave the expression unreadable (the eyes the pupil's lids close are applyLateConstraints').
+  // Angry brows on a closed eye leave the expression unreadable. (The closed eyes the pupil slot draws sit small inside an
+  // open eye and take any brow)
   if (parts.eyes === "droop" && parts.brow === "angry") parts.brow = "flat";
 
   // Eyewear does not work on a cyclops.

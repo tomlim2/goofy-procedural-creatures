@@ -5,7 +5,7 @@
 // Reading checks only what the drawing cannot do without and says, in the one word a status label shows, why
 // it refused. Nothing here touches rng.
 
-import { SPECIES, LID_PUPILS } from "./vocabulary/index.js";
+import { SPECIES } from "./vocabulary/index.js";
 import { MARKS } from "./vocabulary/palette.js";
 import { deriveSpec } from "./spec.js";
 export { deriveSpec };
@@ -60,8 +60,8 @@ function migrate(next) {
     out.parts = { ...out.parts, eyes: mark ? "ring" : out.parts.eyes, pupil: mark || "dot" };
   }
   // A file from when the closed eyes were eye kinds — the sleepy arc, the flat dash, the ^^ arch on the bare face. They
-  // are lid pupils now, closing a ring eye (a ring is the size they were drawn at, and a closed eye is symmetric either way)
-  if (out.parts && LID_PUPILS.includes(out.parts.eyes)) out.parts = { ...out.parts, eyes: "ring", pupil: out.parts.eyes };
+  // are pupils now, drawn small inside a ring eye, like the marks above
+  if (out.parts && ["sleepy", "line", "happy"].includes(out.parts.eyes)) out.parts = { ...out.parts, eyes: "ring", pupil: out.parts.eyes };
   // A file from before hair was three slots: the old value names the same style in the new ones
   if (out.parts && (out.parts.hair !== undefined || out.parts.hairFront === undefined)) {
     const { hair, ...rest } = out.parts;
