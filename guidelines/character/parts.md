@@ -53,7 +53,7 @@ ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A 
 glyph is drawn in their place — a **substitution**, not a covering ([../motion/catalog.md](../motion/catalog.md) § the face, `scene/rig.js eyeFx`). Which is why static eyes are baked
 separately from the face frame (the `staticEyes` frame).
 | half | Half-lidded — only the **lower arc** of the lid line + **the white** inside the arc + the lid line + the pupil below the line (a line across the whole circle smears into "a circle with a line through it") | ✗ |
-| lidded | A heavy lid — the outline plus a **thick, sagging lid line** across the eye (sagging in the middle); **below the line is the white, above it is skin**, with the pupil peeking out below the line. If half-lidded (half) is one stroke, this is an eye with a thick lid | ✗ |
+| lidded | A heavy lid — the outline plus a **thick, sagging lid line** across the eye (sagging in the middle); **below the line is the white, above it is skin**, with the pupil **under the lid** — drawn on the white before the lid is laid, a little high, so the lid covers its top (the layers of a real eye: white, pupil, lid). If half-lidded (half) is one stroke, this is an eye with a thick lid | ✗ |
 | sharp | lidded **tilted 0.34 rad toward the nose** — the outer corner lifts and the nose side drops, for a fierce impression | ✗ |
 | soft | lidded **tilted 0.34 rad the other way** — the outer corner droops, for a gentle impression (the mirror of sharp) | ✗ |
 | slit | An almond outline (half-height 0.7r) + **the white** inside the almond + a **filled** vertical spindle pupil (a thin stroke does not read when small) | ✗ |

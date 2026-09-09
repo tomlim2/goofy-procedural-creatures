@@ -217,16 +217,19 @@ export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
       }
       const lidLine = rot(lid);
       paintPart(fills, spec, path, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
-      // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it
+      // **The layers of a real eye — the white, the pupil on it, the lid over both.** The pupil is drawn on the white before the lid is
+      // laid, a little high (0.08r above the centre, slightly left or right per individual), so the lid covers its top and the rest looks
+      // out from under it; drawn after the lid it poked out above the line onto the skin. The round one, always: under that thick lid a
+      // mark is a smudge, so the pupil slot does not reach this set (spec.js NO_MARK_EYES pins it to dot) — only a face state's arch
+      // does (a smile keeps the white and the lid, and the pupil under it becomes the ^^, its top under the lid like the pupil's)
+      const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
+      const [px, py] = rot([[eye.x + eye.r * gaze, eye.y - eye.r * 0.08]])[0];   // the pupil's place, turned with the lid
+      pupilMark(fills, spec, eye, [px, py], eye.r * 0.36, () =>
+        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.08, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" }), state.pupil || "dot");
+      // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it. It covers the pupil's top
       const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
       paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
       fills.contour(path, { color: dark });
-      // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil.
-      // The round one, always: under that thick lid a mark is a smudge, so the pupil slot does not reach this set (spec.js NO_MARK_EYES pins it to dot) —
-      // only a face state's arch does (a smile keeps the white and the lid, and the pupil under it becomes the ^^)
-      const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
-      pupilMark(fills, spec, eye, [eye.x + eye.r * gaze, eye.y - eye.r * 0.16], eye.r * 0.36, () =>
-        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" }), state.pupil || "dot");
       // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
       fills.line(lidLine, { color: dark });
     } else if (kind === "half") {
