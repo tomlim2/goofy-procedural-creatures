@@ -10,7 +10,7 @@ import { makeRng } from "../rng.js";
 import { SLOTS, LATE_SLOTS, ARCHETYPES, SPECIES, DEFAULT_BIAS, FILLS, INKS, ACCENTS, POPS, DARKS, FUR_POOL, SCALES, HAIR_POOL, TOP_KNOTS } from "./vocabulary/index.js";
 import { shade, luminance, tint, hexToRgb } from "../color.js";
 import { layout, eyeGeometry } from "./draw/layout.js";
-import { LENS_SCALE } from "./draw/face.js";
+import { LENS_SCALE, EYEWEAR_SIZE } from "./draw/face.js";
 import { MARKS, PALETTE, IMP_INK } from "./vocabulary/palette.js";
 import { makeHouse } from "../house/index.js";
 
@@ -435,8 +435,14 @@ export function makeCreature(roll, speciesName = "human") {
   if (eyes.length === 2) {
     const [a, b] = eyes;
     const gap = Math.hypot(b.x - a.x, b.y - a.y);
-    // Glasses and goggles are dropped when the two lenses overlap (when the eyes are close) — overlapping rims read as a mistake. They are never forced smaller to fit the eyes
-    if ((parts.eyewear === "glasses" || parts.eyewear === "goggles") && gap < (a.r + b.r) * LENS_SCALE[parts.eyewear] * 1.02) parts.eyewear = "none";
+    // Glasses and goggles are dropped when the two lenses overlap (when the eyes are close) — overlapping rims read as a mistake. The lens
+    // is at the eyewearSize step: a large pair that laps steps down to medium (the size every pair had before the slot — a step of the
+    // slot, the same overwrite as any rule's), and a pair that laps at medium or small is dropped, never squeezed further
+    if (parts.eyewear === "glasses" || parts.eyewear === "goggles") {
+      const fits = (step) => gap >= (a.r + b.r) * LENS_SCALE[parts.eyewear] * (EYEWEAR_SIZE[step] || 1) * 1.02;
+      if (parts.eyewearSize === "large" && !fits("large") && fits("medium")) parts.eyewearSize = "medium";
+      if (!fits(parts.eyewearSize)) parts.eyewear = "none";
+    }
     // An eyepatch is **not put on an individual whose eyes overlap** — a patch (1.5× the eye) laid over the other eye reads as a mistake
     if (parts.eyewear === "patch") {
       const covered = eyes.find((e) => e.side === parts.patchSide) || a;

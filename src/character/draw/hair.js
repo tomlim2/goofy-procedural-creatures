@@ -20,7 +20,7 @@ import { paintOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { browLine } from "./head.js";
-import { LENS_SCALE } from "./face.js";
+import { rimScale } from "./face.js";
 import { paintPart } from "./body.js";
 import { luminance, tint, deepen } from "../../color.js";
 
@@ -69,7 +69,7 @@ const eyeSafeY = (h) => {
 // head (a sixth of humans), and a lock that stops at the temple lies inside the cap and is not there
 const laneX = (h) => {
   const { spec, box, rx, ry } = h;
-  const rim = LENS_SCALE[spec.parts.eyewear] || (spec.parts.eyewear === "monocle" ? 1.5 : spec.parts.eyewear === "patch" ? 1.35 : 1);
+  const rim = rimScale(spec);   // the eyewear's rim at its size step (face.js)
   const eyeOuter = Math.max(...eyeGeometry(spec, box).map((e) => Math.abs(e.x) + e.r * rim));
   return Math.max(rx * 0.9, Math.min(eyeOuter + ry * 0.2, rx * 1.08), eyeOuter + ry * 0.12);
 };

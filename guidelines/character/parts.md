@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 234 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 34 slots, 237 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -79,7 +79,7 @@ highlighted eyeball eyes — bead and ◕ sparkle — were dropped.)
 if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". half and side stay on this list even after gaining a white ([rules.md](rules.md)). An eye hidden by a patch is skipped with `patched(spec, eye)` — only when there is a patch (look at patchSide alone and the eye disappears along with a patch dropped late).
 
 ### pupil — the pupil (8)
-**What sits in the eyeball**, a part of its own — the `pupil` slot, the last late slot. The eye kind is the ball and its lids;
+**What sits in the eyeball**, a part of its own — the `pupil` slot, a late slot. The eye kind is the ball and its lids;
 the pupil is drawn where that kind keeps it, by `pupilMark` (face.js): the rig's live eyes hand it the pupil mesh (so a mark
 still shrinks on a startle and follows the gaze), and side and half hand it their pupil's place under the lid (the heavy-lidded
 three keep the round pupil).
@@ -145,10 +145,18 @@ it is the eyes' first property (PART → eyes → property), in place of the siz
 
 ### eyewear (5)
 none / glasses (two circles plus arms, the lens radius = the eye × 1.45) / goggles (big circles plus a strap round the head, × 1.75) / patch (a patch over one eye plus a diagonal strap) / monocle (one big circle plus a cord).
-Glasses and goggles are **dropped when the two lenses overlap** (an individual whose eyes are close — they are never forced smaller to fit, `makeCreature` sets none once the proportions are settled).
+Glasses and goggles are **dropped when the two lenses overlap** (an individual whose eyes are close — `makeCreature` decides once the proportions are settled: a large pair that laps steps down to medium, and a pair that laps at medium or small is set to none, never squeezed further).
 An eyepatch is always a **black** fill (an object) — on an imp's ink-black head it gets a light rim and only the strap is light ink. **Dropped when the eyes overlap** (when the patch radius of 1.5r
 laps onto the other eye — decided once the proportions are settled). An eyepatch is also **dropped on mismatched eyes** — cover one side of an individual whose eye size (`eyeSizeSkew` > 0.09) or height (`eyeHeightSkew` > 0.03) is noticeably different and the remaining
 eye looks oddly large or high on its own, which reads as a mistake (set to none after the proportions are settled; patchSide is cleared too).
+
+### eyewearSize — the lens size (3)
+
+A late slot (the last), so nothing rolled before it moves. **small · medium · large** — 0.8 · 1 · 1.25 of the rim (`draw/face.js`
+`EYEWEAR_SIZE`): the glasses' and goggles' lenses scale with it, and the monocle's ring and string by a milder step (0.88 · 1 · 1.15 —
+the ring is already the biggest lens, and at the full step it ran past a cat's face); a patch has no lens and keeps its size. Medium is the lens every creature had before the slot, and a file without the slot draws medium. Everything that has to clear
+the eyewear reads the same step (`rimScale` — the brow line, so a hat brim and the hem of the bangs stop above a large lens). Weights
+small 1 · medium 2 · large 1.2. In the editor it is the eyewear's property (PART → eyewear → property).
 
 ### hair — two slots: hairFront (13) · hairBack (13)
 `hair.js` — hair is **two slots combined freely**: the **front** (앞머리 — everything on the head itself, in front of it: the

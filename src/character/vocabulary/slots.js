@@ -157,7 +157,12 @@ export const SLOTS = {
   // ring · wide · cyclops · oval, side · half; an eye with no ball (dot), the hollow eye (no pupil by definition), the
   // slit (its own pupil) and the heavy-lidded three (under that thick lid a mark is a smudge — the round pupil only)
   // are pinned to dot by spec.js. The one mark allowed without an eyeball is the dot, which is what `eyes: dot` is
-  pupil: ["dot", "sleepy", "line", "happy", "cross", "squeeze", "spiral", "scrawl"]
+  pupil: ["dot", "sleepy", "line", "happy", "cross", "squeeze", "spiral", "scrawl"],
+  // **The eyewear's size** — the lens step of glasses, goggles and a monocle: small · medium · large, 0.8 · 1 · 1.25 of the rim
+  // (draw/face.js EYEWEAR_SIZE; the monocle's ring by a milder 0.88 · 1 · 1.15); medium is the lens every creature had before the slot, and a file without it draws medium. A
+  // late slot, the last — one draw at the very end. A large pair that laps steps down to medium; a pair that laps at medium is
+  // dropped (spec.js). A patch has no lens and keeps its size
+  eyewearSize: ["small", "medium", "large"]
 };
 
 // Headgear that is hair — a bun, the apple tops: tied on the crown, worn like a hat and never with one, so they live in the
@@ -211,6 +216,7 @@ export const DEFAULT_BIAS = {
   bodyDensity: [["same", 10], ["black", 0.5], ["hatch", 0.5], ["scribble", 0.5], ["stipple", 0.5], ["light", 0.5]],
   browLength: [["short", 1], ["medium", 2], ["long", 1]],
   eyeScale: [["small", 1], ["medium", 2], ["large", 1]],
+  eyewearSize: [["small", 1], ["medium", 2], ["large", 1.2]],
   arms: [["stick", 3], ["sleeve", 3], ["mitten", 2], ["stubby", 2]],
   armLength: [["medium", 3], ["long", 1]],
   legs: [["stick", 3], ["boots", 3], ["stub", 2.5], ["bent", 2], ["float", 1.5], ["tiptoe", 1]],

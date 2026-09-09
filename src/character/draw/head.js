@@ -4,7 +4,7 @@ import { paintOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { headShape, eyeGeometry } from "./layout.js";
 import { shade, isDark, mix } from "../../color.js";
-import { LENS_SCALE } from "./face.js";
+import { rimScale } from "./face.js";
 import { paintPart } from "./body.js";
 import { MARKS, blushOf } from "../vocabulary/palette.js";
 import { SPECIES } from "../vocabulary/species.js";
@@ -412,7 +412,7 @@ export function drawPupEars(ink, fills, spec, box) {
 export function browLine(spec, box) {
   const { headCy: cy, headRy: ry } = box;
   const eyes = eyeGeometry(spec, box);
-  const rim = LENS_SCALE[spec.parts.eyewear] || (spec.parts.eyewear === "monocle" ? 1.5 : spec.parts.eyewear === "patch" ? 1.35 : 1);
+  const rim = rimScale(spec);   // the eyewear's rim at its size step (face.js)
   const eyeTop = eyes.reduce((m, e) => Math.max(m, e.y + e.r * rim), cy);
   return Math.max(cy + ry * 0.42, eyeTop + ry * 0.1);
 }

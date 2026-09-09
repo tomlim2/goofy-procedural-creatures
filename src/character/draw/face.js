@@ -441,6 +441,21 @@ export function drawBrow(ink, spec, box, eyes, kindOverride) {
 
 // The lens radius = the eye radius × a multiplier. spec.js uses the same value when deciding whether the two lenses overlap.
 export const LENS_SCALE = { glasses: 1.45, goggles: 1.75 };
+// The eyewearSize slot's steps on the lens — medium is the lens every creature had before the slot; a file without it draws medium.
+// A monocle's ring is already the biggest lens (1.5 of the eye), and at the full large step it ran past a cat's face, so its steps
+// are milder — three fifths of the way: 0.88 · 1 · 1.15 (monocleSize)
+export const EYEWEAR_SIZE = { small: 0.8, medium: 1, large: 1.25 };
+const monocleSize = (spec) => 1 + ((EYEWEAR_SIZE[spec.parts.eyewearSize] || 1) - 1) * 0.6;
+// The rim's radius on the eye's, for what has to clear the eyewear (the brow line, a hat brim, the hem of the bangs — head.js
+// browLine, hair.js): a lens kind by LENS_SCALE, a monocle 1.5, each at the eyewear's size step; a patch 1.35; bare eyes 1.
+// One place — the two callers each carried the expression and drifted apart from the drawing was a hazard
+export function rimScale(spec) {
+  const kind = spec.parts.eyewear;
+  const size = EYEWEAR_SIZE[spec.parts.eyewearSize] || 1;
+  if (LENS_SCALE[kind]) return LENS_SCALE[kind] * size;
+  if (kind === "monocle") return 1.5 * monocleSize(spec);
+  return kind === "patch" ? 1.35 : 1;
+}
 // The ^^ smile arch — an arch bulging upward over the eye. **One path, two callers**: the `happy` pupil draws it small
 // inside the eye (pupilMark), and the scene stands it up as the shut lid for the ^^ state on every eye (scene/rig.js).
 // Written out in both places, changing the happy eye left every other creature's ^^ on the old arch
@@ -463,14 +478,17 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
     return;
   }
 
+  // The lens step — the eyewearSize slot: the rim, and on a monocle its string, scale with it
+  const size = EYEWEAR_SIZE[spec.parts.eyewearSize] || 1;
   if (kind === "monocle") {
     const eye = eyes[eyes.length - 1];
-    ink.contour(blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.5, { lumps: 4, amount: 0.06, noise: null }), { color: ink0 });
-    ink.line([[eye.x + eye.r * 1.4, eye.y - eye.r], [eye.x + eye.r * 1.9, eye.y - eye.r * 2.6]], { color: ink0, size: "S" });
+    const ring = monocleSize(spec);   // the ring's own milder step
+    ink.contour(blobPath(eye.x, eye.y, eye.r * 1.5 * ring, eye.r * 1.5 * ring, { lumps: 4, amount: 0.06, noise: null }), { color: ink0 });
+    ink.line([[eye.x + eye.r * 1.4 * ring, eye.y - eye.r * ring], [eye.x + eye.r * 1.9 * ring, eye.y - eye.r * 2.6 * ring]], { color: ink0, size: "S" });
     return;
   }
 
-  const scale = LENS_SCALE[kind] || 1.45;
+  const scale = (LENS_SCALE[kind] || 1.45) * size;
   for (const eye of eyes) {
     ink.contour(blobPath(eye.x, eye.y, eye.r * scale, eye.r * scale * 0.92, { lumps: 4, amount: 0.06, noise: null }), { color: ink0 });
   }
