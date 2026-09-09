@@ -64,6 +64,8 @@ function migrate(next) {
   if (out.parts && ["sleepy", "line", "happy"].includes(out.parts.eyes)) out.parts = { ...out.parts, eyes: "ring", pupil: out.parts.eyes };
   // droop (´･ω･` — a dot eye under a falling lid stroke) was dropped; the dot eye is what is left of it
   if (out.parts && out.parts.eyes === "droop") out.parts = { ...out.parts, eyes: "dot" };
+  // The dots pattern (four square dabs on the body) and spots (three outlined dalmatian spots) were dropped; the body goes plain
+  if (out.parts && (out.parts.pattern === "dots" || out.parts.pattern === "spots")) out.parts = { ...out.parts, pattern: "none" };
   // A file from before hair was three slots: the old value names the same style in the new ones
   if (out.parts && (out.parts.hair !== undefined || out.parts.hairFront === undefined)) {
     const { hair, ...rest } = out.parts;

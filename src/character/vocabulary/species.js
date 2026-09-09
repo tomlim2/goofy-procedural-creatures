@@ -11,7 +11,7 @@ export const SPECIES = [
     // overwrites deterministically — the archetype's disposition (a scholar's dot eyes and so on) survives.
     forbid: {
       // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
-      pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
+      pattern: { stripes: "none", hatch: "none", patch: "none" },
       tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" },
       arms: { none: "stick" },   // humans have arms (armless belongs to imps)
       face2: { tears: "none" },  // tear marks are not given to humans (they belong to imps)
@@ -39,7 +39,7 @@ export const SPECIES = [
     name: "pup",
     forbid: {
       // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
-      pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
+      pattern: { stripes: "none", hatch: "none", patch: "none" },
       tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" },
       ears: { none: "flap", pointyBig: "pointyMid", roundBig: "roundMid", foldBig: "foldMid", perkBig: "perkMid" },
       // Dog ear boundary — none and the huge ear become dog ears
@@ -89,7 +89,7 @@ export const SPECIES = [
     name: "cat",
     forbid: {
       // The **pattern** belongs to the imps and the rex — stripes, dots, spots, hatching and a patch, laid over the material
-      pattern: { stripes: "none", dots: "none", hatch: "none", spots: "none", patch: "none" },
+      pattern: { stripes: "none", hatch: "none", patch: "none" },
       tailDeco: { ribbon: "none", plates: "none", dip: "none", club: "none", band: "none", spikes: "none" },
       ears: { flap: "pointy", long: "pointyMid", none: "pointy", fold: "pointy", foldMid: "pointyMid", foldBig: "pointyBig", perk: "pointy", perkMid: "pointyMid", perkBig: "pointyBig" },
       // Cat ear boundary — floppy and folded ears and none become crown ears, by size. A **round** ear is not here: the
@@ -167,7 +167,7 @@ export const SPECIES = [
     },
     bias: {
       // The point of the species — almost every one is patterned, in a second scale color (spec.js pattern2)
-      pattern: [["stripes", 3], ["spots", 3], ["dots", 2.5], ["patch", 2], ["hatch", 2], ["none", 1]],
+      pattern: [["stripes", 3], ["patch", 2.5], ["hatch", 2.5], ["none", 1]],
       // Dragon horns — the maid-dragon mapping lives in drawHorns (the way of drawing differs by species)
       horns: [["none", 3], ["curved", 2], ["antenna", 1.5], ["straight", 1.5], ["ram", 1.5], ["nub", 1], ["crown", 1]],
       ears: [["none", 1]],
@@ -233,7 +233,7 @@ export const SPECIES = [
       mouth: [["grimace", 3], ["scribble", 2], ["zigzag", 2], ["fangs", 3], ["shout", 1.5], ["open", 1.5], ["wave", 1], ["smug", 1], ["line", 0.5]],
       mouthSize: [["normal", 2], ["wide", 2], ["small", 0.5]],
       // The patterns are the imps' alone (the other three species forbid them), so all five live here
-      pattern: [["stripes", 3], ["hatch", 2], ["none", 2], ["dots", 1.5], ["spots", 1.5], ["patch", 1.5]],
+      pattern: [["stripes", 3], ["hatch", 2], ["none", 2], ["patch", 1.5]],
       face2: [["none", 6], ["tears", 1], ["circles", 1]],
       body: [["bean", 3], ["box", 1]],
       brow: [["none", 3], ["flat", 2], ["angry", 2], ["peak", 1], ["bushy", 0.5]],

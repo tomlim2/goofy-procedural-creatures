@@ -184,7 +184,7 @@ A goofy material is what a surface is made of, the way a 3D material is — **ho
 `MeshBasicMaterial` for the whole board.)
 The `base` colour — the fill-up (`flat`, optionally a tone of the color) — always opaque (on the
 board the one in front has to hide the one behind);
-— and the creature's **pattern** (stripes, dots, spots, hatching: the `pattern` slot), clipped to the contour and drawn
+— and the creature's **pattern** (stripes, hatching, a patch: the `pattern` slot), clipped to the contour and drawn
 **last of all, over the texture**: it is a mark on the animal rather than part of its surface, and under a hatched or dusted
 material it was being buried (`paint(…, { pattern })`; on a tail it runs
 along the tube instead — stripes as rings, [character/parts.md](character/parts.md) § tail — and the tube's base is cut as a

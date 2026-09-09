@@ -623,22 +623,8 @@ export function patternOn(sketch, points, { kind, color }) {
       const y = b.y0 + (h * i) / 4;
       for (const piece of clipSegment([b.x0 - 0.02, y], [b.x1 + 0.02, y + 0.004], points)) sketch.pencil(piece, { color, width: 0.011 });
     }
-  } else if (kind === "dots") {
-    for (let i = 0; i < 4; i += 1) {
-      const x = b.cx - w * 0.5 + (i % 2) * w;
-      const y = b.y0 + h * (0.3 + Math.floor(i / 2) * 0.35);
-      if (insidePath([x - 0.01, y], points) && insidePath([x + 0.01, y], points)) sketch.pencil([[x - 0.008, y], [x + 0.008, y]], { color, width: 0.012 });
-    }
   } else if (kind === "hatch") {
     hatchLines(b.cx, b.cy, w * 0.8, h * 0.35, Math.PI * 0.25, 5, 0.007);
-  } else if (kind === "spots") {
-    for (let i = 0; i < 3; i += 1) {
-      const sx = b.cx + (i - 1) * w * 0.5;
-      const sy = b.y0 + h * (0.35 + (i % 2) * 0.3);
-      let spot = blobPath(sx, sy, 0.025 + (i % 2) * 0.01, 0.02, { lumps: 4, amount: 0.25, noise: null });
-      if (spot.some((p) => !insidePath(p, points))) spot = spot.map(([x, y]) => [sx + (x - sx) * 0.6, sy + (y - sy) * 0.6]);   // a spot on the edge shrinks in
-      if (spot.every((p) => insidePath(p, points))) sketch.pencil(spot, { color, width: 0.008, closed: true });
-    }
   } else if (kind === "patch") {
     hatchLines(b.cx - w * 0.35, b.cy, w * 0.4, h * 0.25, 0, 4, 0.008);
   } else throw new Error(`unknown pattern: ${kind}`);

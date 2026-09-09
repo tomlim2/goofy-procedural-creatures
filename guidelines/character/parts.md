@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 231 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 229 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -434,12 +434,13 @@ and a narrow body draws the legs together. The shoulder position (on the torso o
 `BUILD` (biped) and `QUAD_BUILD` (quad) in `layout()`. `LATE_SLOTS`. Default weights medium 4 · narrow 1.5 · wide 1.5 · skinny 1 · small 1.
 Gallery: `gallery.html?slot=build&fix=legLength:long`.
 
-### pattern (6) — the surface, not a part. **The patterns are the imps'**
-The five kinds — stripes (3 horizontal lines) / dots (4 dots) / patch (hatching on the left) / hatch (diagonals over the whole
-thing) / spots (3 dalmatian spots) — are **forbidden outside imps** (species.js: they fall to none for humans, cats and dogs), so a
-pattern on the board reads as an imp's marking. The sixth value is none. (A **calico** — the tricolor patch, colour regions painted
+### pattern (4) — the surface, not a part. **The patterns are the imps'**
+The three kinds — stripes (3 horizontal lines) / patch (hatching on the left) / hatch (diagonals over the whole thing) — are
+**forbidden outside imps** (species.js: they fall to none for humans, cats and dogs), so a pattern on the board reads as an
+imp's marking. The fourth value is none. (dots — four square dabs on the body — and spots — three outlined dalmatian spots —
+were dropped; a file that carried either opens plain.) (A **calico** — the tricolor patch, colour regions painted
 into a cat's or a dog's base as decals — was here and was removed: the whole decal machinery went with it.)
-The five kinds are drawn **over** the goofy material, last of all and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `medium/materials.js`; light ink when the body color's luminance < 120), under the goofy material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
+The three kinds are drawn **over** the goofy material, last of all and clipped to the contour (`paint(…, { pattern })`, `patternOn` in `medium/materials.js`; light ink when the body color's luminance < 120), under the goofy material's texture. They read as a pattern on clothes on a human body and as fur markings on a dog or cat — the same slot. A mark is surface, not form: in 3D terms it is the albedo's pattern.
 
 ### legs (6)
 
@@ -551,7 +552,7 @@ degrees of turn per unit of tail). The scene bends it as a
 ends are **joints** (`line(…, { joint })`: no overshoot, no thinning, and the end lands exactly on its point — [../drawing.md](../drawing.md) § the outline); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick). A tube's tip
 **tapers to a point** under the lines over 1.6 end-widths (a brush end — a disc and an arc of line were ink on ink) except block, which stays square.
 **Color and pattern.** The tail is the body's color (a quad's `cloth` — the head color or a tone of it), at the head's value step like the rest of the mass. A tube carries the creature's
-**pattern** (the `pattern` slot, [../drawing.md](../drawing.md) § what takes the goofy material) along itself — stripes as **rings**, dots and spots along the spine, hatch across it — in the
+**pattern** (the `pattern` slot, [../drawing.md](../drawing.md) § what takes the goofy material) along itself — stripes as **rings**, hatch across it — in the
 body's pattern ink (light on dark fur). A thin line, a tuft, beads and a pom have no area for it.
 
 ### arms — form (5) — bipeds only

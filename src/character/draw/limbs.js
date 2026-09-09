@@ -509,7 +509,7 @@ export function tailSketch(spec, variant = 0) {
   // The point at a whole-tail t — for placing fur strokes, beads, bands and tufts
   const at = (t) => alongSpine(spine, Math.max(0, Math.min(1, t)));
   // The pattern along a tube — every mark sits inside the tube's width at its t, so nothing needs clipping: a ring is a mark from one
-  // side to the other (the ribbon tapers to nothing at its ends), a dot a short mark off the spine, a spot a small contour, a hatch a diagonal
+  // side to the other (the ribbon tapers to nothing at its ends), a hatch a diagonal
   const tubePattern = (widthAt) => {
     if (!pattern) return;
     const color = pattern.color;
@@ -517,18 +517,6 @@ export function tailSketch(spec, variant = 0) {
       for (let d = 0.06; d < total - 0.025; d += 0.05) {
         const t = d / total, a = at(t), w = widthAt(t) * 0.98;
         sketch.line([[a.x - a.dy * w, a.y + a.dx * w], [a.x + a.dy * w, a.y - a.dx * w]], { color, skinT: [t, t] });   // a ring
-      }
-    } else if (pattern.kind === "dots") {
-      let side = 1;
-      for (let d = 0.05; d < total - 0.02; d += 0.045, side = -side) {
-        const t = d / total, a = at(t), w = widthAt(t) * 0.45;
-        const x = a.x - a.dy * w * side, y = a.y + a.dx * w * side;
-        sketch.line([[x - a.dx * 0.006, y - a.dy * 0.006], [x + a.dx * 0.006, y + a.dy * 0.006]], { color, skinT: [t, t] });
-      }
-    } else if (pattern.kind === "spots") {
-      for (let d = 0.07; d < total - 0.03; d += 0.075) {
-        const t = d / total, a = at(t), r = Math.min(0.012, widthAt(t) * 0.55);
-        if (r > 0.005) sketch.contour(blobPath(a.x, a.y, r, r * 0.8, { lumps: 4, amount: 0.25, noise: null }), { color, size: "S", skinT: [t, t] });
       }
     } else if (pattern.kind === "hatch") {
       for (let d = 0.05; d < total - 0.02; d += 0.035) {
