@@ -616,6 +616,9 @@ const representativeOf = (name, slot) => {
   const own = referenceOf(name).parts[slot];
   return own !== "none" ? own : SLOTS[slot].find((v) => v !== "none") || own;
 };
+// The reference with one slot set. The pupil is shown in a ring eye, the plainest ball: the reference's own eye may be
+// one that keeps no mark (the heavy-lidded set, the slit), and every pupil would come out the dot
+const shown = (at, slot, value) => derive({ ...at, parts: { ...at.parts, ...(slot === "pupil" ? { eyes: "ring" } : {}), [slot]: value } });
 const references = {};
 function referenceOf(name) {
   if (!references[name]) {
@@ -879,7 +882,7 @@ function paintTabs() {
     enqueue(`${name}/tabs`, () => {
       if (images[slot]) return;
       const off = document.createElement("canvas");
-      paintPart(off, derive({ ...at, parts: { ...at.parts, [slot]: representativeOf(name, slot) } }), slot, TAB_SIZE);
+      paintPart(off, shown(at, slot, representativeOf(name, slot)), slot, TAB_SIZE);
       images[slot] = off;
       if (spec.species === name) blit(off, tabs[slot].canvas);
     });
@@ -921,7 +924,7 @@ function menuOf(name, slot) {
   const at = referenceOf(name);
   for (const value of SLOTS[slot]) {
     enqueue(key, () => {
-      paintPart(forms[value].canvas, derive({ ...at, parts: { ...at.parts, [slot]: value } }), slot, FORM_SIZE);
+      paintPart(forms[value].canvas, shown(at, slot, value), slot, FORM_SIZE);
       forms[value].painted = true;
       if (menuKey === key && spec.parts[slot] === value) blit(forms[value].canvas, shape.canvas);
     });

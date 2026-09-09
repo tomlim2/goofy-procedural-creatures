@@ -9,12 +9,12 @@ export const SLOTS = {
   // Static eyes: dot · half · slit · hollow (an empty eye — an ellipse with no pupil) ·
   //   a set of heavy lids (the same eye at different tilts — a white, a thick sagging lid line and a pupil):
   //   lidded (flat) · sharp (tilted 0.34 rad toward the nose — the fierce look of a lifted outer corner) · soft (tilted the other way — the gentle look of a drooping outer corner)
-  // From kaomoji: side (¬_¬ a sideways glance) · droop (´･ω･` drooping outer corners). (The ◕ eyeball eye was dropped)
+  // From kaomoji: side (¬_¬ a sideways glance). (The ◕ eyeball eye and droop, ´･ω･` — a dot eye under a falling lid stroke — were dropped)
   // The closed eyes (the sleepy arc, the flat dash, the ^^ arch) and the symbols (an X, >_<, a spiral, a scrawl) are not
   // kinds but values of the `pupil` slot, below — marks drawn small inside the eyeball
   // ☆_☆ and ♥_♥ are not eye kinds but startle variants (motion/events.js stepSurprise) — the eyes turn into them briefly
   eyes: ["ring", "dot", "wide", "half", "slit", "cyclops", "oval", "hollow",
-    "side", "droop", "lidded", "sharp", "soft"],
+    "side", "lidded", "sharp", "soft"],
   // Brows: the straight three (flat · angry · worry), then the shapes the eye knows from brows in the world — arch (a
   // rounded arch) · peak (a steep arch, up then down at the tail) · wave (the S: a dip, a rise, a taper) · bushy (three
   // strokes thick) · raised (one lifted and arched, the other flat — the skeptic) · mono (one brow across both eyes)
@@ -149,10 +149,10 @@ export const SLOTS = {
   // line (a flat dash, -_-) · happy (the ^^ arch) — and the symbols — cross (an X) · squeeze (the >_< bracket) ·
   // spiral · scrawl (a crayon's loops). All seven used to be eye kinds drawn at the eye's own size on the bare face;
   // they are **marks** now, drawn small where the pupil is, at a pupil's reach inside the white, in the board's ink
-  // (a closed eye inside an open one — the kaomoji look). So only the eyes that draw a round pupil take one — ring ·
-  // wide · cyclops · oval, side · half and the lidded three; an eye with no ball (dot, droop), the hollow eye (no
-  // pupil by definition) and the slit (its own pupil) are pinned to dot by spec.js. The one mark allowed without an
-  // eyeball is the dot, which is what `eyes: dot` is
+  // (a closed eye inside an open one — the kaomoji look). So only the eyes that keep a pupil in the open take one —
+  // ring · wide · cyclops · oval, side · half; an eye with no ball (dot), the hollow eye (no pupil by definition), the
+  // slit (its own pupil) and the heavy-lidded three (under that thick lid a mark is a smudge — the round pupil only)
+  // are pinned to dot by spec.js. The one mark allowed without an eyeball is the dot, which is what `eyes: dot` is
   pupil: ["dot", "sleepy", "line", "happy", "cross", "squeeze", "spiral", "scrawl"]
 };
 
@@ -173,7 +173,7 @@ export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mout
 export const DEFAULT_BIAS = {
   // When there is no species or archetype bias. cyclops is not here (it only comes from the imp bias)
   eyes: [["ring", 3], ["dot", 2], ["wide", 2], ["half", 1.5], ["slit", 1], ["oval", 1.5], ["hollow", 1],
-    ["side", 1], ["droop", 1], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
+    ["side", 1], ["lidded", 1.5], ["sharp", 1.5], ["soft", 1.5]],
   // The pupil — the round one most of the time; a mark on about two fifths of the eyes that can take one — what the
   // seven had as eye kinds (sleepy · line · happy 1.5 each of the eyes' weight; spiral 1 · cross 1 · squeeze 1 · scrawl 1.5)
   pupil: [["dot", 12], ["sleepy", 1.3], ["line", 1.3], ["happy", 1.3], ["cross", 1], ["squeeze", 1], ["spiral", 1], ["scrawl", 1.5]],

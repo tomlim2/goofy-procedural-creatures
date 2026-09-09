@@ -62,6 +62,8 @@ function migrate(next) {
   // A file from when the closed eyes were eye kinds — the sleepy arc, the flat dash, the ^^ arch on the bare face. They
   // are pupils now, drawn small inside a ring eye, like the marks above
   if (out.parts && ["sleepy", "line", "happy"].includes(out.parts.eyes)) out.parts = { ...out.parts, eyes: "ring", pupil: out.parts.eyes };
+  // droop (´･ω･` — a dot eye under a falling lid stroke) was dropped; the dot eye is what is left of it
+  if (out.parts && out.parts.eyes === "droop") out.parts = { ...out.parts, eyes: "dot" };
   // A file from before hair was three slots: the old value names the same style in the new ones
   if (out.parts && (out.parts.hair !== undefined || out.parts.hairFront === undefined)) {
     const { hair, ...rest } = out.parts;

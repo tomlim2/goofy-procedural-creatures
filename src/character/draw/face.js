@@ -177,10 +177,6 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       pupilMark(fills, spec, eye, [eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12], eye.r * 0.36, () =>
         paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true, part: "eyes" }));
-    } else if (kind === "droop") {
-      // ´･ω･` — drooping outer corners. A lid stroke falling outward over a dot eye (glum)
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 5, { amount: 0.2 })), ink0, { own: true, part: "eyes" });
-      ink.line([[eye.x - eye.side * eye.r * 0.55, eye.y + eye.r * 1.05], [eye.x + eye.side * eye.r * 0.95, eye.y + eye.r * 0.5]], { color: ink0 });
     } else if (kind === "hollow") {
       // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket)
       eyeball(eye, 6);
@@ -215,10 +211,10 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
       paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
       fills.contour(path, { color: dark });
-      // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil
+      // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil.
+      // Always the round one: under that thick lid a mark is a smudge, so the pupil slot does not reach this set (spec.js NO_MARK_EYES pins it to dot)
       const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
-      pupilMark(fills, spec, eye, [eye.x + eye.r * gaze, eye.y - eye.r * 0.16], eye.r * 0.36, () =>
-        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" }));
+      paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" });
       // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
       fills.line(lidLine, { color: dark });
     } else if (kind === "half") {
@@ -240,7 +236,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
 }
 
 // The eye kinds that draw an eyeball — the rig's live eyes, and the static kinds that paint a white (the slit,
-// side, hollow, half and the lidded three above). The rest are dots on the bare face: a dot, droop's dot under its stroke
+// side, hollow, half and the lidded three above). The rest is the dot on the bare face
 const EYEBALL_KINDS = new Set([...RIG_EYES, "slit", "side", "hollow", "half", "lidded", "sharp", "soft"]);
 export function drawFace2(ink, fills, spec, box, eyes) {
   const kind = spec.parts.face2;

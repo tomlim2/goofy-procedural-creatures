@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 232 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 231 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -38,7 +38,7 @@ head's axis, `bodyTop`) stays put. A head whose top then passes `MAX_HEAD_TOP` (
 ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A quad's head is laid on the front of the body
 (82% of its half-height above the back) and has no shoulder line.
 
-### eyes — eye kinds (13)
+### eyes — eye kinds (12)
 | Value | Drawing | Alive (pupil, blink) |
 | --- | --- | --- |
 | ring | White + outline + pupil | ● the eye rig |
@@ -48,7 +48,6 @@ ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A 
 | dot | A black dot | ✗ static |
 | hollow | An empty eye — ring with **only the pupil taken out** (white + outline). The same on every species; an imp gets a white eye too | ✗ |
 | side | ¬_¬ a sideways glance — half-lidded (a lower arc plus a lid line, with **the white** inside the arc) and the pupil pushed to one side (the direction is per individual) | ✗ |
-| droop | ´･ω･` drooping outer corners — a dot eye plus a lid stroke falling outward (glum) | ✗ (angry → flat) |
 
 ☆_☆ star eyes and ♥_♥ heart eyes are **not eye kinds** — they are startle variants (awe, smitten). When a startle event is the star or heart variant, the eyes are switched off for 4 seconds and the
 glyph is drawn in their place — a **substitution**, not a covering ([../motion/catalog.md](../motion/catalog.md) § the face, `scene/rig.js eyeFx`). Which is why static eyes are baked
@@ -71,16 +70,17 @@ only the impression should change. **Below the lid line is the white, above it i
 leave the top as white too and it reads as **one more white crescent** laid over the eye; fill the lid with ink and on a black head (an imp, black fur)
 it merges with the head, **leaving only the white crescent**, which does not read as an eye. The skin part is closed by joining the upper portion of the outline's point array (outside ±`asin(0.16)`) to the lid line. The lid line's thickness is proportional to the eye size (≤ 0.2r) — at a fixed thickness it covers the whole white on a small eye (a cat).
 Static eyes are baked in face ink (faceGroup) — so they follow the face turn. Only live eyes (`RIG_EYES`) are stood up as a separate eye rig (white, outline, pupil, lid, ^^, shut line).
-The newer ones (oval, hollow, and the kaomoji side, droop) do not yet split by species — they sit in every species and archetype
-bias but the rex's at the same weight (oval 1.5; hollow, side and droop 1). The closed eyes — sleepy, line, happy — and the marks — squeeze, cross, spiral, scrawl — were eye kinds and are values of the `pupil` slot now (§ pupil). (The triangle eye ◣_◢ was dropped because close-set eyes merged into one; ☆ and ♥ moved to startle variants; and the two
+The newer ones (oval, hollow, and the kaomoji side) do not yet split by species — they sit in every species and archetype
+bias but the rex's at the same weight (oval 1.5; hollow and side 1). (droop, ´･ω･`, was dropped.) The closed eyes — sleepy, line, happy — and the marks — squeeze, cross, spiral, scrawl — were eye kinds and are values of the `pupil` slot now (§ pupil). (The triangle eye ◣_◢ was dropped because close-set eyes merged into one; ☆ and ♥ moved to startle variants; and the two
 highlighted eyeball eyes — bead and ◕ sparkle — were dropped.)
-`LINE_EYES` (droop, half, side) are left-right symmetric — one stroke (a lid line or an arch) defines the eye, so
+`LINE_EYES` (half, side) are left-right symmetric — one stroke (a lid line or an arch) defines the eye, so
 if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". half and side stay on this list even after gaining a white ([rules.md](rules.md)). An eye hidden by a patch is skipped with `patched(spec, eye)` — only when there is a patch (look at patchSide alone and the eye disappears along with a patch dropped late).
 
 ### pupil — the pupil (8)
 **What sits in the eyeball**, a part of its own — the `pupil` slot, the last late slot. The eye kind is the ball and its lids;
 the pupil is drawn where that kind keeps it, by `pupilMark` (face.js): the rig's live eyes hand it the pupil mesh (so a mark
-still shrinks on a startle and follows the gaze), and side, half and the lidded three hand it their pupil's place under the lid.
+still shrinks on a startle and follows the gaze), and side and half hand it their pupil's place under the lid (the heavy-lidded
+three keep the round pupil).
 
 | Value | Drawing |
 | --- | --- |
@@ -94,7 +94,8 @@ still shrinks on a startle and follows the gaze), and side, half and the lidded 
 | scrawl | A circle scribbled with a crayon — six loops, each drawn a bit past one turn, overlaid, each with its own centre, size (0.45~1.05×) and tilt; the thin pen |
 
 A mark reaches 0.55r in a live eye and 0.36r under a lid, in the board's ink (light face ink is lost on a white). **A mark needs
-an eyeball**: an eye with no ball (dot, droop), the hollow eye (no pupil by definition) and the slit (its own pupil) are
+an eyeball, in the open**: an eye with no ball (dot), the hollow eye (no pupil by definition), the slit (its own pupil) and the
+heavy-lidded three (lidded, sharp, soft — under that thick lid a mark is a smudge, so they keep the round pupil) are
 pinned to dot by `applyLateConstraints` (`NO_MARK_EYES`), and a ghost's hollow eyes with them. The dot is the one mark that
 stands without an eyeball, which is what `eyes: dot` is.
 

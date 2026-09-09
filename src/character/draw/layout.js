@@ -125,7 +125,7 @@ export function eyeGeometry(spec, box) {
   }
 
   // Left and right are deliberately set slightly off. Symmetry reads as a geometric figure at once.
-  // But **eyes drawn with lines only** (droop, half, side) are symmetric — on a single-stroke eye, a different size or height
+  // But **eyes drawn with lines only** (half, side) are symmetric — on a single-stroke eye, a different size or height
   // reads as a mistake rather than "a smaller eye" (eyes with whites and a pupil still read as eyes when mismatched)
   const lineEye = LINE_EYES.includes(spec.parts.eyes);
   const sizeSkew = lineEye ? 0 : p.eyeSizeSkew;
@@ -151,5 +151,5 @@ export function eyeGeometry(spec, box) {
   ];
 }
 // Eyes drawn with lines only — kept left-right symmetric (eyeGeometry)
-export const LINE_EYES = ["droop", "half", "side"];   // the marks left it (cross, squeeze, and the closed eyes sleepy · line · happy — pupils now): they sit in an eyeball, and a pair of balls wants ring's asymmetry
+export const LINE_EYES = ["half", "side"];   // the marks left it (cross, squeeze, and the closed eyes sleepy · line · happy — pupils now): they sit in an eyeball, and a pair of balls wants ring's asymmetry
 
