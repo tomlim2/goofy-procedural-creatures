@@ -2,7 +2,8 @@
 
 import * as THREE from "three";
 import { paintPart } from "../character/draw/body.js";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath, pupilMark, isGhost, STATIC_EYE_KEYS } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath, pupilMark, isGhost, STATIC_EYE_KEYS, NO_MARK_EYES } from "../character/index.js";
+import { drawEyes } from "../character/draw/face.js";
 import { Sketch } from "../stroke.js";
 import { blobPath, arcPath } from "../shape.js";
 import { makeClock, bindArm } from "../motion/index.js";
@@ -39,19 +40,35 @@ export const DEPTH = {
   head: 0           // the outline (headGroup directly)
 };
 
-// Two sets of closed eyes — the shut line (shut: an arc bulging downward) and the ^^ smile arch (smile: bulging upward). Live eyes (the rig) and static eyes (staticLids) use the same shapes —
-// only the shut line differs slightly (a little higher and tidier on static eyes). In face ink (faceInk) — on an ink-black imp head, a black arch would be lost and invisible
+// Two sets of closed eyes — the shut line (shut: an arc bulging downward) and the ^^ (smile). Live eyes (the rig) and static eyes (staticLids) use the same shut line —
+// it only differs slightly (a little higher and tidier on static eyes). In face ink (faceInk) — on an ink-black imp head, a black arch would be lost and invisible.
+// **The ^^ stays in the ball.** An eye with an eyeball smiles the way the `happy` pupil is drawn — the white and rim stay and the pupil becomes the ^^ arch
+// (pupilMark, the one path): on a live eye the arch is a second pupil mesh at the pupil's place and order (buildCreature), and on a static eye that keeps a
+// pupil under its lid (side, half) the whole eye is redrawn with pupil=happy — drawEyes itself, so the white, the lid and the arch's place
+// are exactly the kind's own. An eye that keeps no mark (dot, the slit's own spindle, the hollow eye, the heavy-lidded three — NO_MARK_EYES) becomes the arch itself,
+// at the eye's size, as every eye did before
 const LID_STYLE = {
   rig: { shutY: 0.1, shutWobble: 0.5 },
   static: { shutY: 0.15, shutWobble: 0.4 }
 };
-function lidSketches(eye, ink, noise, style, spec) {
+function lidSketches(eye, ink, noise, style, spec, box) {
   const s = LID_STYLE[style];
   const mark = (sk) => { sk.outline = spec.outline; sk.inkColor = spec.lineInk; return sk; };   // a ghost's hairline, and its black, reach the eyes too
   const shut = mark(new Sketch(noise, s.shutWobble));
   shut.line(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink });
-  const smile = mark(new Sketch(noise, 0.5));
-  smile.line(smileArchPath(0, 0, eye.r), { color: ink });   // the happy eye's own arch (character/draw/face.js) — one path, so the two cannot drift
+  const happy = { ...spec, parts: { ...spec.parts, pupil: "happy" } };
+  let smile;
+  if (style === "rig") {
+    smile = mark(new Sketch(noise, 0.4));
+    pupilMark(smile, happy, eye, [0, 0], eye.r * 0.55, () => {});   // the arch at the pupil's reach, in the dark ink a mark on a white takes
+  } else if (!NO_MARK_EYES.includes(spec.parts.eyes)) {
+    const inkS = mark(new Sketch(noise, spec.proportions.wobble)), fillsS = mark(new Sketch(noise, spec.proportions.wobble));
+    drawEyes(inkS, fillsS, happy, box, [{ ...eye, x: 0, y: 0 }]);   // the eye at the origin — the mesh is stood where the eye is
+    smile = [fillsS, inkS];   // fills below, ink above — the static layer's own order
+  } else {
+    smile = mark(new Sketch(noise, 0.5));
+    smile.line(smileArchPath(0, 0, eye.r), { color: ink });   // the happy pupil's own arch (character/draw/face.js) — one path, so the two cannot drift
+  }
   // Anger — the fierce eye (an inward-down slanted lid plus a glaring dot). While angry, the open eye is switched off and this stands instead (character/draw/face.js angryEyeSketch)
   const angry = mark(new Sketch(noise, 0.5));
   angryEyeSketch(angry, eye, ink, spec);
@@ -278,14 +295,18 @@ export function buildCreature(spec, noise, birth = 0) {
     pupilMark(pupilSketch, spec, eye, [0, 0], eye.r * 0.55, () =>
       paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, eyeWob(spec, flat, 11, { amount: 0.12 })), spec.palette.ink, { own: true }));
     const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
-    open.add(pupil);
-    rig.add(open);
-
-    // ^^ (smile) — happily closed eyes · the shut line (shut) — when the lid is all the way down (the peak of a blink, sleep). The open eye is switched off and this arch stands instead — so a closed eye does not become a blank face
-    const lids = lidSketches(eye, faceInk, noise, "rig", spec);
-    const smile = sketchMesh(lids.smile, 1, o + 0.35);
+    // The gaze group — the pupil and its ^^ stand-in move with the gaze and shrink on a startle together (animate)
+    const gaze = new THREE.Group();
+    gaze.add(pupil);
+    // ^^ (smile) — the pupil becomes the arch, inside the open eye (lidSketches): the white and rim stay, the pupil mesh is switched off and this
+    // stands at its place. The shut line (shut) — when the lid is all the way down (the peak of a blink, sleep): then the open eye is switched off and
+    // the line stands instead — so a closed eye does not become a blank face
+    const lids = lidSketches(eye, faceInk, noise, "rig", spec, firstDrawn.box);
+    const smile = sketchMesh(lids.smile, 0.95, o + 0.2);
     smile.visible = false;
-    rig.add(smile);
+    gaze.add(smile);
+    open.add(gaze);
+    rig.add(open);
     const shut = sketchMesh(lids.shut, 1, o + 0.35);
     shut.visible = false;
     rig.add(shut);
@@ -295,17 +316,18 @@ export function buildCreature(spec, noise, birth = 0) {
 
     faceGroup.add(rig);
     // gazeScale: how far the pupil travels with the gaze (× the eye radius). On a bead eye the pupil *is* the eye, so only a little
-    eyeRigs.push({ rig, open, pupil, smile, shut, angry, eye, gazeScale: 0.34 });
+    eyeRigs.push({ rig, open, gaze, pupil, smile, shut, angry, eye, gazeScale: 0.34 });
   }
 
   // Every eye not hidden by a patch (static eyes included) — bakes the static eyes' closed-eye and startle-variant glyphs where the eye is
   const allEyes = eyeGeometry(spec, layout(spec)).filter((eye) => !patched(spec, eye));
 
-  // The closed eye of a static eye (dot, slit, half, the lidded set…) — sleep (the shut line), ^^ and a wink (the smile arch). There is no cover: **that eye's** static
-  // layer (frames) is switched off (animate) and the arch stands instead — layers being per eye, only the winking side changes and the other eye stays. It pairs with a live eye's open/shut/smile
+  // The closed eye of a static eye (dot, slit, half, the lidded set…) — sleep (the shut line), ^^ and a wink (the smile: the eye redrawn with a ^^ pupil when it
+  // keeps one, the arch alone when it has no ball — lidSketches). There is no cover: **that eye's** static layer (frames) is switched off (animate) and the glyph
+  // stands instead — layers being per eye, only the winking side changes and the other eye stays. It pairs with a live eye's open/shut/smile
   const staticLids = [];
   for (const { key, eye } of firstDrawn.staticEyes) {
-    const lids = lidSketches(eye, faceInk, noise, "static", spec);
+    const lids = lidSketches(eye, faceInk, noise, "static", spec, firstDrawn.box);
     const shut = sketchMesh(lids.shut, 1, 3.6);
     const smile = sketchMesh(lids.smile, 1, 3.6);
     const angry = sketchMesh(lids.angry, 1, 3.6);

@@ -5,9 +5,9 @@
 //
 // What counts as correct (the expectation):
 //   brows (not none) · mouth · nose (muzzle) · eyewear · cheeks · whiskers (cats) — visible in every state
-//   static eyes (dot, slit, half …) — for sleep, ^^, a wink (on that side) and anger, a substitute glyph shows instead (shut line / smile arc / fierce eye)
-//   the eye rig's pupil (ring, wide, cyclops) — closed during a blink, ^^, a wink (that side) and sleep, so it is left out then. In exchange,
-//   the shut line has to be visible then — an eye closing must not make the eye disappear from the face
+//   static eyes (dot, slit, half …) — for sleep, ^^, a wink (on that side) and anger, a substitute shows instead (shut line / the smile: the eye with a ^^ pupil, or the arc alone / fierce eye)
+//   the eye rig's pupil (ring, wide, cyclops) — swapped for the ^^ arch during ^^ and a wink (that side), shut away by a blink and sleep, so it is left out then. In exchange,
+//   the arch or the shut line has to be visible then — an eye closing must not make the eye disappear from the face
 //   the ^^ arc — visible when happy or winking (that side) · the sleep lid — visible when asleep
 //   a quad's tail — raised (tailRaise 1, drawn above the body) it has to show; at rest it is drawn behind the body, so a hidden one is written
 //   down as information, not a violation (the known cost of drawing it behind — parts.md § tail)

@@ -244,7 +244,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   for (const m of item.faceStates.brow) m.visible = m === browOn;
   for (const m of item.faceStates.mouth) m.visible = m === mouthOn;
 
-  // Static eyes — per eye: past halfway asleep the shut line stands **instead**, a smile arch for ^^ or a wink (that side), a fierce eye for anger (not covering it — **that eye's** static layer is switched off).
+  // Static eyes — per eye: past halfway asleep the shut line stands **instead**, the smile for ^^ or a wink (that side — the eye redrawn with a ^^ pupil, or the arch alone on an eye with no ball), a fierce eye for anger (not covering it — **that eye's** static layer is switched off).
   // A wink changes one side only — the other eye's layer stays on (switching both eyes off as one layer would lose the other eye). Priority: sleep > anger > ^^/wink
   const asleep = (state.sleep || 0) > 0.5;
   for (const lid of item.staticLids) {
@@ -257,20 +257,22 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   }
 
   // Eyes — startle, gaze, blink, ^^, wink. Startle does not grow the eye; it shrinks **the pupil only** (1 → 0.5×).
-  // Closing is not covering but **redrawing**: an open eye ↔ a shut line (lid > 0.5) — there is no middle (half-lidded). For ^^ and a wink the smile arch stands in.
+  // Closing is not covering but **redrawing**: an open eye ↔ a shut line (lid > 0.5) — there is no middle (half-lidded).
+  // ^^ and a wink keep the eye open: the white and rim stay and the pupil is swapped for the arch at its place (rig.js) — a smile beats the lid.
   // A blink (0.13 s) passes as two cuts: open eye → shut line → open eye
   for (const rig of item.eyeRigs) {
-    rig.pupil.scale.setScalar(1 - 0.5 * (state.startle || 0));
-    rig.pupil.position.x = state.gaze[0] * rig.eye.r * rig.gazeScale;
-    rig.pupil.position.y = state.gaze[1] * rig.eye.r * rig.gazeScale * 0.82;
+    rig.gaze.scale.setScalar(1 - 0.5 * (state.startle || 0));
+    rig.gaze.position.x = state.gaze[0] * rig.eye.r * rig.gazeScale;
+    rig.gaze.position.y = state.gaze[1] * rig.eye.r * rig.gazeScale * 0.82;
     const winked = state.winkSide !== 0 && rig.eye.side === state.winkSide;
     const angryEye = angryOn && !asleep;   // anger — redrawn as a fierce eye (below sleep, above ^^/wink)
     const smiling = !angryEye && (winked || state.happy);
     const lid = state.lid || 0;
     rig.angry.visible = angryEye;
     rig.smile.visible = smiling;
+    rig.pupil.visible = !smiling;
     rig.shut.visible = !angryEye && !smiling && lid > 0.5;
-    rig.open.visible = !angryEye && !smiling && lid <= 0.5;
+    rig.open.visible = !angryEye && (smiling || lid <= 0.5);
   }
 
   // Startle eye variants — ☆_☆ / ♥_♥. Meanwhile the eyes (the static eye frame and the eye rig) are **switched off** and replaced by the glyph (not covered). Pop in and out by the envelope (k) (0.7 → 1)

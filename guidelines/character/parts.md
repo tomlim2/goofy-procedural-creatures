@@ -101,8 +101,10 @@ stands without an eyeball, which is what `eyes: dot` is.
 
 **The three closed eyes are marks like the rest** — a shut eye drawn small where the pupil is, inside the open one (the
 kaomoji look), the same strokes they were as eye kinds at the pupil's reach instead of the eye's. So a ring with a ^^ in it is
-still alive: the arch is the pupil mesh, it shrinks on a startle and follows the gaze, and sleep or ^^ still swap the open eye
-for the state's glyph. All seven — the three closed eyes and the four symbols — were eye kinds drawn at the eye's own size on
+still alive: the arch is the pupil mesh, it shrinks on a startle and follows the gaze. **The ^^ state draws the same arch in the
+ball** — a smile or a wink turns the pupil into `happy` for the moment (a live eye swaps its pupil mesh for the arch, a static eye
+that keeps a pupil under its lid is redrawn with `pupil: happy` — `scene/rig.js lidSketches`); an eye with no ball becomes the arch
+itself. Sleep still shuts the eye. All seven — the three closed eyes and the four symbols — were eye kinds drawn at the eye's own size on
 the bare face; a file from then opens as a ring eye with that pupil (`file.js migrate`).
 
 ### brow — brows (11)
