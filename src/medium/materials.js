@@ -82,7 +82,18 @@ export const GOOFY_MATERIALS = {
                                                     glaze: { size: 0.46, tone: 0.96, edgeTone: 0.985, edgeWidth: 0.006, from: 0.35 },
                                                     drip: { chance: 0.55, length: [0.3, 0.6], width: 0.0034, from: 0.5 },
                                                     sparkle: { per: 260, size: [0.0018, 0.0036], tone: 0.3, until: 0.42 },
-                                                    strokes: { count: [2, 4], length: [0.9, 1.5], width: [0.16, 0.28], tone: [-0.025, 0.06], spread: 0.5, bristles: 5, load: [0.4, 2.6] } } }
+                                                    strokes: { count: [2, 4], length: [0.9, 1.5], width: [0.16, 0.28], tone: [-0.025, 0.06], spread: 0.5, bristles: 5, load: [0.4, 2.6] } } },
+  // Marker — a felt tip: **broad, bright strokes**. The tip is wide (`width` — a third of a small part across, a fifth of the medium page's ball), and its ink is a
+  // light laid over the ground, the way every mark but charcoal's is (`opened`): `light` is how far toward white the band goes at
+  // black, and at light it is a faint wash. What a marker fill looks like (looked up): every overlap of two strokes is a second
+  // layer of ink, so a fill of straight strokes is **striped where they meet** — here brighter, two layers of light — the strokes
+  // stay visible one by one, and an alcohol marker's saturation wanders a touch from stroke to stroke (two tints alternating, each
+  // band a hair off the set's angle, `wobble` rad, and width). The step is how tightly they are laid: room between at light,
+  // touching by hatch, overlapping by half the nib at black (the way a marker fill is actually laid) — and where two bands overlap
+  // the strip between their edges is laid again, brighter.
+  // At black a second set goes across the first (`cross` of a right angle). The contour cuts them square, the way a marker stops
+  // at a line
+  MARKER:      { base: { kind: "flat" }, texture: { kind: "band", angle: 1.1, width: 0.085, light: 0.2, wobble: 0.06, cross: 0.85 } }
 };
 
 
@@ -407,6 +418,51 @@ export function paintWith(sketch, points, name, { color, only, pattern, value, s
       }
       case "speckle": {
         dust(sketch, points, b, { ...f, per: f.per * (0.4 + V.v * 0.8) }, h, contrast(f.tone), holdTag);   // black: thick dust · light: a few specks
+        break;
+      }
+      case "band": {
+        // A felt marker (the table's note): broad bright bands along one diagonal — lights over the ground, two tints alternating, a
+        // hair off the set's angle and width each; laid tighter as the step climbs — room between at light, touching by hatch,
+        // overlapping at black — and **where two bands overlap the strip between their edges is laid again, brighter**: the second
+        // layer of ink every marker overlap is. At black a second set crosses the first. Cut square by the contour
+        const amount = f.light * (0.55 + weight * 0.5);   // how far toward white: light 0.12 · black 0.19 (opened damps it on a dark ground)
+        const band = [opened(amount), opened(amount * 0.8)];
+        const seam = opened(Math.min(0.5, amount * 1.4));   // two layers of light — a step brighter, not a glare
+        // The lay by step, from how a marker is actually used (looked up): a fill is laid edge to edge with each stroke overlapping the
+        // last by half the nib — that is black; hatch is one clean pass, strokes just touching; below it the strokes stand apart with the
+        // ground showing between them (the "sliver of paper left between strokes for a glare line")
+        const spacing = f.width * (0.5 + 2.1 * (1 - weight) * (1 - weight));   // light 2.3 · scribble 1.3 · hatch 1.0 · black 0.56 of the width (under it: overlap)
+        // A band is a rectangle across the part's bounds, **clipped as an area** (fillClipped) — a stroke this wide cut only along
+        // its centre line poked its corners past the contour wherever the edge met it at a slant
+        const strip = (o, dirX, dirY, w) => {
+          const nx = -dirY, ny = dirX;
+          const ax = b.cx + nx * o - dirX * b.r * 1.5, ay = b.cy + ny * o - dirY * b.r * 1.5;
+          const cx = b.cx + nx * o + dirX * b.r * 1.5, cy = b.cy + ny * o + dirY * b.r * 1.5;
+          const hx = nx * w / 2, hy = ny * w / 2;
+          return [[ax + hx, ay + hy], [cx + hx, cy + hy], [cx - hx, cy - hy], [ax - hx, ay - hy]];
+        };
+        const lay = (angle, k) => {
+          const dx = Math.cos(angle), dy = Math.sin(angle), nx = -dy, ny = dx;
+          let prev = null;
+          for (let s = -b.r, i = 0; s <= b.r; s += spacing, i += 1) {
+            const o = s + (u(i + k) - 0.5) * spacing * 0.25;
+            const wob = (u(i + k + 33) - 0.5) * f.wobble;
+            const w = f.width * (0.92 + u(i + k + 66) * 0.16);
+            // The offset is measured along the set's normal; the band itself may lean a hair off the set's angle
+            const ox = b.cx + nx * o, oy = b.cy + ny * o;
+            const bx = Math.cos(angle + wob), by = Math.sin(angle + wob);
+            const bnx = -by, bny = bx, hx = bnx * w / 2, hy = bny * w / 2, L = b.r * 1.5;
+            const rect = [[ox - bx * L + hx, oy - by * L + hy], [ox + bx * L + hx, oy + by * L + hy], [ox + bx * L - hx, oy + by * L - hy], [ox - bx * L - hx, oy - by * L - hy]];
+            fillClipped(sketch, rect, points, band[i % 2]);
+            if (prev !== null && o - prev < f.width) {   // the seam — this band laps the one before
+              fillClipped(sketch, strip((o + prev) / 2, dx, dy, f.width - (o - prev)), points, seam);
+            }
+            prev = o;
+          }
+        };
+        holdTag();
+        lay(f.angle + swing, 400);
+        if (V.name === "black") lay(f.angle + swing + Math.PI * 0.5 * f.cross, 700);
         break;
       }
       case "wash": {

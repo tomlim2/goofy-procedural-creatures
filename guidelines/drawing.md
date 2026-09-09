@@ -192,7 +192,7 @@ along the tube instead — stripes as rings, [character/parts.md](character/part
 which every drawing call can set (`skinT`) and a skinned mesh reads its bones from. A tag is **per vertex**: a point two quads share takes one t, or the part tears where
 it bends. The `texture`'s marks take the tag too when the base is a fill at one t — a bead, a tuft, a pom turns with its hatching on it; over a strip they are left untagged
 and the mesh reads them from where they sit, which inside a tube is the same t); and its
-`texture` — `hatch`, `scratch`, `dab` or `speckle` — the medium's pattern laid over it, clipped to the
+`texture` — `hatch`, `scratch`, `dab`, `speckle`, `wash` or `band` — the medium's pattern laid over it, clipped to the
 contour (`clipSegment`, `insidePath` in `medium/materials.js`). Both paint the same thing, the colour of the surface —
 base color and its map, in 3D terms. A channel that would be a *different* thing — `opacity` (the reference's
 62% graphite, vertex alpha) — is not built; it would be a new key, not a
@@ -210,7 +210,7 @@ part, a stripe rather than a pencil line — and oil's spread of paint is pulled
 already pale and the top of the spread ran all the way to a cream white (a bleach rather than thinned paint).
 Charcoal keeps dark marks — its specks are the grain of a dark
 crumb — and so do the watercolour's dried edge, pool rims and granulation, because dried pigment is deeper than the wash it came
-out of; its pools are lights like the rest. A technique that goes the other way is part of what keeps the five apart. Where a technique's own direction still stands it is
+out of; its pools are lights like the rest. A technique that goes the other way is part of what keeps the six apart. Where a technique's own direction still stands it is
 its ground's: graphite and charcoal deepen theirs, ink lightens its own (its scratches take the ink away). On a **dark** color every mark goes lighter (`contrast` in `materials.js`), by as much as the technique asked for either
 way: there is nothing below a dark ground to draw with. Only the amount is mirrored, never the direction — mirroring the direction
 turned ink's light scratches into marks *darker* than the ground they were scratched into, and oil's darker half of the spread
@@ -227,7 +227,7 @@ The table is `GOOFY_MATERIALS` in `medium/materials.js`; an unknown name throws,
 nothing. The medium page draws one **shader ball** per entry — the same ball in the same color, filled each
 way, its contour the board's PENCIL_STROKE — so the table cannot drift from what is seen. Each row is headed by **the goofy
 material's own name and its texture kind** (`graphite · hatch`, `charcoal · speckle`) — the balls and the labels under them show the
-five density steps, which says how many marks but never which of the five materials is making them. The last ball of every textured
+five density steps, which says how many marks but never which of the six materials is making them. The last ball of every textured
 row is the same material on a **dark ground**, which is where the rule above is visible.
 
 | Goofy material | base | texture | On the board |
@@ -237,13 +237,14 @@ row is the same material on a **dark ground**, which is where the rule above is 
 | `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter | the `material` slot (0.8) |
 | `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, cut flat by the contour, in a spread of four **waterings of the ground** (`washes`) — the same light, and on a dark ground the whole spread drops so the first of them go on darker than the ground | the `material` slot (1) |
 | `CHARCOAL` | `flat` | `speckle` — coarse dark crumbs, each a short stroke at its own angle | the `material` slot (1) |
+| `MARKER` | `flat` | `band` — a felt tip: **broad, bright** strokes side by side along one diagonal — lights over the ground, the tip a third of a small part across (two tints alternating, each band a hair off the set's angle and width), cut square by the contour; tighter as the step climbs — room between at light, touching by hatch, overlapping at black — and **where two bands overlap the strip is laid again, brighter**: the second layer of ink a marker's overlaps are, which is what makes a marker fill striped. Crossed at black | the `material` slot (0.9) |
 | `WATERCOLOUR` | `flat` | `wash` — the brush and how the wash dries. **Strokes** first: broad sweeps across the part along the hand's swing, each a rounded stroke a shade off the ground, trailing off one end in dry bristle marks — one or two at a light step, the brush going back over itself at a loaded one, the sweeps overlapping. Then the drying: **blooms** (backruns — one to three, the size of a brush touch: a pale centre fading out through nested lobes, the pushed-out pigment gathered as a soft deeper arc on **one side**, and the whole bloom gone round once with a broken hairline, in dashes, faint — a sketch showing through the wash), the **edge** (pigment walks to where the wash stops drying — a thin deeper line just inside the contour along a **run** of it, never all the way round), **granulation** (fine deeper specks, more in the loaded steps), and at the loaded steps a **glaze** (a second wash over one side, wet on dry — a lobe a little deeper with a soft hard edge where it stops) and sometimes a **drip** (a run of paint straight down from the bloom, tapering to a bead); at the thin steps **dry brush** (a band of pale flecks where the brush skipped the tooth). The ground is the part's colour at every step; the step is how loaded the brush is. A wash never draws closed dark cells — a first wash ringed every pool and ran the edge the whole way round, and the network read as cracked earth; an earlier one still had many small blooms and read as camouflage | the `material` slot (0.9) |
 
 The head takes the creature's goofy material — the `material` slot, a late slot ([character/parts.md](character/parts.md)
 § surface) — and the body takes it too unless `bodyMaterial` names another (§ what takes the goofy material), each at a **value step** — the head's `density`, the body's `bodyDensity` or the head's. `VALUES` (`medium/materials.js`) is the reference's scale, five steps named for
 the way graphite makes each: black 1 · hatch 0.72 · scribble 0.62 · stipple 0.5 · light 0.34. A goofy material renders a
 step its own way — graphite changes technique (cross-hatch → hatch → a wavy scribble → coarse dabs → one thin set three gaps apart),
-ink, oil and charcoal lay down more or less of their texture.
+ink, oil, charcoal and the marker lay down more or less of their texture.
 
 **A step is an amount of the medium, and the ground is the part's colour at every step.** The step says how much of its texture a
 material lays down — how many rules, scratches, dabs, specks and sweeps, and how they are laid — and never a tone of the ground. It

@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 232 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 234 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -582,21 +582,22 @@ species bias of 3:2. The archetype does not take part.
 
 ## Surface
 
-### material (5) — a late slot
+### material (6) — a late slot
 
 The creature's **goofy material** — what the head and the body are made of, how their areas are filled ([../drawing.md](../drawing.md) § the goofy material, the
 `GOOFY_MATERIALS` table in `medium/materials.js`): **graphite** (the color hatched with thin
 upright pencil strokes, weight 1.5) · **charcoal** (dusted with specks, 1) · **oil** (thick paint in a spread of
 lights, 1) · **ink** (solid, scratched open, 0.8) · **watercolour** (a wash drying — one or two pale blooms, a dried edge along part of the
-contour, granulation, 0.9; a first wash was dropped as blotchy and this one keeps its blooms few, the size of a brush touch, with no closed rings).
+contour, granulation, 0.9; a first wash was dropped as blotchy and this one keeps its blooms few, the size of a brush touch, with no closed rings) ·
+**marker** (a felt tip — broad bright strokes along one diagonal, tighter as the step climbs, brighter where they overlap, crossed at black, 0.9).
 **Every creature is made of one of them.** FLAT — the fill-up with nothing laid on it — was in this slot at weight 5 and left four
 creatures in five untextured; it is still a goofy material (the whites of the eyes are filled with it) but it is not something a
 creature can be made of. Measured over 40 boards: graphite 26% · oil 21% · watercolour 18% · charcoal 17% · ink 17%.
 
-### bodyMaterial (6) — a late slot
+### bodyMaterial (7) — a late slot
 
 The **body's** goofy material when it is not the head's: **same** (weight 9 — three quarters of the board, one tool through) or one
-of the five. A face and a torso are two surfaces and one hand may reach for a second tool between them. The head's side of the line
+of the six. A face and a torso are two surfaces and one hand may reach for a second tool between them. The head's side of the line
 is the head, the ears, the horns, the hair, the hat, the muzzle, the nose and the face; the body's is the torso, the arms and hands,
 the sleeves, the legs and boots, and the tail. Around a quarter of creatures come out split, and one in twelve with two *textured*
 materials. The density splits along the same line, on its own slot (`bodyDensity`, below).

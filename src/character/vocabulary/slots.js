@@ -105,12 +105,12 @@ export const SLOTS = {
   // The **material** — the creature's goofy material: what the head and the body are made of, how their areas are filled (medium/materials.js GOOFY_MATERIALS — a base color and its
   // texture). Each lays its marks over the base in a tone of the part's own color. FLAT, the fill-up with nothing on it, is not one of
   // them: it is what the whites of the eyes are filled with, not something a creature is made of. A late slot — the look, not the form
-  material: ["graphite", "ink", "oil", "charcoal", "watercolour"],
-  // The **body's** goofy material — `same` for one tool over the whole creature, or one of the five for a body made of something else
+  material: ["graphite", "ink", "oil", "charcoal", "watercolour", "marker"],
+  // The **body's** goofy material — `same` for one tool over the whole creature, or one of the six for a body made of something else
   // than the head. A face and a torso are two surfaces (skin and cloth already have two colors), and one hand may well reach for a
   // second tool between them. Everything on the head follows `material` — ears, horns, hair, a hat, the muzzle; everything on the body
   // follows this one — the limbs, the hands, the boots, the sleeves, the tail. The density may split the same way (`bodyDensity`, below)
-  bodyMaterial: ["same", "graphite", "ink", "oil", "charcoal", "watercolour"],
+  bodyMaterial: ["same", "graphite", "ink", "oil", "charcoal", "watercolour", "marker"],
   // The **density** — how dark the goofy material draws this creature: **the value step itself**, picked by the roll from the five
   // (medium/materials.js VALUES: black · hatch · scribble · stipple · light). It used to be a hand (lighter/normal/darker) that moved
   // a step read off the part's colour, which meant a pale creature could never draw black and a black one never light — half the
@@ -167,7 +167,7 @@ export const TOP_KNOTS = ["bun", "apple", "appleBig"];
 // Slots added later. makeCreature draws them after everything else (parts, constraints, colors, proportions) —
 // that way the earlier rng consumption is unchanged and existing rolls keep their boards (only the new slot's value is added).
 // A new slot goes on the end here. Reorder them and these slots' values change.
-export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale", "hairBack", "pupil"];
+export const LATE_SLOTS = ["legLength", "build", "tailSkin", "tailLength", "mouthPos", "mouthSize", "material", "density", "bodyMaterial", "tailDeco", "ghost", "bodyDensity", "browLength", "eyeScale", "hairBack", "pupil", "eyewearSize"];
 
 // Default weights for slots with no archetype bias.
 //
@@ -201,9 +201,9 @@ export const DEFAULT_BIAS = {
   mouthSize: [["normal", 3], ["small", 2], ["wide", 1]],
   // Goofy materials — every creature is made of one. FLAT, the fill-up alone, was in here at weight 5 and left four boards in five
   // untextured; it is still a goofy material (the whites of the eyes are flat) but it is not something a creature can be made of
-  material: [["graphite", 1.5], ["charcoal", 1], ["oil", 1], ["ink", 0.8], ["watercolour", 0.9]],
+  material: [["graphite", 1.5], ["charcoal", 1], ["oil", 1], ["ink", 0.8], ["watercolour", 0.9], ["marker", 0.9]],
   // Most creatures are one tool through; a body of its own is seasoning on top of seasoning
-  bodyMaterial: [["same", 9], ["graphite", 1], ["charcoal", 0.7], ["oil", 0.7], ["ink", 0.5], ["watercolour", 0.6]],
+  bodyMaterial: [["same", 9], ["graphite", 1], ["charcoal", 0.7], ["oil", 0.7], ["ink", 0.5], ["watercolour", 0.6], ["marker", 0.6]],
   tailDeco: [["none", 1]],   // the rex carries its own weights; everyone else forbids the lot
   ghost: [["none", 24], ["white", 1]],   // 1 in 25 — about 1.4 on a board of 35
   density: [["black", 1], ["hatch", 1], ["scribble", 1], ["stipple", 1], ["light", 1]],
