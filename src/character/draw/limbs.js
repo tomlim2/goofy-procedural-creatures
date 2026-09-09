@@ -17,9 +17,9 @@ const ARM_BASE = 0.242;
 const ARM_LENGTH_SCALE = { medium: 1, long: 1.64 };
 
 // Shoulder x — on the torso's left/right outline. The half-width at shoulder height (22% from the top) differs per body form:
-// box 1 · bean (an ellipse) ≈0.85 · dress (a trapezoid, 0.6 at the top → 1.35 at the bottom) ≈0.76 · tube 0.62.
+// box 1 · bean (an ellipse) ≈0.85 · dress (a trapezoid, 0.6 at the top → 1.35 at the bottom) ≈0.76 · tube 0.62 · vee (the other way, 1.3 at the top → 0.7 at the bottom) ≈1.17.
 // An arm has to come out of the torso's side — coming out further in, it looks like it sprouts from the middle of the chest.
-const SHOULDER_X = { bean: 0.85, box: 0.98, dress: 0.76, tube: 0.63 };
+const SHOULDER_X = { bean: 0.85, box: 0.98, dress: 0.76, tube: 0.63, vee: 1.17 };
 
 // The knee — a biped leg splits into thigh and shin here (of the hip height). The drawing and the rig
 // description (motionRig — the leg IK's bone lengths) read the same number
@@ -468,7 +468,7 @@ export function tailSketch(spec, variant = 0) {
   // the tube's pinched start showed — the tail read as floating beside it. Every kind buries the root the
   // box's ~0.15·w under its own worst edge, and the spine's x is stretched below so the TIP lands exactly
   // where the box root puts it: the visible tail is identical on every body — only the hidden root differs
-  const REX_ROOT = { box: 0.85, dress: 0.85, tube: 0.47 };   // bean and anything else — the round blob
+  const REX_ROOT = { box: 0.85, dress: 0.85, tube: 0.47, vee: 0.65 };   // bean and anything else — the round blob; a vee is 0.8·w at the hip
   const rootK = box.quad ? 0 : (REX_ROOT[spec.parts.body] ?? 0.55);
   const pivot = box.quad
     ? [cx + box.bodyW * 0.98, (box.bodyTop + box.legTop) / 2 + box.bodyH * 0.1]
@@ -661,7 +661,7 @@ export function tailSketch(spec, variant = 0) {
     // Where the tail CLEARS the body — the deco sits on the visible tail, not at a spine t: with the root
     // buried (REX_ROOT), a short flag hides a third of its spine and wore its ring inside the body. The edge
     // is the same per-kind estimate the root uses, plus a margin of one root width
-    const edgeK = box.quad ? 0 : ({ box: 1, dress: 1.1, tube: 0.62 }[spec.parts.body] ?? 0.78);
+    const edgeK = box.quad ? 0 : ({ box: 1, dress: 1.1, tube: 0.62, vee: 0.8 }[spec.parts.body] ?? 0.78);
     const clearX = Math.max(0, (edgeK - rootK) * box.bodyW) + wOf(0) * 0.6;
     let tVis = 0;
     while (tVis < 0.6 && at(tVis).x < clearX) tVis += 0.05;

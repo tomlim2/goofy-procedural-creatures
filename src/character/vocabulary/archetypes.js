@@ -13,7 +13,7 @@ export const ARCHETYPES = [
       nose: [["wedge", 3], ["hook", 2], ["dot", 2], ["broad", 1.5], ["none", 1]],
       hairFront: [["none", 3], ["hairline", 2], ["swept", 1], ["mohawk", 2], ["tuft", 2]],
       hairBack: [["none", 4], ["mop", 2], ["spikes", 3], ["hedgehog", 2]],
-      head: [["round", 3], ["wide", 2], ["square", 2], ["pear", 1]]
+      head: [["round", 3], ["wide", 2], ["square", 2], ["pear", 1], ["jar", 1.5]]
     }
   },
   {
@@ -37,7 +37,8 @@ export const ARCHETYPES = [
     bias: {
       headgear: [["helmet", 4], ["cap", 3], ["band", 2], ["pot", 2], ["none", 1]],
       eyewear: [["patch", 3], ["goggles", 3], ["none", 3]],
-      head: [["square", 3], ["block", 2], ["round", 2], ["wide", 1]],
+      head: [["square", 3], ["block", 2], ["wedge", 2], ["round", 2], ["wide", 1]],
+      body: [["vee", 3], ["box", 2], ["bean", 1]],   // the bruiser — a chest over a narrow waist
       hairFront: [["none", 3], ["hairline", 2], ["swept", 1], ["mohawk", 1.5]],
       hairBack: [["none", 3], ["mop", 2], ["spikes", 2], ["hedgehog", 1.5]],
       arms: [["sleeve", 3], ["stick", 2]],
@@ -50,7 +51,7 @@ export const ARCHETYPES = [
     bias: {
       horns: [["antenna", 5], ["nub", 2], ["none", 2]],
       eyes: [["wide", 4], ["ring", 3], ["oval", 1.5], ["hollow", 1], ["side", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],
-      head: [["tall", 3], ["round", 3], ["egg", 2], ["pear", 1]],
+      head: [["tall", 3], ["round", 3], ["egg", 2], ["wedge", 1], ["pear", 1]],
       body: [["tube", 3], ["bean", 2]],
       build: [["narrow", 2], ["skinny", 2], ["medium", 1]],
       legs: [["stick", 3], ["tiptoe", 2], ["bent", 2]],
@@ -64,7 +65,7 @@ export const ARCHETYPES = [
     name: "blob",
     weight: 2,
     bias: {
-      head: [["wide", 4], ["round", 3], ["pear", 2]],
+      head: [["wide", 4], ["round", 3], ["pear", 2], ["jar", 2]],
       hairFront: [["none", 2], ["hairline", 1], ["tuft", 2], ["helmet", 1]],
       hairBack: [["none", 5], ["mop", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["oval", 1.5], ["hollow", 1], ["side", 1], ["lidded", 1], ["sharp", 1], ["soft", 1]],

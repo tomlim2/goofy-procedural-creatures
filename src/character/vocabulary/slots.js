@@ -4,7 +4,9 @@
 
 // The options per slot. Names line up 1:1 with the drawing-function keys in draw.js.
 export const SLOTS = {
-  head: ["round", "square", "tall", "pear", "wide", "egg", "block"],
+  // The outline (draw/layout.js HEAD_SHAPES) — and the trapezoid pair from the shape sheet: wedge (wider at the brow than the chin) ·
+  // jar (a narrow crown over a wide, angular jaw)
+  head: ["round", "square", "tall", "pear", "wide", "egg", "block", "wedge", "jar"],
   // Live eyes (the rig — pupil, blink, startle): ring · wide (a ring 1.3× bigger) · cyclops (one eye) · oval (a tall elliptical big eye). (The highlighted eyeball eye was dropped)
   // Static eyes: dot · half · slit · hollow (an empty eye — an ellipse with no pupil) ·
   //   a set of heavy lids (the same eye at different tilts — a white, a thick sagging lid line and a pupil):

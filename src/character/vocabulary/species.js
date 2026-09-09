@@ -175,7 +175,7 @@ export const SPECIES = [
       headgear: [["none", 9], ["cap", 0.5], ["crown", 0.4], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.4]],
       eyewear: [["none", 7], ["monocle", 1], ["patch", 1]],
       // A blocky head for the jaw to live in
-      head: [["block", 3], ["wide", 2.5], ["square", 2], ["pear", 1]],
+      head: [["block", 3], ["wide", 2.5], ["square", 2], ["jar", 2], ["pear", 1]],
       // Small fierce eyes, set high on the head (the proportions push them up over the jaw)
       eyes: [["dot", 3], ["sharp", 2.5], ["lidded", 2], ["ring", 1.5], ["slit", 1.5], ["hollow", 1], ["side", 1], ["half", 1]],
       brow: [["none", 2], ["flat", 1.5], ["angry", 1.5], ["peak", 0.8], ["bushy", 0.6], ["mono", 0.3]],

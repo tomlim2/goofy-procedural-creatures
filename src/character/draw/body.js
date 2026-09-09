@@ -94,6 +94,10 @@ export function drawBody(ink, fills, spec, box, noise) {
     path = [[-w * 1.35, bottom], [-w * 0.6, top], [w * 0.6, top], [w * 1.35, bottom]];
   } else if (kind === "tube") {
     path = [[-w * 0.62, bottom], [-w * 0.62, top], [w * 0.62, top], [w * 0.62, bottom]];
+  } else if (kind === "vee") {
+    // An inverted trapezoid — shoulders wide, waist narrow: the bruiser's chest (the shape sheet's big block over a medium one). The
+    // dress's mirror: its wide end at the top, 1.3 of the width, the narrow end at the hips
+    path = [[-w * 0.7, bottom], [-w * 1.3, top], [w * 1.3, top], [w * 0.7, bottom]];
   } else {
     path = blobPath(0, (bottom + top) / 2, w, (top - bottom) / 2, {
       lumps: 4, amount: 0.12, noise, phase: spec.proportions.hand * 0.02

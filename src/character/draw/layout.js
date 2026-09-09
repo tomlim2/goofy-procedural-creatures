@@ -12,10 +12,15 @@ const HEAD_SHAPES = {
   pear: { square: 0.25, taper: 0.3, rx: 1, ry: 1.06 },
   wide: { square: 0.7, taper: 0.1, rx: 1.28, ry: 0.9 },
   egg: { square: 0.2, taper: 0.28, rx: 0.94, ry: 1.14 },
-  block: { square: 2.2, taper: 0, rx: 1.06, ry: 0.98 }
+  block: { square: 2.2, taper: 0, rx: 1.06, ry: 0.98 },
+  // The trapezoid pair (the character-design shape sheet: small · big · medium blocks stacked, contrast between them) —
+  // angular like block, tapered like pear and egg. wedge is wider at the brow than the chin (a negative taper — the
+  // bruiser's small head, the lanky one's tall one); jar is the other way, a narrow crown over a wide jaw: pear's angular cousin
+  wedge: { square: 1.2, taper: -0.3, rx: 1.02, ry: 1.02 },
+  jar: { square: 1.4, taper: 0.32, rx: 1.04, ry: 1.12 }
 };
 
-// Biped build (the build slot). w is the bodyW multiplier, h the bodyH multiplier, dressW the multiplier for a dress torso, stance the leg stance
+// Biped build (the build slot). w is the bodyW multiplier, h the bodyH multiplier, dressW the multiplier for a flared torso (dress, vee — their wide end reaches 1.3~1.35 of it), stance the leg stance
 // (leg x against the body half-width). A wide body carries a wide stance; a narrow one draws the legs together.
 export const BUILD = {
   skinny: { w: 0.5, h: 1.15, dressW: 0.6, stance: 0.33 },    // lanky — a stick torso
@@ -80,7 +85,7 @@ export function layout(spec) {
   // A dress flares 1.35× at the hem, so wide is applied less — to stay inside the cell (±0.45).
   const build = BUILD[spec.parts.build] || BUILD.medium;
   const bodyH = 0.28 * (p.bodyScale / 0.52) * build.h;
-  const bodyW = 0.23 * p.bodyWide * (spec.parts.body === "dress" ? build.dressW : build.w);
+  const bodyW = 0.23 * p.bodyWide * (spec.parts.body === "dress" || spec.parts.body === "vee" ? build.dressW : build.w);   // a flared torso is measured at its narrow end
   const bodyTop = legTop + bodyH;
   const shape = headShape(spec);
   let headRy = 0.3 * p.headScale * shape.ry;

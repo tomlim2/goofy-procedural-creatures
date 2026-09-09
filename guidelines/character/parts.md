@@ -2,7 +2,7 @@
 
 > Basis: `src/character/vocabulary/slots.js`, `src/character/draw/`. When the code changes, fix this document in the same commit.
 
-The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 229 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
+The full list of `SLOTS` in `src/character/vocabulary/slots.js`. 33 slots, 232 parts. Drawing is `src/character/draw/` (a section = a file: `head.js` the outline and ears ·
 `hair.js` hair · `headgear.js` hats and horns · `face.js` eyes, brows, eyewear, nose, muzzle, cheeks and whiskers · `mouth.js` the mouth · `faceStates.js` the brow and mouth state sets · `body.js` the body and markings · `limbs.js` limbs and the tail).
 
 **The rule**: a slot holds **form (what it looks like)** only. Pose and action are `motion/` states (see [rules.md](rules.md)).
@@ -16,7 +16,7 @@ into an arch by switching off only that eye ([rules.md](rules.md) § a face part
 
 ## Head
 
-### head — the outline (7)
+### head — the outline (9)
 Built from `blobPath`'s superellipse (angularity), taper (the top/bottom width ratio) and size multipliers. The `HEAD_SHAPES` table.
 
 | Value | square | taper | rx / ry | Impression |
@@ -28,6 +28,8 @@ Built from `blobPath`'s superellipse (angularity), taper (the top/bottom width r
 | wide | 0.7 | +0.1 | 1.28 / 0.9 | Spread sideways |
 | egg | 0.2 | +0.28 | 0.94 / 1.14 | A tall egg |
 | block | 2.2 | 0 | 1.06 / 0.98 | Almost square |
+| wedge | 1.2 | −0.3 | 1.02 / 1.02 | An inverted trapezoid — a wide brow narrowing to the chin (the shape sheet's bruiser and its lanky one) |
+| jar | 1.4 | +0.32 | 1.04 / 1.12 | A narrow crown over a wide, angular jaw — pear's angular cousin, as block is the square's |
 
 Noise lumps (headLumps) are laid on top of the head. No shading — that is the light's job ([../drawing.md](../drawing.md) § the light).
 
@@ -414,8 +416,10 @@ A white fill (the grid, grin, fangs, tooth strips) is paper white and the rims a
 
 ## Body
 
-### body (4)
-bean (a crumpled ellipse) / box / dress (a bottom-heavy trapezoid) / tube (a narrow tube). Fill + outline.
+### body (5)
+bean (a crumpled ellipse) / box / dress (a bottom-heavy trapezoid) / tube (a narrow tube) / vee (an inverted trapezoid — shoulders
+1.3 of the width, waist 0.7: the bruiser's chest; like the dress it is measured at its narrow end, `BUILD.dressW`, and the arms pivot
+at its wide top, `SHOULDER_X`). Fill + outline.
 A quad is a horizontal blob regardless of the slot value.
 
 ### build — the build (5)
