@@ -1,6 +1,7 @@
 // Before/after comparison for drawing refactors — diffs the working tree's drawing against a git ref (HEAD by default) over **every slot value × species × roll**.
 //   node scripts/drawdiff.mjs          # compare against HEAD
 //   node scripts/drawdiff.mjs main     # compare against another ref
+//   DRAWDIFF_SKIP=pupil=sleepy,pupil=line node scripts/drawdiff.mjs   # leave out values you already know changed — the list (capped at 30) then shows the rest
 //
 // snapshot.mjs hashes one board (35 creatures) per layer, so it never visits every slot value. When drawing code moves in a big way (splitting files, turning it into a table),
 // run this — it hashes and compares 11 layers × 2 boil variants + limbs (× 2 boil variants, and their joints' places) + tail bones + brow/mouth states, sketch by sketch. diff 0 means the drawing is unchanged.
@@ -16,6 +17,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "..");
 const ref = process.argv[2] || "HEAD";
+// Values to leave out of the walk (slot=value, comma-separated) — a form change floods the capped list with the value it
+// changed; skipping it shows whether anything else moved
+const skip = new Set((process.env.DRAWDIFF_SKIP || "").split(",").filter(Boolean));
 
 const git = (cmd) => execSync(`git ${cmd}`, { cwd: root, encoding: "utf8" }).trim();
 const repoRoot = git("rev-parse --show-toplevel");
@@ -68,7 +72,13 @@ try {
   // The ref may predate the rename (a creature's `seed` became its `roll`, `proportions.wobbleSeed` its `hand`);
   // the working tree's drawing reads the new names, so its side of the spec carries both
   const modern = (s) => ({ ...s, roll: s.roll ?? s.seed, proportions: { ...s.proportions, hand: s.proportions.hand ?? s.proportions.wobbleSeed } });
+  // A combination that throws on one side (a cyclops under glasses — the board never draws it, the walk does) is written
+  // down as a difference and the walk goes on, instead of taking the whole comparison down with it
   const check = (rawSpec, label) => {
+    try { compare(rawSpec, label); }
+    catch (e) { note(`${label} threw: ${e.message}`); }
+  };
+  const compare = (rawSpec, label) => {
     const specOld = ghosted(oldM, rawSpec), spec = ghosted(newM, modern(rawSpec));
     for (const v of [0, 1]) {
       const a = oldM.drawCreature(specOld, v), b = newM.drawCreature(spec, v);
@@ -125,12 +135,18 @@ try {
           onlyOne.add(`only in ${ref}: ${slot}=${drawable.parts[slot]} (a base spec, drawn as ${values[0]})`);
           drawable.parts[slot] = values[0];
         }
+        // A skipped value the base spec itself carries would show in every value walked on it — it is drawn as the first value too
+        if (skip.has(`${slot}=${drawable.parts[slot]}`)) {
+          onlyOne.add(`skipped: ${slot}=${drawable.parts[slot]} (a base spec, drawn as ${values[0]})`);
+          drawable.parts[slot] = values[0];
+        }
       }
       for (const [slot, values] of Object.entries(oldSlots)) {
         if (!newM.SLOTS[slot]) { onlyOne.add(`only in ${ref}: slot ${slot}`); continue; }   // a renamed or removed slot — the working tree cannot draw it
         for (const value of values) {
           // A value the working tree no longer has (a removed part) cannot be drawn by it — noted once, not compared
           if (!newM.SLOTS[slot].includes(value)) { onlyOne.add(`only in ${ref}: ${slot}=${value}`); continue; }
+          if (skip.has(`${slot}=${value}`)) continue;
           check({ ...drawable, parts: { ...drawable.parts, [slot]: value } }, `${species}/${roll}/${slot}=${value}`);
         }
       }

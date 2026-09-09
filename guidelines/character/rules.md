@@ -157,4 +157,5 @@ is the default (judging form); B for motion.
 bones, brow/mouth states) sketch by sketch against a git ref (HEAD by default), over
 **every slot value × species × roll**. A refactor that splits files or turns branches into a table is not done
 until this is 0 — the gallery is the eye and this is the number. In a commit that **changes** form, a difference
-is correct (check the list to see which slot values changed).
+is correct (check the list to see which slot values changed; the list stops at 30, so leave out the values you meant to change with
+`DRAWDIFF_SKIP=slot=value,…` and see whether anything else moved). A combination that throws on one side is listed as a difference, not a crash.

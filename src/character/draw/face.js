@@ -457,7 +457,9 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
   for (const eye of eyes) {
     ink.contour(blobPath(eye.x, eye.y, eye.r * scale, eye.r * scale * 0.92, { lumps: 4, amount: 0.06, noise: null }), { color: ink0 });
   }
-  ink.line([[eyes[0].x + eyes[0].r * scale, eyes[0].y], [eyes[1].x - eyes[1].r * scale, eyes[1].y]], { color: ink0, size: "S" });
+  // The bridge joins two lenses. A cyclops wears one lens and no bridge — the board never puts glasses on one (applyConstraints),
+  // but the gallery pins any eye kind under any eyewear, and drawing a bridge to a second eye that is not there threw
+  if (eyes.length === 2) ink.line([[eyes[0].x + eyes[0].r * scale, eyes[0].y], [eyes[1].x - eyes[1].r * scale, eyes[1].y]], { color: ink0, size: "S" });
   if (kind === "goggles") {
     for (const eye of eyes) {
       ink.line([[eye.x + eye.side * eye.r * scale, eye.y], [eye.side * box.headRx * 1.02, eye.y + 0.02]], { color: ink0 });
