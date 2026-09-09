@@ -82,9 +82,9 @@ export function eyeFloor(spec, eyes, x) {
 // on a white), as lines into the sketch the eye's white is in, so a larger eye's white still covers a smaller eye's
 // mark. They were eye kinds, drawn at the eye's own size on the bare face; an eye with no ball takes no mark
 // (spec.js pins its pupil to dot). The rig's live eyes call this too (scene/rig.js) — the pupil mesh is whatever
-// mark the slot says, and it still shrinks on a startle and follows the gaze
-export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot) {
-  const kind = spec.parts.pupil || "dot";
+// mark the slot says, and it still shrinks on a startle and follows the gaze. `kind` is the slot's unless a face state forces one for the
+// moment — the ^^ arch of a smile or a wink (drawEyes' state.pupil, scene/rig.js lidSketches)
+export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot, kind = spec.parts.pupil || "dot") {
   const dark = spec.palette.ink;
   if (kind === "cross") {
     sketch.line([[cx - reach, cy - reach], [cx + reach, cy + reach]], { color: dark });
@@ -134,8 +134,12 @@ export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot) {
   } else dot();
 }
 
-export function drawEyes(ink, fills, spec, box, eyes) {
+// `state.pupil` — a pupil a face state forces for the moment (the ^^ arch of a smile or a wink, scene/rig.js lidSketches):
+// every eye with a white takes it in place of its own — the heavy-lidded set too, whose slot pupil is the dot alone, and
+// the hollow eye, which has none of its own — so a smile never takes the white away. Only the bare dot eye is not here
+export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
   const kind = spec.parts.eyes;
+  const pupil = state.pupil || spec.parts.pupil;   // what the marked kinds draw — the state's, else the slot's
   // The eye's line is the face ink — an outline is not a surface, and no material moves it. The pupil is one
   // (part: "eyes" on its fills — paintPart takes the worn material's colour when a hand moved it) and the white
   // another (part: "eyeWhite", vocabulary/wear.js)
@@ -163,7 +167,11 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       const path = blobPath(eye.x, eye.y, eye.r * 1.05, eye.r * 0.7, eyeWob(spec, eye, 2, { amount: 0.1 }));
       paintPart(fills, spec, path, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
       fills.contour(path, { color: dark });
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, eyeWob(spec, eye, 3, { amount: 0.05 })), dark, { own: true, part: "eyes" });
+      // The spindle is the pupil — through pupilMark like side and half, so the ^^ state can stand where it is (scene/rig.js redraws
+      // the eye with pupil=happy: the almond stays, the spindle becomes the arch). On the board the slit keeps its own spindle —
+      // spec.js NO_MARK_EYES pins the slot to dot
+      pupilMark(fills, spec, eye, [eye.x, eye.y], eye.r * 0.4, () =>
+        paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, eyeWob(spec, eye, 3, { amount: 0.05 })), dark, { own: true, part: "eyes" }), pupil);
     } else if (kind === "side") {
       // ¬_¬ — a sideways glance. Half-lidded (a lower arc plus a lid line) but with the pupil pushed to one side (which side is per individual)
       const dir = spec.proportions.hand % 2 ? 1 : -1;
@@ -176,10 +184,12 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       pupilMark(fills, spec, eye, [eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12], eye.r * 0.36, () =>
-        paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true, part: "eyes" }));
+        paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true, part: "eyes" }), pupil);
     } else if (kind === "hollow") {
-      // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket)
+      // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket).
+      // A smile still keeps the white — the state's arch is drawn in the empty eye at a ring's reach
       eyeball(eye, 6);
+      if (state.pupil) pupilMark(fills, spec, eye, [eye.x, eye.y], eye.r * 0.55, () => {}, state.pupil);
     } else if (kind === "lidded" || kind === "sharp" || kind === "soft") {
       // The heavy-lidded set — **the same eye at different tilts**: lidded flat · sharp tilted toward the nose (the fierce look of a lifted outer corner) ·
       // soft tilted the other way (the gentle look of a drooping outer corner). The tilt rotates the white, the lid line and the pupil together about the eye's centre —
@@ -212,9 +222,11 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
       fills.contour(path, { color: dark });
       // The pupil — peeking out from under the lid line (slightly left or right per individual). It has to be stroked **before** the line so the line passes over the pupil.
-      // Always the round one: under that thick lid a mark is a smudge, so the pupil slot does not reach this set (spec.js NO_MARK_EYES pins it to dot)
+      // The round one, always: under that thick lid a mark is a smudge, so the pupil slot does not reach this set (spec.js NO_MARK_EYES pins it to dot) —
+      // only a face state's arch does (a smile keeps the white and the lid, and the pupil under it becomes the ^^)
       const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
-      paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" });
+      pupilMark(fills, spec, eye, [eye.x + eye.r * gaze, eye.y - eye.r * 0.16], eye.r * 0.36, () =>
+        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.16, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" }), state.pupil || "dot");
       // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
       fills.line(lidLine, { color: dark });
     } else if (kind === "half") {
@@ -228,7 +240,7 @@ export function drawEyes(ink, fills, spec, box, eyes) {
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       pupilMark(fills, spec, eye, [eye.x, eye.y - eye.r * 0.12], eye.r * 0.36, () =>
-        paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true, part: "eyes" }));
+        paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true, part: "eyes" }), pupil);
     }
     // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
     // as separate meshes to move the startle (pupil shrink), gaze and lids.
@@ -236,8 +248,10 @@ export function drawEyes(ink, fills, spec, box, eyes) {
 }
 
 // The eye kinds that draw an eyeball — the rig's live eyes, and the static kinds that paint a white (the slit,
-// side, hollow, half and the lidded three above). The rest is the dot on the bare face
-const EYEBALL_KINDS = new Set([...RIG_EYES, "slit", "side", "hollow", "half", "lidded", "sharp", "soft"]);
+// side, hollow, half and the lidded three above). The rest is the dot on the bare face. A smile keeps every one of
+// these whites and swaps the pupil for the arch (scene/rig.js lidSketches, drawEyes' state.pupil); the dot eye alone
+// becomes the arch itself
+export const EYEBALL_KINDS = new Set([...RIG_EYES, "slit", "side", "hollow", "half", "lidded", "sharp", "soft"]);
 export function drawFace2(ink, fills, spec, box, eyes) {
   const kind = spec.parts.face2;
   if (kind === "none") return;
