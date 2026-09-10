@@ -114,11 +114,14 @@ export const PENCIL = {
   ghost: { width: 0.62, ink: [0.2, 0.5], slip: [0.5, 1.6] },   // one per ghost, bottom-up: the deepest faintest, the one just under the line darkest
   // The shed. Only a line at least minWidth wide (world) sheds. density: the share of re-sample points that drop a crumb (per stroke).
   // An ink crumb sits on the edge, its centre scatter × the half width out — never past the edge, so it frays the line instead of
-  // floating loose beside it; a bite (the bite share of crumbs) is a square of what shows through the line — the paper under a dark
+  // floating loose beside it; a bite (the bite share of crumbs) is a chip of what shows through the line — the paper under a dark
   // line, a deep tone of its own colour under a light one (a light line is a mark on a dark surface)
-  // inside, up to inside × the half width from the spine. A crumb's side is size (world) — fixed, not a share of the width:
-  // graphite sheds the same grain whether the line is thin or thick, so a thick line does not shed boulders
-  grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0025, 0.0045] }
+  // inside, up to inside × the half width from the spine. A crumb's extent is size (world) — fixed, not a share of the width:
+  // graphite sheds the same grain whether the line is thin or thick, so a thick line does not shed boulders. Each is a **shard**
+  // (Sketch.crumb) — five corners at uneven radii, turned its own way and a little longer one way than the other — and the sizes lean
+  // small (skew: the noise's magnitude to this power — most crumbs are dust, a few are the full size). They were axis-aligned squares,
+  // and a square reads as a pixel the moment a line is looked at up close; graphite does not shed squares
+  grit: { minWidth: 0.006, density: [0.2, 0.55], scatter: [0.8, 1.0], bite: 0.45, inside: 0.8, size: [0.0018, 0.0052], skew: 1.6 }
 };
 
 
@@ -164,11 +167,26 @@ export class Sketch {
   // The goofy fur (medium/fur.js) — how hair is grown along a path, by name
   fur(points, name, options) { return furWith(this, points, name, options); }
 
-  // A small axis-aligned square — the pencil's crumbs and bites
-  square(cx, cy, size, rgb) {
-    const h = size / 2;
-    this.triangle(cx - h, cy - h, cx + h, cy - h, cx + h, cy + h, rgb);
-    this.triangle(cx - h, cy - h, cx + h, cy + h, cx - h, cy + h, rgb);
+  // A crumb — the pencil's crumbs and bites: a small shard, a fan of five corners at uneven radii about the centre, turned by angle
+  // and stretched 1~1.5 along its own axis. u(k) hands back a number in [0, 1] per corner from the drawing noise, so the shard is the
+  // sketch's own and boils with it. size is its extent (the diameter a full-radius corner reaches). It was an axis-aligned square
+  crumb(cx, cy, size, angle, u, rgb) {
+    const n = 5;
+    const r = size / 2;
+    const stretch = 1 + 0.5 * u(9);
+    const ca = Math.cos(angle), sa = Math.sin(angle);
+    const pts = [];
+    for (let k = 0; k < n; k += 1) {
+      const a = (k / n) * Math.PI * 2 + (u(k) - 0.5) * ((Math.PI * 2) / n) * 0.7;   // the corners a little off their even spacing
+      const rk = r * (0.45 + 0.55 * u(k + 5));                                       // and at uneven radii
+      const lx = Math.cos(a) * rk * stretch, ly = (Math.sin(a) * rk) / stretch;
+      pts.push([cx + lx * ca - ly * sa, cy + lx * sa + ly * ca]);
+    }
+    for (let k = 0; k < n; k += 1) {
+      const [ax, ay] = pts[k];
+      const [bx, by] = pts[(k + 1) % n];
+      this.triangle(cx, cy, ax, ay, bx, by, rgb);
+    }
   }
 
   // The pencil — every number in PENCIL (above). closed draws a seamless loop: no overshoot, and the sines snapped to whole cycles
@@ -344,9 +362,11 @@ export class Sketch {
         const isBite = noise(ph * 0.31 + i * 5.39) * 0.5 + 0.5 < G.bite;
         const h = halves[i];
         const d = isBite ? v * G.inside * h : Math.sign(v || 1) * (G.scatter[0] + (G.scatter[1] - G.scatter[0]) * Math.abs(v)) * h;
-        const size = G.size[0] + (G.size[1] - G.size[0]) * Math.abs(noise(ph * 0.17 + i * 7.13));
+        const size = G.size[0] + (G.size[1] - G.size[0]) * Math.pow(Math.abs(noise(ph * 0.17 + i * 7.13)), G.skew);   // most are dust
+        const angle = noise(ph * 0.41 + i * 4.73) * Math.PI;                                                            // turned its own way
+        const u = (k) => noise(ph * 0.19 + i * 8.71 + k * 3.37) * 0.5 + 0.5;                                          // the shard's corners
         this.skinT = tagAt(i);   // a crumb is one point — one tag is right for it
-        this.square(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, isBite ? biteRgb : passRgb);
+        this.crumb(path[i][0] + normals[i][0] * d, path[i][1] + normals[i][1] * d, size, angle, u, isBite ? biteRgb : passRgb);
       }
       this.skinT = NaN;
     }

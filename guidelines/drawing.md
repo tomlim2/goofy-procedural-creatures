@@ -54,7 +54,10 @@ the board goes through it. It has four habits: the spine wanders on two sines **
 **breathes** on two more sines plus a per-stroke jitter, the ends **run past** where they should stop
 instead of pinching to a point, and a thick line **sheds** — ink crumbs outside the edge, and bites inside of
 whatever shows *through* the line: the paper under a dark one, and a deep tone of its own colour under a
-**light** one (a light line is a mark on a dark surface, and a paper-coloured bite there only fattened it). Two parts of the reference are left out on purpose: its 62% ink (our ink stays opaque) and
+**light** one (a light line is a mark on a dark surface, and a paper-coloured bite there only fattened it). A crumb
+or a bite is a **shard** (`Sketch.crumb` — five corners at uneven radii, turned its own way, a little longer one way
+than the other), and the sizes lean small: most are dust, a few the full size (`grit.skew`). They were axis-aligned
+squares, and a square reads as a pixel the moment a line is looked at up close — graphite does not shed squares. Two parts of the reference are left out on purpose: its 62% ink (our ink stays opaque) and
 its tremor (the sizzle).
 
 Every number lives in the `PENCIL` table at the top of `stroke.js` and nowhere else — tune there. A
