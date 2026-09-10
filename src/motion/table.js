@@ -36,6 +36,7 @@ export function ghostMotion(M) {
     armActions: null, armActionGap: null,
     quadActions: null, quadActionGap: null,
     bodyActions: null, bodyActionGap: null,
+    dance: null,   // a ghost drifts; it does not dance
     legTap: null, legStep: null,
     stretch: null, shiver: null,
     wink: null, happyHold: null, angry: null, surprise: null, emojis: null,
@@ -64,6 +65,9 @@ export const MOTION = {
     // Base states — alternates between standing (idle) and walking in place (walk). walk: hz step frequency · leg leg amplitude (rad) · bob body lift (units) · sway side lean (rad)
     modes: [["idle", 4], ["walk", 1]], modeHold: { idle: [30, 90], walk: [6, 14] },
     walk: { hz: 1.8, leg: 0.3, bob: 0.01, sway: 0.05, arm: 0.14, trip: [0.1, 0.18], speed: 0.045 },   // trip the distance out and back (cells), speed cells/second
+    // The dance (the screen's DANCE; the routine and the beat are actions.js DANCE): lean the hip sway and the arm sway's lean (rad) · scoot the
+    // side-step with the hips (units) · step the legs' scissor (rad) · bob the bounce on the beat (units) · bounce the knee dip on the beat while the arms sway (of the leg)
+    dance: { lean: 0.13, scoot: 0.03, step: 0.22, bob: 0.012, bounce: 0.05 },
     sway: [0.012, 0.032], swayPeriod: [2.6, 4.6],
     rock: 0.006,
     roll: null, dip: null,
@@ -88,6 +92,7 @@ export const MOTION = {
     // Base states — alternates between standing (idle), lying asleep (sleep), walking (walk) and sitting (sit). [state, weight] is the ratio drawn at a start or transition; the hold is modeHold
     modes: [["idle", 3], ["sleep", 1], ["walk", 1.5], ["sit", 1.5]], modeHold: { idle: [40, 120], sleep: [25, 60], walk: [6, 16], sit: [15, 45] },
     walk: { hz: 2.6, leg: 0.32, bob: 0.008, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.07, tail: 0.12 },   // a trot — diagonal leg pairs alternate, and the tail sways with the step
+    dance: null,   // the dance is the bipeds' — a quad stands through it
     quadActions: [["wag", 3.5], ["scratch", 1]], quadActionGap: [6, 16],   // dogs wag often
     // The tail wags whenever it smiles ^^ (a happy hold or a ^^ blink). 3 Hz — 8 ticks a cycle at 24; at 4 Hz the wag strobed (6 ticks: up·up·mid·down·down·mid).
     // seated: the multipliers while sitting — a slow, small wag (content), not the standing one
@@ -126,6 +131,7 @@ export const MOTION = {
     // Cats sleep and sit more often, and for longer
     modes: [["idle", 2], ["sleep", 1], ["walk", 1], ["sit", 1.5]], modeHold: { idle: [40, 120], sleep: [30, 90], walk: [6, 14], sit: [20, 60] },
     walk: { hz: 2.2, leg: 0.28, bob: 0.006, sway: 0, arm: 0, trip: [0.1, 0.16], speed: 0.05, tail: 0 },   // an unhurried walk — the tail does not sway with it (a cat does not wag like a dog)
+    dance: null,
     // A cat does not wag its tail like a dog — the tail only ever swishes and flicks. Its one action is scratching with a hind paw
     quadActions: [["scratch", 1]], quadActionGap: [10, 28],
     // A rare front-paw knead, an even rarer step
@@ -164,6 +170,7 @@ export const MOTION = {
     legTap: [14, 34], legStep: null,
     modes: [["idle", 4], ["walk", 1]], modeHold: { idle: [25, 80], walk: [5, 12] },
     walk: { hz: 2.3, leg: 0.36, bob: 0.012, sway: 0.06, arm: 0.16, trip: [0.1, 0.18], speed: 0.06 },   // a bouncy walk
+    dance: { lean: 0.16, scoot: 0.035, step: 0.26, bob: 0.018, bounce: 0.06 },   // an imp throws itself into it
     sway: [0.015, 0.04], swayPeriod: [2, 3.8],
     rock: 0.004,
     roll: null, dip: null,
@@ -186,6 +193,7 @@ export const MOTION = {
     modes: [["idle", 3], ["walk", 1]], modeHold: { idle: [25, 80], walk: [6, 14] },
     // The stomp — a slow, heavy step with a big body lift and lean; short trips
     walk: { hz: 1.4, leg: 0.26, bob: 0.018, sway: 0.05, arm: 0.05, trip: [0.1, 0.16], speed: 0.045 },
+    dance: { lean: 0.09, scoot: 0.02, step: 0.16, bob: 0.008, bounce: 0.04 },   // heavy — a smaller sway and step, the tiny arms along for the ride
     sway: [0.01, 0.025], swayPeriod: [2.6, 4.6],
     rock: 0.006,
     roll: null, dip: null,

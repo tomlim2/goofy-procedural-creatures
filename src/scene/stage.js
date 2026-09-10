@@ -105,6 +105,12 @@ export function createStage(canvas, { hifiveRush = 1 } = {}) {
   // along the row); "front" — stood facing +z, the way paper standees are left on a desk, and seen edge-on from the side
   let facing = "camera";
   let built = null;   // the lattice size the camera was last homed for
+  // A forced action — the DANCE card (the board's ACTION card, scene/index.js): every clock is told, and a running
+  // high five is let go (a forced body would fight it). null follows each creature's own schedule
+  let forcedAction = null;
+  function applyForced(item) {
+    if (item.clock) item.clock.force(forcedAction, item.spec.roll % 2 ? 1 : -1);   // a house has no clock
+  }
 
   // The camera — an orbit about the lattice's centre. yaw 0 is in front, looking toward −z
   const orbit = { yaw: 0, pitch: STAGE.homePitch[0], dist: 8 };
@@ -176,6 +182,7 @@ export function createStage(canvas, { hifiveRush = 1 } = {}) {
   }
 
   function place(item, index) {
+    if (forcedAction) applyForced(item);
     const [x, z] = slotPosition(index);
     item.baseX = x;
     item.baseY = 0;
@@ -300,7 +307,7 @@ export function createStage(canvas, { hifiveRush = 1 } = {}) {
       item.smudge.position.set(item.group.position.x, 0.002, item.group.position.z);
       item.smudge.rotation.y = yaw;
     }
-    if (bindView) hifives.releaseAll();
+    if (bindView || forcedAction) hifives.releaseAll();
     else hifives.update(creatures, columns, clockNow, (x, y, anchor) => sparks.burst(x, y, clockNow, noise, { z: anchor.group.position.z, yaw }));
     sparks.update(clockNow);
     restack();
@@ -320,6 +327,7 @@ export function createStage(canvas, { hifiveRush = 1 } = {}) {
     setBind: (value) => { bindView = value; },
     setBoil: (value) => { boilOn = value; },
     setFacing: (value) => { facing = value === "front" ? "front" : "camera"; },
+    setAction: (name) => { forcedAction = name || null; for (const item of creatures) applyForced(item); },
     renderer, scene, camera, creatures: () => creatures
   };
 }

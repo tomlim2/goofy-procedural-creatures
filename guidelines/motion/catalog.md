@@ -22,8 +22,8 @@ Every frame, `update(t)` returns a state object and `scene/animate.js` applies i
 | Easing | `ease.js` | The shape of every curve — `bump`, `bumps`, `envelope`, `ramp` (envelopes) · `damp` (critically damped follow). Velocity 0 at the start and end ([rules.md](rules.md) § easing) |
 | Events | `events.js` | Blink · gaze dart · startle · nod · sniff dip · stretch · shiver · paw flick · step in place · tail flick · emoji schedule · regen |
 | Emoji | `emoji.js` | ♥ ! ? … above the head — not a motion but **a separately triggered animation layer**. A curve per kind (float, pop, wobble, mumble), one channel. Motions' `emoji` triggers and the idle schedule fire into it |
-| States | `states.js` | **The base state (mode)** idle, sleep, walk, sit · the ^^ happy eye · wink · head tilt · brow state · mouth state · look (a held face turn) · action scheduling (arm, body and quad layers each — when and which action) |
-| Actions | `actions.js` | **idle** (the base — a biped A-pose, a quad's standing stance) and the **content** of the actions, in three layers: arm `ACTIONS` (hand target, elbow direction, oscillation, which arm, IK) · body `BODY_ACTIONS` (hopping in place — shared) · quad `QUAD_ACTIONS` (one leg or the tail — angle, oscillation). The layers overlap. The sitting pose `sitPose(rig.body)` (the content of the sit base state — solved from the rig dimensions) |
+| States | `states.js` | **The base state (mode)** idle, sleep, walk, sit — and dance, forced only · the ^^ happy eye · wink · head tilt · brow state · mouth state · look (a held face turn) · action scheduling (arm, body and quad layers each — when and which action) |
+| Actions | `actions.js` | **idle** (the base — a biped A-pose, a quad's standing stance) and the **content** of the actions, in three layers: arm `ACTIONS` (hand target, elbow direction, oscillation, which arm, IK) · body `BODY_ACTIONS` (hopping in place — shared) · quad `QUAD_ACTIONS` (one leg or the tail — angle, oscillation). The layers overlap. The sitting pose `sitPose(rig.body)` (the content of the sit base state — solved from the rig dimensions) · the dance `DANCE` · `danceRole` · `danceFrame` (the song, the three dancers and one tick of the routine; § the dance) |
 
 ## The state object
 
@@ -55,7 +55,8 @@ What `clock.update(t)` returns, and where the scene applies it.
 | bodyDrop | units ≥ 0 | **The torso is the crouch's master** — how far the body sinks below standing (the jump's and the five's crouches). The scene eases this one scalar and **solves the knees off the displayed height every frame** (animate.js + solveLeg): move the torso and the legs bend by themselves, the feet held to the floor by construction |
 | action / actionSide | The action name of the arm layer (biped) or the leg and tail layer (quad), or null / the active arm's side or the leg index | For debugging and statistics. The scene only looks at arms and legOffset |
 | bodyAction | The body layer's action name, or null | "jump" while hopping in place. hopY and squash are its curve |
-| mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" · "float" (a ghost) / 0~1 / 0~1 / 0~1 | The base state and how far asleep, walking or sitting it is (eased). All of it is already blended into legOffset, hopY, sway, arms and so on. The scene only uses sleep, to turn on the sleep lid (the static eye cover) |
+| mode / sleep / walk / sit | "idle" · "sleep" · "walk" · "sit" · "float" (a ghost) · "dance" (forced — § the dance) / 0~1 / 0~1 / 0~1 | The base state and how far asleep, walking or sitting it is (eased). All of it is already blended into legOffset, hopY, sway, arms and so on. The scene only uses sleep, to turn on the sleep lid (the static eye cover) |
+| facing | ±1 | group.scale.x — a tailed creature's walking direction (below), and the dance's spin riding on it: the card thinning to paper and coming back mirrored |
 | bodyTilt | rad | bodyGroup.rotation.z — the body tilt of a quad sit (negative = the back goes down), about **the front legs' root** (item.bodyPivot). sitPose(rig.body).tilt × sit |
 | walkX / facing | cells / ±1 | group.position.x (the distance moved from home) / group.scale.x (a TAILED creature — the quads and the rex — flipping to face its walking direction, so the tail trails; a tailless biped is always 1, and a high five's commanded trip never flips) |
 | tailAngle / tailTip / tailPuff / tailRaise / tailRaisePose | rad / rad / 0~1 / 0~1 / [rad × bones] or null | The root bone's rotation / the tip bone's rotation (relative to the root) / the bone thickness scale (1 + 0.6·puff, perpendicular to the spine) / blending each joint from rest toward its raise target — vertical, or `tailRaisePose` (a ♥'s question mark: joint world angles) (scene/animate.js) |
@@ -204,9 +205,9 @@ rubbery squash on the body; the earlier scale squash was taken out on purpose):
 goes out as `hopY` and the envelopes `dropK` and `flight`; the clock solves the legs onto them
 (`solveLeg`), subtracts the crouch descent from `hopY`, and adds `hopY×4` to the shoulders for the arms.
 
-### The base state (mode) — idle · sleep · walk · sit · float
+### The base state (mode) — idle · sleep · walk · sit · float · dance
 
-An individual is always in some **base state**. idle (standing) · sleep (lying asleep, quads) · walk (walking — it moves, every species) · sit (sitting, quads) · float (a ghost, below — its only state). A state like running would join here.
+An individual is always in some **base state**. idle (standing) · sleep (lying asleep, quads) · walk (walking — it moves, every species) · sit (sitting, quads) · float (a ghost, below — its only state) · dance (the Dumb Ways to Die chorus, bipeds — forced from a screen and never scheduled, below). A state like running would join here.
 The action layers stack on top — while asleep, actions, looking, startle and winking all rest; while walking, body actions (jumping) and quad actions rest while arm actions carry on (waving as it walks);
 and while sitting only body actions (jumping) rest, with quad actions (scratching with a hind paw, wagging), the face and looking carrying on (it scratches while sitting).
 `initMode`/`stepMode` in `states.js`; `modes` (the ratios), `modeHold` (the hold) and `walk` (the step parameters) in `table.js`. **Transitions pass through idle** — from idle
@@ -240,6 +241,41 @@ the front legs stand at world angle 0 (vertical) and the hind legs fold forward 
 A dog's tail tilts with the body and drops a little further (−0.3) to lie on the floor, its **swish stilled by 90%** — a seated tail lies and only its tip taps and flicks (a tail sweeping the floor read as a tail moving down); the wag carries on. A cat's tail **stays up**: the arch keeps 70% and the swish carries on, so a seated cat swings its tail up, back and forth — awake, a cat's tail points up and nowhere else. The sit lays the whole leg forward from the hip, so with a short body and long legs the hind foot passes the front one; the tilt
 is then reduced so the hind foot comes no further than between the front pair, and a build whose hips still sit more than 0.045 off the floor (long legs plus a short body, 9% of 600) **cannot sit** — it stands through the sit state.
 Scratching with a hind paw and wagging carry on while seated (a leg mid-action wins), while jumping rests. Measured at cat 12.9% and pup 11.1% (180 s × 40 creatures, sit > 0.5). Force it with the ACTION card's SIT.
+
+### The dance — the Dumb Ways to Die chorus, forced only
+
+The stage's DANCE card and the debug screen's ACTION DANCE (`clock.force("dance")`) put every biped into the chorus of *Dumb Ways to
+Die* as the video dances it. A base state like walk (a blend, a t-based phase), and the one state no species' pool carries: it is never
+scheduled, so a clock that is never forced is byte-identical with the feature in place (snapshot motion diff 0), and there is no firing
+frequency to count. The routine is `DANCE` and `danceFrame` in `actions.js`; the amplitudes are each species' `dance` in `table.js`.
+
+**The song.** 128 bpm, 4/4 (Wikipedia); the loop is one chorus, nine bars — 36 beats — laid out by the chorus's own timing (the synced
+lyrics: *Dumb ways to die · so many dumb ways to die* 0~7.5 s, *dumb ways to di-i-i-ie* 7.5~11 s, *so many dumb ways to die* 11 s~, and
+a breath before the next verse — 16.4 s, 35 beats). **The beat is the board's, not the individual's**: the phase runs off the global
+tick every creature on a screen shares — the one place `t` is not taken from birth ([rules.md](rules.md) § birth-relative time) — so
+every dancer is on the same beat whatever its birth. Every channel is a function of the beat — no rng, no state.
+
+**Three dancers, by roll** (`danceRole` — the video's three kinds, the Dumb Ways to Die wiki's dancer pages; 13 · 4 · 3 of 20):
+
+| Dancer | Beats 0~16 | 16~20 | 20~23 | 23.5 · 24 | 24~36 |
+| --- | --- | --- | --- | --- | --- |
+| **standard** (65%) | **hula and pacing** — the hips swing one side per beat (`lean`, the head held up against it, `head.hula` −0.6), a side-step with them (`scoot`, shiverX), the legs scissoring (`step`), a bob on the beat (`bob`); the arms out at the sides, one rising as the other dips (`hands.out`, `wave`) | **the spin** — one turn, eased in and out: the card thins to paper, comes back mirrored, and round (`facing` × cos) | **the jump** — one big crouch-and-spring (`DANCE.jump` through `jumpCurve`: the same crouch-through-the-legs and flight as the body layer's hop; the arms are dragged up by it) | — | **the arm sway** — the hands over the head tilting to one side and the other with the body, two beats a side (`hands.up`, `swayBeats`), the head going over with it (`head.sway` 0.35), a knee dip on the beat (`bounce`) |
+| **secondary** (20%) | stands and **claps over its head** on two and four (`hands.apart` → the centre line, `clapBeats`), a small bob with each | claps | claps | **two claps in a row**, a half beat apart — the two claps in the song, right after the standard dancers' jump | the arm sway with everyone |
+| **tertiary** (15%) | the arm sway | the arm sway | the arm sway | the arm sway | the arm sway |
+
+Every dancer **sings** — the mouth moves on the half beat (`mouthAlt`) through the sung lines, up to beat 31. A quad and a ghost stand
+through DANCE (`dance` null in the table — its mode reads idle), the way a build that cannot sit stands through sit.
+
+- **The arms are the dance's** — a target per side (`def.poseOf`, `solveArms`), blended from idle's hand target by `danceK` so they come
+  into it and out of it instead of snapping; the phases crossfade over `edge` (0.75 beat) at every seam, the loop's included. Every dance
+  target keeps its hand above the shoulder line, so the elbow's side never flips mid-move (it did, at the hula's wave crossing zero:
+  the shoulder jumped 1.2 rad in a tick). The arm-action schedule keeps stepping underneath; only its result is set aside
+- `danceK` (`approach` 0.08, about half a second) blends it in and out. While it dances the body layer rests (no hop of its own) and the
+  walks stop where they stand (a forced base state). Forced from a screen, the scene lets every running high five go, as for any forced action
+- Writes into `sway`, `shiverX`, `hopY`, `headAngle`, `headBob`, `legOffset`, `bodyDrop`, `facing`, both arms and `mouthAlt`
+- Measured over one loop of a standard, a secondary and a tertiary dancer born at 0, 3.25 and 5.5 s: every channel continuous at 24 ticks (the
+  largest per-tick change in a shoulder is the arms coming up after the jump, 0.4 rad, and the secondary's double clap, 0.7 rad — a clap is
+  quick); a cat under DANCE reads idle every tick
 
 ### The ghost — float, and nothing else
 

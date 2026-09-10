@@ -302,6 +302,7 @@ if (actionSel) {
   addOption(actionSel, "sleep", "SLEEP — asleep (quad)");
   addOption(actionSel, "sit", "SIT — sitting (quad)");
   addOption(actionSel, "walk", "WALK — walking (out and back home)");
+  addOption(actionSel, "dance", "DANCE — the Dumb Ways to Die chorus (bipeds)");
   // Body actions — shared by bipeds and quads (forced, they repeat with a rest between)
   for (const [name, def] of Object.entries(BODY_ACTIONS)) addOption(actionSel, name, `${name.toUpperCase()} — ${def.label} (body)`);
   // Quad actions — they only bite on cats and dogs (bipeds idle)

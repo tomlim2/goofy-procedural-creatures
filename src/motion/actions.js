@@ -104,6 +104,108 @@ export const BODY_ACTIONS = {
   }
 };
 
+// The dance — the chorus of *Dumb Ways to Die*, as the video dances it. A **base state** (motion/index.js — like walk, a blend and a
+// t-based phase), forced from the screen's DANCE and never scheduled; bipeds only (table.js `dance`, null on the quads, which stand
+// through it the way a build that cannot sit does). What is here is the song's — one clock for the whole cast: the phase runs off the
+// board's time, not the individual's birth, so every dancer is on the same beat. How far each species leans, steps and bobs is its own
+// (table.js dance).
+//
+// The routine, from the video (the Dumb Ways to Die wiki's dancer pages) and the chorus's own timing (128 bpm, 4/4 — Wikipedia; the
+// synced lyrics: "Dumb ways to die · so many dumb ways to die" 0~7.5 s, "dumb ways to di-i-i-ie" 7.5~11, "so many dumb ways to die"
+// 11~ and a breath before the next verse — 16.4 s, 35 beats; the loop is 36). Three kinds of dancer, by roll:
+//   standard   hula dancing and pacing to the beat (the hips swinging one side per beat, a side-step with them, the legs scissoring,
+//              the arms out at the sides, one rising as the other dips) through the first two lines · a SPIN on "dumb ways to di-" (a
+//              card turning through paper) · the JUMP on the held note (one big crouch-and-spring) · then the arms up over the head
+//              swaying side to side with the body, two beats a side, to the end
+//   secondary  stands and claps over its head on every beat, claps twice in a row right after the standard dancers' jump (the two
+//              claps in the song), then swings its arms with the rest
+//   tertiary   nothing but the arm sway, the whole way
+// Every dancer sings — the mouth moves on the half beat while a line is sung
+export const DANCE = {
+  bpm: 128,                 // the song's tempo; the beat is the board's clock (index.js)
+  beats: 36,                // the loop — one chorus, nine bars
+  // the standard dance, in beats of the loop: hula [from, to] · spin [from, to] · the jump's start · the two claps · the arm sway [from, to]
+  phases: { hula: [0, 16], spin: [16, 20], jump: 20, claps: [23.5, 24], sway: [24, 36] },
+  edge: 0.75,               // beats a phase fades in and out over — the seams crossfade, the loop's included
+  swayBeats: 2,             // beats per side in the arm sway (the hula sways one per side)
+  head: { hula: -0.6, sway: 0.35 },   // the head against the lean: it stays up while the hips swing (the bean's), and goes over with the arm sway
+  jump: { hops: 1, dur: 0.75, amp: 1.3, antic: 0.47, settle: 0.25 },   // one big crouch-and-spring (jumpCurve) — 1.47 s, three beats and a bit
+  // hand targets as multiples of reach [x outward, y up]: out — the hula arms, wave how far one rises as the other dips (the hand
+  // stays above the shoulder line: every dance target keeps y > 0, so the elbow's side never flips mid-move) · apart — the clap's
+  // open hands, clapUp how much they lift as they meet at the centre line · up — the sway's hands over the head, x the tilt a side
+  hands: { out: [0.85, 0.14], wave: 0.12, apart: [0.3, 0.9], clapUp: 0.08, up: [0.32, 0.92] },
+  clapBeats: 2,             // a clap every this many beats — on two and four — until the double clap after the jump
+  roles: [13, 17],          // by roll, of 20: below the first standard (65%), below the second secondary (20%), the rest tertiary (15%)
+  sing: 31,                 // the mouth moves on the half beat while a line is sung — up to this beat of the loop
+  label: "the Dumb Ways chorus (bipeds)"
+};
+
+// Which of the video's three dances this individual does, off its roll
+export function danceRole(key) {
+  const r = key % 20;
+  return r < DANCE.roles[0] ? "standard" : r < DANCE.roles[1] ? "secondary" : "tertiary";
+}
+
+// One tick of the dance at beat b of the loop (0 ≤ b < DANCE.beats), for a role, with this species' amplitudes D (table.js dance) and
+// the arm rig (a clap meets at the centre line, −arm.x in shoulder terms). Everything is a function of b — no rng, no state — so every
+// dancer on a screen, born whenever, is on the same beat. What comes back is laid over idle by the clock:
+//   lean rad (sway) · scoot units (the side-step, shiverX) · step rad (the legs' scissor) · bob units (on the beat, hopY) · head rad ·
+//   bounce (a knee dip on the beat, a fraction of the leg) · spin (the facing multiplier: 1 → 0 → −1 → 0 → 1, a card turning) ·
+//   jump {hopY, dropK, flight} (jumpCurve's) · hand(side) the hand target [x, y] in reach multiples · sing
+export function danceFrame(b, role, D, arm) {
+  const P = DANCE.phases, e = DANCE.edge, N = DANCE.beats, H = DANCE.hands;
+  const frac = (x) => x - Math.floor(x);
+  // a window from a to c, faded e beats over each end; the loop's seam is looked at one loop either way
+  const win = (a, c) => {
+    let w = 0;
+    for (const o of [0, -N, N]) {
+      const x = b + o;
+      w = Math.max(w, ramp((x - a + e / 2) / e) * (1 - ramp((x - c + e / 2) / e)));
+    }
+    return w;
+  };
+  const onBeat = bump(frac(b + 0.5));                                 // 0→1→0 once a beat, peaking ON the beat
+  const hulaLean = Math.sin(b * Math.PI);                             // one side per beat
+  const swayLean = Math.sin((b / DANCE.swayBeats) * Math.PI);        // two beats a side (the sway starts on a multiple of four, so the seam holds)
+  const standard = role === "standard", secondary = role === "secondary";
+  const wHula = standard ? win(P.hula[0], P.hula[1]) : 0;
+  const wOut = standard ? win(P.hula[0], P.sway[0]) : 0;             // the arms out — through the hula, the spin and the jump
+  const wClap = secondary ? win(P.hula[0], P.sway[0]) : 0;
+  const wSway = role === "tertiary" ? 1 : win(P.sway[0], P.sway[1]);
+  // The claps — on two and four (clapBeats), and two in a row, a half beat apart, right after the jump
+  let clapK = 0;
+  if (secondary) {
+    const from = P.claps[0] - 0.25;
+    clapK = b < from ? bump(frac((b - 1) / DANCE.clapBeats + 0.5)) : b < P.claps[1] + 0.25 ? bump(frac((b - from) * 2 + 0.5)) : 0;
+  }
+  // The spin — one turn, eased in and out, the card thinning to paper and back mirrored
+  const spin = standard && b >= P.spin[0] && b < P.spin[1] ? Math.cos(Math.PI * 2 * ramp((b - P.spin[0]) / (P.spin[1] - P.spin[0]))) : 1;
+  // The jump — the standard dancers', from its beat; jumpCurve is zero once it has settled
+  const jump = standard && b >= P.jump ? jumpCurve(((b - P.jump) * 60) / DANCE.bpm, DANCE.jump) : { hopY: 0, dropK: 0, flight: 0 };
+  const centre = arm ? -arm.x / (arm.upper + arm.lower) : -0.2;
+  const idle = ARM_POSES.idle.hand;
+  const hand = (side) => {
+    const rest = Math.max(0, 1 - wOut - wClap - wSway);
+    const yOut = H.out[1] + H.wave * -side * hulaLean * (wOut > 0 ? wHula / wOut : 0);   // the hula's wave rides on the out pose
+    const clapX = H.apart[0] * (1 - clapK) + centre * clapK;
+    const clapY = H.apart[1] + H.clapUp * clapK;
+    return [
+      H.out[0] * wOut + clapX * wClap + -side * H.up[0] * swayLean * wSway + idle[0] * rest,   // both hands to the lean's side: one world direction
+      yOut * wOut + clapY * wClap + H.up[1] * wSway + idle[1] * rest
+    ];
+  };
+  return {
+    lean: D.lean * (hulaLean * wHula + 0.8 * swayLean * wSway),
+    scoot: D.scoot * hulaLean * wHula,
+    step: D.step * hulaLean * wHula,
+    bob: D.bob * onBeat * (wHula + 0.6 * wClap),
+    head: D.lean * (DANCE.head.hula * hulaLean * wHula + DANCE.head.sway * swayLean * wSway),
+    bounce: D.bounce * onBeat * wSway,
+    spin, jump, hand,
+    sing: b < DANCE.sing && Math.floor(b * 2) % 2 === 0
+  };
+}
+
 // The whole timeline of one action, for scheduling — the anticipation, the hops, the settle
 export function jumpSpan(def) {
   return (def.antic || 0) + def.hops * def.dur + (def.settle || 0);
@@ -327,7 +429,7 @@ export function solveArms(arm, act, t, rest = "idle") {
     if (!arm) { arms[String(side)] = bindArm(side); continue; }
     const covered = def && (def.arms === "both" || side === act.side);
     arms[String(side)] = covered
-      ? solveArm(arm, side, def.pose, t - act.start, env)
+      ? solveArm(arm, side, def.poseOf ? def.poseOf(side) : def.pose, t - act.start, env)   // poseOf: a target per side (the dance — both hands to one world side)
       : solveArm(arm, side, rest, 0, 0);
   }
   return arms;

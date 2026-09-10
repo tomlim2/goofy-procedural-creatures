@@ -12,7 +12,7 @@ There is no per-individual rest pose like "this one rests with its hands behind 
 ## The base state (mode) is the floor — idle · sleep · walk · sit, and run to come
 
 An individual is always in some base state (`stepMode` in `states.js`; `modes` and `modeHold` in `table.js`), and that decides the rig's floor pose and what rests.
-Right now it is idle · sleep (quads) · walk (a walk that moves it) · sit (quads, sitting). Anything of the form "what is this individual doing right now", like running, is attached here as a state — not as an action (something done briefly and returned from).
+Right now it is idle · sleep (quads) · walk (a walk that moves it) · sit (quads, sitting) · dance (the Dumb Ways to Die chorus, bipeds — forced from a screen, never scheduled). Anything of the form "what is this individual doing right now", like running, is attached here as a state — not as an action (something done briefly and returned from).
 The **content** of a state that has a pose (sleep, sit) — the leg angles, the body tilt — is solved from the rig dimensions: not a table of constants but computed from the individual's leg length and body length, as in
 `sitPose(rig.body)` in `actions.js`. That is what lets a dachshund and a long-legged build sit with the same meaning. A build that cannot sit (null) stands through that state — it is never forced.
 State transitions are blended with easing (0~1 values like sleepK and walkK) so nothing snaps, and they only ever pass **through idle**.
@@ -130,6 +130,9 @@ A rhythm's step uses no rng. Only events' and states' steps use it (for the next
 
 Every schedule is relative to `birth`. Set them in absolute time and an individual born from a regen finds every schedule
 already in the past, and it runs away, regenerating every frame.
+
+The one thing that is **not** birth-relative is a beat every individual has to share: the dance's phase runs off the board's
+time ([catalog.md](catalog.md) § the dance), so the whole line leans together whatever each dancer's birth. A schedule never does.
 
 ## Sizes come from measurement
 

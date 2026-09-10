@@ -12,13 +12,13 @@ import { MOTION, ghostMotion } from "./table.js";
 import * as R from "./rhythm.js";
 import * as E from "./events.js";
 import * as S from "./states.js";
-import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, jumpCurve, jumpSpan, swingSpan, sitPose, bindArm, solveArms, solveLeg } from "./actions.js";
+import { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, DANCE, ARM_POSES, danceRole, danceFrame, jumpCurve, jumpSpan, swingSpan, sitPose, bindArm, solveArms, solveLeg } from "./actions.js";
 import { initEmoji, triggerEmoji, stepEmoji } from "./emoji.js";
 import { ramp, smoothstep, damp, approach, bump, envelope } from "./ease.js";
 import { TICK_FPS } from "../tick.js";
 
 export { MOTION } from "./table.js";
-export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, ARM_POSES, bindArm, solveArm, solveArms, solveLeg, swingSpan } from "./actions.js";
+export { ACTIONS, QUAD_ACTIONS, BODY_ACTIONS, DANCE, ARM_POSES, danceRole, danceFrame, bindArm, solveArm, solveArms, solveLeg, swingSpan } from "./actions.js";
 export { EMOJI } from "./emoji.js";
 
 // The bind state — a character that has received no motion at all. Every value is still and at default: a biped's arms in a T-pose,
@@ -97,7 +97,7 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
   // A forced action (the on-screen ACTION card). That layer keeps doing it while the others idle. null follows the schedule,
   // "idle" keeps every layer idle. Arm actions (ACTIONS) are bipeds, quad actions (QUAD_ACTIONS) quads, body actions (BODY_ACTIONS) shared.
   let forced = null;
-  let forcedMode = null;   // "sleep" | "walk" | "sit" | "idle" | null — the ACTION card can set the base state too
+  let forcedMode = null;   // "sleep" | "walk" | "sit" | "dance" | "idle" | null — the ACTION card can set the base state too
   let forcedSide = 1;
   let forcedStart = -1;
   // A high five commanded by the scene (scene/hifive.js) — the pair logic needs both creatures' positions,
@@ -126,6 +126,12 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
   const W = M.walk || null;
   let walkK = mode.mode === "walk" && W ? 1 : 0;
   const walkPhase = ((key % 97) / 97) * Math.PI * 2;
+  // The dance (actions.js DANCE — the song and the routine; table.js dance — this species' amplitudes, null on a quad). Forced only,
+  // never scheduled. Which of the video's three dances this one does is its roll's (danceRole)
+  const D = M.dance || null;
+  const role = danceRole(key);
+  let danceK = 0;
+  let danceStart = -1;
   // The float (a ghost) — a steady lift off the floor with a slow drift over it. Its phase is per individual and
   // comes **from the roll with no rng**, like walkPhase just above: the clock keeps drawing from this stream all
   // through update(), so an init draw here would shift every schedule after it and re-roll every creature's motion
@@ -177,7 +183,7 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
   // If an action has just started and has an emoji trigger, fire it
   const fireEmoji = (key, act, defs, t) => {
     const name = act ? act.action : null;
-    if (name && name !== lastAction[key] && defs[name].emoji) triggerEmoji(emoji, defs[name].emoji, t);
+    if (name && name !== lastAction[key] && defs[name] && defs[name].emoji) triggerEmoji(emoji, defs[name].emoji, t);   // (the dance's computed arm act is in no table)
     lastAction[key] = name;
   };
 
@@ -188,6 +194,7 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
       else if (action === "sleep") { forced = "idle"; forcedMode = "sleep"; }
       else if (action === "walk") { forced = null; forcedMode = "walk"; }   // arm actions still follow the schedule while walking (waving as it walks)
       else if (action === "sit") { forced = null; forcedMode = "sit"; }     // quad actions (scratching, wagging) still follow the schedule while sitting
+      else if (action === "dance") { forced = null; forcedMode = "dance"; }   // the Dumb Ways to Die chorus (bipeds) — the arm schedule keeps stepping, its result set aside
       else if (action === "idle") { forced = "idle"; forcedMode = "idle"; }
       else if (ACTIONS[action] || QUAD_ACTIONS[action] || BODY_ACTIONS[action]) { forced = action; forcedMode = "idle"; }
       else { forced = null; forcedMode = null; }
@@ -221,6 +228,8 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
       // -- update: fixed order --
       // The base state — idle (standing) / sleep (lying asleep). The schedule runs even while forced. sleepK blends the pose
       let modeName = forcedMode || S.stepMode(mode, t, rng, M);
+      // A species with no dance in the table (the quads) stands through DANCE, the way a build that cannot sit stands through sit
+      if (modeName === "dance" && !D) modeName = "idle";
       // A high five overrides the base state without touching the schedule (stepMode already ran, rng intact) —
       // the mover walks its commanded trip, the anchor stands. The schedule takes back over on release
       if (five) modeName = five.walkTo != null && W ? "walk" : "idle";
@@ -276,6 +285,17 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
       if (walkK < 0.001) walkK = 0;
       const ph = W ? t * Math.PI * 2 * W.hz + walkPhase : 0;
       const stepBump = 0.5 - 0.5 * Math.cos(2 * ph);   // 0→1→0 once per step (twice the period)
+      // Dance — the Dumb Ways chorus (actions.js danceFrame: the routine per role, every channel a function of the beat). danceK
+      // eases it in and out (0.08 — about half a second). **The beat is the board's, not the individual's**: the phase runs off
+      // globalT, the one clock every creature on a screen shares, so the whole line dances together (a birth-relative phase would
+      // put every dancer on its own beat — the one place t is not taken from birth). No rng
+      const dancing = modeName === "dance" && !!D;
+      danceK = approach(danceK, dancing ? 1 : 0, 0.08);
+      if (danceK < 0.001) danceK = 0;
+      if (danceK > 0 && danceStart < 0) danceStart = t;
+      if (danceK === 0) danceStart = -1;
+      const df = danceK > 0 ? danceFrame(((globalT * DANCE.bpm) / 60) % DANCE.beats, role, D, arm) : null;
+      const danceBob = df ? df.bob * danceK : 0;
 
       // Face
       // A ghost's eyes are hollow — two holes, and a hole has no lid to close. It does not blink, and the ^^ a
@@ -336,13 +356,18 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
         const start = start0 + Math.floor((t - start0) / period) * period;
         return { action: forced, start, until: start + jumpSpan(def) };
       });
-      if (asleep || walkK > 0.5 || sitK > 0.5 || five) bact = null;   // no body actions while asleep, walking, sitting or mid-five (the schedule already ran above; a jump would tear the palms apart)
-      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action]) : { hopY: 0, dropK: 0, flight: 0 };
+      if (asleep || walkK > 0.5 || sitK > 0.5 || five || danceK > 0.5) bact = null;   // no body actions while asleep, walking, sitting, dancing or mid-five (the schedule already ran above; a jump would tear the palms apart)
+      // The dance's jump rides the same envelopes as the body layer's (the crouch through the legs, the flight letting the rest bend go)
+      const jc = bact ? jumpCurve(t - bact.start, BODY_ACTIONS[bact.action])
+        : df ? { hopY: df.jump.hopY * danceK, dropK: df.jump.dropK * danceK, flight: df.jump.flight * danceK }
+        : { hopY: 0, dropK: 0, flight: 0 };
       // The jump carries no scale — squash here belongs to sleep alone (below). The crouch's descent is
       // solved through the legs, at the legs section
       const hp = { hopY: jc.hopY, squashX: 0, squashY: 0 };
       // Walk — the body lifts slightly with each step
       if (walkK > 0 && W) hp.hopY += W.bob * stepBump * walkK;
+      // Dance — the bob on the beat (the jump is in jc above)
+      if (danceBob) hp.hopY += danceBob;
       // Sleep — the body settles to the hem and flattens
       if (sleepK > 0 && rig) { hp.hopY -= rig.legTop * sleepK; hp.squashY -= 0.06 * sleepK; hp.squashX += 0.06 * sleepK; }
       // **The float** — a ghost hangs off the floor and drifts, and that is the whole of its movement. A steady
@@ -395,6 +420,21 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
       const scheduledArm = S.stepArmAction(armAction, t, rng, M);   // the schedule runs even with no arms (fixed rng consumption)
       let act = armed ? resolveLayer(t, scheduledArm, ACTIONS, true,
         (def, start) => ({ action: forced, side: forcedSide, start, until: Infinity })) : null;
+      // The dance owns the arms — the hula's out-and-wave, the claps, the sway over the head (danceFrame hand): a target per side,
+      // blended from idle's by danceK so the arms come into it and out of it instead of snapping. The schedule ran; only the result is set aside
+      if (df && armed) {
+        const k = danceK;
+        act = {
+          action: "dance", side: 0, start: danceStart, until: Infinity,
+          def: {
+            arms: "both",
+            poseOf: (side) => {
+              const h = df.hand(side), i = ARM_POSES.idle.hand;
+              return { hand: [i[0] + (h[0] - i[0]) * k, i[1] + (h[1] - i[1]) * k], bend: "out", floor: true };
+            }
+          }
+        };
+      }
       // The high five takes the arm layer — but only once it is this party's moment: a waiting anchor and a
       // mover still far out (beyond carryFrom of its target) keep their scheduled arms. act.def carries the
       // computed pose past the ACTIONS table
@@ -458,7 +498,7 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
         // Arms up on a jump — off the hop's height MINUS the float. A jump drags the arms up because the body
         // left the ground under them; a ghost hangs there, and the same term would hold its arms out sideways
         // for good (an imp's reached 93° — straight out from the shoulder)
-        const hopDrag = hp.hopY - floatY;
+        const hopDrag = hp.hopY - floatY - danceBob;   // (a dance's bob on the beat is no jump; its jump is)
         if (!reaching && hopDrag > 0 && !(walkK > 0.5)) off += side * hopDrag * 4;
         if (!reaching && walkK > 0 && W) off += Math.sin(ph + (side > 0 ? Math.PI : 0)) * W.arm * walkK;   // walk — the arms swing counter to the legs
         off += R.armJitter(armSwing, t, side);
@@ -494,7 +534,8 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
         const standing = Math.max(0, 1 - sleepK - sitK);
         // A float is airborne the whole time — the same release as a jump's flight, held on — and its knees are
         // folded by that individual's own amount, faded in with the rise so the tuck happens as it leaves the floor
-        const dropFrac = REST_BEND * (1 - Math.max(jc.flight, floatK)) * standing + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK + floatFold * floatK;
+        const dropFrac = REST_BEND * (1 - Math.max(jc.flight, floatK)) * standing + BODY_ACTIONS.jump.crouchDrop * jc.dropK + ACTIONS.hifive.crouchDrop * fiveDropK + floatFold * floatK
+          + (df ? df.bounce * danceK : 0);   // the dance — a knee dip on the beat while the arms sway
         bodyDrop = leg.y * Math.min(dropFrac, 0.4);
       }
       // Walk — a quad alternates its diagonal pairs (0·3 / 1·2) front and back; a biped's two legs alternately open and close (a walk seen head-on)
@@ -503,6 +544,8 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
         if (quad) { legOffset[0] += s; legOffset[3] += s; legOffset[1] -= s; legOffset[2] -= s; }
         else { legOffset[0] += s; legOffset[1] -= s; }
       }
+      // The dance — the hula's pacing: the legs scissor with the hips, a side-step a beat
+      if (df) { const s = df.step * danceK; legOffset[0] += s; legOffset[1] -= s; }
       for (let i = 0; i < 4; i += 1) legOffset[i] += R.legJitter(t, i);
 
       // Tail · jelly — the tail's default is the idle angle (tailIdle), with the swish and flick on top. The tip bone (tailTip) is a relative angle against the root
@@ -632,15 +675,17 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
 
       return {
         breathe: br, lid, gaze, startle, eyeFx, angry: angryK, regen: regenNow, emoji: em,
-        browAlt: F ? false : md.browAlt, mouthAlt: F ? false : md.mouthAlt,   // a ghost's face does not change (the mood, above)
-        sway: sw.sway + (walkK > 0 && W ? Math.sin(ph) * W.sway * walkK : 0) + fiveLean, rock: sw.rock,
-        headAngle: (tiltAngle + rollAngle) * awake + sleepHead,
-        headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0),
-        hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX,
+        // a ghost's face does not change (the mood, above); a dancer sings — its mouth moves on the half beat through the sung lines
+        browAlt: F ? false : md.browAlt, mouthAlt: F ? false : md.mouthAlt || !!(df && df.sing && danceK > 0.5),
+        sway: sw.sway + (walkK > 0 && W ? Math.sin(ph) * W.sway * walkK : 0) + fiveLean + (df ? df.lean * danceK : 0), rock: sw.rock,
+        headAngle: (tiltAngle + rollAngle) * awake + sleepHead + (df ? df.head * danceK : 0),
+        headBob: headBob * awake + sleepBob + (walkK > 0 && W ? W.bob * 0.5 * stepBump * walkK : 0) + danceBob * 0.5,
+        hopY: hp.hopY, squashX: hp.squashX, squashY: hp.squashY, stretchX, shiverX: shiverX + (df ? df.scoot * danceK : 0),
         jellyX: j.jellyX, jellyY: j.jellyY, faceTurn: [faceTurn[0], faceTurn[1]],
         happy: isHappy, winkSide, tailAngle, tailTip, tailPuff, tailRaise, tailRaisePose, tailArch, tailPose,
         arms, legOffset, legOsc, bodyDrop,
-        mode: F ? "float" : modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing,
+        // the facing carries the dance's spin — the card turning through paper and back, mirrored halfway
+        mode: F ? "float" : modeName, sleep: sleepK, walk: walkK, sit: sitK, bodyTilt: sit ? sit.tilt * sitK : 0, walkX: trip.x, facing: facing * (df ? 1 + (df.spin - 1) * danceK : 1),
         // The action running right now — the arm layer (biped) or the leg and tail layers (quad) plus which side (the active arm's side / the leg index), and the body layer. For debugging and statistics
         action: act ? act.action : qact ? qact.action : null,
         actionSide: act ? act.side : qact ? qact.index : 0,

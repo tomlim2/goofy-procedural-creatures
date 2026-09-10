@@ -102,15 +102,22 @@ const controls = createControls({
   face: {
     el: document.getElementById("faceSeg"), initial: "camera",
     apply: (value) => stage.setFacing(value)
+  },
+  // DANCE — the Dumb Ways to Die chorus: every biped dances it on the same beat (motion/actions.js DANCE); the quads
+  // stand through it. A forced base state, so a running high five is let go and the walks stop where they are
+  dance: {
+    el: document.getElementById("danceSeg"), initial: "off",
+    apply: (value) => stage.setAction(value === "on" ? "dance" : null)
   }
 }, (def) => { if (def.rebuild) render(); else syncUrl(); });
 
-// Shortcuts — R new cast · H home
+// Shortcuts — R new cast · H home · D dance
 window.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement) return;
   const key = event.key.toLowerCase();
   if (key === "r") reroll();
   if (key === "h") stage.home();
+  if (key === "d") controls.set("dance", controls.value("dance") === "on" ? "off" : "on");
 });
 
 window.addEventListener("resize", () => stage.resize());
