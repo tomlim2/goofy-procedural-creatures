@@ -36,7 +36,8 @@ export function makeSparks(scene) {
   };
 
   return {
-    burst(x, y, t, noise) {
+    // z and yaw are the stage's (scene/stage.js): the contact stands at the pair's depth and the stars face the way the cards do. The board passes neither
+    burst(x, y, t, noise, { z = 0, yaw = 0 } = {}) {
       const meshes = THROWS.map(([, , , r]) => {
         const sketch = new Sketch(noise, 0.5);
         const star = starPath(0, 0, r);
@@ -47,7 +48,7 @@ export function makeSparks(scene) {
         scene.add(mesh);
         return mesh;
       });
-      bursts.push({ meshes, x, y, start: t });
+      bursts.push({ meshes, x, y, z, yaw, start: t });
     },
     update(t) {
       bursts = bursts.filter((b) => {
@@ -60,8 +61,8 @@ export function makeSparks(scene) {
           const [ang, dist, spin] = THROWS[i];
           const m = b.meshes[i];
           m.visible = true;
-          m.position.set(b.x + Math.cos(ang) * dist * out, b.y + Math.sin(ang) * dist * out - GRAV * k * k, 0);
-          m.rotation.z = spin * k;
+          m.position.set(b.x + Math.cos(ang) * dist * out, b.y + Math.sin(ang) * dist * out - GRAV * k * k, b.z);
+          m.rotation.set(0, b.yaw, spin * k);   // XYZ: the spin in the star's own plane, then the cards' turn
           m.scale.setScalar(ramp(k / POP));
           m.material.opacity = 0.95 * (k < 0.55 ? 1 : 1 - ramp((k - 0.55) / 0.45));
         }

@@ -44,7 +44,7 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
         ├── staticLid ×(static eye count) ← a static eye's (dot, slit, half…) shut line, smile (the eye redrawn with a ^^ pupil when it keeps one, the arch alone when it has no ball) and fierce eye (3.6). Asleep (sleep > 0.5) the shut line, angry the fierce eye, ^^ or a wink (that side) the smile arch — that eye's static layer (lid.frames) is switched off then and this stands instead (no cover)
         └── eyeRig ×(0~2)        ← live eyes only
             ├── open{white+rim as one mesh · gaze{pupil · smile}} · shut · angry — from the eye block o (back eye 3, front eye 3.5): +0 · +0.2 · +0.2 / +0.35 / +0.35. ^^ and a wink keep open on and swap the pupil for the smile (the arch at the pupil's place — the gaze group carries both). On closing, open is **switched off** and shut (the shut line, lid > 0.5), smile (^^, a wink) or angry (anger — the fierce eye) stands instead — there is no skin-colored cover
-emojiRoot (the scene root, beside group)  ← the emoji. Not attached to the head; it eases (0.1) toward the point above the head (in world coordinates) —
+emojiRoot (the scene root, beside group)  ← the emoji. Not attached to the head; it eases (0.1) toward the point above the head (in world coordinates, depth included) —
                                   so it is dragged a beat behind on a tilt or a jump and leans into the drag. It only has a mesh while an emoji is up
 ```
 
@@ -55,6 +55,7 @@ page's figures all read it.
 These values are the layers **within** an individual. The scene gives each individual a block of `index × 10` on top (`scene/index.js stack`) — so when neighbours overlap (a huge head, walking),
 the individual in front (a lower row; within a row, the one to the right) is drawn above as a whole and layers never interleave. Every fill is **opaque** (body, head, face, front ears, hat), so
 the front individual hides the one behind completely, outline, color and shape. The emoji is 100000 (above every individual); paper 0 and the floor line 1 are unchanged.
+The stage hands the same blocks out by **distance to the camera** instead, every tick (§ the stage).
 
 One layer is one mesh — the fills sketch and the ink sketch are joined into one geometry (fills underneath). Within the same renderOrder, vertex order *is* front-to-back, so no separate
 number is needed. Only the face and static eyes are two meshes, fills (2.3) and ink (2.4) — the two layers' fills and ink have to interleave (a static eye's fill below the whiskers, its ink
@@ -163,6 +164,27 @@ the forced action, position, render order block, `settle` and adding to the scen
 stands. With `keepClock`, the old clock and the display-side easing carry over when the two move the same way (`sameMotion` — the same species and ghost
 state, the same roll, the same motion rig): the editor asks for it on every edit, so a creature redrawn in another material or colour keeps walking
 mid-step. A different rig gets a clock of its own — a clock solves actions off the dims it was born with.
+
+## The stage — the same rig, stood on a floor
+
+`scene/stage.js` (`/stage.html`) stands the cast up in a room and redraws nothing: an individual is `buildCreature`'s rig (or `buildHouse`'s), its clock is
+`makeClock`'s and `applyState` moves it, exactly as on the board. A creature's triangles all lie in its own x·y plane, so the group is a **card** — stood on
+the floor at `group.position` (x, 0, z): the board's x across the row, every other row half a cell over, the rows `STAGE.rowZ` apart down the depth, the
+last row (the board's front row) nearest the camera. `baseY` is 0 — the soles on the floor — and animate writes x and y only, so the depth is the stage's alone.
+
+- **Facing** is `group.rotation.y` — the camera's bearing (FACE CAMERA, one yaw for the whole cast so a high-five pair still walks along its row) or 0 (FRONT — a
+  paper standee, seen edge-on from the side). Euler XYZ, so the sway (`rotation.z`, animate) turns in the card's own plane first and the card turns after. The emoji
+  glyph and the high-five stars take the same yaw the same way (`rotation.y` over their own `rotation.z`; the stars are burst at the pair's depth — `hifive`'s
+  `onContact` names the anchor for it)
+- **Front to back** is still renderOrder (no depth test), but the block per individual (`STAGE.ordering`, the board's 10) is handed out by **distance to the
+  camera** every tick — far first, so the nearest is drawn last and whole; a block moves only when its rank does (`restack`). The layers inside are this document's
+- **The contact smudge** — a puddle of the paper shaded a little (`STAGE.smudge`), lying flat at the feet (order 0.5, over the floor, under every block), following
+  the walk and staying on the floor through a hop. It is what makes a card stand *on* the sheet rather than float in front of it. A scene mark, not a part
+- **The floor and the sheet** — the floor is the board's paper keyed on its own plane and the grain pass is a second, orthographic render over the screen
+  ([drawing.md](drawing.md) § the paper). The camera is an orbit about the lattice's centre (`STAGE.pitch`, `STAGE.dist` bound it; HOME refits it to the lattice),
+  and a frame whose tick has not changed may still draw while it is being moved ([performance.md](performance.md) § the tick)
+
+Every knob is in `STAGE` at the top of the file.
 
 ## Where it commonly breaks
 

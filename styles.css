@@ -51,7 +51,7 @@ html, body {
 .bar a { pointer-events: auto; color: inherit; }
 .status { margin-left: auto; opacity: 0.6; }
 
-/* One nav, the same six screens on every page (the HTML carries it; the current one is a .here span, not a link).
+/* One nav, the same screens on every page (the HTML carries it; the current one is a .here span, not a link).
    Every screen judges a different thing and they are useless if you cannot get from one to the next — before this,
    the grid linked to nothing at all and the other five each named a different subset */
 .nav { display: flex; gap: 10px; pointer-events: auto; font-size: 10px; letter-spacing: 0.14em; }
@@ -167,6 +167,11 @@ select.wide { width: 100%; }
   letter-spacing: 0.14em;
   opacity: 0.6;
 }
+
+/* The stage — the canvas is the camera's handle: a drag goes round, so the cursor says grab, and a finger's drag is the
+   camera's rather than the page's scroll (touch-action) */
+.stage #stage { cursor: grab; touch-action: none; }
+.stage.dragging #stage { cursor: grabbing; }
 
 .noscript {
   position: fixed;

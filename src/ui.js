@@ -66,8 +66,10 @@ export function download(name, text, type = "application/json") {
 // Calls tick(elapsedSeconds) every frame. onError is for updating the status label
 // The loop — a fixed TICK_FPS ticks per second (tick.js). A rAF frame whose tick has not changed does nothing: no update, no render.
 // tick(t) gets t = n / TICK_FPS, the n-th tick's time, never the display's clock — so the pose at tick n is the same on every machine.
-// A stall (a hidden tab) skips ticks rather than catching up: time is the truth, not the step count
-export function runLoop(tick, onError) {
+// A stall (a hidden tab) skips ticks rather than catching up: time is the truth, not the step count.
+// between(): the one exception, for a frame whose tick has NOT changed — the stage draws the last tick's pose again while its
+// camera is being moved by hand (guidelines/performance.md § the tick). Nothing updates in it; the board passes none
+export function runLoop(tick, onError, between = null) {
   const start = performance.now();
   let last = -1;
   const frame = () => {
@@ -76,6 +78,13 @@ export function runLoop(tick, onError) {
       last = n;
       try {
         tick(n / TICK_FPS);
+      } catch (error) {
+        onError(error);
+        console.error(error);
+      }
+    } else if (between) {
+      try {
+        between();
       } catch (error) {
         onError(error);
         console.error(error);

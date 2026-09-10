@@ -28,11 +28,45 @@ export const FLOOR = 0.16;
 export const CELL_CEILING = CELL_H - FLOOR;
 
 // The reference board for paper grain. Whatever the grid is, the grain is drawn as it would look on a screen of this size (9×6 looks best).
-const PAPER_GRID = [9, 6];
+export const PAPER_GRID = [9, 6];
 
 // The margin around the board. 1×1 is a single creature, so filling the board would eat the whole screen — the view is doubled so it stands at half size
 const PAD = 1.08;
 const SOLO_PAD = PAD * 2;
+
+// Solves the world size the camera holds from the lattice size and the canvas aspect. Wraps the board at 1.08× and stretches whichever side is left over to fit the aspect.
+// Exported for the stage (scene/stage.js): its sheet pass is laid in the 9×6 board's view, the same grain space the board pins its grain to
+export function viewSize(cols, rowCount, aspect) {
+  const width = cols * CELL_W;
+  const height = rowCount * CELL_H;
+  const pad = cols * rowCount === 1 ? SOLO_PAD : PAD;
+  let viewW = width * pad;
+  let viewH = height * pad;
+  if (aspect > width / height) viewW = viewH * aspect;
+  else viewH = viewW / aspect;
+  return [viewW, viewH];
+}
+
+// A house — a static occupant (src/house/index.js): three boil frames of one layer, no clock, no face,
+// no emoji. The update loop only cycles its boil; everything else about it stands still on purpose.
+// The stage stands one up the same way (scene/stage.js)
+export function buildHouse(spec) {
+  const group = new THREE.Group();
+  const frames = { house: [] };
+  for (let k = 0; k < BOIL_FRAMES; k += 1) {
+    const layer = drawHouse(spec, k);
+    const mesh = sketchMesh([layer.fills, layer.ink], 1, 1.5);
+    mesh.visible = k === 0;
+    frames.house.push(mesh);
+    group.add(mesh);
+  }
+  const boil = boilRate(spec.roll);   // a house boils at the board's own cadence (rig.js)
+  return {
+    static: true, group, frames, boilRanges: [], spec, limbs: [], lastState: null,
+    boilFps: boil.fps, boilOffset: boil.offset,
+    baseX: 0, baseY: 0, generation: 0, emojiRoot: new THREE.Group()
+  };
+}
 
 export function createScene(canvas, { hifiveRush = 1 } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
@@ -74,26 +108,6 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     if (item.clock) item.clock.force(forcedAction, item.spec.roll % 2 ? 1 : -1);   // a house has no clock
   }
 
-  // A house — a static occupant (src/house/index.js): three boil frames of one layer, no clock, no face,
-  // no emoji. The update loop only cycles its boil; everything else about it stands still on purpose
-  function buildHouse(spec) {
-    const group = new THREE.Group();
-    const frames = { house: [] };
-    for (let k = 0; k < BOIL_FRAMES; k += 1) {
-      const layer = drawHouse(spec, k);
-      const mesh = sketchMesh([layer.fills, layer.ink], 1, 1.5);
-      mesh.visible = k === 0;
-      frames.house.push(mesh);
-      group.add(mesh);
-    }
-    const boil = boilRate(spec.roll);   // a house boils at the board's own cadence (rig.js)
-    return {
-      static: true, group, frames, boilRanges: [], spec, limbs: [], lastState: null,
-      boilFps: boil.fps, boilOffset: boil.offset,
-      baseX: 0, baseY: 0, generation: 0, emojiRoot: new THREE.Group()
-    };
-  }
-
   // Lifts one individual out of the scene — throws the geometry away (materials are shared, so they stay) and detaches the group and emoji root
   function discard(item) {
     disposeGroup(item.group);
@@ -112,18 +126,6 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
       scene.remove(ground);
       ground = null;
     }
-  }
-
-  // Solves the world size the camera holds from the lattice size and the canvas aspect. Wraps the board at 1.08× and stretches whichever side is left over to fit the aspect.
-  function viewSize(cols, rowCount, aspect) {
-    const width = cols * CELL_W;
-    const height = rowCount * CELL_H;
-    const pad = cols * rowCount === 1 ? SOLO_PAD : PAD;
-    let viewW = width * pad;
-    let viewH = height * pad;
-    if (aspect > width / height) viewW = viewH * aspect;
-    else viewH = viewW / aspect;
-    return [viewW, viewH];
   }
 
   function layout() {

@@ -353,6 +353,11 @@ material, a `press` per value step and a `teeth` tag on every triangle, which at
 what a real sheet does. It costs one full-screen quad and needs no render target, so the frame stays one pass
 and the blending stays on the canvas.
 
+**On the stage** (`scene/stage.js`) the sheet is the **floor**: `sheetColor` keyed on the floor's own plane (x·z) at one grain unit per world unit — the
+9×6 board's — with its tone and blotches only (the cell handed in as 0.5, no grain), and the grain is the same over-pass in a **second render** of its own, an
+orthographic camera in the 9×6 board's view (`viewSize`), so the speckle is the board's and stays pinned to the screen while the perspective camera moves. Laid
+in the room it would slide over the drawing. What shows past the sheet is the desk, the renderer's clear colour (`STAGE.desk`).
+
 **The fixed few.** Every colour on the board is picked by the roll from a pool, except five: the blush and the tongue's pink,
 the white of a tooth and an eye, the light ink a mark takes on a part too dark for the palette's ink, the palest muzzle, a
 heart eye and the sweat drop's blue. They are `MARKS` in `character/vocabulary/palette.js` — they lived as string literals in four files each, so a

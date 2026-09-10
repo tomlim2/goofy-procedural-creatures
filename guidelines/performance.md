@@ -47,6 +47,10 @@ If you changed the scene structure (layers, rig, meshes), measure these numbers 
 The loop runs the motion at a fixed 24 ticks a second ([determinism.md](determinism.md) § the tick) and a rAF
 frame whose tick has not changed neither updates nor renders. On a 60 Hz screen that is 24 frames drawn, not 60 —
 the two passes and their draw calls run 2.5× less often — and on 120 Hz, 5×. The numbers above are per drawn frame.
+The one exception is the stage while its camera is being moved by hand (`runLoop`'s `between`, `ui.js`): the last
+tick's pose is drawn again from the new place, at the display's rate, and nothing updates — a camera that only moves
+24 times a second reads as a stutter. It also re-blocks the render orders per tick ([rig.md](rig.md) § the stage): a
+traversal of the meshes of every individual whose rank changed, nothing while the camera stands still.
 
 ### A part that boils without a mesh per frame — `sketchMeshBoil`
 

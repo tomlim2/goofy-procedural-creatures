@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MENAGERIE — the stage</title>
+<meta name="description" content="The cast stood up in a room — paper standees on a sheet, a camera going round them.">
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body class="stage">
+
+<canvas id="stage" aria-label="Creatures stood on a sheet in a room"></canvas>
+
+<header class="bar">
+  <a class="mark" href="./index.html">MENAGERIE</a>
+  <span class="sub"><span class="tag">GOOFY PROCEDURAL CREATURES</span></span>
+  <nav class="nav"><a href="./index.html">GRID</a><span class="here">STAGE</span><a href="./debug.html">DEBUG</a><a href="./gallery.html">GALLERY</a><a href="./editor.html">EDITOR</a><a href="./audit.html">AUDIT</a><a href="./pixeldiff.html">DIFF</a><a href="./how.html">HOW</a></nav>
+  <span class="status" id="status">BOOT</span>
+</header>
+
+<aside class="deck">
+  <section class="card">
+    <h2>STAGE</h2>
+    <button id="reroll" class="wide">NEW CAST</button>
+  </section>
+
+  <section class="card">
+    <h2>VIEW</h2>
+    <button id="home" class="wide">HOME</button>
+    <div class="row seg mt" id="faceSeg" role="group" aria-label="Which way the cards face">
+      <button data-face="camera" class="on">CAMERA</button>
+      <button data-face="front">FRONT</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>EXPORT</h2>
+    <button id="exportPng" class="wide">PNG</button>
+  </section>
+
+  <section class="card">
+    <h2>SPECIES</h2>
+    <div class="row seg" id="speciesSeg" role="group" aria-label="Species preview">
+      <button data-species="all" class="on">ALL</button>
+      <button data-species="human">HUMAN</button>
+      <button data-species="cat">CAT</button>
+      <button data-species="pup">PUP</button>
+      <button data-species="imp">IMP</button>
+      <button data-species="rex">REX</button>
+      <button data-species="house">HOUSE</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>GRID</h2>
+    <div class="row seg" id="countSeg" role="group" aria-label="Lattice size">
+      <button data-grid="1x1">1×1</button>
+      <button data-grid="5x4">5×4</button>
+      <button data-grid="7x5" class="on">7×5</button>
+      <button data-grid="9x6">9×6</button>
+    </div>
+  </section>
+
+  <p class="hint">Drag to go round · wheel or pinch to come nearer · R new cast · H home · FACE: CAMERA turns every card to you, FRONT leaves them stood as paper standees · controls ride in the URL</p>
+</aside>
+
+<noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>
+
+<script type="module" src="./src/stage.js"></script>
+</body>
+</html>

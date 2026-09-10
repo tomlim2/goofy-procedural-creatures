@@ -146,7 +146,8 @@ export function makeHifives({ rush = 1 } = {}) {
 
   return {
     // One pass per tick, after every clock has updated (each item's lastState is this tick's).
-    // onContact(x, y) fires once per five, the moment the slap lands.
+    // onContact(x, y, anchor) fires once per five, the moment the slap lands — the anchor item along with the point,
+    // for a screen where a pair stands at a depth (the stage) and the point's x·y is not the whole of where it is.
     update(creatures, columns, t, onContact) {
       active = active.filter((f) => {
         // A regen or rebuild swapped an item out — let go (the discarded clock takes the release harmlessly)
@@ -171,7 +172,7 @@ export function makeHifives({ rush = 1 } = {}) {
         if (f.phase === "swing" && t >= f.contactAt) {
           f.phase = "hold";
           f.holdUntil = t + HIFIVE.hold;
-          onContact(f.point[0], f.point[1]);
+          onContact(f.point[0], f.point[1], f.a);
         }
         if (f.phase === "hold" && t >= f.holdUntil) { stop(f); cool(f, t); return false; }
         return true;

@@ -291,8 +291,9 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   }
 
   // Emoji animation — a layer separate from motion. The clock's emoji channel supplies the kind, progress and curves (dy, scale, rot, opacity).
-  // It is not attached to the head: it lives at the scene root (emojiRoot) and eases toward the point above the head (in world coordinates) —
-  // so it feels dragged a beat behind when the head tilts and the body jumps. It leans slightly into the direction of the drag.
+  // It is not attached to the head: it lives at the scene root (emojiRoot) and eases toward the point above the head (in world coordinates, depth
+  // included) — so it feels dragged a beat behind when the head tilts and the body jumps. It leans slightly into the direction of the drag.
+  // Only rotation.z is written; a screen that turns the cards (the stage) turns the glyph by rotation.y on top of it
   const emoji = state.emoji;
   if (emoji) {
     if (!item.emojiMesh || item.emojiKind !== emoji.kind) {
@@ -312,7 +313,7 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
     if (!item.emojiPos) item.emojiPos = EMOJI_TARGET.clone();
     else item.emojiPos.lerp(EMOJI_TARGET, snap ? 1 : 0.1);
     const lagX = EMOJI_TARGET.x - item.emojiPos.x;
-    item.emojiMesh.position.set(item.emojiPos.x, item.emojiPos.y + emoji.dy, 0);
+    item.emojiMesh.position.set(item.emojiPos.x, item.emojiPos.y + emoji.dy, item.emojiPos.z);   // z too — on the stage the head stands at a depth (0 on the board)
     item.emojiMesh.scale.setScalar(emoji.scale);
     item.emojiMesh.rotation.z = emoji.rot - lagX * 6;
     item.emojiMesh.material.opacity = emoji.opacity;

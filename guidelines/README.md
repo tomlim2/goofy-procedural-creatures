@@ -13,14 +13,15 @@ point is the root [`CLAUDE.md`](../CLAUDE.md)).
 | **Motion** | `src/motion/` | [motion/catalog.md](motion/catalog.md) the state object, per-species parameters, every motion | [motion/rules.md](motion/rules.md) classifying rhythm/events/states, rng order, measuring firing |
 | Shared | `src/scene/` `src/stroke.js` `src/shape.js` `src/medium/` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) rolls and files — what a roll promises, the gates<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
 
-## The seven screens
+## The eight screens
 
 Every page carries the same nav, so any screen is one click from any other. Six of them judge a different
-thing; the editor is the one that **makes** rather than judges.
+thing; the editor is the one that **makes** rather than judges, and the stage is the one that **shows**.
 
 | Screen | What it is for |
 | --- | --- |
 | `/index.html` **GRID** | The board itself — a cast of specs, the thing being made. Nothing is picked until a creature is clicked; then REDRAW · BACK · OPEN · SAVE stand at its feet, one cell only, and a click on nowhere lets the pick go. BOARD saves and opens the whole cast as JSON. Species, grid size, PNG |
+| `/stage.html` **STAGE** | The cast stood up in a room — every creature the board's own drawing, stood on a sheet like a paper standee, in rows down the depth, a perspective camera going round it (drag), nearer (wheel, a pinch), HOME. FACE turns every card to the camera or leaves them stood facing front. The same cast as the board (the lanes, a species preview, the grid sizes), NEW rolls another; PNG. [rig.md](rig.md) § the stage |
 | `/debug.html` **DEBUG** | The board plus the judging controls, folded into one JUDGING card: POSE (bind), INK (boil), ACTION (force one), HIGH FIVE (rush), REGEN (live). Folded, the summary names whatever is away from its default, so a screen left on BIND never reads as a bug. Every control rides in the address |
 | `/gallery.html` **GALLERY** | One slot's every value on the same individual, side by side |
 | `/editor.html` **EDITOR** | The character maker — a species, then every slot, colour and proportion by hand |

@@ -37,6 +37,12 @@ is extracted once at start and served under `/base/` for the pixel diff page.
 The drawing is the same and only the control cards differ (the same `src/main.js`). Nothing links here from the main page — you type the address.
 To go back, press **MENAGERIE** in the header.
 
+`/stage.html` — **the stage**. The cast stood up in a room: every creature is the board's own drawing, stood on a sheet of paper like
+a standee, in rows down the depth, and a perspective camera goes round it — drag to go round, wheel or a pinch to come nearer, HOME
+(`H`) to stand back where the page opened. FACE CAMERA turns every card to the camera; FRONT leaves them stood facing front, paper seen
+edge-on from the side. The same cast as the board (the lanes, a species preview, the grid sizes), NEW CAST (`R`) rolls another; PNG.
+Nothing is redrawn for it — the rig, the clock and the high fives are the board's ([guidelines/rig.md](guidelines/rig.md) § the stage).
+
 `/gallery.html?slot=legs&species=human` — **the parts gallery**. Draws every value of one slot side by side on the same individual
 (the individual fixed; NEW rolls another). The FIX dropdown (`&fix=legLength:short`) pins one other slot, and `&values=bangs,bun` puts just a few of that slot's
 values up large. For judging the form of a single part. Where census is numbers, this is the picture.
@@ -125,10 +131,11 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | `src/color.js` | Hex color utilities — linear conversion (`hexToRgb`), luminance (`luminance`, `isDark`), tones (`shade`). Character and drawing share them | [drawing](guidelines/drawing.md) § colors |
 | **`src/character/`** | What the roll decides. `vocabulary/` (slots, species, archetypes, palette) `spec.js` (roll→spec) `draw/` (spec→strokes: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | What the clock decides. `table.js` (per-species parameters) `rhythm.js` (standing) `events.js` (intermittent) `states.js` (held — including the base states idle/sleep/walk) `actions.js` (idle and actions — arm, body and quad layers) `emoji.js` (emoji animation — the trigger layer) `ease.js` (curve shapes — envelopes and following, all eased in and out) `index.js` (assembly in a fixed rng order) | [motion/](guidelines/motion/) |
-| `src/scene/` | three.js. `rig.js` (geometry → hierarchy) `animate.js` (state → rig) `paper.js` (the paper — one plane, one GLSL fragment: the board's only shader) `post.js` (what is drawn over the finished board — the same sheet again, on top) `mesh.js` (meshes and the shared GPU materials) `emoji.js` (glyph shapes) `index.js` (the scene, the loop, regen) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
+| `src/scene/` | three.js. `rig.js` (geometry → hierarchy) `animate.js` (state → rig) `paper.js` (the paper — one plane, one GLSL fragment: the board's only shader) `post.js` (what is drawn over the finished board — the same sheet again, on top) `mesh.js` (meshes and the shared GPU materials) `emoji.js` (glyph shapes) `index.js` (the scene, the loop, regen) `stage.js` (the same rigs stood on a floor — a perspective camera, front-to-back by distance) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
 | `src/export.js` | Screen → PNG. Puts the WebGL canvas onto a 2D canvas and lays a signature (the name) on top to download. It knows nothing about the scene — it takes a canvas already drawn | |
-| `src/main.js` · `src/control.js` · `src/ui.js` | The entry point. `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the loop — a fixed 24 ticks a second, `tick.js`; shared with gallery, audit and the medium page) | |
+| `src/main.js` · `src/control.js` · `src/ui.js` | The entry point. `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the loop — a fixed 24 ticks a second, `tick.js`; shared with the stage, gallery, audit and the medium page) | |
 | `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
+| `src/stage.js` · `stage.html` | The stage — the cast stood up in a room, the camera by hand | [rig](guidelines/rig.md) § the stage |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
 | `src/editor.js` · `editor.html` | The editor — one working spec edited by hand, saved and opened as JSON. The only screen whose creature need not be a roll's | [determinism](guidelines/determinism.md) |
 | `src/pixeldiff.js` · `pixeldiff.html` | The pixel diff — the working tree against a git ref, rendered on the same GPU, the differing pixels counted per creature | [determinism](guidelines/determinism.md) |
