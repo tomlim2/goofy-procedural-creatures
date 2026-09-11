@@ -261,7 +261,12 @@ export function drawHorns(ink, fills, spec, box, noise) {
         cap.push([tip[0] + (-ey) * wEnd * Math.cos(th) + ex * wEnd * Math.sin(th), tip[1] + ex * wEnd * Math.cos(th) + ey * wEnd * Math.sin(th)]);
       }
       const poly = [...L, ...cap, ...R.slice().reverse()];
-      paintPart(fills, spec, poly, bone, { part: "horns", own: true });
+      // **Ear-clipped, not fanned.** A horn is a band between two rails, and the moment it bends — a curved horn's sweep, a ram's
+      // spiral, the twig off an antenna — its own centre is out on the concave side, past the inner rail. Fanned from there the
+      // triangles for the far rail were turned the wrong way and laid bone-white across the bend, **outside the ink**: a white
+      // wedge in the crook of every curved horn and a ram whose spiral was filled in solid
+      // (guidelines/character/rules.md § a fill has to be visible from its centre; `node scripts/fanspill.mjs` counts it)
+      paintPart(fills, spec, poly, bone, { part: "horns", own: true, concave: true });
       ink.contour(poly, { color: ink0 });
       return pts;
     };

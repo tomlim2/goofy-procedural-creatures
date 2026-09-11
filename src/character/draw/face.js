@@ -299,7 +299,10 @@ export function drawFace2(ink, fills, spec, box, eyes) {
         const t = 1 - i / n;
         return edge(t, DEPTH * Math.sin(t * Math.PI));
       });
-      paintPart(fills, spec, [...upper, ...lower], tone, { own: true, part: "head" });
+      // **Ear-clipped, not fanned.** A crescent is not visible from its own centre — the centre sits in the bite the eye takes out of
+      // it — so the fan filled the bite in too and the moon came out a half-moon, a grey patch over the eye's lower half
+      // (guidelines/character/rules.md § a fill has to be visible from its centre; `node scripts/fanspill.mjs` counts it)
+      paintPart(fills, spec, [...upper, ...lower], tone, { own: true, part: "head", concave: true });
       // The bag — a line a little under the moon's deeper edge, left to right. Under an eyeball that edge climbs the eye's sides
       // to its corners, and a line following it the whole way drew a bowl round the eye; the bag is the half that runs under it
       const [b0, b1] = ball ? [0.25, 0.75] : [0, 1];
