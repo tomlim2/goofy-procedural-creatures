@@ -79,6 +79,17 @@ If six do not feel like enough, adding one is fine. But an archetype is a **disp
   (including eyewear and goggle rims) — while the sides may come down below the ear (cy − 0.45·ry) and cover it. A hair cap's arc goes to depth 0.62 (ear height) —
   the spread at the side ends does not reach the eyes (x ±0.4·rx). Never compute the brow line separately
 - **Never make parts avoid each other on their own.** Overlaps are blocked at the combination stage, in `applyConstraints`
+- **A fill has to be visible from its centre.** `fill()` cuts a shape as a fan of triangles from the mean of its points, and the fan *is* the
+  shape only when every edge can be seen from that centre — a star-shaped polygon: a blob, a disc, a triangle, a trapezoid, a half-moon.
+  A shape that bends round its centre is not — a bent band (a curved horn), a spiral (a ram's), a crescent (a ring under an eye), a
+  dome with its brim (the cap), a band with a row of points (a crown), an L — and the fan's triangles for the edges the centre cannot
+  see are turned the wrong way and painted **outside the outline**: bone-white past a horn's ink, a ring under the eye filled up to a
+  half-moon. The contour hides none of it; it is a second shape under the line. Three ways out, in the order to try: fill it **in
+  pieces**, each visible from its own centre (the cap — the dome and the brim; the crown — the band and each spike, `headgear.js`) · cut a tube as a **strip** between its rails
+  (`paintPart(…, { strip: [left, right] })` — the tail) · **ear-clip** it (`paintPart(…, { concave: true })` — the filled hair). Ear
+  clipping wants a simple outline: two rails that fold over each other at a tight bend cross, and where the ears run out the rest is
+  fanned again. Count it, never eyeball it — `node scripts/fanspill.mjs` walks every slot value × species × roll through
+  `shape.js fanSpill` and names each shape the fan spills on, the value that brings it and how much (§ a fill is read with fanspill)
 
 ## A face part has to be visible in every state
 
@@ -159,3 +170,29 @@ bones, brow/mouth states) sketch by sketch against a git ref (HEAD by default), 
 until this is 0 — the gallery is the eye and this is the number. In a commit that **changes** form, a difference
 is correct (check the list to see which slot values changed; the list stops at 30, so leave out the values you meant to change with
 `DRAWDIFF_SKIP=slot=value,…` and see whether anything else moved). A combination that throws on one side is listed as a difference, not a crash.
+
+## A fill is read with fanspill
+
+```
+node scripts/fanspill.mjs                 # every drawing site whose fill spills past its outline, worst first, with the slot values that bring it
+node scripts/fanspill.mjs --check         # the count only, exit 1 if there is any
+node scripts/fanspill.mjs --all           # every fill that spilled, one line each
+node scripts/fanspill.mjs --min 0.02      # the share of its own area a shape's leak has to reach to count (default 1%)
+node scripts/fanspill.mjs --rolls 11,777  # the rolls to walk (default drawdiff's three)
+```
+
+`fill()` is a fan from the centre and is only right for a shape visible from it (§ what a drawing function has to keep to). The
+script wraps the fan and walks the drawing the way drawdiff does — every layer, the limbs, the tail bones, the brow and mouth
+states — and measures every polygon that reaches it. `shape.js fanSpill` finds the turned triangles (`fan`: their area as a share
+of the shape's, and how many edges); `shape.js fanLeak` measures what of them **shows** — the fan's paint outside the outline,
+less the sliver along the edge the contour's own width covers — as `leak`, a share of the shape's area, and `across`, the side of a
+square holding it, to read against the ink's 0.01 and a head's 0.3. The two differ on purpose: a crumpled edge flips a hair of the
+outline on a thin shape (a brim, a sleeve, a coronet's body) and the fan's triangle to it lies over the shape's own paint — a big
+`fan` and no `leak`. A leak under 1% of the shape, or narrower than the ink across, is not counted unless asked for (`--min`). A
+shape painted `concave` is checked for a self-crossing outline instead and listed as information: ear clipping gives up on one and
+fans what is left. A part you add must not appear in the list — run it before and after, and the difference is none.
+
+The count is a shape against **its own outline**, never against what happens to be drawn over it. A crescent's spill under a big
+eyeball is counted although the white covers it — because the same crescent under an eye that is only a mark has nothing over it,
+and a part may not rely on its neighbour to hide it (§ never make parts avoid each other on their own). That is why the number is
+read with the picture beside it: `/pixeldiff.html` says how much of the board actually moved when you fix one.

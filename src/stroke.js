@@ -389,8 +389,11 @@ export class Sketch {
     }
   }
 
-  // Area fill. Cut as a fan from the centre.
-  // Every shape we use is visible from its centre, so this is enough.
+  // Area fill. Cut as a fan from the centre — right only for a shape **visible from its centre** (star-shaped). A bent band, a
+  // spiral, a crescent, a notched cap is not: the fan's triangles for the hidden edges are turned the wrong way and painted past
+  // the outline. That is counted, not assumed — `node scripts/fanspill.mjs` walks every part through shape.js fanSpill; a shape
+  // that spills is ear-clipped (fillPolygon, `concave`), cut as a strip or filled in pieces (guidelines/character/rules.md
+  // § a fill has to be visible from its centre)
   // skinT tags the fan with one t (the skin tag) — a bead, a tuft, a pom sitting at one place on a bent part
   fill(points, color, skinT = NaN) {
     this.skinT = skinT;
@@ -413,8 +416,9 @@ export class Sketch {
 
   // Area fill for a shape that is NOT visible from its centre — a cap with side lobes, a hood, a ragged sheet (the filled hair,
   // hair.js). Ear clipping: the polygon is cut into triangles by taking off one convex corner at a time whose triangle holds no
-  // other vertex. The fan above spilled across such a shape's concave notches onto whatever lay there (a face). Only the hair
-  // asks for it (materials.js paintWith `concave`); every other shape on the board is star-shaped and keeps the fan
+  // other vertex. The fan above spilled across such a shape's concave notches onto whatever lay there (a face). The hair asks
+  // for it (materials.js paintWith `concave`); which other shapes need it is what scripts/fanspill.mjs counts. It gives up on a
+  // self-crossing outline and fans what is left — the script counts those too
   fillPolygon(points, color, skinT = NaN) {
     this.skinT = skinT;
     const rgb = hexToRgb(color);

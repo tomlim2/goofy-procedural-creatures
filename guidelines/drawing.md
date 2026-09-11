@@ -28,8 +28,10 @@ their own; this is for the fills under them and the shapes that are only a fill.
 The board is three.js, and nothing is drawn on a 2D canvas (the only 2D contexts are the PNG
 export and the medium page copying its renders into its cards). WebGL's `linewidth` is fixed at 1 in most
 environments and `THREE.Line` gives you no control over thickness, so every stroke goes through `Sketch.pencil()`
-and becomes a triangle ribbon; every fill is a fan of triangles; a layer's ink and fills go
-into one `BufferGeometry` with vertex colors.
+and becomes a triangle ribbon; every fill is a fan of triangles from the shape's centre — right only for a shape that is
+visible from its centre, and a bent band, a spiral or a crescent fans past its own outline
+([character/rules.md](character/rules.md) § a fill has to be visible from its centre says what such a shape is filled with
+instead, and `node scripts/fanspill.mjs` counts them); a layer's ink and fills go into one `BufferGeometry` with vertex colors.
 
 Four things have to be present together to look hand-drawn. Leave out any one and it becomes vector clip art.
 

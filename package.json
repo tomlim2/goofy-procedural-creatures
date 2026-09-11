@@ -10,7 +10,8 @@
     "start": "node serve.mjs",
     "census": "node scripts/census.mjs",
     "snapshot": "node scripts/snapshot.mjs",
-    "drawdiff": "node scripts/drawdiff.mjs"
+    "drawdiff": "node scripts/drawdiff.mjs",
+    "fanspill": "node scripts/fanspill.mjs"
   },
   "dependencies": {
     "three": "^0.169.0"

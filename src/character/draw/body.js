@@ -49,6 +49,7 @@ export function paintPart(fills, spec, path, color, { own = false, flat = false,
   // one pale tone wins over a hand's own colour there; a box's is already a ghost's. The rule was written out here
   // as well, character for character, and paint.js is where it belongs
   const options = { color: markInkOf(spec, part, color), ...surfaceHand(spec, where) };
+  if (part) options.part = part;   // the part's name rides along, for the witnesses — scripts/fanspill.mjs reads it off each fill; the material ignores it
   if (pattern) options.pattern = pattern;   // the rex's second scale, laid in the torso's base (patternOf)
   if (strip) options.strip = strip;   // a tube's base cut as a strip between its rails (the tail — bones bend it)
   if (stripT) options.stripT = stripT;   // …tagged per rung with its t along the spine (the skin reads its bones from the tag)
