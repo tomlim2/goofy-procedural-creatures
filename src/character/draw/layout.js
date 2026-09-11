@@ -52,6 +52,31 @@ export function headShape(spec) {
   return HEAD_SHAPES[spec.parts.head] || HEAD_SHAPES.round;
 }
 
+// Where a ray leaving `from` along `dir` crosses the head outline — the superellipse plus the top/bottom width ratio that drawHead
+// draws (its lumps left out). For anything that runs to the edge of the head and stops there whatever the head's shape: on a square
+// head the side is at the full half-width, on a round head at brow height it is well inside it, and a wedge narrows toward the chin —
+// a line ended at ±headRx stuck out of a round head and fell short of a wide one. Bisected on the outline's implicit form; headAnchor
+// (head.js) walks the same outline by its parameter angle. A `from` already outside the outline is returned as it is
+export function headEdgeAlong(spec, box, from, dir) {
+  const shape = headShape(spec);
+  const n = 2 + shape.square;
+  const inside = (x, y) => {
+    const uy = (y - box.headCy) / box.headRy;
+    const ux = x / (box.headRx * (1 - shape.taper * uy));
+    return Math.pow(Math.abs(ux), n) + Math.pow(Math.abs(uy), n) < 1;
+  };
+  const [fx, fy] = from;
+  const len = Math.hypot(dir[0], dir[1]) || 1;
+  const dx = dir[0] / len, dy = dir[1] / len;
+  if (!inside(fx, fy)) return [fx, fy];
+  let lo = 0, hi = 2 * (box.headRx + box.headRy);   // the far end is outside the outline for any head
+  for (let i = 0; i < 24; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (inside(fx + dx * mid, fy + dy * mid)) lo = mid; else hi = mid;
+  }
+  return [fx + dx * lo, fy + dy * lo];
+}
+
 // (Color tone and luminance utilities are in src/color.js — shade, isDark)
 
 // Pulls actual dimensions out of the spec. Every drawing function shares these values.

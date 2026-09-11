@@ -4,7 +4,7 @@
 import { paintPart } from "./body.js";
 import { paintOf, markInkOf } from "../vocabulary/paint.js";
 import { blobPath, arcPath } from "../../shape.js";
-import { TAU } from "./layout.js";
+import { TAU, headEdgeAlong } from "./layout.js";
 import { shade, luminance, isDark, mix, tint } from "../../color.js";
 import { MARKS, blushOf } from "../vocabulary/palette.js";
 
@@ -461,6 +461,9 @@ export function rimScale(spec) {
 // Written out in both places, changing the happy eye left every other creature's ^^ on the old arch
 export const smileArchPath = (cx, cy, r) => arcPath(cx, cy - r * 0.12, r * 0.92, r * 0.72, Math.PI * 0.12, Math.PI * 0.88, 10);
 
+// The eyepatch strap (drawEyewear): where on the patch the two ends attach (the parameter angle up from the eye's horizontal, on the
+// inner and the outer side) and how steeply each rises — the far end, across the forehead, at 26°, the short near end at 40°
+const PATCH_STRAP = { corner: 1.13, far: 0.45, near: 0.7 };
 export function drawEyewear(ink, fills, spec, box, eyes) {
   const kind = spec.parts.eyewear;
   if (kind === "none") return;
@@ -470,11 +473,23 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
     // An eyepatch is **an object**, so it is always black — filled in an imp's light face ink it becomes a white mass and reads as a mistake.
     // On an ink-black head a light rim holds its shape so the black patch reads. The strap is face ink (black on a light head, light on an ink-black one)
     const eye = eyes.find((e) => e.side === spec.parts.patchSide) || eyes[0];
-    const patch = blobPath(eye.x, eye.y, eye.r * 1.5, eye.r * 1.35, { lumps: 3, amount: 0.025, noise: fills.noise, phase: 1.3 });   // almost a circle — only a touch, so it does not jiggle as the boil runs
+    const a = eye.r * 1.5, b = eye.r * 1.35;
+    const patch = blobPath(eye.x, eye.y, a, b, { lumps: 3, amount: 0.025, noise: fills.noise, phase: 1.3 });   // almost a circle — only a touch, so it does not jiggle as the boil runs
     paintPart(fills, spec, patch, spec.palette.ink, { own: true });
     if (spec.faceInk) ink.contour(patch, { color: spec.faceInk });
-    // The strap crosses the head
-    ink.line([[eye.x, eye.y + eye.r * 1.3], [-eye.side * box.headRx, box.headCy + box.headRy * 0.45]], { color: ink0, size: "S" });
+    // The strap — the band round the head, tilted: lowest at the patch and **rising both ways from it**, the way a cartoon pirate's does.
+    // Two lines leave the patch's upper corners and stop on the head outline (headEdgeAlong — so they end at the edge whatever the head's
+    // shape): the long one up across the forehead to the far side, the short one out to the near side. Bangs and a hat brim (drawn above
+    // the eyewear, scene/rig.js) cover its far end the way they would a real strap. It used to be one line from the top of the patch to a
+    // fixed point (±headRx, 0.45 ry): level with a medium eye and downhill from a large or a high one, so it grazed the other eye's white and
+    // ran alongside its brow like a second brow, and at ±headRx it stuck out past a round head's outline
+    const out = eye.side || 1;   // toward the patched side (a cyclops never wears one — applyConstraints; the gallery may still pin it)
+    for (const [dir, tilt] of [[-out, PATCH_STRAP.far], [out, PATCH_STRAP.near]]) {
+      const from = [eye.x + dir * a * Math.cos(PATCH_STRAP.corner), eye.y + b * Math.sin(PATCH_STRAP.corner)];
+      const to = headEdgeAlong(spec, box, from, [dir * Math.cos(tilt), Math.sin(tilt)]);
+      if (Math.hypot(to[0] - from[0], to[1] - from[1]) < 0.004) continue;   // a patch that already reaches the outline (big eyes) has no room for that end
+      ink.line([from, to], { color: ink0, size: "S" });
+    }
     return;
   }
 
