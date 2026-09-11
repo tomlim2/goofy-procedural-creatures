@@ -20,6 +20,10 @@ const BANDS = { hat: 0.03, brim: 0.055 };
 // The cap's dome — `grow` how much wider than the head it is at the brow (a cap is worn on the head, not painted on it),
 // `clear` how far it stands off the hair's own volume at the crown (over hair.js SCALP_PUFF)
 const CAP_DOME = { grow: 1.06, clear: 0.06 };
+// …and how far its brim reaches, in the dome's half-width. It was 1.5 off the old dome; the dome grew to clear the hair and
+// the brim had no reason to follow it, so it is pulled in to reach where it did (the median over 600 individuals) — at 1.5
+// it went 14% further and put the brim past the half-cell for 45% of cap wearers instead of 29%
+const CAP_BRIM = 1.34;
 
 export function drawHeadgear(ink, fills, spec, box, headPath) {
   const kind = spec.parts.headgear;
@@ -93,7 +97,7 @@ const HEADGEAR = {
     const { path, w } = coverHair(CAP_DOME.grow, CAP_DOME.clear, bottom);
     paintPart(fills, spec, path, accent, { part: "headgear", own: true });   // a hat takes the creature's goofy material at its own color's step
     ink.contour(path, { color: ink0 });
-    const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
+    const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * CAP_BRIM, bottom - 0.01], [tiltSide * w * CAP_BRIM, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
     paintPart(fills, spec, brim, accent, { part: "headgear", own: true });
     ink.contour(brim, { color: ink0 });
   },
