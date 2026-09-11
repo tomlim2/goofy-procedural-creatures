@@ -8,6 +8,7 @@ import { paintPart } from "./body.js";
 import { shade } from "../../color.js";
 import { headShape } from "./layout.js";
 import { browLine } from "./head.js";
+import { hairDome } from "./hair.js";
 import { MARKS } from "../vocabulary/palette.js";
 import { TOP_KNOTS } from "../vocabulary/slots.js";
 
@@ -16,7 +17,11 @@ import { TOP_KNOTS } from "../vocabulary/slots.js";
 // (medium/outlines.js PEN_SIZES)
 const BANDS = { hat: 0.03, brim: 0.055 };
 
-export function drawHeadgear(ink, fills, spec, box) {
+// The cap's dome — `grow` how much wider than the head it is at the brow (a cap is worn on the head, not painted on it),
+// `clear` how far it stands off the hair's own volume at the crown (over hair.js SCALP_PUFF)
+const CAP_DOME = { grow: 1.06, clear: 0.06 };
+
+export function drawHeadgear(ink, fills, spec, box, headPath) {
   const kind = spec.parts.headgear;
   if (kind === "none" || TOP_KNOTS.includes(kind)) return;   // a bun or an apple top is headgear by slot but hair by drawing (hair.js drawTopKnot) — no hat under it
   const ink0 = spec.palette.ink;
@@ -37,17 +42,22 @@ export function drawHeadgear(ink, fills, spec, box) {
   // Hats that cover the head (helmet, cap) follow **the head outline shape** (squareness, the top/bottom width ratio) rather than an ellipse, drawn slightly larger and then
   // cut at the brow line — the corners of a square head and the hair on the crown both have to be covered. Only the outline above (y ≥ line) is kept and the bottom is joined up.
   const shape = headShape(spec);
-  const cover = (grow, line) => {
-    const outline = blobPath(0, cy, rx * grow, ry * grow, { lumps: 3, amount: 0.05, noise: null, square: shape.square, taper: shape.taper });
+  // The cut a covering hat is made with — only the outline above `line` is kept, and the two ends are joined across it
+  const cutAt = (outline, line) => {
     const upper = outline.filter(([, y]) => y >= line);
     // Closes the cut with the left and right ends on y = line (keeping left→right order)
     upper.sort((a, b) => Math.atan2(a[1] - line, a[0]) - Math.atan2(b[1] - line, b[0]));
     const w = Math.max(...upper.map(([x]) => Math.abs(x)));
     return { path: [[w, line], ...upper, [-w, line]], w };
   };
+  const cover = (grow, line) => cutAt(blobPath(0, cy, rx * grow, ry * grow, { lumps: 3, amount: 0.05, noise: null, square: shape.square, taper: shape.taper }), line);
+  // …and the cut for a hat worn **over hair**: the hair's own dome (hair.js hairDome — the head's drawn path with the
+  // scalp's volume on it), `clear` further out than the hair and `grow` bigger all round, so the hat clears the hair by
+  // the same margin at every lump instead of letting it out over the edge wherever the two outlines disagreed
+  const coverHair = (grow, clear, line) => cutAt(hairDome(spec, box, headPath, clear).map(([x, y]) => [x * grow, cy + (y - cy) * grow]), line);
 
   // The hat itself — one entry per kind (HEADGEAR, below), `pot` when the value is one this table does not know
-  (HEADGEAR[kind] || HEADGEAR.pot)({ ink, fills, spec, box, ink0, pop, accent, rx, ry, cy, brow, halfW, crown, tiltSide, shape, cover });
+  (HEADGEAR[kind] || HEADGEAR.pot)({ ink, fills, spec, box, ink0, pop, accent, rx, ry, cy, brow, halfW, crown, tiltSide, shape, cover, coverHair });
 }
 
 // **One entry per hat**, the way every other part of the drawing is a table (mouth.js MOUTH, hair.js FRONTS and
@@ -73,10 +83,14 @@ const HEADGEAR = {
     ink.line([[-w * 1.02, bottom + 0.004], [w * 1.02, bottom - 0.004]], { color: ink0 });
     ink.line([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, size: "S" });
   },
-  // Baseball cap — a dome following the head shape (1.04×) plus a brim out to one side (the brow line). The brim droops slightly
-  cap: ({ ink, fills, spec, ink0, accent, ry, brow, tiltSide, shape, cover }) => {
+  // Baseball cap — a dome over the hair plus a brim out to one side (the brow line). The brim droops slightly.
+  // **A cap is the one covering hat worn over hair** (a helmet and a pot take it off, spec.js applyLateConstraints), so its
+  // dome is cut from the hair's own dome rather than the head's — CAP_DOME above the scalp. Following the head at 1.04×,
+  // as it did, it sat inside the hair: the scalp's puff came out over the dome's edge as a rim of hair riding above the
+  // cap, and the cap read as sunk into the head rather than worn on it
+  cap: ({ ink, fills, spec, ink0, accent, ry, brow, tiltSide, shape, coverHair }) => {
     const bottom = brow + ry * 0.05;
-    const { path, w } = cover(1.04, bottom);
+    const { path, w } = coverHair(CAP_DOME.grow, CAP_DOME.clear, bottom);
     paintPart(fills, spec, path, accent, { part: "headgear", own: true });   // a hat takes the creature's goofy material at its own color's step
     ink.contour(path, { color: ink0 });
     const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * 1.5, bottom - 0.01], [tiltSide * w * 1.5, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);

@@ -77,7 +77,7 @@ export function drawCreature(spec, variant = 0) {
     backFills: L.hairBack.fills, crownFills: L.hairCrown.fills, frontFills: L.hairFront.fills,
     headPath   // the head's own drawn outline — a filled piece that sits ON the head (the scalp) follows it exactly (hair.js scalp)
   }, spec, box, noise);
-  drawHeadgear(L.hat.ink, L.hat.fills, spec, box);   // the hat layer is above the ears — it covers their roots
+  drawHeadgear(L.hat.ink, L.hat.fills, spec, box, headPath);   // the hat layer is above the ears — it covers their roots. headPath: a cap is cut from the hair's own dome, which is built on it (headgear.js coverHair)
   drawTopKnot(L.hat.ink, L.hat.fills, spec, box, noise);   // a bun or an apple top — headgear that is hair, on the same layer, in the hair's colour
 
   // Only eyes whose pupil moves are passed along. A cyclops is alive too.

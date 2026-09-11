@@ -113,6 +113,17 @@ const untapered = (h, path) => {
     return [x * (1 + (1 / (1 - taper * uy) - 1) * s), y];
   });
 };
+// **How much volume hair has over the skull** — the scalp is the head's own drawn path pushed out by this at the crown
+const SCALP_PUFF = 0.08;
+// What a hat worn OVER hair has to clear: that same dome, `extra` further out. A hat cut from the head's shape instead
+// (a smooth blob) cannot clear it — the head's drawn path lumps with the creature's own noise, the puff multiplies those
+// lumps, and the hat's own lumps fall elsewhere, so the hair came out over the hat's edge wherever the two disagreed.
+// Sharing the path is what makes the clearance even. The hats that take the hair off (helmet, pot — spec.js
+// applyLateConstraints) have nothing to clear and keep the plain shape (headgear.js cover)
+export function hairDome(spec, box, headPath, extra = 0) {
+  const h = { spec, rx: box.headRx, ry: box.headRy, cy: box.headCy };
+  return puffed(h, untapered(h, headPath || grownOutline(h, 1.0, 1.0, 3, 0.04)), SCALP_PUFF + extra);
+}
 // A path pushed out from the head's centre — by `amount` at the crown, easing (smoothstep) to nothing at the temple level (0.15·ry
 // above the centre) and below: the volume hair has over the skull, tucked back into the head at the sides
 const puffed = (h, path, amount) => path.map(([x, y]) => {
@@ -159,7 +170,7 @@ const halfWidthAt = (outline, y, sign) => {
 const scalp = (h, frontY, topLine, hemAt) => {
   const { crown, crownFills, spec, rx, ry, cy } = h;
   const bottomAt = scalpHem(h, frontY, hemAt);
-  const outline = puffed(h, untapered(h, h.headPath || grownOutline(h, 1.0, 1.0, 3, 0.04)), 0.08);   // the head's drawn path, its taper undone above the temples, puffed; a caller without one gets the head shape
+  const outline = puffed(h, untapered(h, h.headPath || grownOutline(h, 1.0, 1.0, 3, 0.04)), SCALP_PUFF);   // the head's drawn path, its taper undone above the temples, puffed; a caller without one gets the head shape
   const upper = outline.filter(([x, y]) => y >= bottomAt(x)).sort(arcSort(cy));
   // The hem, its ends **on the outline** — run out to 0.97·rx whatever the head's width at that height, they stood past a head
   // narrow there (a pear at the brow) as a brim's corners, and the cap read as a helmet
