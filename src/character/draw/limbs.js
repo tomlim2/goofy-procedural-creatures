@@ -9,6 +9,7 @@ import { layout, BUILD, shoulderY } from "./layout.js";
 import { shade, tint, luminance } from "../../color.js";
 import { SPECIES } from "../vocabulary/species.js";
 import { MARKS, POPS } from "../vocabulary/palette.js";
+import { muzzleFill } from "./face.js";
 
 // Arm dimensions. Length = a slot independent of form × per-individual jitter. medium is the baseline 1, long is 1.64× that (enough to sweep the floor).
 // The baseline arm length is 0.242 — shorter than that and the hand is near the torso and does not read as an arm.
@@ -353,7 +354,7 @@ function armRigOf(spec, box) {
 
 // -- tail — skeleton (tail) × skin (tailSkin) --
 // A tail is three slots. The **skeleton** (curl, flag, longtail, stubtail, hook, kink, ring) is the spine's shape (a point list, origin at the pivot),
-// the **skin** (line, thick, plume, tuft, block, ball, puff, plus the disabled wedge) is what goes on that spine — a thin line, a filled thick tail, a bushy plume,
+// the **skin** (line, thick, plume, tuft, block, ball, puff, plus the disabled wedge) is what goes on that spine — a thin line, a filled thick tail, a bushy plume (a brush cut to a flame at its tip),
 // a tuft at the tip, a block, beads, a pom — and the **length** (tailLength) shrinks the whole skeleton.
 // Any skin goes on any skeleton (a plume skin on a stub skeleton = a pom). The scene stands it up as an eight-bone chain and rotates each bone (tailSketch below).
 
@@ -497,12 +498,33 @@ export function tailSketch(spec, variant = 0) {
   const total = spine.reduce((acc, q, i) => (i ? acc + Math.hypot(q[0] - spine[i - 1][0], q[1] - spine[i - 1][1]) : 0), 0);
   const ts = spineT(spine);
 
+  // The spine every tube is laid on — re-sampled every 0.012 and smoothed (two passes of a three-point mean, the ends kept; tube, below)
+  const fineSpine = () => {
+    let fine = resample(spine, 0.012);
+    for (let pass = 0; pass < 2; pass += 1) fine = fine.map((q, i) => (i === 0 || i === fine.length - 1 ? q : [(fine[i - 1][0] + q[0] + fine[i + 1][0]) / 3, (fine[i - 1][1] + q[1] + fine[i + 1][1]) / 3]));
+    return fine;
+  };
+  // **How much room a brush has at its end** — the tightest bend over the tail's last half, measured over seven rungs at a time (0.084 of arc).
+  // A brush is widest at its tip, and on a tight curl (a hook's question mark) the widest part is where it turns: at full width the tube was as
+  // wide as its own curl and folded over itself into a knot. Held to 0.6 of that radius, a hook's brush stays an open hook
+  const brushRoom = () => {
+    const fine = fineSpine(), m = fine.length;
+    const dir = (i, j) => { const x = fine[j][0] - fine[i][0], y = fine[j][1] - fine[i][1], l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
+    let tightest = Infinity;
+    for (let i = Math.floor(m / 2); i + 7 < m; i += 1) {
+      const u = dir(i, i + 3), v = dir(i + 4, i + 7);
+      const turn = Math.abs(Math.atan2(u[0] * v[1] - u[1] * v[0], u[0] * v[0] + u[1] * v[1]));
+      if (turn > 1e-6) tightest = Math.min(tightest, 0.084 / turn);
+    }
+    return tightest;
+  };
+  const brushWidth = stub ? 0.034 : Math.max(0.024, Math.min(0.048, 0.6 * brushRoom()));
   // The thickness function (on the whole tail's t) — per skin. A rex tail is three times and a bit thick at the
   // root, tapering hard — the counterweight
   const thickK = box.quad ? 1 : 3.2;
   const widthOf = {
     thick: (t) => (stub ? 0.024 : 0.02 * thickK) * (1 - t * 0.7) + 0.004,
-    plume: (t) => (stub ? 0.03 : 0.016 + 0.024 * Math.sin(Math.PI * Math.min(1, t * 1.15))),
+    plume: (t) => (stub ? brushWidth : 0.014 + (brushWidth - 0.014) * (1 - (1 - t) * (1 - t))),   // a brush — narrow at the root, widest at the tip (the reference's, about 1:3), as wide as its end's bend allows (brushRoom)
     block: () => (stub ? 0.024 : 0.019 * thickK),
     wedge: (t) => (stub ? 0.03 : 0.028) * (1 - t) + 0.001
   };
@@ -534,12 +556,11 @@ export function tailSketch(spec, variant = 0) {
   // The fine spine is **smoothed** (two passes of a three-point mean, the ends kept) so the skeleton's corners round off, and the width at every rung is
   // **clamped by the bend** — at most 0.85 × the radius of curvature there — so a tube can never be thicker than its curl and fold over itself (a hook
   // skeleton under a plume did, at the tip)
-  const tube = (widthAt, { squareTip = false } = {}) => {
-    let fine = resample(spine, 0.012);
-    for (let pass = 0; pass < 2; pass += 1) fine = fine.map((q, i) => (i === 0 || i === fine.length - 1 ? q : [(fine[i - 1][0] + q[0] + fine[i + 1][0]) / 3, (fine[i - 1][1] + q[1] + fine[i + 1][1]) / 3]));
+  const tube = (widthAt, { squareTip = false, cap = null, tip = null } = {}) => {
+    const fine = fineSpine();
     const end = spine[spine.length - 1], prev = spine[spine.length - 2];
     const wEnd = widthAt(1);
-    const taper = !squareTip && wEnd > 0.004;
+    const taper = !squareTip && !cap && wEnd > 0.004;
     const taperLen = wEnd * 1.6;
     if (taper) {
       const len = Math.hypot(end[0] - prev[0], end[1] - prev[1]) || 1;
@@ -562,18 +583,32 @@ export function tailSketch(spec, variant = 0) {
       const turn = Math.abs(Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy));
       return turn < 1e-6 ? Infinity : ((lu + lv) / 2) / turn;
     });
-    const { left, right } = tubeSides(fine, (t, i) => Math.min(widthOnFine(t), 0.85 * radius[i]));
+    // A cut end (cap) is held as narrow as the rung before it: the last rung has no bend of its own, and on a curl it stood out a knob wider than the tube
+    const clampAt = (i) => (cap && i === fine.length - 1 ? radius[i - 1] : radius[i]);
+    const { left, right } = tubeSides(fine, (t, i) => Math.min(widthOnFine(t), 0.85 * clampAt(i)));
     if (taper) { left[left.length - 1] = fine[fine.length - 1].slice(); right[right.length - 1] = fine[fine.length - 1].slice(); }   // the rails meet at the point
     // Every triangle carries its t along the spine as its skin tag — the strip per rung, the side lines by arc fraction — so the skin is bent by
     // construction, never guessed from a vertex's position (beside a tight curl a guess picks the curl's other arm, and the skin tears)
     const tsFine = spineT(fine);
     const tRung = (i) => Math.min(1, (tsFine[i] * whole) / body);
-    paintPart(sketch, spec, [...left, ...right.slice().reverse()], fur, { part: "tail", body: true, strip: [left, right], stripT: tRung });   // the tail is fur — the body's goofy material
+    if (tip) {
+      // A two-tone tube — the fur up to `tip.from`, the tip's colour past it: two strips sharing the rung between them (colour only, no line across)
+      const k = Math.max(1, Math.min(left.length - 2, left.findIndex((_, i) => tRung(i) >= tip.from)));
+      const L1 = left.slice(0, k + 1), R1 = right.slice(0, k + 1), L2 = left.slice(k), R2 = right.slice(k);
+      paintPart(sketch, spec, [...L1, ...R1.slice().reverse()], fur, { part: "tail", body: true, strip: [L1, R1], stripT: tRung });
+      paintPart(sketch, spec, [...L2, ...R2.slice().reverse()], tip.color, { part: "tail", body: true, strip: [L2, R2], stripT: (i) => tRung(i + k) });
+    } else {
+      paintPart(sketch, spec, [...left, ...right.slice().reverse()], fur, { part: "tail", body: true, strip: [left, right], stripT: tRung });   // the tail is fur — the body's goofy material
+    }
+    // The cut end past the last rung — filled before any line is laid, ear-clipped (its notches are not visible from its centre)
+    const capPoints = cap ? cap(left[left.length - 1], right[right.length - 1], fine) : null;
+    if (capPoints) paintPart(sketch, spec, capPoints, tip ? tip.color : fur, { part: "tail", body: true, skinT: 1, concave: true });
     tubePattern(widthAt);
     const railT = left.map((_, i) => tRung(i));   // the rails' tags follow the spine's t rung by rung — a rail's own length runs short on the inside of a curl
     sketch.line(left, { color: ink0, size: "S", joint: [true, true], skinT: railT });    // both ends joints — at the point two flicks would double into a spike
     sketch.line(right, { color: ink0, size: "S", joint: [true, true], skinT: railT });
-    if (!taper) sketch.line([left[left.length - 1], right[right.length - 1]], { color: ink0, size: "S", joint: [true, true], skinT: [1, 1] });
+    if (capPoints) sketch.line(capPoints, { color: ink0, size: "S", joint: [true, true], skinT: [1, 1], step: 0.004 });   // a fine step, so the tongues keep their points
+    else if (!taper) sketch.line([left[left.length - 1], right[right.length - 1]], { color: ink0, size: "S", joint: [true, true], skinT: [1, 1] });
   };
   // A thin spine line — its root a joint (no overshoot into the body), the tip free (the pencil's flick)
   const spineLine = (size) => sketch.line(spine, { color: ink0, size, joint: [true, false], skinT: [0, 1] });
@@ -584,31 +619,41 @@ export function tailSketch(spec, variant = 0) {
   } else if (skin === "thick" || skin === "block" || skin === "wedge") {
     tube(widthOf[skin], { squareTip: skin === "block" });
   } else if (skin === "plume") {
-    // A bushy plume tail — a filled body swollen in the middle plus fur strands: hairs growing from the tube's **edge** (the local width), leaning
-    // back toward the root, fine pencil lines (0.25) rooted at the edge and flicking at their ends — a mark from a fixed distance read as a thorn,
-    // and the ones crowding the tip made a black knob with the lines. The tip fans out into three hairs past the point — the bushy end. A pom on a stub
-    tube(widthOf.plume);
-    const n = stub ? 3 : 8;
-    for (let i = 0; i < n; i += 1) {
-      const t = stub ? 0.3 + i * 0.25 : 0.15 + i * 0.09;
-      const a = at(Math.min(0.98, t));
-      const side = i % 2 ? 1 : -1;
-      const nx = -a.dy * side, ny = a.dx * side;
-      const w = (stub ? 0.03 : widthOf.plume(t)) * 0.85;
-      const len = stub ? 0.024 : 0.032;
-      const tt = Math.min(0.98, t);
-      sketch.line([[a.x + nx * w, a.y + ny * w], [a.x + nx * (w + len) - a.dx * len * 0.35, a.y + ny * (w + len) - a.dy * len * 0.35]], { color: ink0, size: "S", joint: [true, false], skinT: [tt, tt] });   // a hair — rooted at the edge, flicking at its end; under the grit's width, so no crumbs
-    }
-    if (!stub) {
-      const e = at(1);
-      const reach = widthOf.plume(1) * 1.6;   // the taper's length — the point is this far past the spine's end
-      for (const ang of [-0.45, 0, 0.45]) {
-        const c = Math.cos(ang), sn = Math.sin(ang);
-        const dx = e.dx * c - e.dy * sn, dy = e.dx * sn + e.dy * c;
-        const x0 = e.x + e.dx * reach * 0.6, y0 = e.y + e.dy * reach * 0.6;
-        sketch.line([[x0, y0], [x0 + dx * 0.03, y0 + dy * 0.03]], { color: ink0, size: "S", joint: [true, false], skinT: [1, 1] });   // the tip's tuft
-      }
-    }
+    // A bushy tail — the reference's brush: narrow at the root and widest at the tip, the tip **in another colour** (the muzzle's — the reference's
+    // round pad and its tail end are one patch colour) and **cut into three tongues of flame** leaning back, the way a brush of fur is blown back.
+    // The bushiness is the silhouette's, never a stroke's: hairs stuck on the tube's edge (eight short lines and three fanned at the point) read as
+    // pins driven into it, not as fur. On a stub, a short brush with the same cut end
+    const flame = (a0, b0, fine) => {
+      const m = fine.length;
+      const e = fine[m - 1], q = fine[m - 2];
+      const len = Math.hypot(e[0] - q[0], e[1] - q[1]) || 1;
+      const d = [(e[0] - q[0]) / len, (e[1] - q[1]) / len];
+      const mid = [(a0[0] + b0[0]) / 2, (a0[1] + b0[1]) / 2];
+      const w = Math.hypot(a0[0] - b0[0], a0[1] - b0[1]) / 2;
+      // Which way the tongues lean. A straight end leans them back toward the body and up, the reference's flame blown back. An end that
+      // **curls** leans them to the outside of its bend, and the tighter the curl the shorter they run: leaned the reference's way, a hook's
+      // tongues folded back into its own tube and knotted there
+      const dir = (i, j) => { const x = fine[j][0] - fine[i][0], y = fine[j][1] - fine[i][1], l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
+      const [u, v] = m >= 8 ? [dir(m - 8, m - 5), dir(m - 4, m - 1)] : [d, d];
+      const turn = Math.atan2(u[0] * v[1] - u[1] * v[0], u[0] * v[0] + u[1] * v[1]);   // over the last seven rungs, + to the left
+      let n = [-d[1], d[0]];   // the spine's left at its end
+      if (Math.abs(turn) > 0.9) { if (turn > 0) n = [-n[0], -n[1]]; }   // a curled end (a hook's question mark: 0.9~2 rad over those rungs; a longtail's or a flag's gentle lift stays under) — the outside of the bend
+      else if (-n[0] + n[1] < 0) n = [-n[0], -n[1]];                     // a straight end — back toward the body and up
+      const reach = Math.max(0.5, Math.min(1, (0.084 / Math.max(Math.abs(turn), 1e-6)) / (3 * w)));   // the bend's radius against three half-widths
+      const [a, b] = (a0[0] - mid[0]) * n[0] + (a0[1] - mid[1]) * n[1] >= 0 ? [a0, b0] : [b0, a0];   // a on the lean side
+      const P = (along, across) => [mid[0] + (d[0] * along * reach + n[0] * across) * w, mid[1] + (d[1] * along * reach + n[1] * across) * w];
+      // Three tongues, each a curved hook: its outer edge swells out and over toward the lean side, its tip lands past its own base on that side,
+      // and its inner edge falls back into the notch — the longest on the lean side, curling out over the rail, the shortest on the far side
+      return [
+        a, P(0.65, 1.22), P(1.35, 1.34), P(2.05, 1.16),   // the long tongue, out over the lean side
+        P(1.3, 0.8), P(0.7, 0.42),                          // back down into the first notch
+        P(1.2, 0.5), P(1.8, 0.3),                           // the middle tongue
+        P(1.05, -0.02), P(0.55, -0.28),                     // the second notch
+        P(0.95, -0.2), P(1.45, -0.38),                      // the short tongue
+        P(0.85, -0.74), b
+      ];
+    };
+    tube(widthOf.plume, { cap: flame, tip: { from: 0.62, color: muzzleFill(spec) } });
   } else if (skin === "tuft") {
     // A tuft at the tip — a thin line plus a filled tuft at the end (a lion's tail)
     spineLine("M");
@@ -617,17 +662,13 @@ export function tailSketch(spec, variant = 0) {
     paintPart(sketch, spec, ball, shade(fur, 0.82), { part: "tail", body: true, skinT: 1 });
     sketch.contour(ball, { color: ink0, skinT: [1, 1] });
   } else if (skin === "puff") {
-    // A pom — a rabbit tail. Regardless of the skeleton's length, one bushy tuft near the rump (at spine 0.3) plus fur strokes around it
+    // A pom — a rabbit tail. Regardless of the skeleton's length, one bushy tuft near the rump (at spine 0.3). Its lumps are the fur: the six
+    // short strokes that stood round it read as pins stuck in a ball
     const a = at(0.3);
     const r = 0.04;
     const pom = blobPath(a.x, a.y + 0.004, r, r * 0.92, { lumps: 6, amount: 0.22, noise: null });
     paintPart(sketch, spec, pom, fur, { part: "tail", body: true, skinT: 0.3 });
     sketch.contour(pom, { color: ink0, skinT: [0.3, 0.3] });
-    for (let i = 0; i < 6; i += 1) {
-      const ang = -1.0 + i * 0.66;   // around the top and outside
-      const x0 = a.x + Math.cos(ang) * r * 0.9, y0 = a.y + 0.004 + Math.sin(ang) * r * 0.85;
-      sketch.line([[x0, y0], [x0 + Math.cos(ang) * 0.016, y0 + Math.sin(ang) * 0.016]], { color: ink0, size: "S", skinT: [0.3, 0.3] });
-    }
   } else if (skin === "ball") {
     // Beads — a tail strung with beads along the spine, **on a thin spine line** (without it the beads float behind the rump). One pom on a stub (a rabbit)
     if (stub) {

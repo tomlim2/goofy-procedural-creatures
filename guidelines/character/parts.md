@@ -538,12 +538,12 @@ is a pom (`tailSpine`, `tubeSides` in `limbs.js`).
 | --- | --- |
 | line | One thin stroke (thick on a stub) — the reference default |
 | thick | A filled body, thick at the root and thinning to the tip (fur color), plus an outline |
-| plume | A filled body swollen in the middle plus **hairs** — fine pencil lines (0.25, under the grit's width) rooted at the tube's edge, leaning back, and three fanning past the point (bushy — a spitz or fox) |
+| plume | **A brush** — the reference's bushy tail: narrow at the root and widest at the tip (about 1:3), the last 38% in **the muzzle's colour** (a two-tone tip, colour only — the reference's pad and tail end are one patch colour), and the end **cut into three hooked tongues of flame** leaning back toward the body and up. The bushiness is the silhouette's alone: the hairs it had — eight short lines stuck on the tube's edge and three fanned at the point — read as pins driven into it. On a curled end the tongues lean to the outside of the bend and run shorter, and the brush is held to 0.6 of its end's tightest bend (`brushRoom`): at full width a hook's brush was as wide as its own curl and folded into a knot (a spitz or fox) |
 | tuft | A thin line plus a filled tuft at the tip (a lion) |
 | block | A block — a strip of constant width with a squared tip |
 | wedge | A wedge — wide at the root, pointed at the tip — **disabled** (a rat tail). Assets and gallery only |
 | ball | Beads — four beads along the spine (getting smaller) on a thin spine line (without it they floated behind the rump); on a stub, one pom |
-| puff | A pom — a bushy rabbit tail attached near the rump regardless of the skeleton (a tuft plus fur strokes around it). Dogs |
+| puff | A pom — a bushy rabbit tail attached near the rump regardless of the skeleton: one lumpy tuft, its lumps the fur (the six short strokes that stood round it read as pins stuck in a ball). Dogs |
 
 The pivot is at the tail root. Species bias — skeleton: pup flag 4 · stubtail 3 · longtail 2 · ring 2 · curl 1 · hook 0.5 / cat curl 4 · longtail 3 · hook 2.5 · flag 2 ·
 kink 1.5 · stubtail 1 (kink is cats only, ring dogs only). Skin: pup thick 3 · line 2 · plume 2 · puff 2 · tuft 1 · ball 1 · block 0.5 / cat line 3 · thick 2 · plume 1.5 ·
@@ -568,8 +568,8 @@ tie it to a bone's own span and adding bones makes every bend sharper rather tha
 degrees of turn per unit of tail). The scene bends it as a
 `SkinnedMesh` ([../rig.md](../rig.md)), so a bend **curves** instead of breaking — there are no seams and no caps (four rigid bone meshes opened wedges at every joint). The side lines'
 ends are **joints** (`line(…, { joint })`: no overshoot, no thinning, and the end lands exactly on its point — [../drawing.md](../drawing.md) § the outline); a thin-line tail's root is a joint too and its tip runs free (the pencil's flick). A tube's tip
-**tapers to a point** under the lines over 1.6 end-widths (a brush end — a disc and an arc of line were ink on ink) except block, which stays square.
-**Color and pattern.** The tail is the body's color (a quad's `cloth` — the head color or a tone of it), at the head's value step like the rest of the mass. A tube carries the creature's
+**tapers to a point** under the lines over 1.6 end-widths (a brush end — a disc and an arc of line were ink on ink) except block, which stays square, and plume, which is cut into its flame (the cut end is ear-clipped — its notches are not visible from its centre).
+**Color and pattern.** The tail is the body's color (a quad's `cloth` — the head color or a tone of it), at the head's value step like the rest of the mass; a plume's tip is the muzzle's colour (`muzzleFill`), the two strips sharing a rung with no line across it. A tube carries the creature's
 **pattern** (the `pattern` slot, [../drawing.md](../drawing.md) § what takes the goofy material) along itself — stripes as **rings**, hatch across it — in the
 body's pattern ink (light on dark fur). A thin line, a tuft, beads and a pom have no area for it.
 

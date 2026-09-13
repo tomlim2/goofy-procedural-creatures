@@ -527,14 +527,18 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
 //   fill the muzzle color — per individual (hand, no rng): light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (0.55× the fur) 25%
 //   ink  the color of **the line drawn on** the muzzle (the mouth) — split by the muzzle's luminance (black if light, light ink if dark). The nose is an object and always black, but on a dark muzzle it gets a light rim
 export const hasMuzzle = (spec) => spec.species === "pup" || spec.species === "cat";
+// The muzzle's colour alone — the tail's two-tone tip wears it too (limbs.js plume), the way the reference's round pad and its tail tip are one patch colour
+export function muzzleFill(spec) {
+  const roll = spec.proportions.hand % 100;
+  return roll < 45 ? MARKS.muzzle : roll < 75 ? shade(spec.palette.skin, 1.12) : shade(spec.palette.skin, 0.55);
+}
 export function muzzleGeometry(spec, box) {
   const kind = spec.parts.nose;
   const mw = kind === "hook" ? 0.62 : kind === "long" ? 0.68 : kind === "wedge" ? 0.4 : 0.5;
   const mh = kind === "long" ? 0.28 : kind === "wedge" ? 0.3 : 0.36;
   const my = box.headCy - box.headRy * (kind === "long" ? 0.48 : 0.42);
   const nr = kind === "hook" ? 0.05 : kind === "dot" ? 0.032 : 0.04;
-  const roll = spec.proportions.hand % 100;
-  const fill = roll < 45 ? MARKS.muzzle : roll < 75 ? shade(spec.palette.skin, 1.12) : shade(spec.palette.skin, 0.55);
+  const fill = muzzleFill(spec);
   const dark = luminance(fill) < 120;
   return { my, rx: box.headRx * mw, ry: box.headRy * mh, noseY: my + box.headRy * 0.16, noseR: nr, fill, dark, ink: dark ? "#e9e3d5" : spec.palette.ink };
 }
