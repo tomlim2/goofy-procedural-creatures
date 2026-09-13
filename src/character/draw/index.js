@@ -15,7 +15,7 @@ export { limbSketches, motionRig, BIND_ARM, tailSketch } from "./limbs.js";
 
 // Layer names — one sketch pair (ink, fills) each. scene/rig.js stands meshes up under the same names (render order is in guidelines/rig.md)
 //   body · crownBack side ears · head the head outline · horns · hairBack back hair · hairCrown hair on the scalp · hairFront bangs · front dog/cat ears ·
-//   hat · face cheeks and whiskers · staticEyeBack/staticEyeFront static eyes (one layer per eye) · faceFront nose, muzzle, eyewear
+//   hat · face cheeks, tears, dark circles · staticEyeBack/staticEyeFront static eyes (one layer per eye) · faceFront the muzzle, nose, eyewear and a cat's whiskers
 // Layers attached to the head (ears, horns, hair, hat) each get a **depth (DEPTH)** from scene/rig.js and shift by different amounts on a face turn — bangs go a little toward the face, back hair goes the other way because it is behind the head
 // Static eyes are baked **per eye** — to turn one side into an arch for a wink, only that eye's layer can be switched off while the other stays (with both eyes in one mesh, the other eye vanishes too).
 // The smaller eye is Back, the larger is Front — when they overlap the larger is in front (a hollow's white covers the smaller eye's rim, with no crossing line)
@@ -65,11 +65,15 @@ export function drawCreature(spec, variant = 0) {
     drawEyes(L[key].ink, L[key].fills, spec, box, [eye]);
   });
   drawFace2(L.face.ink, L.face.fills, spec, box, eyes);
-  // The nose and eyewear are **frontmost** on the face (above the eye rig) — so a startle-widened white or a closed lid cannot cover the nose or a rim into nothing
+  // The muzzle, the nose and eyewear are **frontmost** on the face (above the eye rig) — so a startle-widened white or a closed lid cannot cover the nose or a rim into nothing
   drawNose(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
   // Brows and the mouth are not baked here. For state switching (rest, alt, angry, ^^) the scene stands separate meshes up with facePartSketch (faceStates.js).
-  drawWhiskers(L.face.ink, spec, box);   // cat whiskers — being on the face layer, they draw over the outline and can poke outside
   drawEyewear(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
+  // A cat's whiskers — **the last lines on the frontmost face layer**, so they are in front of its eyes and pupils in every state (the eye rig 3~,
+  // a lid, the ☆·♥ at 6.32) and of the muzzle they grow from, and they draw over the outline and can poke outside. They were on the face layer
+  // (2.4), under every live eye's white. The stroke phase carries on from the face layer, where they were drawn — the same wobble, the geometry unchanged
+  L.faceFront.ink.phase = L.face.ink.phase;
+  drawWhiskers(L.faceFront.ink, spec, box);
   // Three hair layers — back hair (behind the head) · on the scalp (same depth as the horns) · bangs (over the face). Each layer has its own depth and shifts separately on a face turn (rig.js DEPTH). See hair.js
   // The fills go along too — the filled family paints hair shapes with the goofy material; the fur kinds leave them empty (an empty sketch stands no mesh up)
   drawHair({

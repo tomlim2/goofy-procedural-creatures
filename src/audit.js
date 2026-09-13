@@ -15,7 +15,7 @@
 import * as THREE from "three";
 import { createScene, CELL_W, CELL_H } from "./scene/index.js";
 import { makeGrid, layout, eyeGeometry, facePartKinds } from "./character/index.js";
-import { drawEyes, drawFace2, drawNose, drawEyewear, drawWhiskers } from "./character/draw/face.js";
+import { drawEyes, drawFace2, drawNose, drawEyewear, drawWhiskers, hasMuzzle } from "./character/draw/face.js";
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng } from "./rng.js";
 import { sketchMesh, disposeGroup } from "./scene/mesh.js";
@@ -127,9 +127,9 @@ function audit() {
     // Static eyes get one layer per eye — so do the temp meshes (only the winking side is substituted; the other has to stay)
     for (const lid of item.staticLids) mk(`eyes${lid.eye.side < 0 ? 0 : 1}`, (ink, fills) => drawEyes(ink, fills, spec, box, [lid.eye]), 2.3, 2.4, lid.frames, lid.eye.side);
     if (spec.parts.face2 !== "none") mk("face2", (ink, fills) => drawFace2(ink, fills, spec, box, eyes), 2.3, 2.4, "face");
-    if (spec.species === "pup" || spec.parts.nose !== "none") mk("nose", (ink, fills) => drawNose(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");
+    if (hasMuzzle(spec) || spec.parts.nose !== "none") mk("nose", (ink, fills) => drawNose(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");
     if (spec.parts.eyewear !== "none") mk("eyewear", (ink, fills) => drawEyewear(ink, fills, spec, box, eyes), 6.4, 6.5, "faceFront");
-    if (spec.species === "cat") mk("whiskers", (ink) => drawWhiskers(ink, spec, box), 2.3, 2.4, "face");
+    if (spec.species === "cat") mk("whiskers", (ink) => drawWhiskers(ink, spec, box), 6.4, 6.5, "faceFront");   // the last lines on the frontmost face layer
 
     const reg = region(item);
     const headPx = reg.w / 1.5;   // the region width is 1.5× the head width — so this is the head width in pixels

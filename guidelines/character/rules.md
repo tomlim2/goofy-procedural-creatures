@@ -40,7 +40,7 @@ Species restrictions like "humans do not have X" go in **the single place, `spec
 
 Use forbid to block a single value; use bias only when the species takes the whole slot. Never hardcode a
 species name in spec.js or draw/ (a species branch in draw/ is only for when the **way of drawing** differs — a
-dog's muzzle, a cat's crown ears).
+muzzle a dog and a cat share, a cat's crown ears).
 
 ## Change three files, in order
 
@@ -102,7 +102,7 @@ mouth laid on top). The rules:
 - A dot mouth, a dot nose and a vertical pupil are **open lines that came out short**. The pencil keeps the ends of anything shorter than `PENCIL.stub` and sheds nothing there, so they stay their own length ([../drawing.md](../drawing.md) § the outline). `Sketch.stroke` draws nothing shorter than its re-sample step — its taper takes both ends to nothing — so anything short handed to it directly (an emoji's glyph, the medium page's dot eyes) has to name a finer `step`
 - The nose and cheeks sit **below the eye's (white's) lower edge** (`eyeFloor` — only when the eye actually reaches that x, as with a big eye or a cyclops). A startle does not grow the eye, only shrinks the pupil, so the white's size is always unchanged
 - **The mouth goes under the nose, and under the eyes when the nose is above them** (`eyeBottom` — the lowest edge of *any* eye, not `eyeFloor`: two big eyes set wide apart leave the middle empty, and a mouth placed by the nose alone landed in the gap and was drawn over both. 5% of creatures did)
-- A dog's mouth follows not the face proportion but **above the muzzle, below the nose** (`muzzleGeometry`) — overlapping the nose mass makes it invisible
+- A dog's or a cat's mouth follows not the face proportion but **the muzzle — in it, below the nose** (`muzzleGeometry`) — overlapping the nose mass makes it invisible
 - An open mouth's height is proportional to the head and **ends below the nose**. Brows go 1.9× the eye above it (1.35× on a cyclops) but **inside the head** (headCy + 0.84·ry)
 - The ink inside the eye rig (the ^^ arch, the sleep lid arch) is `faceInk` — draw black on an imp's ink-black head and it may as well not be there
 - **Two eyes overlap only slightly, and where they do the larger is in front.** `eyeGeometry` opens the centre distance to at least `OVERLAP` (70%, exported from `draw/layout.js`) of the sum of the radii (shrinking both eyes if there is no room), and where they overlap a per-eye render order block (back eye 3.0~3.35, front eye 3.5~3.85, `scene/rig.js`) has the larger eye cover the smaller one's rim and pupil —

@@ -124,7 +124,7 @@ export const SPECIES = [
       hairFront: [["none", 1]], hairBack: [["none", 1]],
       headgear: [["none", 8], ["cap", 1], ["beret", 0.5], ["crown", 0.3], ["halo", 0.3], ["cone", 0.4], ["coronet", 0.5]],
       eyewear: [["none", 6], ["patch", 2], ["monocle", 1]],
-      // Nose — cats read the slot as cat noses (face.js catNose): dot a small triangle · wedge a heart · hook triangle + philtrum · long a wide nose with a long philtrum · none nothing
+      // Nose — cats read the slot as cat noses in the muzzle, whose form it sets as a dog's does (face.js catNose, muzzleGeometry): dot a small triangle · wedge a heart · hook triangle + philtrum · long a wide nose with a long philtrum · none the pad alone
       nose: [["dot", 3], ["wedge", 2], ["hook", 2], ["long", 1], ["none", 1.5]],
       eyes: [["half", 3], ["slit", 3], ["wide", 2], ["dot", 1], ["oval", 1.5], ["hollow", 1], ["side", 1], ["lidded", 2], ["sharp", 2], ["soft", 2]],
       pupil: [["dot", 8], ["sleepy", 2.2], ["line", 0.8], ["happy", 0.8], ["cross", 2], ["squeeze", 1], ["scrawl", 1]],   // the little closed eyes (a dozing cat, one in seven) and the symbols its eye kinds carried — marks in the ball, as pupils now

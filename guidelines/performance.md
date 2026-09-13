@@ -78,7 +78,7 @@ renderer skips uniform updates while the same material runs on, and does not bak
 `stroke.js buildGeometry(sketches)` joins several sketches into one (earlier ones end up underneath). `rig.js`
 bakes each layer's fills sketch and then its ink sketch into one mesh — every fill is opaque, so at the same
 renderOrder the fills being drawn first is all that is needed. The exceptions are the face and the static eye
-layers (staticEyeBack/Front): a static eye's fill (pupil, white) has to sit below the face ink (whiskers) and
+layers (staticEyeBack/Front): a static eye's fill (pupil, white) has to sit below the face ink (a tear) and
 its ink above, so fills 2.3 and ink 2.4 are kept apart.
 The eye rig's white and rim are one mesh too. The hierarchy and the numbers are in [rig.md](rig.md) § the hierarchy.
 

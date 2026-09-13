@@ -1,14 +1,14 @@
 // Mouths — 20 kinds. Docs: guidelines/character/parts.md § mouth
 // One drawing function per kind — the MOUTH table. A new mouth means adding a function here and putting the name in slots.js SLOTS.mouth.
 // A function takes m (the context): { ink, fills, spec, box, x·y (the mouth centre), w (half-width), openH (the open height), ink0 (mouth ink — the face ink), edge (rims and lines over white teeth — palette ink, always dark) }
-// Position, width and ink are decided by mouthPlacement — species (above the muzzle for dogs), mouthPos, mouthSize and per-individual jitter are all solved there at once.
+// Position, width and ink are decided by mouthPlacement — species (in the muzzle for dogs and cats), mouthPos, mouthSize and per-individual jitter are all solved there at once.
 // The kind table for state switching (rest, alt, angry, ^^) is faceStates.js.
 
 import { blobPath, arcPath, crumple } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { markInkOf } from "../vocabulary/paint.js";
 import { TAU, eyeGeometry } from "./layout.js";
-import { eyeBottom, noseBottomY, muzzleGeometry } from "./face.js";
+import { eyeBottom, noseBottomY, muzzleGeometry, hasMuzzle } from "./face.js";
 import { MARKS, blushOf } from "../vocabulary/palette.js";
 
 // Mouth width multiplier — the mouthSize slot (a late slot). In the reference, very small mouths and very wide mouths split at the extremes
@@ -30,16 +30,16 @@ export function mouthPlacement(spec, box) {
   const top = Math.max(Math.min(noseBottomY(spec, box, eyes), floor) - 0.006, chin + 0.012);
   const tPos = spec.parts.mouthPos === "high" ? 0.22 : spec.parts.mouthPos === "low" ? 0.76 : 0.5;
   let y = Math.min(top + (chin - top) * tPos, floor - 0.03);
-  // A dog's mouth sits **above the muzzle**, so its ink follows the muzzle's luminance too (black on a light muzzle, light ink on a black one) — separate from the face (head color) ink
-  const ink0 = markInkOf(spec, "mouth", spec.species === "pup" ? muzzleGeometry(spec, box).ink : (spec.faceInk || spec.palette.ink));   // the mouth wears the ink; moved by a hand, what it wears
+  // A dog's or a cat's mouth sits **in the muzzle**, so its ink follows the muzzle's luminance too (black on a light muzzle, light ink on a black one) — separate from the face (head color) ink
+  const ink0 = markInkOf(spec, "mouth", hasMuzzle(spec) ? muzzleGeometry(spec, box).ink : (spec.faceInk || spec.palette.ink));   // the mouth wears the ink; moved by a hand, what it wears
   let w = box.headRx * 0.38 * (MOUTH_SIZE[spec.parts.mouthSize] || 1) * (SPECIES_WIDTH[spec.species] || 1);
   // The open mouth's height — proportional to the head, ending below the nose (swallow the nose and the nose disappears)
-  const noseBottom = spec.species === "pup" || spec.parts.nose === "none" ? Infinity : top;
+  const noseBottom = hasMuzzle(spec) || spec.parts.nose === "none" ? Infinity : top;
   const openH = Math.max(0.018, Math.min(0.05, box.headRy * 0.22, noseBottom - 0.008 - y));
   // Position jitter — a biped's mouth is sometimes slightly off to one side (the reference). ±0.1rx from the individual's hand, no rng. On a quad it is centred under the nose
   let x = box.quad ? 0 : ((spec.proportions.hand % 11) / 10 - 0.5) * 0.2 * box.headRx;
-  if (spec.species === "pup") {
-    // A dog's mouth is above the muzzle and below the nose — it follows the muzzle's dimensions, not the face proportion (mouthDrop). Overlapping the nose mass makes it invisible
+  if (hasMuzzle(spec)) {
+    // A dog's or a cat's mouth is in the muzzle, below the nose — it follows the muzzle's dimensions, not the face proportion (mouthDrop). Overlapping the nose mass makes it invisible
     const m = muzzleGeometry(spec, box);
     y = m.my - box.headRy * 0.12;
     w = Math.min(w, m.rx * 0.72);

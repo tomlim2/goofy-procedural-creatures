@@ -53,7 +53,7 @@ export const SLOTS = {
   // fold **folds on one side only while the other stands** (which side is per individual) · perk stands on both
   ears: ["none", "round", "roundMid", "roundBig", "pointy", "pointyMid", "pointyBig", "flap", "long", "fold", "foldMid", "foldBig", "perk", "perkMid", "perkBig"],
   // Noses — four lines (hook a hook · dot a dot · wedge a ∧ · long a long nose) + two nostrils (nostrils, two watermelon rolls) + three areas (bulb a round button nose · broad a wide triangle · box a square).
-  // Humans and imps get them as drawn, cats read them through catNose, and dogs read them as a muzzle shape (draw/face.js)
+  // Humans and imps get them as drawn; dogs and cats read them as the form of the muzzle they share, with a dog's black nose or a cat's (catNose) in it (draw/face.js)
   nose: ["hook", "dot", "wedge", "long", "none", "bulb", "broad", "nostrils", "box"],
   // Cheek and eye-area detail. The reference's tear marks and blush.
   // none · tears (imps' trickles) · blush (cheek pink) · circles (dark rings under the eyes — every species
@@ -85,7 +85,7 @@ export const SLOTS = {
   tailSkin: ["line", "thick", "plume", "tuft", "block", "wedge", "ball", "puff"],
   // The tail **length** — shrinks the whole skeleton (long 1 · medium 0.7 · short 0.45). The skin thickness is unchanged
   tailLength: ["long", "medium", "short"],
-  // The mouth **position** — where it sits between the bottom of the nose and above the chin: high (just under the nose) · mid · low (near the chin). Dogs ignore it, being on the muzzle rule
+  // The mouth **position** — where it sits between the bottom of the nose and above the chin: high (just under the nose) · mid · low (near the chin). Dogs and cats ignore it, being on the muzzle rule
   mouthPos: ["mid", "high", "low"],
   // The mouth **size** — width multipliers small 0.7 · normal 1 · wide 1.4 (draw/mouth.js MOUTH_SIZE). In the reference, very small mouths and very wide mouths split at the extremes.
   // For imps a species multiplier of 1.3 is applied on top

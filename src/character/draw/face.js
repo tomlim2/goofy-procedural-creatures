@@ -520,10 +520,13 @@ export function drawEyewear(ink, fills, spec, box, eyes) {
   }
 }
 
-// Dog muzzle dimensions and color. The nose slot decides the muzzle's form — the same slot gives a per-species variant.
-// The nose (drawNose) and the mouth (drawMouth, mouth.js) look at the same dimensions — the mouth sits above the muzzle and below the nose.
-//   fill the muzzle color — per individual (hand, no rng): light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (0.55× the fur) 25%. A muzzle is **color only**, with no outline (a color patch)
+// **The muzzle** — the round patch a dog's and a cat's nose and mouth are grouped into: one part the two species share (hasMuzzle), drawn
+// by one function (drawNose) and read by one placement (mouth.js). The nose slot decides its form for both; what sits in it is the
+// species' own — a dog's black nose (its size from the slot) or a cat's nose (catNose).
+// The nose (drawNose) and the mouth (drawMouth, mouth.js) look at the same dimensions — the mouth sits in the muzzle, below the nose.
+//   fill the muzzle color — per individual (hand, no rng): light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (0.55× the fur) 25%
 //   ink  the color of **the line drawn on** the muzzle (the mouth) — split by the muzzle's luminance (black if light, light ink if dark). The nose is an object and always black, but on a dark muzzle it gets a light rim
+export const hasMuzzle = (spec) => spec.species === "pup" || spec.species === "cat";
 export function muzzleGeometry(spec, box) {
   const kind = spec.parts.nose;
   const mw = kind === "hook" ? 0.62 : kind === "long" ? 0.68 : kind === "wedge" ? 0.4 : 0.5;
@@ -541,7 +544,7 @@ export function muzzleGeometry(spec, box) {
 const NOSE_REF_RY = 0.31;
 function noseScale(box) { return box.headRy / NOSE_REF_RY; }
 
-// The nose reference point (humans, cats, imps). If the eyes are big enough to reach the middle (a big eye, a cyclops) the nose is buried in them — it drops below the (startle-widened) eye
+// The nose reference point (humans, imps, the rex — a dog's and a cat's nose sit in the muzzle). If the eyes are big enough to reach the middle (a big eye, a cyclops) the nose is buried in them — it drops below the (startle-widened) eye
 export function noseY(spec, box, eyes) {
   return Math.min(box.headCy - box.headRy * spec.proportions.noseDrop, eyeFloor(spec, eyes, 0) - 0.008);
 }
@@ -577,12 +580,11 @@ function nostrilsShape(spec, box, eyes) {
   return { gap, rx, ry, cy, bottom: cy - ry * 1.05 };
 }
 
-// Cat noses — the nose slot is **read as a cat's** (the same way a dog reads it as a muzzle): dot a small triangle · wedge a heart · hook a triangle plus a philtrum (a Y) ·
-// long a wide triangle plus a long philtrum · none nothing. Drawn as a single line it would be mistaken for the mouth, so it is a **filled** triangle. Pink (the same as the blush and tongue) plus a face-ink rim —
+// Cat noses — the nose slot is **read as a cat's**, sitting in the muzzle at its nose point `y` (the same point a dog's black nose takes): dot a small triangle · wedge a heart ·
+// hook a triangle plus a philtrum (a Y) · long a wide triangle plus a long philtrum · none nothing. Drawn as a single line it would be mistaken for the mouth, so it is a **filled** triangle. Pink (the same as the blush and tongue) plus a face-ink rim —
 // it reads on a light face and on black fur alike. The philtrum is a short vertical line dropping from under the nose toward the mouth
-function catNose(ink, fills, spec, box, eyes) {
+function catNose(ink, fills, spec, box, y) {
   const kind = spec.parts.nose;
-  const y = noseY(spec, box, eyes);
   const ink0 = spec.faceInk || spec.palette.ink;
   const w = Math.max(0.024, box.headRx * (kind === "long" ? 0.13 : 0.1));   // half-width
   const h = Math.max(0.017, box.headRy * (kind === "wedge" ? 0.085 : 0.072));
@@ -606,12 +608,18 @@ function catNose(ink, fills, spec, box, eyes) {
 }
 
 export function drawNose(ink, fills, spec, box, eyes) {
-  if (spec.species === "cat" && spec.parts.nose !== "none") { catNose(ink, fills, spec, box, eyes); return; }
-  if (spec.species === "pup") {
+  if (hasMuzzle(spec)) {
     const m = muzzleGeometry(spec, box);
-    // The muzzle (the region the nose and mouth are grouped into) is **color only** — no outline is drawn round it. An outline makes it look like a board tacked onto the face (it has to stay a color patch)
+    // **The muzzle, outlined** — a dog's and a cat's. It is drawn on the frontmost face layer, so it sits **over the eyes** where a big eye
+    // reaches down to it (the reference cat's round pad laps onto both whites), and its line is the face ink, as a mark on the face is.
+    // It used to be a dog's alone and colour only — an outline was held to make a patch look tacked on — and a cat drew its nose bare on the face
     const muzzle = blobPath(0, m.my, m.rx, m.ry, { lumps: 3, amount: 0.1, noise: null });
     paintPart(fills, spec, muzzle, m.fill, { part: "nose" });   // the muzzle is fur — the creature's goofy material
+    ink.contour(muzzle, { color: spec.faceInk || spec.palette.ink });
+    if (spec.species === "cat") {
+      if (spec.parts.nose !== "none") catNose(ink, fills, spec, box, m.noseY);   // a cat's own nose, at the muzzle's nose point
+      return;
+    }
     const nose = blobPath(0, m.noseY, m.noseR, m.noseR * 0.75, { lumps: 3, amount: 0.15, noise: null });
     paintPart(fills, spec, nose, spec.palette.ink, { own: true });   // the nose is an object — always black
     if (m.dark) ink.contour(nose, { color: m.ink, size: "S" });   // on a dark muzzle a light rim holds the nose (the same rule as the eyepatch)
@@ -673,16 +681,14 @@ export function drawNose(ink, fills, spec, box, eyes) {
 // The nose's lower end — the upper limit for the mouth's position. With no nose, the (startle-widened) eye's lower edge or slightly below the head's centre
 export function noseBottomY(spec, box, eyes) {
   const kind = spec.parts.nose;
-  if (spec.species === "pup") { const m = muzzleGeometry(spec, box); return m.noseY - m.noseR; }   // one call: it re-rolls a hash and two tones
+  if (hasMuzzle(spec)) { const m = muzzleGeometry(spec, box); return m.noseY - m.noseR; }   // a dog's and a cat's nose sit in the muzzle. One call: it re-rolls a hash and two tones
   if (kind === "none") return Math.min(eyeFloor(spec, eyes, 0) - 0.01, box.headCy - box.headRy * 0.04);
-  if (spec.species !== "cat") {   // area noses — they give the lower edge from their own coordinates (a cat reads even these values as a catNose triangle, so it uses the constants below)
-    if (kind === "bulb") return bulbShape(spec, box, eyes).bottom;
-    if (kind === "broad") return broadShape(spec, box, eyes).bottom;
-    if (kind === "nostrils") return nostrilsShape(spec, box, eyes).bottom;
-    if (kind === "box") return boxShape(spec, box, eyes).bottom;
-  }
-  // The cat nose (catNose) is drawn at its own dimensions and does not take the multiplier — the constants here are the old values, kept for cats
-  const k = spec.species === "cat" ? 1 : noseScale(box);
+  // area noses — they give the lower edge from their own coordinates
+  if (kind === "bulb") return bulbShape(spec, box, eyes).bottom;
+  if (kind === "broad") return broadShape(spec, box, eyes).bottom;
+  if (kind === "nostrils") return nostrilsShape(spec, box, eyes).bottom;
+  if (kind === "box") return boxShape(spec, box, eyes).bottom;
+  const k = noseScale(box);
   return noseY(spec, box, eyes) - (kind === "long" ? 0.045 * k : kind === "wedge" ? 0.02 * k : kind === "hook" ? 0.012 * k : 0.008);
 }
 

@@ -97,11 +97,11 @@ export function buildCreature(spec, noise, birth = 0) {
   // One layer = one mesh: the fills sketch and the ink sketch are joined into one geometry (fills below, ink above — half the draw calls). Every fill is **opaque** —
   // when neighbours overlap, the individual in front has to hide the one behind completely, outline, color and shape.
   // The exceptions are the face and the static eyes (staticEyeBack/Front — one layer per eye): their fills (2.3) and ink (2.4) are kept apart — a static eye's fill (pupil, white) has to sit
-  // **below** the face ink (whiskers) while its ink sits above, so the two layers' fills and ink interleave.
+  // **below** the face ink (a tear starting on the eye) while its ink sits above, so the two layers' fills and ink interleave.
   // Static eyes being one layer per eye is because of the wink — turning one eye into an arch means switching off that eye's layer alone (animate).
   // Render order (guidelines/rig.md is the single source): back hair 0.4 → arms behind the back 0.5 → tail at rest 0.8 → legs 1.2 → body 1.5 → side ears 1.7 →
   // head 2 (the fill covers the body ink) → horns 2.06 → hair on the scalp 2.06 → dog/cat ears 2.12 → face and static eyes 2.3/2.4 → arms 2.5 →
-  // frontmost face (nose, eyewear) 6.5 → bangs 6.55 → hat 6.58
+  // frontmost face (the muzzle, nose, eyewear, a cat's whiskers) 6.5 → bangs 6.55 → hat 6.58
   const firstDrawn = drawCreature(spec, 0);
   const mrig = motionRig(spec);
   const neckY = firstDrawn.neckY;
@@ -122,7 +122,7 @@ export function buildCreature(spec, noise, birth = 0) {
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },        // fills and ink kept apart (see above)
     // Static eyes — one layer per eye (the smaller eye Back → the larger Front; overlapping, the larger is in front). For sleep, ^^, a wink (that side) and startle variants, that eye's layer is switched off
     ...STATIC_EYE_KEYS.map((key) => ({ key, group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 })),
-    { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // nose and eyewear — above the eye rig (3~). A startled white or a lid cannot cover them
+    { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // the muzzle, nose, eyewear and a cat's whiskers — above the eye rig (3~) and the ☆·♥ (6.32). A startled white or a lid cannot cover them
     { key: "hairFront", depth: DEPTH.hairFront, dy: -neckY, order: 6.55 }    // bangs — above the nose and eyewear, below the brows and mouth (6.6)
   ];
   for (const layer of LAYERS) if (layer.group === undefined) layer.group = depthGroup(layer.depth);

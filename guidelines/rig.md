@@ -32,12 +32,12 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
     │   └── hatFrame ×3          ← depth 0.45 · hat. Above the bangs, below the brows (6.58) — a hat sits on the hair, never under it
     │   └── hairFrontFrame ×3    ← depth 0.12 · the bangs band, side curtains, the front of the hood type. Over the face (6.55), below the brows and mouth (6.6)
     └── faceGroup            ← origin = the centre of the head (headCy). x/y shift plus squash from the face turn. Every feature
-        ├── faceFrame ×3         ← boil variants. Cheeks, whiskers — fills (2.3) and ink (2.4) as **two meshes** (they have to interleave with the static eyes)
+        ├── faceFrame ×3         ← boil variants. Cheeks, tears, dark circles — fills (2.3) and ink (2.4) as **two meshes** (they have to interleave with the static eyes)
         ├── staticEyeBackFrame ×3 · staticEyeFrontFrame ×3  ← boil variants. Static eyes (dot, half, slit…), **one layer per eye** (the smaller eye Back, the larger Front). Fills (2.3) and ink (2.4), two meshes.
         │                            **The two layers have the same render order** — front-to-back is decided by the sketch, not the layer: on an eye with a white, the outline and lid line have to be drawn into the fills (2.3)
         │                            for the front eye's white to cover the back eye's outline. Put them in the ink (2.4) and the back eye's outline rises above the front eye's white, leaving a crossing line
         │                            For sleep, ^^, a wink (that side) and startle variants (☆·♥), **that eye's** layer is switched off — a wink changes one side only and the other eye stays
-        ├── faceFrontFrame ×3    ← boil variants. Nose, muzzle and eyewear, one mesh (6.5) — above the eye rig
+        ├── faceFrontFrame ×3    ← boil variants. The muzzle (a dog's and a cat's), the nose, eyewear and a cat's whiskers (its last lines), one mesh (6.5) — above the eye rig and the ☆·♥
         ├── eyeFx ×(eye count)  ← startle variants: the ☆·♥ glyphs (6.32). There is no cover — meanwhile the static eye frame and the eye rig are **switched off** and this stands in. Only when state.eyeFx
         ├── faceStates.brow ×3   ← rest / alt / angry (the angry brow — none on species that have none)
         ├── faceStates.mouth ×4  ← rest / alt / angry (the tooth grid on humans and dogs, fangs on cats and imps) / ^^ (the tongue on dogs). The same kind shares a mesh
@@ -58,7 +58,7 @@ the front individual hides the one behind completely, outline, color and shape. 
 The stage hands the same blocks out by **distance to the camera** instead, every tick (§ the stage).
 
 One layer is one mesh — the fills sketch and the ink sketch are joined into one geometry (fills underneath). Within the same renderOrder, vertex order *is* front-to-back, so no separate
-number is needed. Only the face and static eyes are two meshes, fills (2.3) and ink (2.4) — the two layers' fills and ink have to interleave (a static eye's fill below the whiskers, its ink
+number is needed. Only the face and static eyes are two meshes, fills (2.3) and ink (2.4) — the two layers' fills and ink have to interleave (a static eye's white below a tear that starts on it, its ink
 above). Materials are shared per opacity level ([performance.md](performance.md)).
 
 | renderOrder | What |
@@ -74,14 +74,14 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 2.06 | Horns (depth 0.45) · hair on the scalp (depth 0.12, above the horns) — above the outline |
 | 2.12 | Dog and cat ears — the fill opaque (it covers the outline and the hair's root, so the ear attaches as a bump in the silhouette) (depth 0.2). The hat (6.58) stays above them: a cap covers the crown ears rather than letting them poke through — a hat is worn over the ears, and the small hats the animals draw (cap, beret, crown, halo) leave the silhouette readable |
 | 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) |
-| 2.4 | Face ink (whiskers, tears) · static eye ink (one layer per eye) |
+| 2.4 | Face ink (tears, the dark circles' bag) · static eye ink (one layer per eye) |
 | 1.2 | **Legs** — behind the body (above the floor line at 1, below the body at 1.5). A leg's root is inside the body outline and the foot reaches back up to the hem; in front, both lay on top of the torso |
 | 2.5 | Arms, upper and forearm (above the body ink — the sleeve covers the outline so the shoulder reads as embedded) |
 | 3.0~3.35 | The back (smaller) eye's rig — white+rim 3 · pupil 3.2 · ^^/shut line 3.35 (on closing, the white, rim and pupil are switched off and only the line remains) |
 | 3.5~3.85 | The front (larger) eye's rig — the same order, +0.5. When two eyes overlap the front eye's white covers the back eye's rim and pupil (no crossing line) |
 | 3.6 | A static eye's shut line and smile arch — the static eye frame is switched off then (no cover) |
 | 6.32 | The startle variant ☆·♥ glyphs — meanwhile the eyes (the static frame, the rig) are switched off. Below the nose and eyewear |
-| 6.5 | The frontmost face (muzzle fills plus nose and eyewear ink) — so a lid or an eye cover cannot cover the nose or a rim |
+| 6.5 | The frontmost face — the fills (a dog's and a cat's muzzle, the nose) and then the ink (the muzzle's outline, the nose, eyewear, and a cat's whiskers last) — so a lid or an eye cover cannot cover the nose or a rim, the muzzle is drawn over a big eye, and a cat's whiskers are in front of its eyes and pupils in every state |
 | 6.55 | Bangs — above the nose and eyewear, below the hat, the brows and the mouth (depth 0.12) |
 | 6.58 | Hat — above the bangs (a hat sits on the hair, never under it), below the brows and mouth (depth 0.45) |
 | 6.6 | Brows and mouth — above the eye rig (so a closed lid does not erase the brows and a widened cyclops white does not erase the mouth) |

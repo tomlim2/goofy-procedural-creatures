@@ -367,8 +367,8 @@ Four lines + two nostrils + three areas + none. **All of them are proportional t
 A nose with width (bulb, broad, box, nostrils) can lap its wings onto an eye (a white) if it goes by the nose reference point alone (`noseY`, which only looks at x=0) — `bulbShape`, `broadShape`, `boxShape` and `nostrilsShape`
 re-check the eye's lower edge (`eyeFloor`) at their own width (±0.8rx) and drop by that much if it touches. The faceFront layer is above the eye rig, so an area lapping onto an eye hides the white.
 The mouth's position (`noseBottomY`) uses the same functions' `bottom` — have the drawing and the mouth position look at different coordinates and on a big head the mouth bites into the nose.
-Distribution: bulb, broad, box and nostrils are humans only (DEFAULT_BIAS; beast biases broad). They are in no cat, dog or imp species bias — in the gallery they are drawn as a cat's triangular nose or a dog's default muzzle.
-**Each species reads the same slot differently** — pup as a muzzle form (width, height, nose size) and cat as a cat nose (`catNose`):
+Distribution: bulb, broad, box and nostrils are humans only (DEFAULT_BIAS; beast biases broad). They are in no cat, dog or imp species bias — in the gallery they are drawn as a cat's triangular nose or a dog's black one, in the muzzle's default form.
+**A dog and a cat read the slot as their muzzle** (below) — its form, width and height, for both — and what sits in it as their own nose: a dog's black nose (its size from the slot), a cat's nose (`catNose`):
 
 | Value | cat |
 | --- | --- |
@@ -379,15 +379,20 @@ Distribution: bulb, broad, box and nostrils are humans only (DEFAULT_BIAS; beast
 | none | Nothing |
 
 A cat nose is a **pink** fill (the same color as the blush and tongue) plus a face-ink rim — it reads on a light face and on black fur alike. Its size is proportional to the head (half-width 0.1·0.13rx).
-**A dog's muzzle** (the region the nose and mouth are grouped into) differs in color per individual: light cream 45% · a tone slightly lighter than the fur 30% · **black-ish** (the fur ×0.55) 25% (`muzzleGeometry.fill`, `hand`, no rng).
-**It is color only, with no outline** — an outline makes it look like a board tacked onto the face. The mouth ink over the muzzle is split by the muzzle's luminance (black if light, light ink if dark), and
-the nose, being an object, is always black but gets a light rim over a dark muzzle (the same rule as the eyepatch, [rules.md](rules.md)).
+
+**The muzzle — the one part a dog and a cat share** (`hasMuzzle`, `muzzleGeometry`, drawn by `drawNose`): the round pad the nose and mouth are grouped into. Its form comes from the nose slot
+(width 0.4~0.68·rx, height 0.28~0.36·ry, centred 0.42·ry under the head's centre, 0.48 for long); its colour is per individual — light cream 45% · a tone slightly lighter than the fur 30% ·
+**black-ish** (the fur ×0.55) 25% (`fill`, `hand`, no rng) — and it is **outlined** in the face ink, as a mark on the face is. It sits on the frontmost face layer (faceFront, 6.5), so it is drawn
+**over the eyes** where a big eye reaches down to it: the reference cat's round pad laps onto both whites. The nose sits at its nose point (0.16·ry over its centre) and the mouth in it, below the
+nose (`mouthPlacement` — `mouthPos` does not apply). The mouth ink is split by the muzzle's luminance (black if light, light ink if dark), and a dog's nose, being an object, is always black but gets a
+light rim over a dark muzzle (the same rule as the eyepatch, [rules.md](rules.md)). It was a dog's alone and **colour only** — an outline was held to make a patch look like a board tacked onto the
+face — while a cat drew its nose bare on the face; the outline and the shared pad are the reference's.
 
 ### face2 — cheeks and the eye area (4)
 none / tears (two **waves** running down below the eye, a trickle rather than a straight fall — **humans do not have them**, forbid → none; they belong to imps) / blush (a pink ellipse on the cheek) / circles (**dark circles** — the shorthand every cartoon and manga uses for the tired: a shaded crescent under each unpatched eye, darker than the skin and a breath toward violet, filled with the head's goofy material like the muzzle, with one sagging line a little under its middle — the bag. Under an eyeball the crescent hugs the eyeball's lower edge, a third of a radius deep under its centre, and its horns thin to nothing at the eye's corners — a flat floor under the arc drew a cup with straight sides; under an eye that is only a mark (an X, a dot, a sleepy arc) it is a shallow shadow at the mark's foot. On a dark skin it is a shade lighter instead, the face-ink rule. Two bare lines, which this was, read as wrinkles. **Every species can be tired** — the one face2 all five carry). The cheeks sit below the (startle-widened) eye.
 
 Cat **whiskers** are not a slot but fixed per species (`drawWhiskers`) — three strands per side in a slightly drooping fan. The length is per individual (0.42~0.92× the head's half-width), so
-over half of all cats have whiskers **poking out through the head outline** (being on the face layer at 2.4, they sit above the outline and ears and reach onto the paper).
+over half of all cats have whiskers **poking out through the head outline** — **the last lines on the frontmost face layer** (faceFront, 6.5): in front of the eyes and pupils in every state (a live eye's white, the rig at 3~; a lid; the ☆·♥ at 6.32) and of the muzzle they grow from, below the brows and mouth (6.6); above the outline and ears they reach onto the paper. On the face layer at 2.4, as they were, every live eye's white covered them where they crossed it.
 
 ### mouth (20) × mouthPos — the mouth position (3) × mouthSize — the mouth size (3)
 `mouth.js` — one drawing function per kind (the `MOUTH` table). The reference: humans default to **a very small mouth** and what stands out is **the tooth grid**, the grin and the hatching; dogs get w, o and the tongue;
@@ -416,7 +421,7 @@ The rim is face ink (visible only on a dark face) and the lines over the teeth a
 | fangs | A line plus two **big** white fangs below its ends — the **angry mouth** for imps and cats (a hiss). (The spiked-teeth kind overlapped this and was dropped) | Imps |
 
 **Position** `mouthPos` (a late slot) — **high** (0.22) · **mid** (0.5) · **low** (0.76) between the bottom of the nose (`noseBottomY`) and above the chin (headCy − 0.86·ry). With no nose, the upper limit is
-the eye's lower edge or slightly below the head's centre. Dogs follow the muzzle rule (pinned below the nose). Wherever it is, it has to be below the (startle-widened) eye. A biped sits **±0.1rx off to one side** per individual (`hand`) (the reference,
+the eye's lower edge or slightly below the head's centre. Dogs and cats follow the muzzle rule (in the muzzle, below the nose). Wherever it is, it has to be below the (startle-widened) eye. A biped sits **±0.1rx off to one side** per individual (`hand`) (the reference,
 no rng). **Size** `mouthSize` (a late slot) — width multipliers small 0.7 · normal 1 · wide 1.4, with a further species multiplier of 1.3 on imps. Species bias: humans small↑, imps wide↑.
 A white fill (the grid, grin, fangs, tooth strips) is paper white and the rims and vertical lines over it are **the palette ink (dark)** — drawn in an imp's light face ink they are lost on the white and leave an empty white bar. The tongue is blush pink.
 
