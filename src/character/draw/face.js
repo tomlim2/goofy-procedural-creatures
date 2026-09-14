@@ -615,11 +615,12 @@ export function drawNose(ink, fills, spec, box, eyes) {
   if (hasMuzzle(spec)) {
     const m = muzzleGeometry(spec, box);
     // **The muzzle, outlined** — a dog's and a cat's. It is drawn on the frontmost face layer, so it sits **over the eyes** where a big eye
-    // reaches down to it (the reference cat's round pad laps onto both whites), and its line is the face ink, as a mark on the face is.
+    // reaches down to it (the reference cat's round pad laps onto both whites), and its line is the palette's dark ink on every fur, as the head's
+    // outline is — never turned light on dark fur the way the face ink turns (that inversion is for the marks on a face, and the pad is the face's fur).
     // It used to be a dog's alone and colour only — an outline was held to make a patch look tacked on — and a cat drew its nose bare on the face
     const muzzle = blobPath(0, m.my, m.rx, m.ry, { lumps: 3, amount: 0.1, noise: null });
     paintPart(fills, spec, muzzle, m.fill, { part: "nose" });   // the muzzle is fur — the creature's goofy material
-    ink.contour(muzzle, { color: spec.faceInk || spec.palette.ink });
+    ink.contour(muzzle, { color: spec.palette.ink });
     if (spec.species === "cat") {
       if (spec.parts.nose !== "none") catNose(ink, fills, spec, box, m.noseY);   // a cat's own nose, at the muzzle's nose point
       return;

@@ -382,7 +382,7 @@ A cat nose is a **pink** fill (the same color as the blush and tongue) plus a fa
 
 **The muzzle — the one part a dog and a cat share** (`hasMuzzle`, `muzzleGeometry`, drawn by `drawNose`): the round pad the nose and mouth are grouped into. Its form comes from the nose slot
 (width 0.4~0.68·rx, height 0.28~0.36·ry, centred 0.42·ry under the head's centre, 0.48 for long); its colour is per individual — light cream 45% · a tone slightly lighter than the fur 30% ·
-**black-ish** (the fur ×0.55) 25% (`fill`, `hand`, no rng) — and it is **outlined** in the face ink, as a mark on the face is. It sits on the frontmost face layer (faceFront, 6.5), so it is drawn
+**black-ish** (the fur ×0.55) 25% (`fill`, `hand`, no rng) — and it is **outlined** in the palette's dark ink on every fur, as the head's outline is — never turned light on dark fur (the face ink's inversion is for the marks on a face). It sits on the frontmost face layer (faceFront, 6.5), so it is drawn
 **over the eyes** where a big eye reaches down to it: the reference cat's round pad laps onto both whites. The nose sits at its nose point (0.16·ry over its centre) and the mouth in it, below the
 nose (`mouthPlacement` — `mouthPos` does not apply). The mouth ink is split by the muzzle's luminance (black if light, light ink if dark), and a dog's nose, being an object, is always black but gets a
 light rim over a dark muzzle (the same rule as the eyepatch, [rules.md](rules.md)). It was a dog's alone and **colour only** — an outline was held to make a patch look like a board tacked onto the
