@@ -68,6 +68,8 @@ function migrate(next) {
   if (out.parts && out.parts.eyes === "droop") out.parts = { ...out.parts, eyes: "dot" };
   // The dots pattern (four square dabs on the body) and spots (three outlined dalmatian spots) were dropped; the body goes plain
   if (out.parts && (out.parts.pattern === "dots" || out.parts.pattern === "spots")) out.parts = { ...out.parts, pattern: "none" };
+  // The line tail skin (one thin stroke) was dropped; a thin tail opens as the filled tube, the plainest tail left
+  if (out.parts && out.parts.tailSkin === "line") out.parts = { ...out.parts, tailSkin: "thick" };
   // A file from before hair was three slots: the old value names the same style in the new ones
   if (out.parts && (out.parts.hair !== undefined || out.parts.hairFront === undefined)) {
     const { hair, ...rest } = out.parts;

@@ -44,7 +44,7 @@ export function contourWith(sketch, points, options) { return draw(sketch, point
 export function lineWith(sketch, points, options) { return draw(sketch, points, "line", false, options); }
 
 // size picks one of the kind's three widths — **the only way a width is said**. M unless asked: fine detail asks for S, the
-// one heavy line on the board (an imp's horn, a stub tail) for L. There is no free multiplier; a width that is not on a
+// one heavy line on the board (an imp's horn) for L. There is no free multiplier; a width that is not on a
 // kind's ladder cannot be drawn, which is what keeps the board's line weights countable.
 // paper is the color the pencil's bites take when the line runs over a fill. step re-samples a tiny ribbon finer (the star eye).
 // joint = [start, end] marks a line end that meets another line or a fill's edge (the tail's root, the tip's arc): no overshoot, no thinning there.

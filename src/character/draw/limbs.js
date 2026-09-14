@@ -354,7 +354,7 @@ function armRigOf(spec, box) {
 
 // -- tail — skeleton (tail) × skin (tailSkin) --
 // A tail is three slots. The **skeleton** (curl, flag, longtail, stubtail, hook, kink, ring) is the spine's shape (a point list, origin at the pivot),
-// the **skin** (line, thick, plume, tuft, block, ball, puff, plus the disabled wedge) is what goes on that spine — a thin line, a filled thick tail, a bushy plume (a brush cut to a flame at its tip),
+// the **skin** (thick, plume, tuft, block, ball, puff, plus the disabled wedge) is what goes on that spine — a filled thick tail, a bushy plume (a brush cut to a flame at its tip),
 // a tuft at the tip, a block, beads, a pom — and the **length** (tailLength) shrinks the whole skeleton.
 // Any skin goes on any skeleton (a plume skin on a stub skeleton = a pom). The scene stands it up as an eight-bone chain and rotates each bone (tailSketch below).
 
@@ -487,7 +487,7 @@ export function tailSketch(spec, variant = 0) {
       spine = spine.map(([x, y]) => [x * xs, y]);
     }
   }
-  const skin = spec.parts.tailSkin || "line";
+  const skin = spec.parts.tailSkin || "thick";   // a spec without the slot (an older tree's) wears the filled tube
   const stub = spec.parts.tail === "stubtail";
   // The tail grows from the body, so it is the body's color — a quad's cloth, the head color or a tone of it (its value step is the head's: one mass)
   const fur = spec.palette.cloth;
@@ -613,10 +613,7 @@ export function tailSketch(spec, variant = 0) {
   // A thin spine line — its root a joint (no overshoot into the body), the tip free (the pencil's flick)
   const spineLine = (size) => sketch.line(spine, { color: ink0, size, joint: [true, false], skinT: [0, 1] });
 
-  if (skin === "line") {
-    // A thin line — one hand-drawn tail stroke (thick on a stub)
-    spineLine(stub ? "L" : "M");
-  } else if (skin === "thick" || skin === "block" || skin === "wedge") {
+  if (skin === "thick" || skin === "block" || skin === "wedge") {
     tube(widthOf[skin], { squareTip: skin === "block" });
   } else if (skin === "plume") {
     // A bushy tail — the reference's brush: narrow at the root and widest at the tip, the tip **in another colour** (the muzzle's — the reference's
@@ -698,7 +695,7 @@ export function tailSketch(spec, variant = 0) {
   // A stub keeps none — its spine is too short to wear anything
   const deco = spec.parts.tailDeco;
   if (deco && deco !== "none" && !stub) {
-    const wOf = widthOf[skin] || (() => 0.011);   // the thin skins (line, tuft, beads) wear it at a line's width
+    const wOf = widthOf[skin] || (() => 0.011);   // the thin skins (tuft, beads) wear it at a line's width
     // Where the tail CLEARS the body — the deco sits on the visible tail, not at a spine t: with the root
     // buried (REX_ROOT), a short flag hides a third of its spine and wore its ring inside the body. The edge
     // is the same per-kind estimate the root uses, plus a margin of one root width

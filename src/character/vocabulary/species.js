@@ -77,7 +77,7 @@ export const SPECIES = [
       nose: [["dot", 4], ["wedge", 2], ["hook", 1]],
       eyes: [["dot", 3], ["ring", 3], ["half", 2], ["wide", 2], ["oval", 1.5], ["hollow", 1], ["side", 1], ["lidded", 1.5], ["sharp", 1], ["soft", 1]],
       tail: [["flag", 4], ["stubtail", 3], ["longtail", 2], ["curl", 1], ["ring", 2], ["hook", 0.5]],
-      tailSkin: [["thick", 3], ["line", 2], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // dogs are thick or bushy (a spitz), and a rabbit-like pom too. wedge disabled
+      tailSkin: [["thick", 3], ["plume", 2], ["puff", 2], ["tuft", 1], ["ball", 1], ["block", 0.5]],   // dogs are thick or bushy (a spitz), and a rabbit-like pom too. wedge disabled
       tailLength: [["long", 2], ["medium", 2], ["short", 2]],
       // Mouth — the w (omega) under the muzzle by default, a barking o (open), a panting tongue (tongue), plus line, dot and smile. No duck bill, zigzag or spiked teeth (3 reference rows)
       mouth: [["omega", 4], ["line", 2], ["open", 2], ["tongue", 2], ["dot", 1.5], ["smile", 1]],
@@ -132,7 +132,7 @@ export const SPECIES = [
       mouth: [["omega", 4], ["smug", 2], ["three", 1.5], ["line", 2], ["dot", 2], ["meow", 1], ["blep", 0.7]],
       mouthSize: [["normal", 3], ["small", 2], ["wide", 0.3]],
       tail: [["curl", 4], ["longtail", 3], ["flag", 2], ["stubtail", 1], ["hook", 2.5], ["kink", 1.5]],
-      tailSkin: [["line", 3], ["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats get a thin line. wedge disabled
+      tailSkin: [["thick", 2], ["plume", 1.5], ["tuft", 1], ["block", 0.5], ["ball", 0.5], ["puff", 0.3]],   // cats wear a filled tube or a brush (the thin line was dropped). wedge disabled
       tailLength: [["long", 3], ["medium", 2], ["short", 1]],
       face2: [["none", 5], ["blush", 1], ["circles", 0.8]]
     }
