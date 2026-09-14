@@ -341,17 +341,20 @@ export function drawFace2(ink, fills, spec, box, eyes) {
   }
 }
 
-// Cat whiskers — three strands per side. The length is per individual (0.42~0.92× the head's half-width): over half of them have whiskers **poking out through the head outline**.
-// Being drawn on the face layer (2.4) they sit above the outline, ears and hat, and reach out onto the paper. They shift along with a face turn
+// Cat whiskers — three strands per side, **rooted inside the muzzle**: the whisker pads either side of the nose, half the muzzle's half-width out,
+// stacked over its upper half (above the mouth), and fanning out over its outline. They were rooted at a fixed place on the face (0.3·rx out,
+// 0.3·ry under the head's centre), and over a narrow muzzle the top strand started outside it. The length is per individual (0.42~0.92× the
+// head's half-width), so the longer ones **poke out through the head outline**. Drawn last on the frontmost face layer (draw/index.js), they
+// sit in front of the eyes, the muzzle and the outline and reach out onto the paper. They shift along with a face turn
 export function drawWhiskers(ink, spec, box) {
   if (spec.species !== "cat") return;
   const roll = (spec.proportions.hand % 97) / 97;
   const len = box.headRx * (0.42 + roll * 0.5);
-  const wy = box.headCy - box.headRy * 0.3;
+  const m = muzzleGeometry(spec, box);
   for (const side of [-1, 1]) {
     for (let i = 0; i < 3; i += 1) {
-      const y0 = wy + (i - 1) * 0.028;
-      const x0 = side * box.headRx * 0.3;
+      const y0 = m.my + m.ry * (0.18 + (i - 1) * 0.23);   // 0.41 · 0.18 · −0.05 of the muzzle's half-height — inside it at half its width, and above the mouth
+      const x0 = side * m.rx * 0.5;
       // A slightly drooping fan — the longer the whisker, the more its tip spreads
       ink.line([[x0, y0], [x0 + side * len * 0.55, y0 + (i - 1) * 0.008 * (len / 0.09)], [x0 + side * len, y0 + (i - 1) * 0.02 * (len / 0.09) - 0.004]], { color: spec.faceInk || spec.palette.ink, size: "S" });
     }
