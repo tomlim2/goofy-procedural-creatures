@@ -1,28 +1,30 @@
-// The card — what the name screen stands a creature up in (guidelines/name.md § the card): its numbers, where they sit, and the
-// one function that writes them. The numbers are read off the creature: ♥ and rarity off its parts (character/name.js), its moves
-// off its own clock, run for five minutes. The words are written onto a 2D canvas by drawCardWords — the screen's overlay and the
-// saved PNG alike, so the two cannot disagree. Nothing here touches the DOM at import, so scripts/names.mjs reads the same card.
+// The card — what the name screen stands a creature up in (guidelines/name.md § the card): its numbers, where they sit, and how
+// its words are laid out. The numbers are read off the creature: ♥ and rarity off its parts (character/name.js), its moves off its
+// own clock, run for five minutes. The words are the goofy type (medium/type.js) — any script, traced off a real font and written
+// in the pencil into the scene by the page. Nothing here touches the DOM at import, so scripts/names.mjs reads the same card.
 
 import { makeClock, ACTIONS, BODY_ACTIONS, QUAD_ACTIONS } from "./motion/index.js";
-import { motionRig, isGhost, heartsOf, rarityOf, RARITY_NAMES } from "./character/index.js";
+import { motionRig, isGhost, heartsOf, rarityOf, RARITY_NAMES, PAPER } from "./character/index.js";
+import { mix } from "./color.js";
 import { TICK_FPS } from "./tick.js";
 
 // The size SAVE draws the card at, whatever the screen — the 63 × 88 mm trading card's 5:7 (the page lays it out at the same, styles.css)
 export const CARD_SAVE = [1000, 1400];
 
-// Where everything stands, as fractions of the card — x and sizes of its width, y of its height (a word's y is the top of its
-// letters). art is the picture's window; zoom is the camera's, so the cell and the emoji over a head fill that window
+// Where everything stands, as fractions of the card — x and a word's em of its width, y of its height (a word's y is its baseline).
+// art is the picture's window; zoom is the camera's, so the cell and the emoji over a head fill that window. weight is the type's
+// (500 · 700, fonts/); a soft word is written in the ink taken a third of the way to the paper
 export const CARD = {
   inset: 0.035,
   corner: 0.03,
   art: { x0: 0.06, x1: 0.94, y0: 0.155, y1: 0.775 },
   zoom: 1.2,
-  name: { x: 0.075, y: 0.052, size: 0.066, max: 0.64 },
-  hearts: { x: 0.925, y: 0.062, size: 0.048 },
-  kind: { x: 0.076, y: 0.117, size: 0.028 },
-  moves: { x: 0.075, x1: 0.925, y: 0.8, step: 0.044, size: 0.034 },
-  rarity: { x: 0.075, y: 0.905, size: 0.034 },
-  foot: { x: 0.925, y: 0.911, size: 0.022 }
+  name: { x: 0.075, y: 0.104, em: 0.07, weight: 700, max: 0.64 },
+  hearts: { x: 0.925, y: 0.104, em: 0.05, weight: 700 },
+  kind: { x: 0.076, y: 0.142, em: 0.03, weight: 500, soft: true },
+  moves: { x: 0.075, x1: 0.925, y: 0.823, step: 0.04, em: 0.036, weight: 500 },
+  rarity: { x: 0.075, y: 0.927, em: 0.036, weight: 700 },
+  foot: { x: 0.925, y: 0.927, em: 0.025, weight: 700, soft: true }
 };
 
 // -- the moves --
@@ -72,45 +74,34 @@ export function cardOf(made) {
   };
 }
 
-const FONT = "ui-monospace, SFMono-Regular, Menlo, monospace";   // the page's own stack (styles.css); a Hangul or kana name falls back to the platform's
-
-// Writes a card's words over whatever a 2D context `width` × `height` pixels (the whole card's size) already holds — the saved
-// card's scene, or the overlay's cleared glass. A blank card (no card) writes nothing
-export function drawCardWords(ctx, width, height, card) {
-  if (!card) return;
-  ctx.save();
-  ctx.fillStyle = card.ink;
-  ctx.textBaseline = "top";
-  // One word: its size a fraction of the width, shrunk to fit `max` (a fraction of the width) when it runs longer — and then
-  // lowered by half of what it lost, so a long name stays on its line's middle instead of riding up to its top
-  const write = (text, at, { weight = 400, align = "left", alpha = 1, spacing = 0.04, size = at.size, x = at.x, y = at.y, max = at.max } = {}) => {
-    const full = size * width;
-    let px = full;
-    const font = () => {
-      ctx.font = `${weight} ${px.toFixed(2)}px ${FONT}`;
-      if ("letterSpacing" in ctx) ctx.letterSpacing = `${(px * spacing).toFixed(2)}px`;
-    };
-    font();
-    if (max) {
-      const measured = ctx.measureText(text).width;
-      if (measured > max * width) {
-        px *= (max * width) / measured;
-        font();
-      }
-    }
-    ctx.globalAlpha = alpha;
-    ctx.textAlign = align;
-    ctx.fillText(text, x * width, y * height + (full - px) / 2);
-  };
-  write(card.name, CARD.name, { weight: 700, spacing: 0.02 });
-  write(`♥ ${card.hearts}`, CARD.hearts, { weight: 700, align: "right" });
-  write(card.kind, CARD.kind, { alpha: 0.72, spacing: 0.16 });
+// -- the words --
+// Every word on a card, where it stands (CARD): the name as it was typed, the labels in capitals. align right puts the word's end at x
+export function cardWords(card) {
+  const words = [
+    { text: card.name, ...CARD.name },
+    { text: `♥ ${card.hearts}`, ...CARD.hearts, align: "right" },
+    { text: card.kind, ...CARD.kind }
+  ];
   card.moves.forEach((move, i) => {
     const y = CARD.moves.y + CARD.moves.step * i;
-    write(move.label, CARD.moves, { y, max: 0.7 });
-    if (move.count !== null) write(`×${move.count}`, CARD.moves, { x: CARD.moves.x1, y, align: "right", weight: 700 });
+    words.push({ text: move.label.toUpperCase(), ...CARD.moves, y, max: 0.66 });
+    if (move.count !== null) words.push({ text: `×${move.count}`, ...CARD.moves, x: CARD.moves.x1, y, align: "right" });
   });
-  write(`${"★".repeat(card.stars)} ${RARITY_NAMES[card.stars - 1]}`, CARD.rarity, { weight: 700, spacing: 0.12 });
-  write("MENAGERIE v1", CARD.foot, { align: "right", alpha: 0.6, spacing: 0.18, weight: 700 });
-  ctx.restore();
+  words.push({ text: `${"★".repeat(card.stars)} ${RARITY_NAMES[card.stars - 1]}`, ...CARD.rarity });
+  words.push({ text: "MENAGERIE v1", ...CARD.foot, align: "right" });
+  return words;
+}
+
+// A card's words laid out: each traced at its weight (`trace(text, weight)` → { shapes, width } in ems — medium/type.js traceType),
+// shrunk to its `max` width when it runs longer, and placed — { em, x (its left end), y (its baseline), line, color } in card
+// fractions, x and em of the width
+export function layCard(card, trace) {
+  const soft = mix(card.ink, PAPER, 0.35);
+  return cardWords(card).map((word) => {
+    const line = trace(word.text, word.weight);
+    let em = word.em;
+    if (word.max && line.width * em > word.max) em = word.max / line.width;
+    const x = word.align === "right" ? word.x - line.width * em : word.x;
+    return { ...word, em, x, line, color: word.soft ? soft : card.ink };
+  });
 }

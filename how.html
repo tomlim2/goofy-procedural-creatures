@@ -36,8 +36,8 @@ step: <a href="./board.html">the board is here</a>, <a href="https://github.com/
 here</a>.</p>
 
 <p class="lede">This page is the <b>medium</b> — what they are drawn <i>with</i>, on three axes: the <b>goofy outline</b>, the
-<b>goofy material</b> and the <b>goofy fur</b>, plus the shapes and colours. No textures and no brush images; the hand comes from
-rules. It is all three.js, every stroke and fill a triangle.</p>
+<b>goofy material</b> and the <b>goofy fur</b>, plus the <b>goofy type</b> the name screen's card is written in, the goofy letters, the shapes and
+colours. No textures and no brush images; the hand comes from rules. It is all three.js, every stroke and fill a triangle.</p>
 
 <p class="lede"><b>Every figure below is drawn live by the code that draws the creatures</b> — the same
 <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/stroke.js"><code>src/stroke.js</code></a> and
@@ -294,6 +294,80 @@ point waving on its own and a share of each push leaning sideways.</p>
 
 <!-- ================================================================ -->
 <section>
+<h2>THE GOOFY TYPE</h2>
+<p>One screen writes words: the <a href="./">name screen</a>'s card — the name, the kind, the moves, the rarity. A name comes in any
+script, so the card does not draw a word glyph by glyph: it <b>traces a real font</b> (<code>src/medium/type.js</code>). A line is
+written onto a canvas in Noto Sans and Noto Sans KR, served from <code>fonts/</code> and loaded whatever is typed; the canvas's
+coverage is traced at half into rings (marching squares), each ring simplified, and a ring inside an odd number of others is a hole.
+Then the rings go down in the pencil — every point pushed about by a wiggle of its own, the shape filled with its holes, each ring
+edged in a pencil line — and each boil frame wiggles them its own way, so the words boil with the drawing. A kanji, a hanja or an
+emoji the two fonts do not hold is written in the platform's font and traced all the same: an emoji comes out an ink silhouette.</p>
+
+<div class="figs">
+  <figure data-fig="type" class="wide">
+    <canvas></canvas>
+    <figcaption><b>the traced type</b> — Hangul, Latin and kana in one line, traced and written by <code>typeWith</code>, the same
+    function the card writes with.</figcaption>
+  </figure>
+</div>
+</section>
+
+<!-- ================================================================ -->
+<section>
+<h2>THE GOOFY LETTERS</h2>
+<p>The other way to draw a word, and the first: the <b>goofy letters</b> (<code>src/medium/letters.js</code>) — 26 capitals, ten
+digits and a few marks, <b>as strokes, not a font</b>. Every glyph is a list of strokes measured in cap heights — x across its
+width, y from the baseline to the cap — and each stroke goes down as one line of the same pencil, so a word wanders, sheds and boils
+like the drawing it sits on. The ♥ and the ★ are filled under their line. They are Latin capitals only, which is why the card writes
+in the type above; they are kept.</p>
+
+<div class="figs">
+  <figure data-fig="letters" class="wide">
+    <canvas></canvas>
+    <figcaption><b>the capitals</b> — <code>letterWith</code>, one pencil line a stroke, in the letters' own hand (half the board's
+    wobble, so a word a few ink widths tall still reads). Every glyph here is read off <code>GLYPHS</code>.</figcaption>
+  </figure>
+  <figure data-fig="letterMarks" class="wide">
+    <canvas></canvas>
+    <figcaption><b>the digits and the marks</b> — the ♥ and a number, × and a count, ★ for stars, · between two words, and what a
+    name is likely to hold.</figcaption>
+  </figure>
+</div>
+
+<h3>a corner is two strokes</h3>
+<p>The pencil re-samples a line at a fixed step (<code>PENCIL.step</code>, 0.01) and walks round a corner by cutting it. On a head
+that is nothing; on a letter a few steps tall — a small word on a card — a cut corner is a round A. So <b>a corner is
+two strokes meeting, never one bent line</b>, and where the pen runs past a stroke's end it runs past the way a hand does. A
+curve is one stroke; a loop — O, 0, 8, a dot — is closed.</p>
+
+<div class="figs">
+  <figure data-fig="letterCorner" class="wide">
+    <canvas></canvas>
+    <div class="subs"><span>one bent line — the apex walked off</span><span>two strokes — the apex kept</span></div>
+    <figcaption><b>the same A, twice</b> — at the height a card's small words stand, magnified. A stroke that short is a stub to
+    the pencil: it keeps its ends and sheds nothing, which is the rest of what keeps the small words legible.</figcaption>
+  </figure>
+</div>
+
+<h3>the pens</h3>
+<p>A letter's pen is <b>a share of its cap height</b> — the letters' own ladder, the way every outline kind names its own, so a
+word's line grows with the word and a weight that is not on the ladder is not drawn. A title takes L and everything else M.</p>
+
+<div class="figs">
+  <figure data-fig="letterPens" class="wide">
+    <canvas></canvas>
+    <div class="subs"></div>
+    <figcaption><b>S · M · L</b> — the same word at each weight, read off <code>LETTER_PENS</code>.</figcaption>
+  </figure>
+</div>
+
+<p class="note"><b>Capitals only.</b> A character the letters have no glyph for — Hangul, kana, an emoji, a lower-case or an
+accented letter — they cannot write at all. A Korean pencil hand, built from jamo rather than 11,172 syllables, would have been a
+piece of work of its own; tracing a font (the goofy type, above) writes every script there is.</p>
+</section>
+
+<!-- ================================================================ -->
+<section>
 <h2>THE SHAPES</h2>
 <p>A head is not a circle but a lumpy mass. One recipe, <b>blobPath</b>, makes every closed shape on the board:
 a superellipse bent by noise, squared and tapered by two knobs.</p>
@@ -331,7 +405,7 @@ a superellipse bent by noise, squared and tapered by two knobs.</p>
 
 <footer class="foot">
   <p><b>the code</b> — <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/stroke.js"><code>src/stroke.js</code></a> the pencil ·
-  <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/"><code>src/medium/</code></a> the outlines, the materials, the fur ·
+  <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/medium/"><code>src/medium/</code></a> the outlines, the materials, the fur, the type, the letters ·
   <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/shape.js"><code>src/shape.js</code></a> the shapes ·
   <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/paper.js"><code>src/scene/paper.js</code></a> the paper ·
   <a href="https://github.com/tomlim2/goofy-procedural-creatures/blob/main/src/scene/mesh.js"><code>src/scene/mesh.js</code></a> the meshes</p>

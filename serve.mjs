@@ -54,7 +54,8 @@ const TYPES = {
   ".js": "text/javascript; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
-  ".svg": "image/svg+xml"
+  ".svg": "image/svg+xml",
+  ".woff2": "font/woff2"   // the name screen's type (fonts/)
 };
 
 createServer(async (request, response) => {

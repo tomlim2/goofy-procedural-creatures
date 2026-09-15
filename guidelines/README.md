@@ -29,7 +29,7 @@ name screen the one a visitor **plays** — it has no header and no nav, and the
 | `/editor.html` **EDITOR** | The character maker — a species, then every slot, colour and proportion by hand |
 | `/audit.html` **AUDIT** | The face part audit — the whole board × 22 face states, counted in pixels |
 | `/pixeldiff.html` **DIFF** | The rendered board against a reference, pixel by pixel — the only gate that sees the scene and the shaders |
-| `/how.html` **HOW** | The medium page — outlines, materials, fur, shapes and palette, drawn live by the real code |
+| `/how.html` **HOW** | The medium page — outlines, materials, fur, type, letters, shapes and palette, drawn live by the real code |
 
 **Watching a high five.** A pair fives every 300~720 s, so a screen sits quiet for minutes. DEBUG's HIGH FIVE
 **RUSH** divides that wait (and a fresh board's first-five wait) by 60 — `?five=rush`. Only the waiting is
@@ -48,7 +48,7 @@ Looking good to the eye and being right are different things. There is a tool fo
 | Whether a face part **is visible in every state** — and a quad's tail at all | The face part audit — the whole board × 22 face states, the pixel difference per part; each tail at rest and raised | `/audit.html` ([character/rules.md](character/rules.md) § a face part has to be visible in every state) |
 | The **name screen's** mapping and card | `node scripts/names.mjs [--measure]` — the species on ALL at one in five, a name's variants as one name, each species' stars at 60 · 30 · 10%, the ♥ range, a label for every move; `--measure` prints the rarity cut-offs and the ♥ range to paste | [name.md](name.md) § checks |
 | Whether every **fill** stays inside its outline | `node scripts/fanspill.mjs [--check \| --all \| --min 0.02]` — every slot value × species × roll, each shape checked against the fan that fills it, the spills named by part and value | [character/rules.md](character/rules.md) § a fill is read with fanspill |
-| What the **medium** itself does | The medium page — the goofy outlines, the goofy materials as shader balls, the goofy fur, the shapes and the palette, drawn live by `stroke.js` from its own tables | `/how.html` ([drawing.md](drawing.md)) |
+| What the **medium** itself does | The medium page — the goofy outlines, the goofy materials as shader balls, the goofy fur, the goofy type and letters, the shapes and the palette, drawn live by `stroke.js` from its own tables | `/how.html` ([drawing.md](drawing.md)) |
 | How one **action** looks | The debug screen's ACTION card (forcing it on every biped, IDLE). A forced action releases every running high five — a forced arm would fight it | `/debug.html?action=…` · [motion/catalog.md](motion/catalog.md) § the bind pose and arm actions |
 | Motion **frequency** | Counting firings in a 60 s simulation | [motion/rules.md](motion/rules.md) § count the firing frequency |
 | The **high five** — how often pairs land one, and whether the palms meet | `node scripts/hifive-sim.mjs` — the real pair logic over real clocks, both palms run back through FK at contact. To watch one instead of counting them, `/debug.html?five=rush` (§ the nine screens) | [motion/catalog.md](motion/catalog.md) § the high five |

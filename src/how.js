@@ -11,6 +11,8 @@ import { blobPath, arcPath } from "./shape.js";
 import { GOOFY_MATERIALS, VALUES } from "./medium/materials.js";
 import { GOOFY_OUTLINES, BOARD_LINES, SIZE_NAMES } from "./medium/outlines.js";
 import { GOOFY_FUR } from "./medium/fur.js";
+import { GLYPHS, LETTER_PENS, LETTER_HAND, letterWith, writeCentred } from "./medium/letters.js";
+import { loadType, traceType, typeWith } from "./medium/type.js";
 import { sketchMesh } from "./scene/mesh.js";
 import { makeRng, makeNoise } from "./rng.js";
 import { BOIL_FRAMES, boilRate } from "./scene/rig.js";
@@ -65,6 +67,51 @@ fig("hair", [-0.45, -0.26, 0.45, 0.26], (sk) => {
   ink.pencil(blobPath(0, -0.06, 0.24, 0.18, { lumps: 5, amount: 0.07, noise, phase: 17 }), { color: INK, width: 0.01, closed: true, paper: CARD });
   ink.fur(arcPath(0, 0.06, 0.16, 0.09, Math.PI * 0.15, Math.PI * 0.85, 12), "SCRIBBLE", { color: INK, width: 0.008, spread: 0.045 });
 });
+
+// The goofy type — lines in three scripts traced off the page's type and written by the same typeWith the name screen's card writes
+// with. A trace needs the fonts, so the figure stays empty until they have loaded and is baked again then (machinery, below)
+let typeLoaded = false;
+const TYPE_LINES = [["홍길동 · Tom Lim · たなか", 700, 0.1, 0.03], ["★★ RARE · ♥ 120 · ARMS UP ×4", 500, 0.066, -0.13]];
+fig("type", [-0.74, -0.22, 0.74, 0.18], (sk) => {
+  if (!typeLoaded) return;
+  const s = sk(0.5);
+  for (const [text, weight, em, y] of TYPE_LINES) {
+    const line = traceType(text, weight);
+    typeWith(s, line, { x: (-line.width * em) / 2, y, em, color: INK, wiggle: 0.035, phase: s.phase * 0.01 });
+  }
+});
+FIGS.type.zoom = 560;
+
+// The goofy letters — every glyph in medium/letters.js, written by letterWith in the letters' own hand (LETTER_HAND). Past the
+// page's 300 px a unit on purpose: a card stands at 300–560 px a unit, so that is their scale
+const LETTER_CAP = 0.125;
+fig("letters", [-0.74, -0.24, 0.74, 0.24], (sk) => {
+  const s = sk(LETTER_HAND);
+  writeCentred(s, "ABCDEFGHIJKLM", 0, 0.05, LETTER_CAP, { color: INK, paper: CARD });
+  writeCentred(s, "NOPQRSTUVWXYZ", 0, -0.17, LETTER_CAP, { color: INK, paper: CARD });
+});
+FIGS.letters.zoom = 560;
+fig("letterMarks", [-0.74, -0.24, 0.74, 0.24], (sk) => {
+  const s = sk(LETTER_HAND);
+  writeCentred(s, "0123456789", 0, 0.05, LETTER_CAP, { color: INK, paper: CARD });
+  writeCentred(s, ".,'·-_/:!?+()×♥★", 0, -0.17, LETTER_CAP, { color: INK, paper: CARD });
+});
+FIGS.letterMarks.zoom = 560;
+// The pens — the same word at each weight of the letters' ladder, a column each; the labels read LETTER_PENS itself
+fig("letterPens", [-0.75, -0.14, 0.75, 0.14], (sk) => {
+  Object.keys(LETTER_PENS).forEach((pen, i) => writeCentred(sk(LETTER_HAND), "INK", col(i), -0.08, 0.16, { color: INK, pen, paper: CARD }));
+});
+FIGS.letterPens.labels = Object.entries(LETTER_PENS).map(([pen, share]) => `${pen} · ${share} of the cap`);
+FIGS.letterPens.zoom = 560;
+// A corner is two strokes — an A drawn as one bent line beside the A the letters draw, at the height a card's small words stand
+// (its kind and its moves), magnified: the pencil re-samples the bent line at its step and walks the apex off
+const CORNER_CAP = 0.045;
+const BENT_A = { w: 0.66, strokes: [[[0, 0], [0.33, 1], [0.66, 0]], [[0.12, 0.36], [0.54, 0.36]]] };
+fig("letterCorner", [-0.1, -0.012, 0.1, 0.058], (sk) => {
+  const s = sk(LETTER_HAND);
+  [BENT_A, GLYPHS.A].forEach((glyph, i) => letterWith(s, glyph, (i ? 0.05 : -0.05) - (glyph.w * CORNER_CAP) / 2, 0, CORNER_CAP, { color: INK, paper: CARD }));
+});
+FIGS.letterCorner.zoom = 2400;
 
 // The blobPath knobs — one knob per figure, three values each
 function blobRow(sk, phase, make) {
@@ -370,6 +417,11 @@ function paint(f) {
 
 for (const f of figures) paint(f);
 window.addEventListener("resize", () => { for (const f of figures) { f.width = 0; paint(f); } });
+// The type's figure, once the fonts it traces have loaded
+loadType().then(() => {
+  typeLoaded = true;
+  for (const f of figures) if (f.el.dataset.fig === "type") { bake(f); paint(f); }
+});
 statusLabel.textContent = `${figures.length} FIGURES`;
 
 // The kinds' row — the size the three draw at, and AGAIN for another hand. Both bake just those three again:

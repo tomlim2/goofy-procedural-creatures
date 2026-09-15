@@ -2,10 +2,9 @@
 // trading card; SAVE keeps the card, only the card, as it is seen. The address carries nothing and nothing is remembered: the name
 // never leaves the page.
 //
-// The card is one WebGL canvas and one 2D canvas over it. The WebGL one is the board's own scene at 1×1 — the paper, the creature,
-// the sheet over them — with the card's frame drawn into it in the pencil, so the frame boils with the creature and lies under the
-// same sheet. The 2D one holds the words (card.js drawCardWords), and SAVE writes the same words over the same scene drawn again at
-// a fixed size.
+// The card is one WebGL canvas: the board's own scene at 1×1 — the paper, the creature, the sheet over them — with the card's frame
+// and its words drawn into it in the pencil (the words in the goofy type, medium/type.js: any script, traced off Noto Sans), so they
+// boil with the creature, lie under the same sheet, and SAVE is the same scene drawn again at a fixed size.
 
 import * as THREE from "three";
 import { createScene } from "./scene/index.js";
@@ -14,7 +13,8 @@ import { BOIL_FRAMES, boilRate } from "./scene/rig.js";
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng } from "./rng.js";
 import { creatureOfName } from "./character/index.js";
-import { CARD, CARD_SAVE, cardOf, drawCardWords } from "./card.js";
+import { loadType, traceType, typeWith } from "./medium/type.js";
+import { CARD, CARD_SAVE, cardOf, layCard } from "./card.js";
 import { savePng } from "./export.js";
 import { runLoop } from "./ui.js";
 
@@ -23,22 +23,26 @@ const input = document.getElementById("name");
 const speciesSelect = document.getElementById("species");
 const saveButton = document.getElementById("save");
 const face = document.getElementById("face");
-const words = document.getElementById("words");
 const live = document.getElementById("live");
 
 const scene = createScene(face);
 window.menagerie = { scene };   // the debug handle every screen keeps
 
+// The type's four faces, loaded now whatever is typed later (medium/type.js loadType)
+const typeReady = loadType();
+
 const BLANK_INK = "#2b2724";   // the frame of a card nobody has drawn yet — the page's own ink (styles.css --ink)
-// What stands on the card now: { made, card } — null until the first DRAW
+// What stands on the card now: { made, card, laid } — null until the first DRAW
 let current = null;
 
-// -- the frame --
-// The card's edge and the picture's window, as closed pencil lines in the scene's world. The world rectangle the card shows is the
-// camera's, so the frame is laid from it and laid again whenever it moves (a resize). Three boil frames, one mesh each, flipped at
-// the creature's own cadence (rig.js boilRate)
+// -- the frame and the words --
+// The card's edge and the picture's window as closed pencil lines, and the card's words in the goofy type, in the scene's world.
+// The world rectangle the card shows is the camera's, so they are laid from it and laid again whenever it moves (a resize). Three
+// boil frames, one mesh each, flipped at the creature's own cadence (rig.js boilRate); a word's wiggle moves with the frame
 const FRAME_ORDER = 1.2;   // over the paper and the floor line, under every creature (their blocks start at 10, scene/index.js)
-let frame = null;          // { group, boil, extents }
+const TYPE_HAND = 0.5;     // the wobble of the pencil round a letter — half the frame's, so a word a few ink widths tall still reads
+const TYPE_WIGGLE = 0.035; // how far a letter's outline is pushed about, in ems
+let frame = null;          // { group, boil, extents, ink, roll, laid }
 
 function extents() {
   const camera = scene.camera;
@@ -58,7 +62,7 @@ function roundedRect(left, top, right, bottom, r) {
   return points;
 }
 
-function layFrame(ink, roll) {
+function layFrame(ink, roll, laid = null) {
   if (frame) {
     disposeGroup(frame.group);
     scene.scene.remove(frame.group);
@@ -73,36 +77,27 @@ function layFrame(ink, roll) {
   const noise = makeNoise(makeRng(roll + 1));
   const group = new THREE.Group();
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
-    const sketch = new Sketch(noise, 1.2);
-    sketch.phase = k * 101.7;   // a different stretch of the noise per frame — that is the boil
-    sketch.contour(edge, { color: ink });
-    sketch.contour(picture, { color: ink });
-    const mesh = sketchMesh(sketch, 0.9, FRAME_ORDER);
+    const lines = new Sketch(noise, 1.2);
+    lines.phase = k * 101.7;   // a different stretch of the noise per frame — that is the boil
+    lines.contour(edge, { color: ink });
+    lines.contour(picture, { color: ink });
+    const type = new Sketch(noise, TYPE_HAND, 1);
+    type.phase = k * 101.7 + 50;
+    for (const word of laid || []) {
+      typeWith(type, word.line, { x: X(word.x), y: Y(word.y), em: word.em * 2 * hw, color: word.color, wiggle: TYPE_WIGGLE, phase: k * 3.1 });
+    }
+    const mesh = sketchMesh([lines, type], 0.9, FRAME_ORDER);
     mesh.visible = k === 0;
     group.add(mesh);
   }
   scene.scene.add(group);
-  frame = { group, boil: boilRate(roll), extents: [hw, hh], ink, roll };
+  frame = { group, boil: boilRate(roll), extents: [hw, hh], ink, roll, laid };
 }
 
 function boilFrame(t) {
   if (!frame) return;
   const shown = Math.floor(t * frame.boil.fps + frame.boil.offset) % BOIL_FRAMES;
   frame.group.children.forEach((mesh, k) => { mesh.visible = k === shown; });
-}
-
-// -- the words --
-function paintWords() {
-  const ratio = Math.min(window.devicePixelRatio, 2);
-  const width = Math.round(words.clientWidth * ratio);
-  const height = Math.round(words.clientHeight * ratio);
-  if (words.width !== width || words.height !== height) {
-    words.width = width;
-    words.height = height;
-  }
-  const ctx = words.getContext("2d");
-  ctx.clearRect(0, 0, width, height);
-  drawCardWords(ctx, width, height, current && current.card);
 }
 
 // -- the card --
@@ -113,17 +108,21 @@ function stand(specs) {
   scene.camera.updateProjectionMatrix();
 }
 
-function draw() {
+// A DRAW waits for the type; a second DRAW pressed while it waits wins, and the first is let go
+let drawing = 0;
+async function draw() {
   const made = creatureOfName(input.value, speciesSelect.value);
   if (!made) {
     input.focus();
     return;
   }
+  const mine = ++drawing;
+  await typeReady;
+  if (mine !== drawing) return;
   const card = cardOf(made);
-  current = { made, card };
+  current = { made, card, laid: layCard(card, traceType) };
   stand([made.spec]);
-  layFrame(card.ink, made.roll);
-  paintWords();
+  layFrame(card.ink, made.roll, current.laid);
   saveButton.hidden = false;
   const stars = `${card.stars} star${card.stars > 1 ? "s" : ""}`;
   live.textContent = `${card.name} — ${card.kind.toLowerCase()}, ♥ ${card.hearts}, ${stars}`;
@@ -142,9 +141,7 @@ function save() {
   const out = document.createElement("canvas");
   out.width = width;
   out.height = height;
-  const ctx = out.getContext("2d");
-  ctx.drawImage(face, 0, 0, width, height);
-  drawCardWords(ctx, width, height, current.card);
+  out.getContext("2d").drawImage(face, 0, 0, width, height);
   renderer.setPixelRatio(ratio);
   renderer.setSize(face.clientWidth, face.clientHeight, false);
   scene.draw();
@@ -171,13 +168,11 @@ saveButton.addEventListener("click", save);
 stand([]);
 scene.resize();
 layFrame(BLANK_INK, 0);
-paintWords();
 
 runLoop((t) => {
   scene.resize();
   const [hw, hh] = extents();
-  if (frame && (Math.abs(hw - frame.extents[0]) > 1e-9 || Math.abs(hh - frame.extents[1]) > 1e-9)) layFrame(frame.ink, frame.roll);
-  if (words.width !== Math.round(words.clientWidth * Math.min(window.devicePixelRatio, 2))) paintWords();
+  if (frame && (Math.abs(hw - frame.extents[0]) > 1e-9 || Math.abs(hh - frame.extents[1]) > 1e-9)) layFrame(frame.ink, frame.roll, frame.laid);
   boilFrame(t);
   scene.update(t);
 }, (error) => { live.textContent = `error: ${error.message}`; });

@@ -1,7 +1,7 @@
 # The name screen
 
-> Basis: `index.html`, `src/name.js`, `src/card.js`, `src/character/name.js`, `scripts/names.mjs`. When the code changes, fix this
-> document in the same commit.
+> Basis: `index.html`, `src/name.js`, `src/card.js`, `src/character/name.js`, `src/medium/type.js`, `fonts/`, `scripts/names.mjs`. When the
+> code changes, fix this document in the same commit.
 
 **Type a name and draw its card.** The same name always stands up the same creature — its species, its parts, its
 colours and the way it moves — on a trading card with its ♥, its moves and its rarity, and the visitor saves the card.
@@ -26,7 +26,7 @@ is seen; the card carries the name, its species and its rarity, and no story; th
 - **Not a story.** The card says what the creature is and what it does and tells no tale. A story a species — six
   lines each, a line for its ghost, a lore line for the blank card, in two languages — was written and dropped: more
   writing, checking and translating than the wrap-up wanted. With no sentences of its own, the card's words are the
-  vocabulary's, in English, and nothing is translated.
+  vocabulary's, in English, and nothing is translated — written in the goofy type (§ the type), labels in capitals.
 - **Not another game's card.** It borrows the trading card's shape and its reading order — name, kind, picture, moves —
   and nothing of any game's look: no borrowed logo, symbol, typeface, colour or border. Its frame is this project's
   pencil.
@@ -60,7 +60,7 @@ is seen; the card carries the name, its species and its rarity, and no story; th
 - **The address carries nothing.** There is no control worth keeping in it, and the name is kept out on purpose — an
   address is what gets copied, pasted and logged.
 - **For a screen reader** — the card's words go into an `aria-live="polite"` caption, so drawing one reads out who stood
-  up; the two canvases are hidden from it.
+  up; the canvas is hidden from it.
 
 ## A name → a creature
 
@@ -115,8 +115,8 @@ roll or takes one; both carry this screen as the one exception. It takes a name,
 │ │                                │ │
 │ │                                │ │
 │ └────────────────────────────────┘ │
-│ one hand up                     ×6 │
-│ arms up                         ×5 │
+│ ONE HAND UP                     ×6 │
+│ ARMS UP                         ×5 │
 │ ★ COMMON              MENAGERIE v1 │
 └────────────────────────────────────┘
 ```
@@ -125,7 +125,7 @@ roll or takes one; both carry this screen as the one exception. It takes a name,
 
 | On the card | What it shows | Read from |
 | --- | --- | --- |
-| The name | The shown name, shrunk to fit 64% of the width when it runs longer, and kept on its line's middle | What was typed |
+| The name | The shown name as it was typed, shrunk to fit 64% of the width when it runs longer | What was typed |
 | ♥ | 30 to 150, in tens | Its size — `sizeOf`, the head's and the body's areas (`layout`: `headRx·headRy + bodyW·bodyH`), laid onto 30–150 over `HEART_RANGE`, the 5th and 95th percentile of that area over all five species together (0.0594–0.2341), so a rex runs high and a cat low. A big creature has more to love |
 | The kind | `ARCHETYPE · SPECIES` | The spec (`archetype`, `species`) |
 | The picture | The creature on its paper, alive | The board's own scene at 1×1 (`scene.build([spec], 1)`, `SOLO_PAD`) with the camera's zoom at 1.2, REGEN STILL (a live regen would swap it for somebody else's) |
@@ -133,7 +133,9 @@ roll or takes one; both carry this screen as the one exception. It takes a name,
 | Rarity | `★ COMMON` · `★★ RARE` · `★★★ LEGENDARY` | `rarityScore` — how unlikely its parts are together, the sum of −ln(share) over them, each share taken from the weights that picked the part (`slotWeights`, the one lookup `pickSlot` draws with: species > archetype > default > even; a value not in those weights, a constraint's overwrite, is left out) — cut at its species' 60th and 90th percentile (`RARITY_CUTS`), so the stars fall to 60 · 30 · 10% of every species. Per species, because the score is not fair across them: a human carries 2–4 parts under a 10% share where a cat carries 0–2, and a human's cut-offs sit at 43.2 · 46.8 where a rex's sit at 31.5 · 35.1 |
 | The foot | `MENAGERIE v1` | The release |
 
-Where each thing stands is one table, `CARD` in `src/card.js` — fractions of the card's width (x, sizes) and height (y).
+Where each thing stands is one table, `CARD` in `src/card.js` — fractions of the card's width (x, a word's em) and height
+(y, a word's baseline), with each word's weight (500 or 700) and whether it is soft (the ink a third of the way to the paper:
+the kind and the foot).
 
 - **The frame** is the pencil (`src/stroke.js`), drawn by `src/name.js` into the scene with the creature: the card's edge
   and the picture's window as closed lines with round corners, laid from the camera's world rectangle and laid again if
@@ -144,17 +146,62 @@ Where each thing stands is one table, `CARD` in `src/card.js` — fractions of t
   tallest head the board makes (1.05, a human), its top stands at 18.2% of the card's height, under the window's top
   edge at 15.5%. That is what sets the zoom: the cell and the emoji over it fill the window, and the creature stands half
   the card wide.
-- **The words** are `drawCardWords` on a 2D canvas over the scene, in the page's monospace; a Hangul or kana name falls
-  back to the platform's font — no web font is loaded, and the site stays static files. The same function writes them
-  onto the saved card, so the screen and the file cannot disagree.
+- **The words** are the goofy type (§ the type) — the name as it was typed, the labels in capitals — traced by `layCard`
+  and written by `src/name.js` into the same meshes as the frame, so they boil with it and lie under the same sheet. The
+  card is one canvas: nothing is written over the scene.
 - **SAVE keeps the card and nothing else** — no controls, no page around it — as it is seen. The renderer is set to
-  **1000 × 1400** for one draw of the state already on the screen (the same tick, the same boil frame), the scene is
-  copied onto a 2D canvas in that task, the words are written over it, and the renderer is set back; so a card saved from
+  **1000 × 1400** for one draw of the state already on the screen (the same tick, the same boil frame, the frame and the
+  words with it), the scene is copied onto a 2D canvas in that task, and the renderer is set back; so a card saved from
   a phone is as sharp as one saved from a desktop. Named `<name>.png`, the characters a file system refuses
   (`/ \ : * ? " < > |`) turned into `_`. On a phone whose share sheet takes files (`navigator.canShare({ files })`, a
   coarse pointer) SAVE opens it — save to photos, send it on — and everywhere else it downloads (`export.js savePng`,
   which reads the PNG with `toDataURL` so the share call stays inside the click that asked for it). There is no creature
   file (JSON) on this screen.
+
+## The type
+
+`src/medium/type.js` — how the card writes any script. Settled with the owner (2026-09-15): the project's own capitals
+(§ the letters) write only Latin, and a Korean pencil hand is not worth drawing, so the card traces a real font and gives it
+the pencil's wiggle instead.
+
+- **The font** is Noto Sans and Noto Sans KR at 500 and 700, served from `fonts/` (subset: Latin, Greek, Cyrillic, every
+  Hangul syllable, the jamo, kana, CJK punctuation and the card's marks — 1.6 MB for the four files; `fonts/README.md` says
+  how they were made) under the SIL Open Font License. `styles.css` names the faces for this page (`Menagerie Sans`,
+  `Menagerie Sans KR`), so a copy installed on the machine never stands in.
+- **All four faces load whatever is typed** (`loadType`, when the page opens). A font service sends only the slices a page's
+  text needs, and a slice fetched for a name tells the service which characters the name holds; a face of our own fetched
+  only when a name needs it would still say which script. Loading them all keeps the promise that the name never reaches a
+  request. A DRAW waits for them.
+- **Traced, not set** (`traceType`). A line is written onto a canvas at 96 px to the em, and the canvas's coverage is traced
+  by marching squares at half — the crossings placed along each cell edge where the coverage passes 0.5, so a ring follows
+  the antialiased edge rather than the pixels' steps — the segments joined into rings and each simplified to 0.6 px. A ring
+  inside an odd number of others is a hole in the smallest outline round it. A line is traced once and remembered.
+- **Written in the pencil** (`typeWith`). Every point is pushed about by a wiggle of its own — 0.035 of an em along the
+  sketch's noise, at the boil frame's own phase, so each frame wiggles the words its own way — the shape is filled with its
+  holes (three.js's ear clipping, `ShapeUtils.triangulateShape`), and each ring is edged in a pencil line 0.035 of an em
+  wide in a hand of 0.5.
+- **Any script.** A character neither font holds — a kanji, a hanja, an emoji — is written in the platform's font and traced
+  all the same; an emoji comes out an ink silhouette.
+
+## The letters
+
+`src/medium/letters.js` — the project's own capitals, asked for by the owner (2026-09-15) and the card's words until the type
+replaced them (they write only Latin); kept, and drawn on the medium page (`how.html` § the goofy letters): 26 letters, ten
+digits and a few marks (`. , ' · - _ / : ! ? + ( ) × ♥ ★` and the space). Not a font file — every glyph is a list of strokes,
+and each stroke goes down as one pencil line (`sketch.pencil`), so a word wanders, sheds and boils like the drawing it sits on.
+
+- **Drawn in cap heights**: x from 0 to the glyph's width, y from the baseline (0) to the cap (1), a tail or a comma
+  below. A word is laid out (`layOut`) glyph by glyph with `LETTER_GAP` (0.22 of a cap) between, and a run of characters
+  with no glyph is kept whole and measured by the caller, so a syllable or an emoji sequence is never cut apart.
+- **A corner is two strokes, never one bent line.** The pencil re-samples a line at a fixed step (`PENCIL.step`, 0.01)
+  and cuts every corner it walks round; on a letter a few steps tall a cut corner is a round A. Two strokes meeting keep
+  it, and where the pen runs past a stroke's end it runs past the way a hand does. A curve is one stroke; a loop (O, 0,
+  8, a dot) is closed; a dot, ♥ and ★ are filled under their line.
+- **The pen is a share of the cap** — `LETTER_PENS` S 0.08 · M 0.11 · L 0.15, the letters' own ladder as every outline
+  kind names its own (`medium/outlines.js`): a title at L, everything else at M. A word a few steps tall has strokes that
+  are stubs to the pencil (`PENCIL.stub`) — they keep their ends and shed nothing, which is what keeps it legible. The
+  letters' hand (`LETTER_HAND`) is 0.5 of the frame's wobble for the same reason.
+- **Capitals only** — no lower case, no accents, no other script, which is why the card writes in the type.
 
 ## The board's address
 
@@ -177,6 +224,7 @@ the paper up in the same 1×1 view its creature will, with no floor line under n
 - At the build: snapshot diff 0 against the tree before (specs, geometry, motion — `slotWeights` is `pickSlot`'s lookup
   moved, not changed); drawdiff against HEAD 187,360 sketches, 0 spec and 0 drawing differences; census 0; fanspill 0; pixeldiff 0 on the board (4 boards × 35).
 - **By hand** — the blank card, a card drawn and redrawn by the dropdown, a 40-character name shrinking onto its line, a
-  ghost's `floating`, a saved card at 1000 × 1400 holding only the card, and the page at 375px wide: the card 339 × 475,
-  5:7, under two rows of controls. Enter mid-composition with a Korean input method, and the share sheet on a phone,
-  want a real keyboard and a real phone.
+  ghost's `floating`, a name in four scripts and an emoji (`Élodie 김たなか 🐈`) written and saved at 1000 × 1400 holding only
+  the card, the four faces loaded before the first DRAW, and the page at 375px wide: the card 339 × 475, 5:7, under two rows
+  of controls. Enter mid-composition with a Korean input method, and the share sheet on a phone, want a real keyboard and a
+  real phone.

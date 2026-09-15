@@ -494,9 +494,16 @@ body.how { height: auto; }
 /* A row that follows a wide button inside one card (BOARD: NEW BOARD, then SAVE · OPEN). */
 .mt { margin-top: 4px; }
 
+/* The type the name screen's card is written in (src/medium/type.js) — Noto Sans and Noto Sans KR, served from fonts/ and named
+   for this page, so a copy installed on the machine never stands in. The card traces them off a canvas; nothing is set in them */
+@font-face { font-family: "Menagerie Sans"; src: url("./fonts/noto-sans-500.woff2") format("woff2"); font-weight: 500; font-display: block; }
+@font-face { font-family: "Menagerie Sans"; src: url("./fonts/noto-sans-700.woff2") format("woff2"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Menagerie Sans KR"; src: url("./fonts/noto-sans-kr-500.woff2") format("woff2"); font-weight: 500; font-display: block; }
+@font-face { font-family: "Menagerie Sans KR"; src: url("./fonts/noto-sans-kr-700.woff2") format("woff2"); font-weight: 700; font-display: block; }
+
 /* The name screen — the front door (index.html, guidelines/name.md): one row of controls and the card under it, nothing else.
    The card is sized from the height the screen leaves it, and its width follows at the trading card's 5:7 — never wider than the
-   screen. Its two canvases lie on each other: the scene, and the words over it */
+   screen. Its one canvas is the scene, the words drawn into it */
 body.front main { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 18px; }
 .front .controls { display: flex; gap: 6px; width: min(100%, 560px); }
 .front .controls input { flex: 1 1 auto; min-width: 0; font: inherit; font-size: 14px; color: inherit; background: #f2ecdf; border: 1px solid var(--line); padding: 6px 10px; border-radius: 0; }
@@ -507,7 +514,6 @@ body.front main { position: fixed; inset: 0; display: flex; flex-direction: colu
 .namecard { position: relative; margin: 0; aspect-ratio: 5 / 7; height: min(calc(100vh - 86px), calc((100vw - 36px) * 1.4)); box-shadow: 0 3px 18px rgba(43, 39, 36, 0.2); }
 @supports (height: 100dvh) { .namecard { height: min(calc(100dvh - 86px), calc((100vw - 36px) * 1.4)); } }
 .namecard canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.namecard #words { pointer-events: none; }
 /* Read out, not shown — the card's words for a screen reader (the canvas holds the ones you see) */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* A phone: the field takes the first row and the rest share the second */
