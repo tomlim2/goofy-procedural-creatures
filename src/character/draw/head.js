@@ -110,7 +110,8 @@ export function drawEars(ink, fills, spec, box) {
 // Cat ears — **bumps** in the head silhouette. Filled triangles stand at the two corners of the crown (~35° from the crown) with the base tucked inside the outline
 // so they attach to the head as one mass (the reference: the outline continues into the ear and a colored head has the ear in the same color). The outline is the same size as the head's, drawn twice.
 // Drawn on the layer in front of the head (front) so the fill covers the head outline. Three proportions — pointy the default · pointyMid narrow and tall · pointyBig wide and big.
-// The inner ear is per individual: 60% a small inner triangle (a double line), 15% a dark fill, the rest none (tufts read as an owl and were dropped).
+// The inner ear is per individual: 45% a small inner triangle (a double line), 30% a dark fill, the rest none (tufts read as an owl and were dropped;
+// so was a crease — one straight stroke from the root to half the ear's height, in the outline's ink, which read as a stick in the ear rather than a fold).
 // It follows the **normal** at the attachment point: the base is laid along the outline's tangent there (inset by 0.02), and the ear's axis is halfway between the normal and vertical
 // (half the normal's tilt, plus a slight left/right difference) — on a round head it opens out naturally, on a flat head it stands straight.
 // **The tip is a dome** — `tip` is its radius, the apex at h, the sides meeting the circle where a straight side would touch it. A flat
@@ -123,7 +124,6 @@ export function drawEars(ink, fills, spec, box) {
 //   pointyMid a narrow, tall triangle — it opens further (+0.15 rad; the reference's long ears open about 30°)
 //   pointyBig a wide, low ear — a round tip and convex sides (the colored brown and grey cats' ears)
 //   round · roundMid · roundBig — the rounded ear, at the pointed family's three builds
-// The inner ear is per individual: double line 50% · ink fill 15% · one crease stroke 15% · none 20%.
 const CAT_EAR = {
   pointy: { w: 0.05, h: 0.1, theta: 0.6, lean: 0, tip: 0.012, bow: -0.08 },
   pointyMid: { w: 0.04, h: 0.14, theta: 0.55, lean: 0.15, tip: 0.01, bow: -0.06 },
@@ -181,8 +181,8 @@ export function drawCatEars(ink, fills, spec, box) {
   const skin = spec.palette.skin;
   const hand = spec.proportions.hand;
   const roll = hand % 100;
-  // The inner ear — line (a double line) 45% · fill 30% · crease 15% · none 10%. The fill color is per individual, either pink (the same as the nose and blush) or a tone in the same family
-  const inner = roll < 45 ? "line" : roll < 75 ? "dark" : roll < 90 ? "notch" : "none";
+  // The inner ear — line (a double line) 45% · fill 30% · none 25%. The fill color is per individual, either pink (the same as the nose and blush) or a tone in the same family
+  const inner = roll < 45 ? "line" : roll < 75 ? "dark" : "none";
   const innerFill = (hand >> 7) % 2 ? blushOf(spec) : shade(skin, isDark(skin) ? 1.5 : 0.62);
   // The inner line is **a mark drawn on fur**, so it uses face ink — a black line on black fur is lost and invisible (the outline meets the background, so it stays black)
   const innerInk = spec.faceInk || ink0;
@@ -256,8 +256,6 @@ export function drawCatEars(ink, fills, spec, box) {
     const innerBase = earPath(def.w * IN, def.h * TIP_K, def.tip * IN, { inset: 0.012, runInset: 0.012, scale: IN }, wobL, wobR);
     if (inner === "line") ink.line(innerBase, { color: earInnerInk, size: "S" });
     else if (inner === "dark") paintPart(fills, spec, innerBase, innerFill, { part: "ears", own: true });
-    // The crease — one line from the middle of the root to half the ear's height (it reads as a fold mark)
-    else if (inner === "notch") ink.line([baseAt(0, 0.012), [bx + ax * def.h * 0.5, by + ay * def.h * 0.5]], { color: earInnerInk, size: "S" });
   }
 }
 
