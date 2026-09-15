@@ -1,0 +1,182 @@
+# The name screen
+
+> Basis: `index.html`, `src/name.js`, `src/card.js`, `src/character/name.js`, `scripts/names.mjs`. When the code changes, fix this
+> document in the same commit.
+
+**Type a name and draw its card.** The same name always stands up the same creature — its species, its parts, its
+colours and the way it moves — on a trading card with its ♥, its moves and its rarity, and the visitor saves the card.
+It is the front door (`/`): the board shows thirty-odd creatures that belong to nobody; this one is yours.
+
+Settled with the owner (2026-09-15): the name is the seed and the species is optional, ALL first; the result is a
+trading card at the card's 5:7; the front door holds nothing but the controls; SAVE keeps the card, only the card, as it
+is seen; the card carries the name, its species and its rarity, and no story; the board moved to `/board.html`.
+
+## What it is not
+
+- **Not random.** The name is the seed: like a random button, except the same name presses it the same way every time.
+  A name that gave a new creature on every press would make the name decoration, and nobody could say "my name is this
+  cat". There is no REDRAW for a name.
+- **Not a new drawing.** No drawing, vocabulary or motion code changed for it. A name becomes a roll and a species, and
+  from there it is `makeCreature` → `deriveSpec` → the scene, exactly as a board cell.
+- **Not a hub.** No header, no nav, no link out. The board and the tools keep addresses of their own (§ the board's
+  address) and are reached by typing them, as `/debug.html` always was.
+- **Not remembered, not sent.** The name is never in the address, never in storage and never in a request. Reload and
+  the field is empty.
+- **Not filtered.** Nothing leaves the browser, and the card says only what the visitor typed.
+- **Not a story.** The card says what the creature is and what it does and tells no tale. A story a species — six
+  lines each, a line for its ghost, a lore line for the blank card, in two languages — was written and dropped: more
+  writing, checking and translating than the wrap-up wanted. With no sentences of its own, the card's words are the
+  vocabulary's, in English, and nothing is translated.
+- **Not another game's card.** It borrows the trading card's shape and its reading order — name, kind, picture, moves —
+  and nothing of any game's look: no borrowed logo, symbol, typeface, colour or border. Its frame is this project's
+  pencil.
+
+## The screen
+
+```
+   [ YOUR NAME            ] [ ALL ▾ ] [ DRAW ] [ SAVE ]
+                ┌──────────────────────┐
+                │                      │
+                │       the card       │
+                │        (5 : 7)       │
+                │                      │
+                └──────────────────────┘
+```
+
+- **The controls, and nothing else** — the name field, the species dropdown, **DRAW**, and **SAVE** once a card stands.
+  One row across the top; at 520px and under the field takes the whole width and the rest share the row under it. The
+  card stands under them, sized from the height the screen leaves it and never wider than the screen (`styles.css`
+  `.namecard`). Before the first draw it is blank: the frame, in the page's ink, and an empty picture.
+- **The field** — placeholder `YOUR NAME`, `maxlength="40"` (a name, not a sentence), `autocomplete="off"`,
+  `spellcheck="false"`, focused when the page opens.
+- **The dropdown** — `ALL · HUMAN · CAT · PUP · IMP · REX`, ALL first and chosen when the page opens: ALL lets the name
+  pick the species, the rest fix it. Changing it while a card stands draws again, as DRAW does.
+- **DRAW, or Enter in the field** — draws the card. A key that comes out empty (§ a name → a creature) draws nothing and
+  puts the focus back in the field.
+- **On Enter, not while typing.** Live, every keystroke would stand a different creature up — a Korean name passes
+  through `ㅎ`, `호`, `홍` on its way — and the reveal would be a flicker of creatures that are nobody's. For the same
+  reason **Enter is ignored while an input method is composing** — `event.isComposing`, or `keyCode` 229, which Safari
+  sends for that Enter with `isComposing` already false: the Enter that commits a Hangul syllable must not also draw.
+- **The address carries nothing.** There is no control worth keeping in it, and the name is kept out on purpose — an
+  address is what gets copied, pasted and logged.
+- **For a screen reader** — the card's words go into an `aria-live="polite"` caption, so drawing one reads out who stood
+  up; the two canvases are hidden from it.
+
+## A name → a creature
+
+`src/character/name.js`, exported from `src/character/index.js`, so the node scripts read the same mapping as the page.
+
+| Step | Rule |
+| --- | --- |
+| The key (`nameKey`) | `normalize("NFKC")` → drop control and zero-width characters (`\p{Cc}`, U+200B–U+200D, U+2060, U+FEFF) → collapse every run of white space (`\s`, the ideographic space included) to one space → trim → `toLowerCase()`. `" 홍길동 "`, the decomposed (NFD) `홍길동` a copied file name carries, `Tom  Lim`, `TOM LIM` and the full-width `ＴＯＭ ＬＩＭ` are each one name |
+| Refused | A key that comes out empty — `creatureOfName` returns null |
+| The roll (`nameRoll`) | FNV-1a (32-bit, over the UTF-8 bytes) of `menagerie:name:v1:` + the key, through murmur3's `fmix32` finalizer — an unsigned 32-bit roll, the kind `randomRoll()` makes |
+| The species (`nameSpecies`) | On ALL, the same hash of `menagerie:name:v1:species:` + the key, modulo 5, into `NAME_SPECIES` = human · cat · pup · imp · rex (the board's lanes without the house) — one in five each. A species chosen in the dropdown is used as it is |
+| The creature | `makeCreature(roll, species)` |
+| The shown name (`shownName`) | What was typed, NFC and trimmed. The key is only ever hashed |
+
+**The roll is the name's alone** — the dropdown never touches it — so choosing the species ALL would have given draws
+the identical creature. The species on ALL has a hash of its own rather than the roll's bits, so which species a name is
+and what it looks like do not lean on each other. **`v1` in the salt names the mapping**: if the mapping itself ever has
+to change, a new salt says so out loud instead of quietly moving every name.
+
+The clock is keyed by the spec's roll (`makeClock(spec.roll, …)`, `scene/rig.js`), so a name also has **its own way of
+moving** — the same blinks, glances and actions, in the same order.
+
+### What the same name promises
+
+- **Within one version of the code, one card.** The same key and the same dropdown choice give the same creature and
+  the same numbers, on every load, browser and machine. Only the pose is the moment's: the creature on the card is
+  alive, and SAVE keeps whatever it is doing when it is pressed.
+- **Across versions, the creature follows the generator.** The mapping above is frozen, but `makeCreature` promises
+  nothing across versions ([determinism.md](determinism.md)): add a slot or move a weight and a name's creature changes
+  with every other roll. A change like that draws every name again, and it is made knowing that — `snapshot.mjs` keeps
+  six names (§ checks), and the rarity cut-offs and the ♥ range are measured constants that `names.mjs` fails on when
+  they drift.
+- **A saved card keeps what it was.** It is a picture; nothing about it can move.
+
+A frozen copy of the generator for this screen was considered and left: the spec would hold still but the drawing
+would not, so the creature would drift anyway, and the copy would be a second generator to keep.
+
+**This bends one rule, on purpose.** [determinism.md](determinism.md) and [README.md](README.md) say no screen shows a
+roll or takes one; both carry this screen as the one exception. It takes a name, turns it into a roll, and shows neither.
+
+## The card
+
+```
+┌────────────────────────────────────┐
+│ 홍길동                        ♥ 130 │
+│ WANDERER · REX                     │
+│ ┌────────────────────────────────┐ │
+│ │                                │ │
+│ │                                │ │
+│ │     the creature, on paper     │ │
+│ │     (alive on the screen)      │ │
+│ │                                │ │
+│ │                                │ │
+│ └────────────────────────────────┘ │
+│ one hand up                     ×6 │
+│ arms up                         ×5 │
+│ ★ COMMON              MENAGERIE v1 │
+└────────────────────────────────────┘
+```
+
+**5:7** — the 63 × 88 mm trading card. Every number on it is read off the creature itself (`src/card.js` `cardOf`).
+
+| On the card | What it shows | Read from |
+| --- | --- | --- |
+| The name | The shown name, shrunk to fit 64% of the width when it runs longer, and kept on its line's middle | What was typed |
+| ♥ | 30 to 150, in tens | Its size — `sizeOf`, the head's and the body's areas (`layout`: `headRx·headRy + bodyW·bodyH`), laid onto 30–150 over `HEART_RANGE`, the 5th and 95th percentile of that area over all five species together (0.0594–0.2341), so a rex runs high and a cat low. A big creature has more to love |
+| The kind | `ARCHETYPE · SPECIES` | The spec (`archetype`, `species`) |
+| The picture | The creature on its paper, alive | The board's own scene at 1×1 (`scene.build([spec], 1)`, `SOLO_PAD`) with the camera's zoom at 1.2, REGEN STILL (a live regen would swap it for somebody else's) |
+| The moves | Two actions and how many times each starts in the creature's first five minutes | Its own clock run tick by tick, 24 a second ([motion/rules.md](motion/rules.md) § count the firing frequency), named by the action's `label` cut at its first parenthesis. **The arm layer (a quad's legs and tail) comes first and the body layer only fills in**: the body has one action, the hop, and every creature starts it — counted with the rest it opened nearly every card (13 hops in five minutes against 6 of the likeliest arm action). A cat's first move is always its scratch and a dog's its wag, their quad layers' whole list; a human's spreads over ten arm actions. Fewer than two, the card shows what it has: an armless imp only jumps, and a ghost, which does nothing but float, shows `floating` |
+| Rarity | `★ COMMON` · `★★ RARE` · `★★★ LEGENDARY` | `rarityScore` — how unlikely its parts are together, the sum of −ln(share) over them, each share taken from the weights that picked the part (`slotWeights`, the one lookup `pickSlot` draws with: species > archetype > default > even; a value not in those weights, a constraint's overwrite, is left out) — cut at its species' 60th and 90th percentile (`RARITY_CUTS`), so the stars fall to 60 · 30 · 10% of every species. Per species, because the score is not fair across them: a human carries 2–4 parts under a 10% share where a cat carries 0–2, and a human's cut-offs sit at 43.2 · 46.8 where a rex's sit at 31.5 · 35.1 |
+| The foot | `MENAGERIE v1` | The release |
+
+Where each thing stands is one table, `CARD` in `src/card.js` — fractions of the card's width (x, sizes) and height (y).
+
+- **The frame** is the pencil (`src/stroke.js`), drawn by `src/name.js` into the scene with the creature: the card's edge
+  and the picture's window as closed lines with round corners, laid from the camera's world rectangle and laid again if
+  it moves. Three boil frames, flipped at the creature's own cadence (`boilRate`), over the paper and the floor line and
+  under every creature (render order 1.2), and under the same sheet (`post.js`) as the creature. It takes the
+  creature's ink from before a ghost pales it (`palette0.ink`).
+- **The picture's window holds the emoji.** An emoji rides 0.15 over the head's top and rises up to 0.072 more; on the
+  tallest head the board makes (1.05, a human), its top stands at 18.2% of the card's height, under the window's top
+  edge at 15.5%. That is what sets the zoom: the cell and the emoji over it fill the window, and the creature stands half
+  the card wide.
+- **The words** are `drawCardWords` on a 2D canvas over the scene, in the page's monospace; a Hangul or kana name falls
+  back to the platform's font — no web font is loaded, and the site stays static files. The same function writes them
+  onto the saved card, so the screen and the file cannot disagree.
+- **SAVE keeps the card and nothing else** — no controls, no page around it — as it is seen. The renderer is set to
+  **1000 × 1400** for one draw of the state already on the screen (the same tick, the same boil frame), the scene is
+  copied onto a 2D canvas in that task, the words are written over it, and the renderer is set back; so a card saved from
+  a phone is as sharp as one saved from a desktop. Named `<name>.png`, the characters a file system refuses
+  (`/ \ : * ? " < > |`) turned into `_`. On a phone whose share sheet takes files (`navigator.canShare({ files })`, a
+  coarse pointer) SAVE opens it — save to photos, send it on — and everywhere else it downloads (`export.js savePng`,
+  which reads the PNG with `toDataURL` so the share call stays inside the click that asked for it). There is no creature
+  file (JSON) on this screen.
+
+## The board's address
+
+`/` is the name screen, so the board moved: **`index.html` → `board.html`**, the same `src/main.js`. Every tool page's
+header keeps its nav — GRID goes to `./board.html`, and the MENAGERIE mark to `./`, the front door. `how.html`'s two links
+to the board follow it. The scene lays out one row for an empty cast (`scene/index.js` `build`), so the blank card stands
+the paper up in the same 1×1 view its creature will, with no floor line under nobody.
+
+## Checks
+
+- **`node scripts/names.mjs`** — the mapping and the card on their own, each check exiting 1 when it fails: the species
+  over 10,000 made-up names on ALL (each within 20% ± 1.5 — measured 19.2–20.6%); every variant in the key's row coming
+  out as one name, and a name of only spaces and invisible characters as no name; the roll unmoved by the dropdown; each
+  species' stars at 60 · 30 · 10% (± 3) with the cut-offs the page carries; the ♥ range within 5% of its measure; a label
+  for every move a card can show. It reports how many cards show two moves (193 of 200 humans, cats, dogs and rexes — the
+  seven without are ghosts — and 151 of 200 imps, the rest armless) and lists sample names with their cards.
+  `--measure` prints `RARITY_CUTS` and `HEART_RANGE` as they measure, to paste after a change to the weights or the layout.
+- **`scripts/snapshot.mjs`** keeps the creatures of six sample names (`names`), so a generator change says how many it
+  moved.
+- At the build: snapshot diff 0 against the tree before (specs, geometry, motion — `slotWeights` is `pickSlot`'s lookup
+  moved, not changed); drawdiff against HEAD 187,360 sketches, 0 spec and 0 drawing differences; census 0; fanspill 0; pixeldiff 0 on the board (4 boards × 35).
+- **By hand** — the blank card, a card drawn and redrawn by the dropdown, a 40-character name shrinking onto its line, a
+  ghost's `floating`, a saved card at 1000 × 1400 holding only the card, and the page at 375px wide: the card 339 × 475,
+  5:7, under two rows of controls. Enter mid-composition with a Korean input method, and the share sheet on a phone,
+  want a real keyboard and a real phone.

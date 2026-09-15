@@ -2,7 +2,8 @@
 //   node scripts/snapshot.mjs before   → snapshots/before.json
 //   node scripts/snapshot.mjs after    -> snapshots/after.json + diff against before
 //
-// 200 creature specs, geometry hashes (head, body, limbs, tail, brows, mouth), and 60 s motion trajectories for the four species.
+// 200 creature specs, geometry hashes (head, body, limbs, tail, brows, mouth), 60 s motion trajectories for the four species, and the
+// creatures six sample names make on the name screen (guidelines/name.md) — a generator change says how many names it moved.
 // To run without three.js it never calls stroke's build() — it hashes positions/colors only.
 
 import { createHash } from "node:crypto";
@@ -90,6 +91,15 @@ for (const species of ["human", "pup", "cat", "imp"]) {
   out.motion[species + "_sample"] = samples[120];
 }
 
+// 4. names — what the name screen's door makes of six names (a snapshot from before the screen has none, and is not compared on it)
+const NAMES = ["홍길동", "Tom Lim", "たなか", "🐈", "menagerie", "Ada Lovelace"];
+if (draw.creatureOfName) {
+  out.names = Object.fromEntries(NAMES.map((text) => {
+    const made = draw.creatureOfName(text);
+    return [text, hash([made.roll, made.species, made.spec])];
+  }));
+}
+
 mkdirSync(join(root, "snapshots"), { recursive: true });
 const file = join(root, "snapshots", `${label}.json`);
 writeFileSync(file, JSON.stringify(out, null, 1));
@@ -104,6 +114,7 @@ if (label === "after" && existsSync(join(root, "snapshots/before.json"))) {
     for (const k of Object.keys(b)) if (JSON.stringify(b[k]) !== JSON.stringify(a[k])) diffs.push(`geometry[${i}].${k}`);
   });
   for (const k of Object.keys(before.motion)) if (JSON.stringify(before.motion[k]) !== JSON.stringify(out.motion[k])) diffs.push(`motion.${k}`);
+  for (const k of Object.keys(before.names || {})) if (before.names[k] !== (out.names || {})[k]) diffs.push(`names.${k}`);
   if (diffs.length) { console.log("differences:", diffs.length); console.log(diffs.slice(0, 20).join("\n")); process.exit(1); }
   console.log("behaviour unchanged — diff 0");
 }

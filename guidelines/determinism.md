@@ -21,6 +21,13 @@ is saved as a file. **No screen shows a roll or takes one.** The address carries
 never a board; a NEW button rolls another; a file remembers. Rolls live in the generator and in the node
 gates, where a repeatable sample is the point.
 
+**One screen takes something like a roll, on purpose: the name screen** ([name.md](name.md)). A visitor's name
+becomes a key, and the key a roll and a species (`character/name.js`) — the screen shows neither, and the name
+never reaches the address. What it promises is this document's promise and no more: the same name draws the same
+creature within a version of the code, and a generator change draws every name again. The mapping itself is salted
+with its version (`menagerie:name:v1:`), so a change to *it* has to say so; `snapshot.mjs` keeps six names, so a
+change to the generator counts how many it moved.
+
 ## What a roll promises
 
 - **Within one version of the code, the same roll gives the same spec.** Every roll on the generation path

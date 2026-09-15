@@ -13,14 +13,16 @@ point is the root [`CLAUDE.md`](../CLAUDE.md)).
 | **Motion** | `src/motion/` | [motion/catalog.md](motion/catalog.md) the state object, per-species parameters, every motion | [motion/rules.md](motion/rules.md) classifying rhythm/events/states, rng order, measuring firing |
 | Shared | `src/scene/` `src/stroke.js` `src/shape.js` `src/medium/` `src/color.js` `src/rng.js` `src/control.js` `src/ui.js` `src/export.js` | [rig.md](rig.md) the three.js hierarchy and origins | [determinism.md](determinism.md) rolls and files — what a roll promises, the gates<br>[drawing.md](drawing.md) lines, color, layers<br>[performance.md](performance.md) draw calls, materials, measurement |
 
-## The eight screens
+## The nine screens
 
-Every page carries the same nav, so any screen is one click from any other. Six of them judge a different
-thing; the editor is the one that **makes** rather than judges, and the stage is the one that **shows**.
+Every page but the front door carries the same nav, so any screen is one click from any other. Six of them judge a
+different thing; the editor is the one that **makes** rather than judges, the stage the one that **shows**, and the
+name screen the one a visitor **plays** — it has no header and no nav, and the others are reached by address.
 
 | Screen | What it is for |
 | --- | --- |
-| `/index.html` **GRID** | The board itself — a cast of specs, the thing being made. Nothing is picked until a creature is clicked; then REDRAW · BACK · OPEN · SAVE stand at its feet, one cell only, and a click on nowhere lets the pick go. BOARD saves and opens the whole cast as JSON. Species, grid size, PNG |
+| `/` · `index.html` **the name screen** | The front door ([name.md](name.md)). A name, a species (ALL lets the name pick) and DRAW stand the creature that name makes up on a trading card — its ♥, its moves, its rarity — and SAVE keeps the card as it is seen. The same name draws the same card within a version of the code; the name is never in the address, in storage or in a request |
+| `/board.html` **GRID** | The board itself — a cast of specs, the thing being made. Nothing is picked until a creature is clicked; then REDRAW · BACK · OPEN · SAVE stand at its feet, one cell only, and a click on nowhere lets the pick go. BOARD saves and opens the whole cast as JSON. Species, grid size, PNG |
 | `/stage.html` **STAGE** | The cast stood up in a room — every creature the board's own drawing, stood on a sheet like a paper standee, in rows down the depth, a perspective camera going round it (drag), nearer (wheel, a pinch), HOME. FACE turns every card to the camera or leaves them stood facing front; DANCE puts every biped into the Dumb Ways to Die chorus on one beat ([motion/catalog.md](motion/catalog.md) § the dance). The same cast as the board (the lanes, a species preview, the grid sizes), NEW rolls another; PNG. [rig.md](rig.md) § the stage |
 | `/debug.html` **DEBUG** | The board plus the judging controls, folded into one JUDGING card: POSE (bind), INK (boil), ACTION (force one), HIGH FIVE (rush), REGEN (live). Folded, the summary names whatever is away from its default, so a screen left on BIND never reads as a bug. Every control rides in the address |
 | `/gallery.html` **GALLERY** | One slot's every value on the same individual, side by side |
@@ -44,11 +46,12 @@ Looking good to the eye and being right are different things. There is a tool fo
 | One part's **form** | The parts gallery — every value of a slot (or a few chosen with `values=`) on the same individual, side by side | `/gallery.html?slot=…&species=…&fix=…&values=…` ([../README.md](../README.md) § Running) |
 | Part **distribution** and species identity | `node scripts/census.mjs [--slot X \| --check]` | [character/rules.md](character/rules.md) § distribution is read with census |
 | Whether a face part **is visible in every state** — and a quad's tail at all | The face part audit — the whole board × 22 face states, the pixel difference per part; each tail at rest and raised | `/audit.html` ([character/rules.md](character/rules.md) § a face part has to be visible in every state) |
+| The **name screen's** mapping and card | `node scripts/names.mjs [--measure]` — the species on ALL at one in five, a name's variants as one name, each species' stars at 60 · 30 · 10%, the ♥ range, a label for every move; `--measure` prints the rarity cut-offs and the ♥ range to paste | [name.md](name.md) § checks |
 | Whether every **fill** stays inside its outline | `node scripts/fanspill.mjs [--check \| --all \| --min 0.02]` — every slot value × species × roll, each shape checked against the fan that fills it, the spills named by part and value | [character/rules.md](character/rules.md) § a fill is read with fanspill |
 | What the **medium** itself does | The medium page — the goofy outlines, the goofy materials as shader balls, the goofy fur, the shapes and the palette, drawn live by `stroke.js` from its own tables | `/how.html` ([drawing.md](drawing.md)) |
 | How one **action** looks | The debug screen's ACTION card (forcing it on every biped, IDLE). A forced action releases every running high five — a forced arm would fight it | `/debug.html?action=…` · [motion/catalog.md](motion/catalog.md) § the bind pose and arm actions |
 | Motion **frequency** | Counting firings in a 60 s simulation | [motion/rules.md](motion/rules.md) § count the firing frequency |
-| The **high five** — how often pairs land one, and whether the palms meet | `node scripts/hifive-sim.mjs` — the real pair logic over real clocks, both palms run back through FK at contact. To watch one instead of counting them, `/debug.html?five=rush` (§ the six screens) | [motion/catalog.md](motion/catalog.md) § the high five |
+| The **high five** — how often pairs land one, and whether the palms meet | `node scripts/hifive-sim.mjs` — the real pair logic over real clocks, both palms run back through FK at contact. To watch one instead of counting them, `/debug.html?five=rush` (§ the nine screens) | [motion/catalog.md](motion/catalog.md) § the high five |
 | Motion noise while judging form | POSE BIND (pinned to the T-pose) · INK STILL (the boil stopped) | `/debug.html?pose=bind&ink=still` · [rig.md](rig.md) § pose and ink |
 | **Invariance** before and after a refactor | `node scripts/snapshot.mjs before/after` (specs, one board's geometry, motion trajectories) · `node scripts/drawdiff.mjs` (drawing — every slot value against HEAD) · `/pixeldiff.html` (the picture — the rendered board against a ref, pixel by pixel; the only gate that sees the scene and the shaders) | [determinism.md](determinism.md) |
 | **Performance** (frame cost) | Read `renderer.info.render.calls` and the frame time from the console | [performance.md](performance.md) § how it is measured |
@@ -57,7 +60,8 @@ Looking good to the eye and being right are different things. There is a tool fo
 
 - A creature is its JSON; a roll only rolls one. The same roll gives the same roll within one version of the
   code and promises nothing across versions — anything worth keeping is a file. No screen shows a roll or
-  takes one: a board is rolled on load, a NEW button rolls another, and a file remembers
+  takes one: a board is rolled on load, a NEW button rolls another, and a file remembers. The one exception
+  is the name screen, which takes a name, turns it into a roll, and shows neither ([name.md](name.md))
 - Character is slots (form) only; motion is rhythm/events/states only. Hands behind the back is not a form
   but a pose (motion)
 - Looking good to the eye and having the right distribution and frequency are different things. If you

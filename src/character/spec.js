@@ -55,9 +55,14 @@ function pickArchetype(rng) {
   return rng.weighted(ARCHETYPES.map((a) => [a, a.weight]));
 }
 
-// Species skeleton > archetype disposition > default weights > even. Four steps down.
+// The weights a slot is picked by: species skeleton > archetype disposition > default weights > even (null). Four steps down.
+// Written once, because the name screen's rarity reads a part's share off the very weights that picked it (character/name.js)
+export function slotWeights(species, archetype, slot) {
+  return species.bias[slot] || archetype.bias[slot] || DEFAULT_BIAS[slot] || null;
+}
+
 function pickSlot(rng, species, archetype, slot) {
-  const bias = species.bias[slot] || archetype.bias[slot] || DEFAULT_BIAS[slot];
+  const bias = slotWeights(species, archetype, slot);
   if (bias) return rng.weighted(bias);
   return rng.pick(SLOTS[slot]);
 }

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MENAGERIE — debug</title>
-<meta name="description" content="The main screen plus pose, ink, action and regen controls. For judging form and motion.">
+<title>MENAGERIE — goofy procedural creatures</title>
+<meta name="description" content="A hand-drawn board of creatures. Each one breathes, blinks and glances around on its own clock.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -15,7 +15,7 @@
 }
 </script>
 </head>
-<body class="debug">
+<body>
 
 <canvas id="stage" aria-label="Procedurally drawn creature grid"></canvas>
 <!-- The pin at a picked creature's feet: REDRAW · BACK · OPEN · SAVE. Glyphs are Google Material Icons "refresh", "undo", "file_upload" and "file_download" (Apache 2.0), inlined so the page stays a static file -->
@@ -29,7 +29,8 @@
 
 <header class="bar">
   <a class="mark" href="./">MENAGERIE</a>
-  <nav class="nav"><a href="./board.html">GRID</a><a href="./stage.html">STAGE</a><span class="here">DEBUG</span><a href="./gallery.html">GALLERY</a><a href="./editor.html">EDITOR</a><a href="./audit.html">AUDIT</a><a href="./pixeldiff.html">DIFF</a><a href="./how.html">HOW</a></nav>
+  <span class="sub"><span class="tag">GOOFY PROCEDURAL CREATURES</span></span>
+  <nav class="nav"><span class="here">GRID</span><a href="./stage.html">STAGE</a><a href="./debug.html">DEBUG</a><a href="./gallery.html">GALLERY</a><a href="./editor.html">EDITOR</a><a href="./audit.html">AUDIT</a><a href="./pixeldiff.html">DIFF</a><a href="./how.html">HOW</a></nav>
   <span class="status" id="status">BOOT</span>
 </header>
 
@@ -48,50 +49,6 @@
     <h2>EXPORT</h2>
     <button id="exportPng" class="wide">PNG</button>
   </section>
-
-  <details class="card fold" id="judgeFold">
-    <summary>JUDGING <span class="foldNow" id="judgeNow"></span></summary>
-    <div class="foldBody">
-    <section class="group">
-      <h2>POSE</h2>
-      <div class="row seg" id="poseSeg" role="group" aria-label="Pose">
-        <button data-pose="motion" class="on">MOTION</button>
-        <button data-pose="bind">BIND</button>
-      </div>
-    </section>
-
-    <section class="group">
-      <h2>INK</h2>
-      <div class="row seg" id="inkSeg" role="group" aria-label="Ink">
-        <button data-ink="boil" class="on">BOIL</button>
-        <button data-ink="still">STILL</button>
-      </div>
-    </section>
-
-    <section class="group">
-      <h2>ACTION</h2>
-      <select id="actionSel" class="wide" aria-label="Force an action">
-        <option value="">AUTO</option>
-      </select>
-    </section>
-
-    <section class="group">
-      <h2>HIGH FIVE</h2>
-      <div class="row seg" id="fiveSeg" role="group" aria-label="High five schedule">
-        <button data-five="auto" class="on">AUTO</button>
-        <button data-five="rush">RUSH</button>
-      </div>
-    </section>
-
-    <section class="group">
-      <h2>REGEN</h2>
-      <div class="row seg" id="liveSeg" role="group" aria-label="Regen toggle">
-        <button data-live="off" class="on">STILL</button>
-        <button data-live="on">LIVE</button>
-      </div>
-    </section>
-    </div>
-  </details>
 
   <section class="card">
     <h2>SPECIES</h2>
@@ -116,7 +73,6 @@
     </div>
   </section>
 
-  <p class="hint">R new board · B pose · I ink · S regen · ACTION forces one action (a forced action releases every running high five) · HIGH FIVE RUSH shortens only the waiting, so the swing is the real one · controls ride in the URL</p>
 </aside>
 
 <noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>

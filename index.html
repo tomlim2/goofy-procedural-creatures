@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MENAGERIE — goofy procedural creatures</title>
-<meta name="description" content="A hand-drawn board of creatures. Each one breathes, blinks and glances around on its own clock.">
+<title>MENAGERIE — draw your creature</title>
+<meta name="description" content="Type a name and draw its creature, hand-drawn on a trading card. The same name always draws the same one.">
 <link rel="stylesheet" href="./styles.css">
 <script type="importmap">
 {
@@ -15,68 +15,32 @@
 }
 </script>
 </head>
-<body>
+<body class="front">
 
-<canvas id="stage" aria-label="Procedurally drawn creature grid"></canvas>
-<!-- The pin at a picked creature's feet: REDRAW · BACK · OPEN · SAVE. Glyphs are Google Material Icons "refresh", "undo", "file_upload" and "file_download" (Apache 2.0), inlined so the page stays a static file -->
-<div id="pin" class="pin" hidden>
-  <button id="pinRedraw" type="button" aria-label="Redraw this creature" title="Redraw — a fresh one in this cell"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
-  <button id="back" type="button" aria-label="Back to the previous creature" title="Back — the one that stood here before"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></button>
-  <button id="pinOpen" type="button" aria-label="Open a creature file into this cell" title="Open — a creature file into this cell"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg></button>
-  <button id="pinSave" type="button" aria-label="Save this creature as a file" title="Save — this creature as a file"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></button>
-</div>
-<input id="cellFile" type="file" accept="application/json,.json" hidden aria-label="Open a creature file into the picked cell">
-
-<header class="bar">
-  <a class="mark" href="./index.html">MENAGERIE</a>
-  <span class="sub"><span class="tag">GOOFY PROCEDURAL CREATURES</span></span>
-  <nav class="nav"><span class="here">GRID</span><a href="./stage.html">STAGE</a><a href="./debug.html">DEBUG</a><a href="./gallery.html">GALLERY</a><a href="./editor.html">EDITOR</a><a href="./audit.html">AUDIT</a><a href="./pixeldiff.html">DIFF</a><a href="./how.html">HOW</a></nav>
-  <span class="status" id="status">BOOT</span>
-</header>
-
-<aside class="deck">
-  <section class="card">
-    <h2>BOARD</h2>
-    <button id="reroll" class="wide">NEW BOARD</button>
-    <div class="row seg mt">
-      <button id="boardSave">SAVE</button>
-      <button id="boardOpen">OPEN</button>
-    </div>
-    <input id="boardFile" type="file" accept="application/json,.json" hidden aria-label="Open a board file">
-  </section>
-
-  <section class="card">
-    <h2>EXPORT</h2>
-    <button id="exportPng" class="wide">PNG</button>
-  </section>
-
-  <section class="card">
-    <h2>SPECIES</h2>
-    <div class="row seg" id="speciesSeg" role="group" aria-label="Species preview">
-      <button data-species="all" class="on">ALL</button>
-      <button data-species="human">HUMAN</button>
-      <button data-species="cat">CAT</button>
-      <button data-species="pup">PUP</button>
-      <button data-species="imp">IMP</button>
-      <button data-species="rex">REX</button>
-      <button data-species="house">HOUSE</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>GRID</h2>
-    <div class="row seg" id="countSeg" role="group" aria-label="Grid size">
-      <button data-grid="1x1">1×1</button>
-      <button data-grid="5x4">5×4</button>
-      <button data-grid="7x5" class="on">7×5</button>
-      <button data-grid="9x6">9×6</button>
-    </div>
-  </section>
-
-</aside>
+<!-- The front door (guidelines/name.md): the controls and the card, nothing else. The board is /board.html -->
+<main>
+  <form id="controls" class="controls" autocomplete="off">
+    <input id="name" type="text" maxlength="40" placeholder="YOUR NAME" aria-label="Your name" autocomplete="off" spellcheck="false" autofocus>
+    <select id="species" aria-label="Species">
+      <option value="all">ALL</option>
+      <option value="human">HUMAN</option>
+      <option value="cat">CAT</option>
+      <option value="pup">PUP</option>
+      <option value="imp">IMP</option>
+      <option value="rex">REX</option>
+    </select>
+    <button id="draw" type="submit">DRAW</button>
+    <button id="save" type="button" hidden>SAVE</button>
+  </form>
+  <figure class="namecard">
+    <canvas id="face" aria-hidden="true"></canvas>
+    <canvas id="words" aria-hidden="true"></canvas>
+    <figcaption id="live" class="sr" aria-live="polite"></figcaption>
+  </figure>
+</main>
 
 <noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>
 
-<script type="module" src="./src/main.js"></script>
+<script type="module" src="./src/name.js"></script>
 </body>
 </html>

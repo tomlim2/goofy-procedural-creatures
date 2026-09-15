@@ -11,7 +11,8 @@
     "census": "node scripts/census.mjs",
     "snapshot": "node scripts/snapshot.mjs",
     "drawdiff": "node scripts/drawdiff.mjs",
-    "fanspill": "node scripts/fanspill.mjs"
+    "fanspill": "node scripts/fanspill.mjs",
+    "names": "node scripts/names.mjs"
   },
   "dependencies": {
     "three": "^0.169.0"

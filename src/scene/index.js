@@ -193,7 +193,9 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     hifives.reset();   // slots renumber — index-keyed cooldowns would mean other pairs
     if (sparks) sparks.clear();
     columns = cols;
-    rows = Math.ceil(specs.length / cols);
+    // An empty cast still lays out one row: the name screen's blank card stands the paper up in the 1×1 view its creature will
+    // stand in, so the frame drawn around that view does not jump when the first one arrives (src/name.js)
+    rows = Math.max(1, Math.ceil(specs.length / cols));
 
     const rng = makeRng(specs[0] ? specs[0].roll : 1);
     noise = makeNoise(rng);
@@ -217,7 +219,7 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     const width = columns * CELL_W;
     const height = rows * CELL_H;
     const groundSketch = new Sketch(noise, 1.4);
-    for (let row = 0; row < rows; row += 1) {
+    for (let row = 0; row < (specs.length ? rows : 0); row += 1) {   // nobody stands on an empty cast's floor, so it has none
       const y = height / 2 - CELL_H * (row + 1) + FLOOR;
       groundSketch.line([[-width / 2 + 0.1, y], [width / 2 - 0.1, y]], { color: "#4a423a" });
     }

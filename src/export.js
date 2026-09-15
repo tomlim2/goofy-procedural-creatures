@@ -27,13 +27,36 @@ export function exportPng(canvas, { mark, name }) {
   ctx.fillText(mark, out.width - pad, out.height - pad);
 
   out.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = name;
-    link.click();
-    // Some browsers lose the URL before the save starts if it is revoked right after the click. Revoke on the next tick
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    if (blob) downloadBlob(blob, name);
   }, "image/png");
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  // Some browsers lose the URL before the save starts if it is revoked right after the click. Revoke on the next tick
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+// A finished picture handed to the visitor (the name screen's card): a phone's share sheet where it takes files — save to photos,
+// send it on — and a download everywhere else, a desktop's share sheet included (a SAVE button that opens one is not a save).
+// **Synchronous up to the share call**: a share sheet opens only inside the click that asked for it, and toBlob's callback has already
+// left that click, so the PNG is read with toDataURL in the same task
+export function savePng(canvas, name) {
+  const [, data] = canvas.toDataURL("image/png").split(",");
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  const file = new File([bytes], name, { type: "image/png" });
+  const phone = navigator.maxTouchPoints > 0 && window.matchMedia("(pointer: coarse)").matches;
+  if (phone && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file] }).catch((error) => {
+      if (error.name !== "AbortError") downloadBlob(file, name);   // a sheet closed by hand is not a failure
+    });
+    return;
+  }
+  downloadBlob(file, name);
 }

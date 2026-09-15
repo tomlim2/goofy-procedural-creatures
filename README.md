@@ -4,7 +4,11 @@ A board of hand-drawn creatures, rolled fresh on every load. A board where human
 from the top, each breathing on its own clock, blinking, glancing around, getting startled, waving hello, folding and unfolding their arms, hopping in place, floating ♥ ! ? over their heads.
 The lines never stop boiling on a low period. Shapes change only when you press NEW BOARD, or redraw one creature.
 
-**[tomlim2.github.io/goofy-procedural-creatures](https://tomlim2.github.io/goofy-procedural-creatures/)** — the board running right now.
+The front door is the other way round: **type a name and draw its card** — the creature that name makes, alive on a trading card
+with its ♥, its moves and its rarity. The same name always draws the same one.
+
+**[tomlim2.github.io/goofy-procedural-creatures](https://tomlim2.github.io/goofy-procedural-creatures/)** — the name screen ·
+**[/board.html](https://tomlim2.github.io/goofy-procedural-creatures/board.html)** — the board, running right now.
 
 ## The goal
 
@@ -33,9 +37,17 @@ git tag v0.1.0 && git push origin v0.1.0
 `node serve.mjs [port] [ref]` — the port can also come from `PORT` (so two sessions can each run one), and the ref (HEAD by default)
 is extracted once at start and served under `/base/` for the pixel diff page.
 
-`/debug.html` — **the debug screen**. The main page has only BOARD, EXPORT, SPECIES and GRID; to touch the pose, ink, actions, the high five or regen, come here.
-The drawing is the same and only the control cards differ (the same `src/main.js`). Nothing links here from the main page — you type the address.
-To go back, press **MENAGERIE** in the header.
+`/` — **the name screen**, the front door ([guidelines/name.md](guidelines/name.md)). A name field, a species (ALL lets the name pick)
+and DRAW — nothing else, no header and no nav. The name is the seed: it becomes a roll and a species, and the creature stands up on a
+trading card (5:7) with its ♥ (its size), its two likeliest moves (its own clock, run for five minutes) and its rarity (how unlikely its
+parts are together, cut at 60 · 30 · 10% of its species). SAVE keeps the card, only the card, as it is seen, at 1000 × 1400 — a phone's
+share sheet where there is one. The name is never in the address, in storage or in a request.
+
+`/board.html` — **the board**. It has only BOARD, EXPORT, SPECIES and GRID.
+
+`/debug.html` — **the debug screen**. To touch the pose, ink, actions, the high five or regen, come here.
+The drawing is the same as the board's and only the control cards differ (the same `src/main.js`). Nothing links here from the board — you type the address.
+**GRID** in the header goes back to the board, **MENAGERIE** to the front door.
 
 `/stage.html` — **the stage**. The cast stood up in a room: every creature is the board's own drawing, stood on a sheet of paper like
 a standee, in rows down the depth, and a perspective camera goes round it — drag to go round, wheel or a pinch to come nearer, HOME
@@ -84,7 +96,7 @@ tree (`serve.mjs`'s ref under `/base/`, HEAD by default) on the same GPU and cou
 The gate that sees the picture itself — the scene and the shaders (the paper, the sheet pass, a mesh's opacity, the parallax) that `drawdiff` is blind to.
 A refactor has to come out at 0; a change shows where the picture moved.
 
-The main screen (`/`) has only **BOARD · EXPORT · SPECIES · GRID**. The rest belongs to the debug screen (`/debug.html`).
+The board (`/board.html`) has only **BOARD · EXPORT · SPECIES · GRID**. The rest belongs to the debug screen (`/debug.html`).
 
 A board is a **cast** of specs, and a spec is JSON. Nothing is picked until you click a creature; then a pin
 stands at its feet with four glyphs: REDRAW rolls a fresh one into that cell and leaves every other creature
@@ -113,13 +125,13 @@ The state you make **rides in the address**. Build a screen, copy the address, a
 Anything at its default is left off — the address of an untouched screen carries nothing.
 
 ```
-/?grid=1x1&species=cat&pose=bind&ink=still&action=wave
+/board.html?grid=1x1&species=cat&pose=bind&ink=still&action=wave
 ```
 
 `grid` `pose` `ink` `live` `species` `action` `five` — exactly the controls in the table above, and the values are the buttons' `data-*` (for ACTION, the list's values).
 The stage carries `grid` `species` `face` `dance` the same way.
-A value not in the list, and **a value whose card is not on that screen**, is ignored — `pose=bind` falls off on the main page (it is used on the debug screen).
-The board itself is never in the address — it is rolled fresh, and kept as a file. Press **MENAGERIE** in the header to go back to the main page (the same on the debug, gallery and audit screens).
+A value not in the list, and **a value whose card is not on that screen**, is ignored — `pose=bind` falls off on the board (it is used on the debug screen).
+The board itself is never in the address — it is rolled fresh, and kept as a file. **GRID** in the header goes back to the board and **MENAGERIE** to the front door (the same on every screen with a header).
 
 ## Structure
 
@@ -136,9 +148,10 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | **`src/character/`** | What the roll decides. `vocabulary/` (slots, species, archetypes, palette) `spec.js` (roll→spec) `draw/` (spec→strokes: `layout` `head` `hair` `headgear` `face` `mouth` `faceStates` `body` `limbs`) | [character/](guidelines/character/) |
 | **`src/motion/`** | What the clock decides. `table.js` (per-species parameters) `rhythm.js` (standing) `events.js` (intermittent) `states.js` (held — including the base states idle/sleep/walk/sit) `actions.js` (idle and actions — arm, body and quad layers; the dance's beat) `emoji.js` (emoji animation — the trigger layer) `ease.js` (curve shapes — envelopes and following, all eased in and out) `index.js` (assembly in a fixed rng order) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js` (geometry → hierarchy) `animate.js` (state → rig) `paper.js` (the paper — one plane, one GLSL fragment: the board's only shader) `post.js` (what is drawn over the finished board — the same sheet again, on top) `mesh.js` (meshes and the shared GPU materials) `emoji.js` (glyph shapes) `index.js` (the scene, the loop, regen) `stage.js` (the same rigs stood on a floor — a perspective camera, front-to-back by distance) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
-| `src/export.js` | Screen → PNG. Puts the WebGL canvas onto a 2D canvas and lays a signature (the name) on top to download. It knows nothing about the scene — it takes a canvas already drawn | |
-| `src/main.js` · `src/control.js` · `src/ui.js` | The entry point. `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the loop — a fixed 24 ticks a second, `tick.js`; shared with the stage, gallery, audit and the medium page) | |
-| `debug.html` | The debug screen — the same `src/main.js` as `index.html`, with every control card (the controller skips the missing ones) | |
+| `src/export.js` | Screen → PNG. Puts the WebGL canvas onto a 2D canvas and lays a signature (the name) on top to download; `savePng` hands a finished picture to a phone's share sheet or a download. It knows nothing about the scene — it takes a canvas already drawn | |
+| `index.html` · `src/name.js` · `src/card.js` · `src/character/name.js` | The name screen, the front door. `character/name.js` turns a name into a key, a roll and a species (the one door into the generator that takes something from a visitor) and reads ♥ and rarity off the parts; `card.js` is the card — its moves off the creature's clock, where everything stands, and the one function that writes its words; `name.js` is the page — the scene at 1×1 with the card's frame drawn in the pencil, and SAVE | [name](guidelines/name.md) |
+| `src/main.js` · `src/control.js` · `src/ui.js` | The board's entry point (`board.html`). `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the loop — a fixed 24 ticks a second, `tick.js`; shared with the stage, gallery, audit, the medium page and the name screen) | |
+| `debug.html` | The debug screen — the same `src/main.js` as `board.html`, with every control card (the controller skips the missing ones) | |
 | `src/stage.js` · `stage.html` | The stage — the cast stood up in a room, the camera by hand | [rig](guidelines/rig.md) § the stage |
 | `src/gallery.js` · `gallery.html` | The parts gallery — the same individual side by side, per slot value | |
 | `src/editor.js` · `editor.html` | The editor — one working spec edited by hand, saved and opened as JSON. The only screen whose creature need not be a roll's | [determinism](guidelines/determinism.md) |
@@ -160,6 +173,10 @@ node scripts/snapshot.mjs before       # before a refactor — records specs, ge
 node scripts/snapshot.mjs after        # after — diff 0 means behaviour is unchanged
 
 node scripts/drawdiff.mjs [ref]        # for drawing refactors — compares the working tree against a git ref (HEAD by default) over every slot value × species × roll. 0 means the drawing is unchanged
+
+node scripts/fanspill.mjs --check      # every fill checked against the fan that fills it — 0 means no fill spills past its outline
+
+node scripts/names.mjs                 # the name screen on its own — the species on ALL, a name's variants as one name, the stars at 60 · 30 · 10%, the ♥ range, the moves' labels; --measure prints the constants to paste
 
 node scripts/hifive-sim.mjs            # how often pairs land a high five, and whether the palms meet — the real pair logic over real clocks, both palms run back through FK at contact
 ```

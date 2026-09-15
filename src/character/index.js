@@ -7,6 +7,7 @@
 
 export { makeCreature, makeGrid, makeBoard, boardCells, cellRoll, laneSpecies, LANES, ghostPalette, ghostOutline, ghostInk, isGhost, deriveSpec, applyForbid, applyConstraints, applyLateConstraints, NO_MARK_EYES } from "./spec.js";
 export { readCreature, readBoard, creatureJson, boardJson, isHouse, BOARD_FILE } from "./file.js";
+export { NAME_SPECIES, nameKey, shownName, nameRoll, nameSpecies, creatureOfName, HEART_RANGE, sizeOf, heartsOf, rarityScore, RARITY_CUTS, RARITY_NAMES, rarityOf } from "./name.js";
 export { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, BIND_ARM, tailSketch, LAYER_KEYS, HAIR_KEYS, STATIC_EYE_KEYS } from "./draw/index.js";
 export { layout, eyeGeometry, OVERLAP } from "./draw/layout.js";
 export { RIG_EYES, EYEBALL_KINDS, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath, pupilMark } from "./draw/face.js";
