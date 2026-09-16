@@ -22,9 +22,10 @@ never a board; a NEW button rolls another; a file remembers. Rolls live in the g
 gates, where a repeatable sample is the point.
 
 **One screen takes something like a roll, on purpose: the name screen** ([name.md](name.md)). A visitor's name
-becomes a key, and the key a roll and a species (`character/name.js`) — the screen shows neither, and the name
-never reaches the address. What it promises is this document's promise and no more: the same name draws the same
-creature within a version of the code, and a generator change draws every name again. The mapping itself is salted
+becomes a key, and the key a roll and a species (`character/name.js`) — the screen shows neither, and its address
+carries the name and the dropdown's choice, never a roll. What it promises is this document's promise and no more: the
+same name draws the same creature within a version of the code, and a generator change draws every name again, a
+shared link's with them. The mapping itself is salted
 with its version (`menagerie:name:v1:`), so a change to *it* has to say so; `snapshot.mjs` keeps six names, so a
 change to the generator counts how many it moved.
 

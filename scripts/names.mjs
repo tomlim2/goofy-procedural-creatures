@@ -1,8 +1,8 @@
 // The name screen's mapping and card on their own (guidelines/name.md § checks).
 //   node scripts/names.mjs             the checks, the constants as measured, and sample cards
 //   node scripts/names.mjs --measure   only the constants — RARITY_CUTS and HEART_RANGE as they measure, to paste into src/character/name.js
-// Exits 1 when a check fails: the species on ALL off one in five, a name's variants not one name, a species' stars off
-// 60 · 30 · 10%, the ♥ range drifted from its measure, a move a card can show with no label.
+// Exits 1 when a check fails: the species on ALL off one in five, a name's variants not one name, an address that does not bring
+// back its card, a species' stars off 60 · 30 · 10%, the ♥ range drifted from its measure, a move a card can show with no label.
 
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -66,6 +66,19 @@ check(C.creatureOfName("   ") === null && C.creatureOfName("\u200b\u200d\t") ===
 const other = C.creatureOfName("Tom Lim", "cat");
 const same = C.creatureOfName("Tom Lim");
 check(other.roll === same.roll, "the roll is the name's alone — choosing a species does not move it");
+
+// -- the address: a link brings back the card it was drawn at --
+const LINKED = ["홍길동", " Tom  Lim ", "たなか", "Élodie 🐈", "a&b=c#d+e%f?g/h"];
+const cardAt = (made) => made && JSON.stringify([made.shown, made.roll, made.species, made.spec]);
+const back = LINKED.flatMap((text) => ["all", "cat"].map((species) => {
+  const read = C.nameOfAddress(`?${C.addressOfName(text, species)}`);
+  return read.species === species && cardAt(C.creatureOfName(read.text, read.species)) === cardAt(C.creatureOfName(text, species));
+}));
+check(back.every(Boolean), `an address brings back its card — ${LINKED.map((t) => JSON.stringify(t)).join(" · ")}, each on ALL and on CAT`);
+check(
+  !C.addressOfName("Tom", "all").includes("species") && C.nameOfAddress("?name=Tom&species=dragon").species === "all" && C.nameOfAddress("").text === "",
+  "ALL stays out of the address, a species no name can be reads as ALL, and an address with no name names nobody"
+);
 
 // -- the stars: 60 · 30 · 10% of every species, with the cut-offs the page carries --
 for (const species of C.NAME_SPECIES) {

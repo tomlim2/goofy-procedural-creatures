@@ -9,7 +9,9 @@ It is the front door (`/`): the board shows thirty-odd creatures that belong to 
 
 Settled with the owner (2026-09-15): the name is the seed and the species is optional, ALL first; the result is a
 trading card at the card's 5:7; the front door holds nothing but the controls; SAVE keeps the card, only the card, as it
-is seen; the card carries the name, its species and its rarity, and no story; the board moved to `/board.html`.
+is seen; the card carries the name, its species and its rarity, and no story; the board moved to `/board.html`. After v1.0.0 the
+owner asked for two more: the card is to be shared by its link, so the card drawn rides in the address (§ the screen), and the first
+screen is not to be empty, so the card lies face down until a DRAW turns it over (§ the back).
 
 ## What it is not
 
@@ -20,9 +22,9 @@ is seen; the card carries the name, its species and its rarity, and no story; th
   from there it is `makeCreature` → `deriveSpec` → the scene, exactly as a board cell.
 - **Not a hub.** No header, no nav, no link out. The board and the tools keep addresses of their own (§ the board's
   address) and are reached by typing them, as `/debug.html` always was.
-- **Not remembered, not sent.** The name is never in the address, never in storage and never in a request. Reload and
-  the field is empty.
-- **Not filtered.** Nothing leaves the browser, and the card says only what the visitor typed.
+- **Not remembered.** Nothing is kept in storage. The card drawn rides in the address instead (§ the screen), so a reload
+  draws it again and a link shares it — and the name goes wherever the address goes.
+- **Not filtered.** Nothing checks a name anywhere: the card says only what was typed, or what a link carried.
 - **Not a story.** The card says what the creature is and what it does and tells no tale. A story a species — six
   lines each, a line for its ghost, a lore line for the blank card, in two languages — was written and dropped: more
   writing, checking and translating than the wrap-up wanted. With no sentences of its own, the card's words are the
@@ -34,19 +36,22 @@ is seen; the card carries the name, its species and its rarity, and no story; th
 ## The screen
 
 ```
-   [ YOUR NAME            ] [ ALL ▾ ] [ DRAW ] [ SAVE ]
-                ┌──────────────────────┐
-                │                      │
-                │       the card       │
-                │        (5 : 7)       │
-                │                      │
-                └──────────────────────┘
+   before a name                            a card drawn
+
+   [ YOUR NAME       ] [ ALL ▾ ] [ DRAW ]   [ YOUR NAME       ] [ ALL ▾ ] [ DRAW ] [ SAVE ]
+        ┌──────────────────────┐                 ┌──────────────────────┐
+        │                      │                 │                      │
+        │      MENAGERIE       │   ── DRAW ──▶   │       the card       │
+        │      TYPE A NAME     │    turns it     │        (5 : 7)       │
+        │                      │      over       │                      │
+        └──────────────────────┘                 └──────────────────────┘
+              its back                              the creature's side
 ```
 
 - **The controls, and nothing else** — the name field, the species dropdown, **DRAW**, and **SAVE** once a card stands.
   One row across the top; at 520px and under the field takes the whole width and the rest share the row under it. The
   card stands under them, sized from the height the screen leaves it and never wider than the screen (`styles.css`
-  `.namecard`). Before the first draw it is blank: the frame, in the page's ink, and an empty picture.
+  `.namecard`). Before a name it lies face down (§ the back): the screen is never empty, and DRAW turns the card over.
 - **The field** — placeholder `YOUR NAME`, `maxlength="40"` (a name, not a sentence), `autocomplete="off"`,
   `spellcheck="false"`, focused when the page opens.
 - **The dropdown** — `ALL · HUMAN · CAT · PUP · IMP · REX`, ALL first and chosen when the page opens: ALL lets the name
@@ -57,8 +62,18 @@ is seen; the card carries the name, its species and its rarity, and no story; th
   through `ㅎ`, `호`, `홍` on its way — and the reveal would be a flicker of creatures that are nobody's. For the same
   reason **Enter is ignored while an input method is composing** — `event.isComposing`, or `keyCode` 229, which Safari
   sends for that Enter with `isComposing` already false: the Enter that commits a Hangul syllable must not also draw.
-- **The address carries nothing.** There is no control worth keeping in it, and the name is kept out on purpose — an
-  address is what gets copied, pasted and logged.
+- **The address carries the card** — `?name=` the shown name, and `&species=` the dropdown's choice, left out on ALL as
+  every screen leaves its starting values out (`character/name.js` `addressOfName`; `URLSearchParams` escapes it, so a
+  name with `&`, `#`, `+` or a space in it comes back as it went). It is written in place whenever a card is drawn
+  (`history.replaceState` — no history entry a name, so BACK leaves the page), and only then: a DRAW that draws nothing
+  leaves the address on the card still standing, and a species picked with no card up leaves it as it was.
+- **A link opened** (`nameOfAddress`) fills the field and the dropdown and draws, as DRAW would. A name longer than the
+  field is cut to its 40 by whole characters, where typing would have stopped (`maxlength` holds back typing, not a value
+  set from a script); a species no name can be is ALL; an address with no name leaves the card face down. Until the card is
+  drawn — the type loading, on a first visit — the link's name waits in the field over the back.
+- **What the address costs** is what every address costs: the name is in what gets copied, pasted and kept in a browser's
+  history, and opening a link sends it, with the rest of the address, to the host serving the page. Typing a name and
+  drawing it send nothing.
 - **For a screen reader** — the card's words go into an `aria-live="polite"` caption, so drawing one reads out who stood
   up; the canvas is hidden from it.
 
@@ -93,6 +108,8 @@ moving** — the same blinks, glances and actions, in the same order.
   with every other roll. A change like that draws every name again, and it is made knowing that — `snapshot.mjs` keeps
   six names (§ checks), and the rarity cut-offs and the ♥ range are measured constants that `names.mjs` fails on when
   they drift.
+- **A link keeps the name, not the creature.** The address holds what was typed and the dropdown's choice — never the
+  roll or the spec — so a link opened after a generator change draws the creature that name makes then, as typing it would.
 - **A saved card keeps what it was.** It is a picture; nothing about it can move.
 
 A frozen copy of the generator for this screen was considered and left: the spec would hold still but the drawing
@@ -122,6 +139,11 @@ roll or takes one; both carry this screen as the one exception. It takes a name,
 ```
 
 **5:7** — the 63 × 88 mm trading card. Every number on it is read off the creature itself (`src/card.js` `cardOf`).
+
+**The area and the card** are two things, and the rest of this document keeps them apart. The **area** is the canvas: the whole 5:7
+rectangle, the paper in it, and what SAVE writes out. The **card** is what the pencil draws inside the area — its edge `CARD.inset`
+(0.035 of the width) in from the area's own, so a margin of paper shows around it. A turn turns the card; the area does not move
+(§ the back).
 
 | On the card | What it shows | Read from |
 | --- | --- | --- |
@@ -158,6 +180,44 @@ the kind and the foot).
   which reads the PNG with `toDataURL` so the share call stays inside the click that asked for it). There is no creature
   file (JSON) on this screen.
 
+## The back
+
+`src/name.js` `layBack`. Asked for by the owner (2026-09-16): the first screen is not to be empty. Of the ways to fill it — a title
+and a line over the controls, a hint written on a blank card, an example card already drawn, creatures walking past — the card's own
+back won, because DRAW already means *draw a card*.
+
+```
+┌────────────────────────────────────┐
+│ ┌────────────────────────────────┐ │
+│ │                                │ │
+│ │           MENAGERIE            │ │
+│ │           TYPE A NAME          │ │
+│ │                                │ │
+│ └────────────────────────────────┘ │
+└────────────────────────────────────┘
+```
+
+- **The card's own edge** (`CARD.inset`, `CARD.corner`), a border inside it at 0.075 of the width, and the wordmark over the hint,
+  written in the goofy letters (§ the letters) — the project's own capitals, on the card they were drawn for. The hint takes the
+  soft ink the kind and the foot take; everything else is the page's ink, since a card with nobody on it has no palette.
+- **It boils** like everything else — three frames at roll 0's cadence — over the paper of the same empty 1×1 scene the creature
+  will stand in, so nothing under the card moves when the first one arrives.
+- **DRAW turns the card over** (`turnOver`, `stepTurn`): the card is squashed across until it stands on its edge, what it shows is
+  swapped there — the creature stood up, the frame and the words laid, where there is nothing to see — and it opens out again, half
+  a turn each way in 0.2 s. The angle turns at a constant speed and the card stands as wide as its cosine, taken absolute, so the
+  side that comes round is the right way about rather than mirrored. Every later DRAW turns the card too — one card never dissolves
+  into another — and the slowest work there is, standing a creature up, happens where it cannot be seen.
+- **The card turns, not the area.** The turn is drawn in the scene rather than in CSS: `scene/index.js` `setTurn(k)` squashes
+  everything drawn on the paper — every creature, and the floor line under it — and this page squashes the frame group with it,
+  while the paper and the sheet over it are left alone, so the page the card lies on holds still while the card turns on it. It has
+  to ride in the scene because `applyState` writes a creature's `scale.x` (its facing) every tick, so the turn is multiplied in
+  after it.
+- **On the loop's own clock** — `stepTurn` off the tick, 24 a second — so the card boils as it turns, and a turn waits with
+  everything else while a tab is hidden.
+- **One turn at a time.** A DRAW during a turn waits for it (`turning`, a promise the turns queue on), so a held Enter or a run
+  down the dropdown plays out as turns rather than a stutter. SAVE is disabled while a turn runs, since a card caught mid-turn would
+  save squashed, and a visitor who asks for less motion (`prefers-reduced-motion: reduce`) gets the swap with no turn at all.
+
 ## The type
 
 `src/medium/type.js` — how the card writes any script. Settled with the owner (2026-09-15): the project's own capitals
@@ -170,8 +230,9 @@ the pencil's wiggle instead.
   `Menagerie Sans KR`), so a copy installed on the machine never stands in.
 - **All four faces load whatever is typed** (`loadType`, when the page opens). A font service sends only the slices a page's
   text needs, and a slice fetched for a name tells the service which characters the name holds; a face of our own fetched
-  only when a name needs it would still say which script. Loading them all keeps the promise that the name never reaches a
-  request. A DRAW waits for them.
+  only when a name needs it would still say which script. Loading them all keeps the fonts from saying anything about a name:
+  a name typed and drawn reaches no request, and only a link, opened, carries one — in its own address (§ the screen). A DRAW
+  waits for them.
 - **Traced, not set** (`traceType`). A line is written onto a canvas at 96 px to the em, and the canvas's coverage is traced
   by marching squares at half — the crossings placed along each cell edge where the coverage passes 0.5, so a ring follows
   the antialiased edge rather than the pixels' steps — the segments joined into rings and each simplified to 0.6 px. A ring
@@ -186,7 +247,8 @@ the pencil's wiggle instead.
 ## The letters
 
 `src/medium/letters.js` — the project's own capitals, asked for by the owner (2026-09-15) and the card's words until the type
-replaced them (they write only Latin); kept, and drawn on the medium page (`how.html` § the goofy letters): 26 letters, ten
+replaced them (they write only Latin); kept, drawn on the medium page (`how.html` § the goofy letters) and writing the card's back
+(§ the back): 26 letters, ten
 digits and a few marks (`. , ' · - _ / : ! ? + ( ) × ♥ ★` and the space). Not a font file — every glyph is a list of strokes,
 and each stroke goes down as one pencil line (`sketch.pencil`), so a word wanders, sheds and boils like the drawing it sits on.
 
@@ -207,14 +269,16 @@ and each stroke goes down as one pencil line (`sketch.pencil`), so a word wander
 
 `/` is the name screen, so the board moved: **`index.html` → `board.html`**, the same `src/main.js`. Every tool page's
 header keeps its nav — GRID goes to `./board.html`, and the MENAGERIE mark to `./`, the front door. `how.html`'s two links
-to the board follow it. The scene lays out one row for an empty cast (`scene/index.js` `build`), so the blank card stands
-the paper up in the same 1×1 view its creature will, with no floor line under nobody.
+to the board follow it. The scene lays out one row for an empty cast (`scene/index.js` `build`), so the card's back stands the
+paper up in the same 1×1 view its creature will, with no floor line under nobody.
 
 ## Checks
 
 - **`node scripts/names.mjs`** — the mapping and the card on their own, each check exiting 1 when it fails: the species
   over 10,000 made-up names on ALL (each within 20% ± 1.5 — measured 19.2–20.6%); every variant in the key's row coming
-  out as one name, and a name of only spaces and invisible characters as no name; the roll unmoved by the dropdown; each
+  out as one name, and a name of only spaces and invisible characters as no name; the roll unmoved by the dropdown; an
+  address bringing back the card it was drawn at (Hangul, kana, an accent and an emoji, spaces, and `& = # + % ? /`, each on
+  ALL and on CAT), ALL left out of it, a species no name can be read as ALL and an address with no name as nobody; each
   species' stars at 60 · 30 · 10% (± 3) with the cut-offs the page carries; the ♥ range within 5% of its measure; a label
   for every move a card can show. It reports how many cards show two moves (193 of 200 humans, cats, dogs and rexes — the
   seven without are ghosts — and 151 of 200 imps, the rest armless) and lists sample names with their cards.
@@ -223,8 +287,18 @@ the paper up in the same 1×1 view its creature will, with no floor line under n
   moved.
 - At the build: snapshot diff 0 against the tree before (specs, geometry, motion — `slotWeights` is `pickSlot`'s lookup
   moved, not changed); drawdiff against HEAD 187,360 sketches, 0 spec and 0 drawing differences; census 0; fanspill 0; pixeldiff 0 on the board (4 boards × 35).
-- **By hand** — the blank card, a card drawn and redrawn by the dropdown, a 40-character name shrinking onto its line, a
+- **By hand** — a card drawn and redrawn by the dropdown, a 40-character name shrinking onto its line, a
   ghost's `floating`, a name in four scripts and an emoji (`Élodie 김たなか 🐈`) written and saved at 1000 × 1400 holding only
   the card, the four faces loaded before the first DRAW, and the page at 375px wide: the card 339 × 475, 5:7, under two rows
   of controls. Enter mid-composition with a Korean input method, and the share sheet on a phone, want a real keyboard and a
   real phone.
+- **The address, by hand** — a link opened (`홍길동` on CAT: the field, the dropdown and the card); a name typed and the
+  dropdown moved to ALL, each rewriting the address in place with no history entry; a refused DRAW leaving it; a name with
+  `& = # + % ? /` drawn, reloaded and standing the same card; a link's 43-unit name cut to 39 at the emoji that would have
+  passed 40, with `species=dragon` read as ALL.
+- **The back and the turn, by hand** — `/` standing the card face down at 748 × 863 and at 375 × 812 (555 × 777 and 339 × 475, 5:7),
+  the wordmark and the hint reading at both; DRAW turning it over — the card caught part way, narrow, with the paper and its shadow
+  around it not moving, and the creature and its floor line narrowing with the card; the dropdown turning the card again to another
+  species' card and `&species=…`; a link (`홍길동` on CAT) opening on the back with the name already in the field and turning over by
+  itself; SAVE after a turn 1000 × 1400, the card's edge at 3.3% and 96.8% across (flat on, not caught mid-turn), with the canvas set
+  back; and the board drawing as it did, the turn being the name screen's alone.

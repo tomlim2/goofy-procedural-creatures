@@ -38,10 +38,12 @@ git tag v0.1.0 && git push origin v0.1.0
 is extracted once at start and served under `/base/` for the pixel diff page.
 
 `/` — **the name screen**, the front door ([guidelines/name.md](guidelines/name.md)). A name field, a species (ALL lets the name pick)
-and DRAW — nothing else, no header and no nav. The name is the seed: it becomes a roll and a species, and the creature stands up on a
+and DRAW — nothing else, no header and no nav. The card lies face down (MENAGERIE · TYPE A NAME, in the goofy letters) until a DRAW
+turns it over. The name is the seed: it becomes a roll and a species, and the creature stands up on a
 trading card (5:7) with its ♥ (its size), its two likeliest moves (its own clock, run for five minutes) and its rarity (how unlikely its
 parts are together, cut at 60 · 30 · 10% of its species). SAVE keeps the card, only the card, as it is seen, at 1000 × 1400 — a phone's
-share sheet where there is one. The name is never in the address, in storage or in a request.
+share sheet where there is one. The card drawn rides in the address — `/?name=…&species=…` — so a link shares it; nothing is kept in
+storage.
 
 `/board.html` — **the board**. It has only BOARD, EXPORT, SPECIES and GRID.
 

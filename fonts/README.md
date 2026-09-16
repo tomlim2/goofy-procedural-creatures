@@ -2,8 +2,9 @@
 
 The type the name screen's card is written in (`src/medium/type.js`, guidelines/name.md § the type) — Noto Sans and Noto Sans KR,
 under the SIL Open Font License 1.1 (`OFL-NotoSans.txt`, `OFL-NotoSansKR.txt`). Served from here rather than from a font service:
-a service that sends only the slices of a font a page's text needs would learn which characters a visitor's name holds, and the
-name screen promises the name never reaches a request. The page loads all four files whatever is typed.
+a service that sends only the slices of a font a page's text needs would learn which characters a visitor's name holds, and a
+name typed and drawn on the name screen reaches no request (only a shared link carries one, in its own address). The page loads all
+four files whatever is typed.
 
 | File | From | Weight | Characters |
 | --- | --- | --- | --- |

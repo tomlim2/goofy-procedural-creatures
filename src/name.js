@@ -1,10 +1,11 @@
 // The name screen — the front door (guidelines/name.md). A name, a species (ALL lets the name pick) and DRAW stand a creature up on a
-// trading card; SAVE keeps the card, only the card, as it is seen. The address carries nothing and nothing is remembered: the name
-// never leaves the page.
+// trading card; SAVE keeps the card, only the card, as it is seen. The card drawn rides in the address (?name=…&species=…), so a link
+// shares it; nothing is kept in storage.
 //
 // The card is one WebGL canvas: the board's own scene at 1×1 — the paper, the creature, the sheet over them — with the card's frame
 // and its words drawn into it in the pencil (the words in the goofy type, medium/type.js: any script, traced off Noto Sans), so they
-// boil with the creature, lie under the same sheet, and SAVE is the same scene drawn again at a fixed size.
+// boil with the creature, lie under the same sheet, and SAVE is the same scene drawn again at a fixed size. The screen opens on the
+// card's back, and a DRAW turns the card over.
 
 import * as THREE from "three";
 import { createScene } from "./scene/index.js";
@@ -12,8 +13,10 @@ import { sketchMesh, disposeGroup } from "./scene/mesh.js";
 import { BOIL_FRAMES, boilRate } from "./scene/rig.js";
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng } from "./rng.js";
-import { creatureOfName } from "./character/index.js";
+import { creatureOfName, addressOfName, nameOfAddress, PAPER } from "./character/index.js";
 import { loadType, traceType, typeWith } from "./medium/type.js";
+import { writeCentred } from "./medium/letters.js";
+import { mix } from "./color.js";
 import { CARD, CARD_SAVE, cardOf, layCard } from "./card.js";
 import { savePng } from "./export.js";
 import { runLoop } from "./ui.js";
@@ -31,18 +34,16 @@ window.menagerie = { scene };   // the debug handle every screen keeps
 // The type's four faces, loaded now whatever is typed later (medium/type.js loadType)
 const typeReady = loadType();
 
-const BLANK_INK = "#2b2724";   // the frame of a card nobody has drawn yet — the page's own ink (styles.css --ink)
 // What stands on the card now: { made, card, laid } — null until the first DRAW
 let current = null;
 
-// -- the frame and the words --
-// The card's edge and the picture's window as closed pencil lines, and the card's words in the goofy type, in the scene's world.
-// The world rectangle the card shows is the camera's, so they are laid from it and laid again whenever it moves (a resize). Three
+// -- what the pencil lays over the scene: the card's back, or its frame and words --
+// The world rectangle the card shows is the camera's, so both are laid from it and laid again whenever it moves (a resize). Three
 // boil frames, one mesh each, flipped at the creature's own cadence (rig.js boilRate); a word's wiggle moves with the frame
 const FRAME_ORDER = 1.2;   // over the paper and the floor line, under every creature (their blocks start at 10, scene/index.js)
 const TYPE_HAND = 0.5;     // the wobble of the pencil round a letter — half the frame's, so a word a few ink widths tall still reads
 const TYPE_WIGGLE = 0.035; // how far a letter's outline is pushed about, in ems
-let frame = null;          // { group, boil, extents, ink, roll, laid }
+let frame = null;          // { group, boil, extents, lay } — lay() draws the same thing again at the camera's new size
 
 function extents() {
   const camera = scene.camera;
@@ -62,42 +63,121 @@ function roundedRect(left, top, right, bottom, r) {
   return points;
 }
 
-function layFrame(ink, roll, laid = null) {
+// One pencil group over the scene: the same drawing in three boil frames, its noise the roll's. paint(lines, words, k, at) lays one
+// frame — `lines` in the frame's hand, `words` in the letters' and the type's, and at.X / at.Y take a fraction of the card to the world
+function layPencil(roll, paint) {
   if (frame) {
     disposeGroup(frame.group);
     scene.scene.remove(frame.group);
   }
   const [hw, hh] = extents();
-  const X = (fx) => -hw + fx * 2 * hw;
-  const Y = (fy) => hh - fy * 2 * hh;
-  const inset = CARD.inset * 2 * hw;
-  const radius = CARD.corner * 2 * hw;
-  const edge = roundedRect(-hw + inset, hh - inset, hw - inset, -hh + inset, radius);
-  const picture = roundedRect(X(CARD.art.x0), Y(CARD.art.y0), X(CARD.art.x1), Y(CARD.art.y1), radius * 0.4);
+  const at = { hw, hh, X: (fx) => -hw + fx * 2 * hw, Y: (fy) => hh - fy * 2 * hh };
   const noise = makeNoise(makeRng(roll + 1));
   const group = new THREE.Group();
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const lines = new Sketch(noise, 1.2);
     lines.phase = k * 101.7;   // a different stretch of the noise per frame — that is the boil
-    lines.contour(edge, { color: ink });
-    lines.contour(picture, { color: ink });
-    const type = new Sketch(noise, TYPE_HAND, 1);
-    type.phase = k * 101.7 + 50;
-    for (const word of laid || []) {
-      typeWith(type, word.line, { x: X(word.x), y: Y(word.y), em: word.em * 2 * hw, color: word.color, wiggle: TYPE_WIGGLE, phase: k * 3.1 });
-    }
-    const mesh = sketchMesh([lines, type], 0.9, FRAME_ORDER);
+    const words = new Sketch(noise, TYPE_HAND, 1);
+    words.phase = k * 101.7 + 50;
+    paint(lines, words, k, at);
+    const mesh = sketchMesh([lines, words], 0.9, FRAME_ORDER);
     mesh.visible = k === 0;
     group.add(mesh);
   }
   scene.scene.add(group);
-  frame = { group, boil: boilRate(roll), extents: [hw, hh], ink, roll, laid };
+  frame = { group, boil: boilRate(roll), extents: [hw, hh], lay: () => layPencil(roll, paint) };
+}
+
+// The card's edge and the picture's window as closed pencil lines, and the card's words in the goofy type
+function layFrame(ink, roll, laid) {
+  layPencil(roll, (lines, words, k, { X, Y, hw, hh }) => {
+    const inset = CARD.inset * 2 * hw;
+    const radius = CARD.corner * 2 * hw;
+    lines.contour(roundedRect(-hw + inset, hh - inset, hw - inset, -hh + inset, radius), { color: ink });
+    lines.contour(roundedRect(X(CARD.art.x0), Y(CARD.art.y0), X(CARD.art.x1), Y(CARD.art.y1), radius * 0.4), { color: ink });
+    for (const word of laid) {
+      typeWith(words, word.line, { x: X(word.x), y: Y(word.y), em: word.em * 2 * hw, color: word.color, wiggle: TYPE_WIGGLE, phase: k * 3.1 });
+    }
+  });
+}
+
+// -- the back --
+// The card face down, which is what the screen opens on (guidelines/name.md § the back): the card's own edge, a border inside it, and
+// the wordmark over a hint in the goofy letters — medium/letters.js, the project's own capitals, which the card's words were drawn
+// for. In the page's ink, since a card with no creature has no palette, and boiling at roll 0's cadence like any other card
+const BACK_INK = "#2b2724";   // styles.css --ink
+const BACK = {
+  border: 0.075,                 // the border inside the card's edge, of the card's width
+  mark: { y: 0.5, cap: 0.062 },  // MENAGERIE across the middle: its baseline and cap, of the card's height
+  hint: { y: 0.6, cap: 0.028 }
+};
+function layBack() {
+  layPencil(0, (lines, words, k, { Y, hw, hh }) => {
+    const inset = CARD.inset * 2 * hw;
+    const radius = CARD.corner * 2 * hw;
+    lines.contour(roundedRect(-hw + inset, hh - inset, hw - inset, -hh + inset, radius), { color: BACK_INK });
+    const border = BACK.border * 2 * hw;
+    lines.contour(roundedRect(-hw + border, hh - border, hw - border, -hh + border, radius * 0.6), { color: BACK_INK });
+    writeCentred(words, "MENAGERIE", 0, Y(BACK.mark.y), BACK.mark.cap * 2 * hh, { color: BACK_INK, pen: "L" });
+    writeCentred(words, "TYPE A NAME", 0, Y(BACK.hint.y), BACK.hint.cap * 2 * hh, { color: mix(BACK_INK, PAPER, 0.35) });
+  });
 }
 
 function boilFrame(t) {
   if (!frame) return;
   const shown = Math.floor(t * frame.boil.fps + frame.boil.offset) % BOIL_FRAMES;
   frame.group.children.forEach((mesh, k) => { mesh.visible = k === shown; });
+}
+
+// -- turning the card over --
+// A DRAW turns the card over: the card — its outline, its words and the creature standing on it — is squashed across until it
+// stands on its edge, what it shows is swapped there, where there is nothing to see, and it opens out again. **The card turns, not
+// the area**: the paper and the sheet over it hold still (scene/index.js `setTurn` squashes everything drawn on the paper; the
+// frame is this page's own group), so a card turns over on a page that does not move — and the slowest work there is, standing a
+// creature up, happens where it cannot be seen. It runs on the loop's own clock, so the card boils as it turns. The turns are
+// taken one at a time, a DRAW during one waiting for it, and a visitor who asks for less motion gets the swap alone
+const TURN = 0.2;   // half a turn, seconds
+const lessMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let turning = Promise.resolve();   // the turns queue on this
+let turn = null;                   // the one running: { from, swap, done, swapped }
+let turned = 1;                    // how wide the card stands — 1 flat on, 0 on its edge
+
+function turnTo(k) {
+  turned = k;
+  frame.group.scale.x = k;
+  scene.setTurn(k);
+}
+
+function turnOver(swap) {
+  turning = turning.then(() => new Promise((done) => {
+    if (lessMotion.matches) {
+      swap();
+      done();
+      return;
+    }
+    saveButton.disabled = true;   // a card caught mid-turn would save squashed
+    turn = { from: null, swap, done, swapped: false };
+  }));
+  return turning;
+}
+
+// One tick of the turn: the card stands as wide as the cosine of the angle it has turned through, and what it shows is swapped at
+// the edge — at |cos| the new side comes round the right way about rather than mirrored
+function stepTurn(t) {
+  if (!turn) return;
+  if (turn.from === null) turn.from = t;
+  const u = Math.min(1, (t - turn.from) / (2 * TURN));
+  if (u >= 0.5 && !turn.swapped) {
+    turn.swap();
+    turn.swapped = true;
+  }
+  turnTo(Math.abs(Math.cos(Math.PI * u)));
+  if (u >= 1) {
+    const { done } = turn;
+    turn = null;
+    saveButton.disabled = false;
+    done();
+  }
 }
 
 // -- the card --
@@ -108,10 +188,13 @@ function stand(specs) {
   scene.camera.updateProjectionMatrix();
 }
 
-// A DRAW waits for the type; a second DRAW pressed while it waits wins, and the first is let go
+// A DRAW waits for the type; a second DRAW pressed while it waits wins, and the first is let go. The card drawn goes into the address
+// in place (replaceState — no history entry a name, so BACK leaves the page), and only a card drawn: a DRAW that draws nothing leaves
+// the address on the card still standing
 let drawing = 0;
 async function draw() {
-  const made = creatureOfName(input.value, speciesSelect.value);
+  const species = speciesSelect.value;
+  const made = creatureOfName(input.value, species);
   if (!made) {
     input.focus();
     return;
@@ -120,12 +203,16 @@ async function draw() {
   await typeReady;
   if (mine !== drawing) return;
   const card = cardOf(made);
-  current = { made, card, laid: layCard(card, traceType) };
-  stand([made.spec]);
-  layFrame(card.ink, made.roll, current.laid);
-  saveButton.hidden = false;
-  const stars = `${card.stars} star${card.stars > 1 ? "s" : ""}`;
-  live.textContent = `${card.name} — ${card.kind.toLowerCase()}, ♥ ${card.hearts}, ${stars}`;
+  const laid = layCard(card, traceType);   // the words traced before the turn starts, so the turn does not wait on a new script
+  await turnOver(() => {
+    current = { made, card, laid };
+    stand([made.spec]);
+    layFrame(card.ink, made.roll, laid);
+    saveButton.hidden = false;
+    window.history.replaceState(null, "", `${window.location.pathname}?${addressOfName(made.shown, species)}`);
+    const stars = `${card.stars} star${card.stars > 1 ? "s" : ""}`;
+    live.textContent = `${card.name} — ${card.kind.toLowerCase()}, ♥ ${card.hearts}, ${stars}`;
+  });
 }
 
 // SAVE — the card as it is seen, drawn again at CARD_SAVE: the renderer is set to that size for one draw of the state already on
@@ -164,15 +251,31 @@ speciesSelect.addEventListener("change", () => {
 });
 saveButton.addEventListener("click", save);
 
-// -- the blank card, and the loop --
-stand([]);
+// -- the back, and the loop --
+stand([]);          // the paper alone, in the 1×1 view the creature will stand in, so the card does not move when one arrives
 scene.resize();
-layFrame(BLANK_INK, 0);
+layBack();
 
 runLoop((t) => {
   scene.resize();
   const [hw, hh] = extents();
-  if (frame && (Math.abs(hw - frame.extents[0]) > 1e-9 || Math.abs(hh - frame.extents[1]) > 1e-9)) layFrame(frame.ink, frame.roll, frame.laid);
+  if (frame && (Math.abs(hw - frame.extents[0]) > 1e-9 || Math.abs(hh - frame.extents[1]) > 1e-9)) frame.lay();   // laid flat again
+  stepTurn(t);   // after the re-lay, which draws the card its full width
   boilFrame(t);
   scene.update(t);
 }, (error) => { live.textContent = `error: ${error.message}`; });
+
+// -- a link --
+// An address a card was drawn at fills the field and the dropdown and draws, as DRAW would. The field's maxlength holds back typing,
+// not a value set from here, so a longer name is cut to it — by whole characters, where typing would have stopped
+const linked = nameOfAddress(window.location.search);
+speciesSelect.value = linked.species;
+if (linked.text) {
+  let text = "";
+  for (const character of linked.text) {
+    if (text.length + character.length > input.maxLength) break;
+    text += character;
+  }
+  input.value = text;
+  draw();
+}

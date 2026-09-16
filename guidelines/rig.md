@@ -144,6 +144,7 @@ The 3 variants share the composition and differ only in wobble. Brows, mouth, li
 | **Pose** (the rig) | POSE MOTION/BIND, `B` | `scene.setBind` | With BIND, `BIND_STATE` instead of the clock (a biped T-pose; a quad's legs vertical and tail exactly as drawn), joint easing immediate (snap). The clock keeps running |
 | **Ink** (the lines) | INK BOIL/STILL, `I` | `scene.setBoil` | With STILL, boil frame 0 is pinned |
 | Forcing an action (debug) | The ACTION card | `scene.setAction` | Every biped keeps doing that action. IDLE is no action. `clock.force`. AUTO follows the schedule |
+| How wide the drawing stands | The name screen's DRAW | `scene.setTurn` | 1 flat on, 0 on its edge: every creature and the floor line squashed across, the paper and the sheet over it left alone, so the name screen's card turns over on a page that does not move ([name.md](name.md) § the back). Multiplied in after `applyState`, which writes a creature's facing into the same `scale.x` |
 
 The bind pose is a state of the rig and the boil is a hand-drawn material. Being different axes, they switch separately —
 you can have "bind, but the lines boiling" and "mid-motion, but the lines pinned".

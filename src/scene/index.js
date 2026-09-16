@@ -101,6 +101,11 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
   let boilOn = true;
   // The regen switch. Off by default — form changes only through NEW ROLL.
   let regenEnabled = false;
+  // How wide what is drawn on the paper stands — 1 flat on, 0 on its edge. The name screen turns its card over with it
+  // (src/name.js § the turn): everything drawn is squashed across while the paper and the sheet over it stay put, so the card
+  // turns and the page it lies on does not. It is applied after applyState, which writes a creature's scale.x (its facing) every tick
+  let turnX = 1;
+  let lastTurnX = 1;   // so the tick that comes back to 1 puts the floor line and the emoji back, and the ticks after it do nothing
   // A forced action (the ACTION card). null follows each creature's own schedule. Used to judge one action.
   // The active arm of an asymmetric action is split on the parity of the roll, so left and right look mixed on the board.
   let forcedAction = null;
@@ -193,8 +198,8 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     hifives.reset();   // slots renumber — index-keyed cooldowns would mean other pairs
     if (sparks) sparks.clear();
     columns = cols;
-    // An empty cast still lays out one row: the name screen's blank card stands the paper up in the 1×1 view its creature will
-    // stand in, so the frame drawn around that view does not jump when the first one arrives (src/name.js)
+    // An empty cast still lays out one row: the name screen's card, face down, stands the paper up in the 1×1 view its creature will
+    // stand in, so the card drawn around that view does not jump when the first one arrives (src/name.js)
     rows = Math.max(1, Math.ceil(specs.length / cols));
 
     const rng = makeRng(specs[0] ? specs[0].roll : 1);
@@ -387,6 +392,17 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
       }
       applyState(item, state, t, noise, { boil: boilOn });
     }
+    // The turn (setTurn) — over the poses this tick laid down, and over the floor line they stand on; a house is left, having no
+    // state written each tick to multiply into
+    if (turnX !== 1 || lastTurnX !== 1) {
+      for (const item of creatures) {
+        if (item.static) continue;
+        item.group.scale.x *= turnX;
+        item.emojiRoot.scale.x = turnX;
+      }
+      if (ground) ground.scale.x = turnX;
+      lastTurnX = turnX;
+    }
     // The high five — after every clock has moved, so both of a pair's positions are this tick's.
     // Off while the rig is pinned (BIND — the picture and the clocks disagree) or the ACTION card is
     // forcing (a forced arm would fight the five)
@@ -399,6 +415,11 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
 
   function setRegen(value) {
     regenEnabled = value;
+  }
+
+  // How wide the drawing stands (turnX) — the name screen's card turn
+  function setTurn(k) {
+    turnX = k;
   }
 
   function setBind(value) {
@@ -427,5 +448,5 @@ export function createScene(canvas, { hifiveRush = 1 } = {}) {
     renderer.render(scene, camera);
   }
 
-  return { build, replace, setHover, update, resize, setRegen, setBind, setBoil, setAction, draw, probe, renderer, scene, camera, creatures: () => creatures };
+  return { build, replace, setHover, update, resize, setRegen, setBind, setBoil, setAction, setTurn, draw, probe, renderer, scene, camera, creatures: () => creatures };
 }

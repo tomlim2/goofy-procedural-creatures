@@ -1,6 +1,7 @@
 // A name → a creature — the name screen's one door into the generator (guidelines/name.md). A name becomes a key, the key a roll
-// and a species, and from there it is makeCreature, exactly as a board cell. Also what the card reads off the creature's parts:
-// its size (♥) and its rarity. Nothing here touches the DOM, so the node scripts read the same mapping as the page.
+// and a species, and from there it is makeCreature, exactly as a board cell. Also the address a card is shared by, and what the card
+// reads off the creature's parts: its size (♥) and its rarity. Nothing here touches the DOM, so the node scripts read the same mapping
+// as the page.
 
 import { makeCreature, slotWeights } from "./spec.js";
 import { layout } from "./draw/layout.js";
@@ -57,6 +58,23 @@ export function creatureOfName(text, species = "all") {
   const kind = NAME_SPECIES.includes(species) ? species : nameSpecies(key);
   const roll = nameRoll(key);
   return { key, shown: shownName(text), roll, species: kind, spec: makeCreature(roll, kind) };
+}
+
+// -- the address --
+// A card is shared by its address: ?name= the shown name, and &species= the dropdown's choice when it is not ALL — ALL is where the
+// screen starts, and every screen leaves its starting values out of the address. URLSearchParams does the escaping, so a name with
+// & = # + % or a space in it comes back as it went
+export function addressOfName(text, species = "all") {
+  const query = new URLSearchParams({ name: shownName(text) });
+  if (NAME_SPECIES.includes(species)) query.set("species", species);
+  return query.toString();
+}
+
+// What an address carries: { text, species } — text "" when it names nobody, species "all" when it names none a name can be
+export function nameOfAddress(search) {
+  const query = new URLSearchParams(search);
+  const species = query.get("species");
+  return { text: query.get("name") ?? "", species: NAME_SPECIES.includes(species) ? species : "all" };
 }
 
 // -- ♥ --
