@@ -336,10 +336,10 @@ export function makeClock(key, birth = 0, species = "human", rig = null, ghost =
       }
       lid = Math.max(lid, sleepK);
       const startle = startle0 * awake;   // startle 0~1 — how far the pupil shrinks
-      // Anger 0~1 — **redrawn** (scene) as fierce eyes and a bared-tooth mouth (plus angry brows). It beats a smile. Not while asleep. The schedule runs even while forced
+      // Anger 0~1 — the angry brows (scene; a face with no brows shows nothing) and a cat's bristling tail. It beats a smile. Not while asleep. The schedule runs even while forced
       const angryK = S.stepAngry(angry, t, rng, M) * awake;
       if (angryK > 0.5) isHappy = false;
-      // Startle eye variants — the eyes turn into ☆_☆ / ♥_♥ (the scene switches the eyes off and substitutes the glyph). k is the startle envelope as it is. They do not change while angry (the fierce eye wins)
+      // Startle eye variants — the pupils become ☆ / ♥ in the ball (the scene swaps the pupil for the glyph, a heavy lid lifting for it). k is the startle envelope as it is. They do not change while angry (anger wins)
       const eyeFx = startle > 0 && surprise.variant && surprise.variant !== "plain" && angryK <= 0.5 ? { kind: surprise.variant, k: startle } : null;
       if (sleepK > 0.5) isHappy = false;
 

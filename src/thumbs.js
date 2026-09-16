@@ -101,8 +101,7 @@ function isolate(item, part) {
   if (item.tailGroup) item.tailGroup.visible = !!want.tail;
   for (const e of item.eyeRigs) e.rig.visible = !!want.eyes;
   for (const face of ["brow", "mouth"]) for (const mesh of item.faceStates[face] || []) mesh.visible = want.face === face && mesh === item.faceStates[face][0];
-  for (const fx of item.eyeFx) { fx.star.visible = false; fx.heart.visible = false; }
-  for (const lid of item.staticLids) { lid.shut.visible = false; lid.smile.visible = false; lid.angry.visible = false; }
+  for (const lid of item.staticLids) { lid.shut.visible = false; lid.smile.visible = false; lid.star.visible = false; lid.heart.visible = false; }
 }
 
 // Builds `spec` once and paints every view off it. views: [{ canvas, part, size }] — size in CSS pixels, square

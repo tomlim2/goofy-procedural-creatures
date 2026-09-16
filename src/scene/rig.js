@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { paintPart } from "../character/draw/body.js";
-import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, layout, eyeGeometry, eyeShape, eyeWob, patched, starPath, heartPath, angryEyeSketch, smileArchPath, pupilMark, isGhost, STATIC_EYE_KEYS, EYEBALL_KINDS } from "../character/index.js";
+import { drawCreature, facePartKinds, facePartSketch, limbSketches, motionRig, tailSketch, eyeShape, eyeWob, starPath, heartPath, smileArchPath, pupilMark, isGhost, STATIC_EYE_KEYS, EYEBALL_KINDS } from "../character/index.js";
 import { drawEyes } from "../character/draw/face.js";
 import { Sketch } from "../stroke.js";
 import { blobPath, arcPath } from "../shape.js";
@@ -40,39 +40,52 @@ export const DEPTH = {
   head: 0           // the outline (headGroup directly)
 };
 
-// Two sets of closed eyes — the shut line (shut: an arc bulging downward) and the ^^ (smile). Live eyes (the rig) and static eyes (staticLids) use the same shut line —
-// it only differs slightly (a little higher and tidier on static eyes). In face ink (faceInk) — on an ink-black imp head, a black arch would be lost and invisible.
-// **The ^^ stays in the ball.** An eye with a white smiles the way the `happy` pupil is drawn — the white and rim stay and the pupil becomes the ^^ arch
-// (pupilMark, the one path): on a live eye the arch is a second pupil mesh at the pupil's place and order (buildCreature), and on a static eye with a white
-// (EYEBALL_KINDS — the slit, side, half, the hollow eye, the heavy-lidded three) the whole eye is redrawn with the state's pupil forced to the arch —
-// drawEyes itself, so the white, the lid and the arch's place are exactly the kind's own: a cat's almond stays and its spindle becomes the arch, a heavy
-// lid keeps its white and the round pupil under it becomes the ^^, an empty eye takes the arch in its white. Only the bare dot eye, with no white to keep,
-// becomes the arch itself, at the eye's size, as every eye did before
+// The closed eye — the shut line (shut: an arc bulging downward) — and the three marks a face state puts in the pupil's place: the ^^ of a smile or a wink
+// (smile), and the ☆ and ♥ of a startle (star, heart). Live eyes (the rig) and static eyes (staticLids) use the same shut line — it only differs slightly (a
+// little higher and tidier on static eyes). In face ink (faceInk) — on an ink-black imp head, a black arch would be lost and invisible.
+// **The marks stay in the ball.** An eye with a white smiles, or is struck starry, the way the `happy`, `star` and `heart` pupils are drawn — the white and
+// rim stay and the pupil becomes the mark (pupilMark, the one path each): on a live eye the mark is a second pupil mesh at the pupil's place and order
+// (buildCreature), and on a static eye with a white (EYEBALL_KINDS — the slit, side, half, the hollow eye, the heavy-lidded three) the whole eye is redrawn
+// with the state's pupil forced to the mark — drawEyes itself, so the white and the mark's place are exactly the kind's own: a cat's almond stays and its
+// spindle becomes the mark, a heavy lid lifts and the mark stands in the open white, an empty eye takes the mark in its white. Only the bare dot eye, with
+// no white to keep, becomes the mark itself, at the eye's size — the arch, a white star, a red heart — as every eye did before
 const LID_STYLE = {
   rig: { shutY: 0.1, shutWobble: 0.5 },
   static: { shutY: 0.15, shutWobble: 0.4 }
 };
+const STATE_PUPILS = ["happy", "star", "heart"];
 function lidSketches(eye, ink, noise, style, spec, box) {
   const s = LID_STYLE[style];
   const mark = (sk) => { sk.outline = spec.outline; sk.inkColor = spec.lineInk; return sk; };   // a ghost's hairline, and its black, reach the eyes too
   const shut = mark(new Sketch(noise, s.shutWobble));
   shut.line(arcPath(0, eye.r * s.shutY, eye.r * 0.85, eye.r * 0.55, Math.PI * 1.1, Math.PI * 1.9, 10), { color: ink });
-  let smile;
-  if (style === "rig") {
-    smile = mark(new Sketch(noise, 0.4));
-    pupilMark(smile, spec, eye, [0, 0], eye.r * 0.55, () => {}, "happy");   // the arch at the pupil's reach, in the dark ink a mark on a white takes
-  } else if (EYEBALL_KINDS.has(spec.parts.eyes)) {
-    const inkS = mark(new Sketch(noise, spec.proportions.wobble)), fillsS = mark(new Sketch(noise, spec.proportions.wobble));
-    drawEyes(inkS, fillsS, spec, box, [{ ...eye, x: 0, y: 0 }], { pupil: "happy" });   // the eye at the origin — the mesh is stood where the eye is
-    smile = [fillsS, inkS];   // fills below, ink above — the static layer's own order
-  } else {
-    smile = mark(new Sketch(noise, 0.5));
-    smile.line(smileArchPath(0, 0, eye.r), { color: ink });   // the happy pupil's own arch (character/draw/face.js) — one path, so the two cannot drift
+  const marks = {};
+  for (const kind of STATE_PUPILS) {
+    if (style === "rig") {
+      marks[kind] = mark(new Sketch(noise, 0.4));
+      pupilMark(marks[kind], spec, eye, [0, 0], eye.r * 0.55, () => {}, kind);   // at the pupil's reach, in the dark ink a mark on a white takes
+    } else if (EYEBALL_KINDS.has(spec.parts.eyes)) {
+      const inkS = mark(new Sketch(noise, spec.proportions.wobble)), fillsS = mark(new Sketch(noise, spec.proportions.wobble));
+      drawEyes(inkS, fillsS, spec, box, [{ ...eye, x: 0, y: 0 }], { pupil: kind });   // the eye at the origin — the mesh is stood where the eye is
+      marks[kind] = [fillsS, inkS];   // fills below, ink above — the static layer's own order
+    } else {
+      // The bare dot eye — the glyph at the eye's size: the happy pupil's own arch (character/draw/face.js — one path, so the two cannot drift), the star
+      // outlined in the ink over the white, the heart in its red
+      const glyph = mark(new Sketch(noise, 0.5));
+      if (kind === "happy") glyph.line(smileArchPath(0, 0, eye.r), { color: ink });
+      else if (kind === "star") {
+        const star = starPath(0, 0, eye.r * 1.1);
+        paintPart(glyph, spec, star, MARKS.white, { flat: true });
+        glyph.contour(star, { color: spec.palette.ink, step: 0.006 });
+      } else {
+        const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
+        paintPart(glyph, spec, heart, MARKS.heart, { own: true });
+        glyph.contour(heart, { color: spec.palette.ink, step: 0.006 });
+      }
+      marks[kind] = glyph;
+    }
   }
-  // Anger — the fierce eye (an inward-down slanted lid plus a glaring dot). While angry, the open eye is switched off and this stands instead (character/draw/face.js angryEyeSketch)
-  const angry = mark(new Sketch(noise, 0.5));
-  angryEyeSketch(angry, eye, ink, spec);
-  return { shut, smile, angry };
+  return { shut, smile: marks.happy, star: marks.star, heart: marks.heart };
 }
 
 export function buildCreature(spec, noise, birth = 0) {
@@ -122,7 +135,7 @@ export function buildCreature(spec, noise, birth = 0) {
     { key: "face", group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 },        // fills and ink kept apart (see above)
     // Static eyes — one layer per eye (the smaller eye Back → the larger Front; overlapping, the larger is in front). For sleep, ^^, a wink (that side) and startle variants, that eye's layer is switched off
     ...STATIC_EYE_KEYS.map((key) => ({ key, group: faceGroup, dy: -faceCy, fillOrder: 2.3, order: 2.4 })),
-    { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // the muzzle, nose, eyewear and a cat's whiskers — above the eye rig (3~) and the ☆·♥ (6.32). A startled white or a lid cannot cover them
+    { key: "faceFront", group: faceGroup, dy: -faceCy, order: 6.5 },   // the muzzle, nose, eyewear and a cat's whiskers — above the eye rig (3~) and every mark in the eyes. A startled white or a lid cannot cover them
     { key: "hairFront", depth: DEPTH.hairFront, dy: -neckY, order: 6.55 }    // bangs — above the nose and eyewear, below the brows and mouth (6.6)
   ];
   for (const layer of LAYERS) if (layer.group === undefined) layer.group = depthGroup(layer.depth);
@@ -305,65 +318,46 @@ export function buildCreature(spec, noise, birth = 0) {
     const smile = sketchMesh(lids.smile, 0.95, o + 0.2);
     smile.visible = false;
     gaze.add(smile);
+    // ☆_☆ / ♥_♥ (a startle's variants) — the star or the heart stands at the pupil's place too, in the open eye beside the gaze group rather than in it:
+    // a startle shrinks the pupil, and these stand for the pupil while it is struck, popping in by the startle's own envelope (animate) instead
+    const star = sketchMesh(lids.star, 0.95, o + 0.2);
+    const heart = sketchMesh(lids.heart, 0.95, o + 0.2);
+    for (const m of [star, heart]) {
+      m.visible = false;
+      open.add(m);
+    }
     open.add(gaze);
     rig.add(open);
     const shut = sketchMesh(lids.shut, 1, o + 0.35);
     shut.visible = false;
     rig.add(shut);
-    const angry = sketchMesh(lids.angry, 1, o + 0.35);
-    angry.visible = false;
-    rig.add(angry);
 
     faceGroup.add(rig);
     // gazeScale: how far the pupil travels with the gaze (× the eye radius). On a bead eye the pupil *is* the eye, so only a little
-    eyeRigs.push({ rig, open, gaze, pupil, smile, shut, angry, eye, gazeScale: 0.34 });
+    eyeRigs.push({ rig, open, gaze, pupil, smile, star, heart, shut, eye, gazeScale: 0.34 });
   }
 
-  // Every eye not hidden by a patch (static eyes included) — bakes the static eyes' closed-eye and startle-variant glyphs where the eye is
-  const allEyes = eyeGeometry(spec, layout(spec)).filter((eye) => !patched(spec, eye));
-
-  // The closed eye of a static eye (dot, slit, half, the lidded set…) — sleep (the shut line), ^^ and a wink (the smile: the eye redrawn with its pupil
-  // forced to the ^^ when it has a white, the arch alone on the bare dot — lidSketches). There is no cover: **that eye's** static layer (frames) is switched off (animate) and the glyph
-  // stands instead — layers being per eye, only the winking side changes and the other eye stays. It pairs with a live eye's open/shut/smile
+  // A static eye's (dot, slit, half, the lidded set…) other faces — sleep (the shut line), ^^ and a wink (the smile), a startle's ☆ and ♥ (star, heart): the
+  // eye redrawn with its pupil forced to the mark when it has a white, the glyph alone on the bare dot (lidSketches). There is no cover: **that eye's** static
+  // layer (frames) is switched off (animate) and the glyph stands instead — layers being per eye, only the winking side changes and the other eye stays.
+  // It pairs with a live eye's open/shut/smile/star/heart
   const staticLids = [];
   for (const { key, eye } of firstDrawn.staticEyes) {
     const lids = lidSketches(eye, faceInk, noise, "static", spec, firstDrawn.box);
     const shut = sketchMesh(lids.shut, 1, 3.6);
     const smile = sketchMesh(lids.smile, 1, 3.6);
-    const angry = sketchMesh(lids.angry, 1, 3.6);
-    for (const m of [shut, smile, angry]) {
+    const star = sketchMesh(lids.star, 1, 3.6);
+    const heart = sketchMesh(lids.heart, 1, 3.6);
+    for (const m of [shut, smile, star, heart]) {
       m.position.set(eye.x, eye.y - faceCy, 0);
       m.visible = false;
       faceGroup.add(m);
     }
-    staticLids.push({ shut, smile, angry, eye, frames: frames[key] });
-  }
-
-  // Startle eye variants — ☆_☆ / ♥_♥. Not a cover: meanwhile the eyes (the static eye frame and the eye rig) are **switched off** and only the glyph is drawn in their place (6.32 — below the nose and eyewear).
-  // Visible only when the startle is the star or heart variant (animate: state.eyeFx). Both are baked per eye and only the matching kind is turned on
-  const eyeFx = [];
-  for (const eye of allEyes) {
-    const starSketch = new Sketch(noise, 0.5); starSketch.outline = spec.outline; starSketch.inkColor = spec.lineInk;
-    const star = starPath(0, 0, eye.r * 1.1);
-    paintPart(starSketch, spec, star, MARKS.white, { flat: true });
-    starSketch.contour(star, { color: spec.palette.ink, step: 0.006 });
-    const heartSketch = new Sketch(noise, 0.5); heartSketch.outline = spec.outline; heartSketch.inkColor = spec.lineInk;
-    const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
-    paintPart(heartSketch, spec, heart, MARKS.heart, { own: true });
-    heartSketch.contour(heart, { color: spec.palette.ink, step: 0.006 });
-    const starMesh = sketchMesh(starSketch, 1, 6.32);
-    const heartMesh = sketchMesh(heartSketch, 1, 6.32);
-    for (const m of [starMesh, heartMesh]) {
-      m.position.set(eye.x, eye.y - faceCy, 0);
-      m.visible = false;
-      faceGroup.add(m);
-    }
-    eyeFx.push({ star: starMesh, heart: heartMesh, eye });
+    staticLids.push({ shut, smile, star, heart, eye, frames: frames[key] });
   }
 
   return {
     group,
-    eyeFx,
     bodyGroup,
     headGroup,
     faceGroup,

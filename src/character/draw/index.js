@@ -70,7 +70,7 @@ export function drawCreature(spec, variant = 0) {
   // Brows and the mouth are not baked here. For state switching (rest, alt, angry, ^^) the scene stands separate meshes up with facePartSketch (faceStates.js).
   drawEyewear(L.faceFront.ink, L.faceFront.fills, spec, box, eyes);
   // A cat's whiskers — **the last lines on the frontmost face layer**, so they are in front of its eyes and pupils in every state (the eye rig 3~,
-  // a lid, the ☆·♥ at 6.32) and of the muzzle they grow from, and they draw over the outline and can poke outside. They were on the face layer
+  // a lid, the ☆·♥ in the eye) and of the muzzle they grow from, and they draw over the outline and can poke outside. They were on the face layer
   // (2.4), under every live eye's white. The stroke phase carries on from the face layer, where they were drawn — the same wobble, the geometry unchanged
   L.faceFront.ink.phase = L.face.ink.phase;
   drawWhiskers(L.faceFront.ink, spec, box);

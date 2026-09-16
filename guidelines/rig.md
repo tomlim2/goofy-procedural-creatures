@@ -38,12 +38,11 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
         │                            for the front eye's white to cover the back eye's outline. Put them in the ink (2.4) and the back eye's outline rises above the front eye's white, leaving a crossing line
         │                            For sleep, ^^, a wink (that side) and startle variants (☆·♥), **that eye's** layer is switched off — a wink changes one side only and the other eye stays
         ├── faceFrontFrame ×3    ← boil variants. The muzzle (a dog's and a cat's), the nose, eyewear and a cat's whiskers (its last lines), one mesh (6.5) — above the eye rig and the ☆·♥
-        ├── eyeFx ×(eye count)  ← startle variants: the ☆·♥ glyphs (6.32). There is no cover — meanwhile the static eye frame and the eye rig are **switched off** and this stands in. Only when state.eyeFx
-        ├── faceStates.brow ×3   ← rest / alt / angry (the angry brow — none on species that have none)
-        ├── faceStates.mouth ×4  ← rest / alt / angry (the tooth grid on humans and dogs, fangs on cats and imps) / ^^ (the tongue on dogs). The same kind shares a mesh
-        ├── staticLid ×(static eye count) ← a static eye's (dot, slit, half…) shut line, smile (the eye redrawn with a ^^ pupil when it keeps one, the arch alone when it has no ball) and fierce eye (3.6). Asleep (sleep > 0.5) the shut line, angry the fierce eye, ^^ or a wink (that side) the smile arch — that eye's static layer (lid.frames) is switched off then and this stands instead (no cover)
+        ├── faceStates.brow ×3   ← rest / alt / angry (the angry brow — none on species that have none; anger is the brows' alone)
+        ├── faceStates.mouth ×3  ← rest / alt / ^^ (the tongue on dogs). The same kind shares a mesh
+        ├── staticLid ×(static eye count) ← a static eye's (dot, slit, half…) shut line, smile, star and heart (3.6) — the eye redrawn with that pupil when it keeps a white (a heavy lid lifting for it), the glyph alone on the bare dot. Asleep (sleep > 0.5) the shut line, a startle's ☆·♥ the star or the heart, ^^ or a wink (that side) the smile — that eye's static layer (lid.frames) is switched off then and this stands instead (no cover)
         └── eyeRig ×(0~2)        ← live eyes only
-            ├── open{white+rim as one mesh · gaze{pupil · smile}} · shut · angry — from the eye block o (back eye 3, front eye 3.5): +0 · +0.2 · +0.2 / +0.35 / +0.35. ^^ and a wink keep open on and swap the pupil for the smile (the arch at the pupil's place — the gaze group carries both). On closing, open is **switched off** and shut (the shut line, lid > 0.5), smile (^^, a wink) or angry (anger — the fierce eye) stands instead — there is no skin-colored cover
+            ├── open{white+rim as one mesh · gaze{pupil · smile} · star · heart} · shut — from the eye block o (back eye 3, front eye 3.5): +0 · +0.2 · +0.2 · +0.2 / +0.35. ^^, a wink and the ☆·♥ keep open on and swap the pupil for the mark at its place (the arch rides in the gaze group; the star and the heart stand beside it — a startle shrinks the pupil, not what stands for it). On closing, open is **switched off** and shut (the shut line, lid > 0.5) stands instead — there is no skin-colored cover
 emojiRoot (the scene root, beside group)  ← the emoji. Not attached to the head; it eases (0.1) toward the point above the head (in world coordinates, depth included) —
                                   so it is dragged a beat behind on a tilt or a jump and leans into the drag. It only has a mesh while an emoji is up
 ```
@@ -79,8 +78,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 2.5 | Arms, upper and forearm (above the body ink — the sleeve covers the outline so the shoulder reads as embedded) |
 | 3.0~3.35 | The back (smaller) eye's rig — white+rim 3 · pupil 3.2 · ^^/shut line 3.35 (on closing, the white, rim and pupil are switched off and only the line remains) |
 | 3.5~3.85 | The front (larger) eye's rig — the same order, +0.5. When two eyes overlap the front eye's white covers the back eye's rim and pupil (no crossing line) |
-| 3.6 | A static eye's shut line and smile arch — the static eye frame is switched off then (no cover) |
-| 6.32 | The startle variant ☆·♥ glyphs — meanwhile the eyes (the static frame, the rig) are switched off. Below the nose and eyewear |
+| 3.6 | A static eye's shut line, smile, star and heart — the static eye frame is switched off then (no cover) |
 | 6.5 | The frontmost face — the fills (a dog's and a cat's muzzle, the nose) and then the ink (the muzzle's outline, the nose, eyewear, and a cat's whiskers last) — so a lid or an eye cover cannot cover the nose or a rim, the muzzle is drawn over a big eye, and a cat's whiskers are in front of its eyes and pupils in every state |
 | 6.55 | Bangs — above the nose and eyewear, below the hat, the brows and the mouth (depth 0.12) |
 | 6.58 | Hat — above the bangs (a hat sits on the hair, never under it), below the brows and mouth (depth 0.45) |
@@ -125,7 +123,7 @@ When attaching a new layer to the head, settle on one depth in this table and wr
 | Limb pieces (front, back) | pivot.rotation.z, elbow.rotation.z (the eased target angle plus un-eased oscillation — an arm's elbow or a biped leg's knee), front/back visible. A biped's knees also take the crouch solved off the eased state.bodyDrop (the torso is the master — animate.js + solveLeg), foot.rotation.z counter-rotates the ankle so the sole stays level, and grounded, group.position.y takes the drawn legs' FK shortening so the feet never cut the floor |
 | The tail | The bones' position and rotation.z (forward kinematics from the joint rotations) · bone.scale.y (bristle — thickness only) |
 | Brow and mouth rest/alt | visible |
-| The eye rig | pupil.scale (startle — the pupil 1 → 0.5×), pupil.position (gaze), visible (open the open eye / shut the shut line / smile ^^) |
+| The eye rig | pupil.scale (startle — the pupil 1 → 0.5×), pupil.position (gaze), visible (open the open eye / shut the shut line / smile ^^ / star and heart, a startle's ☆·♥, popping in by its envelope) |
 | — | The position/rotation/scale of group, headGroup, the depth groups and faceGroup — group.position.x carries the distance walked (walkX) and group.scale.x carries a quad's walking direction (facing ±1) |
 
 **Never rebuild geometry per frame.** The only exceptions are the emoji (once per trigger), the high-five stars (once per contact, `scene/spark.js`) and regen (replacing an individual).

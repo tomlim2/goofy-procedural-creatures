@@ -37,7 +37,7 @@ export function eyeWob(spec, eye, k = 0, { amount = 0.07, noise = null } = {}) {
   };
 }
 
-// The star's (☆) vertex list — outer r, inner r·inner, point up. Used by the startle ☆_☆ eye cover (scene/rig.js)
+// The star's (☆) vertex list — outer r, inner r·inner, point up. The startle's ☆_☆ — the star pupil (pupilMark), and the whole eye on a bare dot eye (scene/rig.js)
 export function starPath(cx, cy, r, inner = 0.45) {
   const pts = [];
   for (let i = 0; i < 10; i += 1) {
@@ -47,7 +47,7 @@ export function starPath(cx, cy, r, inner = 0.45) {
   }
   return pts;
 }
-// The heart's (♥) closed curve — width w, height h. Used by the startle ♥_♥ eye cover (scene/rig.js)
+// The heart's (♥) closed curve — width w, height h. The startle's ♥_♥ — the heart pupil (pupilMark), and the whole eye on a bare dot eye (scene/rig.js)
 export function heartPath(cx, cy, w, h) {
   const pts = [];
   for (let i = 0; i <= 28; i += 1) {
@@ -83,10 +83,19 @@ export function eyeFloor(spec, eyes, x) {
 // mark. They were eye kinds, drawn at the eye's own size on the bare face; an eye with no ball takes no mark
 // (spec.js pins its pupil to dot). The rig's live eyes call this too (scene/rig.js) — the pupil mesh is whatever
 // mark the slot says, and it still shrinks on a startle and follows the gaze. `kind` is the slot's unless a face state forces one for the
-// moment — the ^^ arch of a smile or a wink (drawEyes' state.pupil, scene/rig.js lidSketches)
+// moment — the ^^ arch of a smile or a wink, the ☆ and the ♥ of a startle (drawEyes' state.pupil, scene/rig.js lidSketches). Those
+// two are the state's alone, never the slot's: a star outlined in the ink and filled with the white it stands in, a red heart
 export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot, kind = spec.parts.pupil || "dot") {
   const dark = spec.palette.ink;
-  if (kind === "cross") {
+  if (kind === "star") {
+    const star = starPath(cx, cy, reach * 1.15);
+    paintPart(sketch, spec, star, MARKS.white, { flat: true });
+    sketch.contour(star, { color: dark, step: 0.006 });
+  } else if (kind === "heart") {
+    const heart = heartPath(cx, cy, reach * 1.05, reach * 0.9);
+    paintPart(sketch, spec, heart, MARKS.heart, { own: true });
+    sketch.contour(heart, { color: dark, step: 0.006 });
+  } else if (kind === "cross") {
     sketch.line([[cx - reach, cy - reach], [cx + reach, cy + reach]], { color: dark });
     sketch.line([[cx + reach, cy - reach], [cx - reach, cy + reach]], { color: dark });
   } else if (kind === "squeeze") {
@@ -134,9 +143,10 @@ export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot, kind = spec.p
   } else dot();
 }
 
-// `state.pupil` — a pupil a face state forces for the moment (the ^^ arch of a smile or a wink, scene/rig.js lidSketches):
-// every eye with a white takes it in place of its own — the heavy-lidded set too, whose slot pupil is the dot alone, and
-// the hollow eye, which has none of its own — so a smile never takes the white away. Only the bare dot eye is not here
+// `state.pupil` — a pupil a face state forces for the moment (the ^^ arch of a smile or a wink, the ☆ and ♥ of a startle;
+// scene/rig.js lidSketches): every eye with a white takes it in place of its own — the heavy-lidded set too, whose slot pupil
+// is the dot alone and whose lid lifts for it, and the hollow eye, which has none of its own — so a smile or a startle never
+// takes the white away. Only the bare dot eye is not here
 export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
   const kind = spec.parts.eyes;
   const pupil = state.pupil || spec.parts.pupil;   // what the marked kinds draw — the state's, else the slot's
@@ -217,21 +227,27 @@ export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
       }
       const lidLine = rot(lid);
       paintPart(fills, spec, path, paintOf(spec, "eyeWhite"), { part: "eyeWhite" });
-      // **The layers of a real eye — the white, the pupil on it, the lid over both.** The pupil is drawn on the white before the lid is
-      // laid, a little high (0.08r above the centre, slightly left or right per individual), so the lid covers its top and the rest looks
-      // out from under it; drawn after the lid it poked out above the line onto the skin. The round one, always: under that thick lid a
-      // mark is a smudge, so the pupil slot does not reach this set (spec.js NO_MARK_EYES pins it to dot) — only a face state's arch
-      // does (a smile keeps the white and the lid, and the pupil under it becomes the ^^, its top under the lid like the pupil's)
-      const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
-      const [px, py] = rot([[eye.x + eye.r * gaze, eye.y - eye.r * 0.08]])[0];   // the pupil's place, turned with the lid
-      pupilMark(fills, spec, eye, [px, py], eye.r * 0.36, () =>
-        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.08, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" }), state.pupil || "dot");
-      // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it. It covers the pupil's top
-      const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
-      paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
-      fills.contour(path, { color: dark });
-      // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
-      fills.line(lidLine, { color: dark });
+      if (state.pupil) {
+        // **A face state lifts the lid.** The ^^ of a smile or a wink and the ☆ or ♥ of a startle are drawn in an open eye — the white, the
+        // mark in its middle at a ring's reach, the rim — and the lid is left off: a ^^ or a star peering out from under a heavy lid read as
+        // sleepy and struck at once (the owner, 2026-09-16). The eye is still this kind's, its crumpled white at its tilt, and the round pupil
+        // is back under its lid the moment the state ends
+        pupilMark(fills, spec, eye, [eye.x, eye.y], eye.r * 0.55, () => {}, state.pupil);
+        fills.contour(path, { color: dark });
+      } else {
+        // **The layers of a real eye — the white, the pupil on it, the lid over both.** The pupil is drawn on the white before the lid is
+        // laid, a little high (0.08r above the centre, slightly left or right per individual), so the lid covers its top and the rest looks
+        // out from under it; drawn after the lid it poked out above the line onto the skin. The round one, always: under that thick lid a
+        // mark is a smudge, so the pupil slot does not reach this set (spec.js NO_MARK_EYES pins it to dot)
+        const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
+        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.08, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" });
+        // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it. It covers the pupil's top
+        const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
+        paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
+        fills.contour(path, { color: dark });
+        // The thickness is proportional to the eye size — at a fixed thickness the stroke covers the whole white on a small eye (a cat)
+        fills.line(lidLine, { color: dark });
+      }
     } else if (kind === "half") {
       // A half-closed eye — no line is drawn across the whole circle (a circle plus a line smears into "a circle with a line through it").
       // Only the **lower arc** of the lid line is drawn, with the pupil below that line → the shape of a heavy lid covering the eye
@@ -698,14 +714,4 @@ export function noseBottomY(spec, box, eyes) {
   if (kind === "box") return boxShape(spec, box, eyes).bottom;
   const k = noseScale(box);
   return noseY(spec, box, eyes) - (kind === "long" ? 0.045 * k : kind === "wedge" ? 0.02 * k : kind === "hook" ? 0.012 * k : 0.008);
-}
-
-// The fierce eye (anger) — the eye is **redrawn**: a thick slanted lid dropping on the inner (nose) side plus a glaring dot beneath it (a dot under ＼ ／). A cyclops gets a horizontal lid.
-// Live eyes (the rig) and static eyes both use the same shape (scene/rig.js). Coordinates are relative to the eye's centre
-export function angryEyeSketch(sketch, eye, ink, spec) {
-  const r = eye.r;
-  const inward = -eye.side;   // the nose side (0 on a cyclops)
-  const lid = inward === 0 ? [[-r * 0.95, r * 0.45], [r * 0.95, r * 0.45]] : [[-inward * r * 0.95, r * 0.55], [inward * r * 0.95, r * 0.05]];
-  sketch.line(lid, { color: ink });
-  paintPart(sketch, spec, blobPath(0, -r * 0.3, r * 0.3, r * 0.3, { lumps: 3, amount: 0.12, noise: null }), ink, { own: true, part: "eyes" });
 }

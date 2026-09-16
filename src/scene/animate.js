@@ -237,57 +237,55 @@ export function applyState(item, state, t, noise, { snap = false, boil = true } 
   const grounded = Math.max(0, 1 - (state.hopY || 0) / 0.02);
   if (plantLegs > 0 && plantDrop > 0 && grounded > 0) item.group.position.y -= (plantDrop / plantLegs) * grounded;
 
-  // Brow and mouth state sets — brows: angry (2) > alt (1) > rest (0). Mouth: angry (2) > ^^ (3, the tongue on dogs) > alt (1) > rest (0). The same kind shares a mesh, so only the chosen mesh is turned on
+  // Brow and mouth state sets — brows: angry (2) > alt (1) > rest (0). Mouth: ^^ (2, the tongue on dogs) > alt (1) > rest (0). The same kind shares a mesh, so only the chosen mesh is turned on.
+  // Anger is the brows' alone — the eyes and the mouth are left as they are (the owner, 2026-09-16: an angry face is angry brows, and a face without brows shows nothing)
   const angryOn = (state.angry || 0) > 0.5;
   const browOn = item.faceStates.brow[angryOn ? 2 : state.browAlt ? 1 : 0];
-  const mouthOn = item.faceStates.mouth[angryOn ? 2 : state.happy ? 3 : state.mouthAlt ? 1 : 0];
+  const mouthOn = item.faceStates.mouth[state.happy ? 2 : state.mouthAlt ? 1 : 0];
   for (const m of item.faceStates.brow) m.visible = m === browOn;
   for (const m of item.faceStates.mouth) m.visible = m === mouthOn;
 
-  // Static eyes — per eye: past halfway asleep the shut line stands **instead**, the smile for ^^ or a wink (that side — the eye redrawn with a ^^ pupil, or the arch alone on an eye with no ball), a fierce eye for anger (not covering it — **that eye's** static layer is switched off).
-  // A wink changes one side only — the other eye's layer stays on (switching both eyes off as one layer would lose the other eye). Priority: sleep > anger > ^^/wink
+  // A startle's variants — ☆_☆ / ♥_♥: the star or the heart stands where the pupil is, in the open eye (rig.js), popping in and out by the envelope (k) (0.7 → 1)
+  const fx = state.eyeFx;
+  const fxOn = !!fx && fx.k > 0.02;
+  const pop = fxOn ? 0.7 + 0.3 * fx.k : 1;
+
+  // Static eyes — per eye: past halfway asleep the shut line stands **instead**; the star or heart for a startle's variant, the smile for ^^ or a wink (that side) —
+  // the eye redrawn with that pupil, or the glyph alone on an eye with no ball (not covering it — **that eye's** static layer is switched off).
+  // A wink changes one side only — the other eye's layer stays on (switching both eyes off as one layer would lose the other eye). Priority: sleep > ☆♥ > ^^/wink
   const asleep = (state.sleep || 0) > 0.5;
   for (const lid of item.staticLids) {
-    const angryEye = angryOn && !asleep;
-    const happyEye = !angryEye && (state.happy || (state.winkSide !== 0 && lid.eye.side === state.winkSide));
-    lid.angry.visible = angryEye;
+    const struck = fxOn && !asleep;
+    const happyEye = !struck && (state.happy || (state.winkSide !== 0 && lid.eye.side === state.winkSide));
+    lid.star.visible = struck && fx.kind === "star";
+    lid.heart.visible = struck && fx.kind === "heart";
+    lid.star.scale.setScalar(pop);
+    lid.heart.scale.setScalar(pop);
     lid.smile.visible = happyEye;
     lid.shut.visible = asleep && !happyEye;
-    if (happyEye || asleep || angryEye) for (const g of lid.frames) g.visible = false;
+    if (happyEye || asleep || struck) for (const g of lid.frames) g.visible = false;
   }
 
-  // Eyes — startle, gaze, blink, ^^, wink. Startle does not grow the eye; it shrinks **the pupil only** (1 → 0.5×).
+  // Eyes — startle, gaze, blink, ^^, wink, ☆♥. Startle does not grow the eye; it shrinks **the pupil only** (1 → 0.5×).
   // Closing is not covering but **redrawing**: an open eye ↔ a shut line (lid > 0.5) — there is no middle (half-lidded).
-  // ^^ and a wink keep the eye open: the white and rim stay and the pupil is swapped for the arch at its place (rig.js) — a smile beats the lid.
+  // ^^, a wink and the ☆♥ keep the eye open: the white and rim stay and the pupil is swapped for the mark at its place (rig.js) — they beat the lid.
   // A blink (0.13 s) passes as two cuts: open eye → shut line → open eye
   for (const rig of item.eyeRigs) {
     rig.gaze.scale.setScalar(1 - 0.5 * (state.startle || 0));
     rig.gaze.position.x = state.gaze[0] * rig.eye.r * rig.gazeScale;
     rig.gaze.position.y = state.gaze[1] * rig.eye.r * rig.gazeScale * 0.82;
     const winked = state.winkSide !== 0 && rig.eye.side === state.winkSide;
-    const angryEye = angryOn && !asleep;   // anger — redrawn as a fierce eye (below sleep, above ^^/wink)
-    const smiling = !angryEye && (winked || state.happy);
+    const struck = fxOn && !asleep;
+    const smiling = !struck && (winked || state.happy);
     const lid = state.lid || 0;
-    rig.angry.visible = angryEye;
+    rig.star.visible = struck && fx.kind === "star";
+    rig.heart.visible = struck && fx.kind === "heart";
+    rig.star.scale.setScalar(pop);
+    rig.heart.scale.setScalar(pop);
     rig.smile.visible = smiling;
-    rig.pupil.visible = !smiling;
-    rig.shut.visible = !angryEye && !smiling && lid > 0.5;
-    rig.open.visible = !angryEye && (smiling || lid <= 0.5);
-  }
-
-  // Startle eye variants — ☆_☆ / ♥_♥. Meanwhile the eyes (the static eye frame and the eye rig) are **switched off** and replaced by the glyph (not covered). Pop in and out by the envelope (k) (0.7 → 1)
-  const fx = state.eyeFx;
-  const fxOn = !!fx && fx.k > 0.02;
-  if (fxOn) for (const lid of item.staticLids) for (const g of lid.frames) g.visible = false;
-  for (const rig of item.eyeRigs) rig.rig.visible = !fxOn;
-  for (const e of item.eyeFx) {
-    e.star.visible = fxOn && fx.kind === "star";
-    e.heart.visible = fxOn && fx.kind === "heart";
-    if (fxOn) {
-      const s = 0.7 + 0.3 * fx.k;
-      e.star.scale.setScalar(s);
-      e.heart.scale.setScalar(s);
-    }
+    rig.pupil.visible = !smiling && !struck;
+    rig.shut.visible = !smiling && !struck && lid > 0.5;
+    rig.open.visible = smiling || struck || lid <= 0.5;
   }
 
   // Emoji animation — a layer separate from motion. The clock's emoji channel supplies the kind, progress and curves (dy, scale, rot, opacity).

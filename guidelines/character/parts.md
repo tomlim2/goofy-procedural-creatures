@@ -51,11 +51,12 @@ ceiling is solved on both seats (sunk and lifted) and the smaller head taken. A 
 | hollow | An empty eye — ring with **only the pupil taken out** (white + outline). The same on every species; an imp gets a white eye too | ✗ |
 | side | ¬_¬ a sideways glance — half-lidded (a lower arc plus a lid line, with **the white** inside the arc) and the pupil pushed to one side (the direction is per individual) | ✗ |
 
-☆_☆ star eyes and ♥_♥ heart eyes are **not eye kinds** — they are startle variants (awe, smitten). When a startle event is the star or heart variant, the eyes are switched off for 4 seconds and the
-glyph is drawn in their place — a **substitution**, not a covering ([../motion/catalog.md](../motion/catalog.md) § the face, `scene/rig.js eyeFx`). Which is why static eyes are baked
+☆_☆ star eyes and ♥_♥ heart eyes are **not eye kinds** — they are startle variants (awe, smitten). When a startle event is the star or heart variant, the pupil becomes a ☆ or a ♥ **in the
+ball** for 4 seconds — a mark like the ^^ (§ the pupil): the white is kept, a heavy lid lifts, and only the bare dot eye becomes the glyph itself ([../motion/catalog.md](../motion/catalog.md)
+§ the face, `scene/rig.js lidSketches`). A static eye is **redrawn** with that pupil and the redrawing stands in its place — a substitution, not a covering — which is why static eyes are baked
 separately from the face frame (the `staticEyes` frame).
 | half | Half-lidded — only the **lower arc** of the lid line + **the white** inside the arc + the lid line + the pupil below the line (a line across the whole circle smears into "a circle with a line through it") | ✗ |
-| lidded | A heavy lid — the outline plus a **thick, sagging lid line** across the eye (sagging in the middle); **below the line is the white, above it is skin**, with the pupil **under the lid** — drawn on the white before the lid is laid, a little high, so the lid covers its top (the layers of a real eye: white, pupil, lid). If half-lidded (half) is one stroke, this is an eye with a thick lid | ✗ |
+| lidded | A heavy lid — the outline plus a **thick, sagging lid line** across the eye (sagging in the middle); **below the line is the white, above it is skin**, with the pupil **under the lid** — drawn on the white before the lid is laid, a little high, so the lid covers its top (the layers of a real eye: white, pupil, lid). If half-lidded (half) is one stroke, this is an eye with a thick lid. **The lid lifts for a face state**: the ^^ of a smile or a wink and a startle's ☆·♥ are drawn in the open white at a ring's reach, the lid left off — a ^^ peering out from under a heavy lid read as sleepy and happy at once | ✗ |
 | sharp | lidded **tilted 0.34 rad toward the nose** — the outer corner lifts and the nose side drops, for a fierce impression | ✗ |
 | soft | lidded **tilted 0.34 rad the other way** — the outer corner droops, for a gentle impression (the mirror of sharp) | ✗ |
 | slit | An almond outline (half-height 0.7r) + **the white** inside the almond + a **filled** vertical spindle pupil (a thin stroke does not read when small) | ✗ |
@@ -82,7 +83,7 @@ if only one side is smaller or higher it reads as a mistake rather than "a small
 **What sits in the eyeball**, a part of its own — the `pupil` slot, a late slot. The eye kind is the ball and its lids;
 the pupil is drawn where that kind keeps it, by `pupilMark` (face.js): the rig's live eyes hand it the pupil mesh (so a mark
 still shrinks on a startle and follows the gaze), and side and half hand it their pupil's place under the lid (the heavy-lidded
-three keep the round pupil).
+three keep the round pupil, and lift their lid when a face state puts a mark in the eye).
 
 | Value | Drawing |
 | --- | --- |
@@ -103,12 +104,14 @@ stands without an eyeball, which is what `eyes: dot` is.
 
 **The three closed eyes are marks like the rest** — a shut eye drawn small where the pupil is, inside the open one (the
 kaomoji look), the same strokes they were as eye kinds at the pupil's reach instead of the eye's. So a ring with a ^^ in it is
-still alive: the arch is the pupil mesh, it shrinks on a startle and follows the gaze. **The ^^ state draws the same arch in the
-ball** — a smile or a wink forces the pupil to `happy` for the moment (a live eye swaps its pupil mesh for the arch; a static eye
-with a white — slit, side, half, hollow, the heavy-lidded three: `EYEBALL_KINDS` — is redrawn with the state's pupil, `drawEyes`
-`state.pupil`, `scene/rig.js lidSketches`: the cat's almond keeps its white while the spindle becomes the arch, a heavy lid keeps
-its white with the ^^ under it, an empty eye takes the arch in its white). A white is never taken away by a smile; only the bare
-dot eye becomes the arch itself. Sleep still shuts the eye. All seven — the three closed eyes and the four symbols — were eye kinds drawn at the eye's own size on
+still alive: the arch is the pupil mesh, it shrinks on a startle and follows the gaze. **The face states draw their marks in the
+ball too** — a smile or a wink forces the pupil to `happy` for the moment, and a startle's variants force it to `star` (the ☆
+outlined in the ink and filled with the white it stands in) or `heart` (the ♥ in its red), two marks that are the state's alone,
+never the slot's (a live eye swaps its pupil mesh for the mark; a static eye with a white — slit, side, half, hollow, the
+heavy-lidded three: `EYEBALL_KINDS` — is redrawn with the state's pupil, `drawEyes` `state.pupil`, `scene/rig.js lidSketches`:
+the cat's almond keeps its white while the spindle becomes the mark, a heavy lid lifts and the mark stands in the open white, an
+empty eye takes the mark in its white). A white is never taken away by a smile or a startle; only the bare dot eye becomes the
+mark itself. Sleep still shuts the eye. All seven — the three closed eyes and the four symbols — were eye kinds drawn at the eye's own size on
 the bare face; a file from then opens as a ring eye with that pupil (`file.js migrate`).
 
 ### brow — brows (11)
@@ -395,7 +398,7 @@ none / tears (two **waves** running down below the eye, a trickle rather than a 
 Cat **whiskers** are not a slot but fixed per species (`drawWhiskers`) — three strands per side in a slightly drooping fan, **rooted inside the muzzle**: the whisker pads either side
 of the nose, half the muzzle's half-width out, stacked over its upper half above the mouth, fanning out over its outline. They were rooted at a fixed place on the face (0.3·rx out, 0.3·ry under
 the head's centre), and a third of cats had a strand starting outside a narrow muzzle. The length is per individual (0.42~0.92× the head's half-width), so over half of all cats (54%) have
-whiskers **poking out through the head outline** — **the last lines on the frontmost face layer** (faceFront, 6.5): in front of the eyes and pupils in every state (a live eye's white, the rig at 3~; a lid; the ☆·♥ at 6.32) and of the muzzle they grow from, below the brows and mouth (6.6); above the outline and ears they reach onto the paper. On the face layer at 2.4, as they were, every live eye's white covered them where they crossed it.
+whiskers **poking out through the head outline** — **the last lines on the frontmost face layer** (faceFront, 6.5): in front of the eyes and pupils in every state (a live eye's white, the rig at 3~; a lid; the ^^ and the ☆·♥ in the eye) and of the muzzle they grow from, below the brows and mouth (6.6); above the outline and ears they reach onto the paper. On the face layer at 2.4, as they were, every live eye's white covered them where they crossed it.
 
 ### mouth (20) × mouthPos — the mouth position (3) × mouthSize — the mouth size (3)
 `mouth.js` — one drawing function per kind (the `MOUTH` table). The reference: humans default to **a very small mouth** and what stands out is **the tooth grid**, the grin and the hatching; dogs get w, o and the tongue;
@@ -418,10 +421,10 @@ The rim is face ink (visible only on a dark face) and the lines over the teeth a
 | blep | ω plus a pink tongue tip below | Cats |
 | tongue | A slightly open bowl (no teeth) plus a pink tongue hanging below (with a centre line) — on a dog this is **the alt mouth for ^^** (panting) | Dogs, imps |
 | zigzag | A zigzag | Imps |
-| grimace | **The tooth grid** — 3~6 vertical lines (proportional to the width) inside a wide, flat rounded rectangle (white fill plus outline). The **angry mouth** for humans and dogs | Imps, humans (trooper) |
+| grimace | **The tooth grid** — 3~6 vertical lines (proportional to the width) inside a wide, flat rounded rectangle (white fill plus outline) | Imps, humans (trooper) |
 | grin | A grin — white teeth inside a wide smiling arc plus two vertical lines plus the upper line | Humans |
 | scribble | A hatched mouth — five bundles of horizontal hatching | Imps, rarely humans |
-| fangs | A line plus two **big** white fangs below its ends — the **angry mouth** for imps and cats (a hiss). (The spiked-teeth kind overlapped this and was dropped) | Imps |
+| fangs | A line plus two **big** white fangs below its ends (a hiss). (The spiked-teeth kind overlapped this and was dropped) | Imps |
 
 **Position** `mouthPos` (a late slot) — **high** (0.22) · **mid** (0.5) · **low** (0.76) between the bottom of the nose (`noseBottomY`) and above the chin (headCy − 0.86·ry). With no nose, the upper limit is
 the eye's lower edge or slightly below the head's centre. Dogs and cats follow the muzzle rule (in the muzzle, below the nose). Wherever it is, it has to be below the (startle-widened) eye. A biped sits **±0.1rx off to one side** per individual (`hand`) (the reference,
@@ -429,7 +432,8 @@ no rng). **Size** `mouthSize` (a late slot) — width multipliers small 0.7 · n
 A white fill (the grid, grin, fangs, tooth strips) is paper white and the rims and vertical lines over it are **the palette ink (dark)** — drawn in an imp's light face ink they are lost on the white and leave an empty white bar. The tongue is blush pink.
 
 **State sets** (`faceStates.js`): rest / alt (`ALT_MOUTH` — dot↔line, line↔wave, smile→grin, omega↔three, frown↔smug, grimace→line, tongue→open, fangs→line, shout→open, meow·blep→omega, zigzag·scribble→wave, bracket→line, pout→dot) /
-**angry** (`ANGRY_MOUTH` — grimace on humans and dogs, fangs on cats and imps) / **^^** (`HAPPY_MOUTH` — tongue on dogs only; the rest keep their rest mouth). The same kind shares a mesh.
+**^^** (`HAPPY_MOUTH` — tongue on dogs only; the rest keep their rest mouth). The same kind shares a mesh. The angry mouth — the grid on humans and dogs, fangs on cats and imps — went with the fierce eye
+(2026-09-16): anger is the brows' alone, and the mouth keeps its own.
 
 ## Body
 

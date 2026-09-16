@@ -201,7 +201,7 @@ export const MOTION = {
     stretch: null,
     tilt: [7, 16], tiltAmp: 0.08,
     jelly: null, shiver: [26, 60],
-    // It gets ANGRY — the fierce eyes and the clenched tooth grid (faceStates ANGRY_MOUTH.rex), like a cat's hiss
+    // It gets ANGRY — the brows, at a cat's cadence (anger is the brows' alone; the eyes and the mouth stay)
     wink: null, happyHold: null, angry: [22, 55], angryHold: [3, 5],
     // The tail — a biped with one (the one exception): a slow heavy sway, the tip lagging behind
     tailSwish: { amp: [0.06, 0.14], period: [2.8, 5] }, tailFlick: [8, 18],

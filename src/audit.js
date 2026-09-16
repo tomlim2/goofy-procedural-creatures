@@ -5,10 +5,10 @@
 //
 // What counts as correct (the expectation):
 //   brows (not none) · mouth · nose (muzzle) · eyewear · cheeks · whiskers (cats) — visible in every state
-//   static eyes (dot, slit, half …) — for sleep, ^^, a wink (on that side) and anger, a substitute shows instead (shut line / the smile: the eye with a ^^ pupil, or the arc alone / fierce eye)
-//   the eye rig's pupil (ring, wide, cyclops) — swapped for the ^^ arch during ^^ and a wink (that side), shut away by a blink and sleep, so it is left out then. In exchange,
-//   the arch or the shut line has to be visible then — an eye closing must not make the eye disappear from the face
-//   the ^^ arc — visible when happy or winking (that side) · the sleep lid — visible when asleep
+//   static eyes (dot, slit, half …) — for sleep, ^^, a wink (on that side) and a startle's ☆·♥, a substitute shows instead (the shut line / the eye redrawn with a ^^, ☆ or ♥ pupil, or the glyph alone on the bare dot)
+//   the eye rig's pupil (ring, wide, cyclops) — swapped for the ^^ arch during ^^ and a wink (that side), for the ☆·♥ during a startle's variant, shut away by a blink and sleep, so it is left out then. In exchange,
+//   the mark or the shut line has to be visible then — an eye closing must not make the eye disappear from the face
+//   the ^^ arc — visible when happy or winking (that side) · the ☆·♥ — visible then · the sleep lid — visible when asleep. Anger is the brows' alone: the eyes and the mouth are checked as they are
 //   a quad's tail — raised (tailRaise 1, drawn above the body) it has to show; at rest it is drawn behind the body, so a hidden one is written
 //   down as information, not a violation (the known cost of drawing it behind — parts.md § tail)
 
@@ -139,29 +139,29 @@ function audit() {
       scene.probe(item, ov);
       const asleep = !!ov.sleep, closedAll = !!ov.lid || !!ov.happy;
       const parts = [];   // [label, meshes, should it show, frame keys to hide]
-      const angry = !!ov.angry;
-      const browIdx = angry ? 2 : ov.browAlt ? 1 : 0, mouthIdx = angry ? 2 : ov.happy ? 3 : ov.mouthAlt ? 1 : 0;   // same priority as animate
+      const angry = !!ov.angry;   // anger is the brows' alone — the eyes and the mouth stay as they are
+      const browIdx = angry ? 2 : ov.browAlt ? 1 : 0, mouthIdx = ov.happy ? 2 : ov.mouthAlt ? 1 : 0;   // same priority as animate
       if (kinds.brow[browIdx] !== "none") parts.push(["brow", [item.faceStates.brow[browIdx]], true]);
       parts.push(["mouth", [item.faceStates.mouth[mouthIdx]], true]);
-      // Static eyes are substituted only for sleep, ^^, anger, startle variants and **a wink on that side** — the other eye has to stay visible through a wink
-      for (const t of temp) parts.push([t.label, t.meshes, t.label.startsWith("eyes") ? !(asleep || ov.happy || angry || ov.eyeFx || (ov.winkSide && ov.winkSide === t.side)) : true, t.hidden]);
+      const struck = !!ov.eyeFx && !asleep;   // a startle's ☆/♥ — the star or the heart stands where the pupil is
+      // Static eyes are substituted only for sleep, ^^, the ☆♥ and **a wink on that side** — the other eye has to stay visible through a wink
+      for (const t of temp) parts.push([t.label, t.meshes, t.label.startsWith("eyes") ? !(asleep || ov.happy || struck || (ov.winkSide && ov.winkSide === t.side)) : true, t.hidden]);
       item.eyeRigs.forEach((rig, i) => {
         const winked = ov.winkSide && rig.eye.side === ov.winkSide;
-        const closed = winked || closedAll || asleep || !!ov.eyeFx || angry;
+        const closed = winked || closedAll || asleep || struck;
         parts.push([`pupil${i}`, [rig.pupil], !closed]);
-        parts.push([`smile${i}`, [rig.smile], !angry && !!(winked || ov.happy)]);
+        parts.push([`smile${i}`, [rig.smile], !struck && !!(winked || ov.happy)]);
+        parts.push([`star${i}`, [rig.star], struck && ov.eyeFx.kind === "star"]);
+        parts.push([`heart${i}`, [rig.heart], struck && ov.eyeFx.kind === "heart"]);
         // A closed eye (blink, sleep) has to have its shut line — "the pupil may be invisible" does not mean "the eye may be gone"
-        parts.push([`shut${i}`, [rig.shut], !angry && !winked && !ov.happy && (asleep || (ov.lid || 0) > 0.5)]);
-        parts.push([`angry${i}`, [rig.angry], angry && !asleep]);   // anger — the fierce eye shows instead
+        parts.push([`shut${i}`, [rig.shut], !struck && !winked && !ov.happy && (asleep || (ov.lid || 0) > 0.5)]);
       });
-      // Startle variants — the ☆/♥ cover has to show then, and the eye underneath is allowed not to
-      if (ov.eyeFx) item.eyeFx.forEach((e, i) => parts.push([`eyeFx${i}`, [ov.eyeFx.kind === "star" ? e.star : e.heart], true]));
       item.staticLids.forEach((lid, i) => {
-        const angryEye = angry && !asleep;
-        const happyEye = !angryEye && (!!ov.happy || (ov.winkSide && lid.eye.side === ov.winkSide));
+        const happyEye = !struck && (!!ov.happy || (ov.winkSide && lid.eye.side === ov.winkSide));
         parts.push([`sleepLid${i}`, [lid.shut], asleep && !happyEye]);   // sleep — the shut line (the cover stays; only the line is toggled)
         parts.push([`smile${i}`, [lid.smile], !!happyEye]);            // ^^ / wink — the smile arc
-        parts.push([`angry${i}`, [lid.angry], angryEye]);              // anger — the fierce eye
+        parts.push([`star${i}`, [lid.star], struck && ov.eyeFx.kind === "star"]);
+        parts.push([`heart${i}`, [lid.heart], struck && ov.eyeFx.kind === "heart"]);
       });
 
       for (const [label, meshes, expect, hidden] of parts) {
