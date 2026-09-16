@@ -20,9 +20,12 @@ export const boilRate = (n) => ({ fps: (8 + (n % 5) * 0.5) / 15, offset: n % BOI
 // guidelines/rig.md § the hierarchy is the single source for these numbers, and the raised one lived only in
 // animate.js — rig.js, which bakes the resting one, did not carry it
 export const TAIL_ORDER = { rest: 0.8, raised: 2.08 };
-// A limb's render order: a leg behind the body (above the floor line), an arm above the body's ink so the sleeve
-// covers the outline and the shoulder reads as embedded. The upper bone, the lower and the foot all take it
-export const limbOrder = (kind) => (kind === "leg" ? 1.2 : 2.5);
+// A limb's render order: a leg behind the body (above the floor line); an arm **above everything the individual has** — the
+// head, the ears, the hair, the hat, the brows and the mouth (6.6) — so a hand raised, waved or laid on the face is never behind
+// the head it is in front of (the owner, 2026-09-16: the arms come before every part), and the sleeve covers the body outline
+// so the shoulder reads as embedded. The upper bone, the lower and the foot all take it. The arms held behind the back keep
+// their own mesh behind the body (0.5) — that pose is about the arms going out of sight
+export const limbOrder = (kind) => (kind === "leg" ? 1.2 : 7);
 
 // The fake 3D depth (z) — how many times the features' shift a layer moves on a face turn. 1 = the features (the front of the face), 0 = the head outline (the skull axis, no shift), negative = behind (the other way).
 // Set as **one number** per layer — how far forward or back it is *is* the shift. Layers meaning the same thing sharing a value is just a tag (front hair and the scalp),
@@ -113,8 +116,8 @@ export function buildCreature(spec, noise, birth = 0) {
   // **below** the face ink (a tear starting on the eye) while its ink sits above, so the two layers' fills and ink interleave.
   // Static eyes being one layer per eye is because of the wink — turning one eye into an arch means switching off that eye's layer alone (animate).
   // Render order (guidelines/rig.md is the single source): back hair 0.4 → arms behind the back 0.5 → tail at rest 0.8 → legs 1.2 → body 1.5 → side ears 1.7 →
-  // head 2 (the fill covers the body ink) → horns 2.06 → hair on the scalp 2.06 → dog/cat ears 2.12 → face and static eyes 2.3/2.4 → arms 2.5 →
-  // frontmost face (the muzzle, nose, eyewear, a cat's whiskers) 6.5 → bangs 6.55 → hat 6.58
+  // head 2 (the fill covers the body ink) → horns 2.06 → hair on the scalp 2.06 → dog/cat ears 2.12 → face and static eyes 2.3/2.4 →
+  // frontmost face (the muzzle, nose, eyewear, a cat's whiskers) 6.5 → bangs 6.55 → hat 6.58 → brows and mouth 6.6 → arms 7
   const firstDrawn = drawCreature(spec, 0);
   const mrig = motionRig(spec);
   const neckY = firstDrawn.neckY;
@@ -192,7 +195,7 @@ export function buildCreature(spec, noise, birth = 0) {
   }
 
   // Limbs — joint pivot groups. Swung with rotation.z.
-  // An arm has two meshes, front (above the body ink, 2.5) and back (behind the body, 0.5), and switches
+  // An arm has two meshes, front (above every part, 7) and back (behind the body, 0.5), and switches
   // between them by pose. The sleeve and hand have to cover the body outline for the joint to look embedded in the body.
   // An arm has two joints: pivot (shoulder) ─ front (upper arm) ─ elbow (the elbow pivot) ─ lower (forearm).
   // The shoulder angle and elbow angle have to be given separately for the arm to fold.
@@ -208,14 +211,14 @@ export function buildCreature(spec, noise, birth = 0) {
     const front = new THREE.Group();
     // A **leg goes behind the body** (1.2 — above the floor line at 1, below the body at 1.5). Its root sits inside the body outline
     // and the foot reaches back up to the hem, so drawn in front the root's line and the foot's fill lay on top of the torso.
-    // An **arm** stays in front (2.5): its sleeve and hand have to cover the body outline for the shoulder to look embedded
+    // An **arm** stays in front of everything (7): its sleeve and hand have to cover the body outline for the shoulder to look embedded, and a raised hand the head
     front.add(boiledMesh((fl) => fl[li].sketch, 1, limbOrder(limb.kind)));
     pivot.add(front);
 
     let elbow = null;
     if (limb.lowerSketch) {
       // The lower bone's pivot — an arm's elbow, or a leg's **knee** (the shin, with the foot on it).
-      // The shin stays on the leg layer (1.2, behind the body); the forearm on the arm layer (2.5)
+      // The shin stays on the leg layer (1.2, behind the body); the forearm on the arm layer (7)
       elbow = new THREE.Group();
       elbow.position.set(limb.elbow[0], limb.elbow[1], 0);
       elbow.add(boiledMesh((fl) => fl[li].lowerSketch, 1, limbOrder(limb.kind)));

@@ -17,8 +17,8 @@ group                        ← origin = the soles. Sway, shiver, jump, breathi
 │   │   │                           Bristle (tailPuff): bone.scale.y — thickness only, perpendicular to the bone's own axis; a sibling bone shears no child
 │   │   └── SkinnedMesh ×1       ← the whole skin in the pivot's space, every vertex weighted to two or three bones (limbs.js weightsAt); all three boil frames in it, switched by drawRange
 │   └── limb pivot ×N        ← shoulder and hip pivots
-│       ├── front             ← the upper arm (2.5) or the thigh (1.2 — behind the body)
-│       │   └── elbow         ← the lower bone's pivot — an arm's elbow plus the forearm (2.5), or a leg's **knee** plus the shin (1.2), on a biped and a quad alike. Two angles per limb (state.arms; a leg's knee is the crouch solve's); only a float leg has no lower bone
+│       ├── front             ← the upper arm (7 — above everything the individual has) or the thigh (1.2 — behind the body)
+│       │   └── elbow         ← the lower bone's pivot — an arm's elbow plus the forearm (7), or a leg's **knee** plus the shin (1.2), on a biped and a quad alike. Two angles per limb (state.arms; a leg's knee is the crouch solve's); only a float leg has no lower bone
 │       │       └── foot      ← the **ankle** at the shin's end (biped legs, not the tiptoe) — the foot's own sketch, counter-rotated by what the hip and knee turned so the sole stays level with the floor at any fold
 │       └── back              ← hands behind the back (arms only, 0.5)
 └── headGroup                ← origin = the neck (neckY = bodyTop). Tilt, roll, nod, dip. Only the outline sits here directly
@@ -75,7 +75,6 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 2.3 | Face fills (cheeks) · static eye fills (pupil, white; one layer per eye — the smaller first) |
 | 2.4 | Face ink (tears, the dark circles' bag) · static eye ink (one layer per eye) |
 | 1.2 | **Legs** — behind the body (above the floor line at 1, below the body at 1.5). A leg's root is inside the body outline and the foot reaches back up to the hem; in front, both lay on top of the torso |
-| 2.5 | Arms, upper and forearm (above the body ink — the sleeve covers the outline so the shoulder reads as embedded) |
 | 3.0~3.35 | The back (smaller) eye's rig — white+rim 3 · pupil 3.2 · ^^/shut line 3.35 (on closing, the white, rim and pupil are switched off and only the line remains) |
 | 3.5~3.85 | The front (larger) eye's rig — the same order, +0.5. When two eyes overlap the front eye's white covers the back eye's rim and pupil (no crossing line) |
 | 3.6 | A static eye's shut line, smile, star and heart — the static eye frame is switched off then (no cover) |
@@ -83,6 +82,7 @@ above). Materials are shared per opacity level ([performance.md](performance.md)
 | 6.55 | Bangs — above the nose and eyewear, below the hat, the brows and the mouth (depth 0.12) |
 | 6.58 | Hat — above the bangs (a hat sits on the hair, never under it), below the brows and mouth (depth 0.45) |
 | 6.6 | Brows and mouth — above the eye rig (so a closed lid does not erase the brows and a widened cyclops white does not erase the mouth) |
+| 7 | **Arms, upper and forearm — above everything the individual has.** A hand raised, waved or laid on the face is in front of the head, the hair, the hat and the mouth, never behind them (the owner, 2026-09-16: the arms come before every part; they stood at 2.5, under the face, until then), and the sleeve covers the body outline so the shoulder reads as embedded. The arms held behind the back keep their own mesh at 0.5 |
 | 100000 | The emoji (♥ ! ? … ;) — above every individual's block (`EMOJI_ORDER`) — and the high-five stars (`scene/spark.js`, direct children of the scene root; three ☆ per contact, alive for 0.75 s) |
 
 ## Origin rules
