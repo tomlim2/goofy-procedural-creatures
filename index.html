@@ -9,7 +9,7 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.min.js",
     "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
   }
 }
@@ -17,26 +17,33 @@
 </head>
 <body class="front">
 
-<!-- The front door (guidelines/name.md): the controls and the card, nothing else. The card lies face down until a DRAW turns it
-     over. The board is /board.html -->
+<!-- The front door (guidelines/name.md): the card, and under it the name field with the species and DRAW beside it, then SAVE and
+     LINK once a card stands, nothing else. The card lies face down until a DRAW turns it over. The board is /board.html -->
 <main>
-  <form id="controls" class="controls" autocomplete="off">
-    <input id="name" type="text" maxlength="40" placeholder="YOUR NAME" aria-label="Your name" autocomplete="off" spellcheck="false" autofocus>
-    <select id="species" aria-label="Species">
-      <option value="all">ALL</option>
-      <option value="human">HUMAN</option>
-      <option value="cat">CAT</option>
-      <option value="pup">PUP</option>
-      <option value="imp">IMP</option>
-      <option value="rex">REX</option>
-    </select>
-    <button id="draw" type="submit">DRAW</button>
-    <button id="save" type="button" hidden>SAVE</button>
-  </form>
   <figure class="namecard">
     <canvas id="face" aria-hidden="true"></canvas>
     <figcaption id="live" class="sr" aria-live="polite"></figcaption>
   </figure>
+  <!-- Two rows: the field, the species and DRAW, and under them SAVE and LINK once a card stands. The words are English here and
+       set again in the device's language when the page opens (src/lang.js) -->
+  <form id="controls" class="controls" autocomplete="off">
+    <div class="row">
+      <input id="name" type="text" maxlength="40" placeholder="YOUR NAME" aria-label="Your name" autocomplete="off" spellcheck="false" autofocus>
+      <select id="species" aria-label="Species">
+        <option value="all">ANY</option>
+        <option value="human">HUMAN</option>
+        <option value="cat">CAT</option>
+        <option value="pup">PUP</option>
+        <option value="imp">IMP</option>
+        <option value="rex">REX</option>
+      </select>
+      <button id="draw" type="submit">DRAW</button>
+    </div>
+    <div class="row" id="after" hidden>
+      <button id="save" type="button">SAVE</button>
+      <button id="link" type="button">LINK</button>
+    </div>
+  </form>
 </main>
 
 <noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>

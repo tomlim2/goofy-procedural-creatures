@@ -1,6 +1,7 @@
-// The name screen — the front door (guidelines/name.md). A name, a species (ALL lets the name pick) and DRAW stand a creature up on a
-// trading card; SAVE keeps the card, only the card, as it is seen. The card drawn rides in the address (?name=…&species=…), so a link
-// shares it; nothing is kept in storage.
+// The name screen — the front door (guidelines/name.md). A name, a species (ANY lets the name pick) and DRAW stand a creature up on a
+// trading card; SAVE keeps the card, only the card, as it is seen; LINK hands its address on. The card drawn rides in the address
+// (?name=…&species=…), so a link shares it; nothing is kept in storage. The screen speaks the device's language, Korean or English
+// (lang.js) — the controls, the back's hint and what the card says about the creature.
 //
 // The card is one WebGL canvas: the board's own scene at 1×1 — the paper, the creature, the sheet over them — with the card's frame
 // and its words drawn into it in the pencil (the words in the goofy type, medium/type.js: any script, traced off Noto Sans), so they
@@ -18,21 +19,41 @@ import { loadType, traceType, typeWith } from "./medium/type.js";
 import { writeCentred } from "./medium/letters.js";
 import { mix } from "./color.js";
 import { CARD, CARD_SAVE, cardOf, layCard } from "./card.js";
-import { savePng } from "./export.js";
+import { savePng, shareLink } from "./export.js";
 import { runLoop } from "./ui.js";
+import { langOf, UI } from "./lang.js";
 
 const form = document.getElementById("controls");
 const input = document.getElementById("name");
 const speciesSelect = document.getElementById("species");
+const drawButton = document.getElementById("draw");
 const saveButton = document.getElementById("save");
+const linkButton = document.getElementById("link");
+const afterRow = document.getElementById("after");   // SAVE and LINK — the row that stands once a card does
 const face = document.getElementById("face");
 const live = document.getElementById("live");
+
+// The device's language, Korean or English (lang.js): the page's words are set from it before anything is drawn. ?lang= in the
+// address comes first, so a link can ask for the other one and a check can read the page in both
+const LANG = langOf([...new URLSearchParams(window.location.search).getAll("lang"), ...(navigator.languages || [navigator.language])]);
+const T = UI[LANG];
+document.documentElement.lang = LANG;
+document.title = T.title;
+input.placeholder = T.name;
+input.setAttribute("aria-label", T.name);
+speciesSelect.setAttribute("aria-label", T.species);
+for (const option of speciesSelect.options) option.textContent = T[option.value === "all" ? "any" : option.value];
+drawButton.textContent = T.draw;
+saveButton.textContent = T.save;
+linkButton.textContent = T.link;
 
 const scene = createScene(face);
 window.menagerie = { scene };   // the debug handle every screen keeps
 
-// The type's four faces, loaded now whatever is typed later (medium/type.js loadType)
-const typeReady = loadType();
+// The type's four faces, loaded now whatever is typed later (medium/type.js loadType). Until they are here a DRAW waits on them — 1.6 MB
+// on a first visit — and says so: the button reads DRAWING… and takes no second press, so a slow line never looks like a dead button
+let typeLoaded = false;
+const typeReady = loadType().then(() => { typeLoaded = true; });
 
 // What stands on the card now: { made, card, laid } — null until the first DRAW
 let current = null;
@@ -74,6 +95,7 @@ function layPencil(roll, paint) {
   const at = { hw, hh, X: (fx) => -hw + fx * 2 * hw, Y: (fy) => hh - fy * 2 * hh };
   const noise = makeNoise(makeRng(roll + 1));
   const group = new THREE.Group();
+  group.position.y = scene.camera.position.y;   // laid about the camera's centre, which stands above the origin (stand)
   for (let k = 0; k < BOIL_FRAMES; k += 1) {
     const lines = new Sketch(noise, 1.2);
     lines.phase = k * 101.7;   // a different stretch of the noise per frame — that is the boil
@@ -109,7 +131,8 @@ const BACK_INK = "#2b2724";   // styles.css --ink
 const BACK = {
   border: 0.075,                 // the border inside the card's edge, of the card's width
   mark: { y: 0.5, cap: 0.062 },  // MENAGERIE across the middle: its baseline and cap, of the card's height
-  hint: { y: 0.6, cap: 0.028 }
+  hint: { y: 0.6, cap: 0.028 },  // the hint under it — the letters' cap, or the type's em at typeEm times that
+  typeEm: 1.4
 };
 function layBack() {
   layPencil(0, (lines, words, k, { Y, hw, hh }) => {
@@ -119,9 +142,18 @@ function layBack() {
     const border = BACK.border * 2 * hw;
     lines.contour(roundedRect(-hw + border, hh - border, hw - border, -hh + border, radius * 0.6), { color: BACK_INK });
     writeCentred(words, "MENAGERIE", 0, Y(BACK.mark.y), BACK.mark.cap * 2 * hh, { color: BACK_INK, pen: "L" });
-    writeCentred(words, "TYPE A NAME", 0, Y(BACK.hint.y), BACK.hint.cap * 2 * hh, { color: mix(BACK_INK, PAPER, 0.35) });
+    // The hint — the goofy letters write it in English; Korean is the type's (medium/type.js), so it waits for the faces and is laid
+    // when they come (typeReady below), the wordmark standing alone until then
+    const soft = mix(BACK_INK, PAPER, 0.35);
+    if (LANG === "en") writeCentred(words, T.hint, 0, Y(BACK.hint.y), BACK.hint.cap * 2 * hh, { color: soft });
+    else if (typeLoaded) {
+      const line = traceType(T.hint, 500);
+      const em = BACK.hint.cap * 2 * hh * BACK.typeEm;
+      typeWith(words, line, { x: -(line.width * em) / 2, y: Y(BACK.hint.y), em, color: soft, wiggle: TYPE_WIGGLE, phase: k * 3.1 });
+    }
   });
 }
+typeReady.then(() => { if (!current && LANG !== "en") layBack(); });
 
 function boilFrame(t) {
   if (!frame) return;
@@ -155,7 +187,7 @@ function turnOver(swap) {
       done();
       return;
     }
-    saveButton.disabled = true;   // a card caught mid-turn would save squashed
+    saveButton.disabled = linkButton.disabled = true;   // a card caught mid-turn would save squashed, and its address is written at the swap
     turn = { from: null, swap, done, swapped: false };
   }));
   return turning;
@@ -175,7 +207,7 @@ function stepTurn(t) {
   if (u >= 1) {
     const { done } = turn;
     turn = null;
-    saveButton.disabled = false;
+    saveButton.disabled = linkButton.disabled = false;
     done();
   }
 }
@@ -186,6 +218,10 @@ function stand(specs) {
   scene.build(specs, 1);
   scene.camera.zoom = CARD.zoom;
   scene.camera.updateProjectionMatrix();
+  // The camera looks above the origin, so the cell sits down the card at CARD.origin — the picture's window runs further below the
+  // name than above it, and the creature is stood in its middle, the emoji over its head still under the window's top
+  const [, hh] = extents();
+  scene.camera.position.y = (CARD.origin - 0.5) * 2 * hh;
 }
 
 // A DRAW waits for the type; a second DRAW pressed while it waits wins, and the first is let go. The card drawn goes into the address
@@ -200,18 +236,23 @@ async function draw() {
     return;
   }
   const mine = ++drawing;
-  await typeReady;
+  if (!typeLoaded) {
+    drawButton.disabled = true;
+    drawButton.textContent = T.drawing;
+    await typeReady;
+    drawButton.disabled = false;
+    drawButton.textContent = T.draw;
+  }
   if (mine !== drawing) return;
-  const card = cardOf(made);
+  const card = cardOf(made, LANG);
   const laid = layCard(card, traceType);   // the words traced before the turn starts, so the turn does not wait on a new script
   await turnOver(() => {
     current = { made, card, laid };
     stand([made.spec]);
     layFrame(card.ink, made.roll, laid);
-    saveButton.hidden = false;
+    afterRow.hidden = false;
     window.history.replaceState(null, "", `${window.location.pathname}?${addressOfName(made.shown, species)}`);
-    const stars = `${card.stars} star${card.stars > 1 ? "s" : ""}`;
-    live.textContent = `${card.name} — ${card.kind.toLowerCase()}, ♥ ${card.hearts}, ${stars}`;
+    live.textContent = T.live(card);
   });
 }
 
@@ -250,6 +291,14 @@ speciesSelect.addEventListener("change", () => {
   if (current) draw();
 });
 saveButton.addEventListener("click", save);
+// LINK — the card's address handed on (export.js shareLink): a phone's share sheet, else the clipboard, the button saying COPIED for a moment
+linkButton.addEventListener("click", async () => {
+  if (!current) return;
+  const outcome = await shareLink(window.location.href, T.linkPrompt);
+  if (outcome !== "copied") return;
+  linkButton.textContent = T.copied;
+  setTimeout(() => { linkButton.textContent = T.link; }, 1600);
+});
 
 // -- the back, and the loop --
 stand([]);          // the paper alone, in the 1×1 view the creature will stand in, so the card does not move when one arrives

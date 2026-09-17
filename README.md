@@ -5,7 +5,7 @@ from the top, each breathing on its own clock, blinking, glancing around, gettin
 The lines never stop boiling on a low period. Shapes change only when you press NEW BOARD, or redraw one creature.
 
 The front door is the other way round: **type a name and draw its card** — the creature that name makes, alive on a trading card
-with its ♥, its moves and its rarity. The same name always draws the same one.
+with its name and its species. The same name always draws the same one.
 
 **[tomlim2.github.io/goofy-procedural-creatures](https://tomlim2.github.io/goofy-procedural-creatures/)** — the name screen ·
 **[/board.html](https://tomlim2.github.io/goofy-procedural-creatures/board.html)** — the board, running right now.
@@ -23,7 +23,7 @@ node serve.mjs
 ```
 
 `http://127.0.0.1:7300`. It uses native ES modules, so opening it over `file://` is not supported.
-three.js comes from unpkg via an importmap. The check scripts (§ Scripts) import `three` in node, so they need `npm install` once.
+three.js comes from unpkg via an importmap — the minified module build (`three.module.min.js`, 170 KB gzipped against the plain build's 264). The check scripts (§ Scripts) import `three` in node, so they need `npm install` once.
 
 ### Deploying
 
@@ -37,12 +37,12 @@ git tag v0.1.0 && git push origin v0.1.0
 `node serve.mjs [port] [ref]` — the port can also come from `PORT` (so two sessions can each run one), and the ref (HEAD by default)
 is extracted once at start and served under `/base/` for the pixel diff page.
 
-`/` — **the name screen**, the front door ([guidelines/name.md](guidelines/name.md)). A name field, a species (ALL lets the name pick)
-and DRAW — nothing else, no header and no nav. The card lies face down (MENAGERIE · TYPE A NAME, in the goofy letters) until a DRAW
+`/` — **the name screen**, the front door ([guidelines/name.md](guidelines/name.md)). The card, and under it a name field with a species
+(ANY lets the name pick) and DRAW — nothing else, no header and no nav — in English, or in Korean when the device speaks it
+(`src/lang.js`; `?lang=ko` asks for it). The card lies face down (MENAGERIE · TYPE A NAME, in the goofy letters) until a DRAW
 turns it over. The name is the seed: it becomes a roll and a species, and the creature stands up on a
-trading card (5:7) with its ♥ (its size), its two likeliest moves (its own clock, run for five minutes) and its rarity (how unlikely its
-parts are together, cut at 60 · 30 · 10% of its species). SAVE keeps the card, only the card, as it is seen, at 1000 × 1400 — a phone's
-share sheet where there is one. The card drawn rides in the address — `/?name=…&species=…` — so a link shares it; nothing is kept in
+trading card (5:7) that says its name, its species and the release, and no more — nothing on it ranks a name. SAVE keeps the card, only the card, as it is seen, at 1000 × 1400 — a phone's
+share sheet where there is one. The card drawn rides in the address — `/?name=…&species=…` — so a link shares it, and LINK hands it on (a phone's share sheet, else the clipboard); nothing is kept in
 storage.
 
 `/board.html` — **the board**. It has only BOARD, EXPORT, SPECIES and GRID.
@@ -151,7 +151,7 @@ motion everything dynamic that the clock decides. It is not per-part animation. 
 | **`src/motion/`** | What the clock decides. `table.js` (per-species parameters) `rhythm.js` (standing) `events.js` (intermittent) `states.js` (held — including the base states idle/sleep/walk/sit) `actions.js` (idle and actions — arm, body and quad layers; the dance's beat) `emoji.js` (emoji animation — the trigger layer) `ease.js` (curve shapes — envelopes and following, all eased in and out) `index.js` (assembly in a fixed rng order) | [motion/](guidelines/motion/) |
 | `src/scene/` | three.js. `rig.js` (geometry → hierarchy) `animate.js` (state → rig) `paper.js` (the paper — one plane, one GLSL fragment: the board's only shader) `post.js` (what is drawn over the finished board — the same sheet again, on top) `mesh.js` (meshes and the shared GPU materials) `emoji.js` (glyph shapes) `index.js` (the scene, the loop, regen) `stage.js` (the same rigs stood on a floor — a perspective camera, front-to-back by distance) | [rig](guidelines/rig.md) · [performance](guidelines/performance.md) |
 | `src/export.js` | Screen → PNG. Puts the WebGL canvas onto a 2D canvas and lays a signature (the name) on top to download; `savePng` hands a finished picture to a phone's share sheet or a download. It knows nothing about the scene — it takes a canvas already drawn | |
-| `index.html` · `src/name.js` · `src/card.js` · `src/character/name.js` | The name screen, the front door. `character/name.js` turns a name into a key, a roll and a species (the one door into the generator that takes something from a visitor) and reads ♥ and rarity off the parts; `card.js` is the card — its moves off the creature's clock, where everything stands, its words laid out in the goofy type (`medium/type.js`, traced off the fonts in `fonts/`); `name.js` is the page — the scene at 1×1 with the card's frame drawn in the pencil, and SAVE | [name](guidelines/name.md) |
+| `index.html` · `src/name.js` · `src/card.js` · `src/character/name.js` | The name screen, the front door. `character/name.js` turns a name into a key, a roll and a species (the one door into the generator that takes something from a visitor); `card.js` is the card — where everything stands, its three words laid out in the goofy type (`medium/type.js`, traced off the fonts in `fonts/`); `name.js` is the page — the scene at 1×1 with the card's frame drawn in the pencil, and SAVE | [name](guidelines/name.md) |
 | `src/main.js` · `src/control.js` · `src/ui.js` | The board's entry point (`board.html`). `control.js` is the screen control table — the value, the address (query) and what that value does in one place (the buttons carry no behaviour). `ui.js` is the DOM utilities underneath (segmented buttons, list wiring, options, the loop — a fixed 24 ticks a second, `tick.js`; shared with the stage, gallery, audit, the medium page and the name screen) | |
 | `debug.html` | The debug screen — the same `src/main.js` as `board.html`, with every control card (the controller skips the missing ones) | |
 | `src/stage.js` · `stage.html` | The stage — the cast stood up in a room, the camera by hand | [rig](guidelines/rig.md) § the stage |
@@ -179,7 +179,7 @@ node scripts/drawdiff.mjs [ref]        # for drawing refactors — compares the 
 
 node scripts/fanspill.mjs --check      # every fill checked against the fan that fills it — 0 means no fill spills past its outline
 
-node scripts/names.mjs                 # the name screen on its own — the species on ALL, a name's variants as one name, the stars at 60 · 30 · 10%, the ♥ range, the moves' labels; --measure prints the constants to paste
+node scripts/names.mjs                 # the name screen on its own — the species on ANY, a name's variants as one name, an address bringing its card back, a Korean name for every species
 
 node scripts/hifive-sim.mjs            # how often pairs land a high five, and whether the palms meet — the real pair logic over real clocks, both palms run back through FK at contact
 ```

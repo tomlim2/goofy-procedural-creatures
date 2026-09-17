@@ -56,7 +56,7 @@ function pickArchetype(rng) {
 }
 
 // The weights a slot is picked by: species skeleton > archetype disposition > default weights > even (null). Four steps down.
-// Written once, because the name screen's rarity reads a part's share off the very weights that picked it (character/name.js)
+// Written once, the one lookup pickSlot draws with (the name screen's rarity read a part's share off it too, until the rarity went)
 export function slotWeights(species, archetype, slot) {
   return species.bias[slot] || archetype.bias[slot] || DEFAULT_BIAS[slot] || null;
 }

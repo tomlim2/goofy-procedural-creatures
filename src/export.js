@@ -41,6 +41,9 @@ function downloadBlob(blob, name) {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
+// A phone — a touch screen behind a coarse pointer: where a share sheet is how something is handed over, and a download is not
+export const onPhone = () => navigator.maxTouchPoints > 0 && window.matchMedia("(pointer: coarse)").matches;
+
 // A finished picture handed to the visitor (the name screen's card): a phone's share sheet where it takes files — save to photos,
 // send it on — and a download everywhere else, a desktop's share sheet included (a SAVE button that opens one is not a save).
 // **Synchronous up to the share call**: a share sheet opens only inside the click that asked for it, and toBlob's callback has already
@@ -51,12 +54,38 @@ export function savePng(canvas, name) {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   const file = new File([bytes], name, { type: "image/png" });
-  const phone = navigator.maxTouchPoints > 0 && window.matchMedia("(pointer: coarse)").matches;
-  if (phone && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+  if (onPhone() && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
     navigator.share({ files: [file] }).catch((error) => {
       if (error.name !== "AbortError") downloadBlob(file, name);   // a sheet closed by hand is not a failure
     });
     return;
   }
   downloadBlob(file, name);
+}
+
+// A link handed to the visitor (the name screen's LINK): a phone's share sheet where there is one, the clipboard everywhere else,
+// and a prompt holding the address when the clipboard is refused (a denied permission, an insecure origin) — it can still be copied
+// by hand — and where a prompt is not to be had either, nothing: the address is still in the bar. Called inside the click that
+// asked, since a share sheet opens only there. Resolves what happened: "shared" · "left" (a sheet closed by hand) · "copied" ·
+// "shown" · "failed"
+export async function shareLink(url, promptText = "The card's link") {
+  if (onPhone() && typeof navigator.share === "function") {
+    try {
+      await navigator.share({ url });
+      return "shared";
+    } catch (error) {
+      if (error.name === "AbortError") return "left";
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    return "copied";
+  } catch {
+    try {
+      window.prompt(promptText, url);
+      return "shown";
+    } catch {
+      return "failed";   // a webview with no prompt either — the address is still in the bar
+    }
+  }
 }
