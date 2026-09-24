@@ -41,7 +41,8 @@ is extracted once at start and served under `/base/` for the pixel diff page.
 (ANY lets the name pick) and DRAW — nothing else, no header and no nav — in English, or in Korean when the device speaks it
 (`src/lang.js`; `?lang=ko` asks for it). The card lies face down (MENAGERIE · TYPE A NAME, in the goofy letters) until a DRAW
 turns it over. The name is the seed: it becomes a roll and a species, and the creature stands up on a
-trading card (5:7) that says its name, its species and the release, and no more — nothing on it ranks a name. SAVE keeps the card, only the card, as it is seen, at 1000 × 1400 — a phone's
+trading card (5:7) that says its name, its species and the release, and no more — nothing on it ranks a name — on paper washed with
+the creature's own material, with its colours as paint chips at the top. SAVE keeps the card, only the card, as it is seen, at 1000 × 1400 — a phone's
 share sheet where there is one. The card drawn rides in the address — `/?name=…&species=…` — so a link shares it, and LINK hands it on (a phone's share sheet, else the clipboard); nothing is kept in
 storage.
 

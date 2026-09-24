@@ -14,7 +14,9 @@ import { sketchMesh, disposeGroup } from "./scene/mesh.js";
 import { BOIL_FRAMES, boilRate } from "./scene/rig.js";
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng } from "./rng.js";
-import { creatureOfName, addressOfName, nameOfAddress, PAPER } from "./character/index.js";
+import { creatureOfName, addressOfName, nameOfAddress, isGhost, PAPER } from "./character/index.js";
+import { materialOf } from "./character/draw/body.js";
+import { stepOf } from "./medium/materials.js";
 import { loadType, traceType, typeWith } from "./medium/type.js";
 import { writeCentred } from "./medium/letters.js";
 import { mix } from "./color.js";
@@ -62,6 +64,7 @@ let current = null;
 // The world rectangle the card shows is the camera's, so both are laid from it and laid again whenever it moves (a resize). Three
 // boil frames, one mesh each, flipped at the creature's own cadence (rig.js boilRate); a word's wiggle moves with the frame
 const FRAME_ORDER = 1.2;   // over the paper and the floor line, under every creature (their blocks start at 10, scene/index.js)
+const UNDER_ORDER = 0.6;   // the card's dressing under the floor line (1): the picture's paper
 const TYPE_HAND = 0.5;     // the wobble of the pencil round a letter — half the frame's, so a word a few ink widths tall still reads
 const TYPE_WIGGLE = 0.035; // how far a letter's outline is pushed about, in ems
 let frame = null;          // { group, boil, extents, lay } — lay() draws the same thing again at the camera's new size
@@ -84,8 +87,9 @@ function roundedRect(left, top, right, bottom, r) {
   return points;
 }
 
-// One pencil group over the scene: the same drawing in three boil frames, its noise the roll's. paint(lines, words, k, at) lays one
-// frame — `lines` in the frame's hand, `words` in the letters' and the type's, and at.X / at.Y take a fraction of the card to the world
+// One pencil group over the scene: the same drawing in three boil frames, its noise the roll's. paint({ lines, words, under }, k, at)
+// lays one frame — `lines` in the frame's hand, `words` in the letters' and the type's, `under` what goes under the floor line — and
+// at.X / at.Y take a fraction of the card to the world
 function layPencil(roll, paint) {
   if (frame) {
     disposeGroup(frame.group);
@@ -101,22 +105,44 @@ function layPencil(roll, paint) {
     lines.phase = k * 101.7;   // a different stretch of the noise per frame — that is the boil
     const words = new Sketch(noise, TYPE_HAND, 1);
     words.phase = k * 101.7 + 50;
-    paint(lines, words, k, at);
-    const mesh = sketchMesh([lines, words], 0.9, FRAME_ORDER);
-    mesh.visible = k === 0;
-    group.add(mesh);
+    const under = new Sketch(noise, 1.2);
+    under.phase = k * 101.7 + 25;
+    paint({ lines, words, under }, k, at);
+    // One child per boil frame (boilFrame shows children[k]): a group holding the frame's meshes — the lines and words at
+    // FRAME_ORDER, and what goes under the floor line at UNDER_ORDER when there is anything
+    const frameGroup = new THREE.Group();
+    frameGroup.add(sketchMesh([lines, words], 0.9, FRAME_ORDER));
+    if (!under.empty) frameGroup.add(sketchMesh([under], 1, UNDER_ORDER));
+    frameGroup.visible = k === 0;
+    group.add(frameGroup);
   }
   scene.scene.add(group);
   frame = { group, boil: boilRate(roll), extents: [hw, hh], lay: () => layPencil(roll, paint) };
 }
 
-// The card's edge and the picture's window as closed pencil lines, and the card's words in the goofy type
-function layFrame(ink, roll, laid) {
-  layPencil(roll, (lines, words, k, { X, Y, hw, hh }) => {
+// The card's edge and the picture's window as closed pencil lines, the card's words in the goofy type, and its dressing (CARD): the
+// picture's paper washed with the creature's own material, and its colours as paint chips
+function layFrame(made, card, laid) {
+  const { spec } = made;
+  const ink = card.ink;
+  // The wash — the creature's material at the lightest step in a tint of its skin, so each card's paper is its own; a ghost, which
+  // draws no texture, gets the tint alone
+  const wash = { name: materialOf(spec, "head"), color: mix(spec.palette.skin, PAPER, CARD.wash.tint), value: stepOf(CARD.wash.step), only: isGhost(spec) ? "base" : undefined };
+  layPencil(made.roll, ({ lines, words, under }, k, { X, Y, hw, hh }) => {
     const inset = CARD.inset * 2 * hw;
     const radius = CARD.corner * 2 * hw;
+    const window = roundedRect(X(CARD.art.x0), Y(CARD.art.y0), X(CARD.art.x1), Y(CARD.art.y1), radius * 0.4);
+    under.paint(window, wash.name, { color: wash.color, value: wash.value, only: wash.only });
     lines.contour(roundedRect(-hw + inset, hh - inset, hw - inset, -hh + inset, radius), { color: ink });
-    lines.contour(roundedRect(X(CARD.art.x0), Y(CARD.art.y0), X(CARD.art.x1), Y(CARD.art.y1), radius * 0.4), { color: ink });
+    lines.contour(window, { color: ink });
+    // The paint chips — a row ending at the right, each a flat square of one colour in the card's ink
+    const size = CARD.swatch.size * 2 * hw, gap = CARD.swatch.gap * 2 * hw;
+    card.swatches.forEach((color, i) => {
+      const right = X(CARD.swatch.x1) - (card.swatches.length - 1 - i) * (size + gap);
+      const chip = roundedRect(right - size, Y(CARD.swatch.y) + size / 2, right, Y(CARD.swatch.y) - size / 2, size * 0.2);
+      lines.fill(chip, color);
+      lines.contour(chip, { color: ink, size: "S" });
+    });
     for (const word of laid) {
       typeWith(words, word.line, { x: X(word.x), y: Y(word.y), em: word.em * 2 * hw, color: word.color, wiggle: TYPE_WIGGLE, phase: k * 3.1 });
     }
@@ -135,7 +161,7 @@ const BACK = {
   typeEm: 1.4
 };
 function layBack() {
-  layPencil(0, (lines, words, k, { Y, hw, hh }) => {
+  layPencil(0, ({ lines, words }, k, { Y, hw, hh }) => {
     const inset = CARD.inset * 2 * hw;
     const radius = CARD.corner * 2 * hw;
     lines.contour(roundedRect(-hw + inset, hh - inset, hw - inset, -hh + inset, radius), { color: BACK_INK });
@@ -158,7 +184,7 @@ typeReady.then(() => { if (!current && LANG !== "en") layBack(); });
 function boilFrame(t) {
   if (!frame) return;
   const shown = Math.floor(t * frame.boil.fps + frame.boil.offset) % BOIL_FRAMES;
-  frame.group.children.forEach((mesh, k) => { mesh.visible = k === shown; });
+  frame.group.children.forEach((frameGroup, k) => { frameGroup.visible = k === shown; });
 }
 
 // -- turning the card over --
@@ -249,7 +275,7 @@ async function draw() {
   await turnOver(() => {
     current = { made, card, laid };
     stand([made.spec]);
-    layFrame(card.ink, made.roll, laid);
+    layFrame(made, card, laid);
     afterRow.hidden = false;
     window.history.replaceState(null, "", `${window.location.pathname}?${addressOfName(made.shown, species)}`);
     live.textContent = T.live(card);

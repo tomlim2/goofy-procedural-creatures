@@ -138,7 +138,7 @@ roll or takes one; both carry this screen as the one exception. It takes a name,
 
 ```
 ┌────────────────────────────────────┐
-│ 홍길동                              │
+│ 홍길동                          ▪▪▪ │
 │ REX                                │
 │ ┌────────────────────────────────┐ │
 │ │                                │ │
@@ -155,7 +155,10 @@ roll or takes one; both carry this screen as the one exception. It takes a name,
 ```
 
 **5:7** — the 63 × 88 mm trading card. Three words on it — the name, the species, the release — and the creature (`src/card.js`
-`cardOf`); nothing on it ranks a name (§ what it is not).
+`cardOf`); nothing on it ranks a name (§ what it is not). Its dressing is the creature's own (the owner, 2026-09-17, out of a
+brainstorm against trading cards, artist trading cards and sketch cards): the picture's paper washed with its material and its
+colours as paint chips — every card its own without any card being better. A shadow under its feet came with them and was taken
+off again (the owner, 2026-09-24: not needed); the floor line stands on the wash alone.
 
 **The area and the card** are two things, and the rest of this document keeps them apart. The **area** is the canvas: the whole 5:7
 rectangle, the paper in it, and what SAVE writes out. The **card** is what the pencil draws inside the area — its edge `CARD.inset`
@@ -164,9 +167,11 @@ rectangle, the paper in it, and what SAVE writes out. The **card** is what the p
 
 | On the card | What it shows | Read from |
 | --- | --- | --- |
-| The name | The shown name as it was typed, shrunk to fit 85% of the width when it runs longer | What was typed |
+| The name | The shown name as it was typed, shrunk to fit 62% of the width when it runs longer — it stops short of the chips | What was typed |
+| The chips | Three to five little squares in a row at the top right, each one colour, in the card's ink | Its palette — skin, cloth, hair, accent and a pop where it has one, each once (`swatchesOf`); a ghost's one pale tone is one chip |
 | The species | `REX` — in Korean `공룡` (§ the two languages) | The spec (`species`) |
 | The picture | The creature on its paper, alive | The board's own scene at 1×1 (`scene.build([spec], 1)`, `SOLO_PAD`) with the camera's zoom at 1.45, looking above the origin so the cell sits at 0.566 of the card's height (`CARD.origin`), REGEN STILL (a live regen would swap it for somebody else's) |
+| The picture's paper | The window washed with the creature's material — graphite's rules, a marker's bands, charcoal's dust — in a tint of its skin, under the floor line and the creature | `materialOf(spec, "head")` at the lightest step (`CARD.wash` — `light`, the marks few and pale) in `mix(skin, PAPER, 0.72)`; a ghost, which draws no texture, gets the tint alone |
 | The foot | `MENAGERIE v1` | The release |
 
 Where each thing stands is one table, `CARD` in `src/card.js` — fractions of the card's width (x, a word's em) and height
@@ -187,6 +192,9 @@ the kind and the foot).
 - **The words** are the goofy type (§ the type) — the name as it was typed, the species in capitals (or in Korean), the release — traced by `layCard`
   and written by `src/name.js` into the same meshes as the frame, so they boil with it and lie under the same sheet. The
   card is one canvas: nothing is written over the scene.
+- **The dressing goes under the floor line** (`UNDER_ORDER` 0.6 — over the paper at 0, under the floor line at 1 and every creature),
+  in its own sketch per boil frame, so the wash's marks boil with the frame; each boil frame is one group of
+  the two meshes (`layPencil`). The chips are the frame's (1.2), above the paper with the words. A turn squashes it all with the card.
 - **SAVE keeps the card and nothing else** — no controls, no page around it — as it is seen. The renderer is set to
   **1000 × 1400** for one draw of the state already on the screen (the same tick, the same boil frame, the frame and the
   words with it), the scene is copied onto a 2D canvas in that task, and the renderer is set back; so a card saved from
@@ -344,3 +352,7 @@ paper up in the same 1×1 view its creature will, with no floor line under nobod
   where the prompt is refused too; the dropdown reading ANY; DRAW at the field's right and ANY · SAVE · LINK under them; `?lang=ko`
   turning the controls, the back's hint and the card Korean — 공룡 — with `<html lang="ko">` and the
   Korean title, and `?lang=en` turning them back.
+- **The dressing, by hand** — a pup in graphite (Ada Love): the window washed with pale rules in a tint of its skin, three chips at
+  the top right (its cloth the colour of its skin, so one fewer); a rex in another material (menagerie); with the shadow taken off, the floor line
+  on the wash alone and nothing under the feet.
+  Before each boil frame was one group the frames' meshes were toggled one by one and the wash showed without the frame.

@@ -1,4 +1,5 @@
-// The card — what the name screen stands a creature up in (guidelines/name.md § the card): its three words and where they sit.
+// The card — what the name screen stands a creature up in (guidelines/name.md § the card): its three words, its dressing and where
+// they sit.
 // A card says who it is and no more: the name as it was typed, the species, and the release (the owner, 2026-09-17 — the ♥, the
 // moves and the rarity it carried read as ranking a person by their name, and went). The species is said in the screen's
 // language (lang.js). The words are the goofy type (medium/type.js) — any script, traced off a real font and written in the
@@ -21,10 +22,20 @@ export const CARD = {
   art: { x0: 0.06, x1: 0.94, y0: 0.155, y1: 0.885 },
   zoom: 1.45,
   origin: 0.566,
-  name: { x: 0.075, y: 0.104, em: 0.07, weight: 700, max: 0.85 },
+  name: { x: 0.075, y: 0.104, em: 0.07, weight: 700, max: 0.62 },   // max stops short of the swatches
   kind: { x: 0.076, y: 0.142, em: 0.03, weight: 500, soft: true },
-  foot: { x: 0.925, y: 0.927, em: 0.025, weight: 700, soft: true }
+  foot: { x: 0.925, y: 0.927, em: 0.025, weight: 700, soft: true },
+  // The dressing (the owner, 2026-09-17): the picture's paper is the creature's own material at the lightest step in a tint of its
+  // skin (wash — tint is how far the skin goes toward the paper); its colours stand as paint chips in a row at the top right
+  // (swatch — the row's right end, the chips' middle, a chip's side and the gap, of the width). No shadow under its feet (the
+  // owner, 2026-09-24: not needed)
+  wash: { step: "light", tint: 0.72 },
+  swatch: { x1: 0.925, y: 0.083, size: 0.03, gap: 0.009 }
 };
+
+// The creature's colours as paint chips: its skin, cloth, hair and accent, and a pop where it has one — each once. A ghost's one pale
+// tone is one chip
+export const swatchesOf = (spec) => [...new Set([spec.palette.skin, spec.palette.cloth, spec.palette.hair, spec.palette.accent, spec.palette.pop].filter(Boolean))];
 
 // -- the card --
 // What a card says about a made creature (character/name.js creatureOfName), in a language (lang.js WORDS): the species — in English
@@ -35,6 +46,7 @@ export function cardOf(made, lang = "en") {
   return {
     name: made.shown,
     kind: species ? species[spec.species] || spec.species : spec.species.toUpperCase(),
+    swatches: swatchesOf(spec),
     // The ink its words and its frame take — the creature's own, from before a ghost pales it
     ink: (spec.palette0 || spec.palette).ink
   };
