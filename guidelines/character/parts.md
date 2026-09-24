@@ -80,7 +80,10 @@ highlighted eyeball eyes — bead and ◕ sparkle — were dropped.)
 if only one side is smaller or higher it reads as a mistake rather than "a smaller eye". half and side stay on this list even after gaining a white ([rules.md](rules.md)). An eye hidden by a patch is skipped with `patched(spec, eye)` — only when there is a patch (look at patchSide alone and the eye disappears along with a patch dropped late).
 
 ### pupil — the pupil (8)
-**What sits in the eyeball**, a part of its own — the `pupil` slot, a late slot. The eye kind is the ball and its lids;
+**What sits in the eyeball**, a part of its own — the `pupil` slot, a late slot. **Every pupil is painted flat** — the round one of
+every kind, the slit's spindle, the star and the heart a startle puts in the eye: ink in an eye, not a surface, so a hand's material
+(the editor's PART → material) lends it a colour and never a texture (the owner, 2026-09-17; [../drawing.md](../drawing.md) § what
+takes the goofy material). The eye kind is the ball and its lids;
 the pupil is drawn where that kind keeps it, by `pupilMark` (face.js): the rig's live eyes hand it the pupil mesh (so a mark
 still shrinks on a startle and follows the gaze), and side and half hand it their pupil's place under the lid (the heavy-lidded
 three keep the round pupil, and lift their lid when a face state puts a mark in the eye).

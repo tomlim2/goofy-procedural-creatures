@@ -166,11 +166,12 @@ paint themselves by hand because it took no `pattern`, and it does now. The dens
 says `same` (`surfaceHand(spec, where)`, the one place a step is read). A skin, fur or cloth surface (the
 ears, the muzzle, the hands, boots and sleeves, the tail and its ends) takes its side's value step — one
 mass on a dog, a cat or an imp (`surfaceHand`), its own color's on a human. A detail or an object — the hats,
-the inner ear, the eyes (whites, pupils, irises, highlights, the static eyes, the star and heart eyes, the angry
-eye), the nose, the mouth's inside, teeth and tongue, the blush, the eye patch, the cheek and
-forehead shade patches, the horn tip — takes its **own color's** step (`own`): a black nose black, whatever the creature's hand. Two things stay FLAT
+the inner ear, the eyes' highlights, the nose, the mouth's inside, teeth and tongue, the blush, the eye patch, the cheek and
+forehead shade patches, the horn tip — takes its **own color's** step (`own`): a black nose black, whatever the creature's hand. Three things stay FLAT
 by rule: the **whites of the eyes** (the sclera, the static eyes' white, the star eye — `flat`: a white of the
-eye is not a surface the pencil touches) and the emoji, which are not a creature's part.
+eye is not a surface the pencil touches), **the pupils** (every kind's round one, the slit's spindle, and the marks
+a state puts in the eye — the star, the heart; ink in an eye, not a surface: a hand's material lends a pupil its
+colour and never a texture, the owner's rule of 2026-09-17) and the emoji, which are not a creature's part.
 
 Adding a filled part means painting it through `paintPart`, never `fill` — a `fill` on a creature is a bug
 (it stands flat beside a hatched head).
@@ -237,7 +238,7 @@ row is the same material on a **dark ground**, which is where the rule above is 
 
 | Goofy material | base | texture | On the board |
 | --- | --- | --- | --- |
-| `FLAT` | `flat` — the fill-up, the fan from the centre (ear-clipped instead for a shape not visible from its centre — the filled hair's caps and sheets, `paintPart(…, { concave: true })`) | — | not in the `material` slot: the whites of the eyes (`paintPart(…, { flat: true })`) and nothing else. A creature is always made of one of the four below |
+| `FLAT` | `flat` — the fill-up, the fan from the centre (ear-clipped instead for a shape not visible from its centre — the filled hair's caps and sheets, `paintPart(…, { concave: true })`) | — | not in the `material` slot: the whites of the eyes and the pupils (`paintPart(…, { flat: true })`) and nothing else. A creature is always made of one of the four below |
 | `GRAPHITE` | `flat` | `hatch` — thin rules, nearly upright, each drawn as a few `pencil()` strokes with gaps (the hand lifts), now and then doubled, **in the light ink scratches with** (`mark`) over the part's colour | the `material` slot (1.5) |
 | `INK` | `flat` | `scratch` — long watered lines dragged across, taking the ink away: the darker the step the fewer and the tighter | the `material` slot (0.8) |
 | `OIL` | `flat` | `dab` — thick paint: round-ended capsules of one width and many lengths, scattered along one diagonal, cut flat by the contour, in a spread of four **waterings of the ground** (`washes`) — the same light, and on a dark ground the whole spread drops so the first of them go on darker than the ground | the `material` slot (1) |

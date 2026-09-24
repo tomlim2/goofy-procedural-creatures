@@ -93,7 +93,7 @@ export function pupilMark(sketch, spec, eye, [cx, cy], reach, dot, kind = spec.p
     sketch.contour(star, { color: dark, step: 0.006 });
   } else if (kind === "heart") {
     const heart = heartPath(cx, cy, reach * 1.05, reach * 0.9);
-    paintPart(sketch, spec, heart, MARKS.heart, { own: true });
+    paintPart(sketch, spec, heart, MARKS.heart, { flat: true });
     sketch.contour(heart, { color: dark, step: 0.006 });
   } else if (kind === "cross") {
     sketch.line([[cx - reach, cy - reach], [cx + reach, cy + reach]], { color: dark });
@@ -152,7 +152,8 @@ export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
   const pupil = state.pupil || spec.parts.pupil;   // what the marked kinds draw — the state's, else the slot's
   // The eye's line is the face ink — an outline is not a surface, and no material moves it. The pupil is one
   // (part: "eyes" on its fills — paintPart takes the worn material's colour when a hand moved it) and the white
-  // another (part: "eyeWhite", vocabulary/wear.js)
+  // another (part: "eyeWhite", vocabulary/wear.js). **A pupil is painted flat**, every kind and every mark: ink
+  // in an eye, not a surface, so a hand's material lends it a colour and never a texture (the owner, 2026-09-17)
   const ink0 = spec.faceInk || spec.palette.ink;
   // The ink of eyes laid on a white (slit, side, half, the lidded set, and the marks) — drawn in light face ink it is lost on the white
   const dark = spec.palette.ink;
@@ -169,7 +170,7 @@ export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
     if (patched(spec, eye)) continue;
 
     if (kind === "dot") {
-      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 1, { amount: 0.2 })), ink0, { own: true, part: "eyes" });
+      paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.4, eye.r * 0.4, eyeWob(spec, eye, 1, { amount: 0.2 })), ink0, { flat: true, part: "eyes" });
     } else if (kind === "slit") {
       // An almond outline plus a **filled** vertical pupil (a spindle). With a thin stroke, on a small eye the outline's two lines merge into a smear and the pupil does not read —
       // the almond is raised a little (0.7r) and the pupil filled as an area, so it reads as a cat eye from a distance.
@@ -181,7 +182,7 @@ export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
       // the eye with pupil=happy: the almond stays, the spindle becomes the arch). On the board the slit keeps its own spindle —
       // spec.js NO_MARK_EYES pins the slot to dot
       pupilMark(fills, spec, eye, [eye.x, eye.y], eye.r * 0.4, () =>
-        paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, eyeWob(spec, eye, 3, { amount: 0.05 })), dark, { own: true, part: "eyes" }), pupil);
+        paintPart(fills, spec, blobPath(eye.x, eye.y, eye.r * 0.2, eye.r * 0.6, eyeWob(spec, eye, 3, { amount: 0.05 })), dark, { flat: true, part: "eyes" }), pupil);
     } else if (kind === "side") {
       // ¬_¬ — a sideways glance. Half-lidded (a lower arc plus a lid line) but with the pupil pushed to one side (which side is per individual)
       const dir = spec.proportions.hand % 2 ? 1 : -1;
@@ -194,7 +195,7 @@ export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       pupilMark(fills, spec, eye, [eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12], eye.r * 0.36, () =>
-        paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { own: true, part: "eyes" }), pupil);
+        paintPart(fills, spec, blobPath(eye.x + dir * eye.r * 0.48, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 4, { amount: 0.12 })), dark, { flat: true, part: "eyes" }), pupil);
     } else if (kind === "hollow") {
       // An empty eye — an ordinary eye (ring) with only the pupil taken out. On any species a white plus an outline, no pupil (an imp gets a white eye too, not a black socket).
       // A smile still keeps the white — the state's arch is drawn in the empty eye at a ring's reach
@@ -240,7 +241,7 @@ export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
         // out from under it; drawn after the lid it poked out above the line onto the skin. The round one, always: under that thick lid a
         // mark is a smudge, so the pupil slot does not reach this set (spec.js NO_MARK_EYES pins it to dot)
         const gaze = (spec.proportions.hand % 5 - 2) * 0.06;
-        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.08, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { own: true, part: "eyes" });
+        paintPart(fills, spec, rot(blobPath(eye.x + eye.r * gaze, eye.y - eye.r * 0.08, eye.r * 0.3, eye.r * 0.34, { lumps: 3, amount: 0.12, noise: null })), dark, { flat: true, part: "eyes" });
         // The lid (above the line) — the lid line runs left→right and the outline's upper part (right→top→left) is joined on to close it. It covers the pupil's top
         const brow = path.slice(Math.ceil((a0 / TAU) * path.length), Math.floor(((Math.PI - a0) / TAU) * path.length) + 1);
         paintPart(fills, spec, [...lidLine, ...brow], spec.palette.skin);
@@ -259,7 +260,7 @@ export function drawEyes(ink, fills, spec, box, eyes, state = {}) {
       fills.line(arc, { color: dark });
       fills.line([[eye.x - eye.r * 1.15, eye.y + lidY - eye.r * 0.05], [eye.x + eye.r * 1.15, eye.y + lidY + 0.004]], { color: dark });
       pupilMark(fills, spec, eye, [eye.x, eye.y - eye.r * 0.12], eye.r * 0.36, () =>
-        paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { own: true, part: "eyes" }), pupil);
+        paintPart(fills, spec, blobPath(eye.x, eye.y - eye.r * 0.12, eye.r * 0.3, eye.r * 0.3, eyeWob(spec, eye, 8, { amount: 0.12 })), dark, { flat: true, part: "eyes" }), pupil);
     }
     // ring / wide / cyclops / oval (RIG_EYES) are not drawn here. The scene stands the white, pupil and shut line up
     // as separate meshes to move the startle (pupil shrink), gaze and lids.

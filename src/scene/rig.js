@@ -82,7 +82,7 @@ function lidSketches(eye, ink, noise, style, spec, box) {
         glyph.contour(star, { color: spec.palette.ink, step: 0.006 });
       } else {
         const heart = heartPath(0, 0, eye.r * 1.0, eye.r * 0.85);
-        paintPart(glyph, spec, heart, MARKS.heart, { own: true });
+        paintPart(glyph, spec, heart, MARKS.heart, { flat: true });
         glyph.contour(heart, { color: spec.palette.ink, step: 0.006 });
       }
       marks[kind] = glyph;
@@ -309,7 +309,7 @@ export function buildCreature(spec, noise, birth = 0) {
     // The pupil — the round one, or the mark the `pupil` slot names (character/draw/face.js pupilMark); either is one
     // mesh at the eye's centre, so the startle shrinks it and the gaze moves it the same
     pupilMark(pupilSketch, spec, eye, [0, 0], eye.r * 0.55, () =>
-      paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, eyeWob(spec, flat, 11, { amount: 0.12 })), spec.palette.ink, { own: true }));
+      paintPart(pupilSketch, spec, blobPath(0, 0, eye.r * 0.44, eye.r * 0.44, eyeWob(spec, flat, 11, { amount: 0.12 })), spec.palette.ink, { flat: true }));   // flat, like every pupil (face.js drawEyes)
     const pupil = sketchMesh(pupilSketch, 0.95, o + 0.2);
     // The gaze group — the pupil and its ^^ stand-in move with the gaze and shrink on a startle together (animate)
     const gaze = new THREE.Group();
