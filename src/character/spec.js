@@ -113,9 +113,9 @@ export function applyLateConstraints(parts) {
     if (parts.headgear === "band") through.splice(1, 2);   // cloud and the hood stay under a band
     if (through.includes(parts.hairFront)) parts.hairFront = "none";
     // …and a cap's dome covers the whole crown, where the tufts and wisps root: they are spikes, not a dome it can be cut to clear
-    // (draw/headgear.js coverHair), and they stood up through the cloth. The small hats that sit on the crown (a cone, a coronet,
-    // a paper crown) and the band leave room round them, and the spikes read as hair coming out beside the hat
-    if (parts.headgear === "cap" && (parts.hairFront === "tuft" || parts.hairFront === "wisp")) parts.hairFront = "none";
+    // (draw/headgear.js coverHair), and they stood up through the cloth — a fedora's crown the same. The small hats that sit on the
+    // crown (a cone, a coronet, a paper crown) and the band leave room round them, and the spikes read as hair coming out beside the hat
+    if ((parts.headgear === "cap" || parts.headgear === "fedora") && (parts.hairFront === "tuft" || parts.hairFront === "wisp")) parts.hairFront = "none";
     if (parts.hairBack === "spikes" || (parts.hairBack === "hedgehog" && parts.headgear !== "band")) parts.hairBack = "none";
   }
   // A mohawk wears nothing on the crown, a bun or an apple top included (with a hat on it is already gone, above)

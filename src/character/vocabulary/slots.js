@@ -46,7 +46,7 @@ export const SLOTS = {
   // bonnet (the frilly bonnet) is **disabled** — the asset stays but it is in no bias (it never gets drawn)
   // …and what is tied on the crown, worn like a hat and never with one: a bun, the apple tops (TOP_KNOTS below — they were a hair
   // slot of their own, hairTop). Hair by colour and drawing (draw/hair.js drawTopKnot), headgear by slot
-  headgear: ["none", "helmet", "cap", "band", "pot", "beret", "bonnet", "crown", "halo", "cone", "coronet", "bun", "apple", "appleBig"],
+  headgear: ["none", "helmet", "cap", "band", "pot", "beret", "fedora", "bonnet", "crown", "halo", "cone", "coronet", "bun", "apple", "appleBig"],
   horns: ["none", "curved", "straight", "antenna", "nub", "ram", "crown"],
   // round, pointy and fold come in three sizes — default (small) · Mid (medium, 1.4×) · Big (large, 1.8×). Same shape, different size only.
   // Cat crown ears, dog ears and human/imp side ears all use the same multipliers
@@ -190,7 +190,7 @@ export const DEFAULT_BIAS = {
   // Three slots, each with a common none, so a creature seldom wears all three at once and about one in fourteen wears nothing
   hairFront: [["none", 3], ["hairline", 3], ["blunt", 2], ["swept", 2], ["curtain", 1.5], ["sideLock", 1.5], ["cap", 1], ["mohawk", 1], ["tuft", 2], ["wisp", 2], ["curly", 1.5], ["helmet", 1.5], ["cloud", 1.2]],
   hairBack: [["none", 5], ["bob", 2], ["mop", 1.5], ["long", 1.5], ["sheets", 1.2], ["twintails", 1], ["bunsTop", 0.8], ["bunsLow", 0.6], ["bunsSide", 0.7], ["ponytail", 1.2], ["pigtails", 1.2], ["spikes", 2], ["hedgehog", 1.2]],
-  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1], ["coronet", 1], ["bun", 1], ["apple", 1], ["appleBig", 0.7]],   // bonnet disabled
+  headgear: [["none", 6], ["cap", 2], ["band", 2], ["beret", 2], ["fedora", 1], ["helmet", 1], ["pot", 1], ["crown", 1], ["halo", 0.7], ["cone", 1], ["coronet", 1], ["bun", 1], ["apple", 1], ["appleBig", 0.7]],   // bonnet disabled
   eyewear: [["none", 5], ["glasses", 2], ["patch", 2], ["goggles", 1], ["monocle", 1]],
   ears: [["none", 4], ["round", 1.5], ["roundMid", 0.5], ["pointy", 1.5], ["pointyMid", 1], ["pointyBig", 0.5], ["flap", 1], ["fold", 0.7], ["foldMid", 0.3], ["perk", 0.7], ["perkMid", 0.3]],
   brow: [["none", 2], ["flat", 2], ["angry", 1], ["worry", 1], ["arch", 1], ["peak", 0.8], ["wave", 0.6], ["bushy", 0.7], ["raised", 0.6], ["mono", 0.35], ["dot", 0.6]],

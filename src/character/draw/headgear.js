@@ -24,6 +24,12 @@ const CAP_DOME = { grow: 1.06, clear: 0.06 };
 // the brim had no reason to follow it, so it is pulled in to reach where it did (the median over 600 individuals) — at 1.5
 // it went 14% further and put the brim past the half-cell for 45% of cap wearers instead of 29%
 const CAP_BRIM = 1.34;
+// The fedora — `foot` how much wider than the hair's dome the crown's foot is at the brim and `clear` how far it stands off the hair
+// (so no hair comes out between the brim and the crown), `rise` how high the crown goes over the head's top (of ry — its shoulders
+// stay under the cell's ceiling), `taper` how much narrower its top is, `dent` the pinch in it (of the crown's height), `ribbon`
+// the ribbon's shade of the felt; and the brim — `brimH` its half-height (of ry), `brim` its reach in the foot's half-widths,
+// never past `reach` (the cell is ±0.5 wide), `tilt` how far it is tipped to one side
+const FEDORA = { foot: 1.04, clear: 0.02, rise: 0.24, taper: 0.78, dent: 0.16, ribbon: 0.55, brimH: 0.075, brim: 1.55, reach: 0.46, tilt: 0.05 };
 
 export function drawHeadgear(ink, fills, spec, box, headPath) {
   const kind = spec.parts.headgear;
@@ -88,7 +94,7 @@ const HEADGEAR = {
     ink.line([[0, bottom + (crown - bottom) * 0.2], [0.004, crown * 0.99 + ry * 0.08]], { color: ink0, size: "S" });
   },
   // Baseball cap — a dome over the hair plus a brim out to one side (the brow line). The brim droops slightly.
-  // **A cap is the one covering hat worn over hair** (a helmet and a pot take it off, spec.js applyLateConstraints), so its
+  // **A cap is a covering hat worn over hair**, as the fedora is (a helmet and a pot take it off, spec.js applyLateConstraints), so its
   // dome is cut from the hair's own dome rather than the head's — CAP_DOME above the scalp. Following the head at 1.04×,
   // as it did, it sat inside the hair: the scalp's puff came out over the dome's edge as a rim of hair riding above the
   // cap, and the cap read as sunk into the head rather than worn on it
@@ -100,6 +106,42 @@ const HEADGEAR = {
     const brim = crumple([[tiltSide * w * 0.1, bottom + 0.012], [tiltSide * w * CAP_BRIM, bottom - 0.01], [tiltSide * w * CAP_BRIM, bottom - 0.03], [tiltSide * w * 0.1, bottom - 0.01]], 0.003, tiltSide * 2);
     paintPart(fills, spec, brim, accent, { part: "headgear", own: true });
     ink.contour(brim, { color: ink0 });
+  },
+  // Fedora (중절모) — a felt hat seen from the front: a tub of a crown pinched in at the top, a ribbon round its foot, and the brim, a
+  // flat lens wider than the head. **Worn over hair, like the cap**: the crown's foot is measured off the hair's own dome (coverHair)
+  // and stands a little outside it, so no hair comes out between the brim and the crown, and the tufts and wisps come off under it
+  // as under a cap (spec.js). The brim's lower edge stops on the brow line at the eyes (|x| < 0.8·rx), tilt included. Its far half
+  // passes behind the crown: the lens is filled whole but outlined only along its near arc and outside the crown's foot, and the
+  // crown's foot is bowed down over it — the near side of the ring the crown stands on
+  fedora: ({ ink, fills, spec, ink0, accent, rx, ry, brow, crown, tiltSide, coverHair }) => {
+    const tilt = tiltSide * FEDORA.tilt;
+    const cos = Math.cos(tilt), sin = Math.sin(tilt);
+    const brimH = ry * FEDORA.brimH;
+    const y = brow + brimH + Math.abs(sin) * rx * 0.8 + 0.004;   // the brim's middle
+    const w = coverHair(1, FEDORA.clear, y).w * FEDORA.foot;       // the crown's foot
+    const top = crown + ry * FEDORA.rise;
+    const dent = (top - y) * FEDORA.dent;
+    const t = w * FEDORA.taper;
+    const lean = tiltSide * w * 0.04;
+    const tub = crumple([
+      [-w, y], [-t + lean, top], [-t * 0.3 + lean, top + dent * 0.35], [lean, top - dent], [t * 0.3 + lean, top + dent * 0.35], [t + lean, top], [w, y],
+      [w * 0.5, y - brimH * 0.4], [0, y - brimH * 0.52], [-w * 0.5, y - brimH * 0.4]
+    ], 0.004, spec.roll * 0.0017);
+    paintPart(fills, spec, tub, accent, { part: "headgear", own: true });   // a hat takes the creature's goofy material at its own color's step
+    const at = ([bx, by]) => [bx * cos - by * sin, y + bx * sin + by * cos];   // the brim's own frame: its middle at y, tipped by tilt
+    const reach = Math.min(w * FEDORA.brim, FEDORA.reach);
+    const lens = arcPath(0, 0, reach, brimH, 0, Math.PI * 2, 30).slice(0, -1).map(at);   // the last point is the first again
+    paintPart(fills, spec, lens, accent, { part: "headgear", own: true });
+    ink.contour(tub, { color: ink0 });
+    // The ribbon — the felt's own colour taken darker, a thick pencil stroke round the crown's foot: a band, not a line (BANDS)
+    const ribbonY = y + brimH + BANDS.hat * 0.5;
+    ink.pencil([[-w * 0.97, ribbonY], [w * 0.97, ribbonY + 0.004]], { color: shade(accent, FEDORA.ribbon), width: BANDS.hat });
+    ink.line([[-w * 0.95, ribbonY + BANDS.hat * 0.55], [w * 0.95, ribbonY + BANDS.hat * 0.55 + 0.004]], { color: ink0, size: "S" });
+    // The brim's line — the near arc whole, the far arc only where it shows beside the crown
+    const beside = Math.acos(Math.min(1, w / reach));
+    ink.line(arcPath(0, 0, reach, brimH, Math.PI, Math.PI * 2, 18).map(at), { color: ink0 });
+    ink.line(arcPath(0, 0, reach, brimH, 0, beside, 6).map(at), { color: ink0 });
+    ink.line(arcPath(0, 0, reach, brimH, Math.PI - beside, Math.PI, 6).map(at), { color: ink0 });
   },
   // Beret — a flat disc laid on the crown at a tilt, plus a nub
   beret: ({ ink, fills, spec, ink0, accent, rx, ry, cy, brow, crown, tiltSide }) => {
