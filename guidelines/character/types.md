@@ -74,7 +74,7 @@ the range. Most of the silhouette variety comes from here.
 | bodyScale / bodyWide | 0.52 (0.12) / 1 (0.2) | Body height and width. The `build` slot's multipliers (width 0.5~1.4, height 0.7~1.15) are applied to both |
 | legLength / armSpread | 0.3 (0.12) / 1 (0.25) | Leg length (×0.55, and a further ×0.3 when `legLength` is short) · arm length (×0.242, and a further ×1.64 when `armLength` is long) |
 | bodyLen / tailLift | 1 (0.2) / 0 (1) | For quads. Bipeds draw them too (to fix the rng call count) |
-| wobble | 1 (0.55) | The per-individual hand-shake multiplier. Neat ones and messy ones have to be mixed |
+| wobble | 1 (0.55) — **cats ×0.6** | The per-individual hand-shake multiplier. Neat ones and messy ones have to be mixed. A cat's hand is steadier (`CAT_HAND`): its lines shook and boiled too much for the owner (2026-09-17), and the wobble is what the boil moves by, so a steadier hand is a quieter boil too |
 | `hand` | 0~100000 | The rng roll for drawing. Kept separate from the generation rng |
 
 ## The palette

@@ -57,6 +57,9 @@ function pickArchetype(rng) {
 
 // The weights a slot is picked by: species skeleton > archetype disposition > default weights > even (null). Four steps down.
 // Written once, the one lookup pickSlot draws with (the name screen's rarity read a part's share off it too, until the rarity went)
+// How much of the hand-shake a cat gets — the wobble of its lines, and with it how much they boil from frame to frame
+export const CAT_HAND = 0.6;
+
 export function slotWeights(species, archetype, slot) {
   return species.bias[slot] || archetype.bias[slot] || DEFAULT_BIAS[slot] || null;
 }
@@ -202,8 +205,10 @@ function makeProportions(rng, archetype, species) {
     // takes as its default — most let them hang, some rest with them open or behind the back.
 
 
-    // Every individual shakes by a different amount. Some are neat, some are a mess.
-    wobble: rng.around(1, 0.55),
+    // Every individual shakes by a different amount. Some are neat, some are a mess. A cat's hand is steadier — its
+    // lines shook and boiled too much for the owner (2026-09-17), so a cat gets CAT_HAND of what the rest get. The
+    // number of rng calls is the same (only the multiplier)
+    wobble: rng.around(1, 0.55) * (species === "cat" ? CAT_HAND : 1),
     hand: rng.int(0, 100000)
   };
 }
