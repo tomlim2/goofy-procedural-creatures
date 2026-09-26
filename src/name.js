@@ -14,7 +14,7 @@ import { sketchMesh, disposeGroup } from "./scene/mesh.js";
 import { BOIL_FRAMES, boilRate } from "./scene/rig.js";
 import { Sketch } from "./stroke.js";
 import { makeNoise, makeRng } from "./rng.js";
-import { creatureOfName, addressOfName, nameOfAddress, isGhost, PAPER } from "./character/index.js";
+import { creatureOfName, addressOfName, nameOfAddress, nameKey, shownName, isGhost, PAPER } from "./character/index.js";
 import { materialOf } from "./character/draw/body.js";
 import { stepOf } from "./medium/materials.js";
 import { loadType, traceType, typeWith } from "./medium/type.js";
@@ -152,15 +152,21 @@ function layFrame(made, card, laid) {
 // -- the back --
 // The card face down, which is what the screen opens on (guidelines/name.md § the back): the card's own edge, a border inside it, and
 // the wordmark over a hint in the goofy letters — medium/letters.js, the project's own capitals, which the card's words were drawn
-// for. In the page's ink, since a card with no creature has no palette, and boiling at roll 0's cadence like any other card
+// for — or over the name, as it is typed. In the page's ink, since a card with no creature has no palette, and boiling at roll 0's
+// cadence like any other card
 const BACK_INK = "#2b2724";   // styles.css --ink
 const BACK = {
   border: 0.075,                 // the border inside the card's edge, of the card's width
   mark: { y: 0.5, cap: 0.062 },  // MENAGERIE across the middle: its baseline and cap, of the card's height
   hint: { y: 0.6, cap: 0.028 },  // the hint under it — the letters' cap, or the type's em at typeEm times that
-  typeEm: 1.4
+  typeEm: 1.4,
+  name: 0.7                      // the name typed, shrunk to this much of the card's width when it runs longer
 };
 function layBack() {
+  // The name as it is typed stands where the hint does (the field lays the back again at every keystroke, below): as the card will
+  // write it (shownName, in the type), in the page's ink where the hint is soft — a field's text is dark where its placeholder was
+  // grey. A key that comes out empty is no name, and the hint comes back
+  const typed = nameKey(input.value) ? shownName(input.value) : "";
   layPencil(0, ({ lines, words }, k, { Y, hw, hh }) => {
     const inset = CARD.inset * 2 * hw;
     const radius = CARD.corner * 2 * hw;
@@ -168,18 +174,19 @@ function layBack() {
     const border = BACK.border * 2 * hw;
     lines.contour(roundedRect(-hw + border, hh - border, hw - border, -hh + border, radius * 0.6), { color: BACK_INK });
     writeCentred(words, "MENAGERIE", 0, Y(BACK.mark.y), BACK.mark.cap * 2 * hh, { color: BACK_INK, pen: "L" });
-    // The hint — the goofy letters write it in English; Korean is the type's (medium/type.js), so it waits for the faces and is laid
-    // when they come (typeReady below), the wordmark standing alone until then
+    // The goofy letters write the English hint; the name and the Korean hint are the type's (medium/type.js), any script, so they
+    // wait for the faces and are laid when they come (typeReady below) — the English hint standing until then, the Korean wordmark
+    // alone
     const soft = mix(BACK_INK, PAPER, 0.35);
-    if (LANG === "en") writeCentred(words, T.hint, 0, Y(BACK.hint.y), BACK.hint.cap * 2 * hh, { color: soft });
+    if (LANG === "en" && !(typed && typeLoaded)) writeCentred(words, T.hint, 0, Y(BACK.hint.y), BACK.hint.cap * 2 * hh, { color: soft });
     else if (typeLoaded) {
-      const line = traceType(T.hint, 500);
-      const em = BACK.hint.cap * 2 * hh * BACK.typeEm;
-      typeWith(words, line, { x: -(line.width * em) / 2, y: Y(BACK.hint.y), em, color: soft, wiggle: TYPE_WIGGLE, phase: k * 3.1 });
+      const line = traceType(typed || T.hint, 500);
+      const em = Math.min(BACK.hint.cap * 2 * hh * BACK.typeEm, (BACK.name * 2 * hw) / line.width);
+      typeWith(words, line, { x: -(line.width * em) / 2, y: Y(BACK.hint.y), em, color: typed ? BACK_INK : soft, wiggle: TYPE_WIGGLE, phase: k * 3.1 });
     }
   });
 }
-typeReady.then(() => { if (!current && LANG !== "en") layBack(); });
+typeReady.then(() => { if (!current) layBack(); });
 
 function boilFrame(t) {
   if (!frame) return;
@@ -309,6 +316,31 @@ function save() {
 input.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && (event.isComposing || event.keyCode === 229)) event.preventDefault();
 });
+// The back writes the name as it is typed — every keystroke, a syllable an input method is still composing too — while the back is
+// what shows; once a card stands, the field changes nothing on it until DRAW
+input.addEventListener("input", () => {
+  if (!current) layBack();
+});
+// The field keeps the keyboard. It is focused when the page opens (autofocus), but a page opened where it does not have the keyboard
+// yet — the app's pane beside a chat, a window behind another — gets it with the first click on it, and a click on the card took it
+// off the field. So a mouse press anywhere but on a control leaves the caret in the field (the press's own default, the focus moving
+// to the page, is let go); a tap on the card's back brings a phone's keyboard up, and a tap while it is up still puts it away, as a
+// phone's tap does
+let pointer = "mouse";   // what the last press was made with — pointerdown comes before the mouse's own events, a finger's too
+let typing = false;      // whether the field had the keyboard when it was made
+window.addEventListener("pointerdown", (event) => {
+  pointer = event.pointerType;
+  typing = document.activeElement === input;
+}, true);
+window.addEventListener("mousedown", (event) => {
+  if (pointer !== "mouse" || event.button !== 0 || event.target === document.documentElement) return;   // the root: a scrollbar
+  if (event.target.closest("input, select, button, a, label")) return;
+  event.preventDefault();
+  input.focus({ preventScroll: true });
+});
+face.addEventListener("click", () => {
+  if (pointer !== "mouse" && !current && !typing) input.focus();
+});
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   draw();
@@ -352,5 +384,6 @@ if (linked.text) {
     text += character;
   }
   input.value = text;
+  layBack();   // the back with the name on it, as if it had been typed, until the card turns over
   draw();
 }

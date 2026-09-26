@@ -60,9 +60,14 @@ screen is not to be empty, so the card lies face down until a DRAW turns it over
   sharing the row — the same at every width, so a desktop is not a different screen (the owner, 2026-09-17; until then they
   stood over the card, on one row on a desktop). The card stands over them, sized from the height the screen leaves it (a flex item that shrinks over the
   controls, its width following at 5:7) and never wider than the screen (`styles.css` `.namecard`). The card holds nothing a
-  keyboard can land on, so Tab still reaches the field first, and `autofocus` holds. Before a name it lies face down (§ the back): the screen is never empty, and DRAW turns the card over.
+  keyboard can land on, so Tab still reaches the field first, and `autofocus` holds; a click on the card or the paper round it
+  leaves the caret there (the field, below). Before a name it lies face down (§ the back): the screen is never empty, and DRAW turns the card over.
 - **The field** — placeholder `YOUR NAME` (`이름` in Korean), `maxlength="40"` (a name, not a sentence), `autocomplete="off"`,
-  `spellcheck="false"`, focused when the page opens.
+  `spellcheck="false"`, focused when the page opens — **and kept** (the owner, 2026-09-26): a page opened where it does not have
+  the keyboard yet (the app's pane beside a chat, a window behind another) gets it with the first click, and that click, on the card
+  or anywhere but a control, used to take the focus off the field. A mouse press there now leaves the caret in the field (its default
+  is let go, `src/name.js`); a tap on the card's back brings a phone's keyboard up, and a tap while it is up still puts it away, as
+  a phone's tap does. What is typed is written on the card's back as it is typed (§ the back).
 - **The dropdown** — `ANY · HUMAN · CAT · PUP · IMP · REX`, ANY first and chosen when the page opens: ANY lets the name
   pick the species, the rest fix it (its value is `all` in the code and the address logic — the absence of a species; it
   read ALL until 2026-09-17, which a visitor took for "every species"). Changing it while a card stands draws again, as
@@ -215,7 +220,7 @@ is never written into the address by the page. `<html lang>` and the title follo
 | | English | Korean |
 | --- | --- | --- |
 | The controls (`UI`) | YOUR NAME · ANY · HUMAN · CAT · PUP · IMP · REX · DRAW · DRAWING… · SAVE · LINK · COPIED | 이름 · 아무나 · 사람 · 고양이 · 강아지 · 도깨비 · 공룡 · 뽑기 · 뽑는 중… · 저장 · 링크 · 복사됨 |
-| The back's hint | TYPE A NAME, in the goofy letters | 이름을 적어 보세요, in the type — it waits for the faces and is laid when they come, the wordmark standing alone until then |
+| The back's hint | TYPE A NAME, in the goofy letters; the name typed in its place, in the type, once the faces are here | 이름을 적어 보세요, in the type — it waits for the faces and is laid when they come, the wordmark standing alone until then; the name typed in its place |
 | The card (`WORDS`, `card.js cardOf(made, lang)`) | the species, the vocabulary's own name in capitals — REX | its table's word — 공룡 |
 | The screen reader's line | Tom Lim — rex | Tom Lim — 공룡 |
 
@@ -242,6 +247,13 @@ back won, because DRAW already means *draw a card*.
 - **The card's own edge** (`CARD.inset`, `CARD.corner`), a border inside it at 0.075 of the width, and the wordmark over the hint,
   written in the goofy letters (§ the letters) — the project's own capitals, on the card they were drawn for. The hint takes the
   soft ink the kind and the foot take; everything else is the page's ink, since a card with nobody on it has no palette.
+- **The name is written on it as it is typed** (the owner, 2026-09-26). Every keystroke in the field — a syllable an input method
+  is still composing too — lays the back again with the name where the hint was: as the card will write it (`shownName`, in the
+  type), at the hint's size and shrunk to 0.7 of the width when it runs longer (`BACK.name`), in the page's ink where the hint is
+  soft — a field's text is dark where its placeholder was grey. A key that comes out empty (spaces) is no name, and the hint comes
+  back. The type is any script, so the name waits for the faces as the Korean hint does, the English hint standing until they come
+  (a first visit's second or so). A link's name is on the back as the card turns over. Once a card stands, typing changes nothing
+  on it until DRAW. A keystroke is a re-lay of the whole back, about 9 ms on a laptop, 3 of them tracing the name.
 - **It boils** like everything else — three frames at roll 0's cadence — over the paper of the same empty 1×1 scene the creature
   will stand in, so nothing under the card moves when the first one arrives.
 - **DRAW turns the card over** (`turnOver`, `stepTurn`): the card is squashed across until it stands on its edge, what it shows is
@@ -356,3 +368,9 @@ paper up in the same 1×1 view its creature will, with no floor line under nobod
   the top right (its cloth the colour of its skin, so one fewer); a rex in another material (menagerie); with the shadow taken off, the floor line
   on the wash alone and nothing under the feet.
   Before each boil frame was one group the frames' meshes were toggled one by one and the wash showed without the frame.
+- **The name on the back, and the field keeping the keyboard, by hand** (2026-09-26) — in the app's pane, which opens without the
+  keyboard (`document.hasFocus()` false, the field the active element): a click on the card leaving the field focused, and
+  `Ada Love` typed straight after it written under MENAGERIE in ink; a 40-unit name shrunk to the width; the field emptied and
+  TYPE A NAME back in the soft ink; `?lang=ko` — 이름을 적어 보세요, then 홍길동; Enter turning the card over, and 이 typed after it
+  leaving the card as it was (the field 홍길동이); a link (`Ada Love`) caught mid-turn with the name on the back; a finger's tap
+  on the back focusing the field and a second tap letting it go (pointer events dispatched, pointerType touch).
