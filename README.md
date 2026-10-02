@@ -37,7 +37,7 @@ git tag v0.1.0 && git push origin v0.1.0
 `node serve.mjs [port] [ref]` — the port can also come from `PORT` (so two sessions can each run one), and the ref (HEAD by default)
 is extracted once at start and served under `/base/` for the pixel diff page.
 
-`/` — **the board**, the front door. It has only BOARD, EXPORT, SPECIES and GRID.
+`/` — **the board**, the front door. It has only BOARD, EXPORT, SPECIES and GRID, in one line along the bottom, set like the header's nav.
 
 `/card.html` — **the name screen**, the personal card ([guidelines/name.md](guidelines/name.md)) — CARD in the header. The card, and under it a name field with a species
 (ANY lets the name pick) and DRAW — nothing else, no header and no nav — in English, or in Korean when the device speaks it
@@ -99,7 +99,7 @@ tree (`serve.mjs`'s ref under `/base/`, HEAD by default) on the same GPU and cou
 The gate that sees the picture itself — the scene and the shaders (the paper, the sheet pass, a mesh's opacity, the parallax) that `drawdiff` is blind to.
 A refactor has to come out at 0; a change shows where the picture moved.
 
-The board (`/`) has only **BOARD · EXPORT · SPECIES · GRID**. The rest belongs to the debug screen (`/debug.html`).
+The board (`/`) has only **BOARD · EXPORT · SPECIES · GRID** — one line along the bottom, set like the header's nav (`styles.css` `.dock`). The rest belongs to the debug screen (`/debug.html`).
 
 A board is a **cast** of specs, and a spec is JSON. Nothing is picked until you click a creature; then a pin
 stands at its feet with four glyphs: REDRAW rolls a fresh one into that cell and leaves every other creature

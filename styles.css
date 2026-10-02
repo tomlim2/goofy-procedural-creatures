@@ -144,6 +144,30 @@ select.wide { width: 100%; }
 .hint { margin: 0; opacity: 0.45; }
 .hint a, .sub a { color: inherit; }
 
+/* The board's deck is a dock (the owner, 2026-10-02): its four cards stand in one line along the bottom, set like the header's
+   nav — each card's name in the deck's small capitals, then its controls as words, the one on lit as the nav's .here is and the
+   rest dim until the pointer comes — so nothing covers the board's drawing at the left any more. Like the header it lets a click
+   through to the canvas everywhere but on a control (a click on nowhere lets a pick go), and on a narrow screen it wraps */
+.dock {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 24px;
+  padding: 14px 18px;
+  pointer-events: none;
+}
+.dock .card { display: flex; align-items: baseline; gap: 10px; padding: 0; border: 0; background: none; box-shadow: none; }
+.dock .card h2 { margin: 0; }
+.dock .row, .dock .seg { display: flex; gap: 10px; }
+.dock .mt { margin-top: 0; }
+.dock button { flex: 0 0 auto; width: auto; padding: 2px 0; border: 0; background: none; font-size: 10px; letter-spacing: 0.14em; opacity: 0.45; pointer-events: auto; }
+.dock button:hover { background: none; opacity: 0.9; text-decoration: underline; }
+.dock button.on { background: none; color: inherit; opacity: 0.85; font-weight: 700; }
+
 /* Parts gallery — the canvas is pushed right of the deck and below the header so the cards never cover the drawing.
    Labels sit in the same box as the canvas and gallery.js places them by camera projection */
 .gallery #stage,
@@ -184,7 +208,7 @@ select.wide { width: 100%; }
    sideways. Only the main and debug screens; gallery and audit assume a wide screen and keep their desktop
    decks. The canvas stays fullscreen behind it. */
 @media (max-width: 700px) {
-  body:not(.gallery):not(.audit) .deck {
+  body:not(.gallery):not(.audit) .deck:not(.dock) {
     left: 0;
     right: 0;
     bottom: 0;
@@ -199,6 +223,8 @@ select.wide { width: 100%; }
   body:not(.gallery):not(.audit) .card { flex: 0 0 auto; }
   .sub .tag { display: none; }   /* the tagline does not fit beside the title on a phone — the nav next to it stays */
   .nav { gap: 7px; letter-spacing: 0.06em; }
+  .dock { gap: 4px 16px; padding: 10px 12px; }
+  .dock .row, .dock .seg { gap: 8px; }
 }
 
 
