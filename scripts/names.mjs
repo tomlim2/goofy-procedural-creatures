@@ -1,7 +1,7 @@
 // The name screen's mapping and card on their own (guidelines/name.md § checks).
 //   node scripts/names.mjs   the checks, and sample cards in both languages
 // Exits 1 when a check fails: the species on ANY off one in five, a name's variants not one name, an address that does not bring
-// back its card, a species with no Korean name (lang.js).
+// back its card, a species with no Korean name (lang.js), a paint chip that is not a colour.
 
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -58,6 +58,20 @@ check(
 
 // -- Korean: every species has a name (lang.js WORDS.ko) --
 check(C.NAME_SPECIES.every((s) => WORDS.ko.species[s]), `every species has a Korean name — ${C.NAME_SPECIES.map((s) => `${s} ${WORDS.ko.species[s] || "?"}`).join(" · ")}`);
+
+// -- the paint chips: every one a colour the pencil can take (a pop is { color, target } — its chip was once the object, and one
+// card in eight threw at the turn and never turned over) --
+const CHIPS = 5000;
+let chips = 0, oddChips = 0, popCards = 0;
+for (let i = 0; i < CHIPS; i += 1) {
+  const made = C.creatureOfName(madeUp(i));
+  if (made.spec.palette.pop) popCards += 1;
+  for (const chip of cardOf(made).swatches) {
+    chips += 1;
+    if (!/^#[0-9a-f]{6}$/i.test(chip)) oddChips += 1;
+  }
+}
+check(oddChips === 0, `every paint chip a hex colour — ${chips} chips on ${CHIPS} cards, ${popCards} of them with a pop${oddChips ? `, ${oddChips} not` : ""}`);
 
 // -- sample cards, in both languages --
 console.log("");

@@ -336,7 +336,10 @@ paper up in the same 1×1 view its creature will, with no floor line under nobod
   out as one name, and a name of only spaces and invisible characters as no name; the roll unmoved by the dropdown; an
   address bringing back the card it was drawn at (Hangul, kana, an accent and an emoji, spaces, and `& = # + % ? /`, each on
   ANY and on CAT), ANY left out of it, a species no name can be read as ANY and an address with no name as nobody; a Korean
-  name for every species. It lists the sample names' species in both languages. (Its checks of the stars, the ♥ range and
+  name for every species; every paint chip on 5,000 cards a hex colour (a pop is `{ color, target }`, and until 2026-09-26 its
+  chip was the object itself: one card in eight — every one with a pop — threw at the turn's swap and stood on its edge,
+  the error repeating every tick; the swap is now marked before it runs, so one that throws is reported once and the turn
+  still ends). It lists the sample names' species in both languages. (Its checks of the stars, the ♥ range and
   the moves' labels, and `--measure`, went with those numbers on 2026-09-17.)
 - **`scripts/snapshot.mjs`** keeps the creatures of six sample names (`names`), so a generator change says how many it
   moved.

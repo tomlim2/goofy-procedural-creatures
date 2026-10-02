@@ -233,8 +233,8 @@ function stepTurn(t) {
   if (turn.from === null) turn.from = t;
   const u = Math.min(1, (t - turn.from) / (2 * TURN));
   if (u >= 0.5 && !turn.swapped) {
+    turn.swapped = true;   // before the swap, so a swap that throws is reported once and the turn still ends, not tried again every tick
     turn.swap();
-    turn.swapped = true;
   }
   turnTo(Math.abs(Math.cos(Math.PI * u)));
   if (u >= 1) {

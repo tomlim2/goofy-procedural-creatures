@@ -34,8 +34,8 @@ export const CARD = {
 };
 
 // The creature's colours as paint chips: its skin, cloth, hair and accent, and a pop where it has one — each once. A ghost's one pale
-// tone is one chip
-export const swatchesOf = (spec) => [...new Set([spec.palette.skin, spec.palette.cloth, spec.palette.hair, spec.palette.accent, spec.palette.pop].filter(Boolean))];
+// tone is one chip. The pop is { color, target } (spec.js — the part it lands on), so its chip is its colour
+export const swatchesOf = (spec) => [...new Set([spec.palette.skin, spec.palette.cloth, spec.palette.hair, spec.palette.accent, spec.palette.pop && spec.palette.pop.color].filter(Boolean))];
 
 // -- the card --
 // What a card says about a made creature (character/name.js creatureOfName), in a language (lang.js WORDS): the species — in English
