@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MENAGERIE — draw your creature</title>
+<meta name="description" content="Type a name and draw its creature, hand-drawn on a trading card. The same name always draws the same one.">
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.min.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body class="front">
+
+<!-- The personal card (guidelines/name.md): the card, and under it the name field with the species and DRAW beside it, then SAVE
+     and LINK once a card stands, nothing else. The card lies face down until a DRAW turns it over. The board is the front door, / -->
+<main>
+  <figure class="namecard">
+    <canvas id="face" aria-hidden="true"></canvas>
+    <figcaption id="live" class="sr" aria-live="polite"></figcaption>
+  </figure>
+  <!-- Two rows: the field, the species and DRAW, and under them SAVE and LINK once a card stands. The words are English here and
+       set again in the device's language when the page opens (src/lang.js) -->
+  <form id="controls" class="controls" autocomplete="off">
+    <div class="row">
+      <input id="name" type="text" maxlength="40" placeholder="YOUR NAME" aria-label="Your name" autocomplete="off" spellcheck="false" autofocus>
+      <select id="species" aria-label="Species">
+        <option value="all">ANY</option>
+        <option value="human">HUMAN</option>
+        <option value="cat">CAT</option>
+        <option value="pup">PUP</option>
+        <option value="imp">IMP</option>
+        <option value="rex">REX</option>
+      </select>
+      <button id="draw" type="submit">DRAW</button>
+    </div>
+    <div class="row" id="after" hidden>
+      <button id="save" type="button">SAVE</button>
+      <button id="link" type="button">LINK</button>
+    </div>
+  </form>
+</main>
+
+<noscript><p class="noscript">This page needs WebGL and JavaScript.</p></noscript>
+
+<script type="module" src="./src/name.js"></script>
+</body>
+</html>

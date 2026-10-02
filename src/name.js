@@ -1,4 +1,4 @@
-// The name screen — the front door (guidelines/name.md). A name, a species (ANY lets the name pick) and DRAW stand a creature up on a
+// The name screen — the personal card, card.html (guidelines/name.md). A name, a species (ANY lets the name pick) and DRAW stand a creature up on a
 // trading card; SAVE keeps the card, only the card, as it is seen; LINK hands its address on. The card drawn rides in the address
 // (?name=…&species=…), so a link shares it; nothing is kept in storage. The screen speaks the device's language, Korean or English
 // (lang.js) — the controls, the back's hint and what the card says about the creature.

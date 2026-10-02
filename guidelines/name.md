@@ -1,18 +1,21 @@
 # The name screen
 
-> Basis: `index.html`, `src/name.js`, `src/card.js`, `src/character/name.js`, `src/medium/type.js`, `fonts/`, `scripts/names.mjs`. When the
+> Basis: `card.html`, `src/name.js`, `src/card.js`, `src/character/name.js`, `src/medium/type.js`, `fonts/`, `scripts/names.mjs`. When the
 > code changes, fix this document in the same commit.
 
 **Type a name and draw its card.** The same name always stands up the same creature — its species, its parts, its
 colours and the way it moves — on a trading card with its name and its species, and the visitor saves the card.
-It is the front door (`/`): the board shows thirty-odd creatures that belong to nobody; this one is yours.
+It is the personal card (`/card.html`, CARD in every header): the board at the front door shows thirty-odd creatures that
+belong to nobody; this one is yours.
 
 Settled with the owner (2026-09-15): the name is the seed and the species is optional, ANY first; the result is a
 trading card at the card's 5:7; the front door holds nothing but the controls; SAVE keeps the card, only the card, as it
 is seen; the card carries the name, its species and its rarity, and no story (the rarity went on 2026-09-17 — § what it is
 not); the board moved to `/board.html`. After v1.0.0 the
 owner asked for two more: the card is to be shared by its link, so the card drawn rides in the address (§ the screen), and the first
-screen is not to be empty, so the card lies face down until a DRAW turns it over (§ the back).
+screen is not to be empty, so the card lies face down until a DRAW turns it over (§ the back). On 2026-10-02 the owner took it
+off the front door again — the board, many creatures at once, is the prettier first page — so the board is `/` and this screen
+the personal card at `/card.html` (§ the addresses).
 
 ## What it is not
 
@@ -21,8 +24,8 @@ screen is not to be empty, so the card lies face down until a DRAW turns it over
   cat". There is no REDRAW for a name.
 - **Not a new drawing.** No drawing, vocabulary or motion code changed for it. A name becomes a roll and a species, and
   from there it is `makeCreature` → `deriveSpec` → the scene, exactly as a board cell.
-- **Not a hub.** No header, no nav, no link out. The board and the tools keep addresses of their own (§ the board's
-  address) and are reached by typing them, as `/debug.html` always was.
+- **Not a hub.** No header, no nav, no link out. It is reached from the board's header and every tool's (CARD), and left
+  the way it came (§ the addresses).
 - **Not remembered.** Nothing is kept in storage. The card drawn rides in the address instead (§ the screen), so a reload
   draws it again and a link shares it — and the name goes wherever the address goes.
 - **Not filtered.** Nothing checks a name anywhere: the card says only what was typed, or what a link carried.
@@ -322,11 +325,14 @@ and each stroke goes down as one pencil line (`sketch.pencil`), so a word wander
   letters' hand (`LETTER_HAND`) is 0.5 of the frame's wobble for the same reason.
 - **Capitals only** — no lower case, no accents, no other script, which is why the card writes in the type.
 
-## The board's address
+## The addresses
 
-`/` is the name screen, so the board moved: **`index.html` → `board.html`**, the same `src/main.js`. Every tool page's
-header keeps its nav — GRID goes to `./board.html`, and the MENAGERIE mark to `./`, the front door. `how.html`'s two links
-to the board follow it. The scene lays out one row for an empty cast (`scene/index.js` `build`), so the card's back stands the
+The board is the front door, `/` (`index.html`, `src/main.js`), and this screen is `/card.html` — the owner's call of
+2026-10-02, after the name screen had stood at `/` and the board at `/board.html` since 2026-09-15. Every tool page's header
+has GRID and the MENAGERIE mark going to `./`, the board, and CARD to `./card.html`; `how.html`'s two links to the board
+follow it. `/board.html` stays as a page that forwards to `/` with its query and hash, since v1.0.0 went out with the board
+there. The card's own address is `/card.html?name=…&species=…` (`name.js` writes it off the page's own path); the card was never
+deployed with an address at `/`, so nothing forwards `/?name=…`. The scene lays out one row for an empty cast (`scene/index.js` `build`), so the card's back stands the
 paper up in the same 1×1 view its creature will, with no floor line under nobody.
 
 ## Checks
@@ -377,3 +383,7 @@ paper up in the same 1×1 view its creature will, with no floor line under nobod
   TYPE A NAME back in the soft ink; `?lang=ko` — 이름을 적어 보세요, then 홍길동; Enter turning the card over, and 이 typed after it
   leaving the card as it was (the field 홍길동이); a link (`Ada Love`) caught mid-turn with the name on the back; a finger's tap
   on the back focusing the field and a second tap letting it go (pointer events dispatched, pointerType touch).
+- **The move to `/card.html`, by hand** (2026-10-02) — `/` standing the board, 35 creatures, GRID lit and CARD beside it; CARD
+  opening the card face down, `Ada Love` typed and drawn and the address reading `/card.html?name=Ada+Love`;
+  `/board.html?grid=1x1&species=cat` forwarded to `/?grid=1x1&species=cat`, one cat; every tool page's GRID going to `./` and
+  CARD to `./card.html`; no console errors.
