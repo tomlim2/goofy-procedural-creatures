@@ -159,3 +159,53 @@ export function fanLeak(points, { margin = 0.004, grid = 64 } = {}) {
   const leak = count * w * h;
   return { leak, share: m.area ? leak / m.area : 0 };
 }
+
+// A closed outline cut where it runs into another shape: the stretches of `ring` outside `other`, each an open line from where it
+// comes out of `other` to where it goes back in — so two shapes laid over each other (an antler's shaft and its twig) are
+// outlined as one, their lines meeting where the shapes do instead of crossing into each other. The crossings are shared, so a
+// stretch of one ring ends where a stretch of the other begins. → [{ points, closed }]: the whole ring, closed, when it never
+// crosses `other` and lies outside it; nothing when it lies inside
+export function runsOutside(ring, other) {
+  const n = ring.length, m = other.length;
+  const inside = ([px, py]) => {
+    let hit = false;
+    for (let i = 0, j = m - 1; i < m; j = i++) {
+      const [xi, yi] = other[i], [xj, yj] = other[j];
+      if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) hit = !hit;
+    }
+    return hit;
+  };
+  // The ring walked edge by edge with every crossing of `other`'s outline put in where it falls
+  const walk = [];
+  for (let i = 0; i < n; i += 1) {
+    const [ax, ay] = ring[i], [bx, by] = ring[(i + 1) % n];
+    walk.push({ point: ring[i], cross: false });
+    const hits = [];
+    for (let j = 0; j < m; j += 1) {
+      const [cx, cy] = other[j], [dx, dy] = other[(j + 1) % m];
+      const den = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
+      if (Math.abs(den) < 1e-18) continue;
+      const t = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / den;
+      const u = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / den;
+      if (t >= 0 && t < 1 && u >= 0 && u < 1) hits.push(t);
+    }
+    hits.sort((p, q) => p - q);
+    for (const t of hits) walk.push({ point: [ax + (bx - ax) * t, ay + (by - ay) * t], cross: true });
+  }
+  const first = walk.findIndex((w) => w.cross);
+  if (first < 0) return inside(ring[0]) ? [] : [{ points: ring.slice(), closed: true }];
+  // From one crossing to the next is one stretch, all of it on one side: kept when the middle of its first edge of any length is
+  // outside. Two crossings on one spot (a graze) make a stretch of no length, which is dropped
+  const turned = [...walk.slice(first), ...walk.slice(0, first)];
+  const runs = [];
+  let run = [turned[0].point];
+  for (let k = 1; k <= turned.length; k += 1) {
+    const w = turned[k % turned.length];
+    run.push(w.point);
+    if (!w.cross) continue;
+    const e = run.findIndex((p, i) => i > 0 && Math.hypot(p[0] - run[i - 1][0], p[1] - run[i - 1][1]) > 1e-9);
+    if (e > 0 && !inside([(run[e - 1][0] + run[e][0]) / 2, (run[e - 1][1] + run[e][1]) / 2])) runs.push({ points: run, closed: false });
+    run = [w.point];
+  }
+  return runs;
+}

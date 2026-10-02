@@ -3,7 +3,7 @@
 
 import { paintOf } from "../vocabulary/paint.js";
 import { wearOf } from "../vocabulary/wear.js";
-import { blobPath, arcPath, crumple } from "../../shape.js";
+import { blobPath, arcPath, crumple, runsOutside } from "../../shape.js";
 import { paintPart } from "./body.js";
 import { shade } from "../../color.js";
 import { headShape } from "./layout.js";
@@ -298,8 +298,9 @@ export function drawHorns(ink, fills, spec, box, noise) {
     const bone = shade(MARKS.white, 0.97);
     // A tapered bone horn along a centerline — and its tip is BLUNT: the rails thin gently and close over a
     // round cap, never a point (dragon horn ends are rounded like fingers; collapsed to a point they came out
-    // as scraggly needles under the pencil's wobble)
-    const boneHorn = (raw, w0, place) => {
+    // as scraggly needles under the pencil's wobble). → { spine, poly }; outline: false leaves the ink to the
+    // caller (the antenna's two bones are outlined as one)
+    const boneHorn = (raw, w0, place, { outline = true } = {}) => {
       const pts = place ? place(raw) : raw;
       const L = [], R = [];
       let ex = 0, ey = 1;
@@ -327,8 +328,8 @@ export function drawHorns(ink, fills, spec, box, noise) {
       // wedge in the crook of every curved horn and a ram whose spiral was filled in solid
       // (guidelines/character/rules.md § a fill has to be visible from its centre; `node scripts/fanspill.mjs` counts it)
       paintPart(fills, spec, poly, bone, { part: "horns", own: true, concave: true });
-      ink.contour(poly, { color: ink0 });
-      return pts;
+      if (outline) ink.contour(poly, { color: ink0 });
+      return { spine: pts, poly };
     };
     // **Where on the skull they root is per individual.** They used to be pinned to one spot near the crown;
     // now the base slides down the head's own outline, from up top to the temple — the sideburn line. As it
@@ -350,7 +351,7 @@ export function drawHorns(ink, fills, spec, box, noise) {
       });
       const lean = noise(side * 9.1 + spec.roll * 0.0007) * 0.05;
       if (kind === "curved") {
-        const c = boneHorn([[bx0, by0], [bx0 + side * 0.075, by0 + 0.095], [bx0 + side * 0.055 + lean, by0 + 0.19]], 0.024, place);
+        const c = boneHorn([[bx0, by0], [bx0 + side * 0.075, by0 + 0.095], [bx0 + side * 0.055 + lean, by0 + 0.19]], 0.024, place).spine;
         // the ring segments — two short lines across the horn (the annulated look)
         for (const k of [0.35, 0.6]) {
           const i = k * (c.length - 1), a = c[Math.floor(i)], b = c[Math.ceil(i)] || a;
@@ -364,9 +365,19 @@ export function drawHorns(ink, fills, spec, box, noise) {
         boneHorn([[bx0, by0], [bx0 + side * 0.06 + lean, by0 + 0.1], [bx0 + side * 0.11 + lean, by0 + 0.185]], 0.02, place);
       } else if (kind === "antenna") {
         const pts = [[bx0, by0], [bx0 + side * 0.028, by0 + 0.12], [bx0 + side * 0.06 + lean, by0 + 0.2]];
-        boneHorn(pts, 0.011, place);
+        const shaft = boneHorn(pts, 0.011, place, { outline: false });
         const mx = bx0 + side * 0.02, my = by0 + 0.085;   // one twig off the shaft — half an antler
-        boneHorn([[mx, my], [mx + side * 0.05, my + 0.05]], 0.008, place);
+        const twig = boneHorn([[mx, my], [mx + side * 0.05, my + 0.05]], 0.008, place, { outline: false });
+        // **One antler, one outline.** The twig roots on the shaft's spine, so outlined each on its own the two
+        // closed lines crossed where it leaves — the twig's root drawn across the shaft, the shaft's edge across
+        // the twig — and the antler read as tangled. Each bone's outline is drawn only where it is outside the
+        // other (shape.js runsOutside), the stretches meeting where the twig leaves the shaft
+        for (const [ring, other] of [[shaft.poly, twig.poly], [twig.poly, shaft.poly]]) {
+          for (const run of runsOutside(ring, other)) {
+            if (run.closed) ink.contour(run.points, { color: ink0 });
+            else ink.line(run.points, { color: ink0, joint: [true, true] });
+          }
+        }
       } else if (kind === "ram") {
         const spiral = [];
         for (let i = 0; i <= 14; i += 1) {

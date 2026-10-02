@@ -308,6 +308,13 @@ pair swept back (Fafnir) · **antenna** thin pale horns with one twig, half an a
 curl (Lucoa) · **crown** one BIG pair standing up and out (Ilulu) · **nub** small bone bumps. Bias: none 3 ·
 curved 2 · antenna/straight/ram 1.5 · nub/crown 1 — about three rexes in four horned.
 
+**The antenna's antler is one outline** (the owner, 2026-09-26). Its twig roots on the shaft's spine, so the
+two bones, each outlined on its own, drew two closed lines crossing where the twig leaves — the twig's root
+across the shaft, the shaft's edge across the twig — and the antler read as tangled. Each bone is still
+painted whole, but its outline is drawn only where it is outside the other (`shape.js runsOutside`, open
+stretches joined at the crossings), so the lines meet in one V where the twig leaves the shaft. No other
+horn changed (`drawdiff` with `horns=antenna` skipped: 0).
+
 ### ears (15)
 none / round · roundMid · roundBig / pointy · pointyMid · pointyBig / flap (an arc hanging down) / long (a long lobe) / fold · foldMid · foldBig / perk · perkMid · perkBig.
 round, pointy, fold and perk come in **three sizes** (1 · 1.4 · 1.8×, the same shape) — strip the Mid/Big off the value name and you have the shape (`earKind`, `EAR_SIZE`).
